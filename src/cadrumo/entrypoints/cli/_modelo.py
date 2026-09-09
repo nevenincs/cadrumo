@@ -305,6 +305,22 @@ def _parse_amendment_casilla(spec: str) -> tuple[CasillaId, Decimal]:
     return validated_casilla_id(key, surface="--set casilla"), value
 
 
+def _missing_amendment_options(
+    *,
+    from_filing_record_id: str | None,
+    kind: CalculationRevisionAmendmentKind | None,
+    reason: str | None,
+    set_overrides: list[str] | None,
+) -> tuple[str, ...]:
+    checks = (
+        ("--from-filing-record", not from_filing_record_id or not from_filing_record_id.strip()),
+        ("--kind", kind is None),
+        ("--reason", not reason or not reason.strip()),
+        ("--set", not set_overrides),
+    )
+    return tuple(option for option, missing in checks if missing)
+
+
 def _required_amendment_inputs(
     *,
     from_filing_record_id: str | None,
@@ -313,15 +329,12 @@ def _required_amendment_inputs(
     set_overrides: list[str] | None,
 ) -> tuple[str, CalculationRevisionAmendmentKind, str, tuple[str, ...]]:
     """Return raw amendment CLI inputs or raise one combined option error."""
-    missing: list[str] = []
-    if not from_filing_record_id or not from_filing_record_id.strip():
-        missing.append("--from-filing-record")
-    if kind is None:
-        missing.append("--kind")
-    if not reason or not reason.strip():
-        missing.append("--reason")
-    if not set_overrides:
-        missing.append("--set")
+    missing = _missing_amendment_options(
+        from_filing_record_id=from_filing_record_id,
+        kind=kind,
+        reason=reason,
+        set_overrides=set_overrides,
+    )
     if missing or from_filing_record_id is None or kind is None or reason is None:
         raise typer.BadParameter(
             tr(

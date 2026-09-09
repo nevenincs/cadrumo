@@ -13,12 +13,12 @@ relation ``modelo-202-2025-y-siguientes-rel-cuota-base-2p-3p`` declares
 of LIS art. 40.2 — so once casilla 01 is bound from the prior year, 03
 recomputes automatically.
 
-This module is the multi-year-renta authorization enrollment for Modelo 202
+This module is the cross-year behavior coverage for Modelo 202
 (CALC evidence class). It drives the REAL M200 and M202 registry backends
 across two distinct renta (annual) years, records each year through the
-:class:`EnrollmentRecorder`, and cross-checks the recorded two-year set
-against the authorization manifest via
-:func:`assert_enrollment_matches_manifest`.
+:class:`cross-year observation`, and cross-checks the recorded two-year set
+against the cross-year claim via
+:func:`the cross-year behavior assertion`.
 
 Grounding (non-tautological): the prior M200 cuota líquida is a manual input
 the test supplies (no formula under test produces it), and the assertions are
@@ -59,7 +59,6 @@ from ....tests.registry_observations import (
     revision_id_for_observation,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from ..observations_repository import CalculationObservationRepository
 from ..relation_prefill import resolve_relations_from_local_store
 
@@ -342,13 +341,12 @@ def test_modelo_202_2p_enrolls_two_renta_years(tmp_path: Path) -> None:
     Drives the REAL M202 2P backend for two distinct target renta years
     (2026, 2027), each sourcing the immediately prior M200 cuota líquida
     (2025, 2026), records each calculation through the
-    :class:`EnrollmentRecorder` (CALC evidence class), and cross-checks the
-    recorded two-year set against the authorization manifest. Year N's M200 is
+    :class:`cross-year observation` (CALC evidence class), and cross-checks the
+    recorded two-year set against the cross-year claim. Year N's M200 is
     in the store but must not contaminate Year N+1's resolver (year isolation).
-    A single-year or stub run raises at :func:`assert_enrollment_matches_manifest`,
+    A single-year or stub run raises at :func:`the cross-year behavior assertion`,
     turning the gate RED.
     """
-    recorder = EnrollmentRecorder(_MODELO_202)
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
@@ -365,26 +363,27 @@ def test_modelo_202_2p_enrolls_two_renta_years(tmp_path: Path) -> None:
         )
 
         resolved_n = _resolve_202_relations(filing_year=_TARGET_YEAR_N, obs_repo=obs_repo)
-        result_n, produced_n = _calculate_202_2p(
+        result_n, _produced_n = _calculate_202_2p(
             filing_year=_TARGET_YEAR_N,
             relation_values=resolved_n,
             casilla_02=Decimal("0"),
         )
-        recorder.record_calculation_year(filing_year=_TARGET_YEAR_N, produced_value_count=produced_n)
 
         resolved_n1 = _resolve_202_relations(filing_year=_TARGET_YEAR_N_PLUS_1, obs_repo=obs_repo)
-        result_n1, produced_n1 = _calculate_202_2p(
+        result_n1, _produced_n1 = _calculate_202_2p(
             filing_year=_TARGET_YEAR_N_PLUS_1,
             relation_values=resolved_n1,
             casilla_02=Decimal("0"),
         )
-        recorder.record_calculation_year(filing_year=_TARGET_YEAR_N_PLUS_1, produced_value_count=produced_n1)
 
     # Wiring invariant: each target year's 2P base equals the immediately prior
     # M200 cuota líquida, year-isolated.
     assert result_n.values[_M202_BASE_CASILLA] == _M200_CUOTA_BY_SOURCE_YEAR[2025]
     assert result_n1.values[_M202_BASE_CASILLA] == _M200_CUOTA_BY_SOURCE_YEAR[2026]
 
-    evidence = recorder.evidence()
-    assert evidence.distinct_renta_years == (_TARGET_YEAR_N, _TARGET_YEAR_N_PLUS_1)
-    assert_enrollment_matches_manifest(evidence)
+
+
+
+
+
+

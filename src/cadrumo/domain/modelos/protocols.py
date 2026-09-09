@@ -16,9 +16,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
-from ...core.period import Period
 from .calculation_revision import CalculationRevisionCatalogue
-from .filing_record import ModeloRecord, ModeloRecordCatalogue
+from .filing_record import ModeloRecordCatalogue
 from .participation_index import TransactionRevisionParticipationIndex
 from .verification_report import VerificationReportCatalogue
 
@@ -95,35 +94,6 @@ class CalculationRevisionCatalogueRepositoryProtocol(Protocol):
         expected_revision_id: str | None = None,
     ) -> None:
         """Persist ``catalogue`` plus co-emitted secure-object writes atomically."""
-        ...
-
-
-@runtime_checkable
-class ModeloRecordCatalogueQueryProtocol(Protocol):
-    """Query contract exposed by loaded modelo filing-record catalogues."""
-
-    def current_for(
-        self,
-        *,
-        bucket_id: str,
-        modelo: str,
-        filing_year: int,
-        period: Period,
-        member_nif: str | None = None,
-    ) -> ModeloRecord | None:
-        """Return the current :class:`ModeloRecord` for a filing tuple and optional group member."""
-        ...
-
-    def history_for(
-        self,
-        *,
-        bucket_id: str,
-        modelo: str,
-        filing_year: int,
-        period: Period,
-        member_nif: str | None = None,
-    ) -> tuple[ModeloRecord, ...]:
-        """Return :class:`ModeloRecord` filing history for a filing tuple and optional group member."""
         ...
 
 
@@ -266,7 +236,6 @@ class TransactionParticipationIndexRepositoryProtocol(Protocol):
 
 __all__ = [
     "CalculationRevisionCatalogueRepositoryProtocol",
-    "ModeloRecordCatalogueQueryProtocol",
     "ModeloRecordCatalogueRepositoryProtocol",
     "TransactionParticipationIndexRepositoryProtocol",
     "VerificationReportCatalogueRepositoryProtocol",

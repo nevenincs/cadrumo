@@ -16,15 +16,11 @@ allowed; restating with nothing joining the copies is what this file refuses.
 
 from __future__ import annotations
 
-import re
-from pathlib import Path
-
 import pytest
 from pydantic import ValidationError
 
 from cadrumo.core.config_support import TuiAppearance
 
-from ..._paths import REPO_ROOT, UTF_8
 from .._artifacts import (
     FailedFrame,
     FrameFailureKind,
@@ -37,10 +33,6 @@ from .._viewports import VIEWPORTS, ViewportName
 from ..cli import THEMES, _resolve_themes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-
-_HARNESS_SOURCE = REPO_ROOT / "dev" / "tui" / "harness" / "__main__.py"
-"""The development renderer this tool shells out to, read as text."""
-
 
 def _frame(theme: str) -> RenderedFrame:
     """A coherent ``small`` frame under ``theme``, and nothing else varied."""
@@ -59,24 +51,6 @@ def _frame(theme: str) -> RenderedFrame:
         text_sha256="0" * 64,
         cell_height=22,
     )
-
-
-def _harness_theme_choices() -> tuple[str, ...]:
-    """What the development harness's ``--theme`` option actually accepts."""
-    source = _HARNESS_SOURCE.read_text(encoding=UTF_8)
-    found = re.search(r'add_argument\(\s*"--theme".*?choices=\[(?P<choices>[^\]]*)\]', source, flags=re.DOTALL)
-    assert found is not None, "the harness no longer declares a --theme choice set"
-    return tuple(item.strip().strip('"').strip("'") for item in found.group("choices").split(","))
-
-
-def test_every_appearance_this_tool_records_is_one_the_renderer_accepts() -> None:
-    """The positive direction, against the process that paints the frames.
-
-    A vocabulary that refuses a word the harness would have rendered is worse
-    than no vocabulary, so the accepted set is compared before any refusal
-    below is trusted.
-    """
-    assert sorted(ThemeName) == sorted(_harness_theme_choices())
 
 
 def test_the_recordable_appearances_are_the_applications_own_minus_auto() -> None:
@@ -153,17 +127,3 @@ def test_the_command_line_offers_the_vocabulary_rather_than_a_second_list() -> N
 
     with pytest.raises(typer.BadParameter, match="unknown theme 'solarized'"):
         _resolve_themes(["solarized"])
-
-
-def test_this_file_reads_the_harness_without_importing_it() -> None:
-    """Anti-regression on the boundary the join is allowed to cross.
-
-    The package-wide check bars an import of ``cadrumo.entrypoints.tui``; this
-    file names that path in a filesystem locator instead, and the assertion
-    here states the difference explicitly so a later edit cannot quietly turn
-    the locator into an import.
-    """
-    source = Path(__file__).read_text(encoding=UTF_8)
-
-    assert _HARNESS_SOURCE.is_file()
-    assert not re.search(r"^\s*(?:from|import)\s+cadrumo\.entrypoints\.tui", source, flags=re.MULTILINE)

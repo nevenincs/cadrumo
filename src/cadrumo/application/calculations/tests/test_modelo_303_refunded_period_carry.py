@@ -9,10 +9,10 @@ filed revision is requested as devolución, the persisted
 next period's casilla 110 auto-resolves to zero rather than double-claiming the
 requested devolución credit.
 
-The CONTROL persists the SAME engine-produced negative-result revision with the
+The CONTROL persists the SAME engine-_produced negative-result revision with the
 explicit ``C`` disposition and asserts the credit carries normally.
 
-Grounding (non-tautological): the negative-result saldo is produced by the REAL
+Grounding (non-tautological): the negative-result saldo is _produced by the REAL
 registry engine from a credit scenario (deducible > devengada), never
 hand-computed against the formula under test. The refunded assertion is the
 structural zero-carry invariant; the control compares two engine-derived carry
@@ -287,7 +287,7 @@ def test_carried_4t_period_carries_the_credit_forward_control(tmp_path: Path) ->
 
     the standard compensación behaviour every existing carry chain relies on.
     The only difference from the refunded test is the explicit ``C``
-    disposition. The engine-produced saldo carries into 1T/N+1 casilla 110
+    disposition. The engine-_produced saldo carries into 1T/N+1 casilla 110
     normally.
     the standard compensación behaviour every existing carry chain relies on.
     """
@@ -319,3 +319,5 @@ def test_carried_4t_period_carries_the_credit_forward_control(tmp_path: Path) ->
     assert carry_in > Decimal("0")
     assert history_state is not None
     assert history_state.generated_amount == carried_saldo
+
+

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TypeGuard
 
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import ValidationError
 
 from ...application.workflow.errors import WorkflowError
 from ...application.workflow.persistence import (
@@ -15,9 +15,7 @@ from ...application.workflow.persistence import (
 )
 from ...application.workflow.run_models import WorkflowResult
 from ...application.workflow.state_models import WorkflowState
-from ...core.classification.policies import SensitivityClass
 from ...core.logging import get_logger
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
 from ...core.time.clock import now as utc_now
 from ...domain.buckets.event import BucketEvent
@@ -51,15 +49,6 @@ _RUN_NAMESPACE = WORKFLOW_RUN_NAMESPACE.namespace
 _RUN_SENSITIVITY = WORKFLOW_RUN_NAMESPACE.sensitivity
 
 
-class _WorkflowRunEnvelopeHeader(BaseModel):
-    """Version and classification inspected before the typed run payload."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    schema_version: int = Field(ge=1)
-    classification: SensitivityClass
-
-
 def _secure_objects(store: WorkflowSecureObjectStorePort) -> SecureObjectRepository:
     """Narrow the structural application handle to this adapter's concrete store."""
     if not isinstance(store, SecureObjectRepository):
@@ -78,17 +67,16 @@ def _clear_output_language_cache() -> None:
 
 def _validate_workflow_run_envelope(payload: bytes) -> Envelope[WorkflowResult]:
     """Validate one workflow-run envelope against the exact current contract."""
-    raw_payload = payload.decode("utf-8")
-    header = _WorkflowRunEnvelopeHeader.model_validate_json(raw_payload)
-    if not inner_envelope_classification_is_expected(header.classification, _RUN_SENSITIVITY):
+    envelope = Envelope[WorkflowResult].model_validate_json(payload.decode("utf-8"))
+    if not inner_envelope_classification_is_expected(envelope.classification, _RUN_SENSITIVITY):
         raise ClassificationError(
-            f"workflow run has classification {header.classification}; consumer expected {_RUN_SENSITIVITY}",
+            f"workflow run has classification {envelope.classification}; consumer expected {_RUN_SENSITIVITY}",
         )
-    if not inner_envelope_version_is_current(header.schema_version, _RUN_VERSION):
+    if not inner_envelope_version_is_current(envelope.schema_version, _RUN_VERSION):
         raise EnvelopeVersionError(
-            f"workflow run is at version {header.schema_version}; consumer requires {_RUN_VERSION}",
+            f"workflow run is at version {envelope.schema_version}; consumer requires {_RUN_VERSION}",
         )
-    return Envelope[WorkflowResult].model_validate_json(raw_payload)
+    return envelope
 
 
 class _PersistenceWorkflow:

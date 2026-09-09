@@ -42,12 +42,7 @@ def test_no_tr_constant_naming_violations_repo_wide() -> None:
     Real-behavior gate: walks the actual ``src/cadrumo`` tree (not a fixture)
     and fails loudly, naming every offending ``path:line: 'CONSTANT'`` site,
     the moment a constant reference without the required suffix is passed to
-    the translator. The one currently compliant production site
-    (``application/wizard/_format_hints.py``'s
-    ``REGISTERED_NON_OFFICIAL_SUFFIX_LOCALE_KEY``, referenced from
-    ``application/wizard/_registered_values.py``) is proof this is not a
-    vacuous "nothing calls tr() with a constant" pass — the naming
-    convention is genuinely exercised at HEAD, not merely absent.
+    the translator.
     """
     violations = find_tr_constant_naming_violations(_SRC_ROOT)
 

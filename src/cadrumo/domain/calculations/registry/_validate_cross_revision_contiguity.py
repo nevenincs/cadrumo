@@ -42,32 +42,53 @@ def _validate_strict_continuity_chain_contiguity(modelo: ModeloDefinition) -> tu
     ordered_revisions = _ordered_revisions(modelo)
     if len(ordered_revisions) < 3:
         return ()
-    positions = {revision.id: index for index, revision in enumerate(ordered_revisions)}
+    chain_positions = _continuity_chain_positions(ordered_revisions)
 
+    failures: list[str] = []
+    for continuidad_id in sorted(chain_positions):
+        for left, right in pairwise(sorted(chain_positions[continuidad_id])):
+            failure = _strict_continuity_failure_for_pair(
+                modelo_id=modelo.id,
+                continuidad_id=continuidad_id,
+                ordered_revisions=ordered_revisions,
+                left=left,
+                right=right,
+            )
+            if failure is not None:
+                failures.append(failure)
+    return tuple(failures)
+
+
+def _continuity_chain_positions(ordered_revisions: tuple[ModeloRevision, ...]) -> dict[str, set[int]]:
+    positions = {revision.id: index for index, revision in enumerate(ordered_revisions)}
     chain_positions: dict[str, set[int]] = defaultdict(set)
     for revision in ordered_revisions:
         for casilla in revision.casillas:
             if casilla.continuidad_id is not None:
                 chain_positions[casilla.continuidad_id].add(positions[revision.id])
+    return chain_positions
 
-    failures: list[str] = []
-    for continuidad_id in sorted(chain_positions):
-        for left, right in pairwise(sorted(chain_positions[continuidad_id])):
-            skipped = _skipped_revisions(ordered_revisions, left, right)
-            if not skipped:
-                continue
-            if not any(revision.continuidad_validation == "strict" for revision in ordered_revisions[left : right + 1]):
-                continue
-            failures.append(
-                _format_gapped_chain_failure(
-                    modelo.id,
-                    continuidad_id,
-                    ordered_revisions[left],
-                    ordered_revisions[right],
-                    skipped,
-                ),
-            )
-    return tuple(failures)
+
+def _strict_continuity_failure_for_pair(
+    *,
+    modelo_id: str,
+    continuidad_id: str,
+    ordered_revisions: tuple[ModeloRevision, ...],
+    left: int,
+    right: int,
+) -> str | None:
+    skipped = _skipped_revisions(ordered_revisions, left, right)
+    if not skipped:
+        return None
+    if not any(revision.continuidad_validation == "strict" for revision in ordered_revisions[left : right + 1]):
+        return None
+    return _format_gapped_chain_failure(
+        modelo_id,
+        continuidad_id,
+        ordered_revisions[left],
+        ordered_revisions[right],
+        skipped,
+    )
 
 
 def _skipped_revisions(

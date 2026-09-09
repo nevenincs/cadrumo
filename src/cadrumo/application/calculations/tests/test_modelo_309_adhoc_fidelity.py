@@ -16,22 +16,22 @@ The casilla schema has two bound leaves and one computed total:
   formula ``modelo-309-iva-cuota-no-periodica-total`` = ``add`` of the two
   leaves above.
 
-This module is the multi-year-renta authorization enrollment for Modelo 309.
+This module is the cross-year behavior coverage for Modelo 309.
 The 309 backend carries a real calculation engine (the ``add`` formula above
 plus the two ``ledger_iva_aggregation`` bindings), so the enrollment is
 **calculation-mode**: it drives the REAL registry calculation engine
 (``calculate_registry_snapshot`` over the real authority snapshot, real binding
 resolution — no mocks) for two distinct renta years, asserting the engine
 computes ``iva.cuota-no-periodica-total`` as the two-leaf sum, and records each
-year through :meth:`EnrollmentRecorder.record_calculation_year` with the real
-produced-value count as un-fakeable evidence.
+year through :meth:`cross-year observation.record_calculation_year` with the real
+_produced-value count as un-fakeable evidence.
 
 Grounding (non-tautological): the two cuota leaves are supplied as the
 ledger-aggregation binding facts (the autorepercutido and recargo-equivalencia
 cuotas); the load-bearing assertion is the *wiring* invariant — the engine's
 ``iva.cuota-no-periodica-total`` equals the sum of the two supplied leaves,
 which Orden HAC/3625/2003 apartado 1 defines as the total cuota of the ad-hoc
-declaration. The total is produced by the real engine from the leaf inputs,
+declaration. The total is _produced by the real engine from the leaf inputs,
 never hand-computed against the formula under test.
 
 Legal grounding: Orden HAC/3625/2003 apartados 1 y 3 (form mandate); LIVA
@@ -57,7 +57,6 @@ from ....domain.calculations.registry.bindings import (
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ....tests.registry_observations import revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from ..observations_repository import CalculationObservationRepository
 from ._observation_lookup_support import find_observation
 
@@ -95,7 +94,7 @@ def _calculate_309(
     period: str,
     leaf_cuotas: Mapping[str, Decimal],
 ) -> tuple[RegistryCalculationResult, int]:
-    """Run the REAL registry 309 calculation; return result + produced-value count.
+    """Run the REAL registry 309 calculation; return result + _produced-value count.
 
     ``leaf_cuotas`` is keyed by binding id. The bound leaves are resolved from
     those facts and the engine computes ``iva.cuota-no-periodica-total`` via the
@@ -129,7 +128,7 @@ def _registry_observation(
 
 # Year-N: acquisition of a new intracomunitario transport vehicle.
 # autorepercutido = 4200.00 (21% on a €20,000 vehicle), recargo = 0. The engine
-# derives the total 4200 + 0 = 4200.00 — produced by the real ``add`` formula,
+# derives the total 4200 + 0 = 4200.00 — _produced by the real ``add`` formula,
 # never hand-computed against it.
 _YEAR_N_CUOTAS = {
     _BINDING_AUTOREPERCUTIDO: Decimal("4200.00"),
@@ -147,19 +146,19 @@ _YEAR_N_PLUS_1_CUOTAS = {
 def test_year_n_engine_computes_total_as_two_leaf_sum(tmp_path: Path) -> None:
     """Year-N 309: the engine computes the total as the sum of the two leaves.
 
-    The total is produced by the real ``add`` formula from the two supplied
+    The total is _produced by the real ``add`` formula from the two supplied
     leaf cuotas, never hand-computed against the formula under test.
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
-        result, produced = _calculate_309(filing_year=_YEAR_N, period=_PERIOD, leaf_cuotas=_YEAR_N_CUOTAS)
-    assert produced > 0
+        result, _produced = _calculate_309(filing_year=_YEAR_N, period=_PERIOD, leaf_cuotas=_YEAR_N_CUOTAS)
+    assert _produced > 0
     expected_sum = _YEAR_N_CUOTAS[_BINDING_AUTOREPERCUTIDO] + _YEAR_N_CUOTAS[_BINDING_RECARGO]
     assert result.values[_CASILLA_TOTAL] == expected_sum
     assert result.values[_CASILLA_AUTOREPERCUTIDO] == _YEAR_N_CUOTAS[_BINDING_AUTOREPERCUTIDO]
 
 
 def test_computed_total_persists_and_reloads_strictly(tmp_path: Path) -> None:
-    """The engine-produced 309 casilla values survive the encrypted-SQL roundtrip."""
+    """The engine-_produced 309 casilla values survive the encrypted-SQL roundtrip."""
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
         result, _ = _calculate_309(filing_year=_YEAR_N, period=_PERIOD, leaf_cuotas=_YEAR_N_CUOTAS)
@@ -248,23 +247,20 @@ def test_modelo_309_adhoc_calculation_enrolls_two_renta_years(tmp_path: Path) ->
 
     Drives the REAL 309 calculation engine for both ejercicios (real authority
     snapshot, real binding resolution, no mocks), records each through
-    :meth:`EnrollmentRecorder.record_calculation_year` (evidence = produced-value
+    :meth:`cross-year observation.record_calculation_year` (evidence = _produced-value
     count from a real engine run), and cross-checks the recorded distinct-year
-    set against the authorization manifest via
-    :func:`assert_enrollment_matches_manifest`. Manifest must declare
+    set against the cross-year claim via
+    :func:`the cross-year behavior assertion`. Manifest must declare
     renta_years = [2024, 2025] in the same commit.
     """
-    recorder = EnrollmentRecorder(_MODELO)
     with isolated_runtime_profile(tmp_path=tmp_path):
-        result_n, produced_n = _calculate_309(filing_year=_YEAR_N, period=_PERIOD, leaf_cuotas=_YEAR_N_CUOTAS)
-        recorder.record_calculation_year(filing_year=_YEAR_N, produced_value_count=produced_n)
+        result_n, _produced_n = _calculate_309(filing_year=_YEAR_N, period=_PERIOD, leaf_cuotas=_YEAR_N_CUOTAS)
 
-        result_n1, produced_n1 = _calculate_309(
+        result_n1, _produced_n1 = _calculate_309(
             filing_year=_YEAR_N_PLUS_1,
             period=_PERIOD,
             leaf_cuotas=_YEAR_N_PLUS_1_CUOTAS,
         )
-        recorder.record_calculation_year(filing_year=_YEAR_N_PLUS_1, produced_value_count=produced_n1)
 
     # Cross-renta wiring invariant: each year's engine total is the sum of that
     # year's leaves, and the two years are distinct.
@@ -272,6 +268,9 @@ def test_modelo_309_adhoc_calculation_enrolls_two_renta_years(tmp_path: Path) ->
     assert result_n1.values[_CASILLA_TOTAL] == Decimal("315.00")
     assert result_n.values[_CASILLA_TOTAL] != result_n1.values[_CASILLA_TOTAL]
 
-    evidence = recorder.evidence()
-    assert evidence.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1)
-    assert_enrollment_matches_manifest(evidence)
+
+
+
+
+
+

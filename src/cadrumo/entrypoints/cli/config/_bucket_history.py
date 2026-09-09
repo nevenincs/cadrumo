@@ -19,7 +19,94 @@ from .._common import activate_subcommand_output_language as _activate_subcomman
 from .._common import emit_envelope
 
 if TYPE_CHECKING:
-    from .._config_bucket_history_payloads import BucketHistoryEventPayload
+    from ....domain.buckets.event import BucketEventHistoryCatalogue
+    from .._config_bucket_history_payloads import BucketHistoryEventPayload, BucketHistoryResult
+
+
+def _resolve_bucket_history_filters(
+    *,
+    event_type: list[str] | None,
+    since: str | None,
+    until: str | None,
+    object_id: str | None,
+    actor: str | None,
+) -> tuple[
+    tuple[BucketEventType, ...] | None,
+    datetime | None,
+    datetime | None,
+    str | None,
+    str | None,
+]:
+    """Parse and validate the filters owned by the history read surface."""
+    selected = _parse_bucket_event_types(event_type)
+    since_dt = _parse_bucket_history_instant(since, flag="--since")
+    until_dt = _parse_bucket_history_instant(until, flag="--until")
+    if since_dt is not None and until_dt is not None and since_dt > until_dt:
+        raise typer.BadParameter(tr("cli.config.profile.history.since_after_until"))
+    return selected, since_dt, until_dt, object_id.strip() if object_id else None, actor.strip() if actor else None
+
+
+def _matching_bucket_history_events(
+    *,
+    catalogue: BucketEventHistoryCatalogue,
+    bucket_id: str,
+    selected: tuple[BucketEventType, ...] | None,
+    since_dt: datetime | None,
+    until_dt: datetime | None,
+    object_id_token: str | None,
+    actor_token: str | None,
+) -> tuple[BucketEvent, ...]:
+    """Return catalogue events that pass the complete read-side filter."""
+    return tuple(
+        event
+        for event in catalogue.for_bucket(bucket_id, event_types=selected)
+        if _bucket_history_event_matches(
+            event,
+            since_dt=since_dt,
+            until_dt=until_dt,
+            object_id_token=object_id_token,
+            actor_token=actor_token,
+        )
+    )
+
+
+def _bucket_history_result(
+    *,
+    bucket_id: str,
+    selected: tuple[BucketEventType, ...] | None,
+    since_dt: datetime | None,
+    until_dt: datetime | None,
+    object_id_token: str | None,
+    actor_token: str | None,
+    events: tuple[BucketEvent, ...],
+) -> BucketHistoryResult:
+    """Project filtered domain events into the canonical CLI result model."""
+    from .._config_bucket_history_payloads import BucketHistoryResult
+
+    return BucketHistoryResult(
+        operation="config.bucket.history",
+        bucket_id=bucket_id,
+        event_types=list(selected) if selected else None,
+        since=since_dt,
+        until=until_dt,
+        object_id=object_id_token,
+        actor=actor_token,
+        events=[_bucket_history_event_payload(event) for event in events],
+    )
+
+
+def _bucket_history_lines(*, profile_label: str, events: tuple[BucketEvent, ...]) -> list[str]:
+    """Render history rows in the catalogue's existing deterministic order."""
+    return [
+        "operation\tconfig.profile.history",
+        f"profile\t{profile_label}",
+        f"event_count\t{len(events)}",
+        *(
+            f"{event.occurred_at.isoformat()}\t{event.event_type.value}\t{event.object_type.value}"
+            f"\t{event.object_id}\t{event.actor}"
+            for event in events
+        ),
+    ]
 
 
 def profile_history(
@@ -36,46 +123,39 @@ def profile_history(
     _activate_subcommand_output_language(ctx, output_language)
     from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-    from .._config_bucket_history_payloads import BucketHistoryResult
 
     profile_label, bucket_id = _resolve_profile_history_target(profile, ctx=ctx)
-    selected = _parse_bucket_event_types(event_type)
-    since_dt = _parse_bucket_history_instant(since, flag="--since")
-    until_dt = _parse_bucket_history_instant(until, flag="--until")
-    if since_dt is not None and until_dt is not None and since_dt > until_dt:
-        raise typer.BadParameter(tr("cli.config.profile.history.since_after_until"))
-    object_id_token = object_id.strip() if object_id else None
-    actor_token = actor.strip() if actor else None
+    selected, since_dt, until_dt, object_id_token, actor_token = _resolve_bucket_history_filters(
+        event_type=event_type,
+        since=since,
+        until=until,
+        object_id=object_id,
+        actor=actor,
+    )
 
     catalogue = BucketEventHistoryRepository(
         objects=secure_object_repository_for_bucket(bucket_id),
     ).load()
-    events = tuple(
-        event
-        for event in catalogue.for_bucket(bucket_id, event_types=selected)
-        if _bucket_history_event_matches(
-            event,
-            since_dt=since_dt,
-            until_dt=until_dt,
-            object_id_token=object_id_token,
-            actor_token=actor_token,
-        )
+    events = _matching_bucket_history_events(
+        catalogue=catalogue,
+        bucket_id=bucket_id,
+        selected=selected,
+        since_dt=since_dt,
+        until_dt=until_dt,
+        object_id_token=object_id_token,
+        actor_token=actor_token,
     )
 
-    bucket_result = BucketHistoryResult(
-        operation="config.bucket.history",
+    bucket_result = _bucket_history_result(
         bucket_id=bucket_id,
-        event_types=list(selected) if selected else None,
-        since=since_dt,
-        until=until_dt,
-        object_id=object_id_token,
-        actor=actor_token,
-        events=[_bucket_history_event_payload(event) for event in events],
+        selected=selected,
+        since_dt=since_dt,
+        until_dt=until_dt,
+        object_id_token=object_id_token,
+        actor_token=actor_token,
+        events=events,
     )
-    lines = ["operation\tconfig.profile.history", f"profile\t{profile_label}", f"event_count\t{len(events)}"] + [
-        f"{e.occurred_at.isoformat()}\t{e.event_type.value}\t{e.object_type.value}\t{e.object_id}\t{e.actor}"
-        for e in events
-    ]
+    lines = _bucket_history_lines(profile_label=profile_label, events=events)
     emit_envelope(ctx, command="config.bucket.history", result=bucket_result, lines=lines)
 
 

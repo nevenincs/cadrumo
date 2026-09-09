@@ -44,7 +44,6 @@ from ..atomic_write import (
     atomic_write_hardened_bytes,
     atomic_write_hardened_text,
     atomic_write_publish_once_bytes,
-    atomic_write_stream,
     atomic_write_text,
     durable_write_batch,
     hardened_staged_publication,
@@ -353,19 +352,6 @@ class TestStandardTier:
 
         assert target.read_bytes() == b"OLD-CONTENT"
         assert _tmp_leftovers(tmp_path) == []
-
-    def test_stream_failure_cleans_tmp_and_preserves_existing_target(self, tmp_path: Path) -> None:
-        """A real malformed stream chunk cannot replace a known-good target."""
-        target = tmp_path / "manual.pdf"
-        atomic_write_bytes(target, b"KNOWN-GOOD-PDF")
-
-        invalid_chunks: Any = (b"partial replacement", "not-bytes")
-        with pytest.raises(TypeError):
-            atomic_write_stream(target, invalid_chunks)
-
-        assert target.read_bytes() == b"KNOWN-GOOD-PDF"
-        assert _tmp_leftovers(tmp_path) == []
-
 
 class TestBestEffortTier:
     """Behaviour of :func:`atomic_write_best_effort_bytes` / :func:`atomic_write_best_effort_text`."""

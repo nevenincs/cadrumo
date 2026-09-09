@@ -647,65 +647,6 @@ def resolve_modelo_workflow_run_for_resume(
     )
 
 
-def resolve_modelo_visible_workflow_run_for_resume(
-    *,
-    modelo: str,
-    filing_year: int,
-    period: Period,
-    registry_revision_id: RevisionId | None = None,
-    bucket_id: str | None = None,
-) -> WorkflowResumeTargetResolution:
-    """Resolve natural modelo filing selectors to a resume target resolution.
-
-    The selector is represented as a
-    :class:`application.modelo.ModeloVisibleFilingTarget` before delegation
-    to the shared modelo addressing facade.
-
-    Returns:
-        A :class:`WorkflowResumeTargetResolution` for the visible filing target.
-    """
-    from ..modelo.work_addressing import ModeloVisibleFilingTarget
-
-    target = ModeloVisibleFilingTarget(
-        modelo=modelo,
-        filing_year=filing_year,
-        period=period,
-        registry_revision_id=registry_revision_id,
-        bucket_id=bucket_id,
-    )
-    catalogue, resolved_bucket_id = _captured_work_catalogue(bucket_id)
-    return resolve_modelo_workflow_run_for_resume(
-        target,
-        catalogue=catalogue,
-        bucket_id=resolved_bucket_id,
-    )
-
-
-def resolve_modelo_exact_workflow_run_for_resume(
-    *,
-    work_unit_id: str,
-    bucket_id: str | None = None,
-) -> WorkflowResumeTargetResolution:
-    """Resolve an exact work-unit id to a resume target resolution.
-
-    Exact work-unit ids are represented as
-    :class:`application.modelo.ModeloExactWorkUnitTarget` values before
-    workflow run lookup.
-
-    Returns:
-        A :class:`WorkflowResumeTargetResolution` for the exact work-unit id.
-    """
-    from ..modelo.work_addressing import ModeloExactWorkUnitTarget
-
-    target = ModeloExactWorkUnitTarget(work_unit_id=work_unit_id, bucket_id=bucket_id)
-    catalogue, resolved_bucket_id = _captured_work_catalogue(bucket_id)
-    return resolve_modelo_workflow_run_for_resume(
-        target,
-        catalogue=catalogue,
-        bucket_id=resolved_bucket_id,
-    )
-
-
 def _resolve_resume_from_work_unit(
     work_unit: WorkUnit,
     *,
@@ -807,8 +748,6 @@ __all__ = [
     "WorkflowResumeTargetResolution",
     "find_latest_run_for_period",
     "find_unique_run_for_period",
-    "resolve_modelo_exact_workflow_run_for_resume",
-    "resolve_modelo_visible_workflow_run_for_resume",
     "resolve_modelo_workflow_resume_target",
     "resolve_modelo_workflow_run_for_resume",
     "resume_modelo_workflow",

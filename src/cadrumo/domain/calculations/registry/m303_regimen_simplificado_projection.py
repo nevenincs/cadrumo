@@ -241,21 +241,29 @@ def _m303_iae_epigraph_wire_value(iae_epigrafe: str) -> str:
     """
     whole, separator, fractional = iae_epigrafe.partition(".")
     if separator:
-        if (
-            len(whole) == 3
-            and len(fractional) == 1
-            and whole.isascii()
-            and fractional.isascii()
-            and whole.isdecimal()
-            and fractional.isdecimal()
-        ):
+        if _is_canonical_dotted_iae_epigraph(whole, fractional):
             return f"{whole}{fractional}"
         raise RegistryValidationError(
             f"DP30302 cannot encode noncanonical dotted IAE epigraph {iae_epigrafe!r}",
         )
-    if len(iae_epigrafe) == 3 and iae_epigrafe.isascii() and iae_epigrafe.isdecimal():
+    if _is_canonical_plain_iae_epigraph(iae_epigrafe):
         return iae_epigrafe
     raise RegistryValidationError(f"DP30302 cannot encode IAE epigraph {iae_epigrafe!r} into its four-byte field")
+
+
+def _is_canonical_dotted_iae_epigraph(whole: str, fractional: str) -> bool:
+    return (
+        len(whole) == 3
+        and len(fractional) == 1
+        and whole.isascii()
+        and fractional.isascii()
+        and whole.isdecimal()
+        and fractional.isdecimal()
+    )
+
+
+def _is_canonical_plain_iae_epigraph(value: str) -> bool:
+    return len(value) == 3 and value.isascii() and value.isdecimal()
 
 
 def _project_fact_ref(

@@ -4,7 +4,7 @@ Every record is a frozen pydantic v2 model with `extra="forbid"` so that
 schema drift surfaces as validation failures at the moment the engine
 assembles the plan rather than as silent payload divergence at the
 renderer boundary. The records are intentionally narrow: the engine produces
-them, the Google apply adapter and offline XLSX materializer consume them, and
+them, the Google apply adapter consumes them, and
 the pull/parity adapters compare incoming workbook cell values back against the
 same plan.
 
@@ -14,7 +14,7 @@ A1 addressing
 Workbook cell addresses are expressed by the `SheetCellAddress` record
 which carries the human-readable A1 string plus the structured tab
 name, row index, and column index. Row and column indices are 1-based
-to match Sheets/openpyxl convention. The `a1` string is recomputed from the
+to match Sheets convention. The `a1` string is recomputed from the
 tab + row + column at construction time, so callers never hand-roll
 A1 strings — they always go through this record.
 
@@ -410,8 +410,7 @@ class SheetStyledRange(BaseModel):
     The engine emits one styled range per role-region (the header band, each
     section banner, the operator-input column, the computed column, the result
     cell, wrapped body columns). Both transports resolve ``role`` to a concrete
-    fill / font / alignment through the shared ``theme`` palette, so the offline
-    xls and online Sheets render the same look from the same declaration. Later
+    fill / font / alignment through the shared ``theme`` palette. Later
     ranges win on overlap, so a narrow accent range (e.g. ``result``) may be
     emitted after the broad column range it refines.
     """
@@ -446,8 +445,7 @@ class SheetStyledRange(BaseModel):
 class SheetColumnWidth(BaseModel):
     """A per-tab column width in approximate character units.
 
-    The offline renderer applies it as an openpyxl ``column_dimensions`` width;
-    the online renderer converts it to a pixel size (``~7 px`` per character)
+    The renderer converts it to a pixel size (``~7 px`` per character)
     for ``updateDimensionProperties``. Sized so concept labels and legal-ref
     columns read without clipping.
     """
@@ -578,8 +576,8 @@ class SheetEvidenceFacet(BaseModel):
     """Evidence rows attached to a workbook export plan.
 
     Contributor rows carry ledger-derived transaction facts by casilla; manual
-    entries carry non-ledger fact basis values. The offline serializer writes
-    this facet to both the Evidencia worksheet and the adjacent JSON sidecar.
+    entries carry non-ledger fact basis values. The live renderer writes this
+    facet to the Evidencia worksheet.
     """
 
     model_config = _STRICT_FROZEN
@@ -849,7 +847,7 @@ class SheetExportPlan(BaseModel):
     """Complete description of the workbook every renderer will write.
 
     The plan is the shared contract between the registry-backed engine, Google
-    Sheets apply adapter, offline XLSX materializer, pull adapter, and parity
+    Sheets apply adapter, pull adapter, and parity
     harness. It includes calculation cells, protected ranges, display facets,
     registry metadata, relation provenance, row sets, and workbook evidence.
     """

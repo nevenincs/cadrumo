@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from typing import Final
-from urllib.parse import urlsplit
+from urllib.parse import SplitResult, urlsplit
 
 from pydantic import BaseModel
 
@@ -53,23 +53,43 @@ def _project(attachment: Attachment) -> AttachmentReviewItem:
 
 def _drive_provider_locator(reference: str) -> str:
     """Return an id only from the canonical secret-free Drive file URL."""
+    file_id = _drive_file_id(reference)
+    return file_id if file_id is not None else "not-exposed"
+
+
+def _drive_file_id(reference: str) -> str | None:
+    """Extract a validated Drive ID, refusing malformed URL components."""
     try:
         parsed = urlsplit(reference)
-        if parsed.scheme != "https" or parsed.netloc != "drive.google.com":
-            return "not-exposed"
-        if parsed.username is not None or parsed.password is not None:
-            return "not-exposed"
-        if parsed.query or parsed.fragment:
-            return "not-exposed"
-        parts = parsed.path.split("/")
-        if len(parts) != 4 or parts[:3] != ["", "file", "d"]:
-            return "not-exposed"
+        if not _is_secret_free_drive_url(parsed):
+            return None
+        parts = _drive_file_path_parts(parsed)
+        if parts is None:
+            return None
         file_id = parts[3]
-        if _DRIVE_FILE_ID_RE.fullmatch(file_id) is None:
-            return "not-exposed"
-        return file_id
+        return file_id if _DRIVE_FILE_ID_RE.fullmatch(file_id) is not None else None
     except ValueError:
-        return "not-exposed"
+        return None
+
+
+def _is_secret_free_drive_url(parsed: SplitResult) -> bool:
+    """Return whether URL-level components match the safe Drive origin."""
+    return (
+        parsed.scheme == "https"
+        and parsed.netloc == "drive.google.com"
+        and parsed.username is None
+        and parsed.password is None
+        and not parsed.query
+        and not parsed.fragment
+    )
+
+
+def _drive_file_path_parts(parsed: SplitResult) -> list[str] | None:
+    """Return path components for exactly ``/file/d/<id>`` URLs."""
+    parts = parsed.path.split("/")
+    if len(parts) != 4 or parts[:3] != ["", "file", "d"]:
+        return None
+    return parts
 
 
 def get_attachment_review_item(store: AttachmentStoreProtocol, attachment_id: str) -> AttachmentReviewItem:

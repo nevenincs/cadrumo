@@ -33,12 +33,13 @@ from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.resources.bundled_data import bundled_path
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.loader import load_registry_tree
-from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.loader import load_user_profile_schema
+from ...domain.user_profile.values import UserProfileFactValue
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ..user_profile.projections import profile_fact_index
 from .action_errors import ModeloRequiredBindingsMissingError
@@ -143,25 +144,51 @@ def resolved_required_profile_binding_values(
     """
     if str(work_unit.modelo) != Modelo.M202.value:
         return {}
-    try:
-        record = ProfileRecordRepository.for_current_session(work_unit.bucket_id).load(work_unit.bucket_id)
-    except ProfileNotFoundError:
+    facts = _profile_facts_for_bucket(work_unit.bucket_id)
+    if facts is None:
         return {}
-    facts = profile_fact_index(record, load_user_profile_schema())
-    resolved: dict[BindingId, Decimal] = {}
-    for binding in registry_revision.bindings:
-        if _binding_source_value(binding.source) != "profile":
-            continue
-        value = resolve_profile_binding_value(binding, facts)
-        if value is None or isinstance(value, date):
-            continue
-        if isinstance(value, bool):
-            resolved[binding.id] = Decimal("1") if value else Decimal("0")
-        elif isinstance(value, Decimal):
-            resolved[binding.id] = value
-        elif isinstance(value, int):
-            resolved[binding.id] = Decimal(value)
-    return dict(sorted(resolved.items()))
+    return _resolved_profile_binding_values(registry_revision, facts)
+
+
+def _profile_facts_for_bucket(bucket_id: str) -> Mapping[str, UserProfileFactValue] | None:
+    """Load the canonical typed profile facts, or none when no profile exists."""
+    try:
+        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
+    except ProfileNotFoundError:
+        return None
+    return profile_fact_index(record, load_user_profile_schema())
+
+
+def _resolved_profile_binding_values(
+    registry_revision: ModeloRevision,
+    facts: Mapping[str, UserProfileFactValue],
+) -> dict[BindingId, Decimal]:
+    """Resolve declared profile bindings into the Decimal calculation channel."""
+    return dict(
+        sorted(
+            (binding.id, value)
+            for binding in registry_revision.bindings
+            if _binding_source_value(binding.source) == "profile"
+            if (value := _profile_binding_decimal_value(binding, facts)) is not None
+        ),
+    )
+
+
+def _profile_binding_decimal_value(
+    binding: DataBindingDefinition,
+    facts: Mapping[str, UserProfileFactValue],
+) -> Decimal | None:
+    """Project one resolved profile value into the required Decimal channel."""
+    value = resolve_profile_binding_value(binding, facts)
+    if value is None or isinstance(value, date):
+        return None
+    if isinstance(value, bool):
+        return Decimal("1") if value else Decimal("0")
+    if isinstance(value, Decimal):
+        return value
+    if isinstance(value, int):
+        return Decimal(value)
+    return None
 
 
 def _persisted_binding_ids(binding_overrides: Mapping[BindingId, str]) -> tuple[BindingId, ...]:

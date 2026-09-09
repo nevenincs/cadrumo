@@ -165,17 +165,6 @@ _RECTIFICATIVA_EFFECTIVE_FROM: dict[str, date] = {
 }
 
 
-def modelo_has_codified_amendment_regime(modelo: str) -> bool:
-    """Return whether ``modelo`` has a bundled-source-grounded rectificativa boundary.
-
-    A modelo without a codified boundary (e.g. M130/M131, whose bundled
-    diseño de registros carries no rectificativa fields) is never reported as
-    rectificativa-effective; :func:`permitted_amendment_kind_values` returns
-    the pre-rectificativa complementaria/sustitutiva pair for every period.
-    """
-    return modelo in _RECTIFICATIVA_EFFECTIVE_FROM
-
-
 def resolve_amendment_kind_regime(
     modelo: str,
     period: Period,
@@ -187,8 +176,7 @@ def resolve_amendment_kind_regime(
     Returns an :class:`AmendmentKindRegime` naming the legally-permitted
     :class:`~CalculationRevisionAmendmentKind` string
     values for this ``(modelo, period)`` pair. A modelo with no codified
-    boundary (:func:`modelo_has_codified_amendment_regime` is ``False``)
-    always resolves to the pre-rectificativa pair, never asserting
+    boundary always resolves to the pre-rectificativa pair, never asserting
     rectificativa support no bundled source confirms.
 
     For a period with no calendar date span (an instalment clave or an
@@ -270,7 +258,6 @@ __all__ = [
     "AmendmentKindRegime",
     "AmendmentLiabilityDirection",
     "classify_amendment_liability_direction",
-    "modelo_has_codified_amendment_regime",
     "permitted_amendment_kind_values",
     "resolve_amendment_kind_regime",
 ]

@@ -9,8 +9,7 @@ richer surfaces of its sibling subpackages.
 - :class:`AuthProviderProbe` — narrow auth-provider surface for the preflight gate.
 - :class:`DeadlineWindowChecker` — narrow surface over
   :mod:`cadrumo.domain.deadlines` used by preflight.
-- :class:`ModeloFindingLike` / :class:`ModeloDraftLike` /
-  :class:`ModeloDraftLoader` — narrow filing draft surfaces;
+   - :class:`ModeloFindingLike` / :class:`ModeloDraftLike` — narrow filing draft surfaces;
   :class:`domain.filing.ModeloDraft` structurally conforms to
   :class:`ModeloDraftLike`.
 - :class:`SubmissionRepositoryProtocol` — the read-side persistence port.
@@ -25,7 +24,6 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Iterator, Mapping
 from datetime import date
-from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from ...core.auth_provider import AuthProviderDescription
@@ -131,15 +129,6 @@ class ModeloDraftLike(Protocol):
     @property
     def findings(self) -> tuple[ModeloFindingLike, ...]:
         """Return the validation findings the error-severity gate reads."""
-        ...
-
-
-@runtime_checkable
-class ModeloDraftLoader(Protocol):
-    """Loads a :class:`ModeloDraftLike` from a draft path on disk."""
-
-    def load(self, _draft_path: Path, /) -> ModeloDraftLike:
-        """Load and return the :class:`ModeloDraftLike` at ``draft_path``."""
         ...
 
 

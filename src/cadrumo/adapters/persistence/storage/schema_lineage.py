@@ -20,13 +20,9 @@ Layer two carries a second equality alongside the version one:
 envelope's :class:`~adapters.persistence.storage.SensitivityClass` against
 what the caller's own namespace declares, as defense-in-depth against a row
 whose embedded payload metadata has drifted from the outer columns layer one
-already gated. Twenty-nine call sites hand-rolled this same comparison
-independently before this predicate existed — six of them under their own
-domain-specific exception class rather than the shared
-:class:`~adapters.persistence.storage.ClassificationError`, which is why an
-inventory keyed on the raise could not find them; the AST gate in
-``tests/test_classification_enrollment_inventory.py`` is keyed on the
-comparison instead, for exactly that reason.
+already gated. Callers use this predicate so the equality rule remains owned
+by the schema-lineage boundary regardless of their domain-specific refusal
+type or message.
 
 See Also:
     :func:`~adapters.persistence.storage.sql._secure_object_row_codec.secure_object_record_from_row`

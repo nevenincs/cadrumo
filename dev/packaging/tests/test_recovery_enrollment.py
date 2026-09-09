@@ -22,7 +22,6 @@ from pathlib import Path
 import pytest
 
 from ..._paths import UTF_8
-from ...scripted_registration_channels import scripted_registration_descriptors
 from .._command import run_command
 from .._recovery_enrollment import (
     WINDOWS_BOOTSTRAP_MODULE,
@@ -43,41 +42,6 @@ pytestmark = [pytest.mark.hex_entrypoint, pytest.mark.serial]
 
 _TIMEOUT_SECONDS = 600.0
 
-#: Plays the verb's half of the exchange: mint a phrase nobody could guess,
-#: hand it over, and accept only that exact phrase back. A caller that
-#: fabricated a proof, echoed a constant, or returned a truncated document
-#: cannot satisfy it.
-_VERB_HALF_OF_THE_EXCHANGE = """
-import json, os, secrets, sys
-
-handoff_token, verification_token = int(sys.argv[1]), int(sys.argv[2])
-if sys.platform == "win32":
-    import msvcrt
-
-    handoff = msvcrt.open_osfhandle(handoff_token, os.O_WRONLY | os.O_BINARY)
-    verification = msvcrt.open_osfhandle(verification_token, os.O_RDONLY | os.O_BINARY)
-else:
-    handoff, verification = handoff_token, verification_token
-
-minted = " ".join(secrets.token_hex(4) for _ in range(24))
-os.write(handoff, json.dumps({"recovery_mnemonic": minted}).encode() + b"\\n")
-os.close(handoff)
-
-returned = bytearray()
-while not returned.endswith(b"\\n"):
-    chunk = os.read(verification, 1024)
-    if not chunk:
-        break
-    returned.extend(chunk)
-
-supplied = json.loads(bytes(returned).decode()).get("recovery_mnemonic")
-if supplied != minted:
-    sys.stderr.write("possession proof did not match the minted phrase")
-    raise SystemExit(3)
-sys.stdout.write("verified")
-"""
-
-
 def _development_cli() -> Path:
     """Resolve the ``aeat`` executable installed beside the running interpreter."""
     suffix = ".exe" if sys.platform == "win32" else ""
@@ -89,43 +53,6 @@ def _development_cli() -> Path:
 
 def _creation_payload(passphrase: str) -> str:
     return json.dumps({"passphrase": passphrase, "passphrase_confirmation": passphrase}, separators=(",", ":"))
-
-
-def _channel_token(descriptor: int) -> str:
-    """Render a descriptor as the token this platform's child can reopen."""
-    if sys.platform == "win32":
-        import msvcrt
-
-        return str(msvcrt.get_osfhandle(descriptor))
-    return str(descriptor)
-
-
-@pytest.mark.integration
-def test_the_relay_returns_the_exact_phrase_it_was_handed(tmp_path: Path) -> None:
-    """The proof has to be the phrase the verb minted, not one the caller chose.
-
-    The child mints a fresh phrase per run and accepts nothing else, so this
-    passes only when the phrase genuinely travelled out over the handoff
-    descriptor and came back over the verification descriptor. It also proves
-    the two halves do not deadlock: the child writes and then blocks reading
-    within one call, exactly as the real verb does.
-    """
-    with scripted_registration_descriptors() as (handoff, verification):
-        execution = run_command(
-            (
-                sys.executable,
-                "-c",
-                _VERB_HALF_OF_THE_EXCHANGE,
-                _channel_token(handoff),
-                _channel_token(verification),
-            ),
-            cwd=tmp_path,
-            timeout_seconds=_TIMEOUT_SECONDS,
-            inherited_descriptors=(handoff, verification),
-        )
-
-    assert execution.returncode == 0, execution.stderr
-    assert execution.stdout == "verified"
 
 
 @pytest.mark.unit

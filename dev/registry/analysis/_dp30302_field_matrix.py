@@ -32,10 +32,10 @@ from cadrumo.domain.calculations.registry.ids import (
 
 from ..pipeline._record_design_ir import (
     RecordDesignIntermediate,
-    RecordDesignIntermediateField,
     load_record_design_intermediate,
 )
 from ..pipeline._semantic_map_validation import validate_inspection_source_authority
+from ..pipeline.record_design_intermediate import RecordDesignIntermediateField
 
 __all__ = [
     "DP30302_EPOCHS",

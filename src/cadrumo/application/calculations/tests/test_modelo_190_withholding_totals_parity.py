@@ -76,7 +76,7 @@ _M190_RETENCIONES_TOTAL_CASILLA: CasillaId = validated_casilla_id("decl.retencio
 # The nine 190<-111 annual-summary relations feeding decl.percepciones-total;
 # the tenth feeds decl.retenciones-total. Values are the (arbitrary but
 # distinct, per RET-1 continuity precedent) per-quarter-aggregated sums a
-# taxpayer's four M111 filings would already have produced; this test's unit
+# taxpayer's four M111 filings would already have _produced; this test's unit
 # under test is the parity CHECK, not the M111->M190 relation wiring (covered
 # by test_modelo_190_111_reconciliation_continuity.py), so the relation values
 # are supplied directly.
@@ -190,7 +190,7 @@ def test_totals_parity_catches_a_dropped_perceptor_row(tmp_path: Path) -> None:
     path and NEVER cross-checked against the per-perceptor detail, so a
     withholding-store row silently dropped from the operator's per-perceptor
     entry (a data-loss bug, an incomplete import, or a tampered payroll
-    export) produced no finding at all.
+    export) _produced no finding at all.
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         # Same real engine calculation (same summary totals) as the consistent
@@ -283,3 +283,5 @@ def test_totals_parity_over_empty_observations_reports_full_shortfall() -> None:
     assert parity.percepciones_row_total == Decimal("0")
     assert parity.percepciones_delta == -_EXPECTED_PERCEPCIONES_TOTAL
     assert parity.retenciones_delta == -_EXPECTED_RETENCIONES_TOTAL
+
+

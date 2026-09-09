@@ -656,11 +656,10 @@ _SCALED_AMOUNT_DOMAIN_SHAPE: Final[tuple[str, str, str, bool, str | None]] = (
 )
 
 
-def _allowed_values_failure(field: ExportFieldDefinition) -> str | None:
-    """Return the first contradiction in a closed export value domain."""
-    allowed_values = field.allowed_values
-    if allowed_values is None:
-        return None
+def _allowed_values_declaration_failure(
+    field: ExportFieldDefinition,
+    allowed_values: tuple[str, ...],
+) -> str | None:
     if field.value_policy is not None and field.value_policy is not ExportValuePolicy.ENUMERATED_DIGITS:
         return (
             f"export field {field.id!r} allowed_values requires value_policy "
@@ -673,6 +672,13 @@ def _allowed_values_failure(field: ExportFieldDefinition) -> str | None:
             f"export field {field.id!r} allowed_values requires an unsigned right-justified "
             "left-zero-padded fixed-width integer, or the same shape scaled by a declared decimal count"
         )
+    return None
+
+
+def _allowed_values_member_failure(
+    field: ExportFieldDefinition,
+    allowed_values: tuple[str, ...],
+) -> str | None:
     length = field.length
     if length is None:
         return f"export field {field.id!r} allowed_values requires a declared length"
@@ -685,6 +691,16 @@ def _allowed_values_failure(field: ExportFieldDefinition) -> str | None:
     if invalid:
         return f"export field {field.id!r} allowed_values contains noncanonical or out-of-width entries: {invalid!r}"
     return None
+
+
+def _allowed_values_failure(field: ExportFieldDefinition) -> str | None:
+    """Return the first contradiction in a closed export value domain."""
+    allowed_values = field.allowed_values
+    if allowed_values is None:
+        return None
+    if failure := _allowed_values_declaration_failure(field, allowed_values):
+        return failure
+    return _allowed_values_member_failure(field, allowed_values)
 
 
 def _allowed_values_shape_is_invalid(field: ExportFieldDefinition) -> bool:

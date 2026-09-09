@@ -83,11 +83,9 @@ from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
 from ...domain.calculations.row_source_identity import RowBindingKey, RowSourceIdentity
-from ...domain.modelos.calculation_repository import upsert_calculation_revision
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
-    CalculationRevisionState,
     CalculationSourceIssue,
     CalculationSourceRef,
     FilingInstanceEvidence,
@@ -102,9 +100,6 @@ from ...domain.modelos.row_models import Modelo210AgrupacionRentaRow, ModeloDeta
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from ..calculations.cross_period_clean_state import (
-    cross_period_dependency_requirements as _cross_period_dependency_requirements,
-)
 from ..calculations.observations_repository import CalculationObservationRepository
 from ..filing.persistence_wiring import modelo_record_repository_for_application
 from ..inventory.service import inventory_ledger_repository_for_bucket
@@ -112,9 +107,6 @@ from ._calculation_aggregation_context import load_bucket_aggregation_context as
 from ._calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
 from ._calculation_helpers import (
     build_typed_observations as _build_typed_observations,
-)
-from ._calculation_helpers import (
-    resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit,
 )
 from ._calculation_modelo_adjustments import (
     calculated_decimal as _calculated_decimal,
@@ -137,9 +129,8 @@ from ._calculation_modelo_adjustments import (
 from ._calculation_modelo_adjustments import (
     union_detail_rows_by_identity as _union_detail_rows_by_identity,
 )
-from ._calculation_preparation import (
-    prepare_calculation as _prepare_calculation,
-)
+from ._calculation_preparation import PreparedCalculation as _PreparedCalculation
+from ._calculation_preparation import prepare_calculation as _prepare_calculation
 from ._calculation_source_staging import (
     add_expected_missing_binding_diagnostics as _add_expected_missing_binding_diagnostics,
 )
@@ -159,9 +150,7 @@ from ._registry_helpers import validate_casilla_input_ids as _validate_casilla_i
 from ._transaction_catalogue_cache import MemoizedTransactionCatalogueRepository
 from .action_errors import (
     CalculationRevisionNotFoundError,
-    CalculationRevisionStateError,
     ModeloAggregationBindingError,
-    ModeloCrossPeriodCleanStateError,
 )
 from .calculation_resolution import build_calculation_replay_payloads as _build_calculation_replay_payloads
 from .calculation_resolution import resolve_calculation_inputs as _resolve_calculation_inputs
@@ -172,7 +161,7 @@ from .calculation_route import require_calculation_route_resolver as _require_ca
 from .calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES, CALLER_OVERRIDABLE_CARRY_SOURCES
 from .m303_regimen_simplificado_scope import m303_regimen_simplificado_annual_summary_applies
 from .preconditions import build_modelo_precondition_failure
-from .revision_persistence import persist_calculation_revision, require_filing_instance_evidence_for_work_unit
+from .revision_persistence import persist_calculation_revision
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -376,6 +365,53 @@ def _draft_ledger_anchor(
     )
 
 
+def _calculation_action_repositories(
+    *,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
+) -> tuple[
+    WorkUnitCatalogueRepositoryProtocol,
+    CalculationRevisionCatalogueRepositoryProtocol,
+    BucketEventHistoryRepositoryProtocol,
+]:
+    """Resolve the repositories used by one trusted calculation action."""
+    return (
+        work_unit_repository or WorkUnitCatalogueRepository(),
+        calculation_repository or CalculationRevisionCatalogueRepository(),
+        bucket_event_repository or BucketEventHistoryRepository(),
+    )
+
+
+def _optional_mapping_as_dict[OptionalMappingKey, OptionalMappingValue](
+    value: Mapping[OptionalMappingKey, OptionalMappingValue] | None,
+) -> dict[OptionalMappingKey, OptionalMappingValue]:
+    """Materialize an optional action payload with its historical defaults."""
+    return dict(value or {})
+
+
+def _trusted_backend_casilla_inputs(
+    *,
+    prepared: _PreparedCalculation,
+    work_unit: WorkUnit,
+    revision: ModeloRevision,
+) -> dict[CasillaId, Decimal]:
+    """Combine registry-derived M131 inputs with prepared backend inputs."""
+    return {
+        **_m131_objective_estimation_data_base_inputs(
+            work_unit=work_unit,
+            revision=revision,
+            binding_values=prepared.channels.bindings,
+        ),
+        **dict(prepared.backend_casilla_inputs or dict[CasillaId, Decimal]()),
+    }
+
+
+def _trusted_calculation_clock(clock: datetime | None) -> datetime:
+    """Resolve the timestamp shared by ledger anchoring and persistence."""
+    return clock or _utc_now()
+
+
 def _calculate_modelo_revision_with_trusted_mesh_sources(
     work_unit_id: str,
     *,
@@ -466,9 +502,11 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
             Owns duplicate detection, work-unit pointer advancement, and event
             emission.
     """
-    wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
-    cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
-    bv_repo = bucket_event_repository or BucketEventHistoryRepository()
+    wu_repo, cr_repo, bv_repo = _calculation_action_repositories(
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+        bucket_event_repository=bucket_event_repository,
+    )
     prepared = _prepare_calculation(
         work_unit_id=work_unit_id,
         work_unit_repository=wu_repo,
@@ -496,15 +534,12 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     )
     _require_detail_rows_declared_for_their_owning_modelo(work_unit=work_unit, detail_rows=detail_rows)
     _validate_m210_agrupacion_renta_detail_rows(work_unit, detail_rows, m210_official_tipo_renta_code)
-    resolved_relations = dict(relation_values or {})
-    backend_casilla_inputs = {
-        **_m131_objective_estimation_data_base_inputs(
-            work_unit=work_unit,
-            revision=snapshot.revision,
-            binding_values=prepared.channels.bindings,
-        ),
-        **dict(prepared.backend_casilla_inputs or dict[CasillaId, Decimal]()),
-    }
+    resolved_relations = _optional_mapping_as_dict(relation_values)
+    backend_casilla_inputs = _trusted_backend_casilla_inputs(
+        prepared=prepared,
+        work_unit=work_unit,
+        revision=snapshot.revision,
+    )
     channel_inputs = _resolve_calculation_inputs(
         revision=snapshot.revision,
         filing_year=work_unit.filing_year,
@@ -537,7 +572,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         resolved_enum_bindings=prepared.channels.enum_bindings,
         resolved_date_bindings=prepared.channels.date_bindings,
         resolved_relations=resolved_relations,
-        resolved_row_bindings=row_binding_values or {},
+        resolved_row_bindings=_optional_mapping_as_dict(row_binding_values),
     )
     casilla_values = dict(engine_result.values)
     _require_m303_regimen_simplificado_annual_summary_arrival_values(
@@ -565,7 +600,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         observations=typed_observations,
     )
 
-    now = clock or _utc_now()
+    now = _trusted_calculation_clock(clock)
     return persist_calculation_revision(
         work_unit_id=work_unit_id,
         registry_snapshot_ref=snapshot.snapshot_ref,
@@ -581,9 +616,9 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         input_values_by_casilla_id={**replay_payloads.input_values_by_casilla_id, **resolved_text_inputs},
         binding_overrides=replay_payloads.binding_overrides,
         row_binding_values=replay_payloads.row_binding_values,
-        row_source_identities=dict(row_source_identities or {}),
-        row_casilla_values=dict(row_casilla_values or {}),
-        row_casilla_provenance=dict(row_casilla_provenance or {}),
+        row_source_identities=_optional_mapping_as_dict(row_source_identities),
+        row_casilla_values=_optional_mapping_as_dict(row_casilla_values),
+        row_casilla_provenance=_optional_mapping_as_dict(row_casilla_provenance),
         relation_overrides=replay_payloads.relation_overrides,
         casilla_values=casilla_values,
         source_transaction_ids=source_transaction_ids,
@@ -1899,118 +1934,3 @@ def _calculation_revision_in_repository_bucket(
             context={"calculation_revision_id": calculation_revision_id},
         )
     return revision, work_unit
-
-
-def mark_revision_verificado_completo(
-    calculation_revision_id: CalculationRevisionId,
-    *,
-    actor: str,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    clock: datetime | None = None,
-) -> CalculationRevision:
-    """Transition a draft revision to ``VERIFICADO_COMPLETO``.
-
-    The revision must currently be in ``BORRADOR`` state. After the
-    transition the revision is immutable; subsequent calculation
-    work on the same work unit must produce a new revision.
-
-    Args:
-        calculation_revision_id: The id of the draft revision to promote.
-        actor: Operator identifier stamped as ``verified_by``.
-        calculation_repository: Optional calculation-revision catalogue
-            repository override.
-        work_unit_repository: Optional work-unit catalogue repository
-            override used to refuse direct promotion for cross-period
-            dependency revisions.
-        clock: Optional UTC timestamp override for ``verified_at``.
-
-    Returns:
-        The updated :class:`CalculationRevision` in ``VERIFICADO_COMPLETO`` state.
-
-    Raises:
-        CalculationRevisionNotFoundError: When the revision id is
-            absent.
-        CalculationRevisionStateError: When the revision is not
-            currently in ``BORRADOR`` state.
-    """
-    cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
-    wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
-    catalogue = cr_repo.load()
-    existing, work_unit = _calculation_revision_in_repository_bucket(
-        calculation_revision_id,
-        catalogue=catalogue,
-        calculation_repository=cr_repo,
-        work_unit_repository=wu_repo,
-    )
-    if existing.state is not CalculationRevisionState.BORRADOR:
-        raise CalculationRevisionStateError(
-            translated_message="errors.error.error_modelo_calculation_revision_state",
-            context={"calculation_revision_id": calculation_revision_id, "state": existing.state.value},
-        )
-    require_filing_instance_evidence_for_work_unit(work_unit=work_unit, revision=existing)
-    if existing.source_transaction_ids:
-        # A ledger-derived revision owes a bundled evidence record pegged to its
-        # snapshot fingerprint, and that bundle is built inside verify's granted
-        # branch. This transition does not run verify, so promoting here would
-        # produce a VERIFICADO_COMPLETO revision indistinguishable from a granted
-        # one while silently skipping the evidence bundle, the ledger-drift check
-        # and the clean-state gates. Export then accepts it on the snapshot alone,
-        # which is a reference to a bundle that was never written.
-        raise CalculationRevisionStateError(
-            translated_message="errors.error.error_modelo_calculation_revision_state",
-            context={
-                "calculation_revision_id": calculation_revision_id,
-                "source_transaction_count": len(existing.source_transaction_ids),
-                "state": existing.state.value,
-            },
-        )
-    from .profile_readiness_gate import require_profile_ready_for_work_unit
-
-    require_profile_ready_for_work_unit(work_unit)
-    _refuse_direct_cross_period_verification(existing, work_unit=work_unit)
-    now = clock or _utc_now()
-    verified = existing.model_copy(
-        update={
-            "state": CalculationRevisionState.VERIFICADO_COMPLETO,
-            "verified_at": now,
-            "verified_by": actor.strip(),
-            "updated_at": now,
-        },
-    )
-    cr_repo.save(upsert_calculation_revision(catalogue, verified))
-    return verified
-
-
-def _refuse_direct_cross_period_verification(
-    revision: CalculationRevision,
-    *,
-    work_unit: WorkUnit,
-) -> None:
-    """Require the full verification pipeline for cross-period dependency revisions."""
-    snapshot = _resolve_registry_snapshot_for_work_unit(work_unit)
-    if tuple(_cross_period_dependency_requirements(snapshot)):
-        raise ModeloCrossPeriodCleanStateError(
-            translated_message="application.modelo.errors.cross_period_clean_state_incomplete",
-            context={
-                "calculation_revision_id": revision.calculation_revision_id,
-                "work_unit_id": revision.work_unit_id,
-                "modelo": work_unit.modelo,
-                "filing_year": str(work_unit.filing_year),
-                "period": work_unit.period.registry_token,
-            },
-            precondition_failure=build_modelo_precondition_failure(
-                subject_leaf_key="modelo.work.verify",
-                condition_id="modelo.work.verify.lifecycle_path.required",
-                scenario_id="modelo.work.verify.lifecycle_path.direct_cross_period_promotion_refused",
-                evidence_id="modelo.work.verify.lifecycle_path",
-                evidence_values={
-                    "calculation_revision_id": revision.calculation_revision_id,
-                    "work_unit_id": revision.work_unit_id,
-                    "modelo": str(work_unit.modelo),
-                    "year": work_unit.filing_year,
-                    "period": work_unit.period.registry_token,
-                },
-                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-            ),
-        )

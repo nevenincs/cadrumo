@@ -41,7 +41,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 if TYPE_CHECKING:
-    from ._record_design_ir import RecordDesignIntermediateSource
+    from .record_design_intermediate import RecordDesignIntermediateSource
 
 __all__ = [
     "NoteGovernedAmountDeclaration",

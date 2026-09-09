@@ -10,6 +10,7 @@ from types import SimpleNamespace
 from typing import cast, override
 
 import pytest
+from dev.tui.harness.frame import geometry_band
 from textual.containers import VerticalScroll
 from textual.widgets import DataTable, Static
 
@@ -26,7 +27,6 @@ from .....core.external_constants import OutputLanguage
 from .....core.identity import TransactionId
 from .....domain.transactions.enums import BusinessClassification
 from ....tui.components.host import ScreenHostApp
-from ....tui.devtools.frame import geometry_band
 from ..classification import LedgerClassificationScreen
 from ..controller import LedgerWorkspaceController
 from ..import_flow import LedgerImportScreen

@@ -75,12 +75,12 @@ from ..pipeline._provenance_manifest import (
 )
 from ..pipeline._tree_check import GeneratedExportTreeCheckContext, check_generated_export_tree
 from ..pipeline._tree_validation import GeneratedExportTreeValidationContext
+from ..pipeline.candidate_staging import stage_continuity_metadata
 from ..pipeline.render_check import parsed_tree_file
 from .test_generated_export_trees import (
     _GENERATED_TREES,
     _authorities,
     _isolated_authority,
-    _stage_continuity_metadata,
     _supporting_modelos,
 )
 
@@ -116,7 +116,7 @@ def _render_isolated_tree(tree, root: Path):
     assert not root.exists()
     semantic_map, render_profile, joined, evidence, transport = _authorities(tree)
     registry_root = _isolated_authority(tree, root)
-    continuity_metadata_modelo_root = _stage_continuity_metadata(tree, root)
+    continuity_metadata_modelo_root = stage_continuity_metadata(tree, root)
     export_root = registry_root / "modelos" / tree.modelo / "revisions" / tree.revision / "export"
     render_complete_export_tree(
         export_root,
@@ -461,7 +461,7 @@ def test_m303_2026_publication_is_twice_reproducible_and_check_mode_is_non_mutat
 
         check_root = temp_path / "check"
         check_registry_root = _isolated_authority(tree, check_root)
-        metadata_root = _stage_continuity_metadata(tree, check_root)
+        metadata_root = stage_continuity_metadata(tree, check_root)
         published_modelo_root = check_root / "published-registry" / "aeat" / "modelos" / tree.modelo
         shutil.copytree(bundled_path("registry", "aeat", "modelos", tree.modelo), published_modelo_root)
         for sibling in (published_modelo_root / "revisions").iterdir():

@@ -15,6 +15,7 @@ from types import SimpleNamespace
 from typing import TYPE_CHECKING, cast
 
 import pytest
+from dev.tui.harness.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from textual.screen import Screen
 
 from ....application.search.installed_workbench import (
@@ -30,7 +31,6 @@ from ....core.i18n.render import tr
 from ..__main__ import run
 from ..account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
 from ..app import CadrumoTuiApp
-from ..devtools.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from ..launcher import (
     InstalledWorkbenchRootInputsV1,
     compose_installed_workbench_root,

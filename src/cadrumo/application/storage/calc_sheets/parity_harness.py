@@ -71,7 +71,8 @@ from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_surfaces import RelationDefinition
 from ....domain.period import calculation_filing_date
-from ._parity_comparison import CasillaParity, collect_parity_rows, resolve_parity_verdict
+from ._parity_comparison import collect_parity_rows, resolve_parity_verdict
+from .casilla_parity import CasillaParity
 from .engine import build_export_plan
 from .errors import CalcSheetsParityError
 from .layout import plan_layout

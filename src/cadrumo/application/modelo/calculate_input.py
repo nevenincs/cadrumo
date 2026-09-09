@@ -38,7 +38,6 @@ from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogue
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
 from ...core.decimal.grammar import try_parse_canonical_decimal
-from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import M347_THRESHOLD_EUR
 from ...core.irnr import (
     FETCH_GATED_M210_TIPO_RENTA_CODES,
@@ -48,7 +47,6 @@ from ...core.irnr import (
 from ...core.modelo import Modelo
 from ...core.rescate_type import RescateType
 from ...core.resources.bundled_data import bundled_path
-from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.binding_selector_utils import boolean_binding_encoded_values
 from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
@@ -268,18 +266,6 @@ class Modelo202ModalitySummary:
 
 
 @dataclass(frozen=True, slots=True)
-class ModeloAuthorizationAdvisorySummary:
-    """Application summary for an unauthorized-but-computable modelo.
-
-    A modelo can have a local registry engine while still being marked as not
-    authorised for filing. The calculate command keeps the computation path
-    available and carries this advisory for the rendering layer.
-    """
-
-    state: str
-
-
-@dataclass(frozen=True, slots=True)
 class ModeloWorkCalculationServiceResult:
     """Application-owned result for one `modelo work calculate` command.
 
@@ -304,7 +290,6 @@ class ModeloWorkCalculationServiceResult:
     revision: CalculationRevision
     work_unit: WorkUnit
     modality: Modelo202ModalitySummary | None = None
-    authorization_advisory: ModeloAuthorizationAdvisorySummary | None = None
     source_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
     plazo_resolutions: tuple[M210PlazoResolution, ...] = ()
 
@@ -368,7 +353,6 @@ def calculate_modelo_work_revision(
         revision=revision,
         work_unit=work_unit,
         modality=modelo_202_modality_for_work_unit(work_unit),
-        authorization_advisory=authorization_advisory_for_modelo(str(work_unit.modelo)),
         source_diagnostics=(*inputs.shortcut_diagnostics, *calculation.source_diagnostics),
         plazo_resolutions=plazo_resolutions,
     )
@@ -1143,26 +1127,6 @@ def modelo_202_modality_for_work_unit(work_unit: WorkUnit) -> Modelo202ModalityS
     return Modelo202ModalitySummary(modality=verdict.modality.value, reason=verdict.reason)
 
 
-def authorization_advisory_for_modelo(modelo: str) -> ModeloAuthorizationAdvisorySummary | None:
-    """Return a :class:`ModeloAuthorizationAdvisorySummary` for an unauthorized-but-computable modelo.
-
-    Authorized modelos and modelos without a local calculation engine return
-    ``None``. Unauthorized modelos with an engine return the registry
-    authorization state for non-blocking CLI disclosure.
-    """
-    from ...core.access_gate.authorization import AuthorizationState
-
-    try:
-        capability = bundled_authority().authorization(modelo.strip())
-    except CadrumoError:
-        return None
-    if capability.state is AuthorizationState.AUTHORIZED:
-        return None
-    if not capability.has_engine:
-        return None
-    return ModeloAuthorizationAdvisorySummary(state=capability.state.value)
-
-
 def _supplied_option_group(
     values: tuple[Decimal | None, ...],
     *,
@@ -1510,7 +1474,6 @@ validated_binding_input_channel = _validated_binding_input_channel
 
 __all__ = [
     "Modelo202ModalitySummary",
-    "ModeloAuthorizationAdvisorySummary",
     "ModeloCalculateCasillaInputError",
     "ModeloCalculateDecimalInputError",
     "ModeloCalculateDetailRowsError",
@@ -1522,7 +1485,6 @@ __all__ = [
     "ModeloWorkCalculationServiceResult",
     "WorkCalculateInputBundle",
     "apply_calculation_shortcut_inputs",
-    "authorization_advisory_for_modelo",
     "build_work_calculate_input_bundle",
     "calculate_modelo_work_revision",
     "is_detail_casilla_override_key",

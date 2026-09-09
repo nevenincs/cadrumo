@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import re
-import unicodedata
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Final
 
 from pydantic import ValidationError
+
+from ....core.text_fold import fold_diacritics
 
 if TYPE_CHECKING:
     from openpyxl.worksheet.worksheet import Worksheet
@@ -483,7 +484,7 @@ _DECLARED_SUBDIVISION: Final = re.compile(
 def declared_subdivision_count(field: RecordDesignField) -> int | None:
     """Return how many sub-fields ``field`` says it divides into, else ``None``."""
     text = f"{field.description or ''} {field.content or ''}"
-    normalised = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
+    normalised = fold_diacritics(text).encode("ascii", "ignore").decode("ascii")
     match = _DECLARED_SUBDIVISION.search(normalised)
     if match is None:
         return None

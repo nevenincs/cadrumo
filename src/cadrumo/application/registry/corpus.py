@@ -64,6 +64,12 @@ _ProjectionText = Annotated[str, StringConstraints(strip_whitespace=True, min_le
 _ProjectionDateText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=10)]
 
 
+class _RegistryCorpusModel(BaseModel):
+    """Shared immutable configuration for the registry corpus contracts."""
+
+    model_config = _STRICT_FROZEN
+
+
 class RegistryManualId(StrEnum):
     """Manual identifiers approved for the registry manual operator surface.
 
@@ -75,15 +81,13 @@ class RegistryManualId(StrEnum):
     IVA = "iva"
 
 
-class RegistryTopicProjection(BaseModel):
+class RegistryTopicProjection(_RegistryCorpusModel):
     """Resolved :class:`Topic` content exposed by registry corpus services.
 
     Topic projections attach localized explanatory text and related legal refs
     to citation and manual reports without widening those report contracts to
     the full :class:`TopicCatalogue`.
     """
-
-    model_config = _STRICT_FROZEN
 
     slug: _ProjectionText
     title: _ProjectionText
@@ -92,15 +96,13 @@ class RegistryTopicProjection(BaseModel):
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
 
 
-class RegistryCitationReferenceProjection(BaseModel):
+class RegistryCitationReferenceProjection(_RegistryCorpusModel):
     """One legal document row in the registry citations surface.
 
     The row is derived from reviewed registry :class:`LegalReference` entries
     grouped by document id, preserving the document id for article lookup and
     topic cross-linking.
     """
-
-    model_config = _STRICT_FROZEN
 
     id: _ProjectionText
     kind: _ProjectionText
@@ -115,14 +117,12 @@ class RegistryCitationReferenceProjection(BaseModel):
     topic_slugs: tuple[_ProjectionText, ...] = ()
 
 
-class RegistryCitationArticleProjection(BaseModel):
+class RegistryCitationArticleProjection(_RegistryCorpusModel):
     """One cited article projection in the registry citations surface.
 
     Built from the current reviewed registry :class:`LegalReference` entry and
     its bundled authoritative corpus permalink.
     """
-
-    model_config = _STRICT_FROZEN
 
     numero: _ProjectionText
     titulo: _ProjectionText
@@ -131,32 +131,26 @@ class RegistryCitationArticleProjection(BaseModel):
     cite: _ProjectionText
 
 
-class RegistryCitationsListCommand(BaseModel):
+class RegistryCitationsListCommand(_RegistryCorpusModel):
     """Application command for listing registry citations."""
-
-    model_config = _STRICT_FROZEN
 
     tag: str | None = None
 
 
-class RegistryCitationShowCommand(BaseModel):
+class RegistryCitationShowCommand(_RegistryCorpusModel):
     """Application command for showing one registry citation."""
-
-    model_config = _STRICT_FROZEN
 
     legal_id: str = Field(min_length=1)
     articulo: str | None = None
 
 
-class RegistryCitationsListReport(BaseModel):
+class RegistryCitationsListReport(_RegistryCorpusModel):
     """Typed report for registry citation listing.
 
     Carries rendered :class:`RegistryTopicProjection` rows and
     :class:`RegistryCitationReferenceProjection` rows from the reviewed legal
     catalogue.
     """
-
-    model_config = _STRICT_FROZEN
 
     operation: str = "registry.citations.list"
     reference_count: NonNegativeInt
@@ -166,14 +160,12 @@ class RegistryCitationsListReport(BaseModel):
     references: tuple[RegistryCitationReferenceProjection, ...] = ()
 
 
-class RegistryCitationShowReport(BaseModel):
+class RegistryCitationShowReport(_RegistryCorpusModel):
     """Typed report for a single registry citation lookup.
 
     Carries one :class:`RegistryCitationReferenceProjection`, optional
     article detail, and related :class:`RegistryTopicProjection` rows.
     """
-
-    model_config = _STRICT_FROZEN
 
     operation: str = "registry.citations.show"
     reference: RegistryCitationReferenceProjection
@@ -181,7 +173,7 @@ class RegistryCitationShowReport(BaseModel):
     related_topics: tuple[RegistryTopicProjection, ...] = ()
 
 
-class RegistryCorpusIssueProjection(BaseModel):
+class RegistryCorpusIssueProjection(_RegistryCorpusModel):
     """Normalized issue row for registry corpus verification reports.
 
     Used by citation verification and manual verification so CLI payloads carry
@@ -191,18 +183,14 @@ class RegistryCorpusIssueProjection(BaseModel):
     validation issue in the project.
     """
 
-    model_config = _STRICT_FROZEN
-
     level: BaseSeverity
     code: str = Field(min_length=1)
     message: str = Field(min_length=1)
     reference_id: str | None = None
 
 
-class RegistryCitationsVerificationReport(BaseModel):
+class RegistryCitationsVerificationReport(_RegistryCorpusModel):
     """Typed report for registry citation corpus verification."""
-
-    model_config = _STRICT_FROZEN
 
     operation: str = "registry.citations.verify"
     reference_count: NonNegativeInt
@@ -213,10 +201,8 @@ class RegistryCitationsVerificationReport(BaseModel):
     topics: tuple[RegistryTopicProjection, ...] = ()
 
 
-class RegistryManualPartProjection(BaseModel):
+class RegistryManualPartProjection(_RegistryCorpusModel):
     """One discovered local :class:`ManualPart` row."""
-
-    model_config = _STRICT_FROZEN
 
     manual_id: str = Field(min_length=1)
     year: int = Field(ge=2000, le=2100)
@@ -224,19 +210,15 @@ class RegistryManualPartProjection(BaseModel):
     root: str = Field(min_length=1)
 
 
-class RegistryManualsListCommand(BaseModel):
+class RegistryManualsListCommand(_RegistryCorpusModel):
     """Application command for listing registry manuals."""
-
-    model_config = _STRICT_FROZEN
 
     manual: RegistryManualId | None = None
     year: int | None = Field(default=None, ge=2000, le=2100)
 
 
-class RegistryManualShowCommand(BaseModel):
+class RegistryManualShowCommand(_RegistryCorpusModel):
     """Application command for showing one registry manual."""
-
-    model_config = _STRICT_FROZEN
 
     manual: RegistryManualId
     year: int = Field(ge=2000, le=2100)
@@ -244,10 +226,8 @@ class RegistryManualShowCommand(BaseModel):
     section: str | None = None
 
 
-class RegistryManualRulesCommand(BaseModel):
+class RegistryManualRulesCommand(_RegistryCorpusModel):
     """Application command for listing registry manual rules."""
-
-    model_config = _STRICT_FROZEN
 
     manual: RegistryManualId
     year: int = Field(ge=2000, le=2100)
@@ -255,24 +235,20 @@ class RegistryManualRulesCommand(BaseModel):
     kind: str | None = None
 
 
-class RegistryManualVerifyCommand(BaseModel):
+class RegistryManualVerifyCommand(_RegistryCorpusModel):
     """Application command for verifying one registry manual part."""
-
-    model_config = _STRICT_FROZEN
 
     manual: RegistryManualId
     year: int = Field(ge=2000, le=2100)
     part: ManualPart = ManualPart.SINGLE
 
 
-class RegistryManualsListReport(BaseModel):
+class RegistryManualsListReport(_RegistryCorpusModel):
     """Typed report for registry manual listing.
 
     Carries discovered :class:`RegistryManualPartProjection` rows plus
     topic projections shared with the citation surfaces.
     """
-
-    model_config = _STRICT_FROZEN
 
     operation: str = "registry.manuals.list"
     manual_filter: str | None = None
@@ -283,10 +259,8 @@ class RegistryManualsListReport(BaseModel):
     topics: tuple[RegistryTopicProjection, ...] = ()
 
 
-class RegistryManualSectionProjection(BaseModel):
+class RegistryManualSectionProjection(_RegistryCorpusModel):
     """One extracted manual section projection."""
-
-    model_config = _STRICT_FROZEN
 
     section_id: str = Field(min_length=1)
     title: str = Field(min_length=1)
@@ -294,14 +268,12 @@ class RegistryManualSectionProjection(BaseModel):
     paragraph_count: NonNegativeInt
 
 
-class RegistryManualShowReport(BaseModel):
+class RegistryManualShowReport(_RegistryCorpusModel):
     """Typed report for one manual lookup.
 
     When extracted structure is absent, manifest metadata still populates the
     report with ``structure_available=False`` and zero section/chapter counts.
     """
-
-    model_config = _STRICT_FROZEN
 
     operation: str = "registry.manuals.show"
     manual_id: str = Field(min_length=1)
@@ -317,7 +289,7 @@ class RegistryManualShowReport(BaseModel):
     topics: tuple[RegistryTopicProjection, ...] = ()
 
 
-class RegistryManualRuleProjection(BaseModel):
+class RegistryManualRuleProjection(_RegistryCorpusModel):
     """One manual rule projection.
 
     ``references_casillas`` preserves typed :class:`ManualCasillaReference`
@@ -325,23 +297,19 @@ class RegistryManualRuleProjection(BaseModel):
     :class:`ValidatedRegistryAuthority`.
     """
 
-    model_config = _STRICT_FROZEN
-
     rule_id: str = Field(min_length=1)
     kind: str = Field(min_length=1)
     section_id: str = Field(min_length=1)
     references_casillas: tuple[ManualCasillaReference, ...] = ()
 
 
-class RegistryManualRulesReport(BaseModel):
+class RegistryManualRulesReport(_RegistryCorpusModel):
     """Typed report for manual rule listing.
 
     Projects manual rules into :class:`RegistryManualRuleProjection`
     rows while preserving typed :class:`ManualCasillaReference`
     references for registry cross-checking.
     """
-
-    model_config = _STRICT_FROZEN
 
     operation: str = "registry.manuals.rules"
     manual_id: str = Field(min_length=1)
@@ -355,15 +323,13 @@ class RegistryManualRulesReport(BaseModel):
     topics: tuple[RegistryTopicProjection, ...] = ()
 
 
-class RegistryManualVerificationReport(BaseModel):
+class RegistryManualVerificationReport(_RegistryCorpusModel):
     """Typed report for manual corpus verification.
 
     Summarizes a :class:`ManualVerificationReport` as normalized
     :class:`RegistryCorpusIssueProjection` rows for the application
     surface.
     """
-
-    model_config = _STRICT_FROZEN
 
     operation: str = "registry.manuals.verify"
     manual_id: str = Field(min_length=1)
@@ -931,48 +897,19 @@ def _legal_reference_sort_key(reference: LegalReference) -> tuple[str, str]:
     return (_legal_article_number(reference), reference.id)
 
 
-def _legal_number_for_simple_prefix(parts: list[str]) -> str | None:
-    """Resolve the compact number used by a directly-prefixed legal id."""
-    if len(parts) >= 3 and parts[0] in {"ley", "rd", "rdl", "rdleg"}:
-        return f"{parts[-2]}/{parts[-1]}"
-    return None
-
-
-def _legal_number_for_embedded_rdleg(parts: list[str]) -> str | None:
-    """Resolve the number embedded after a ``rdleg`` legal-id segment."""
-    if "rdleg" not in parts:
-        return None
-    rdleg_index = parts.index("rdleg")
-    if len(parts) <= rdleg_index + 2:
-        return None
-    return f"{parts[rdleg_index + 1]}/{parts[rdleg_index + 2]}"
-
-
-def _legal_number_for_real_decreto_ley(parts: list[str]) -> str | None:
-    """Resolve the number used by a ``real-decreto-ley`` legal id."""
-    if len(parts) < 4 or parts[:3] != ["real", "decreto", "ley"]:
-        return None
-    return f"{parts[-2]}/{parts[-1]}"
-
-
-def _legal_number_for_orden(parts: list[str]) -> str | None:
-    """Resolve the ministry/year number used by an ``orden`` legal id."""
-    if len(parts) < 4 or parts[0] != "orden" or not parts[1].isalpha():
-        return None
-    return f"{parts[1].upper()}/{parts[-2]}/{parts[-1]}"
-
-
 def _legal_document_number(document_id: str) -> str:
     """Return the human-facing number encoded by a canonical legal id."""
     parts = document_id.split("-")
-    for candidate in (
-        _legal_number_for_simple_prefix(parts),
-        _legal_number_for_embedded_rdleg(parts),
-        _legal_number_for_real_decreto_ley(parts),
-        _legal_number_for_orden(parts),
-    ):
-        if candidate is not None:
-            return candidate
+    if len(parts) >= 3 and parts[0] in {"ley", "rd", "rdl", "rdleg"}:
+        return f"{parts[-2]}/{parts[-1]}"
+    if "rdleg" in parts:
+        rdleg_index = parts.index("rdleg")
+        if len(parts) > rdleg_index + 2:
+            return f"{parts[rdleg_index + 1]}/{parts[rdleg_index + 2]}"
+    if len(parts) >= 4 and parts[:3] == ["real", "decreto", "ley"]:
+        return f"{parts[-2]}/{parts[-1]}"
+    if len(parts) >= 4 and parts[0] == "orden" and parts[1].isalpha():
+        return f"{parts[1].upper()}/{parts[-2]}/{parts[-1]}"
     return document_id
 
 
@@ -1027,12 +964,7 @@ def _topics_for_legal_references(
     return tuple(
         topic
         for topic in topics
-        if any(
-            legal_ref in refs
-            or legal_ref in document_ids
-            or any(legal_ref.startswith(f"{document_id}:") for document_id in document_ids)
-            for legal_ref in topic.legal_refs
-        )
+        if any(legal_ref in refs or legal_ref.partition(":")[0] in document_ids for legal_ref in topic.legal_refs)
     )
 
 
@@ -1077,14 +1009,9 @@ def _topic_mentions_reference(
     reference_id: str,
     articulo: str | None,
 ) -> bool:
-    reference_prefix = f"{reference_id}:"
-    article_ref = _legal_ref_id_for_article(reference_id, articulo) if articulo is not None else None
-    for legal_ref in topic.legal_refs:
-        if (legal_ref == reference_id or legal_ref.startswith(reference_prefix)) and (
-            article_ref is None or legal_ref == article_ref
-        ):
-            return True
-    return False
+    if articulo is not None:
+        return _legal_ref_id_for_article(reference_id, articulo) in topic.legal_refs
+    return any(legal_ref.partition(":")[0] == reference_id for legal_ref in topic.legal_refs)
 
 
 def _legal_validation_issue_projections(error: RegistryValidationError) -> tuple[RegistryCorpusIssueProjection, ...]:

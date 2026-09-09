@@ -37,7 +37,13 @@ from ...application.workflow.resume import (
     resolve_modelo_workflow_resume_target,
     resume_modelo_workflow,
 )
-from ...application.workflow.run_models import SiteHealthAlert, WorkflowResult, WorkflowStage, WorkflowStepDetails
+from ...application.workflow.run_models import (
+    SiteHealthAlert,
+    WorkflowObligationFacts,
+    WorkflowResult,
+    WorkflowStage,
+    WorkflowStepDetails,
+)
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.json_contract import ResolvedPreconditionAction
@@ -225,6 +231,33 @@ def work_run_details(
     emit_envelope(ctx, command="modelo.work.run_details", result=result, lines=lines)
 
 
+def _workflow_run_obligation_fields(
+    obligation: WorkflowObligationFacts | None,
+) -> tuple[str | None, str | None, str | None]:
+    return (
+        (obligation.opens_on.isoformat(), obligation.closes_on.isoformat(), obligation.status.value)
+        if obligation is not None
+        else (None, None, None)
+    )
+
+
+def _workflow_run_health_fields(
+    health: SiteHealthAlert | None,
+) -> tuple[str | None, str | None, str | None, int | None, int | None, int | None]:
+    return (
+        (
+            health.stage.value,
+            health.status.state.value,
+            health.status.observed_at.isoformat(),
+            health.status.http_status,
+            health.status.retry_after_seconds,
+            health.status.detected_marker_count,
+        )
+        if health is not None
+        else (None, None, None, None, None, None)
+    )
+
+
 def work_run(
     ctx: typer.Context,
     run_id: str,
@@ -237,9 +270,19 @@ def work_run(
     except WorkflowError as exc:
         raise bad_parameter_from_error(exc) from exc
     payload = _workflow_run_payload(run)
-    obligation = run.obligation
-    health = payload.site_health_alert
-    health_status = health.status if health is not None else None
+    (
+        obligation_opens_on,
+        obligation_closes_on,
+        obligation_status,
+    ) = _workflow_run_obligation_fields(run.obligation)
+    (
+        site_health_stage,
+        site_health_state,
+        site_health_observed_at,
+        site_health_http_status,
+        site_health_retry_after_seconds,
+        site_health_detected_marker_count,
+    ) = _workflow_run_health_fields(payload.site_health_alert)
     result = WorkRunResult(
         run_id=payload.run_id,
         modelo=payload.modelo,
@@ -247,17 +290,17 @@ def work_run(
         final_stage=payload.final_stage,
         aborted_reason=payload.aborted_reason,
         started_at=payload.started_at,
-        obligation_opens_on=obligation.opens_on.isoformat() if obligation is not None else None,
-        obligation_closes_on=obligation.closes_on.isoformat() if obligation is not None else None,
-        obligation_status=obligation.status.value if obligation is not None else None,
+        obligation_opens_on=obligation_opens_on,
+        obligation_closes_on=obligation_closes_on,
+        obligation_status=obligation_status,
         summary_stage=payload.summary_stage,
         summary_locale_key=payload.summary_locale_key,
-        site_health_stage=health.stage.value if health is not None else None,
-        site_health_state=health_status.state.value if health_status is not None else None,
-        site_health_observed_at=health_status.observed_at.isoformat() if health_status is not None else None,
-        site_health_http_status=health_status.http_status if health_status is not None else None,
-        site_health_retry_after_seconds=health_status.retry_after_seconds if health_status is not None else None,
-        site_health_detected_marker_count=health_status.detected_marker_count if health_status is not None else None,
+        site_health_stage=site_health_stage,
+        site_health_state=site_health_state,
+        site_health_observed_at=site_health_observed_at,
+        site_health_http_status=site_health_http_status,
+        site_health_retry_after_seconds=site_health_retry_after_seconds,
+        site_health_detected_marker_count=site_health_detected_marker_count,
         summary=payload.summary,
         action=payload.action,
     )

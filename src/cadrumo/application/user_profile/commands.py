@@ -7,26 +7,21 @@ records together makes their validation dependency explicit without making the
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Annotated, Self
 
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.errors.severity import BaseSeverity as _BaseSeverity
 from ...core.filing_year import FilingYear
-from ...core.hex import Hex64Str
 from ...core.identity import ProfileId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.prose_elision import ElidedProse
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.user_profile.values import UserProfileFact
 
 __all__ = [
     "ProfilePreflightReport",
     "ProfilePreflightRequirement",
-    "ProfileSnapshot",
-    "ProfileStaleCheckReport",
     "ProfileValidationIssue",
     "ProfileValidationReport",
 ]
@@ -105,46 +100,6 @@ class ProfilePreflightReport(BaseModel):
         if self.period.filing_year != self.filing_year:
             raise ValueError("filing_year must match period.filing_year")
         return self
-
-
-# ---------------------------------------------------------------------------
-# Filing snapshots
-# ---------------------------------------------------------------------------
-
-
-class ProfileSnapshot(BaseModel):
-    """Immutable filing-time snapshot of one profile's projection."""
-
-    model_config = _STRICT_FROZEN
-
-    snapshot_id: str = Field(min_length=1, max_length=128)
-    profile_id: ProfileId
-    schema_version: int = Field(ge=1)
-    modelo: str = Field(min_length=1, max_length=16)
-    revision_id: RevisionId = Field(min_length=1, max_length=64)
-    filing_year: FilingYear
-    period: Period
-    canonical_hash: Hex64Str
-    created_at: datetime
-    facts: tuple[UserProfileFact, ...]
-
-    @model_validator(mode="after")
-    def _period_matches_filing_year(self) -> Self:
-        if self.period.filing_year != self.filing_year:
-            raise ValueError("filing_year must match period.filing_year")
-        return self
-
-
-class ProfileStaleCheckReport(BaseModel):
-    """Result of checking a draft's stored snapshot against the current projection."""
-
-    model_config = _STRICT_FROZEN
-
-    snapshot_id: str = Field(min_length=1, max_length=128)
-    profile_id: ProfileId
-    stored_hash: Hex64Str
-    current_hash: Hex64Str
-    stale: bool
 
 
 # ---------------------------------------------------------------------------

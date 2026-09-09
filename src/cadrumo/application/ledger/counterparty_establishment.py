@@ -416,6 +416,64 @@ def _repository(
     return ConfirmedCounterpartyFactsRepository(bucket_id=bucket_id)
 
 
+def _raise_scope_conflict(
+    existing: ConfirmedCounterpartyFacts,
+    asserted: ConfirmedCounterpartyFacts,
+) -> None:
+    """Refuse replacing an already-confirmed territorial scope."""
+    existing_scope = existing.territorial_scope
+    asserted_scope = asserted.territorial_scope
+    if existing_scope is None or asserted_scope is None or existing_scope is asserted_scope:
+        return
+    raise CounterpartyEstablishmentConflictError(
+        translated_message="errors.refused.refused_ledger_counterparty_establishment_conflict",
+        context={
+            "canonical_tax_identifier": existing.canonical_tax_identifier,
+            "confirmed_scope": existing_scope.value,
+            "asserted_scope": asserted_scope.value,
+        },
+    )
+
+
+def _raise_identification_conflict(
+    existing: ConfirmedCounterpartyFacts,
+    asserted: ConfirmedCounterpartyFacts,
+) -> None:
+    """Refuse replacing an already-confirmed IVA identification state."""
+    existing_state = existing.identification_state
+    asserted_state = asserted.identification_state
+    if existing_state is None or asserted_state is None or existing_state is asserted_state:
+        return
+    raise CounterpartyEstablishmentConflictError(
+        translated_message="errors.refused.refused_ledger_counterparty_establishment_conflict",
+        context={
+            "canonical_tax_identifier": existing.canonical_tax_identifier,
+            "confirmed_identification_state": existing_state.value,
+            "asserted_identification_state": asserted_state.value,
+        },
+    )
+
+
+def _merge_confirmed_counterparty_facts(
+    repository: ConfirmedCounterpartyFactsRepository,
+    *,
+    existing: ConfirmedCounterpartyFacts,
+    asserted: ConfirmedCounterpartyFacts,
+) -> ConfirmedCounterpartyFacts:
+    """Apply one non-conflicting assertion while retaining stored answers."""
+    _raise_scope_conflict(existing, asserted)
+    _raise_identification_conflict(existing, asserted)
+    added_identification = asserted.identification_state is not None and existing.identification_state is None
+    if existing.note == asserted.note and not added_identification:
+        return existing
+    update: dict[str, object] = {"note": asserted.note}
+    if added_identification:
+        update["identification_state"] = asserted.identification_state
+    corrected = existing.model_copy(update=update)
+    repository.save(corrected)
+    return corrected
+
+
 def record_confirmed_counterparty_facts(
     *,
     bucket_id: str,
@@ -484,51 +542,7 @@ def record_confirmed_counterparty_facts(
     repo = _repository(bucket_id=bucket_id, repository=repository)
     existing = repo.load(fact.counterparty_key)
     if existing is not None:
-        # Compared only where BOTH answers exist. A stored territory the new
-        # assertion leaves open is not a disagreement -- it is a narrower
-        # assertion, and refusing it would make an operator answering the
-        # identification alone unable to do so for any counterparty already
-        # confirmed. An assertion that CHANGES a stored territory still refuses.
-        if (
-            existing.territorial_scope is not None
-            and fact.territorial_scope is not None
-            and existing.territorial_scope is not fact.territorial_scope
-        ):
-            raise CounterpartyEstablishmentConflictError(
-                translated_message="errors.refused.refused_ledger_counterparty_establishment_conflict",
-                context={
-                    "canonical_tax_identifier": existing.canonical_tax_identifier,
-                    "confirmed_scope": existing.territorial_scope.value,
-                    "asserted_scope": fact.territorial_scope.value,
-                },
-            )
-        if (
-            fact.identification_state is not None
-            and existing.identification_state is not None
-            and existing.identification_state is not fact.identification_state
-        ):
-            raise CounterpartyEstablishmentConflictError(
-                translated_message="errors.refused.refused_ledger_counterparty_establishment_conflict",
-                context={
-                    "canonical_tax_identifier": existing.canonical_tax_identifier,
-                    "confirmed_identification_state": existing.identification_state.value,
-                    "asserted_identification_state": fact.identification_state.value,
-                },
-            )
-        # An identification arriving where none was stored ANSWERS a question
-        # rather than replacing an answer, so it is written through. A call that
-        # supplies none leaves the stored one standing: `None` is an unasked
-        # question, and treating it as an answer would let a retry that only
-        # meant to correct a note silently withdraw the registration fact.
-        added_identification = fact.identification_state is not None and existing.identification_state is None
-        if existing.note == fact.note and not added_identification:
-            return existing
-        update: dict[str, object] = {"note": fact.note}
-        if added_identification:
-            update["identification_state"] = fact.identification_state
-        corrected = existing.model_copy(update=update)
-        repo.save(corrected)
-        return corrected
+        return _merge_confirmed_counterparty_facts(repo, existing=existing, asserted=fact)
     repo.save(fact)
     return fact
 

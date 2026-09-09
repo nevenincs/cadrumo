@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import ast
 import re
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Iterable, Mapping
 from functools import cache
 from pathlib import Path
 from typing import Final
@@ -20,7 +20,6 @@ REPO_ROOT: Path = SRC_CADRUMO.parents[1]
 FIXTURES_DIR: Path = SRC_CADRUMO / "tests" / "fixtures"
 """Bundled fixture tree excluded from production-test ratchets."""
 
-CAST_RATIONALE_MARKER = "CAST-RATIONALE-"
 """Marker prefix required next to production ``cast()`` escape hatches."""
 
 _TEST_MODULE_GLOBS: tuple[str, ...] = ("**/test_*.py", "**/_test_*.py")
@@ -472,56 +471,6 @@ def resolve_dotted_origin(name: str, bindings: Mapping[str, str]) -> str:
     if origin is None:
         return name
     return f"{origin}.{tail}" if tail else origin
-
-
-def has_marker_on_line_or_adjacent_comment_block(lines: Sequence[str], lineno: int, marker: str) -> bool:
-    """Return True when *marker* appears on *lineno* or its leading comment block."""
-    idx = lineno - 1
-    if idx < 0 or idx >= len(lines):
-        return False
-    if marker in lines[idx]:
-        return True
-
-    scan = idx - 1
-    while scan >= 0:
-        candidate = lines[scan]
-        if marker in candidate:
-            return True
-        stripped = candidate.strip()
-        if stripped == "" or stripped.startswith("#"):
-            scan -= 1
-            continue
-        break
-    return False
-
-
-def cast_call_linenos(tree: ast.AST) -> Iterator[int]:
-    """Yield line numbers of real ``cast()``, ``typing.cast()``, and ``t.cast()`` calls."""
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Call):
-            continue
-        func = node.func
-        if (isinstance(func, ast.Name) and func.id == "cast") or (
-            isinstance(func, ast.Attribute)
-            and func.attr == "cast"
-            and isinstance(func.value, ast.Name)
-            and func.value.id in {"typing", "t"}
-        ):
-            yield node.lineno
-
-
-def cast_rationale_violations(source_tree_ast: Mapping[Path, ast.AST] | None = None) -> list[str]:
-    """Return production ``cast()`` sites without an adjacent CAST-RATIONALE marker."""
-    violations: list[str] = []
-    for path, tree in production_ast_items(source_tree_ast):
-        try:
-            lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
-        except OSError:
-            continue
-        for lineno in cast_call_linenos(tree):
-            if not has_marker_on_line_or_adjacent_comment_block(lines, lineno, CAST_RATIONALE_MARKER):
-                violations.append(f"{repo_relative(path)}:{lineno}")
-    return violations
 
 
 def regex_line_hits(

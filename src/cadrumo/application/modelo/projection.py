@@ -817,7 +817,8 @@ def _comparison_year_pair(years: Iterable[int]) -> tuple[int, int]:
     requested_years = list(years)
     if len(requested_years) != 2:
         raise ModeloCompareNeedTwoYearsError(translated_message="cli.app.modelo.compare.need_two_years")
-    return tuple(sorted(requested_years))  # type: ignore[return-value]
+    year_a, year_b = sorted(requested_years)
+    return year_a, year_b
 
 
 def _comparison_static_revisions(

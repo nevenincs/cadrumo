@@ -34,10 +34,12 @@ from ._provenance_manifest import ExportFragmentTarget
 from ._record_design_ir import (
     RecordDesignIntermediate,
     RecordDesignIntermediateAuxiliaryEnvelopeHeader,
+)
+from ._variable_envelope import AUXILIARY_TO_PREFIX_ROLE
+from .record_design_intermediate import (
     RecordDesignIntermediateField,
     RecordDesignIntermediateSource,
 )
-from ._variable_envelope import AUXILIARY_TO_PREFIX_ROLE
 
 __all__ = [
     "M390_AUXILIARY_ENVELOPE_TARGETS",

@@ -7,8 +7,8 @@ import os
 import subprocess
 import sys
 import tempfile
-from collections.abc import Sequence
-from contextlib import suppress
+from collections.abc import Iterator, Sequence
+from contextlib import contextmanager, suppress
 from pathlib import Path
 from textwrap import dedent
 from typing import Any
@@ -263,6 +263,83 @@ def _settings(storage_root: Path, *, output_language: str = "en") -> dict[str, o
     }
 
 
+@contextmanager
+def _payload_channels(inherited_payloads: Sequence[str | bytes]) -> Iterator[list[int]]:
+    """Expose readable payload descriptors and always close their transport files."""
+    readers: list[int] = []
+    writers: list[int] = []
+    temporary_paths: list[str] = []
+    try:
+        for payload in inherited_payloads:
+            encoded = payload if isinstance(payload, bytes) else payload.encode("utf-8")
+            if len(encoded) > 4096:
+                reader, path = tempfile.mkstemp(prefix="cadrumo-s14-secret-")
+                temporary_paths.append(path)
+                os.write(reader, encoded)
+                os.lseek(reader, 0, os.SEEK_SET)
+                readers.append(reader)
+                continue
+            reader, writer = os.pipe()
+            readers.append(reader)
+            writers.append(writer)
+            os.write(writer, encoded)
+            os.close(writer)
+            writers.remove(writer)
+        yield readers
+    finally:
+        for descriptor in (*readers, *writers):
+            with suppress(OSError):
+                os.close(descriptor)
+        for path in temporary_paths:
+            with suppress(OSError):
+                os.unlink(path)
+
+
+def _render_fd_args(args: Sequence[str], readers: Sequence[int]) -> list[str]:
+    """Replace test-owned descriptor placeholders with child-visible descriptors."""
+    return [
+        str(readers[int(value[4:-1])]) if value.startswith("{fd:") and value.endswith("}") else value for value in args
+    ]
+
+
+def _windows_command_and_handles(
+    args: Sequence[str],
+    readers: Sequence[int],
+) -> tuple[list[str], list[int], int | None, int | None]:
+    """Translate secret descriptor placeholders into the Windows HANDLE allowlist."""
+    import msvcrt
+
+    command: list[str] = []
+    profile_handle: int | None = None
+    secrets_handle: int | None = None
+    index = 0
+    while index < len(args):
+        value = args[index]
+        if value in {"--profile-secrets-fd", "--secrets-fd"}:
+            placeholder = args[index + 1]
+            descriptor_index = int(placeholder[4:-1])
+            handle = msvcrt.get_osfhandle(readers[descriptor_index])
+            if value == "--profile-secrets-fd":
+                profile_handle = handle
+            else:
+                secrets_handle = handle
+            index += 2
+            continue
+        command.append(value)
+        index += 1
+    handles = [msvcrt.get_osfhandle(reader) for reader in readers]
+    return command, handles, profile_handle, secrets_handle
+
+
+def _windows_startup(handles: Sequence[int]) -> subprocess.STARTUPINFO:
+    """Make each payload HANDLE inheritable through an explicit startup allowlist."""
+    for handle in handles:
+        os.set_handle_inheritable(handle, True)
+    startup = subprocess.STARTUPINFO()
+    startup.lpAttributeList = {"handle_list": list(handles)}
+    return startup
+
+
 def _run(
     storage_root: Path,
     args: Sequence[str],
@@ -295,29 +372,8 @@ def _run(
             assert_stdin_unread=assert_stdin_unread,
             unread_payload=unread_payload,
         )
-    readers: list[int] = []
-    writers: list[int] = []
-    temporary_paths: list[str] = []
-    try:
-        for payload in inherited_payloads:
-            encoded = payload if isinstance(payload, bytes) else payload.encode("utf-8")
-            if len(encoded) > 4096:
-                reader, path = tempfile.mkstemp(prefix="cadrumo-s14-secret-")
-                temporary_paths.append(path)
-                os.write(reader, encoded)
-                os.lseek(reader, 0, os.SEEK_SET)
-                readers.append(reader)
-                continue
-            reader, writer = os.pipe()
-            readers.append(reader)
-            writers.append(writer)
-            os.write(writer, encoded)
-            os.close(writer)
-            writers.remove(writer)
-        rendered_args = [
-            str(readers[int(value[4:-1])]) if value.startswith("{fd:") and value.endswith("}") else value
-            for value in args
-        ]
+    with _payload_channels(inherited_payloads) as readers:
+        rendered_args = _render_fd_args(args, readers)
         payload = {
             "settings": _settings(storage_root, output_language=output_language),
             "assert_closed_descriptors": [
@@ -351,13 +407,6 @@ def _run(
             timeout=180,
             pass_fds=tuple(readers),
         )
-    finally:
-        for descriptor in (*readers, *writers):
-            with suppress(OSError):
-                os.close(descriptor)
-        for path in temporary_paths:
-            with suppress(OSError):
-                os.unlink(path)
 
 
 def _run_windows_handles(
@@ -377,52 +426,9 @@ def _run_windows_handles(
     """Run the shipped bootstrap with an explicit STARTUPINFOEX HANDLE allowlist."""
     if sys.platform != "win32":
         raise RuntimeError("Windows HANDLE transport requested on a non-Windows host")
-    import msvcrt
-
-    readers: list[int] = []
-    writers: list[int] = []
-    temporary_paths: list[str] = []
-    try:
-        for payload in inherited_payloads:
-            encoded = payload if isinstance(payload, bytes) else payload.encode("utf-8")
-            if len(encoded) > 4096:
-                reader, path = tempfile.mkstemp(prefix="cadrumo-s14-secret-")
-                temporary_paths.append(path)
-                os.write(reader, encoded)
-                os.lseek(reader, 0, os.SEEK_SET)
-                readers.append(reader)
-                continue
-            reader, writer = os.pipe()
-            readers.append(reader)
-            writers.append(writer)
-            os.write(writer, encoded)
-            os.close(writer)
-            writers.remove(writer)
-
-        command: list[str] = []
-        profile_handle: int | None = None
-        secrets_handle: int | None = None
-        index = 0
-        while index < len(args):
-            value = args[index]
-            if value in {"--profile-secrets-fd", "--secrets-fd"}:
-                placeholder = args[index + 1]
-                descriptor_index = int(placeholder[4:-1])
-                handle = msvcrt.get_osfhandle(readers[descriptor_index])
-                if value == "--profile-secrets-fd":
-                    profile_handle = handle
-                else:
-                    secrets_handle = handle
-                index += 2
-                continue
-            command.append(value)
-            index += 1
-
-        handles = [msvcrt.get_osfhandle(reader) for reader in readers]
-        for handle in handles:
-            os.set_handle_inheritable(handle, True)
-        startup = subprocess.STARTUPINFO()
-        startup.lpAttributeList = {"handle_list": handles}
+    with _payload_channels(inherited_payloads) as readers:
+        command, handles, profile_handle, secrets_handle = _windows_command_and_handles(args, readers)
+        startup = _windows_startup(handles)
         payload = {
             "settings": _settings(storage_root, output_language=output_language),
             "profile_handle": profile_handle,
@@ -461,13 +467,6 @@ def _run_windows_handles(
             close_fds=True,
             startupinfo=startup,
         )
-    finally:
-        for descriptor in (*readers, *writers):
-            with suppress(OSError):
-                os.close(descriptor)
-        for path in temporary_paths:
-            with suppress(OSError):
-                os.unlink(path)
 
 
 def _combined(result: subprocess.CompletedProcess[str]) -> str:
@@ -485,6 +484,38 @@ def _storage_snapshot(root: Path) -> dict[str, bytes]:
     }
 
 
+def _assert_no_prompts(combined: str) -> None:
+    """Ensure machine-secret subprocesses never fall back to interactive prompts."""
+    assert not any(prompt in combined.lower() for prompt in _PROMPTS)
+
+
+def _assert_no_secrets(combined: str, extra_secrets: Sequence[str]) -> None:
+    """Ensure known and test-planted secrets never reach the captured output."""
+    for secret in (*_ALL_SECRETS, *extra_secrets):
+        assert secret not in combined
+
+
+def _assert_secret_free_logs(root: Path, secrets: Sequence[str]) -> None:
+    """Ensure diagnostic logs do not persist any machine-secret payload."""
+    for path in root.rglob("*") if root.exists() else ():
+        if path.is_file() and "log" in path.name.lower():
+            contents = path.read_text(encoding="utf-8", errors="replace")
+            for secret in secrets:
+                assert secret not in contents
+
+
+def _assert_refusal_envelope(result: subprocess.CompletedProcess[str], combined: str) -> None:
+    """Validate the single typed JSON refusal envelope and its message shape."""
+    envelope_lines = [
+        line for stream in (result.stdout, result.stderr) for line in stream.splitlines() if line.startswith("{")
+    ]
+    assert len(envelope_lines) == 1, combined
+    envelope = json.loads(envelope_lines[0])
+    assert envelope["status"] == "error"
+    assert isinstance(envelope["error"], dict)
+    assert isinstance(envelope["error"].get("message"), str)
+
+
 def _assert_refused(
     result: subprocess.CompletedProcess[str],
     root: Path,
@@ -494,22 +525,11 @@ def _assert_refused(
 ) -> str:
     combined = _combined(result)
     assert result.returncode == 2, combined
-    envelope_lines = [
-        line for stream in (result.stdout, result.stderr) for line in stream.splitlines() if line.startswith("{")
-    ]
-    assert len(envelope_lines) == 1, combined
-    envelope = json.loads(envelope_lines[0])
-    assert envelope["status"] == "error"
-    assert isinstance(envelope["error"], dict)
-    assert isinstance(envelope["error"].get("message"), str)
-    assert not any(prompt in combined.lower() for prompt in _PROMPTS)
-    for secret in (*_ALL_SECRETS, *extra_secrets):
-        assert secret not in combined
-    for path in root.rglob("*") if root.exists() else ():
-        if path.is_file() and "log" in path.name.lower():
-            contents = path.read_text(encoding="utf-8", errors="replace")
-            for secret in (*_ALL_SECRETS, *extra_secrets):
-                assert secret not in contents
+    _assert_refusal_envelope(result, combined)
+    _assert_no_prompts(combined)
+    secrets = (*_ALL_SECRETS, *extra_secrets)
+    _assert_no_secrets(combined, extra_secrets)
+    _assert_secret_free_logs(root, secrets)
     if before is not None:
         assert _storage_snapshot(root) == before
     return combined
@@ -523,15 +543,10 @@ def _assert_success(
 ) -> dict[str, Any]:
     combined = _combined(result)
     assert result.returncode == 0, combined
-    assert not any(prompt in combined.lower() for prompt in _PROMPTS)
+    _assert_no_prompts(combined)
     secrets = (*_ALL_SECRETS, *extra_secrets)
-    for secret in secrets:
-        assert secret not in combined
-    for path in storage_root.rglob("*"):
-        if path.is_file() and "log" in path.name.lower():
-            contents = path.read_text(encoding="utf-8", errors="replace")
-            for secret in secrets:
-                assert secret not in contents
+    _assert_no_secrets(combined, extra_secrets)
+    _assert_secret_free_logs(storage_root, secrets)
     document = json.loads(result.stdout)
     assert isinstance(document, dict)
     return document

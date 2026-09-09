@@ -41,7 +41,6 @@ from ...core.classification.policies import SensitivityClass
 from ...core.config import Settings, StorageRouteKind, classify_storage_route, load_settings
 from ...core.logging import get_logger
 from ...core.secure_object_write import SecureObjectWrite
-from ...core.time.clock import now as utc_now
 from ...domain.buckets.event import BucketEvent
 from .errors import WorkflowError
 from .events import (
@@ -251,50 +250,6 @@ def workflow_persistence_port() -> WorkflowPersistencePort:
         raise RuntimeError("workflow persistence infrastructure has not been composed") from error
 
 
-_OPERATION_INSTANT: contextvars.ContextVar[datetime | None] = contextvars.ContextVar(
-    "cadrumo_workflow_operation_instant",
-    default=None,
-)
-"""The instant the in-flight CAS update began, stable across its retries.
-
-Set by :meth:`WorkflowStateRepository.update_with_writes` around its retry
-loop and read through :func:`current_operation_instant`.
-"""
-
-
-def current_operation_instant() -> datetime | None:
-    """The instant the enclosing retryable update began, if inside one.
-
-    A CAS update re-runs its callback from fresh state after a revision
-    conflict, so anything the callback derives from the wall clock differs
-    between attempts. That matters for bucket events: their id is derived
-    from ``occurred_at``, and content-addressing is what makes a re-emission
-    collapse onto one catalogue entry. A freshly read clock defeats it, and
-    one logical edit lands two immutable audit rows.
-
-    Reading the operation's instant instead keeps a retried write producing
-    the same event, which is what the event repository asks of callers that
-    need a retry to collapse. Outside an update this returns ``None`` and the
-    caller reads the clock as usual.
-
-    This is not the replay seam: :func:`~cadrumo.core.time.frozen_clock` is
-    default-off and refuses to activate in production, and it freezes every
-    clock read in scope. This names one instant, for the one derivation that
-    must survive a retry.
-    """
-    return _OPERATION_INSTANT.get()
-
-
-@contextmanager
-def workflow_operation_instant_scope(instant: datetime) -> Generator[None]:
-    """Publish one stable instant for every attempt of a logical state update."""
-    token = _OPERATION_INSTANT.set(instant)
-    try:
-        yield
-    finally:
-        _OPERATION_INSTANT.reset(token)
-
-
 class WorkflowStateRepository:
     """Encrypted secure-object repository for :class:`WorkflowState`."""
 
@@ -443,15 +398,8 @@ class WorkflowStateRepository:
         it must only derive values and prepare writes. All returned writes are
         committed with the workflow-state write in one SQL unit of work.
 
-        One instant is minted before the first attempt and published for the
-        whole loop through :func:`current_operation_instant`, so a derivation
-        that would otherwise read the clock afresh on each attempt keeps its
-        value. Bucket-event ids are derived from that instant, and holding it
-        steady is what lets a retried emission collapse onto one catalogue
-        entry instead of landing a second audit row for one logical change.
         """
-        with workflow_operation_instant_scope(utc_now()):
-            return self._update_with_writes_attempts(fn)
+        return self._update_with_writes_attempts(fn)
 
     def _update_with_writes_attempts(
         self,
@@ -633,13 +581,11 @@ __all__ = [
     "WorkflowStateRepository",
     "WorkflowStateStorageProbe",
     "bind_workflow_persistence_port",
-    "current_operation_instant",
     "fingerprint_workflow_state",
     "list_runs",
     "load_run",
     "reset_workflow_state",
     "save_run",
-    "workflow_operation_instant_scope",
     "workflow_persistence_port",
     "workflow_state_repository",
 ]

@@ -29,7 +29,7 @@ from ..analysis._dp30302_field_matrix import (
     measure_dp30302_field_matrix,
     resolve_dp30302_module_sub_indices,
 )
-from ..pipeline._record_design_ir import RecordDesignIntermediateField
+from ..pipeline.record_design_intermediate import RecordDesignIntermediateField
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

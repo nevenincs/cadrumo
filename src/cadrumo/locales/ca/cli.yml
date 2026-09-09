@@ -1308,11 +1308,6 @@ cli:
         calculate_source_advisory: 'AVÍS: %{message} El càlcul s''ha completat, però
           aquest import declarable no s''assigna a cap casella i no es declara en
           aquesta presentació; revisa''l abans de presentar.'
-        calculate_unauthorized_advisory: 'AVÍS: el backend de càlcul del model %{modelo}
-          NO està autoritzat - encara no s''ha provat amb un test integral al llarg
-          d''almenys dos exercicis de renda (porta d''autorització multi-exercici).
-          El resultat s''ha calculat i desat, però tracta''l com a provisional fins
-          que el model estigui autoritzat.'
         calculation_revision_id_help: Identificador estable (SHA-256 de 64 caràcters)
           d'una revisió de càlcul
         casilla_help: Valor de casella amb sintaxi CASILLA_ID=DECIMAL (repetible).

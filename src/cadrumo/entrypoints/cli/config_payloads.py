@@ -43,7 +43,6 @@ from ...core.errors.severity import BaseSeverity
 from ...core.hex import Hex64Str
 from ...core.identity import BucketId, ProfileId, ProfileLabel
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.requirement import RequirementValue
 from ...core.text_bounds import NonEmptyStr, PositiveCount
 from ...core.time.utc import validate_utc_aware
@@ -552,14 +551,34 @@ class ConfigResetOperationPayload(OutputSchema):
         return self
 
     def _validate_completion_reconciliation(self) -> None:
+        summary = self._require_completion_summary()
+        self._validate_completed_target_phases()
+        expected_counts = self._expected_completion_counts()
+        self._validate_completion_counts(summary, expected_counts)
+        self._validate_completion_timestamp(summary)
+
+    def _require_completion_summary(self) -> ConfigResetSummaryPayload:
         summary = self.summary
         if summary is None:
             raise ValueError("complete reset operation requires exactly one summary")
+        return summary
+
+    def _validate_completed_target_phases(self) -> None:
         if any(target.phase is not ConfigResetTargetPhase.DELETED for target in self.targets):
             raise ValueError("complete reset operation requires every target to be deleted")
+
+    def _expected_completion_counts(self) -> tuple[int, int, int]:
         expected_deleted_count = sum(target.exists_at_snapshot for target in self.targets)
         expected_already_absent_count = len(self.targets) - expected_deleted_count
         expected_override_count = sum(bool(target.retention_override_approved) for target in self.targets)
+        return expected_deleted_count, expected_already_absent_count, expected_override_count
+
+    def _validate_completion_counts(
+        self,
+        summary: ConfigResetSummaryPayload,
+        expected_counts: tuple[int, int, int],
+    ) -> None:
+        expected_deleted_count, expected_already_absent_count, expected_override_count = expected_counts
         if summary.target_count != len(self.targets):
             raise ValueError("complete reset summary target count does not match targets")
         if summary.deleted_count != expected_deleted_count:
@@ -568,6 +587,8 @@ class ConfigResetOperationPayload(OutputSchema):
             raise ValueError("complete reset summary absent count does not match targets")
         if summary.retention_override_count != expected_override_count:
             raise ValueError("complete reset summary retention override count does not match targets")
+
+    def _validate_completion_timestamp(self, summary: ConfigResetSummaryPayload) -> None:
         if summary.completed_at != self.updated_at:
             raise ValueError("complete reset summary timestamp must match operation update timestamp")
 
@@ -1027,14 +1048,17 @@ class RepairIntegrityObjectsResult(OutputSchema):
 class RepairIntegrityRegistryResult(OutputSchema):
     """JSON envelope for ``aeat config repair integrity registry``.
 
-    Mirrors
-    :class:`RegistryIntegrityReport`
-    ``model_dump(mode='json')``.
-    ``extra="allow"`` forwards the typed sub-models without re-declaring
-    the registry / diagnostic-check shapes locally.
+    Projects
+    :class:`~cadrumo.application.diagnostics.RegistryIntegrityReport` through
+    the same CLI-local payload rows the composite ``config repair`` report
+    uses: :class:`ConfigRepairRegistryPayload` for the registry summary and
+    :class:`ConfigRepairCheckPayload` for the validation verdict, whose
+    application-owned ``precondition_verdict`` is resolved to a wire
+    ``precondition_action`` at the CLI boundary.
     """
 
-    model_config = STRICT_FROZEN_CONFIG
+    registry: ConfigRepairRegistryPayload
+    check: ConfigRepairCheckPayload
 
 
 # Apoderado verb result schemas

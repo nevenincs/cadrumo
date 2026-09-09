@@ -121,11 +121,26 @@ class DeclarationsCalendarScreen(Screen[None]):
 
     def _refresh(self) -> None:
         table = cast("DataTable[str]", self.query_one("#declarations-calendar-agenda", DataTable))
+        self._remember_current_selection(table)
+        query = self.query_one("#declarations-calendar-search", Input).value
+        rows = self.controller.visible_entries(self._scope, query)
+        self._populate_table(table, rows)
+        notice = self.query_one("#declarations-calendar-notice", Static)
+        if rows:
+            self._restore_visible_selection(table, rows, notice)
+        else:
+            self._render_empty_state(query, notice)
+
+    def _remember_current_selection(self, table: DataTable[str]) -> None:
         current = self._selected_row(table)
         if current is not None and self._hidden_restore_identity is None:
             self._selected_identity = _identity(current)
-        query = self.query_one("#declarations-calendar-search", Input).value
-        rows = self.controller.visible_entries(self._scope, query)
+
+    def _populate_table(
+        self,
+        table: DataTable[str],
+        rows: tuple[DeclarationsCalendarEntryRefV1, ...],
+    ) -> None:
         table.clear(columns=False)
         self._rows_by_identity = {_identity(row): row for row in rows}
         for row in rows:
@@ -137,28 +152,34 @@ class DeclarationsCalendarScreen(Screen[None]):
                 calendar_aeat_label(row.aeat_submission_state),
                 key=_identity(row),
             )
-        notice = self.query_one("#declarations-calendar-notice", Static)
-        if rows:
-            notice.update("")
-            restore = self._selected_identity
-            restored_index = next(
-                (index for index, row in enumerate(rows) if _identity(row) == restore),
-                None,
-            )
-            row_index = restored_index if restored_index is not None else 0
-            table.move_cursor(row=row_index)
-            if restored_index is not None:
-                self._selected_identity = _identity(rows[row_index])
-                self._hidden_restore_identity = None
-            elif restore is None:
-                self._selected_identity = _identity(rows[row_index])
-            else:
-                self._hidden_restore_identity = restore
-            self._render_detail(rows[row_index])
+
+    def _restore_visible_selection(
+        self,
+        table: DataTable[str],
+        rows: tuple[DeclarationsCalendarEntryRefV1, ...],
+        notice: Static,
+    ) -> None:
+        notice.update("")
+        restore = self._selected_identity
+        restored_index = next(
+            (index for index, row in enumerate(rows) if _identity(row) == restore),
+            None,
+        )
+        row_index = restored_index if restored_index is not None else 0
+        table.move_cursor(row=row_index)
+        if restored_index is not None:
+            self._selected_identity = _identity(rows[row_index])
+            self._hidden_restore_identity = None
+        elif restore is None:
+            self._selected_identity = _identity(rows[row_index])
         else:
-            self._hidden_restore_identity = self._selected_identity
-            self.query_one("#declarations-calendar-detail", Static).update("")
-            notice.update(self._empty_copy(query))
+            self._hidden_restore_identity = restore
+        self._render_detail(rows[row_index])
+
+    def _render_empty_state(self, query: str, notice: Static) -> None:
+        self._hidden_restore_identity = self._selected_identity
+        self.query_one("#declarations-calendar-detail", Static).update("")
+        notice.update(self._empty_copy(query))
 
     def _empty_copy(self, query: str) -> str:
         schedule = self.controller.source(DeclarationsCalendarSource.SCHEDULE)

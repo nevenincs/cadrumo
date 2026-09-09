@@ -624,6 +624,11 @@ def _operation_modal_app() -> App[Any]:
         pending_interaction=OperationNoPendingInteractionV1(),
         result_ref=None,
         refusal_ref=None,
+        # A RUNNING projection carries no settlement facts at all: the model
+        # refuses a failure code outside a FAILED terminal condition, and the
+        # field has no default because absence is a statement the caller makes
+        # rather than one the model assumes.
+        failure_error_code=None,
         diagnostic_ref=None,
     )
     page = OperationPublicEventPageV1(

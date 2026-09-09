@@ -11,7 +11,7 @@ See Also:
     :func:`build_value_data` and :func:`build_formula_data` emit the main
     workbook grid, while :func:`build_evidence_value_data` mirrors
     :func:`application.storage.calc_sheets.evidence_table` so the online
-    Evidencia tab stays aligned with the offline workbook renderer.
+    Evidencia tab is derived from the live export plan.
 """
 
 from __future__ import annotations
@@ -21,6 +21,7 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
+from ....application.storage.calc_sheets.export_tables import evidence_table, guide_stamps
 from ....application.storage.calc_sheets.records import (
     SheetCellAddress,
     SheetExportPlan,
@@ -30,7 +31,6 @@ from ....application.storage.calc_sheets.records import (
     TabName,
     column_letters_to_index,
 )
-from ....application.storage.calc_sheets.workbook_export import evidence_table, guide_stamps
 from ....core.decimal.coercion import coerce_decimal
 
 if TYPE_CHECKING:
@@ -110,8 +110,7 @@ def build_evidence_value_data(plan: SheetExportPlan) -> list[ValueRange]:
     """Build Evidencia-tab value writes for ``plan``.
 
     Uses :func:`application.storage.calc_sheets.evidence_table`, the same
-    source used by the offline workbook renderer, so online Sheets output and
-    offline XLSX output stay cell-for-cell aligned.
+    source owned by the live export-plan boundary.
     """
     fingerprint, header, body = evidence_table(plan)
     tab = TabName.EVIDENCIA.value

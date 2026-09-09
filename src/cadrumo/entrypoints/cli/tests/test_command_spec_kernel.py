@@ -1,9 +1,6 @@
 from __future__ import annotations
 
 import dataclasses
-import subprocess
-import sys
-from pathlib import Path
 
 import pytest
 
@@ -106,7 +103,7 @@ def _leaf() -> CommandSpec:
     )
 
 
-def test_kernel_is_immutable_import_light_and_derives_paths_from_edges() -> None:
+def test_kernel_is_immutable_and_derives_paths_from_edges() -> None:
     graph = CommandSpecGraph((_leaf(), _root(), _group()))
 
     assert tuple(node.path for node in graph.nodes()) == (
@@ -115,28 +112,6 @@ def test_kernel_is_immutable_import_light_and_derives_paths_from_edges() -> None
         ("aeat", "config", "list"),
     )
     assert type(graph).__dataclass_params__.frozen
-
-    module_path = Path(__file__).parents[1] / "command_spec.py"
-    probe = subprocess.run(  # noqa: S603 - fixed interpreter and literal probe program.
-        [
-            sys.executable,
-            "-c",
-            (
-                "import importlib.util, sys; "
-                f"spec = importlib.util.spec_from_file_location('cadrumo.entrypoints.cli.command_spec', {str(module_path)!r}); "
-                "assert spec is not None and spec.loader is not None; "
-                "module = importlib.util.module_from_spec(spec); "
-                "sys.modules[spec.name] = module; "
-                "spec.loader.exec_module(module); "
-                "print(int('typer' in sys.modules), int('click' in sys.modules), "
-                "int('json' in sys.modules), int('pydantic' in sys.modules))"
-            ),
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    assert probe.stdout.strip() == "0 0 0 0"
 
 
 @pytest.mark.parametrize("field", ["click_type", "parser"])

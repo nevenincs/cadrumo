@@ -27,8 +27,9 @@ from ..errors import (
 )
 from ..relations import relation_source_requirements
 from ..schema import ModeloDefinition
-from ..temporal import select_revision
-from ._registry_schema_support import _committed_modelo, _committed_snapshot
+from ..schema_deadlines import DeadlineWindowDefinition
+from ..temporal import select_revision, select_revision_for_year
+from ._registry_schema_support import _committed_modelo, _committed_registry_tree, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -272,3 +273,123 @@ def test_revision_validation_accepts_disjoint_windows_with_shared_period_selecto
 
     assert validate_revision_windows(mutated) == []
 
+
+def _declared_filing_windows() -> list[tuple[str, str, DeadlineWindowDefinition]]:
+    """``(modelo id, revision id, window)`` for every filing window the corpus declares."""
+    modelos, _catalogues = _committed_registry_tree()
+    return [
+        (modelo.id, str(revision_id), window)
+        for modelo in modelos
+        for revision_id, revision in modelo.revisions.items()
+        for window in revision.deadline_windows
+    ]
+
+
+def test_every_revision_resolves_on_the_filing_dates_it_declares() -> None:
+    """A modelo must be selectable on the dates it says it is filed.
+
+    THE GENERAL PROPERTY, not one coordinate. ``valid_from``/``valid_to`` bound
+    the tax PERIODS a revision governs, and almost every return is filed after
+    its period has closed -- modelo 390's resumen anual in the thirty first
+    calendar days of the following January (Orden EHA/3111/2009, art. 8), modelo
+    100's renta campaign the following April to June, every fourth-quarter and
+    December coordinate in the January after. Testing a filing date against the
+    period window alone refuses each of them at the exact moment it is due.
+
+    The expectation is not hand-authored: each window is the registry's own
+    declaration, carrying the legal and source references that ground it, so
+    this asserts self-consistency between what a revision says its filing dates
+    are and what the selector will admit on them. A single-coordinate test would
+    not have caught this -- the defect held for 120 of the 1686 window
+    boundaries the corpus declares, across 24 modelos and 53 revisions.
+    """
+    windows = _declared_filing_windows()
+    assert windows, "the corpus must declare filing windows for this property to mean anything"
+
+    unresolvable = []
+    for modelo_id, revision_id, window in windows:
+        modelo, _catalogues = _committed_modelo(modelo_id)
+        for edge in (window.opens_on, window.closes_on):
+            try:
+                selected = select_revision(
+                    modelo,
+                    filing_year=window.filing_year,
+                    period=window.period.registry_token,
+                    on=edge,
+                )
+            except (NoRevisionForPeriodError, AmbiguousRevisionSelectionError) as exc:
+                unresolvable.append(f"{modelo_id}/{revision_id} window {window.id} on {edge}: {type(exc).__name__}")
+                continue
+            if selected.id != revision_id:
+                unresolvable.append(
+                    f"{modelo_id}/{revision_id} window {window.id} on {edge}: resolved to {selected.id}",
+                )
+
+    assert not unresolvable, "revisions unresolvable on their own declared filing dates: " + "; ".join(unresolvable)
+
+
+def test_a_filing_window_admits_only_the_coordinate_it_declares() -> None:
+    """The window widens nothing beyond the period it was declared for.
+
+    THE FAIL-CLOSED HALF, and the reason this is not a blanket date widening.
+    Modelo 303's 2023 revision declares two windows that close on different
+    days: November's monthly filing on 2 January 2024, December's on the 30th.
+    On 15 January both periods are outside the governed year, and only the one
+    whose window is still open may resolve. A revision admitted for any period
+    once admitted for one would pass the sibling assertion above while quietly
+    making November filable a month late.
+    """
+    modelo, _catalogues = _committed_modelo("303")
+
+    assert select_revision(modelo, filing_year=2023, period="12", on=date(2024, 1, 15)).id == "2023"
+    with pytest.raises(NoRevisionForPeriodError):
+        select_revision(modelo, filing_year=2023, period="11", on=date(2024, 1, 15))
+
+
+def test_a_revision_is_refused_once_every_declared_window_has_closed() -> None:
+    """Past the last declared filing date the revision stops resolving.
+
+    Modelo 390's 2025 window closes on 30 January 2026 (the thirtieth calendar
+    day of January, Orden EHA/3111/2009, art. 8). The 30th resolves and the 31st
+    does not: the reach is the declared window, not the following year.
+    """
+    modelo, _catalogues = _committed_modelo("390")
+
+    assert select_revision(modelo, filing_year=2025, period="0A", on=date(2026, 1, 30)).id == "2025"
+    with pytest.raises(NoRevisionForPeriodError):
+        select_revision(modelo, filing_year=2025, period="0A", on=date(2026, 1, 31))
+
+
+def test_a_revision_declaring_no_filing_window_claims_no_reach_beyond_its_periods() -> None:
+    """Absence of a declaration is refusal, never an inferred deadline.
+
+    Modelo 390's 2021 revision is ``applicability`` grade and declares no
+    filing window at all. The selector must not deduce one from the article
+    that governs its 2022-2025 siblings: an undeclared window is an undeclared
+    window, and it stays refused exactly as it was before the window tier
+    existed.
+    """
+    modelo, _catalogues = _committed_modelo("390")
+    revision = modelo.revisions["2021"]
+    assert not revision.deadline_windows
+
+    with pytest.raises(NoRevisionForPeriodError):
+        select_revision(modelo, filing_year=2021, period="0A", on=date(2022, 1, 20))
+
+
+def test_a_live_governed_period_outranks_a_still_open_filing_window() -> None:
+    """At a design boundary the revision that governs the date wins outright.
+
+    On 15 September 2024 modelo 303's ``2024-hasta-08-y-2t`` is still filable
+    for August while ``2024-desde-09-y-3t`` already governs September. Pooling
+    the period tier and the window tier makes that date ambiguous and refuses a
+    year-only question that has one obvious answer, so the window tier is
+    consulted only when no candidate governs the date. Both period-scoped
+    answers stay reachable.
+    """
+    modelo, _catalogues = _committed_modelo("303")
+    boundary = date(2024, 9, 15)
+
+    assert select_revision_for_year(modelo, filing_year=2024, on=boundary).id == "2024-desde-09-y-3t"
+    assert select_revision(modelo, filing_year=2024, period="3T", on=boundary).id == "2024-desde-09-y-3t"
+    assert select_revision(modelo, filing_year=2024, period="08", on=boundary).id == "2024-hasta-08-y-2t"

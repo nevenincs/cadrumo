@@ -274,6 +274,29 @@ def _is_owned_drive_match(entry: dict[str, object], *, prefix: str, object_key_h
     )
 
 
+def _drive_list_kwargs(
+    query: str,
+    fields: str,
+    page_size: int,
+    page_token: str | None,
+) -> dict[str, Any]:
+    """Build one Drive listing request, adding pagination only when present."""
+    kwargs: dict[str, Any] = {"q": query, "fields": fields, "pageSize": page_size}
+    if page_token is not None:
+        kwargs["pageToken"] = page_token
+    return kwargs
+
+
+def _validate_put_inputs(
+    namespace: str,
+    object_key_hmac: str,
+) -> tuple[str, str]:
+    """Validate and canonicalise the values needed before a Drive write."""
+    namespace_clean = _validate_namespace(namespace)
+    hmac_clean = _validate_hmac(object_key_hmac)
+    return namespace_clean, hmac_clean
+
+
 class GoogleDriveProvider:
     """Bytes-in / bytes-out :class:`StorageProvider` backed by Google Drive v3."""
 
@@ -374,6 +397,53 @@ class GoogleDriveProvider:
             translated_error = _translate_http_error(exc, action=action)
         raise translated_error
 
+    def _first_drive_entry(
+        self,
+        service: Any,
+        *,
+        query: str,
+        fields: str,
+        page_size: int,
+        action: str,
+    ) -> dict[str, object] | None:
+        """Return the first listed entry, following Drive pagination in order."""
+        page_token: str | None = None
+        seen_tokens: set[str] = set()
+        while True:
+            kwargs = _drive_list_kwargs(query, fields, page_size, page_token)
+            response = self._execute(service.files().list(**kwargs), action=action)
+            entries = _listed_drive_files(response)
+            if entries:
+                return entries[0]
+            page_token = next_drive_page_token(
+                response.get("nextPageToken") if is_object_dict(response) else None,
+                seen_tokens=seen_tokens,
+                action=action,
+            )
+            if page_token is None:
+                return None
+
+    def _create_owned_folder(
+        self,
+        service: Any,
+        *,
+        name: str,
+        parent_id: str,
+        action: str,
+    ) -> object:
+        """Create an owned folder and return the raw Drive response."""
+        body = {
+            "name": name,
+            "mimeType": _FOLDER_MIME,
+            "parents": [parent_id],
+            "appProperties": {OWNERSHIP_KEY: OWNERSHIP_VALUE},
+        }
+        created = self._execute(
+            service.files().create(body=body, fields="id,appProperties"),
+            action=action,
+        )
+        return created
+
     def _resolve_vault_folder(self) -> str:
         """Resolve or create the configured vault folder under ``root_folder_id``.
 
@@ -391,48 +461,32 @@ class GoogleDriveProvider:
             f"and mimeType='{_FOLDER_MIME}' "
             f"and trashed=false"
         )
-        page_token: str | None = None
-        seen_tokens: set[str] = set()
-        while True:
-            kwargs: dict[str, Any] = {
-                "q": query,
-                "fields": "files(id,name,mimeType,appProperties),nextPageToken",
-                "pageSize": 10,
-            }
-            if page_token is not None:
-                kwargs["pageToken"] = page_token
-            response = self._execute(service.files().list(**kwargs), action="resolve_vault_folder")
-            for entry in _listed_drive_files(response):
-                if entry.get("mimeType") != _FOLDER_MIME:
-                    raise OutboundStorageValidationError(
-                        "configured Drive root contains a vault-name entry that is not a folder",
-                        context={"root_folder_id": self._root_folder_id, "vault_folder_name": self._vault_folder_name},
-                        translated_message="adapters.outbound.storage.google_drive.errors.vault_entry_not_folder",
-                        precondition_verdict=_drive_validation_verdict(
-                            "storage.google_drive.vault_entry.folder",
-                            field="vault_folder_entry",
-                            provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-                        ),
-                    )
-                self._verify_ownership_or_adopt(entry, kind=self._vault_folder_name)
-                self._vault_folder_id = str(entry["id"])
-                return self._vault_folder_id
-            page_token = next_drive_page_token(
-                response.get("nextPageToken") if is_object_dict(response) else None,
-                seen_tokens=seen_tokens,
-                action="resolve_vault_folder",
-            )
-            if page_token is None:
-                break
-        # Create the folder with the ownership marker.
-        body = {
-            "name": self._vault_folder_name,
-            "mimeType": _FOLDER_MIME,
-            "parents": [self._root_folder_id],
-            "appProperties": {OWNERSHIP_KEY: OWNERSHIP_VALUE},
-        }
-        created = self._execute(
-            service.files().create(body=body, fields="id,appProperties"),
+        entry = self._first_drive_entry(
+            service,
+            query=query,
+            fields="files(id,name,mimeType,appProperties),nextPageToken",
+            page_size=10,
+            action="resolve_vault_folder",
+        )
+        if entry is not None:
+            if entry.get("mimeType") != _FOLDER_MIME:
+                raise OutboundStorageValidationError(
+                    "configured Drive root contains a vault-name entry that is not a folder",
+                    context={"root_folder_id": self._root_folder_id, "vault_folder_name": self._vault_folder_name},
+                    translated_message="adapters.outbound.storage.google_drive.errors.vault_entry_not_folder",
+                    precondition_verdict=_drive_validation_verdict(
+                        "storage.google_drive.vault_entry.folder",
+                        field="vault_folder_entry",
+                        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                    ),
+                )
+            self._verify_ownership_or_adopt(entry, kind=self._vault_folder_name)
+            self._vault_folder_id = str(entry["id"])
+            return self._vault_folder_id
+        created = self._create_owned_folder(
+            service,
+            name=self._vault_folder_name,
+            parent_id=self._root_folder_id,
             action="create_vault_folder",
         )
         if not is_object_dict(created) or "id" not in created:
@@ -517,57 +571,41 @@ class GoogleDriveProvider:
         vault_id = self._resolve_vault_folder()
         query = f"'{vault_id}' in parents and name='{namespace}' and mimeType='{_FOLDER_MIME}' and trashed=false"
         action = f"resolve_namespace_{namespace}"
-        page_token: str | None = None
-        seen_tokens: set[str] = set()
-        while True:
-            kwargs: dict[str, Any] = {
-                "q": query,
-                "fields": "files(id,name,appProperties),nextPageToken",
-                "pageSize": 10,
-            }
-            if page_token is not None:
-                kwargs["pageToken"] = page_token
-            response = self._execute(service.files().list(**kwargs), action=action)
-            for entry in _listed_drive_files(response):
-                self._verify_ownership_or_adopt(entry, kind=f"namespace:{namespace}")
-                folder_id = str(entry["id"])
-                self._namespace_folder_ids[namespace] = folder_id
-                return folder_id
-            page_token = next_drive_page_token(
-                response.get("nextPageToken") if is_object_dict(response) else None,
-                seen_tokens=seen_tokens,
-                action=action,
-            )
-            if page_token is None:
-                break
-        if not create:
-            return None
-        body = {
-            "name": namespace,
-            "mimeType": _FOLDER_MIME,
-            "parents": [vault_id],
-            "appProperties": {OWNERSHIP_KEY: OWNERSHIP_VALUE},
-        }
-        created = self._execute(
-            service.files().create(body=body, fields="id,appProperties"),
-            action=f"create_namespace_{namespace}",
+        entry = self._first_drive_entry(
+            service,
+            query=query,
+            fields="files(id,name,appProperties),nextPageToken",
+            page_size=10,
+            action=action,
         )
-        if not is_object_dict(created) or "id" not in created:
-            raise OutboundStorageNetworkError(
-                f"drive create_namespace_{namespace} returned no id",
-                context={"response": str(created)},
-                translated_message="adapters.outbound.storage.google_drive.errors.create_namespace_no_id",
-                precondition_verdict=drive_external_verdict(
-                    DriveStoragePreconditionCondition.RESPONSE_IDENTIFIER_PRESENT,
-                    facts={
-                        "operation": "create_namespace",
-                        "response_mapping": isinstance(created, dict),
-                        "identifier_present": isinstance(created, dict) and "id" in created,
-                    },
-                    outcome=NoRecoveryOutcome.OPERATOR_DECISION,
-                ),
+        if entry is not None:
+            self._verify_ownership_or_adopt(entry, kind=f"namespace:{namespace}")
+            folder_id = str(entry["id"])
+        elif not create:
+            return None
+        else:
+            created = self._create_owned_folder(
+                service,
+                name=namespace,
+                parent_id=vault_id,
+                action=f"create_namespace_{namespace}",
             )
-        folder_id = str(created["id"])
+            if not is_object_dict(created) or "id" not in created:
+                raise OutboundStorageNetworkError(
+                    f"drive create_namespace_{namespace} returned no id",
+                    context={"response": str(created)},
+                    translated_message="adapters.outbound.storage.google_drive.errors.create_namespace_no_id",
+                    precondition_verdict=drive_external_verdict(
+                        DriveStoragePreconditionCondition.RESPONSE_IDENTIFIER_PRESENT,
+                        facts={
+                            "operation": "create_namespace",
+                            "response_mapping": isinstance(created, dict),
+                            "identifier_present": isinstance(created, dict) and "id" in created,
+                        },
+                        outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+                    ),
+                )
+            folder_id = str(created["id"])
         self._namespace_folder_ids[namespace] = folder_id
         return folder_id
 
@@ -609,6 +647,63 @@ class GoogleDriveProvider:
             )
             if page_token is None:
                 return None
+
+    def _put_drive_file(
+        self,
+        service: Any,
+        *,
+        namespace: str,
+        namespace_folder_id: str,
+        object_key_hmac: str,
+        payload: bytes,
+        content_hash: str,
+        label: str,
+    ) -> tuple[object, str]:
+        """Issue the create-or-update Drive write for one validated object."""
+        target_name = build_provider_object_name(object_key_hmac, label, extension=_FILE_EXTENSION)
+        existing = self._find_file(namespace_folder_id, object_key_hmac)
+
+        media_body = _build_media_body(payload)
+        from ..google.records import DriveAppProperties
+
+        app_properties = DriveAppProperties(
+            cadrumo_vault_app=OWNERSHIP_VALUE,
+            namespace=namespace,
+            object_key_hmac=object_key_hmac,
+            content_hash=content_hash,
+        ).model_dump(by_alias=True)
+        # ``dict[str, Any]`` here is the irreducible Google Drive API
+        # boundary shape: ``service.files().create(body=body)`` and
+        # ``service.files().update(body=body)`` accept arbitrary
+        # heterogeneous Drive metadata. Narrowing to ``object`` breaks
+        # the call under the google-api-python-client stubs; this is
+        # a third-party-API boundary where ``Any`` is correct.
+        body: dict[str, Any] = {
+            "name": target_name,
+            "parents": [namespace_folder_id] if existing is None else None,
+            "appProperties": app_properties,
+        }
+        if existing is None:
+            # Drive `files().create` requires `parents`; existing-file
+            # `files().update` rejects it. Strip None entries.
+            body = {k: v for k, v in body.items() if v is not None}
+            request = service.files().create(
+                body=body,
+                media_body=media_body,
+                fields="id,name,size,md5Checksum,modifiedTime,appProperties",
+            )
+            action = "files.create"
+        else:
+            # Update existing — strip `parents`; rename via `name` if label drifted.
+            body = {k: v for k, v in body.items() if v is not None and k != "parents"}
+            request = service.files().update(
+                fileId=existing["id"],
+                body=body,
+                media_body=media_body,
+                fields="id,name,size,md5Checksum,modifiedTime,appProperties",
+            )
+            action = "files.update"
+        return self._execute(request, action=action), action
 
     def put(
         self,
@@ -656,8 +751,10 @@ class GoogleDriveProvider:
             :class:`OutboundStorageNetworkError`: On any other Drive API
                 failure.
         """
-        namespace_clean = _validate_namespace(namespace)
-        hmac_clean = _validate_hmac(object_key_hmac)
+        namespace_clean, hmac_clean = _validate_put_inputs(
+            namespace,
+            object_key_hmac,
+        )
         if not content_hash.strip():
             raise OutboundStorageValidationError(
                 "content_hash must not be blank",
@@ -667,59 +764,24 @@ class GoogleDriveProvider:
                     field="content_hash",
                     provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
                 ),
-            )
+        )
         label_clean = sanitize_provider_object_label(label)
-
+        content_hash_clean = content_hash
         service = self._get_service()
         namespace_folder_id = self._resolve_namespace_folder(namespace_clean)
         if namespace_folder_id is None:
             raise OutboundStorageValidationError(
                 f"Drive namespace folder {namespace_clean!r} was neither resolved nor created",
             )
-        target_name = build_provider_object_name(hmac_clean, label_clean, extension=_FILE_EXTENSION)
-        existing = self._find_file(namespace_folder_id, hmac_clean)
-
-        media_body = _build_media_body(payload)
-        from ..google.records import DriveAppProperties
-
-        app_properties = DriveAppProperties(
-            cadrumo_vault_app=OWNERSHIP_VALUE,
+        response, action = self._put_drive_file(
+            service,
             namespace=namespace_clean,
+            namespace_folder_id=namespace_folder_id,
             object_key_hmac=hmac_clean,
-            content_hash=content_hash,
-        ).model_dump(by_alias=True)
-        # ``dict[str, Any]`` here is the irreducible Google Drive API
-        # boundary shape: ``service.files().create(body=body)`` and
-        # ``service.files().update(body=body)`` accept arbitrary
-        # heterogeneous Drive metadata. Narrowing to ``object`` breaks
-        # the call under the google-api-python-client stubs; this is
-        # a third-party-API boundary where ``Any`` is correct.
-        body: dict[str, Any] = {
-            "name": target_name,
-            "parents": [namespace_folder_id] if existing is None else None,
-            "appProperties": app_properties,
-        }
-        if existing is None:
-            # Drive `files().create` requires `parents`; existing-file
-            # `files().update` rejects it. Strip None entries.
-            body = {k: v for k, v in body.items() if v is not None}
-            request = service.files().create(
-                body=body,
-                media_body=media_body,
-                fields="id,name,size,md5Checksum,modifiedTime,appProperties",
-            )
-            action = "files.create"
-        else:
-            # Update existing — strip `parents`; rename via `name` if label drifted.
-            body = {k: v for k, v in body.items() if v is not None and k != "parents"}
-            request = service.files().update(
-                fileId=existing["id"],
-                body=body,
-                media_body=media_body,
-                fields="id,name,size,md5Checksum,modifiedTime,appProperties",
-            )
-            action = "files.update"
-        response = self._execute(request, action=action)
+            payload=payload,
+            content_hash=content_hash_clean,
+            label=label_clean,
+        )
         if not is_str_keyed_dict(response):
             raise OutboundStorageNetworkError(
                 "drive write returned non-dict response",
@@ -731,7 +793,6 @@ class GoogleDriveProvider:
                     outcome=NoRecoveryOutcome.OPERATOR_DECISION,
                 ),
             )
-
         return metadata_from_drive_entry(response, namespace=namespace_clean, object_key_hmac=hmac_clean)
 
     def get(self, namespace: str, object_key_hmac: str) -> tuple[bytes, ProviderObjectMetadata]:

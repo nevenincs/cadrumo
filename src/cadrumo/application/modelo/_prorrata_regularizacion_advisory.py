@@ -142,6 +142,141 @@ def _prior_year_definitiva_pct(
     return max(candidates, key=lambda item: item[0])[1] if candidates else None
 
 
+def _current_regularizacion_inputs(
+    revision: ModeloRevision,
+    casilla_values: Mapping[CasillaId, Decimal],
+    *,
+    modelo: str,
+) -> tuple[CasillaId, Decimal, Decimal, Decimal] | None:
+    """Resolve the current-year values needed by the casilla-44 projection.
+
+    The semantic-role lookups intentionally stay in registry order.  A missing
+    role, or a current year with no exempt-without-right volume, means that the
+    annual regularización has no grounded projection and must remain silent.
+    The returned tuple carries the percentage id as well as the Decimal values
+    because the pending advisory attaches itself to that canonical casilla.
+    """
+    role_ids = (
+        casilla_id_for_unambiguous_revision_semantic_role(
+            revision,
+            _VOLUMEN_TOTAL_SEMANTIC_ROLE,
+            modelo_id=modelo,
+        ),
+        casilla_id_for_unambiguous_revision_semantic_role(
+            revision,
+            _VOLUMEN_CON_DERECHO_SEMANTIC_ROLE,
+            modelo_id=modelo,
+        ),
+        casilla_id_for_unambiguous_revision_semantic_role(
+            revision,
+            _PORCENTAJE_SEMANTIC_ROLE,
+            modelo_id=modelo,
+        ),
+        casilla_id_for_unambiguous_revision_semantic_role(
+            revision,
+            _CUOTA_DEDUCIBLE_TOTAL_SEMANTIC_ROLE,
+            modelo_id=modelo,
+        ),
+    )
+    volumen_total_id, volumen_con_derecho_id, porcentaje_id, cuota_deducible_id = role_ids
+    if (
+        volumen_total_id is None
+        or volumen_con_derecho_id is None
+        or porcentaje_id is None
+        or cuota_deducible_id is None
+    ):
+        return None
+
+    volumen_total = casilla_values.get(volumen_total_id, Decimal(0))
+    volumen_con_derecho = casilla_values.get(volumen_con_derecho_id, Decimal(0))
+    operaciones_sin_derecho_deduccion = volumen_total - volumen_con_derecho
+    if operaciones_sin_derecho_deduccion <= Decimal(0):
+        return None
+    return (
+        porcentaje_id,
+        operaciones_sin_derecho_deduccion,
+        casilla_values.get(porcentaje_id, Decimal(0)),
+        casilla_values.get(cuota_deducible_id, Decimal(0)),
+    )
+
+
+def _pending_regularizacion_diagnostic(
+    *,
+    filing_year: int,
+    porcentaje_id: CasillaId,
+) -> CalculationSourceDiagnostic:
+    """Build the no-silent-under-declaration pending casilla-44 advisory."""
+    return CalculationSourceDiagnostic(
+        reason="official_box_unpopulated",
+        source_kind=_PENDING_PROVISIONAL_SOURCE_KIND,
+        message=(
+            "Operaciones exentas sin derecho a deducción detectadas en el ejercicio "
+            f"{filing_year} (prorrata general, LIVA arts. 104-105): la regularización de "
+            "casilla 44 no puede comprobarse automáticamente porque no consta el porcentaje "
+            f"de prorrata definitivo de {filing_year - 1} en este equipo. Compruebe manualmente "
+            "si procede una regularización antes de presentar."
+        ),
+        casilla_id=porcentaje_id,
+        # Advisory-asserted: the message states a claim spanning both art.
+        # 104 (the definitive percentage's own computation) and art. 105
+        # (the Cuatro regularización comparison this advisory is about), and
+        # the casilla_id's own ref carries only art. 104.
+        asserted_legal_refs=("ley-37-1992:art-104", "ley-37-1992:art-105"),
+    )
+
+
+def _settlement_prorrata_diagnostics(
+    revision: ModeloRevision,
+    casilla_values: Mapping[CasillaId, Decimal],
+    *,
+    modelo: str,
+    filing_year: int,
+    missing_carry_diagnostics: tuple[CalculationSourceDiagnostic, ...],
+    observation_repository: CalculationObservationRepository,
+    bucket_id: str | None,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Append settlement-only prorrata diagnostics in their canonical order."""
+    especial_diagnostics = _especial_mandatory_diagnostics(
+        revision,
+        modelo=modelo,
+        filing_year=filing_year,
+        bucket_id=bucket_id,
+    )
+    current_inputs = _current_regularizacion_inputs(
+        revision,
+        casilla_values,
+        modelo=modelo,
+    )
+    if current_inputs is None:
+        return especial_diagnostics
+
+    porcentaje_id, operaciones_sin_derecho_deduccion, prorrata_definitiva_pct, cuotas_soportadas_deducibles = (
+        current_inputs
+    )
+    prorrata_provisional_pct = _prior_year_definitiva_pct(
+        observation_repository,
+        filing_year=filing_year,
+        porcentaje_id=porcentaje_id,
+    )
+    if prorrata_provisional_pct is None:
+        pending_diagnostic = _pending_regularizacion_diagnostic(
+            filing_year=filing_year,
+            porcentaje_id=porcentaje_id,
+        )
+        return (*(missing_carry_diagnostics or (pending_diagnostic,)), *especial_diagnostics)
+
+    _result, diagnostic = build_prorrata_regularizacion_advisory(
+        cuotas_soportadas_deducibles=cuotas_soportadas_deducibles,
+        prorrata_provisional_pct=prorrata_provisional_pct,
+        prorrata_definitiva_pct=prorrata_definitiva_pct,
+        operaciones_sin_derecho_deduccion=operaciones_sin_derecho_deduccion,
+        regularizacion_year=filing_year,
+    )
+    if diagnostic is None:
+        return (*missing_carry_diagnostics, *especial_diagnostics)
+    return (*missing_carry_diagnostics, diagnostic, *especial_diagnostics)
+
+
 def collect_prorrata_regularizacion_diagnostics(
     revision: ModeloRevision,
     casilla_values: Mapping[CasillaId, Decimal],
@@ -206,87 +341,17 @@ def collect_prorrata_regularizacion_diagnostics(
     if not is_m303_annual_settlement_period(Period.from_year_and_code(filing_year, period_token)):
         return missing_carry_diagnostics
 
-    # LIVA art. 103.Dos.2.º mandatory-especial settlement check / prompt. This
-    # is independent of the casilla-44 regularización below (it reads the annual
-    # ledger totals under both regimes, not the current period's casilla_values),
-    # so it is computed once here and appended to every settlement return path —
-    # including the early-return paths where the regularización roles are absent.
-    especial_diagnostics = _especial_mandatory_diagnostics(
+    # Settlement-only checks keep their own canonical order: the regularización
+    # advisory (or pending carry) precedes the mandatory-especial diagnostic.
+    return _settlement_prorrata_diagnostics(
         revision,
+        casilla_values,
         modelo=modelo,
         filing_year=filing_year,
+        missing_carry_diagnostics=missing_carry_diagnostics,
+        observation_repository=observation_repository,
         bucket_id=bucket_id,
     )
-
-    volumen_total_id = casilla_id_for_unambiguous_revision_semantic_role(
-        revision,
-        _VOLUMEN_TOTAL_SEMANTIC_ROLE,
-        modelo_id=modelo,
-    )
-    volumen_con_derecho_id = casilla_id_for_unambiguous_revision_semantic_role(
-        revision,
-        _VOLUMEN_CON_DERECHO_SEMANTIC_ROLE,
-        modelo_id=modelo,
-    )
-    porcentaje_id = casilla_id_for_unambiguous_revision_semantic_role(
-        revision,
-        _PORCENTAJE_SEMANTIC_ROLE,
-        modelo_id=modelo,
-    )
-    cuota_deducible_id = casilla_id_for_unambiguous_revision_semantic_role(
-        revision,
-        _CUOTA_DEDUCIBLE_TOTAL_SEMANTIC_ROLE,
-        modelo_id=modelo,
-    )
-    if volumen_total_id is None or volumen_con_derecho_id is None:
-        return especial_diagnostics
-    if porcentaje_id is None or cuota_deducible_id is None:
-        return especial_diagnostics
-
-    volumen_total = casilla_values.get(volumen_total_id, Decimal(0))
-    volumen_con_derecho = casilla_values.get(volumen_con_derecho_id, Decimal(0))
-    operaciones_sin_derecho_deduccion = volumen_total - volumen_con_derecho
-    if operaciones_sin_derecho_deduccion <= Decimal(0):
-        return especial_diagnostics
-
-    prorrata_definitiva_pct = casilla_values.get(porcentaje_id, Decimal(0))
-    cuotas_soportadas_deducibles = casilla_values.get(cuota_deducible_id, Decimal(0))
-
-    prorrata_provisional_pct = _prior_year_definitiva_pct(
-        observation_repository,
-        filing_year=filing_year,
-        porcentaje_id=porcentaje_id,
-    )
-    if prorrata_provisional_pct is None:
-        pending_diagnostic = CalculationSourceDiagnostic(
-            reason="official_box_unpopulated",
-            source_kind=_PENDING_PROVISIONAL_SOURCE_KIND,
-            message=(
-                "Operaciones exentas sin derecho a deducción detectadas en el ejercicio "
-                f"{filing_year} (prorrata general, LIVA arts. 104-105): la regularización de "
-                "casilla 44 no puede comprobarse automáticamente porque no consta el porcentaje "
-                f"de prorrata definitivo de {filing_year - 1} en este equipo. Compruebe manualmente "
-                "si procede una regularización antes de presentar."
-            ),
-            casilla_id=porcentaje_id,
-            # Advisory-asserted: the message states a claim spanning both art.
-            # 104 (the definitive percentage's own computation) and art. 105
-            # (the Cuatro regularización comparison this advisory is about), and
-            # the casilla_id's own ref carries only art. 104.
-            asserted_legal_refs=("ley-37-1992:art-104", "ley-37-1992:art-105"),
-        )
-        return (*(missing_carry_diagnostics or (pending_diagnostic,)), *especial_diagnostics)
-
-    _result, diagnostic = build_prorrata_regularizacion_advisory(
-        cuotas_soportadas_deducibles=cuotas_soportadas_deducibles,
-        prorrata_provisional_pct=prorrata_provisional_pct,
-        prorrata_definitiva_pct=prorrata_definitiva_pct,
-        operaciones_sin_derecho_deduccion=operaciones_sin_derecho_deduccion,
-        regularizacion_year=filing_year,
-    )
-    if diagnostic is None:
-        return (*missing_carry_diagnostics, *especial_diagnostics)
-    return (*missing_carry_diagnostics, diagnostic, *especial_diagnostics)
 
 
 def _especial_mandatory_diagnostics(

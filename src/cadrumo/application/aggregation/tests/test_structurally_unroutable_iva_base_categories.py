@@ -263,7 +263,6 @@ def test_mutation_stripping_the_intra_community_supply_binding_reds_the_negative
     shutil.copytree(bundled_root / "modelos" / "303", scratch_root / "modelos" / "303")
     for catalogue_dir in (
         "apoderamientos",
-        "authorization.d",
         "calendars",
         "categories",
         "iva",

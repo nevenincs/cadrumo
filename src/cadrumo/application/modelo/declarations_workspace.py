@@ -285,6 +285,91 @@ _SOURCES_BY_ZONE: Final = {
 }
 
 
+def _validate_current_revisions(revisions: tuple[CalculationRevision, ...]) -> None:
+    from .calculation_revision_gate import require_calculation_revision_coordinates_current
+
+    for revision in revisions:
+        require_calculation_revision_coordinates_current(revision)
+
+
+def _observable_zones(
+    observations: Mapping[DeclarationsWorkspaceZone, DeclarationsWorkspaceZoneObservationV1],
+) -> set[DeclarationsWorkspaceZone]:
+    return {
+        zone
+        for zone, observation in observations.items()
+        if observation.availability
+        in {DeclarationsWorkspaceAvailability.AVAILABLE, DeclarationsWorkspaceAvailability.STALE}
+    }
+
+
+def _declaration_rows_if_observable(
+    observable: set[DeclarationsWorkspaceZone],
+    units: tuple[WorkUnit, ...],
+    revisions: tuple[CalculationRevision, ...],
+    result_casilla_reader: DeclarationResultCasillaReaderV1 | None,
+) -> tuple[DeclarationsWorkspaceDeclarationRefV1, ...]:
+    if DeclarationsWorkspaceZone.DECLARATIONS not in observable:
+        return ()
+    return _declaration_rows(units, revisions, result_casilla_reader)
+
+
+def _revision_rows_if_observable(
+    observable: set[DeclarationsWorkspaceZone],
+    revisions: tuple[CalculationRevision, ...],
+    units: tuple[WorkUnit, ...],
+) -> tuple[DeclarationsWorkspaceCalculationRevisionRefV1, ...]:
+    if DeclarationsWorkspaceZone.CALCULATION_REVISIONS not in observable:
+        return ()
+    return _revision_rows(revisions, {unit.work_unit_id: unit for unit in units})
+
+
+def _filing_history_rows_if_observable(
+    observable: set[DeclarationsWorkspaceZone],
+    filings: tuple[ModeloRecord, ...],
+    lifecycle_facts: tuple[DeclarationsSanitizedLifecycleFactV1, ...],
+    units: tuple[WorkUnit, ...],
+) -> tuple[tuple[DeclarationsWorkspaceFilingRefV1, ...], tuple[DeclarationsWorkspaceLifecycleRefV1, ...]]:
+    if DeclarationsWorkspaceZone.FILING_HISTORY not in observable:
+        return (), ()
+    filing_rows = _filing_rows(filings)
+    unit_by_id = {unit.work_unit_id: unit for unit in units}
+    lifecycle_rows = _lifecycle_rows(lifecycle_facts, unit_by_id)
+    return filing_rows, lifecycle_rows
+
+
+def _zone_item_counts(
+    declaration_rows: tuple[DeclarationsWorkspaceDeclarationRefV1, ...],
+    revision_rows: tuple[DeclarationsWorkspaceCalculationRevisionRefV1, ...],
+    filing_rows: tuple[DeclarationsWorkspaceFilingRefV1, ...],
+    lifecycle_rows: tuple[DeclarationsWorkspaceLifecycleRefV1, ...],
+) -> dict[DeclarationsWorkspaceZone, int]:
+    return {
+        DeclarationsWorkspaceZone.DECLARATIONS: len(declaration_rows),
+        DeclarationsWorkspaceZone.CALCULATION_REVISIONS: len(revision_rows),
+        DeclarationsWorkspaceZone.FILING_HISTORY: len(filing_rows) + len(lifecycle_rows),
+    }
+
+
+def _zone_states(
+    observations: Mapping[DeclarationsWorkspaceZone, DeclarationsWorkspaceZoneObservationV1],
+    observable: set[DeclarationsWorkspaceZone],
+    declaration_rows: tuple[DeclarationsWorkspaceDeclarationRefV1, ...],
+    revision_rows: tuple[DeclarationsWorkspaceCalculationRevisionRefV1, ...],
+    filing_rows: tuple[DeclarationsWorkspaceFilingRefV1, ...],
+    lifecycle_rows: tuple[DeclarationsWorkspaceLifecycleRefV1, ...],
+) -> tuple[DeclarationsWorkspaceZoneStateV1, ...]:
+    counts = _zone_item_counts(declaration_rows, revision_rows, filing_rows, lifecycle_rows)
+    return tuple(
+        DeclarationsWorkspaceZoneStateV1(
+            **observations[zone].model_dump(),
+            sources=_SOURCES_BY_ZONE[zone],
+            item_count=counts[zone] if zone in observable else None,
+        )
+        for zone in DeclarationsWorkspaceZone
+    )
+
+
 def project_declarations_workspace(
     *,
     bucket_id: BucketId,
@@ -299,10 +384,7 @@ def project_declarations_workspace(
     observations = _validate_observations(zone_observations)
     units = tuple(work_units.values())
     revisions = tuple(calculation_revisions.values())
-    from .calculation_revision_gate import require_calculation_revision_coordinates_current
-
-    for revision in revisions:
-        require_calculation_revision_coordinates_current(revision)
+    _validate_current_revisions(revisions)
     filings = tuple(filing_records.records.values())
     _validate_catalogue_joins(
         bucket_id=bucket_id,
@@ -312,40 +394,31 @@ def project_declarations_workspace(
         lifecycle_facts=lifecycle_facts,
     )
 
-    observable = {
-        zone
-        for zone, observation in observations.items()
-        if observation.availability
-        in {DeclarationsWorkspaceAvailability.AVAILABLE, DeclarationsWorkspaceAvailability.STALE}
-    }
-    declaration_rows = (
-        _declaration_rows(units, revisions, result_casilla_reader)
-        if DeclarationsWorkspaceZone.DECLARATIONS in observable
-        else ()
+    observable = _observable_zones(observations)
+    declaration_rows = _declaration_rows_if_observable(
+        observable,
+        units,
+        revisions,
+        result_casilla_reader,
     )
-    revision_rows = (
-        _revision_rows(revisions, {unit.work_unit_id: unit for unit in units})
-        if DeclarationsWorkspaceZone.CALCULATION_REVISIONS in observable
-        else ()
+    revision_rows = _revision_rows_if_observable(
+        observable,
+        revisions,
+        units,
     )
-    filing_rows = _filing_rows(filings) if DeclarationsWorkspaceZone.FILING_HISTORY in observable else ()
-    lifecycle_rows = (
-        _lifecycle_rows(lifecycle_facts, {unit.work_unit_id: unit for unit in units})
-        if DeclarationsWorkspaceZone.FILING_HISTORY in observable
-        else ()
+    filing_rows, lifecycle_rows = _filing_history_rows_if_observable(
+        observable,
+        filings,
+        lifecycle_facts,
+        units,
     )
-    counts = {
-        DeclarationsWorkspaceZone.DECLARATIONS: len(declaration_rows),
-        DeclarationsWorkspaceZone.CALCULATION_REVISIONS: len(revision_rows),
-        DeclarationsWorkspaceZone.FILING_HISTORY: len(filing_rows) + len(lifecycle_rows),
-    }
-    zones = tuple(
-        DeclarationsWorkspaceZoneStateV1(
-            **observations[zone].model_dump(),
-            sources=_SOURCES_BY_ZONE[zone],
-            item_count=counts[zone] if zone in observable else None,
-        )
-        for zone in DeclarationsWorkspaceZone
+    zones = _zone_states(
+        observations,
+        observable,
+        declaration_rows,
+        revision_rows,
+        filing_rows,
+        lifecycle_rows,
     )
     return DeclarationsWorkspaceProjectionV1(
         bucket_id=bucket_id,

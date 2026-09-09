@@ -21,7 +21,6 @@ from ..flows import (
     REPEATING_INSTANCE_SEPARATOR,
     CheckpointAvailability,
     CopyRefKind,
-    FlowIntentKind,
     FlowMode,
     FlowWidgetKind,
     PageStatus,
@@ -77,20 +76,6 @@ def test_copy_ref_kind_members_and_tokens() -> None:
     }
 
 
-def test_flow_intent_kind_members_and_tokens() -> None:
-    assert {member.name: member.value for member in FlowIntentKind} == {
-        "ANSWER": "answer",
-        "NEXT": "next",
-        "BACK": "back",
-        "JUMP": "jump",
-        "RESET": "reset",
-        "RESTART": "restart",
-        "REVIEW": "review",
-        "CHECKPOINT": "checkpoint",
-        "SUBMIT": "submit",
-    }
-
-
 @pytest.mark.parametrize(
     "enum_cls",
     [
@@ -99,7 +84,6 @@ def test_flow_intent_kind_members_and_tokens() -> None:
         FlowMode,
         CheckpointAvailability,
         CopyRefKind,
-        FlowIntentKind,
     ],
 )
 def test_each_taxonomy_is_a_str_enum(enum_cls: type[StrEnum]) -> None:

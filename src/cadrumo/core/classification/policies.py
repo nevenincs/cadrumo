@@ -5,9 +5,7 @@ entry, audit-log entry) declares a :class:`SensitivityClass`. Each class maps to
 a default :class:`ClassificationPolicy` resolved by :func:`default_policy_for`;
 the policy pins the at-rest treatment (plaintext or ciphertext-required),
 retention behaviour, and the redaction rule references that the audit sink and
-run-trace path honour. Operator-facing output uses
-:class:`OutputSensitivityClass` and :func:`default_output_policy_for` so CLI
-public output can be classified without pretending it is a persisted record.
+run-trace path honour.
 
 The default policy table is the single point of truth. Per-domain
 repositories MAY override the default for an individual record (e.g.
@@ -75,25 +73,6 @@ class SensitivityClass(StrEnum):
     CACHE = "cache"
     CORPUS = "corpus"
     OPERATIONAL = "operational"
-    DIAGNOSTIC = "diagnostic"
-
-
-class OutputSensitivityClass(StrEnum):
-    """Closed catalogue of output redaction surfaces.
-
-    Attributes:
-        CLI_PUBLIC: Operator-facing CLI success output. It is not a
-            persisted sensitivity class; the renderer redacts before
-            emitting text or JSON.
-        LOG: Log-line and log-context output.
-        ERROR: Error-envelope and exception-message output.
-        DIAGNOSTIC: Diagnostic output that may also be persisted under
-            :attr:`SensitivityClass.DIAGNOSTIC`.
-    """
-
-    CLI_PUBLIC = "cli_public"
-    LOG = "log"
-    ERROR = "error"
     DIAGNOSTIC = "diagnostic"
 
 
@@ -269,29 +248,6 @@ class ClassificationPolicy(BaseModel):
     redaction_rules: tuple[str, ...] = Field(default=())
 
 
-class OutputClassificationPolicy(BaseModel):
-    """Default redaction policy attached to an output surface.
-
-    Output classification is intentionally separate from
-    :class:`SensitivityClass`: CLI success output is a rendering-time
-    boundary, while diagnostics may also be persisted and therefore keep
-    their existing at-rest sensitivity.
-
-    Attributes:
-        output: Output surface this policy governs.
-        redaction_rules: Tuple of redaction-rule names to apply before
-            output leaves the process.
-        persisted_as: Persisted sensitivity class when this output is
-            also stored. ``None`` means the surface is emit-only.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    output: OutputSensitivityClass
-    redaction_rules: tuple[str, ...] = Field(default=())
-    persisted_as: SensitivityClass | None = Field(default=None)
-
-
 _FISCAL_YEAR_RETENTION = timedelta(days=365 * 5)
 """Five fiscal years — Spanish autónomo statute-of-limitations envelope."""
 
@@ -375,31 +331,6 @@ _DEFAULT_POLICY_TABLE: Mapping[SensitivityClass, ClassificationPolicy] = Mapping
     },
 )
 
-_DEFAULT_OUTPUT_POLICY_TABLE: Mapping[OutputSensitivityClass, OutputClassificationPolicy] = MappingProxyType(
-    {
-        OutputSensitivityClass.CLI_PUBLIC: OutputClassificationPolicy(
-            output=OutputSensitivityClass.CLI_PUBLIC,
-            redaction_rules=_AUDIT_REDACTION_RULES,
-            persisted_as=None,
-        ),
-        OutputSensitivityClass.LOG: OutputClassificationPolicy(
-            output=OutputSensitivityClass.LOG,
-            redaction_rules=_AUDIT_REDACTION_RULES,
-            persisted_as=SensitivityClass.AUDIT,
-        ),
-        OutputSensitivityClass.ERROR: OutputClassificationPolicy(
-            output=OutputSensitivityClass.ERROR,
-            redaction_rules=_AUDIT_REDACTION_RULES,
-            persisted_as=SensitivityClass.AUDIT,
-        ),
-        OutputSensitivityClass.DIAGNOSTIC: OutputClassificationPolicy(
-            output=OutputSensitivityClass.DIAGNOSTIC,
-            redaction_rules=_AUDIT_REDACTION_RULES,
-            persisted_as=SensitivityClass.DIAGNOSTIC,
-        ),
-    },
-)
-
 
 def default_policy_for(sensitivity: SensitivityClass) -> ClassificationPolicy:
     """Return the default :class:`ClassificationPolicy` for ``sensitivity``.
@@ -413,16 +344,3 @@ def default_policy_for(sensitivity: SensitivityClass) -> ClassificationPolicy:
         constructing a fresh :class:`ClassificationPolicy`.
     """
     return _DEFAULT_POLICY_TABLE[sensitivity]
-
-
-def default_output_policy_for(output: OutputSensitivityClass) -> OutputClassificationPolicy:
-    """Return the default output redaction policy for ``output``.
-
-    Args:
-        output: The output surface to look up.
-
-    Returns:
-        The default :class:`OutputClassificationPolicy`. The returned
-        record is frozen and shared.
-    """
-    return _DEFAULT_OUTPUT_POLICY_TABLE[output]

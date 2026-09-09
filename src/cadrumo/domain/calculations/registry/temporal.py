@@ -62,9 +62,83 @@ def revision_selection_coordinates(
     return tuple((filing_year, period) for filing_year in years for period in selector.periods)
 
 
-def _revision_is_effective_on(revision: ModeloRevision, on: date | None) -> bool:
-    """Return whether ``on`` falls within a revision's inclusive date window."""
-    return on is None or (revision.valid_from <= on and (revision.valid_to is None or on <= revision.valid_to))
+def _declared_filing_window_covers(
+    revision: ModeloRevision,
+    *,
+    on: date,
+    filing_year: int,
+    period: str | None,
+) -> bool:
+    """Return whether ``on`` falls inside a filing window this revision declares.
+
+    Scoped to the requested coordinate: a window admits ``on`` only for the
+    ``filing_year`` it declares and, when the caller named one, the period it
+    declares. A window opened for December's monthly filing must not admit a
+    request for the fourth quarter merely because the two are filed together.
+    """
+    for window in revision.deadline_windows:
+        if window.filing_year != filing_year:
+            continue
+        if period is not None and selector_token_for_request((window.period.registry_token,), period) is None:
+            continue
+        if window.opens_on <= on <= window.closes_on:
+            return True
+    return False
+
+
+def _revision_governs_period_on(revision: ModeloRevision, on: date) -> bool:
+    """Return whether ``on`` falls inside the tax periods a revision governs."""
+    return revision.valid_from <= on and (revision.valid_to is None or on <= revision.valid_to)
+
+
+def _effective_candidates(
+    matching: list[ModeloRevision],
+    *,
+    on: date | None,
+    filing_year: int,
+    period: str | None,
+) -> list[ModeloRevision]:
+    """Narrow selector-matched revisions to those applicable on ``on``, in tiers.
+
+    ``valid_from``/``valid_to`` delimit the TAX PERIODS a revision governs, not
+    the dates on which it may be filed: the corpus declares them at period
+    granularity throughout, down to mid-period design boundaries (modelo 490's
+    2022 first quarter closes at 31 March 2022, modelo 763's 2012 revision spans
+    only its second and third quarters). Almost every filing is made after the
+    period it declares has closed, so testing a filing date against that window
+    alone refuses the revision at the very moment it is legally due -- modelo
+    390's resumen anual is filed in the thirty first calendar days of the
+    January FOLLOWING its ejercicio (Orden EHA/3111/2009, art. 8), which no
+    ``valid_to`` of 31 December can contain.
+
+    The filing reach is therefore read from the one place the registry grounds
+    it -- the revision's own ``deadline_windows``, each carrying the legal and
+    source references that establish it -- rather than by widening a period
+    window past the law or inferring a deadline in code.
+
+    The two tiers are ORDERED, not pooled, and the order is what keeps a design
+    boundary readable. Across a boundary the outgoing revision's last filing
+    window overlaps the incoming revision's first governed periods: on 15
+    September 2024 modelo 303's ``2024-hasta-08-y-2t`` is still filable for
+    August while ``2024-desde-09-y-3t`` already governs September. Pooling the
+    two makes that date ambiguous and refuses a question that has an obvious
+    answer. A revision whose governed periods are live is the design in force,
+    so the window tier is consulted only once no candidate governs ``on`` --
+    which is exactly the after-the-year-closes case the windows exist for.
+
+    A revision declaring no window for the requested coordinate makes no claim
+    about being filable outside its periods and is refused exactly as before.
+    """
+    if on is None:
+        return matching
+    governing = [revision for revision in matching if _revision_governs_period_on(revision, on)]
+    if governing:
+        return governing
+    return [
+        revision
+        for revision in matching
+        if _declared_filing_window_covers(revision, on=on, filing_year=filing_year, period=period)
+    ]
 
 
 def _year_revision_candidates(
@@ -73,12 +147,18 @@ def _year_revision_candidates(
     filing_year: int,
     on: date | None,
 ) -> list[ModeloRevision]:
-    """Return year-matching revisions in the model's declared order."""
-    return [
-        revision
-        for revision in modelo.revisions.values()
-        if revision.period_selector.includes_year(filing_year) and _revision_is_effective_on(revision, on)
+    """Return year-matching revisions applicable on ``on``, in the declared order.
+
+    ``period`` is ``None`` here because the question is not period-scoped: the
+    caller asked which revision governs a filing YEAR. Every window the modelo
+    declares for that year is therefore admissible evidence, and the tier order
+    above -- not a period filter this caller cannot supply -- is what keeps a
+    design boundary unambiguous.
+    """
+    matching = [
+        revision for revision in modelo.revisions.values() if revision.period_selector.includes_year(filing_year)
     ]
+    return _effective_candidates(matching, on=on, filing_year=filing_year, period=None)
 
 
 def _select_single_year_revision(
@@ -133,8 +213,9 @@ def select_revision_for_year(
             searched for the one matching ``filing_year`` and ``on``.
         filing_year: AEAT filing year used to narrow revisions by their
             ``period_selector``.
-        on: Optional reference date that must fall within the revision's
-            ``valid_from`` / ``valid_to`` window.
+        on: Optional reference date at which the revision must be the
+            applicable design: inside the tax periods it governs, or inside a
+            filing window it declares for this coordinate.
     """
     return _select_single_year_revision(
         modelo,
@@ -159,22 +240,23 @@ def select_revision(
             ``period_selector``.
         period: Period token (e.g. ``"1T"``, ``"0A"``, ``"ALTA"``);
             case-insensitive against the revision's declared periods.
-        on: Optional reference date that must fall within the revision's
-            ``valid_from`` / ``valid_to`` window.
+        on: Optional reference date at which the revision must be the
+            applicable design: inside the tax periods it governs, or inside a
+            filing window it declares for this coordinate.
         revision_id: Optional explicit revision id; restricts candidates to
             the matching revision when supplied.
     """
-    candidates = [
+    matching = [
         revision
         for revision in modelo.revisions.values()
         if _revision_matches_request(
             revision,
             filing_year=filing_year,
             period=period,
-            on=on,
             revision_id=revision_id,
         )
     ]
+    candidates = _effective_candidates(matching, on=on, filing_year=filing_year, period=period)
     return _select_single_revision(
         modelo,
         candidates,
@@ -189,9 +271,15 @@ def _revision_matches_request(
     *,
     filing_year: int,
     period: str,
-    on: date | None,
     revision_id: RevisionId | None,
 ) -> bool:
+    """Return whether a revision matches the request's identity and selector.
+
+    Deliberately date-free: ``on`` narrows the matched set in tiers via
+    :func:`_effective_candidates`, which cannot be expressed as a per-revision
+    predicate because the tier a revision lands in depends on whether any OTHER
+    candidate governs the date.
+    """
     if revision_id is not None and revision.id != revision_id:
         return False
     if not revision.period_selector.includes_year(filing_year):
@@ -204,9 +292,7 @@ def _revision_matches_request(
     #
     # The caller's token remains unchanged; canonical normalisation happens at
     # the snapshot boundary, where relation consumers compare exact tokens.
-    if selector_token_for_request(revision.period_selector.periods, period) is None:
-        return False
-    return on is None or (revision.valid_from <= on and (revision.valid_to is None or on <= revision.valid_to))
+    return selector_token_for_request(revision.period_selector.periods, period) is not None
 
 
 def _select_single_revision(

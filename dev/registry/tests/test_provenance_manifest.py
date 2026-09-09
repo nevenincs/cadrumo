@@ -37,7 +37,6 @@ from ..pipeline._provenance_manifest import (
 from ..pipeline._record_design_ir import (
     RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,
     RecordDesignIntermediate,
-    RecordDesignWorkbookFormat,
 )
 from ..pipeline._render_profile import (
     RENDER_PROFILE_SCHEMA_VERSION,
@@ -48,6 +47,7 @@ from ..pipeline._render_profile import (
 )
 from ..pipeline._semantic_map import SemanticMap
 from ..pipeline._semantic_map_join import JoinedRecordDesign, JoinedRecordDesignField, JoinedRecordDesignRecord
+from ..pipeline.record_design_intermediate import RecordDesignWorkbookFormat
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

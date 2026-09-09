@@ -1493,14 +1493,6 @@ application:
           com SetupAnswers.
   workflow:
     errors:
-      adapter_missing_deadline_engine: El motor de flux de treball requereix un adaptador
-        deadline_engine.
-      adapter_missing_filing_draft_builder: El motor de flux de treball requereix
-        un adaptador filing_draft_builder.
-      adapter_missing_inputs_provider: El motor de flux de treball requereix un proveïdor
-        d'entrades basat en dipòsit.
-      adapter_missing_submission_engine: El motor de flux de treball requereix un
-        adaptador submission_engine.
       no_active_profile_bucket: No hi ha cap perfil actiu.
       no_run_for_period: No s'ha trobat cap execució de flux de treball per al model
         {modelo} període {period}. Executeu el flux almenys una vegada abans de reprendre.

@@ -12,7 +12,7 @@ See Also:
     :func:`~domain.calculations.registry.calculate_registry_snapshot`
         Evaluates the registry snapshot after the relation values and manual
         Modelo 714 inputs are assembled.
-    :class:`~application.calculations.EnrollmentRecorder`
+    :class:`~application.calculations.cross-year observation`
         Captures the two distinct renta years asserted against the authorization
         manifest.
     :mod:`~domain.calculations.registry.tests.test_modelo_714_registry`
@@ -35,7 +35,6 @@ from ....domain.calculations.registry.formula_runtime import RegistryCalculation
 from ....domain.calculations.registry.ids import RelationId
 from ....tests.registry_observations import registry_grounded_modelo_observation, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from ..observations_repository import CalculationObservationRepository
 from ..relation_prefill import resolve_relations_from_local_store
 
@@ -247,7 +246,6 @@ def test_modelo_714_joint_limit_calculates_from_local_m100_observation(tmp_path:
 
 def test_modelo_714_joint_limit_calculation_enrolls_two_renta_years(tmp_path: Path) -> None:
     """End-to-end enrollment: M714 art.31 calculation across two renta years."""
-    recorder = EnrollmentRecorder(_MODELO)
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
         for filing_year in _RENTA_YEARS:
@@ -262,8 +260,10 @@ def test_modelo_714_joint_limit_calculation_enrolls_two_renta_years(tmp_path: Pa
             )
             result = _calculate_714_from_local_m100(scenario=scenario, repository=repo)
             _assert_joint_limit_outputs(result, scenario)
-            recorder.record_calculation_year(filing_year=filing_year, produced_value_count=len(result.values))
 
-    evidence = recorder.evidence()
-    assert evidence.distinct_renta_years == _RENTA_YEARS
-    assert_enrollment_matches_manifest(evidence)
+
+
+
+
+
+

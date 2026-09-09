@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import ClassVar, cast, override
 
-from textual.app import ComposeResult
+from textual.app import App, ComposeResult
 from textual.widgets import DataTable, Static
 
 from ....core.identity import TransactionId
@@ -16,7 +16,63 @@ from .controller import (
     ledger_copy,
     review_status_label,
 )
+from .models import LedgerEntryRowV1
 from .workspace_presentation import ledger_workspace_page, restore_transaction_focus
+
+
+def _description_fill_column(columns: tuple[tuple[str, str, int], ...]) -> int:
+    """Choose the description column as the table's only surplus-width target."""
+    names = [name for name, _, _ in columns]
+    return names.index("description") if "description" in names else -1
+
+
+def _selected_row_key(table: DataTable[str]) -> str | None:
+    """Capture the current semantic row key before a table rebuild."""
+    if not table.is_valid_row_index(table.cursor_row):
+        return None
+    return table.ordered_rows[table.cursor_row].key.value
+
+
+def _add_entry_columns(table: ContentDataTable[str], columns: tuple[tuple[str, str, int], ...]) -> None:
+    """Recreate the visible columns with the same translated header floors."""
+    for name, key, size in columns:
+        header = ledger_copy(key)
+        table.add_column(header, key=name, width=max(size, len(header)))
+
+
+def _entry_cells(row: LedgerEntryRowV1) -> dict[str, str]:
+    """Project one backend-owned row into the table's display cells."""
+    entry = row.source
+    return {
+        "date": entry.date,
+        "description": entry.description,
+        "amount": f"{entry.amount} {entry.currency}",
+        "review_status": review_status_label(row.review_status),
+        "counterparty": entry.counterparty,
+        "classification": entry.business_classification,
+        "direction": entry.direction,
+    }
+
+
+def _add_entry_rows(
+    table: ContentDataTable[str],
+    columns: tuple[tuple[str, str, int], ...],
+    rows: tuple[LedgerEntryRowV1, ...],
+) -> None:
+    """Append rows in controller order, retaining each transaction key."""
+    for row in rows:
+        cells = _entry_cells(row)
+        table.add_row(*(cells[name] for name, _, _ in columns), key=row.transaction_id)
+
+
+def _restore_entry_selection(table: DataTable[str], selected: str | None) -> None:
+    """Restore the cursor by transaction key rather than by prior row index."""
+    if selected is None:
+        return
+    for index, ordered in enumerate(table.ordered_rows):
+        if ordered.key.value == selected:
+            table.move_cursor(row=index)
+            break
 
 
 class LedgerEntriesScreen(LedgerWorkspaceScreen):
@@ -64,7 +120,7 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
         # cannot be used with class and instance checks` at mount. The cast
         # carries the element type for the reader and the type checker.
         table = cast("ContentDataTable[str]", self.query_one("#ledger-entries", ContentDataTable))
-        self._fill_table(table, self.app.size.width)
+        self._fill_table(table, cast("App[None]", self.app).size.width)
         if not table.row_count:
             self.query_one("#ledger-refusal", Static).update(ledger_copy("tui.ledger.entries.empty"))
         navigation = cast("DataTable[str]", self.query_one("#ledger-navigation", DataTable))
@@ -104,38 +160,15 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
         # or a state word gains nothing from being wider than its content,
         # while a truncated description is the one cell the operator cannot
         # reconstruct from the others.
-        names = [name for name, _, _ in self._visible_columns(width)]
-        table.fill_column = names.index("description") if "description" in names else -1
-        selected = None
-        if table.is_valid_row_index(table.cursor_row):
-            selected = table.ordered_rows[table.cursor_row].key.value
+        table.fill_column = _description_fill_column(self._visible_columns(width))
+        selected = _selected_row_key(table)
         table.clear(columns=True)
         columns = self._visible_columns(width)
-        for name, key, size in columns:
-            header = ledger_copy(key)
-            # Same floor the budget assumed. Applied here too because the
-            # table's own header-floor pass runs on resize, and this rebuild
-            # replaces the columns it already corrected.
-            table.add_column(header, key=name, width=max(size, len(header)))
-        for row in self.controller.entry_rows():
-            entry = row.source
-            cells = {
-                "date": entry.date,
-                "description": entry.description,
-                "amount": f"{entry.amount} {entry.currency}",
-                "review_status": review_status_label(row.review_status),
-                "counterparty": entry.counterparty,
-                "classification": entry.business_classification,
-                "direction": entry.direction,
-            }
-            table.add_row(*(cells[name] for name, _, _ in columns), key=row.transaction_id)
+        _add_entry_columns(table, columns)
+        _add_entry_rows(table, columns, self.controller.entry_rows())
         if isinstance(table, ContentDataTable):
             table.absorb_surplus_width()
-        if selected is not None:
-            for index, ordered in enumerate(table.ordered_rows):
-                if ordered.key.value == selected:
-                    table.move_cursor(row=index)
-                    break
+        _restore_entry_selection(table, selected)
 
     def on_resize(self) -> None:
         """Re-take the column set for the new width."""
@@ -144,7 +177,7 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
         # cannot be used with class and instance checks` at mount. The cast
         # carries the element type for the reader and the type checker.
         table = cast("ContentDataTable[str]", self.query_one("#ledger-entries", ContentDataTable))
-        self._fill_table(table, self.app.size.width)
+        self._fill_table(table, cast("App[None]", self.app).size.width)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         """Route navigation or retain a safe semantic entry selection."""

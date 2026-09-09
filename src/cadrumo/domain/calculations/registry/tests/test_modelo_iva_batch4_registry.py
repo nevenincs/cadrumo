@@ -18,8 +18,6 @@ See Also:
         Registry validator that cross-checks legal/source catalogue references.
     :func:`~domain.calculations.registry.authority.bundled_authority`
         Authority facade used to inspect generated deadline windows.
-    :data:`~core.access_gate.CANONICAL_MODELO_FLEET`
-        Canonical fleet membership asserted once the foundations are registered.
     :data:`~core.UNMODELED_OBLIGATIONS`
         Legacy unmodeled set these IVA foundations must leave.
     :mod:`~domain.calculations.registry.tests.test_modelo_592_576_121_122_registry`
@@ -101,6 +99,4 @@ def test_modelo_341_reagp_quarterly_windows_20_days_with_january_30_day_q4() -> 
 
 def test_341_is_registry_backed() -> None:
     """380 relocated out of the registry (web-form-only, no AEAT machine format)."""
-    from .....core.access_gate.authorization import CANONICAL_MODELO_FLEET
-
-    assert "341" in CANONICAL_MODELO_FLEET
+    assert bundled_authority().modelo("341").id == "341"

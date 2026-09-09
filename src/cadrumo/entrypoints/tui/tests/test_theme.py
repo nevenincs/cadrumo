@@ -28,10 +28,8 @@ from textual.containers import Vertical
 from textual.screen import Screen
 from textual.theme import Theme
 
-from ....application.user_profile.status_projection import StatusPageData
 from ....core.config import TuiAppearance
 from ....core.directory_scan import scan_directory
-from ....entrypoints.tui.profile.status import StatusScreen
 from ....entrypoints.tui.secret.registration import RegistrationScreen
 from ..components.host import ScreenHostApp
 from ..components.theme import (
@@ -207,10 +205,11 @@ def _registration_screen() -> RegistrationScreen:
     Geometry never calls them, but the screen takes them because it does
     not reach up into the application layer for itself.
     """
-    from ....core.credentials import assess_profile_password
-    from ..devtools.fixture import registration_attempt
+    from dev.tui.harness.fixture import registration_attempt
 
-    return RegistrationScreen(assess=assess_profile_password, register=registration_attempt)
+    from ....core.credentials import assess_profile_password
+
+    return RegistrationScreen(assess=assess_profile_password, register=lambda _request: None)
 
 
 def _gutters(active: Screen[Any]) -> tuple[int, int]:
@@ -229,8 +228,8 @@ def _gutters(active: Screen[Any]) -> tuple[int, int]:
 @pytest.mark.parametrize(("width", "height"), _GEOMETRY_SIZES)
 @pytest.mark.parametrize(
     "build",
-    [_registration_screen, lambda: StatusScreen(StatusPageData())],
-    ids=["registration", "status"],
+    [_registration_screen],
+    ids=["registration"],
 )
 async def test_the_content_column_consumes_the_available_terminal(
     build: Callable[[], App[object]],

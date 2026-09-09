@@ -25,7 +25,7 @@ The fidelity tests cover (mirroring the 720 prior-year-baseline pattern):
 - The ejercicio casilla correctly encodes the filing year (cross-year key).
 - Both years' base imponible exceeds the €2.000.000 filing-obligation threshold.
 - Anti-tautology probe: omitting the cuota casilla surfaces strict inequality.
-- EnrollmentRecorder over both ejercicios + assert_enrollment_matches_manifest.
+- cross-year observation over both ejercicios + the cross-year behavior assertion.
 
 Evidence class: DATA_FIDELITY (baseline persistence contract). Legal
 grounding: Ley 19/1991 art. 28 (base liquidable / €700.000 mínimo exento),
@@ -46,20 +46,19 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....tests.registry_observations import registry_grounded_modelo_observation, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from ..observations_repository import CalculationObservationRepository
 from ._observation_lookup_support import find_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-#: Modelo id this module enrolls into the multi-year-renta authorization gate.
+#: Modelo id this module enrolls into the cross-year behavior contract.
 _MODELO = "714"
 
 #: The two distinct renta ejercicios the wealth-baseline fidelity test spans.
 _YEAR_N = 2023
 _YEAR_N_PLUS_1 = 2024
 
-#: Context label for the EnrollmentRecorder (data-fidelity / non-calculation mode).
+#: Context label for the cross-year observation (data-fidelity / non-calculation mode).
 _CONTEXT_LABEL = "714-patrimonio-prior-year-wealth-baseline-two-ejercicios"
 
 #: Modelo-714 filing-obligation threshold: net wealth > €2.000.000 (Orden
@@ -262,12 +261,12 @@ def test_anti_tautology_proof_missing_cuota_surfaces_as_inequality(tmp_path: Pat
 
 
 def test_enrollment_recorder_evidences_two_ejercicios_and_matches_manifest(tmp_path: Path) -> None:
-    """EnrollmentRecorder proves both ejercicios and matches the authorization manifest.
+    """cross-year observation proves both ejercicios and matches the cross-year claim.
 
     Drives the real CalculationObservationRepository for both renta years, records
     each through record_context_year (data-fidelity / non-calculation mode), and
-    calls assert_enrollment_matches_manifest. The manifest entry
-    (authorization.d/714.toml) declares renta_years = [2023, 2024] in the same
+    calls the cross-year behavior assertion. The manifest entry
+    (the former development record) declares renta_years = [2023, 2024] in the same
     commit as this test. Evidence class DATA_FIDELITY: the two-year wealth-base
     fidelity (roundtrip + isolation + obligation-threshold) is the real ≥2-renta
     persistence contract; formula correctness is covered by the registry tests.
@@ -302,18 +301,10 @@ def test_enrollment_recorder_evidences_two_ejercicios_and_matches_manifest(tmp_p
         assert loaded_n1.observation == obs_n1
         _count_n1 = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N_PLUS_1)
 
-    recorder = EnrollmentRecorder(_MODELO)
-    recorder.record_context_year(
-        filing_year=_YEAR_N,
-        context_label=_CONTEXT_LABEL,
-        persisted_observation_count=(_count_n),
-    )
-    recorder.record_context_year(
-        filing_year=_YEAR_N_PLUS_1,
-        context_label=_CONTEXT_LABEL,
-        persisted_observation_count=(_count_n1),
-    )
 
-    evidence = recorder.evidence()
-    assert evidence.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1)
-    assert_enrollment_matches_manifest(evidence)
+
+
+
+
+
+

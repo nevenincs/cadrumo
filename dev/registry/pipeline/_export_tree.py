@@ -59,9 +59,6 @@ from ._render_profile import (
     RenderProfileSourceEvidence,
     SingletonNumericRule,
     Width17MembershipRule,
-    _has_absent_naturaleza,
-    _is_numeric_aeat_type,
-    _states_no_wire_fact,
     validate_render_profile,
 )
 from ._semantic_map import SemanticMap
@@ -69,6 +66,11 @@ from ._semantic_map_join import JoinedRecordDesign, JoinedRecordDesignField, Joi
 from ._variable_envelope import (
     compile_auxiliary_envelope_header_definition,
     compile_filing_envelope_definition,
+)
+from .render_profile_eligibility import (
+    _has_absent_naturaleza,
+    _is_numeric_aeat_type,
+    _states_no_wire_fact,
 )
 from .source_defects import (
     NoteGovernedAmountDeclaration,

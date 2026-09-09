@@ -1,9 +1,7 @@
 """Typed reports the storage-management service returns.
 
-Every model here is a projection of the core storage taxonomy plus what the
-filesystem currently holds. The taxonomy axes are carried through verbatim
-rather than re-derived, so an operator reading a row sees the same declared
-lifecycle and override policy the resolver and the reclaim guard read.
+Every model here is an operator-facing projection of the core storage taxonomy
+plus what the filesystem currently holds.
 
 See Also:
     :data:`~cadrumo.core.STORAGE_TAXONOMY`
@@ -17,17 +15,9 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
-from ...core.identity import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.storage_taxonomy import (
-    FingerprintParticipation,
     StorageArea,
-    StorageCategory,
-    StorageGrouping,
-    StorageLifecycle,
-    StorageNodeKind,
-    StorageOverridePolicy,
-    StorageScope,
 )
 
 
@@ -67,39 +57,6 @@ class StorageOccupancy(StrEnum):
     ABSENT = "absent"
     EMPTY = "empty"
     POPULATED = "populated"
-
-
-class StorageInventoryRow(_StorageReport):
-    """One declared location, its resolved path, and what it holds.
-
-    ``reclaimable`` is derived from :attr:`lifecycle` alone and is reported so
-    the operator can see, before asking, which members ``reclaim`` would accept.
-    It is a projection of the same predicate the reclaim guard applies, never a
-    second opinion about it.
-    """
-
-    category: StorageCategory
-    subpath: str = Field(min_length=1)
-    node_kind: StorageNodeKind
-    scope: StorageScope
-    grouping: StorageGrouping
-    lifecycle: StorageLifecycle
-    override_policy: StorageOverridePolicy
-    fingerprint_participation: FingerprintParticipation
-    settings_field: str | None = None
-    path: Path | None = None
-    bucket_id: BucketId | None = None
-    occupancy: StorageOccupancy
-    entry_count: int = Field(default=0, ge=0)
-    reclaimable: bool
-
-
-class StorageInventoryReport(_StorageReport):
-    """Every declared location resolved against the current settings."""
-
-    storage_root: Path
-    active_bucket_id: BucketId | None = None
-    rows: tuple[StorageInventoryRow, ...]
 
 
 class StorageAreaInventoryRow(_StorageReport):
@@ -192,8 +149,6 @@ __all__ = [
     "StorageAreaInventoryRow",
     "StorageCheckIssueKind",
     "StorageInitReport",
-    "StorageInventoryReport",
-    "StorageInventoryRow",
     "StorageOccupancy",
     "StorageReclaimReport",
     "StorageTreeCheckReport",

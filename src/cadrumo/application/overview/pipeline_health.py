@@ -281,6 +281,52 @@ def _modelo_health_row(
     )
 
 
+def _latest_report_for_revision(
+    revision: CalculationRevision | None,
+    reports_by_revision_id: dict[str, tuple[VerificationReport, ...]],
+) -> VerificationReport | None:
+    if revision is None:
+        return None
+    reports = reports_by_revision_id.get(revision.calculation_revision_id, ())
+    return reports[-1] if reports else None
+
+
+def _modelo_health_rows(
+    work_units: tuple[WorkUnit, ...],
+    revisions_by_id: dict[str, CalculationRevision],
+    reports_by_revision_id: dict[str, tuple[VerificationReport, ...]],
+) -> list[ModeloHealthRow]:
+    rows: list[ModeloHealthRow] = []
+    for unit in sorted(work_units, key=lambda u: str(u.modelo)):
+        revision = (
+            revisions_by_id.get(unit.current_calculation_revision_id)
+            if unit.current_calculation_revision_id is not None
+            else None
+        )
+        rows.append(
+            _modelo_health_row(
+                modelo=str(unit.modelo),
+                work_unit=unit,
+                revision=revision,
+                latest_report=_latest_report_for_revision(revision, reports_by_revision_id),
+            ),
+        )
+    return rows
+
+
+def _pipeline_health_totals_and_readiness(
+    rows: list[ModeloHealthRow],
+    ledger_report: LedgerStatusReport,
+) -> tuple[int, int, bool]:
+    total_blocking = sum(row.blocking_finding_count for row in rows)
+    total_warning = sum(row.warning_finding_count for row in rows)
+    ledger_clean = ledger_report.readiness_issue_count == 0 and ledger_report.pending_review_count == 0
+    modelos_ready = bool(rows) and all(
+        row.state in (ModeloReadinessState.VERIFIED, ModeloReadinessState.FILED) for row in rows
+    )
+    return total_blocking, total_warning, ledger_clean and modelos_ready
+
+
 def build_pipeline_health_report(
     *,
     bucket_id: str,
@@ -318,33 +364,8 @@ def build_pipeline_health_report(
         A :class:`PipelineHealthReport` with one :class:`ModeloHealthRow` per
         work unit, findings totals, and an overall ``ready`` verdict.
     """
-    rows: list[ModeloHealthRow] = []
-    for unit in sorted(work_units, key=lambda u: str(u.modelo)):
-        revision = None
-        if unit.current_calculation_revision_id is not None:
-            revision = revisions_by_id.get(unit.current_calculation_revision_id)
-        latest_report: VerificationReport | None = None
-        if revision is not None:
-            reports = reports_by_revision_id.get(revision.calculation_revision_id, ())
-            if reports:
-                latest_report = reports[-1]
-        rows.append(
-            _modelo_health_row(
-                modelo=str(unit.modelo),
-                work_unit=unit,
-                revision=revision,
-                latest_report=latest_report,
-            ),
-        )
-
-    total_blocking = sum(row.blocking_finding_count for row in rows)
-    total_warning = sum(row.warning_finding_count for row in rows)
-
-    ledger_clean = ledger_report.readiness_issue_count == 0 and ledger_report.pending_review_count == 0
-    modelos_ready = bool(rows) and all(
-        row.state in (ModeloReadinessState.VERIFIED, ModeloReadinessState.FILED) for row in rows
-    )
-    ready = ledger_clean and modelos_ready
+    rows = _modelo_health_rows(work_units, revisions_by_id, reports_by_revision_id)
+    total_blocking, total_warning, ready = _pipeline_health_totals_and_readiness(rows, ledger_report)
 
     return PipelineHealthReport(
         bucket_id=bucket_id,

@@ -15,11 +15,15 @@ from .....domain.calculations.registry.bindings import CasillaObservation as Cas
 from .....domain.calculations.registry.bindings import RegistryModeloObservation as RegistryModeloObservation
 from .....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from .....domain.calculations.registry.errors import RegistryValidationError
-from .....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from .....domain.calculations.registry.formula_runtime import (
+    RegistryCalculationResult,
+    calculate_registry_snapshot,
+)
 from .....domain.calculations.registry.ids import BindingId, RelationId
 from .....domain.calculations.registry.relations import (
     resolve_relation_values_from_observations as resolve_relation_values_from_observations,
 )
+from .....domain.calculations.registry.schema import RegistrySnapshot
 from .....domain.period import calculation_filing_date
 from .....tests import FIXTURES_DIR
 from .....tests.registry_observations import registry_grounded_observations
@@ -190,6 +194,158 @@ _DECL_MONETARY_SUMMARY_CASILLAS: tuple[CasillaId, ...] = (
 )
 
 
+def _assert_annual_perceptor_binding_value(
+    *,
+    case_label: str,
+    extracted: Mapping[CasillaId, object],
+    perceptor_binding_value: Decimal,
+) -> None:
+    extracted_perceptors = extracted.get(_DECL_TOTAL_PERCEPTORES_CASILLA)
+    assert extracted_perceptors == perceptor_binding_value, (
+        f"PARSER-GAP [{case_label}]: fixture printed {_DECL_TOTAL_PERCEPTORES_CASILLA!r} "
+        f"as {extracted_perceptors!r}, expected {perceptor_binding_value!r}."
+    )
+
+
+def _resolve_annual_relation_values_or_fail(
+    *,
+    snapshot: RegistrySnapshot,
+    observations: tuple[RegistryModeloObservation, ...],
+    filing_year: int,
+    period: str,
+    case_label: str,
+    relation_label: str,
+) -> dict[RelationId, Decimal]:
+    try:
+        return resolve_relation_values_from_observations(
+            snapshot.revision,
+            observations,
+            filing_year=filing_year,
+            period=period,
+        )
+    except RegistryValidationError as exc:
+        pytest.fail(
+            f"BINDING-GAP [{case_label}]: resolve_relation_values_from_observations raised "
+            f"RegistryValidationError - {relation_label} relation chain is structurally broken.\n"
+            f"  error: {exc}",
+        )
+
+
+def _assert_retired_annual_perceptor_relation_absent(
+    *,
+    case_label: str,
+    relation_values: Mapping[RelationId, Decimal],
+    retired_perceptor_relation_id: str,
+    perceptor_binding_id: BindingId,
+) -> None:
+    assert retired_perceptor_relation_id not in relation_values, (
+        f"BINDING-GAP [{case_label}]: retired quarterly perceptor relation "
+        f"{retired_perceptor_relation_id!r} was resolved. Perceptor count must flow through "
+        f"{perceptor_binding_id!r}."
+    )
+
+
+def _calculate_annual_relation_closure_or_fail(
+    *,
+    snapshot: RegistrySnapshot,
+    binding_values: Mapping[BindingId, Decimal],
+    relation_values: Mapping[RelationId, Decimal],
+    year: int,
+    period: str,
+    case_label: str,
+) -> RegistryCalculationResult:
+    try:
+        return calculate_registry_snapshot(
+            snapshot,
+            inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
+            date_context={"filing_period": _period_to_date(year, period)},
+            binding_values=binding_values,
+            relation_values=relation_values,
+        )
+    except RegistryValidationError as exc:
+        pytest.fail(
+            f"BINDING-GAP [{case_label}]: calculate_registry_snapshot raised "
+            f"RegistryValidationError - engine could not recompute from supplied relation_values.\n"
+            f"  error: {exc}\n"
+            f"  binding_values keys: {sorted(binding_values)}\n"
+            f"  relation_values keys: {sorted(relation_values)}",
+        )
+
+
+def _assert_annual_bound_perceptor_output(
+    *,
+    case_label: str,
+    result: RegistryCalculationResult,
+    perceptor_binding_id: BindingId,
+    perceptor_binding_value: Decimal,
+) -> dict[CasillaId, object]:
+    engine_values = dict(result.values)
+    entries_by_target = {entry.target_casilla_id: entry for entry in result.entries}
+
+    assert _DECL_TOTAL_PERCEPTORES_CASILLA not in entries_by_target, (
+        f"FORMULA-MISMATCH [{case_label}]: {_DECL_TOTAL_PERCEPTORES_CASILLA!r} was produced "
+        "by a formula entry, but this casilla must be bound."
+    )
+    assert engine_values.get(_DECL_TOTAL_PERCEPTORES_CASILLA) == perceptor_binding_value, (
+        f"FORMULA-MISMATCH [{case_label}]: engine resolved {_DECL_TOTAL_PERCEPTORES_CASILLA!r} "
+        f"as {engine_values.get(_DECL_TOTAL_PERCEPTORES_CASILLA)!r}, expected binding "
+        f"{perceptor_binding_id!r} value {perceptor_binding_value!r}."
+    )
+    return engine_values
+
+
+def _assert_annual_monetary_closure_casilla(
+    *,
+    case_label: str,
+    casilla_id: CasillaId,
+    extracted: Mapping[CasillaId, object],
+    engine_values: Mapping[CasillaId, object],
+    binding_values: Mapping[BindingId, Decimal],
+    relation_values: Mapping[RelationId, Decimal],
+) -> None:
+    extracted_value = extracted.get(casilla_id)
+    engine_value = engine_values.get(casilla_id)
+    assert extracted_value is not None, (
+        f"PARSER-GAP [{case_label}]: closure casilla {casilla_id!r} absent from extracted values"
+    )
+    assert isinstance(extracted_value, Decimal), (
+        f"PARSER-GAP [{case_label}]: {casilla_id!r} is not Decimal: {type(extracted_value).__name__!r}"
+    )
+    assert engine_value is not None, (
+        f"FORMULA-MISMATCH [{case_label}]: casilla {casilla_id!r} absent from engine result - "
+        "formula evaluation order issue or casilla missing from revision."
+    )
+    assert isinstance(engine_value, Decimal), (
+        f"FORMULA-MISMATCH [{case_label}]: casilla {casilla_id!r} is not Decimal: {type(engine_value).__name__!r}"
+    )
+    assert engine_value == extracted_value, (
+        f"FORMULA-MISMATCH [{case_label}]: engine recomputed {casilla_id!r} as "
+        f"{engine_value!r} but AEAT-printed fixture shows {extracted_value!r}.\n"
+        f"  diff: {engine_value - extracted_value!r}\n"
+        f"  binding_values supplied: {binding_values}\n"
+        f"  relation_values supplied: {relation_values}"
+    )
+
+
+def _assert_annual_monetary_closure_values(
+    *,
+    case_label: str,
+    extracted: Mapping[CasillaId, object],
+    engine_values: Mapping[CasillaId, object],
+    binding_values: Mapping[BindingId, Decimal],
+    relation_values: Mapping[RelationId, Decimal],
+) -> None:
+    for casilla_id in _DECL_MONETARY_SUMMARY_CASILLAS:
+        _assert_annual_monetary_closure_casilla(
+            case_label=case_label,
+            casilla_id=casilla_id,
+            extracted=extracted,
+            engine_values=engine_values,
+            binding_values=binding_values,
+            relation_values=relation_values,
+        )
+
+
 def _assert_annual_relation_closure_chain(
     *,
     annual_modelo: str,
@@ -211,10 +367,10 @@ def _assert_annual_relation_closure_chain(
         year=year,
         period=period,
     )
-    extracted_perceptors = extracted.get(_DECL_TOTAL_PERCEPTORES_CASILLA)
-    assert extracted_perceptors == perceptor_binding_value, (
-        f"PARSER-GAP [{case_label}]: fixture printed {_DECL_TOTAL_PERCEPTORES_CASILLA!r} "
-        f"as {extracted_perceptors!r}, expected {perceptor_binding_value!r}."
+    _assert_annual_perceptor_binding_value(
+        case_label=case_label,
+        extracted=extracted,
+        perceptor_binding_value=perceptor_binding_value,
     )
 
     observations = _registry_modelo_observations_from_values(
@@ -223,79 +379,43 @@ def _assert_annual_relation_closure_chain(
         period_values=source_period_values,
     )
     snapshot = _registry_snapshot(annual_modelo, year, period)
-    try:
-        relation_values = resolve_relation_values_from_observations(
-            snapshot.revision,
-            observations,
-            filing_year=year,
-            period=period,
-        )
-    except RegistryValidationError as exc:
-        pytest.fail(
-            f"BINDING-GAP [{case_label}]: resolve_relation_values_from_observations raised "
-            f"RegistryValidationError - {relation_label} relation chain is structurally broken.\n"
-            f"  error: {exc}",
-        )
-    assert retired_perceptor_relation_id not in relation_values, (
-        f"BINDING-GAP [{case_label}]: retired quarterly perceptor relation "
-        f"{retired_perceptor_relation_id!r} was resolved. Perceptor count must flow through "
-        f"{perceptor_binding_id!r}."
+    relation_values = _resolve_annual_relation_values_or_fail(
+        snapshot=snapshot,
+        observations=observations,
+        filing_year=year,
+        period=period,
+        case_label=case_label,
+        relation_label=relation_label,
+    )
+    _assert_retired_annual_perceptor_relation_absent(
+        case_label=case_label,
+        relation_values=relation_values,
+        retired_perceptor_relation_id=retired_perceptor_relation_id,
+        perceptor_binding_id=perceptor_binding_id,
     )
 
     binding_values: dict[BindingId, Decimal] = {perceptor_binding_id: perceptor_binding_value}
-    try:
-        result = calculate_registry_snapshot(
-            snapshot,
-            inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
-            date_context={"filing_period": _period_to_date(year, period)},
-            binding_values=binding_values,
-            relation_values=relation_values,
-        )
-    except RegistryValidationError as exc:
-        pytest.fail(
-            f"BINDING-GAP [{case_label}]: calculate_registry_snapshot raised "
-            f"RegistryValidationError - engine could not recompute from supplied relation_values.\n"
-            f"  error: {exc}\n"
-            f"  binding_values keys: {sorted(binding_values)}\n"
-            f"  relation_values keys: {sorted(relation_values)}",
-        )
-
-    engine_values = dict(result.values)
-    entries_by_target = {entry.target_casilla_id: entry for entry in result.entries}
-
-    assert _DECL_TOTAL_PERCEPTORES_CASILLA not in entries_by_target, (
-        f"FORMULA-MISMATCH [{case_label}]: {_DECL_TOTAL_PERCEPTORES_CASILLA!r} was produced "
-        "by a formula entry, but this casilla must be bound."
+    result = _calculate_annual_relation_closure_or_fail(
+        snapshot=snapshot,
+        binding_values=binding_values,
+        relation_values=relation_values,
+        year=year,
+        period=period,
+        case_label=case_label,
     )
-    assert engine_values.get(_DECL_TOTAL_PERCEPTORES_CASILLA) == perceptor_binding_value, (
-        f"FORMULA-MISMATCH [{case_label}]: engine resolved {_DECL_TOTAL_PERCEPTORES_CASILLA!r} "
-        f"as {engine_values.get(_DECL_TOTAL_PERCEPTORES_CASILLA)!r}, expected binding "
-        f"{perceptor_binding_id!r} value {perceptor_binding_value!r}."
+    engine_values = _assert_annual_bound_perceptor_output(
+        case_label=case_label,
+        result=result,
+        perceptor_binding_id=perceptor_binding_id,
+        perceptor_binding_value=perceptor_binding_value,
     )
-
-    for casilla_id in _DECL_MONETARY_SUMMARY_CASILLAS:
-        extracted_value = extracted.get(casilla_id)
-        engine_value = engine_values.get(casilla_id)
-        assert extracted_value is not None, (
-            f"PARSER-GAP [{case_label}]: closure casilla {casilla_id!r} absent from extracted values"
-        )
-        assert isinstance(extracted_value, Decimal), (
-            f"PARSER-GAP [{case_label}]: {casilla_id!r} is not Decimal: {type(extracted_value).__name__!r}"
-        )
-        assert engine_value is not None, (
-            f"FORMULA-MISMATCH [{case_label}]: casilla {casilla_id!r} absent from engine result - "
-            f"formula evaluation order issue or casilla missing from revision."
-        )
-        assert isinstance(engine_value, Decimal), (
-            f"FORMULA-MISMATCH [{case_label}]: casilla {casilla_id!r} is not Decimal: {type(engine_value).__name__!r}"
-        )
-        assert engine_value == extracted_value, (
-            f"FORMULA-MISMATCH [{case_label}]: engine recomputed {casilla_id!r} as "
-            f"{engine_value!r} but AEAT-printed fixture shows {extracted_value!r}.\n"
-            f"  diff: {engine_value - extracted_value!r}\n"
-            f"  binding_values supplied: {binding_values}\n"
-            f"  relation_values supplied: {relation_values}"
-        )
+    _assert_annual_monetary_closure_values(
+        case_label=case_label,
+        extracted=extracted,
+        engine_values=engine_values,
+        binding_values=binding_values,
+        relation_values=relation_values,
+    )
 
 
 def _decimal_inputs_from_extracted_values(

@@ -174,7 +174,18 @@ def diff_revisions_cmd(
 
 
 def _diff_revisions_lines(report: RegistryRevisionDiffReport) -> list[str]:
-    lines = [
+    return [
+        *_diff_revision_summary_lines(report),
+        *_diff_casilla_lines(report),
+        *_diff_formula_lines(report),
+        *_diff_parameter_lines(report),
+        *_diff_binding_lines(report),
+    ]
+
+
+def _diff_revision_summary_lines(report: RegistryRevisionDiffReport) -> list[str]:
+    """Render the aggregate counts and revision-level reference changes."""
+    return [
         metric_line("modelo", report.modelo),
         metric_line("from_revision_id", report.from_revision_id),
         metric_line("to_revision_id", report.to_revision_id),
@@ -194,6 +205,11 @@ def _diff_revisions_lines(report: RegistryRevisionDiffReport) -> list[str]:
         metric_line("revision_legal_refs_added", ",".join(report.revision_legal_refs_added)),
         metric_line("revision_legal_refs_removed", ",".join(report.revision_legal_refs_removed)),
     ]
+
+
+def _diff_casilla_lines(report: RegistryRevisionDiffReport) -> list[str]:
+    """Render casilla additions, removals, renumberings, and legal-reference changes."""
+    lines: list[str] = []
     for casilla in report.added_casillas:
         lines.append("\t".join(("added_casilla", casilla.id, casilla.number, casilla.label)))
     for casilla in report.removed_casillas:
@@ -210,18 +226,35 @@ def _diff_revisions_lines(report: RegistryRevisionDiffReport) -> list[str]:
             ),
         )
     lines.extend(f"changed_casilla_legal_refs\t{casilla_id}" for casilla_id in report.changed_casilla_legal_refs)
-    lines.extend(f"added_formula\t{formula_id}" for formula_id in report.added_formulas)
+    return lines
+
+
+def _diff_formula_lines(report: RegistryRevisionDiffReport) -> list[str]:
+    """Render formula additions, removals, and changed targets."""
+    lines = [f"added_formula\t{formula_id}" for formula_id in report.added_formulas]
     lines.extend(f"removed_formula\t{formula_id}" for formula_id in report.removed_formulas)
-    for formula in report.changed_formulas:
-        lines.append("\t".join(("changed_formula", formula.id, formula.target_casilla_id)))
-    lines.extend(f"added_parameter\t{parameter_id}" for parameter_id in report.added_parameters)
+    lines.extend(
+        "\t".join(("changed_formula", formula.id, formula.target_casilla_id))
+        for formula in report.changed_formulas
+    )
+    return lines
+
+
+def _diff_parameter_lines(report: RegistryRevisionDiffReport) -> list[str]:
+    """Render parameter additions, removals, and changed data types."""
+    lines = [f"added_parameter\t{parameter_id}" for parameter_id in report.added_parameters]
     lines.extend(f"removed_parameter\t{parameter_id}" for parameter_id in report.removed_parameters)
-    for parameter in report.changed_parameters:
-        lines.append("\t".join(("changed_parameter", parameter.id, parameter.data_type)))
-    for binding in report.added_bindings:
-        lines.append("\t".join(("added_binding", binding.id, binding.source)))
-    for binding in report.removed_bindings:
-        lines.append("\t".join(("removed_binding", binding.id, binding.source)))
+    lines.extend(
+        "\t".join(("changed_parameter", parameter.id, parameter.data_type))
+        for parameter in report.changed_parameters
+    )
+    return lines
+
+
+def _diff_binding_lines(report: RegistryRevisionDiffReport) -> list[str]:
+    """Render binding additions and removals with their source identities."""
+    lines = ["\t".join(("added_binding", binding.id, binding.source)) for binding in report.added_bindings]
+    lines.extend("\t".join(("removed_binding", binding.id, binding.source)) for binding in report.removed_bindings)
     return lines
 
 

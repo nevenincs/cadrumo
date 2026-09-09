@@ -430,20 +430,44 @@ def extract_justificante_from_digest(
 
 def _extract_csv(text: str, normalised: str, source_label: object) -> str:
     """Locate the Código Seguro de Verificación across the five regex tiers."""
-    csv_match = (
-        _CSV_AUTHENTICITY_FOOTER_RE.search(text)
-        or _CSV_AUTHENTICITY_FOOTER_RE.search(normalised)
-        or _CSV_LABEL_RE.search(text)
-        or _CSV_LABEL_RE.search(normalised)
-        or _CSV_LABEL_INVERTED_RE.search(text)
-        or _CSV_LABEL_INVERTED_RE.search(normalised)
-        or _CSV_LABEL_EN_RE.search(text)
-        or _CSV_LABEL_EN_RE.search(normalised)
-        or _CSV_FALLBACK_RE.search(normalised)
-    )
+    csv_match = _find_csv_match(text, normalised)
     if csv_match is None:
         raise JustificanteCsvNotFoundError(f"no Código Seguro de Verificación found in {source_label}")
-    csv = normalise_aeat_csv(csv_match.group(1))
+    return _validate_csv_match(csv_match, source_label)
+
+
+def _find_csv_match(text: str, normalised: str) -> re.Match[str] | None:
+    """Return the first CSV match in the extractor's precedence order.
+
+    The order is part of the receipt contract: the authenticity footer wins,
+    followed by Spanish label layouts, the English label, and finally the
+    explicit ``CSV=`` fallback.  Keeping the ordered pairs in a loop preserves
+    the short-circuit behavior of the former boolean expression while making
+    each candidate search independently auditable.
+    """
+    candidates = (
+        (_CSV_AUTHENTICITY_FOOTER_RE, text),
+        (_CSV_AUTHENTICITY_FOOTER_RE, normalised),
+        (_CSV_LABEL_RE, text),
+        (_CSV_LABEL_RE, normalised),
+        (_CSV_LABEL_INVERTED_RE, text),
+        (_CSV_LABEL_INVERTED_RE, normalised),
+        (_CSV_LABEL_EN_RE, text),
+        (_CSV_LABEL_EN_RE, normalised),
+        (_CSV_FALLBACK_RE, normalised),
+    )
+    return next(filter(None, map(_search_csv_candidate, candidates)), None)
+
+
+def _search_csv_candidate(candidate: tuple[re.Pattern[str], str]) -> re.Match[str] | None:
+    """Search one ordered CSV candidate without changing match semantics."""
+    pattern, candidate_text = candidate
+    return pattern.search(candidate_text)
+
+
+def _validate_csv_match(match: re.Match[str], source_label: object) -> str:
+    """Normalize and validate one regex capture as an AEAT CSV."""
+    csv = normalise_aeat_csv(match.group(1))
     if not is_aeat_csv(csv):
         raise JustificanteCsvNotFoundError(
             f"Código Seguro de Verificación {csv!r} in {source_label} does not match the AEAT shape",

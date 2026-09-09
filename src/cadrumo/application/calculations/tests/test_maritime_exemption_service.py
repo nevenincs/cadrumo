@@ -170,7 +170,7 @@ class TestResolveMaritimeExemptionRebeca:
 
 
 class TestResolveMaritimeExemptionDa41Guard:
-    """DA 41 inactive guard fires before any observation is produced."""
+    """DA 41 inactive guard fires before any observation is _produced."""
 
     def test_raises_maritime_exemption_inactive_error(self) -> None:
         facts = MaritimeWorkerFacts(
@@ -224,3 +224,5 @@ class TestResolveMaritimeExemptionRetmarGate:
         result = resolve_maritime_exemption(facts=MaritimeWorkerFacts())
         assert result.observations == ()
         assert result.casilla_values == {}
+
+

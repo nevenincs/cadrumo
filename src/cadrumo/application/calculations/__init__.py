@@ -152,14 +152,7 @@ from .m303_regimen_simplificado_annual_summary import (
     validate_m303_regimen_simplificado_annual_summary_target_revision,
 )
 from .maritime_exemption_service import MaritimeExemptionResult, resolve_maritime_exemption
-from .multi_year import (
-    EnrollmentEvidence,
-    EnrollmentEvidenceError,
-    EnrollmentRecorder,
-    EnrollmentYearObservation,
-    PreviousFilingSourceResolver,
-    assert_enrollment_matches_manifest,
-)
+from .multi_year import PreviousFilingSourceResolver
 from .observations_repository import (
     CalculationObservationRepository,
     IvaWalletDecisionEnvelopePayload,
@@ -234,10 +227,6 @@ __all__ = [
     "CrossPeriodDependencyOrigin",
     "CrossPeriodDependencyRequirement",
     "CrossPeriodExpectedMemberSet",
-    "EnrollmentEvidence",
-    "EnrollmentEvidenceError",
-    "EnrollmentRecorder",
-    "EnrollmentYearObservation",
     "IvaCompensationAnnualCrossCheck",
     "IvaCompensationAnnualPartitionSourceResolver",
     "IvaCompensationAnnualSummary",
@@ -273,7 +262,6 @@ __all__ = [
     "assemble_refund_observations",
     "assemble_related_party_observations",
     "assemble_withholding_observations",
-    "assert_enrollment_matches_manifest",
     "build_bienes_inversion_regularizacion_advisory",
     "build_bienes_inversion_transmision_advisory",
     "build_prorrata_declared_volume_divergence_advisory",

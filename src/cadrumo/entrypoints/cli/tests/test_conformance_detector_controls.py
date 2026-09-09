@@ -117,12 +117,12 @@ def test_the_bespoke_notice_detector_flags_a_smuggled_diagnostic_field(field_nam
     )
 
 
-@pytest.mark.parametrize("field_name", ["authorization_advisory", "source_advisories", "stale_draft_advisories"])
+@pytest.mark.parametrize("field_name", ["command_advisory", "source_advisories", "stale_draft_advisories"])
 def test_the_bespoke_notice_detector_flags_the_suffix_smuggling_shape(field_name: str) -> None:
     """The ``*_advisory`` / ``*_advisories`` suffix is the shape a per-command name hides behind.
 
     A literal-name set alone would be defeated by prefixing: ``advisory`` is
-    caught, ``authorization_advisory`` is the same field wearing a command's
+    caught, ``command_advisory`` is the same field wearing a command's
     name. The suffix rule is what makes the check general, so it is controlled
     separately from the literal set above.
     """

@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import override
 
 import pytest
+from dev.tui.harness.frame import geometry_band
 from textual.app import App, ComposeResult
 from textual.containers import VerticalScroll
 from textual.screen import Screen
@@ -44,7 +45,6 @@ from .....domain.modelos.filing_record import (
 )
 from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ...components.host import ScreenHostApp
-from ...devtools.frame import geometry_band
 from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ..controller import DeclarationsWorkspaceController, declarations_copy
 from ..filing_history import DeclarationsFilingHistoryScreen

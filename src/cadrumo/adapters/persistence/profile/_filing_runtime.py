@@ -20,8 +20,6 @@ See Also:
     :mod:`~application.filing.persistence_wiring`
         Application-layer sibling helper that keeps application filing imports
         out of adapter module import time.
-    :class:`~domain.filing.ModeloDraftRepositoryProtocol`
-        Domain repository port implemented by the filing draft adapter.
 """
 
 from __future__ import annotations

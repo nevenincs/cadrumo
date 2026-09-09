@@ -230,16 +230,6 @@ def next_page(definition: FlowDefinition, state: FlowState) -> FlowState:
     )
 
 
-def back_page(definition: FlowDefinition, state: FlowState) -> FlowState:
-    """Move the cursor to the previous visible page; never gated."""
-    sequence = visible_sequence(definition, state)
-    position = _cursor_position(sequence, state.cursor)
-    if position is None or position == 0:
-        return state
-    target = sequence[position - 1]
-    return state.model_copy(update={"cursor": target.key, "visited": (*state.visited, target.key)})
-
-
 def jump_to(definition: FlowDefinition, state: FlowState, page_key: str) -> FlowState:
     """Set the cursor onto any currently-visible page (the review jump)."""
     visible = _visible_by_key(definition, state)
@@ -483,7 +473,6 @@ __all__ = [
     "FlowState",
     "VisiblePage",
     "answer",
-    "back_page",
     "first_unanswered_key",
     "jump_to",
     "next_page",

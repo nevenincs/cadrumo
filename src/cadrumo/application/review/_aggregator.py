@@ -23,6 +23,44 @@ from .models import ReviewItem
 _logger = get_logger(__name__)
 
 
+def _source_review_items(
+    settings: Settings,
+    *,
+    bucket_id: str,
+    confidence_below: Decimal | None,
+) -> list[ReviewItem]:
+    """Collect the source-owned items before queue-level filters are applied."""
+    if confidence_below is not None:
+        return list(
+            transactions_low_confidence(settings, bucket_id=bucket_id, threshold=confidence_below),
+        )
+    return [
+        *transactions_pending(settings, bucket_id=bucket_id),
+        *invoices_pending(settings, bucket_id=bucket_id),
+        *drafts_pending(settings, bucket_id=bucket_id),
+    ]
+
+
+def _filter_review_items(
+    items: list[ReviewItem],
+    *,
+    kinds: frozenset[ReviewItemKind] | None,
+    modelo: str | None,
+) -> list[ReviewItem]:
+    """Apply queue-owned kind and modelo filters in their established order."""
+    if kinds is not None:
+        items = [item for item in items if item.kind in kinds]
+    if modelo is not None:
+        items = [item for item in items if item.modelo == modelo]
+    return items
+
+
+def _sort_review_items(items: list[ReviewItem]) -> tuple[ReviewItem, ...]:
+    """Return items in the stable severity, time, and identity order."""
+    items.sort(key=lambda item: (-severity_rank(item.severity), item.since, item.item_id))
+    return tuple(items)
+
+
 class ReviewQueue:
     """Static collector that aggregates pending review items across sources.
 
@@ -71,22 +109,13 @@ class ReviewQueue:
         Returns:
             A tuple sorted by ``(severity desc, since asc, item_id asc)``.
         """
-        if confidence_below is not None:
-            items: list[ReviewItem] = list(
-                transactions_low_confidence(settings, bucket_id=bucket_id, threshold=confidence_below),
-            )
-        else:
-            items = [
-                *transactions_pending(settings, bucket_id=bucket_id),
-                *invoices_pending(settings, bucket_id=bucket_id),
-                *drafts_pending(settings, bucket_id=bucket_id),
-            ]
-        if kinds is not None:
-            items = [item for item in items if item.kind in kinds]
-        if modelo is not None:
-            items = [item for item in items if item.modelo == modelo]
-        items.sort(key=lambda item: (-severity_rank(item.severity), item.since, item.item_id))
-        result = tuple(items)
+        items = _source_review_items(
+            settings,
+            bucket_id=bucket_id,
+            confidence_below=confidence_below,
+        )
+        items = _filter_review_items(items, kinds=kinds, modelo=modelo)
+        result = _sort_review_items(items)
         _logger.debug(
             "review queue collected items=%d kinds=%s modelo=%s",
             len(result),

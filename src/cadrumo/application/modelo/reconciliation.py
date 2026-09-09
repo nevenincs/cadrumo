@@ -98,7 +98,9 @@ _REFERENCE_ELISION = "..."
 
 if TYPE_CHECKING:
     from ...core.period import Period
+    from ...domain.calculations.registry.schema import RegistrySnapshot
     from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
+    from ...domain.calculations.registry.schema_verification import RegistryVerificationPolicy
     from ...domain.justificante import Justificante
     from ...domain.modelos.calculation_revision import CalculationRevision
     from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
@@ -897,6 +899,93 @@ def _total_targets_for_work_unit(work_unit: WorkUnit) -> dict[str, _TotalTarget]
     return targets
 
 
+def _declaracion_registry_context(
+    work_unit: WorkUnit,
+) -> tuple[RegistrySnapshot, RegistryVerificationPolicy] | None:
+    """Resolve the registry snapshot and folded policy for a declaration compare."""
+    from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
+
+    try:
+        snapshot = resolve_registry_snapshot_for_work_unit(work_unit)
+        policy = snapshot.verification_policy()
+    except (LookupError, KeyError, AttributeError, ValueError, CadrumoError):
+        return None
+    return snapshot, policy
+
+
+def _declaracion_reconcilable_scope(
+    policy: RegistryVerificationPolicy,
+    *,
+    revision_casillas: Mapping[str, CasillaDefinition],
+) -> dict[str, None]:
+    """Return computed casillas that have an observable printed counterpart.
+
+    A casilla carrying an export exemption files no slot on the official
+    record, so the printed declaración cannot carry it either and the
+    extraction profile never targets it. Comparing it against a PDF asserts a
+    comparison this surface cannot perform: ``filed`` can never hold the id,
+    so every such casilla yields ``MISSING_IN_FILED`` whatever the taxpayer
+    declared, including when the computed value is non-zero.
+
+    Excluding them silences nothing observable. The two FEEDS_ADDRESSED_CASILLA
+    cases are already reconciled under the numbered box their projection
+    addresses, while the NOT_IN_RECORD_DESIGN cases have no printed
+    counterpart to observe. Deliberately do not collapse them into id
+    alignment: the semantic source is exempt precisely because it feeds the
+    addressed box, so merging the two ids would leave that exemption with no
+    subject.
+    """
+    return {
+        casilla_id: None
+        for casilla_id in policy.computed_casilla_ids
+        if getattr(revision_casillas.get(casilla_id), "export_exemption_reason", None) is None
+    }
+
+
+def _declaracion_present_scope(
+    policy: RegistryVerificationPolicy,
+    *,
+    computed_values: Mapping[str, Decimal],
+    filed_values: Mapping[str, Decimal],
+) -> dict[str, None]:
+    """Return reconcile-when-present casillas carried by both sides."""
+    return {
+        casilla_id: None
+        for casilla_id in policy.reconcile_when_present_casilla_ids
+        if casilla_id in computed_values and casilla_id in filed_values
+    }
+
+
+def _declaracion_divergences(
+    *,
+    policy: RegistryVerificationPolicy,
+    revision_casillas: Mapping[str, CasillaDefinition],
+    computed_values: Mapping[str, Decimal],
+    filed_values: Mapping[str, Decimal],
+) -> tuple[CasillaDivergence, ...]:
+    """Compare required casillas, then optional casillas present on both sides."""
+    reconcilable = _declaracion_reconcilable_scope(policy, revision_casillas=revision_casillas)
+    divergences = detect_casilla_divergences(
+        computed=computed_values,
+        filed=filed_values,
+        scope=reconcilable,
+        tolerance=policy.tolerance,
+    )
+    present_on_both = _declaracion_present_scope(
+        policy,
+        computed_values=computed_values,
+        filed_values=filed_values,
+    )
+    if present_on_both:
+        divergences += detect_casilla_divergences(
+            computed=computed_values,
+            filed=filed_values,
+            scope=present_on_both,
+            tolerance=policy.tolerance,
+        )
+    return divergences
+
+
 def _reconcile_declaracion_casillas(
     *,
     work_unit: WorkUnit,
@@ -929,13 +1018,10 @@ def _reconcile_declaracion_casillas(
     comparison the reconcile could not perform.
     """
     modelo = str(work_unit.modelo)
-    try:
-        from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
-
-        snapshot = resolve_registry_snapshot_for_work_unit(work_unit)
-        policy = snapshot.verification_policy()
-    except (LookupError, KeyError, AttributeError, ValueError, CadrumoError):
+    registry_context = _declaracion_registry_context(work_unit)
+    if registry_context is None:
         return [], [_totals_not_reconciled("snapshot_unavailable", modelo=modelo)]
+    snapshot, policy = registry_context
     if not policy.computed_casilla_ids and not policy.reconcile_when_present_casilla_ids:
         return [], [_totals_not_reconciled("map_not_declared", modelo=modelo)]
 
@@ -948,53 +1034,12 @@ def _reconcile_declaracion_casillas(
     revision_casillas = casillas_by_id(snapshot.revision)
     filed_values = _decimal_declaracion_values(declaracion)
     computed_values: Mapping[str, Decimal] = revision.casilla_values
-
-    # A casilla carrying an export exemption files no slot on the official
-    # record, so the printed declaración cannot carry it either and the
-    # extraction profile never targets it. Comparing it against a PDF asserts a
-    # comparison this surface cannot perform: `filed` can never hold the id, so
-    # every such casilla yields MISSING_IN_FILED whatever the taxpayer declared
-    # -- including when the computed value is NON-zero, which is a false finding
-    # against a box we never read.
-    #
-    # Excluding them silences nothing observable. The two FEEDS_ADDRESSED_CASILLA
-    # cases are already reconciled under the numbered box their projection
-    # addresses (27 and 45 are both enrolled AND extracted), so the observable
-    # comparison continues; the NOT_IN_RECORD_DESIGN cases have no printed
-    # counterpart to observe. Deliberately NOT collapsed into id alignment: the
-    # semantic source is exempt PRECISELY BECAUSE it feeds the addressed box, so
-    # merging the two ids would leave that exemption with no subject.
-    #
-    # Narrowed here rather than on the policy because the exemption is a fact
-    # about the PRINTED record; a fichero-side consumer of
-    # ``computed_casilla_ids`` is asking a different question.
-    reconcilable = dict.fromkeys(
-        casilla_id
-        for casilla_id in policy.computed_casilla_ids
-        if getattr(revision_casillas.get(casilla_id), "export_exemption_reason", None) is None
+    divergences = _declaracion_divergences(
+        policy=policy,
+        revision_casillas=revision_casillas,
+        computed_values=computed_values,
+        filed_values=filed_values,
     )
-
-    divergences = detect_casilla_divergences(
-        computed=computed_values,
-        filed=filed_values,
-        scope=reconcilable,
-        tolerance=policy.tolerance,
-    )
-    # reconcile-when-present casillas: value-reconcile only when both sides
-    # actually carry a value; an omission on either side is legitimate here and
-    # must never surface as MISSING_IN_FILED / EXTRA_IN_FILED.
-    present_on_both = {
-        casilla_id: None
-        for casilla_id in policy.reconcile_when_present_casilla_ids
-        if casilla_id in computed_values and casilla_id in filed_values
-    }
-    if present_on_both:
-        divergences += detect_casilla_divergences(
-            computed=computed_values,
-            filed=filed_values,
-            scope=present_on_both,
-            tolerance=policy.tolerance,
-        )
     diffs = [_casilla_divergence_diff(divergence, revision_casillas=revision_casillas) for divergence in divergences]
     return diffs, []
 

@@ -51,7 +51,6 @@ from ..calculation_actions import (
     calculate_modelo_revision,
     get_calculation_revision,
     list_calculation_revisions,
-    mark_revision_verificado_completo,
 )
 from ..filing_actions import (
     file_modelo_revision,
@@ -137,7 +136,6 @@ __all__ = [
     "list_calculation_revisions",
     "list_filing_records",
     "list_verification_reports",
-    "mark_revision_verificado_completo",
     "registry_required_manual_casillas",
     "registry_required_manual_casillas_for",
     "seed_modelo_180_work_unit",

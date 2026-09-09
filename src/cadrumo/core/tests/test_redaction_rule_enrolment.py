@@ -41,11 +41,9 @@ import pytest
 
 from ..classification.policies import (
     ClassificationPolicy,
-    OutputSensitivityClass,
     RedactionRule,
     RedactionStrategy,
     SensitivityClass,
-    default_output_policy_for,
     default_policy_for,
 )
 from ..errors.hierarchy import RedactionError
@@ -60,14 +58,10 @@ if TYPE_CHECKING:
 def _named_by_every_policy() -> dict[str, tuple[str, ...]]:
     """Map each policy to the rule names it enrols.
 
-    Both tables, because both resolve through the same registry and a
-    typo is as silent in one as in the other. The output table is where
-    operator-facing redaction is decided, so leaving it out would exempt
-    the surface the operator actually reads.
+    The persisted policies resolve through the shared registry, so a typo in
+    one silently disables that arm unless the refusing resolver catches it.
     """
-    persisted = {f"storage:{s.value}": default_policy_for(s).redaction_rules for s in SensitivityClass}
-    output = {f"output:{s.value}": default_output_policy_for(s).redaction_rules for s in OutputSensitivityClass}
-    return persisted | output
+    return {f"storage:{s.value}": default_policy_for(s).redaction_rules for s in SensitivityClass}
 
 
 def _unresolvable(

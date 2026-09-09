@@ -24,12 +24,12 @@ from cadrumo.domain.calculations.registry.loader import load_catalogue_file, loa
 
 from ..pipeline._record_design_ir import (
     RecordDesignIntermediate,
-    RecordDesignIntermediateField,
     intermediate_anchor_key,
     load_record_design_intermediate,
 )
 from ..pipeline._semantic_map import SemanticMap, SemanticMapEntry, semantic_anchor_key
 from ..pipeline._semantic_map_loader import load_semantic_map
+from ..pipeline.record_design_intermediate import RecordDesignIntermediateField
 
 __all__ = [
     "M200CasillaCandidate",

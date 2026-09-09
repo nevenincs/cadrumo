@@ -192,6 +192,17 @@ def _destination_text(destination: str, *, locale: str | None = None) -> str:
     return _render_locale(key, locale)
 
 
+_ACTION_UNKNOWN_LOCALE_KEY: Final[str] = "tui.search.action.unknown"
+"""How an action this build cannot name is worded.
+
+An unnamed identifier used to render as generic "available action" copy, which
+made an unknown action indistinguishable from a correctly-named, genuinely
+offerable one -- a drifted identifier could then sit in a surface for days
+looking like working copy. The unknown state is worded as unknown instead, the
+way an unrecognised destination and an unrecognised refusal code already are.
+"""
+
+
 def workbench_action_label(action_id: str, *, locale: str | None = None) -> str:
     """Render one catalogue action without exposing its internal identifier.
 
@@ -199,8 +210,12 @@ def workbench_action_label(action_id: str, *, locale: str | None = None) -> str:
     workbench: the palette and Home resolve the same identifier to the same
     words, so a suggested task and the command that performs it cannot be
     described differently.
+
+    An identifier this build has no wording for renders as explicitly unknown
+    rather than as a plausible label: it still renders, because a table row is
+    not the place to raise, but it never claims to be a named action.
     """
-    key = _ACTION_LOCALE_KEYS.get(action_id, "tui.search.action.available")
+    key = _ACTION_LOCALE_KEYS.get(action_id, _ACTION_UNKNOWN_LOCALE_KEY)
     return _render_locale(key, locale)
 
 

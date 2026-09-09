@@ -60,7 +60,10 @@ from ._ledger_counterparty_payloads import (
 )
 
 if TYPE_CHECKING:
-    from ...application.ledger.counterparty_establishment import ConfirmedCounterpartyFacts
+    from ...application.ledger.counterparty_establishment import (
+        ConfirmedCounterpartyFacts,
+        ConfirmedCounterpartyResolution,
+    )
 
 
 def _confirmed_answers(fact: ConfirmedCounterpartyFacts) -> str:
@@ -226,6 +229,92 @@ def counterparty_withdraw(
     )
 
 
+def _counterparty_view_notices(
+    tax_identifier: str,
+    resolution: ConfirmedCounterpartyResolution,
+) -> list[Notice]:
+    """Project contradiction or absence into the shared notice channel."""
+    contradiction = resolution.contradiction
+    if contradiction is not None:
+        return [
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="ledger.counterparty.evidence_contradicts_confirmation",
+                message=tr(
+                    "cli.ledger.counterparty.notices.evidence_contradicts_confirmation",
+                    identifier=tax_identifier,
+                    confirmed=contradiction.confirmed_scope.value,
+                    evidenced=contradiction.evidenced_scope.value,
+                ),
+                context={
+                    "tax_identifier": tax_identifier,
+                    "confirmed_scope": contradiction.confirmed_scope.value,
+                    "evidenced_scope": contradiction.evidenced_scope.value,
+                },
+            ),
+        ]
+    if resolution.fact is None:
+        return [
+            Notice(
+                severity=NoticeSeverity.INFO,
+                code="ledger.counterparty.not_confirmed",
+                message=tr(
+                    "cli.ledger.counterparty.notices.not_confirmed",
+                    identifier=tax_identifier,
+                ),
+                context={"tax_identifier": tax_identifier},
+            ),
+        ]
+    return []
+
+
+def _counterparty_view_result(
+    tax_identifier: str,
+    evidenced_scope: IvaTerritorialScope | None,
+    resolution: ConfirmedCounterpartyResolution,
+) -> CounterpartyViewResult:
+    """Project the resolver's three-state answer onto the backend-owned payload."""
+    fact = resolution.fact
+    identification = resolution.identification
+    contradiction = resolution.contradiction
+    return CounterpartyViewResult(
+        tax_identifier=tax_identifier,
+        confirmed=fact is not None,
+        territorial_scope=fact.value if fact is not None else None,
+        source=fact.source if fact is not None else None,
+        # Read from the resolution rather than from the stored record, so
+        # what an operator is shown and what a later document consumes
+        # cannot drift: the resolver withholds a fact the evidence
+        # contradicts, and a payload read straight from the repository would
+        # show a value no document will actually use.
+        identification_state=identification.value if identification is not None else None,
+        identification_source=identification.source if identification is not None else None,
+        evidenced_scope=evidenced_scope,
+        contradicted=contradiction is not None,
+        # Carried only here and deliberately NOT in `territorial_scope`:
+        # that field is what the rung will answer, and on a contradiction it
+        # answers nothing.
+        confirmed_scope=contradiction.confirmed_scope if contradiction is not None else None,
+        contradiction_detail=contradiction.detail if contradiction is not None else None,
+    )
+
+
+def _counterparty_view_line(
+    tax_identifier: str,
+    resolution: ConfirmedCounterpartyResolution,
+) -> str:
+    """Render the text line from the same three states as the result payload."""
+    contradiction = resolution.contradiction
+    return f"{tax_identifier}: " + (
+        f"contradicted (confirmed {contradiction.confirmed_scope.value}, "
+        f"evidence {contradiction.evidenced_scope.value})"
+        if contradiction is not None
+        else resolution.fact.value.value
+        if resolution.fact is not None
+        else "not confirmed"
+    )
+
+
 def counterparty_view(
     ctx: typer.Context,
     tax_identifier: str,
@@ -261,81 +350,11 @@ def counterparty_view(
         country_code=country_code,
         evidenced_scope=evidenced_scope,
     )
-    fact = resolution.fact
-    identification = resolution.identification
-    contradiction = resolution.contradiction
-    notices: list[Notice] = []
-    if contradiction is not None:
-        # A WARNING rather than INFO: nothing here is a next-step hint. The
-        # store and the document make incompatible claims about the same party,
-        # and until one is withdrawn every confirm against this counterparty
-        # settles no territory at all.
-        notices.append(
-            Notice(
-                severity=NoticeSeverity.WARNING,
-                code="ledger.counterparty.evidence_contradicts_confirmation",
-                message=tr(
-                    "cli.ledger.counterparty.notices.evidence_contradicts_confirmation",
-                    identifier=tax_identifier,
-                    confirmed=contradiction.confirmed_scope.value,
-                    evidenced=contradiction.evidenced_scope.value,
-                ),
-                context={
-                    "tax_identifier": tax_identifier,
-                    "confirmed_scope": contradiction.confirmed_scope.value,
-                    "evidenced_scope": contradiction.evidenced_scope.value,
-                },
-            ),
-        )
-    elif fact is None:
-        notices.append(
-            Notice(
-                severity=NoticeSeverity.INFO,
-                code="ledger.counterparty.not_confirmed",
-                message=tr(
-                    "cli.ledger.counterparty.notices.not_confirmed",
-                    identifier=tax_identifier,
-                ),
-                context={"tax_identifier": tax_identifier},
-            ),
-        )
+    notices = _counterparty_view_notices(tax_identifier, resolution)
     emit_envelope(
         ctx,
         command="ledger.counterparty.show",
-        result=CounterpartyViewResult(
-            tax_identifier=tax_identifier,
-            confirmed=fact is not None,
-            territorial_scope=fact.value if fact is not None else None,
-            source=fact.source if fact is not None else None,
-            # Read from the resolution rather than from the stored record, so
-            # what an operator is shown and what a later document consumes
-            # cannot drift: the resolver withholds a fact the evidence
-            # contradicts, and a payload read straight from the repository would
-            # show a value no document will actually use.
-            identification_state=identification.value if identification is not None else None,
-            identification_source=identification.source if identification is not None else None,
-            evidenced_scope=evidenced_scope,
-            contradicted=contradiction is not None,
-            # Carried only here and deliberately NOT in `territorial_scope`:
-            # that field is what the rung will answer, and on a contradiction it
-            # answers nothing.
-            confirmed_scope=contradiction.confirmed_scope if contradiction is not None else None,
-            contradiction_detail=contradiction.detail if contradiction is not None else None,
-        ),
-        lines=[
-            # Rebuilt from the same three states the payload reports, so the
-            # text and the JSON cannot describe different outcomes. A
-            # contradiction must not read as "not confirmed": the store holds an
-            # answer, and it is the document that disagrees with it.
-            f"{tax_identifier}: "
-            + (
-                f"contradicted (confirmed {contradiction.confirmed_scope.value}, "
-                f"evidence {contradiction.evidenced_scope.value})"
-                if contradiction is not None
-                else fact.value.value
-                if fact is not None
-                else "not confirmed"
-            ),
-        ],
+        result=_counterparty_view_result(tax_identifier, evidenced_scope, resolution),
+        lines=[_counterparty_view_line(tax_identifier, resolution)],
         notices=notices,
     )

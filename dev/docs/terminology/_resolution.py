@@ -233,11 +233,27 @@ _LEGAL_TOML_RE = re.compile(
 _CLI_REFERENCE_RE = re.compile(
     r"^docs/cli/(?P<page>.+)\.rst$",
 )
-_CLI_COMMAND_PATH_RE = re.compile(r"^\*\*Command path:\*\* ``(?P<path>[^`]+)``\s*$")
-_CLI_PARAMETERS_HEADER_RE = re.compile(r"^\*\*Parameters\*\*\s*$")
-_CLI_OUTPUT_SCHEMA_HEADER_RE = re.compile(r"^\*\*Output schema\*\*\s*$")
-_CLI_PARAMETER_LINE_RE = re.compile(r"^\s*``[^`]+``(?:\s*,\s*``[^`]+``)*\s*$")
-_CLI_INLINE_CODE_RE = re.compile(r"``([^`]+)``")
+# ``dev/docs/cli_reference.py`` (`_render_graph_command`) renders each leaf
+# command as a plain RST section heading -- the space-joined command path
+# (always rooted at the untranslated ``aeat`` token) underlined with ``-`` --
+# followed by a plain ``Parameters`` paragraph and one three-line block per
+# parameter: an unindented declaration (the untranslated flag/argument
+# name(s)), an indented description, and one of four fixed indented
+# classification strings. None of these locator lines are bold-marked or
+# wrapped in double backticks; the declaration and heading text are
+# untranslated identifiers, so they ground a hit regardless of the docs
+# build's output language, but the ``Parameters`` heading and classification
+# strings are ``docs_chrome`` translations pinned to the build language (see
+# the module docstring on language pinning) like the rest of this reference.
+_CLI_PARAMETERS_HEADING_RE = re.compile(r"^Parameters$")
+_CLI_PARAMETER_CLASSIFICATIONS: Final[frozenset[str]] = frozenset(
+    {
+        "Argument, required.",
+        "Argument, optional.",
+        "Option, required.",
+        "Option, optional.",
+    },
+)
 _CODE_MODULE_RE = re.compile(
     r"^src/cadrumo/.+\.py$",
 )
@@ -583,10 +599,10 @@ class TargetResolver:
         """Resolve one generated CLI page only through a unique source locator.
 
         The generated reference page is the source evidence boundary. A
-        ``Command path`` line identifies one command record; a parameter name
-        line identifies one option record. A family/navigation page, an
-        unbounded range, or a range spanning more than one locator is not an
-        entity and therefore remains dropped.
+        command-path heading line identifies one command record; a parameter
+        declaration line identifies one option record. A family/navigation
+        page, an unbounded range, or a range spanning more than one locator is
+        not an entity and therefore remains dropped.
         """
         source_path = hit.posix_path.as_posix()
         if hit.line_start < 1 or hit.line_end < hit.line_start:
@@ -866,11 +882,29 @@ def _require_built_cli_reference(repo_root: Path) -> None:
         )
 
 
+def _is_cli_command_heading(lines: list[str], index: int) -> bool:
+    """Return whether ``lines[index]`` is a leaf-command RST section heading.
+
+    ``_render_graph_command`` renders a leaf command as its space-joined path
+    (always rooted at the untranslated ``aeat`` token) underlined with a row
+    of ``-`` exactly as long as the heading text -- the standard RST section
+    convention. A navigation heading (``Direct commands``, ``Choose a command
+    group``) never starts with ``aeat ``, so the prefix check alone already
+    excludes it; the underline check additionally excludes the page's own
+    ``=``-underlined family/group title.
+    """
+    line = lines[index]
+    if not line.startswith("aeat "):
+        return False
+    return index + 1 < len(lines) and lines[index + 1] == "-" * len(line)
+
+
 def _read_cli_source_locators(project_relpath: str) -> _CliSourceLocators | None:
     """Read generated CLI command and parameter locators from one RST page.
 
-    The CLI reference generator writes one explicit ``Command path`` line per
-    leaf command and one inline-code definition line per parameter. This helper
+    The CLI reference generator writes one plain, ``-``-underlined command-path
+    heading per leaf command and one declaration/description/classification
+    triple per parameter (see the locator regex docstrings above). This helper
     reads only those locator lines; the CLI projection remains the authority for
     record identity, metadata, and the emitted page/anchor target.
     """
@@ -886,16 +920,12 @@ def _read_cli_source_locators(project_relpath: str) -> _CliSourceLocators | None
         _require_built_cli_reference(_REPO_ROOT)
         return None
 
-    command_headers = [
-        (index, match.group("path"))
-        for index, line in enumerate(lines)
-        if (match := _CLI_COMMAND_PATH_RE.fullmatch(line)) is not None
-    ]
+    command_headers = [(index, lines[index]) for index in range(len(lines)) if _is_cli_command_heading(lines, index)]
     locators: list[_CliSourceLocator] = []
     for position, (command_index, command_path) in enumerate(command_headers):
         next_command_index = command_headers[position + 1][0] if position + 1 < len(command_headers) else len(lines)
-        # The command locator is deliberately only the explicit command-path
-        # line. A range that also overlaps a parameter locator is ambiguous.
+        # The command locator is deliberately only the explicit heading line. A
+        # range that also overlaps a parameter locator is ambiguous.
         locators.append(
             _CliSourceLocator(
                 command_path=command_path,
@@ -908,33 +938,32 @@ def _read_cli_source_locators(project_relpath: str) -> _CliSourceLocators | None
             (
                 index
                 for index in range(command_index + 1, next_command_index)
-                if _CLI_PARAMETERS_HEADER_RE.fullmatch(lines[index]) is not None
+                if _CLI_PARAMETERS_HEADING_RE.fullmatch(lines[index]) is not None
             ),
             None,
         )
         if parameters_index is None:
             continue
-        output_schema_index = next(
-            (
-                index
-                for index in range(parameters_index + 1, next_command_index)
-                if _CLI_OUTPUT_SCHEMA_HEADER_RE.fullmatch(lines[index]) is not None
-            ),
-            next_command_index,
-        )
+        # A parameter is always exactly three lines: an unindented declaration,
+        # an indented (three-space) description, and an indented classification
+        # drawn from the fixed four-string set. The classification is the
+        # unambiguous anchor -- unlike the declaration or description text, it
+        # cannot collide with unrelated unindented prose (a following command
+        # heading, or a family page's trailing "Choose a command group"
+        # footer) that might otherwise be mistaken for a declaration.
         parameter_lines = [
-            (index, tuple(_CLI_INLINE_CODE_RE.findall(line)))
-            for index, line in enumerate(
-                lines[parameters_index + 1 : output_schema_index],
-                start=parameters_index + 1,
-            )
-            if _CLI_PARAMETER_LINE_RE.fullmatch(line) is not None
+            (index - 2, tuple(part.strip() for part in lines[index - 2].split(" / ")))
+            for index in range(parameters_index + 1, next_command_index)
+            if lines[index].strip() in _CLI_PARAMETER_CLASSIFICATIONS
+            and lines[index].startswith("   ")
+            and index - 2 > parameters_index
+            and not lines[index - 2].startswith(" ")
         ]
         for parameter_position, (parameter_index, option_names) in enumerate(parameter_lines):
             next_parameter_index = (
                 parameter_lines[parameter_position + 1][0]
                 if parameter_position + 1 < len(parameter_lines)
-                else output_schema_index
+                else next_command_index
             )
             locators.append(
                 _CliSourceLocator(

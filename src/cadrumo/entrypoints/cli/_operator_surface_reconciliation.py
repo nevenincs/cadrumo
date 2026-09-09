@@ -100,6 +100,120 @@ def _current_operator_surface_primary_paths(
     return primary_paths
 
 
+def _current_operator_surface_root_landing_schema_keys() -> frozenset[str]:
+    """Return root/group result identities excluded from mounted leaf families."""
+    from .command_specs import COMMAND_GRAPH
+
+    return frozenset(
+        identity
+        for identity, spec in COMMAND_GRAPH.by_schema_identity().items()
+        if spec.kind in NON_LEAF_COMMAND_KINDS and identity.startswith("root.")
+    )
+
+
+def _current_operator_surface_live_leaf_rows(
+    command_keys: tuple[str, ...],
+    callback_aliases_by_key: Mapping[str, set[tuple[str, ...]]],
+    primary_paths: Mapping[str, tuple[str, ...]],
+) -> tuple[LiveLeafInventoryRow, ...]:
+    """Project live command identities and their canonical callback paths."""
+    from ...application.operator_surface.manifest import LiveLeafInventoryRow
+
+    return tuple(
+        LiveLeafInventoryRow(
+            subject_leaf_key=command_key,
+            canonical_cli_path=primary_paths[command_key],
+            alias_cli_paths=tuple(sorted(callback_aliases_by_key.get(command_key, set()))),
+            provenance="CommandSpecGraph input-schema resolution",
+        )
+        for command_key in sorted(command_keys)
+    )
+
+
+def _current_operator_surface_result_schema_rows(
+    schema_references: tuple[CommandSchemaRef, ...],
+) -> tuple[ResultSchemaInventoryRow, ...]:
+    """Project each CommandSpec result-schema reference without inference."""
+    from ...application.operator_surface.manifest import ResultSchemaInventoryRow
+
+    return tuple(
+        ResultSchemaInventoryRow(
+            subject_leaf_key=reference.command,
+            schema_name=reference.schema_name,
+            provenance="CommandSpecGraph through command_schema_refs",
+        )
+        for reference in schema_references
+    )
+
+
+def _current_operator_surface_input_schema_rows(
+    input_schemas: Mapping[str, VerbInputSchema],
+) -> tuple[InputSchemaInventoryRow, ...]:
+    """Project required input names from each verified verb input schema."""
+    from ...application.operator_surface.manifest import InputSchemaInventoryRow
+
+    return tuple(
+        InputSchemaInventoryRow(
+            subject_leaf_key=command_key,
+            required_input_names=tuple(parameter.name for parameter in schema.required_inputs),
+            provenance="VerbInputSchema.required_inputs",
+        )
+        for command_key, schema in sorted(input_schemas.items())
+    )
+
+
+def _current_operator_surface_mounted_family_rows() -> tuple[MountedFamilyInventoryRow, ...]:
+    """Project the application-owned mounted command-family contract."""
+    from ...application.operator_surface.contract import get_operator_surface_contract
+    from ...application.operator_surface.manifest import MountedFamilyInventoryRow
+
+    return tuple(
+        MountedFamilyInventoryRow(
+            root=family.root.value,
+            child=family.child,
+            provenance="OperatorSurfaceContract.command_families",
+        )
+        for family in get_operator_surface_contract().command_families
+    )
+
+
+def _current_operator_surface_profile_policy_classification(
+    command_key: str,
+    root_landing_schema_keys: frozenset[str],
+) -> str:
+    """Classify a command from the graph root landing and write-route policy."""
+    from ._command_schema import command_registration_policy
+
+    if command_key in root_landing_schema_keys:
+        return "non_profile_bound"
+    return (
+        "profile_bound_write"
+        if command_registration_policy(command_key).write_route == "profile-bound"
+        else "non_profile_bound"
+    )
+
+
+def _current_operator_surface_profile_policy_rows(
+    command_keys: tuple[str, ...],
+    root_landing_schema_keys: frozenset[str],
+) -> tuple[ProfilePolicyInventoryRow, ...]:
+    """Project graph/policy profile classification and external exposure."""
+    from ...application.operator_surface.manifest import ProfilePolicyInventoryRow
+
+    return tuple(
+        ProfilePolicyInventoryRow(
+            subject_leaf_key=command_key,
+            classification=_current_operator_surface_profile_policy_classification(
+                command_key,
+                root_landing_schema_keys,
+            ),
+            should_expose_externally=command_key not in root_landing_schema_keys,
+            provenance="CommandSpec policy plus root landing graph classification",
+        )
+        for command_key in sorted(command_keys)
+    )
+
+
 def _current_operator_surface_schema_rows(
     *,
     schema_references: tuple[CommandSchemaRef, ...],
@@ -109,74 +223,25 @@ def _current_operator_surface_schema_rows(
     primary_paths: Mapping[str, tuple[str, ...]],
 ) -> _CurrentOperatorSurfaceSchemaInventory:
     """Build application-owned reconciliation rows from the verified live sources."""
-    from ...application.operator_surface.contract import get_operator_surface_contract
-    from ...application.operator_surface.manifest import (
-        InputSchemaInventoryRow,
-        LiveLeafInventoryRow,
-        MountedFamilyInventoryRow,
-        ProfilePolicyInventoryRow,
-        ResultSchemaInventoryRow,
-    )
-    from ._command_schema import command_registration_policy
-    from .command_specs import COMMAND_GRAPH
-
-    root_landing_schema_keys = frozenset(
-        identity
-        for identity, spec in COMMAND_GRAPH.by_schema_identity().items()
-        if spec.kind in NON_LEAF_COMMAND_KINDS and identity.startswith("root.")
-    )
+    root_landing_schema_keys = _current_operator_surface_root_landing_schema_keys()
 
     return _CurrentOperatorSurfaceSchemaInventory(
         command_keys=command_keys,
-        live_leaves=tuple(
-            LiveLeafInventoryRow(
-                subject_leaf_key=command_key,
-                canonical_cli_path=primary_paths[command_key],
-                alias_cli_paths=tuple(sorted(callback_aliases_by_key.get(command_key, set()))),
-                provenance="CommandSpecGraph input-schema resolution",
-            )
-            for command_key in sorted(command_keys)
+        live_leaves=_current_operator_surface_live_leaf_rows(
+            command_keys,
+            callback_aliases_by_key,
+            primary_paths,
         ),
-        result_schemas=tuple(
-            ResultSchemaInventoryRow(
-                subject_leaf_key=reference.command,
-                schema_name=reference.schema_name,
-                provenance="CommandSpecGraph through command_schema_refs",
-            )
-            for reference in schema_references
+        result_schemas=_current_operator_surface_result_schema_rows(
+            schema_references,
         ),
-        input_rows=tuple(
-            InputSchemaInventoryRow(
-                subject_leaf_key=command_key,
-                required_input_names=tuple(parameter.name for parameter in schema.required_inputs),
-                provenance="VerbInputSchema.required_inputs",
-            )
-            for command_key, schema in sorted(input_schemas.items())
+        input_rows=_current_operator_surface_input_schema_rows(
+            input_schemas,
         ),
-        mounted_families=tuple(
-            MountedFamilyInventoryRow(
-                root=family.root.value,
-                child=family.child,
-                provenance="OperatorSurfaceContract.command_families",
-            )
-            for family in get_operator_surface_contract().command_families
-        ),
-        profile_policies=tuple(
-            ProfilePolicyInventoryRow(
-                subject_leaf_key=command_key,
-                classification=(
-                    "non_profile_bound"
-                    if command_key in root_landing_schema_keys
-                    else (
-                        "profile_bound_write"
-                        if command_registration_policy(command_key).write_route == "profile-bound"
-                        else "non_profile_bound"
-                    )
-                ),
-                should_expose_externally=command_key not in root_landing_schema_keys,
-                provenance="CommandSpec policy plus root landing graph classification",
-            )
-            for command_key in sorted(command_keys)
+        mounted_families=_current_operator_surface_mounted_family_rows(),
+        profile_policies=_current_operator_surface_profile_policy_rows(
+            command_keys,
+            root_landing_schema_keys,
         ),
     )
 
@@ -215,17 +280,10 @@ def _current_operator_surface_exposures(
 def _current_operator_surface_exclusions() -> tuple[ExplicitExclusionInventoryRow, ...]:
     """Project the declared root-landing omissions into reconciliation evidence."""
     from ...application.operator_surface.manifest import ExplicitExclusionInventoryRow, ReconciliationSurface
-    from .command_specs import COMMAND_GRAPH
-
-    root_landing_schema_keys = frozenset(
-        identity
-        for identity, spec in COMMAND_GRAPH.by_schema_identity().items()
-        if spec.kind in NON_LEAF_COMMAND_KINDS and identity.startswith("root.")
-    )
 
     return tuple(
         exclusion
-        for command_key in sorted(root_landing_schema_keys)
+        for command_key in sorted(_current_operator_surface_root_landing_schema_keys())
         for exclusion in (
             ExplicitExclusionInventoryRow(
                 subject_leaf_key=command_key,

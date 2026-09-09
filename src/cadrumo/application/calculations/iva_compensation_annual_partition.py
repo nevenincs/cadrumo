@@ -26,6 +26,7 @@ from ...core.modelo import Modelo
 from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.bindings import (
+    IvaCompensationAnnualPartitionRequirement,
     RegistryModeloObservation,
     iva_compensation_annual_partition_requirement,
 )
@@ -236,6 +237,97 @@ def _unresolved_diagnostics(
     )
 
 
+def _select_partition_revision(
+    registry_snapshot: RegistrySnapshot | None,
+    context: CalculationSourceContext,
+) -> ModeloRevision:
+    """Use the bound snapshot revision or select the canonical bundled one."""
+    revision = registry_snapshot.revision if registry_snapshot is not None else None
+    if revision is not None:
+        return revision
+    from ...core.resources.bundled_data import bundled_path
+    from ...domain.calculations.registry.loader import load_registry_tree
+
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo = next(candidate for candidate in modelos if candidate.id == context.modelo)
+    return select_revision(
+        modelo,
+        filing_year=context.filing_year,
+        period=context.period.registry_token,
+    )
+
+
+def _partition_repository(repository: CalculationObservationRepository | None) -> CalculationObservationRepository:
+    """Return the configured observation repository or the local default."""
+    if repository is not None:
+        return repository
+    return CalculationObservationRepository()
+
+
+def _load_partition_envelopes_or_degrade(
+    revision: ModeloRevision,
+    *,
+    filing_year: int,
+    repository: CalculationObservationRepository,
+    resolver_id: str,
+    owned_sources: tuple[BindingSourceKind, ...],
+) -> tuple[ObservationEnvelopePayload, ...] | CalculationSourceResolution:
+    """Load source envelopes, projecting storage failures as degraded resolution."""
+    try:
+        return _load_303_observations_for_partition(
+            revision,
+            filing_year=filing_year,
+            repository=repository,
+        )
+    except STORAGE_DEGRADATION_ERRORS as exc:
+        return storage_degradation_resolution(
+            resolver_id=resolver_id,
+            owned_sources=owned_sources,
+            source_kinds=owned_sources,
+            error=exc,
+        )
+
+
+def _unresolved_partition_bindings(
+    binding_ids: tuple[BindingId, ...],
+    binding_values: Mapping[BindingId, Decimal],
+) -> tuple[BindingId, ...]:
+    """Return declared annual bindings for which no source value was resolved."""
+    return tuple(binding_id for binding_id in binding_ids if binding_id not in binding_values)
+
+
+def _partition_provenance(
+    envelopes: tuple[ObservationEnvelopePayload, ...],
+    requirement: IvaCompensationAnnualPartitionRequirement,
+    *,
+    resolver_id: str,
+) -> tuple[CalculationSourceProvenance, ...]:
+    """Project each contributing M303 envelope into the source lineage."""
+    return tuple(
+        CalculationSourceProvenance(
+            resolver_id=resolver_id,
+            resolved_binding_source=_SOURCE_KIND,
+            contributor_source_kind=_SOURCE_KIND.value,
+            contributor_binding_source=_SOURCE_KIND,
+            lineage_role=CalculationSourceLineageRole.PRIMARY,
+            source_ref=(
+                "303:"
+                f"{envelope.observation.filing_year}:{envelope.observation.period}:"
+                "iva-compensation-annual-partition"
+            ),
+            parent_source_ref=None,
+            source_modelo=requirement.source_modelo,
+            source_filing_year=envelope.observation.filing_year,
+            source_periods=requirement.source_periods,
+            source_casilla_ids=requirement.source_casilla_ids,
+            legal_refs=requirement.legal_refs,
+            source_refs=requirement.source_refs,
+            dependency_treatment=requirement.dependency_treatment,
+        )
+        for envelope in envelopes
+    )
+
+
 class IvaCompensationAnnualPartitionSourceResolver:
     """Resolve Modelo 390 boxes 97 / 662 from the IVA compensation FIFO partition."""
 
@@ -260,41 +352,27 @@ class IvaCompensationAnnualPartitionSourceResolver:
             requirement, a degraded resolution on repository failure, or the
             resolved :class:`~._source_mesh.CalculationSourceResolution`.
         """
-        revision = self._registry_snapshot.revision if self._registry_snapshot is not None else None
-        if revision is None:
-            from ...core.resources.bundled_data import bundled_path
-            from ...domain.calculations.registry.loader import load_registry_tree
-
-            modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-            modelo = next(candidate for candidate in modelos if candidate.id == context.modelo)
-            revision = select_revision(
-                modelo,
-                filing_year=context.filing_year,
-                period=context.period.registry_token,
-            )
+        revision = _select_partition_revision(self._registry_snapshot, context)
         requirement = iva_compensation_annual_partition_requirement(revision)
         if requirement is None:
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
-        repo = self._repository if self._repository is not None else CalculationObservationRepository()
-        try:
-            envelopes = _load_303_observations_for_partition(
-                revision,
-                filing_year=context.filing_year,
-                repository=repo,
-            )
-        except STORAGE_DEGRADATION_ERRORS as exc:
-            return storage_degradation_resolution(
-                resolver_id=self.resolver_id,
-                owned_sources=self.owned_sources,
-                source_kinds=self.owned_sources,
-                error=exc,
-            )
+        repo = _partition_repository(self._repository)
+        loaded = _load_partition_envelopes_or_degrade(
+            revision,
+            filing_year=context.filing_year,
+            repository=repo,
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+        )
+        if isinstance(loaded, CalculationSourceResolution):
+            return loaded
+        envelopes = loaded
         binding_values = resolve_iva_compensation_annual_partition_binding_values(
             revision,
             envelopes,
             filing_year=context.filing_year,
         )
-        unresolved = tuple(binding_id for binding_id in requirement.binding_ids if binding_id not in binding_values)
+        unresolved = _unresolved_partition_bindings(requirement.binding_ids, binding_values)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
@@ -305,29 +383,7 @@ class IvaCompensationAnnualPartitionSourceResolver:
                 source_periods=requirement.source_periods,
                 resolver_id=self.resolver_id,
             ),
-            provenance=tuple(
-                CalculationSourceProvenance(
-                    resolver_id=self.resolver_id,
-                    resolved_binding_source=_SOURCE_KIND,
-                    contributor_source_kind=_SOURCE_KIND.value,
-                    contributor_binding_source=_SOURCE_KIND,
-                    lineage_role=CalculationSourceLineageRole.PRIMARY,
-                    source_ref=(
-                        "303:"
-                        f"{envelope.observation.filing_year}:{envelope.observation.period}:"
-                        "iva-compensation-annual-partition"
-                    ),
-                    parent_source_ref=None,
-                    source_modelo=requirement.source_modelo,
-                    source_filing_year=envelope.observation.filing_year,
-                    source_periods=requirement.source_periods,
-                    source_casilla_ids=requirement.source_casilla_ids,
-                    legal_refs=requirement.legal_refs,
-                    source_refs=requirement.source_refs,
-                    dependency_treatment=requirement.dependency_treatment,
-                )
-                for envelope in envelopes
-            ),
+            provenance=_partition_provenance(envelopes, requirement, resolver_id=self.resolver_id),
         )
 
 

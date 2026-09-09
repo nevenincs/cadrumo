@@ -1496,7 +1496,6 @@ tui:
     title: Cadrumo terminal session
   search:
     action:
-      available: Available workbench action
       classify_ledger: Classify ledger
       edit_profile: Edit profile
       explain_overview: Explain overview
@@ -1506,6 +1505,7 @@ tui:
       list_work_revisions: View work revisions
       review_ledger: Review ledger
       review_ledger_evidence: Review ledger evidence
+      unknown: Unrecognised workbench action
       validate_ledger: Validate ledger
     destination:
       aeat_sync: Open AEAT Sync

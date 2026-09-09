@@ -100,6 +100,51 @@ def _bucket_has_a_committed_capsule(bucket_id: str) -> bool:
     return resolve_profile_bucket(bucket_id) is not None
 
 
+def _stateless_auth_projection_snapshot(
+    *,
+    bucket_id: str | None,
+    provider_name: str | None,
+    settings: Settings,
+) -> ActiveAuthProjectionSnapshot:
+    """Build the no-workflow-state snapshot used for absent or dangling routes."""
+    provider = _project_provider_kind(provider_name)
+    return ActiveAuthProjectionSnapshot(
+        bucket_id=bucket_id,
+        state=None,
+        provider=provider,
+        certificate_credentials=(
+            unnamed_certificate_credentials(settings) if provider is AuthProviderKind.CERTIFICATE else None
+        ),
+    )
+
+
+def _witnessed_auth_projection_snapshot(
+    state: WorkflowState,
+    *,
+    bucket_id: str,
+    requested_provider: str | None,
+    fallback_provider: str | None,
+    settings: Settings,
+) -> ActiveAuthProjectionSnapshot:
+    """Build a credential projection from state loaded inside the active route."""
+    provider = _project_provider_kind(requested_provider or state.auth.provider or fallback_provider)
+    credentials = (
+        _resolve_witnessed_certificate_credentials(
+            state,
+            bucket_id=bucket_id,
+            settings=settings,
+        )
+        if provider is AuthProviderKind.CERTIFICATE
+        else None
+    )
+    return ActiveAuthProjectionSnapshot(
+        bucket_id=bucket_id,
+        state=state,
+        provider=provider,
+        certificate_credentials=credentials,
+    )
+
+
 @contextmanager
 def active_auth_projection_span(
     *,
@@ -118,14 +163,10 @@ def active_auth_projection_span(
     resolved = settings or load_settings()
     with active_profile_storage_span(resolved) as bucket_id:
         if bucket_id is None:
-            provider = _project_provider_kind(requested_provider or fallback_provider)
-            yield ActiveAuthProjectionSnapshot(
+            yield _stateless_auth_projection_snapshot(
                 bucket_id=None,
-                state=None,
-                provider=provider,
-                certificate_credentials=(
-                    unnamed_certificate_credentials(resolved) if provider is AuthProviderKind.CERTIFICATE else None
-                ),
+                provider_name=requested_provider or fallback_provider,
+                settings=resolved,
             )
             return
         if not _bucket_has_a_committed_capsule(bucket_id):
@@ -138,33 +179,20 @@ def active_auth_projection_span(
             # would raise instead of answering it. The stateless snapshot below
             # is the same shape already used when no profile resolves at all;
             # the bucket id is retained so the verdict can still name it.
-            provider = _project_provider_kind(requested_provider or fallback_provider)
-            yield ActiveAuthProjectionSnapshot(
+            yield _stateless_auth_projection_snapshot(
                 bucket_id=bucket_id,
-                state=None,
-                provider=provider,
-                certificate_credentials=(
-                    unnamed_certificate_credentials(resolved) if provider is AuthProviderKind.CERTIFICATE else None
-                ),
+                provider_name=requested_provider or fallback_provider,
+                settings=resolved,
             )
             return
         with override_settings(cadrumo_active_profile=bucket_id):
             state = workflow_state_repository().load()
-            provider = _project_provider_kind(requested_provider or state.auth.provider or fallback_provider)
-            credentials = (
-                _resolve_witnessed_certificate_credentials(
-                    state,
-                    bucket_id=bucket_id,
-                    settings=resolved,
-                )
-                if provider is AuthProviderKind.CERTIFICATE
-                else None
-            )
-            yield ActiveAuthProjectionSnapshot(
+            yield _witnessed_auth_projection_snapshot(
+                state,
                 bucket_id=bucket_id,
-                state=state,
-                provider=provider,
-                certificate_credentials=credentials,
+                requested_provider=requested_provider,
+                fallback_provider=fallback_provider,
+                settings=resolved,
             )
 
 

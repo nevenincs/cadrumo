@@ -10,7 +10,7 @@ See Also:
         Deadline-window authority used for the legal plazo assertions.
     :data:`~core.UNMODELED_OBLIGATIONS`
         Central set these promoted IS-consolidation modelos must leave.
-    :data:`~core.access_gate.CANONICAL_MODELO_FLEET`
+    :data:`~core.access_gate.validated registry modelo set`
         Canonical modeled-obligation fleet that must include both forms.
     :class:`~domain.calculations.registry.ModeloEntry`
         Support-matrix row type that reports registry-backed modelo coverage.
@@ -164,7 +164,8 @@ def test_modelo_222_trimestral_windows_open_and_close_on_day_20() -> None:
 
 
 def test_modelo_220_222_are_registry_backed() -> None:
-    from .....core.access_gate.authorization import CANONICAL_MODELO_FLEET
-
+    authority = bundled_authority()
     for modelo_id in ("220", "222"):
-        assert modelo_id in CANONICAL_MODELO_FLEET
+        assert authority.modelo(modelo_id).id == modelo_id
+
+

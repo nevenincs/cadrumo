@@ -47,6 +47,8 @@ if TYPE_CHECKING:
     from typer._click.core import Context as _TyperClickContext
 
     from ....application.user_profile.recovery_custody import ProfileRecoveryEnrollment
+    from ....application.user_profile.registration import ProfileRegistrationOutcome
+    from ....domain.user_profile.values import UserProfileFact
 
 
 class ProfileCreationSecrets(MachineSecretPayload):
@@ -112,16 +114,26 @@ def _validated_recovery_descriptors(
     if handoff_fd is None or verification_fd is None:
         return None
     descriptors = (handoff_fd, verification_fd)
-    if any(descriptor < 0 or descriptor in {0, 1, 2} for descriptor in descriptors):
+    if _contains_reserved_recovery_descriptor(descriptors):
         raise CliRefusedBoundaryError(
             translated_message="cli.config.profile.create_recovery_descriptor_reserved",
         )
-    occupied = {descriptor for descriptor in (passphrase_fd,) if descriptor is not None}
-    if handoff_fd == verification_fd or any(descriptor in occupied for descriptor in descriptors):
+    if _recovery_descriptors_collide(descriptors, passphrase_fd):
         raise CliRefusedBoundaryError(
             translated_message="cli.config.profile.create_recovery_descriptor_collision",
         )
     return descriptors
+
+
+def _contains_reserved_recovery_descriptor(descriptors: tuple[int, int]) -> bool:
+    """Return whether a recovery channel attempts to use a process stream."""
+    return any(descriptor < 0 or descriptor in {0, 1, 2} for descriptor in descriptors)
+
+
+def _recovery_descriptors_collide(descriptors: tuple[int, int], passphrase_fd: int | None) -> bool:
+    """Return whether recovery descriptors overlap each other or the passphrase channel."""
+    occupied = {descriptor for descriptor in (passphrase_fd,) if descriptor is not None}
+    return descriptors[0] == descriptors[1] or any(descriptor in occupied for descriptor in descriptors)
 
 
 def _write_recovery_handoff(descriptor: int, mnemonic: str) -> None:
@@ -231,6 +243,42 @@ def _recovery_handover(
     return handover
 
 
+def _run_scripted_profile_creation(
+    *,
+    register_profile: Callable[..., ProfileRegistrationOutcome],
+    label: str,
+    facts: tuple[UserProfileFact, ...],
+    secrets_stdin: bool,
+    secrets_fd: int | None,
+    recovery_descriptors: tuple[int, int] | None,
+) -> ProfileRegistrationOutcome:
+    """Register the profile while keeping the passphrase live only in this span."""
+    passphrase: str | None = None
+    try:
+        passphrase = resolve_creation_passphrase(
+            secrets_stdin=secrets_stdin,
+            secrets_fd=secrets_fd,
+        )
+        return register_profile(
+            label=label,
+            passphrase=passphrase,
+            facts=facts,
+            recovery_handover=_recovery_handover(descriptors=recovery_descriptors),
+        )
+    finally:
+        if passphrase is not None:
+            del passphrase
+
+
+def _close_recovery_descriptors(descriptors: tuple[int, int] | None) -> None:
+    """Close both handoff descriptors after success or any refusal."""
+    if descriptors is None:
+        return
+    for descriptor in descriptors:
+        with suppress(OSError):
+            os.close(descriptor)
+
+
 def register_profile_from_scripted_invocation(
     ctx: _TyperClickContext,
     kwargs: Mapping[str, object],
@@ -269,25 +317,17 @@ def register_profile_from_scripted_invocation(
         handoff_fd=raw_handoff_fd if isinstance(raw_handoff_fd, int) else None,
         verification_fd=raw_verification_fd if isinstance(raw_verification_fd, int) else None,
     )
-    passphrase: str | None = None
     try:
-        passphrase = resolve_creation_passphrase(
+        outcome = _run_scripted_profile_creation(
+            register_profile=register_profile_with_credentials,
+            label=label,
+            facts=facts,
             secrets_stdin=bool(kwargs.get("secrets_stdin")),
             secrets_fd=secrets_fd,
-        )
-        outcome = register_profile_with_credentials(
-            label=label,
-            passphrase=passphrase,
-            facts=facts,
-            recovery_handover=_recovery_handover(descriptors=recovery_descriptors),
+            recovery_descriptors=recovery_descriptors,
         )
     finally:
-        if passphrase is not None:
-            del passphrase
-        if recovery_descriptors is not None:
-            for descriptor in recovery_descriptors:
-                with suppress(OSError):
-                    os.close(descriptor)
+        _close_recovery_descriptors(recovery_descriptors)
 
     if not outcome.recovery_enrolled:
         raise RuntimeError("profile creation returned without mandatory recovery enrollment")

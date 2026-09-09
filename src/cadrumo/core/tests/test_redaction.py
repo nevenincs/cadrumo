@@ -5,12 +5,9 @@ import hashlib
 import pytest
 
 from ..classification.policies import (
-    OutputSensitivityClass,
     RedactionRule,
     RedactionStrategy,
     SensitivityClass,
-    default_output_policy_for,
-    default_policy_for,
 )
 from ..redaction.rules import (
     CLI_BUCKET_ID_PLACEHOLDER,
@@ -137,16 +134,6 @@ def test_cli_output_structured_redacts_keyed_values_and_string_leaves() -> None:
     assert payload["profile_id"] == _PROFILE_ID
     assert payload["nested"]["notes"][0] == "attachment:raw-key"
     assert payload["nested"][_OTHER_OBJECT_KEY] == "second object keyed"
-
-
-def test_cli_public_output_policy_is_emit_only_while_diagnostic_persists() -> None:
-    cli_policy = default_output_policy_for(OutputSensitivityClass.CLI_PUBLIC)
-    diagnostic_output_policy = default_output_policy_for(OutputSensitivityClass.DIAGNOSTIC)
-    diagnostic_storage_policy = default_policy_for(SensitivityClass.DIAGNOSTIC)
-
-    assert cli_policy.persisted_as is None
-    assert diagnostic_output_policy.persisted_as is SensitivityClass.DIAGNOSTIC
-    assert diagnostic_output_policy.redaction_rules == diagnostic_storage_policy.redaction_rules
 
 
 def test_cli_output_text_bucket_id_tabular_heuristic_cases() -> None:

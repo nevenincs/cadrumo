@@ -33,7 +33,11 @@ from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogue
 from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ...core.identity import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevisionState
+from ...domain.modelos.calculation_revision import (
+    SEALED_REVISION_STATES,
+    CalculationRevision,
+    CalculationRevisionState,
+)
 from ...domain.modelos.filing_record import ExternalEvidence, ModeloRecord, ModeloRecordCatalogue
 from ...domain.modelos.participation_index import (
     TransactionRevisionParticipation,
@@ -44,6 +48,7 @@ from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
 )
+from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 
 
@@ -87,6 +92,52 @@ def _justificante_reference(record: ModeloRecord | None) -> str | None:
     return evidence.reference_id if evidence is not None else None
 
 
+def _participation_for_sealed_revision(
+    revision: CalculationRevision,
+    work_units: WorkUnitCatalogue,
+    filings: ModeloRecordCatalogue,
+) -> tuple[TransactionRevisionParticipation, tuple[str, ...]] | None:
+    """Build one participation row and its source ids when ``revision`` is indexable."""
+    if revision.state not in SEALED_REVISION_STATES:
+        return None
+    work_unit = work_units.get(revision.work_unit_id)
+    if work_unit is None:
+        return None
+
+    is_filed = revision.state in {
+        CalculationRevisionState.PRESENTADO,
+        CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
+    }
+    filing_record = _filing_record_for_revision(revision.calculation_revision_id, filings) if is_filed else None
+    participation = TransactionRevisionParticipation(
+        calculation_revision_id=revision.calculation_revision_id,
+        work_unit_id=work_unit.work_unit_id,
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        revision_state=revision.state.value,
+        filing_record_id=filing_record.filing_record_id if filing_record is not None else None,
+        justificante_reference=_justificante_reference(filing_record),
+    )
+    return participation, revision.source_transaction_ids
+
+
+def _fold_participation(
+    rebuilt: dict[str, TransactionRevisionParticipationIndex],
+    participation: TransactionRevisionParticipation,
+    transaction_ids: tuple[str, ...],
+) -> int:
+    """Merge one revision's participation into each contributing transaction."""
+    participation_count = 0
+    for transaction_id in transaction_ids:
+        current = rebuilt.get(transaction_id) or TransactionRevisionParticipationIndex(
+            transaction_id=transaction_id,
+        )
+        rebuilt[transaction_id] = upsert_transaction_participation(current, participation)
+        participation_count += 1
+    return participation_count
+
+
 def rebuild_participation_index(
     *,
     bucket_id: str | None = None,
@@ -126,33 +177,12 @@ def rebuild_participation_index(
     revision_count = 0
 
     for revision in revisions.values():
-        if revision.state not in SEALED_REVISION_STATES:
+        resolved = _participation_for_sealed_revision(revision, work_units, filings)
+        if resolved is None:
             continue
-        work_unit = work_units.get(revision.work_unit_id)
-        if work_unit is None:
-            continue
+        participation, transaction_ids = resolved
         revision_count += 1
-        is_filed = revision.state in {
-            CalculationRevisionState.PRESENTADO,
-            CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
-        }
-        filing_record = _filing_record_for_revision(revision.calculation_revision_id, filings) if is_filed else None
-        participation = TransactionRevisionParticipation(
-            calculation_revision_id=revision.calculation_revision_id,
-            work_unit_id=work_unit.work_unit_id,
-            modelo=work_unit.modelo,
-            filing_year=work_unit.filing_year,
-            period=work_unit.period,
-            revision_state=revision.state.value,
-            filing_record_id=filing_record.filing_record_id if filing_record is not None else None,
-            justificante_reference=_justificante_reference(filing_record),
-        )
-        for transaction_id in revision.source_transaction_ids:
-            current = rebuilt.get(transaction_id) or TransactionRevisionParticipationIndex(
-                transaction_id=transaction_id,
-            )
-            rebuilt[transaction_id] = upsert_transaction_participation(current, participation)
-            participation_count += 1
+        participation_count += _fold_participation(rebuilt, participation, transaction_ids)
 
     stale_removed_count = participation_repo.replace_all(rebuilt.values())
 

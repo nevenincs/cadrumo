@@ -20,7 +20,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Final
 
-from ..pipeline._record_design_ir import RecordDesignIntermediate, RecordDesignIntermediateField
+from ..pipeline._record_design_ir import RecordDesignIntermediate
+from ..pipeline.record_design_intermediate import RecordDesignIntermediateField
 
 __all__ = [
     "M390_2022_NUMBERED_ANCHOR_COUNT",

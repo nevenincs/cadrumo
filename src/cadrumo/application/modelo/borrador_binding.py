@@ -101,6 +101,153 @@ class Modelo100BorradorBindingCommand(BaseModel):
         return self
 
 
+def _borrador_snapshot_load_failure(
+    command: Modelo100BorradorBindingCommand,
+    *,
+    snapshot_id: str,
+) -> Modelo100BorradorBindingError:
+    """Build the shared refusal for a snapshot that cannot be used."""
+    return Modelo100BorradorBindingError(
+        translated_message="application.modelo.borrador_binding.errors.snapshot_load_failed",
+        context={"borrador_snapshot_id": snapshot_id},
+        precondition_failure=build_modelo_precondition_failure(
+            subject_leaf_key="modelo.work.calculate",
+            condition_id="modelo.work.calculate.borrador_snapshot.active",
+            scenario_id="modelo.work.calculate.borrador_snapshot.load_failed",
+            evidence_id="modelo.work.calculate.borrador_snapshot",
+            evidence_values={
+                "borrador_snapshot_id": snapshot_id,
+                "modelo": command.modelo,
+                "year": command.filing_year,
+                "period": command.period.registry_token,
+            },
+            provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+        ),
+    )
+
+
+def _borrador_snapshot_inactive_failure(
+    command: Modelo100BorradorBindingCommand,
+    snapshot: Borrador100Snapshot,
+    *,
+    snapshot_id: str,
+) -> Modelo100BorradorBindingError:
+    """Build the refusal for a snapshot that is no longer active."""
+    return Modelo100BorradorBindingError(
+        translated_message="application.modelo.borrador_binding.errors.snapshot_not_active",
+        precondition_failure=build_modelo_precondition_failure(
+            subject_leaf_key="modelo.work.calculate",
+            condition_id="modelo.work.calculate.borrador_snapshot.active",
+            scenario_id="modelo.work.calculate.borrador_snapshot.inactive",
+            evidence_id="modelo.work.calculate.borrador_snapshot",
+            evidence_values={
+                "borrador_snapshot_id": snapshot_id,
+                "modelo": command.modelo,
+                "year": command.filing_year,
+                "period": command.period.registry_token,
+                "lifecycle_state": snapshot.state.value,
+            },
+            provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+        ),
+    )
+
+
+def _load_active_borrador_snapshot(
+    command: Modelo100BorradorBindingCommand,
+    *,
+    snapshot_id: str,
+    snapshot_repository: Borrador100SnapshotRepository | None,
+) -> Borrador100Snapshot:
+    """Load the selected snapshot and enforce its axis and active lifecycle."""
+    from ..live.borrador_100 import Borrador100SnapshotRepository, BorradorSnapshotNotFoundError
+    from ..live.errors import LiveApplicationInputError
+    from ..live.snapshot_base import SnapshotLifecycleState
+
+    repository = snapshot_repository or Borrador100SnapshotRepository(bucket_id=command.bucket_id)
+    try:
+        snapshot = repository.load(snapshot_id)
+    except (LiveApplicationInputError, BorradorSnapshotNotFoundError) as exc:
+        raise _borrador_snapshot_load_failure(command, snapshot_id=snapshot_id) from exc
+    _assert_same_axis(
+        bucket_id=command.bucket_id,
+        filing_year=command.filing_year,
+        period=command.period,
+        snapshot=snapshot,
+    )
+    if revision_carry_outcome(snapshot.registry_snapshot_ref).refused:
+        raise _borrador_snapshot_load_failure(command, snapshot_id=snapshot_id)
+    if snapshot.state is not SnapshotLifecycleState.ACTIVE:
+        raise _borrador_snapshot_inactive_failure(command, snapshot, snapshot_id=snapshot_id)
+    return snapshot
+
+
+def _assert_borrador_bindings_allowed(
+    snapshot: Borrador100Snapshot,
+    eligible_bindings: dict[BindingId, DataBindingDefinition],
+) -> None:
+    """Refuse snapshot values not marked ``aeat_prefilled`` by the registry."""
+    unknown_or_forbidden = sorted(set(snapshot.binding_values) - set(eligible_bindings))
+    if unknown_or_forbidden:
+        raise Modelo100BorradorBindingError(
+            translated_message="application.modelo.borrador_binding.errors.forbidden_bindings",
+            context={"bindings": unknown_or_forbidden},
+        )
+
+
+def _resolve_borrador_binding_values(
+    snapshot: Borrador100Snapshot,
+    *,
+    eligible_bindings: dict[BindingId, DataBindingDefinition],
+    caller_owned: set[BindingId],
+) -> tuple[dict[BindingId, Decimal], dict[BindingId, str]]:
+    """Project eligible snapshot values, leaving explicit caller values in control."""
+    decimal_values: dict[BindingId, Decimal] = {}
+    enum_values: dict[BindingId, str] = {}
+    for binding_id, raw_value in snapshot.binding_values.items():
+        if binding_id in caller_owned:
+            continue
+        binding = eligible_bindings[binding_id]
+        if binding.typed_enum is not None:
+            enum_values[binding_id] = str(raw_value).strip()
+            continue
+        decimal_values[binding_id] = _decimal_value(binding_id, raw_value)
+    return decimal_values, enum_values
+
+
+def _borrador_resolution(
+    snapshot: Borrador100Snapshot,
+    *,
+    decimal_values: dict[BindingId, Decimal],
+    enum_values: dict[BindingId, str],
+) -> CalculationSourceResolution:
+    """Build the typed source resolution and both provenance projections."""
+    sourced = tuple(sorted(set(decimal_values) | set(enum_values)))
+    snapshot_fingerprint = f"sha256:{sha256_hex(snapshot.snapshot_id.encode('utf-8'))}"
+    return CalculationSourceResolution(
+        resolver_id=_BORRADOR_RESOLVER_ID,
+        owned_sources=(BindingSourceKind.BORRADOR,),
+        binding_values=decimal_values,
+        enum_binding_values=enum_values,
+        borrador_provenance=BorradorSourceProvenance(
+            snapshot_id=snapshot.snapshot_id,
+            bindings_sourced=sourced,
+        ),
+        provenance=tuple(
+            CalculationSourceProvenance(
+                resolver_id="modelo_100_borrador",
+                resolved_binding_source=BindingSourceKind.BORRADOR,
+                contributor_source_kind="borrador",
+                contributor_binding_source=BindingSourceKind.BORRADOR,
+                lineage_role=CalculationSourceLineageRole.PRIMARY,
+                source_ref=f"borrador:{snapshot.snapshot_id}:binding:{binding_id}",
+                parent_source_ref=None,
+                fingerprint=snapshot_fingerprint,
+            )
+            for binding_id in sourced
+        ),
+    )
+
+
 def resolve_modelo_100_borrador_bindings(
     command: Modelo100BorradorBindingCommand,
     *,
@@ -127,15 +274,12 @@ def resolve_modelo_100_borrador_bindings(
         :class:`BorradorSourceProvenance` plus generic
         :class:`CalculationSourceProvenance` rows for each sourced binding.
     """
-    if command.borrador_snapshot_id is None:
+    snapshot_id = command.borrador_snapshot_id
+    if snapshot_id is None:
         return CalculationSourceResolution(
             resolver_id=_BORRADOR_RESOLVER_ID,
             owned_sources=(BindingSourceKind.BORRADOR,),
         )
-
-    from ..live.borrador_100 import Borrador100SnapshotRepository, BorradorSnapshotNotFoundError
-    from ..live.errors import LiveApplicationInputError
-    from ..live.snapshot_base import SnapshotLifecycleState
 
     if not registry_snapshot.modelo.has_capability("borrador"):
         target_modelo = command.modelo.strip()
@@ -144,116 +288,20 @@ def resolve_modelo_100_borrador_bindings(
             context={"modelo": target_modelo},
         )
     _assert_registry_snapshot_axis(command=command, registry_snapshot=registry_snapshot)
-    repository = snapshot_repository or Borrador100SnapshotRepository(bucket_id=command.bucket_id)
-    try:
-        snapshot = repository.load(command.borrador_snapshot_id)
-    except (LiveApplicationInputError, BorradorSnapshotNotFoundError) as exc:
-        raise Modelo100BorradorBindingError(
-            translated_message="application.modelo.borrador_binding.errors.snapshot_load_failed",
-            context={"borrador_snapshot_id": command.borrador_snapshot_id},
-            precondition_failure=build_modelo_precondition_failure(
-                subject_leaf_key="modelo.work.calculate",
-                condition_id="modelo.work.calculate.borrador_snapshot.active",
-                scenario_id="modelo.work.calculate.borrador_snapshot.load_failed",
-                evidence_id="modelo.work.calculate.borrador_snapshot",
-                evidence_values={
-                    "borrador_snapshot_id": command.borrador_snapshot_id,
-                    "modelo": command.modelo,
-                    "year": command.filing_year,
-                    "period": command.period.registry_token,
-                },
-                provenance=ActionEvidenceProvenance.PERSISTED_STATE,
-            ),
-        ) from exc
-    _assert_same_axis(
-        bucket_id=command.bucket_id,
-        filing_year=command.filing_year,
-        period=command.period,
-        snapshot=snapshot,
+    snapshot = _load_active_borrador_snapshot(
+        command,
+        snapshot_id=snapshot_id,
+        snapshot_repository=snapshot_repository,
     )
-    if revision_carry_outcome(snapshot.registry_snapshot_ref).refused:
-        raise Modelo100BorradorBindingError(
-            translated_message="application.modelo.borrador_binding.errors.snapshot_load_failed",
-            context={"borrador_snapshot_id": command.borrador_snapshot_id},
-            precondition_failure=build_modelo_precondition_failure(
-                subject_leaf_key="modelo.work.calculate",
-                condition_id="modelo.work.calculate.borrador_snapshot.active",
-                scenario_id="modelo.work.calculate.borrador_snapshot.load_failed",
-                evidence_id="modelo.work.calculate.borrador_snapshot",
-                evidence_values={
-                    "borrador_snapshot_id": command.borrador_snapshot_id,
-                    "modelo": command.modelo,
-                    "year": command.filing_year,
-                    "period": command.period.registry_token,
-                },
-                provenance=ActionEvidenceProvenance.PERSISTED_STATE,
-            ),
-        )
-    if snapshot.state is not SnapshotLifecycleState.ACTIVE:
-        raise Modelo100BorradorBindingError(
-            translated_message="application.modelo.borrador_binding.errors.snapshot_not_active",
-            precondition_failure=build_modelo_precondition_failure(
-                subject_leaf_key="modelo.work.calculate",
-                condition_id="modelo.work.calculate.borrador_snapshot.active",
-                scenario_id="modelo.work.calculate.borrador_snapshot.inactive",
-                evidence_id="modelo.work.calculate.borrador_snapshot",
-                evidence_values={
-                    "borrador_snapshot_id": command.borrador_snapshot_id,
-                    "modelo": command.modelo,
-                    "year": command.filing_year,
-                    "period": command.period.registry_token,
-                    "lifecycle_state": snapshot.state.value,
-                },
-                provenance=ActionEvidenceProvenance.PERSISTED_STATE,
-            ),
-        )
-
     eligible_bindings = _borrador_capable_bindings(registry_snapshot)
-    unknown_or_forbidden = sorted(set(snapshot.binding_values) - set(eligible_bindings))
-    if unknown_or_forbidden:
-        raise Modelo100BorradorBindingError(
-            translated_message="application.modelo.borrador_binding.errors.forbidden_bindings",
-            context={"bindings": unknown_or_forbidden},
-        )
-
+    _assert_borrador_bindings_allowed(snapshot, eligible_bindings)
     caller_owned = set(command.caller_binding_values) | set(command.caller_enum_binding_values)
-    decimal_values: dict[BindingId, Decimal] = {}
-    enum_values: dict[BindingId, str] = {}
-    for binding_id, raw_value in snapshot.binding_values.items():
-        key = binding_id
-        if key in caller_owned:
-            continue
-        binding = eligible_bindings[key]
-        if binding.typed_enum is not None:
-            enum_values[key] = str(raw_value).strip()
-            continue
-        decimal_values[key] = _decimal_value(key, raw_value)
-
-    sourced = tuple(sorted(set(decimal_values) | set(enum_values)))
-    snapshot_fingerprint = f"sha256:{sha256_hex(snapshot.snapshot_id.encode('utf-8'))}"
-    return CalculationSourceResolution(
-        resolver_id=_BORRADOR_RESOLVER_ID,
-        owned_sources=(BindingSourceKind.BORRADOR,),
-        binding_values=decimal_values,
-        enum_binding_values=enum_values,
-        borrador_provenance=BorradorSourceProvenance(
-            snapshot_id=snapshot.snapshot_id,
-            bindings_sourced=sourced,
-        ),
-        provenance=tuple(
-            CalculationSourceProvenance(
-                resolver_id="modelo_100_borrador",
-                resolved_binding_source=BindingSourceKind.BORRADOR,
-                contributor_source_kind="borrador",
-                contributor_binding_source=BindingSourceKind.BORRADOR,
-                lineage_role=CalculationSourceLineageRole.PRIMARY,
-                source_ref=f"borrador:{snapshot.snapshot_id}:binding:{binding_id}",
-                parent_source_ref=None,
-                fingerprint=snapshot_fingerprint,
-            )
-            for binding_id in sourced
-        ),
+    decimal_values, enum_values = _resolve_borrador_binding_values(
+        snapshot,
+        eligible_bindings=eligible_bindings,
+        caller_owned=caller_owned,
     )
+    return _borrador_resolution(snapshot, decimal_values=decimal_values, enum_values=enum_values)
 
 
 _BORRADOR_RESOLVER_ID = "modelo_100_borrador"

@@ -13,6 +13,7 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import Final
 
+from cadrumo.application.operator_actions.catalogue import lookup_action
 from cadrumo.application.operator_actions.models import ActionReference, DeclaredNextAction
 from cadrumo.application.overview.calendar_models import (
     OverviewAeatSubmissionState,
@@ -91,6 +92,10 @@ def _action(
 ) -> HomeNextAction:
     if (modelo is None) is not (period_code is None):
         raise ValueError("fixture action declaration address must be complete or absent")
+    # A fixture that mints an action the catalogue cannot dispatch is not a
+    # fixture of anything: no production surface can offer that identifier, so
+    # the candidate under review shows copy the operator will never see.
+    lookup_action(action_id)
     return HomeNextAction(
         rank=rank,
         action=DeclaredNextAction(action=ActionReference(action_id=action_id)),
@@ -158,7 +163,7 @@ def _ready() -> HomeProjectionV1:
         actions=(
             _action(
                 rank=0,
-                action_id="operator.declaration.open",
+                action_id="operator.modelo.work.revisions",
                 reason_code="declaration_needs_review",
                 modelo="303",
                 period_code="3T",

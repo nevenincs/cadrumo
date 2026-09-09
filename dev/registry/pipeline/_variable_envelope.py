@@ -43,12 +43,14 @@ from cadrumo.domain.calculations.registry.schema_exports import (
 
 from ._record_design_ir import (
     RecordDesignIntermediateAuxiliaryEnvelopeHeader,
-    RecordDesignIntermediateField,
     RecordDesignIntermediateRelativeSuffixMarker,
-    RecordDesignIntermediateSource,
     RecordDesignIntermediateVariableEnvelope,
 )
 from ._semantic_map import SemanticMapAnchor, VariableEnvelopeSemantic
+from .record_design_intermediate import (
+    RecordDesignIntermediateField,
+    RecordDesignIntermediateSource,
+)
 
 __all__ = [
     "AUXILIARY_TO_PREFIX_ROLE",

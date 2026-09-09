@@ -8,7 +8,7 @@ from .....core.directory_scan import scan_directory
 from .....core.resources.bundled_data import bundled_path
 from .._snapshot_internals import collect_snapshot_ref_ids
 from ..loader import load_registry_tree
-from ..schema import RegistryCatalogues
+from ..schema import ModeloDefinition, RegistryCatalogues
 
 
 def fragment_declaring(directory: Path, anchor: str) -> Path:
@@ -51,6 +51,21 @@ def fragment_declaring(directory: Path, anchor: str) -> Path:
     return matches[0]
 
 
+def _m130_definition() -> ModeloDefinition:
+    modelos, _full = load_registry_tree(bundled_path("registry", "aeat"))
+    return next(item for item in modelos if str(item.id) == "130")
+
+
+def _m130_declared_reference_ids(modelo: ModeloDefinition) -> tuple[set[str], set[str]]:
+    legal_ids: set[str] = {str(ref) for ref in modelo.legal_refs}
+    source_ids: set[str] = {str(ref) for ref in modelo.source_refs}
+    for revision in modelo.revisions.values():
+        revision_legal, revision_sources = collect_snapshot_ref_ids(modelo, revision)
+        legal_ids.update(str(ref) for ref in revision_legal)
+        source_ids.update(str(ref) for ref in revision_sources)
+    return legal_ids, source_ids
+
+
 def catalogues_for_m130_gate_tests(catalogues: RegistryCatalogues) -> RegistryCatalogues:
     """Narrow ``catalogues`` to exactly the refs modelo 130 declares.
 
@@ -66,14 +81,8 @@ def catalogues_for_m130_gate_tests(catalogues: RegistryCatalogues) -> RegistryCa
     catalogue -- and it cannot go stale, because a newly cited ref joins it the
     same way the modelo declares it.
     """
-    modelos, _full = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(item for item in modelos if str(item.id) == "130")
-    legal_ids: set[str] = {str(ref) for ref in modelo.legal_refs}
-    source_ids: set[str] = {str(ref) for ref in modelo.source_refs}
-    for revision in modelo.revisions.values():
-        revision_legal, revision_sources = collect_snapshot_ref_ids(modelo, revision)
-        legal_ids |= {str(ref) for ref in revision_legal}
-        source_ids |= {str(ref) for ref in revision_sources}
+    modelo = _m130_definition()
+    legal_ids, source_ids = _m130_declared_reference_ids(modelo)
     return catalogues.model_copy(
         update={
             "legal": {ref_id: catalogues.legal[ref_id] for ref_id in sorted(legal_ids) if ref_id in catalogues.legal},

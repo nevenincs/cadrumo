@@ -1381,7 +1381,12 @@ def setup(app):
             app.disconnect(listener.id)
 
     def _resolve_deferred_models(app):
-        """Import the diagnostics module and run its idempotent model rebuild.
+        """Run the idempotent deferred-model rebuilds autodoc depends on.
+
+        Both rebuilds are called through their owning modules: the diagnostics
+        report models resolve their heavy forward references, and the canonical
+        error envelope resolves its action DTO. Neither is reached incidentally
+        by importing the other, so autodoc needs both named here.
 
         Args:
             app: The Sphinx application instance (unused).
@@ -1389,9 +1394,10 @@ def setup(app):
         if not _should_resolve_deferred_models():
             return
         from cadrumo.application import diagnostics
-        from cadrumo.core.errors.error_codes import ErrorEnvelope
+        from cadrumo.core.errors.error_codes import ErrorEnvelope, complete_error_envelope_model
 
         diagnostics._ensure_models_rebuilt()
+        complete_error_envelope_model()
         if not ErrorEnvelope.__pydantic_complete__:
             raise RuntimeError("the canonical ErrorEnvelope model did not resolve for API documentation")
 

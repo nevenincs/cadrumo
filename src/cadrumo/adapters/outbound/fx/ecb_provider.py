@@ -33,7 +33,7 @@ from __future__ import annotations
 
 import csv
 import io
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import date, timedelta
 from decimal import Decimal, InvalidOperation
 from functools import lru_cache
@@ -180,21 +180,30 @@ def _parse_observations(payload: str) -> list[tuple[date, Decimal]]:
         return []
     observations: list[tuple[date, Decimal]] = []
     for row in csv.DictReader(io.StringIO(payload)):
-        period = (row.get("TIME_PERIOD") or "").strip()
-        value = (row.get("OBS_VALUE") or "").strip()
-        if not period or not value:
-            continue
-        day = parse_iso8601_date(period)
-        if day is None:
-            continue
-        try:
-            quote = Decimal(value)
-        except InvalidOperation:
-            continue
-        if not quote.is_finite() or quote <= 0:
-            continue
-        observations.append((day, quote))
+        observation = _parse_observation_row(row)
+        if observation is not None:
+            observations.append(observation)
     return observations
+
+
+def _parse_observation_row(
+    row: Mapping[str | None, str | None],
+) -> tuple[date, Decimal] | None:
+    """Return one usable ECB observation, or ``None`` for a gap/malformed row."""
+    period = (row.get("TIME_PERIOD") or "").strip()
+    value = (row.get("OBS_VALUE") or "").strip()
+    if not period or not value:
+        return None
+    day = parse_iso8601_date(period)
+    if day is None:
+        return None
+    try:
+        quote = Decimal(value)
+    except InvalidOperation:
+        return None
+    if not quote.is_finite() or quote <= 0:
+        return None
+    return day, quote
 
 
 def _https_fetch(url: str) -> str:

@@ -510,6 +510,60 @@ def _render_missing_requirement(requirement: ProfilePreflightRequirement) -> str
     return f"{requirement.label} ({', '.join(requirement.legal_refs)})"
 
 
+def _load_profile_for_modelo_work(*, bucket_id: str, modelo: str) -> UserProfileRecord:
+    try:
+        return ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
+    except ProfileNotFoundError as exc:
+        raise ModeloProfileReadinessError(
+            translated_message="application.modelo.errors.profile_readiness_profile_missing",
+            context={"bucket_id": bucket_id},
+        ) from exc
+
+
+def _require_profile_setup_complete(*, record: UserProfileRecord, bucket_id: str, modelo: str) -> None:
+    """Refuse setup profiles before any filing-grade readiness checks run."""
+    if record.setup_state is not ProfileSetupState.INCOMPLETE:
+        return
+    schema = load_user_profile_schema()
+    missing_paths = missing_required_field_paths(schema, record_to_path_values(record))
+    if missing_paths:
+        grounding = build_profile_grounding_index(bundled_authority())
+        missing_labels = ", ".join(
+            _render_missing_requirement(
+                build_profile_preflight_requirement(path, schema=schema, grounding_index=grounding),
+            )
+            for path in missing_paths
+        )
+        raise ModeloProfileReadinessError(
+            translated_message="application.modelo.errors.profile_readiness_setup_incomplete_missing",
+            context={"bucket_id": bucket_id, "modelo": modelo, "missing": missing_labels},
+        )
+    raise ModeloProfileReadinessError(
+        translated_message="application.modelo.errors.profile_readiness_setup_incomplete",
+        context={"bucket_id": bucket_id, "modelo": modelo},
+    )
+
+
+def _raise_if_profile_preflight_missing(
+    report: ProfilePreflightReport,
+    *,
+    modelo: str,
+    filing_year: int,
+    period: Period,
+) -> None:
+    if report.ready:
+        return
+    raise ModeloProfileReadinessError(
+        translated_message="application.modelo.errors.profile_readiness_missing",
+        context={
+            "modelo": modelo,
+            "filing_year": filing_year,
+            "period": period.registry_token,
+            "missing": ", ".join(format_profile_preflight_requirement(requirement) for requirement in report.missing),
+        },
+    )
+
+
 def require_profile_ready_for_modelo_work(
     *,
     bucket_id: str,
@@ -534,47 +588,8 @@ def require_profile_ready_for_modelo_work(
     ``build_profile_grounding_index`` keeps the added per-call cost bounded on
     this hot path.
     """
-    try:
-        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
-    except ProfileNotFoundError as exc:
-        raise ModeloProfileReadinessError(
-            translated_message="application.modelo.errors.profile_readiness_profile_missing",
-            context={"bucket_id": bucket_id},
-        ) from exc
-    if record.setup_state is ProfileSetupState.INCOMPLETE:
-        # A profile minted by the interactive setup flow is live (listed,
-        # resumable, its tax id reserved) but not workable: its answer set
-        # has not passed the flow's final cross-field validation, so no
-        # filing-grade modelo work may build on it. Name the outstanding
-        # schema-required fields when the enumeration finds any.
-        # SETUP_INCOMPLETE is not identical to "some required field is
-        # empty" - it can also mean the answer set failed a cross-field
-        # rule with every individual field populated, in which case the
-        # enumeration below is empty and the original generic wording is
-        # kept rather than claiming "missing: nothing".
-        schema = load_user_profile_schema()
-        missing_paths = missing_required_field_paths(schema, record_to_path_values(record))
-        if missing_paths:
-            # Grounded, not a bare label. This composed the list without a
-            # grounding index -- which is built further down, AFTER this raise --
-            # so the refusal named the fields and dropped the articles that make
-            # them required, on the one surface whose whole purpose is telling an
-            # operator why a field is demanded of them.
-            grounding = build_profile_grounding_index(bundled_authority())
-            missing_labels = ", ".join(
-                _render_missing_requirement(
-                    build_profile_preflight_requirement(path, schema=schema, grounding_index=grounding),
-                )
-                for path in missing_paths
-            )
-            raise ModeloProfileReadinessError(
-                translated_message="application.modelo.errors.profile_readiness_setup_incomplete_missing",
-                context={"bucket_id": bucket_id, "modelo": modelo, "missing": missing_labels},
-            )
-        raise ModeloProfileReadinessError(
-            translated_message="application.modelo.errors.profile_readiness_setup_incomplete",
-            context={"bucket_id": bucket_id, "modelo": modelo},
-        )
+    record = _load_profile_for_modelo_work(bucket_id=bucket_id, modelo=modelo)
+    _require_profile_setup_complete(record=record, bucket_id=bucket_id, modelo=modelo)
     authority = bundled_authority()
     grounding_index = build_profile_grounding_index(authority)
     applicability_first = enforce_applicability and modelo.strip() in _PRE_ACTIVITY_LIFECYCLE_MODELOS
@@ -608,18 +623,7 @@ def require_profile_ready_for_modelo_work(
         period=period,
         authority=authority,
     )
-    if not report.ready:
-        raise ModeloProfileReadinessError(
-            translated_message="application.modelo.errors.profile_readiness_missing",
-            context={
-                "modelo": modelo,
-                "filing_year": filing_year,
-                "period": period.registry_token,
-                "missing": ", ".join(
-                    format_profile_preflight_requirement(requirement) for requirement in report.missing
-                ),
-            },
-        )
+    _raise_if_profile_preflight_missing(report, modelo=modelo, filing_year=filing_year, period=period)
     _require_not_pre_activity_period(
         record=record,
         bucket_id=bucket_id,

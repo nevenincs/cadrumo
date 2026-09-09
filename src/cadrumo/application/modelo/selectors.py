@@ -227,6 +227,68 @@ def select_current_verified_revision(
     return selection
 
 
+def _selection_for_revision(
+    work_unit: WorkUnit,
+    *,
+    selector: ModeloCalculationRevisionSelector,
+    revision: CalculationRevision,
+) -> ModeloCalculationRevisionSelection:
+    """Project one already-selected revision into the public selection model."""
+    return ModeloCalculationRevisionSelection(
+        selector=selector,
+        work_unit_id=work_unit.work_unit_id,
+        revision=revision,
+        candidates=(ModeloCalculationRevisionCandidate.from_revision(revision),),
+    )
+
+
+def _current_exportable_revision(
+    work_unit: WorkUnit,
+    current_revision: CalculationRevision | None,
+) -> ModeloCalculationRevisionSelection | None:
+    """Resolve the current-pointer branch of the export policy."""
+    if current_revision is None:
+        return None
+    if current_revision.state is CalculationRevisionState.VERIFICADO_COMPLETO:
+        return _selection_for_revision(
+            work_unit,
+            selector=ModeloCalculationRevisionSelector.CURRENT,
+            revision=current_revision,
+        )
+    if current_revision.state is CalculationRevisionState.BORRADOR:
+        raise ModeloCalculationRevisionSelectorStateError(
+            translated_message="errors.refused.modelo_calculation_revision_selector_state",
+        )
+    return None
+
+
+def _verified_exportable_fallback(
+    work_unit: WorkUnit,
+    *,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
+) -> ModeloCalculationRevisionSelection:
+    """Resolve the unambiguous verified-revision fallback for export."""
+    verified = tuple(
+        revision
+        for revision in _revisions_for_work_unit(work_unit, calculation_repository=calculation_repository)
+        if revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
+    )
+    if len(verified) == 1:
+        return _selection_for_revision(
+            work_unit,
+            selector=ModeloCalculationRevisionSelector.LATEST_VERIFIED,
+            revision=verified[0],
+        )
+    if len(verified) > 1:
+        raise ModeloCalculationRevisionSelectorAmbiguousError(
+            tuple(ModeloCalculationRevisionCandidate.from_revision(revision) for revision in verified),
+        )
+    raise ModeloCalculationRevisionSelectorNotFoundError(
+        translated_message="errors.error.modelo_calculation_revision_selector_not_found",
+        context={"selection": "exportable", "exportable_revision_present": False},
+    )
+
+
 def select_exportable_revision(
     work_unit: WorkUnit,
     *,
@@ -245,11 +307,10 @@ def select_exportable_revision(
         calculation_repository=calculation_repository,
     )
     if filed_revision is not None and filed_revision.state is CalculationRevisionState.PRESENTADO:
-        return ModeloCalculationRevisionSelection(
+        return _selection_for_revision(
+            work_unit,
             selector=ModeloCalculationRevisionSelector.FILED,
-            work_unit_id=work_unit.work_unit_id,
             revision=filed_revision,
-            candidates=(ModeloCalculationRevisionCandidate.from_revision(filed_revision),),
         )
 
     current_revision = _optional_revision_by_pointer(
@@ -257,39 +318,12 @@ def select_exportable_revision(
         work_unit.current_calculation_revision_id,
         calculation_repository=calculation_repository,
     )
-    if current_revision is not None:
-        if current_revision.state is CalculationRevisionState.VERIFICADO_COMPLETO:
-            return ModeloCalculationRevisionSelection(
-                selector=ModeloCalculationRevisionSelector.CURRENT,
-                work_unit_id=work_unit.work_unit_id,
-                revision=current_revision,
-                candidates=(ModeloCalculationRevisionCandidate.from_revision(current_revision),),
-            )
-        if current_revision.state is CalculationRevisionState.BORRADOR:
-            raise ModeloCalculationRevisionSelectorStateError(
-                translated_message="errors.refused.modelo_calculation_revision_selector_state",
-            )
-
-    verified = tuple(
-        revision
-        for revision in _revisions_for_work_unit(work_unit, calculation_repository=calculation_repository)
-        if revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
-    )
-    if len(verified) == 1:
-        revision = verified[0]
-        return ModeloCalculationRevisionSelection(
-            selector=ModeloCalculationRevisionSelector.LATEST_VERIFIED,
-            work_unit_id=work_unit.work_unit_id,
-            revision=revision,
-            candidates=(ModeloCalculationRevisionCandidate.from_revision(revision),),
-        )
-    if len(verified) > 1:
-        raise ModeloCalculationRevisionSelectorAmbiguousError(
-            tuple(ModeloCalculationRevisionCandidate.from_revision(revision) for revision in verified),
-        )
-    raise ModeloCalculationRevisionSelectorNotFoundError(
-        translated_message="errors.error.modelo_calculation_revision_selector_not_found",
-        context={"selection": "exportable", "exportable_revision_present": False},
+    current_selection = _current_exportable_revision(work_unit, current_revision)
+    if current_selection is not None:
+        return current_selection
+    return _verified_exportable_fallback(
+        work_unit,
+        calculation_repository=calculation_repository,
     )
 
 

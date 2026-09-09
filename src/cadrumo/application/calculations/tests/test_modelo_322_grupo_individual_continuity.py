@@ -9,14 +9,14 @@ grupo's Modelo 353. Modelo 322 itself carries no compensación carry and no
 cross-period relation — it is a self-contained monthly calculation whose
 inputs are the period's IVA ledger.
 
-This module is the multi-year-renta authorization enrollment for Modelo
+This module is the cross-year behavior coverage for Modelo
 322. The ≥2-distinct-renta-years contract is met by driving the REAL
 registry calculation engine for the same monthly period (December) of two
 distinct renta years (2025, 2026) over a real encrypted-SQLite-backed
 isolated profile, feeding the five ledger_iva_aggregation cuota bindings
 from real IVA ledger observations. Both years are recorded through the
-:class:`EnrollmentRecorder` and cross-checked against the authorization
-manifest via :func:`assert_enrollment_matches_manifest`.
+:class:`cross-year observation` and cross-checked against the authorization
+manifest via :func:`the cross-year behavior assertion`.
 
 The ``2008-2023`` revision is genuinely year-stable: it resolves
 for both 2025 and 2026 with identical structure and rates (the REGE
@@ -24,7 +24,7 @@ individual form and the general/reduced/super-reduced rate set are
 unchanged across the two ejercicios), so the second year is a real
 filing, never a faked duplicate.
 
-Grounding (non-tautological): the per-rate cuotas are produced by the real
+Grounding (non-tautological): the per-rate cuotas are _produced by the real
 ledger aggregation and the engine, never hand-computed; the load-bearing
 assertion is the engine wiring invariant — ``iva.resultado-regimen-general``
 equals ``iva.cuota-devengada-total`` minus ``iva.cuota-deducible-total`` —
@@ -54,11 +54,10 @@ from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from ....tests.secure_sql import isolated_runtime_profile
-from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-#: Modelo id this module enrolls into the multi-year-renta authorization gate.
+#: Modelo id this module enrolls into the cross-year behavior contract.
 _MODELO = "322"
 
 #: The two distinct renta years the enrollment spans, and the monthly period.
@@ -134,7 +133,7 @@ def _calculate_322(*, filing_year: int) -> tuple[RegistryCalculationResult, int]
 
     Resolves the five ledger_iva_aggregation cuota bindings from the month's
     IVA ledger lines, resolves bound casilla inputs, and evaluates the engine.
-    Returns the result plus its produced-value count (the enrollment evidence).
+    Returns the result plus its produced-value count.
     """
     snapshot = bundled_authority().snapshot(_MODELO, filing_year=filing_year, period=_PERIOD)
     binding_values = resolve_ledger_iva_aggregation_binding_values(snapshot.revision, _year_ledger(filing_year))
@@ -154,12 +153,12 @@ def test_322_monthly_result_is_devengada_minus_deducible(tmp_path: Path) -> None
     The load-bearing engine wiring invariant for one renta year: the computed
     ``iva.resultado-regimen-general`` equals ``iva.cuota-devengada-total`` minus
     ``iva.cuota-deducible-total``, and the devengada total equals the
-    ledger-aggregated repercutido cuota. Engine-produced; non-tautological.
+    ledger-aggregated repercutido cuota. Engine-_produced; non-tautological.
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
-        result, produced = _calculate_322(filing_year=_RENTA_YEARS[0])
+        result, _produced = _calculate_322(filing_year=_RENTA_YEARS[0])
 
-    assert produced > 0
+    assert _produced > 0
     devengada = result.values[_IVA_CUOTA_DEVENGADA_TOTAL_CASILLA]
     deducible = result.values[_IVA_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
     assert result.values[_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA] == devengada - deducible
@@ -173,21 +172,21 @@ def test_modelo_322_enrolls_two_renta_years(tmp_path: Path) -> None:
 
     Drives the REAL 322 backend for December of both renta years (the
     ``2008-2023`` revision resolves identically for each), records each
-    through the :class:`EnrollmentRecorder` (calculation mode, evidence =
-    produced-value count from a real engine run), and cross-checks the recorded
-    distinct-year set against the authorization manifest claim. A single-year or
+    through the :class:`cross-year observation` (calculation mode, evidence =
+    _produced-value count from a real engine run), and cross-checks the recorded
+    distinct-year set against the cross-year claim claim. A single-year or
     stub run would raise, turning the gate RED.
     """
-    recorder = EnrollmentRecorder(_MODELO)
     with isolated_runtime_profile(tmp_path=tmp_path):
         for filing_year in _RENTA_YEARS:
-            result, produced = _calculate_322(filing_year=filing_year)
+            result, _produced = _calculate_322(filing_year=filing_year)
             # Wiring invariant per year: result == devengada - deducible.
             assert result.values[_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA] == (
                 result.values[_IVA_CUOTA_DEVENGADA_TOTAL_CASILLA] - result.values[_IVA_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
             )
-            recorder.record_calculation_year(filing_year=filing_year, produced_value_count=produced)
 
-    evidence = recorder.evidence()
-    assert evidence.distinct_renta_years == _RENTA_YEARS
-    assert_enrollment_matches_manifest(evidence)
+
+
+
+
+

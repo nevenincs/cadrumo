@@ -5,9 +5,7 @@ entry, audit-log entry) declares a :class:`SensitivityClass`. Each class maps to
 a default :class:`ClassificationPolicy` resolved by :func:`default_policy_for`;
 the policy pins the at-rest treatment (plaintext or ciphertext-required),
 retention behaviour, and the redaction rule references that the audit sink and
-run-trace path honour. Operator-facing output uses
-:class:`OutputSensitivityClass` and :func:`default_output_policy_for` so CLI
-public output can be classified without pretending it is a persisted record.
+run-trace path honour.
 
 The default policy table is the single point of truth. Per-domain
 repositories MAY override the default for an individual record (e.g.

@@ -207,7 +207,6 @@ def test_mutation_removing_zero_from_m390_aic_base_selector_reds_the_gate(tmp_pa
     shutil.copytree(bundled_root / "modelos" / "390", scratch_root / "modelos" / "390")
     for catalogue_dir in (
         "apoderamientos",
-        "authorization.d",
         "calendars",
         "categories",
         "iva",
@@ -266,7 +265,6 @@ def test_mutation_repointing_box_28_to_the_aic_blind_casilla_reds_the_gate(tmp_p
     shutil.copytree(bundled_root / "modelos" / "390", scratch_root / "modelos" / "390")
     for catalogue_dir in (
         "apoderamientos",
-        "authorization.d",
         "calendars",
         "categories",
         "iva",
@@ -298,3 +296,4 @@ def test_mutation_repointing_box_28_to_the_aic_blind_casilla_reds_the_gate(tmp_p
 
     assert mutated_field_28.casilla_id != _CASILLA_BOX_28
     assert mutated_field_28.casilla_id == _CASILLA_AIC_BLIND
+

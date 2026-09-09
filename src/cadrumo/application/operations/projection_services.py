@@ -2,31 +2,99 @@
 
 from __future__ import annotations
 
-import secrets
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from secrets import compare_digest
-from threading import RLock
-from typing import Protocol, cast, runtime_checkable
+from typing import Protocol, runtime_checkable
 
-from pydantic import BaseModel, TypeAdapter, ValidationError
+from pydantic import BaseModel
 
 from ...core.hashing import content_hash_hex
 from ...core.identity import ContentDigest
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationInteractionKind,
-    OperationLifecycle,
-    OperationTerminalCondition,
+from ._projection_authority import (
+    BoundOperationSecureResponseAuthorityMixin,
+    OperationResponseAuthorityBrokerMixin,
+)
+from ._projection_control import (
+    authorize_cancellation as _authorize_cancellation,
+)
+from ._projection_control import (
+    cancellation_request_or_refusal as _cancellation_request_or_refusal,
+)
+from ._projection_control import (
+    detach_refusal as _detach_refusal,
+)
+from ._projection_control import (
+    execute_cancellation as _execute_cancellation,
+)
+from ._projection_control import (
+    inspect_response_authority as _inspect_response_authority,
+)
+from ._projection_control import (
+    load_cancellation_snapshot as _load_cancellation_snapshot,
+)
+from ._projection_control import (
+    load_detach_context as _load_detach_context,
+)
+from ._projection_control import (
+    load_response_control_context as _load_response_control_context,
+)
+from ._projection_control import (
+    response_control_contract_is_current as _response_control_contract_is_current,
+)
+from ._projection_control import (
+    response_control_request_or_refusal as _response_control_request_or_refusal,
+)
+from ._projection_control import (
+    response_for_mutation as _response_for_mutation,
+)
+from ._projection_control import (
+    response_refusal as _response_refusal,
+)
+from ._projection_read import (
+    load_refresh_context as _load_refresh_context,
+)
+from ._projection_read import (
+    load_result_context as _load_result_context,
+)
+from ._projection_read import (
+    load_review_context as _load_review_context,
+)
+from ._projection_read import (
+    lookup_refresh_registration as _lookup_refresh_registration,
+)
+from ._projection_read import (
+    lookup_result_registration as _lookup_result_registration,
+)
+from ._projection_read import (
+    lookup_review_registration as _lookup_review_registration,
+)
+from ._projection_read import (
+    refresh_request_or_refusal as _refresh_request_or_refusal,
+)
+from ._projection_read import (
+    resolve_refresh_target as _resolve_refresh_target,
+)
+from ._projection_read import (
+    resolve_result_projection as _resolve_result_projection,
+)
+from ._projection_read import (
+    resolve_review_projection as _resolve_review_projection,
+)
+from ._projection_read import (
+    result_digest_or_refusal as _result_digest_or_refusal,
+)
+from ._projection_read import (
+    result_request_or_refusal as _result_request_or_refusal,
+)
+from ._projection_read import (
+    review_request_or_refusal as _review_request_or_refusal,
 )
 from .frontend_contracts import (
-    OperationCancellationRefusalCode,
     OperationCancellationRefusalV1,
     OperationCancellationRequestV1,
     OperationCancellationResultV1,
-    OperationCancellationSuccessV1,
     OperationCancellationVersionHeader,
     OperationDetachRefusalCode,
     OperationDetachRefusalV1,
@@ -39,30 +107,22 @@ from .frontend_contracts import (
     OperationResponseControlRefusalV1,
     OperationResponseControlRequestV1,
     OperationResponseControlResultV1,
-    OperationResponseControlSuccessV1,
     OperationResponseControlVersionHeader,
     OperationResponseMutationRequestV1,
     OperationResponseMutationResultV1,
     OperationResponseMutationSuccessV1,
     OperationResponseRejectRequestV1,
-    OperationResultProjectionRefusalCode,
     OperationResultProjectionRefusalV1,
     OperationResultProjectionRequestV1,
     OperationResultProjectionResultV1,
-    OperationResultProjectionSuccessV1,
     OperationResultProjectionVersionHeader,
-    OperationReviewProjectionReferenceV1,
-    OperationReviewProjectionRefusalCode,
     OperationReviewProjectionRefusalV1,
     OperationReviewProjectionRequestV1,
     OperationReviewProjectionResultV1,
-    OperationReviewProjectionSuccessV1,
     OperationReviewProjectionVersionHeader,
-    OperationWorkspaceRefreshTargetRefusalCode,
     OperationWorkspaceRefreshTargetRefusalV1,
     OperationWorkspaceRefreshTargetRequestV1,
     OperationWorkspaceRefreshTargetResultV1,
-    OperationWorkspaceRefreshTargetSuccessV1,
     OperationWorkspaceRefreshTargetVersionHeader,
 )
 from .interactions import (
@@ -70,13 +130,12 @@ from .interactions import (
     OperationApplyResponse,
     OperationConsumedInteraction,
     OperationInteractionId,
-    OperationInteractionRequest,
     OperationPendingInteraction,
     OperationRejectResponse,
     OperationResponseIntent,
     OperationResponseToken,
 )
-from .models import OperationId, OperationReference, OperationTerminalReceipt
+from .models import OperationId
 from .persistence.journal import (
     OperationObservationReader,
     OperationObservationUnknownOperationError,
@@ -84,18 +143,11 @@ from .persistence.journal import (
     OperationSecureReferenceStore,
 )
 from .registry import (
-    OperationPublicDefinitionContractV1,
-    OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
-    OperationResultProjector,
-    OperationWorkspaceRefreshAdapter,
-    operation_public_schema_reference,
 )
 from .secret_submission import zeroize_secret_buffer
 
-_SUPPORTED_VERSION = 1
 _READ_LIMIT = 1
-_CONTENT_DIGEST_ADAPTER: TypeAdapter[ContentDigest] = TypeAdapter(ContentDigest)
 
 
 @runtime_checkable
@@ -159,7 +211,7 @@ class OperationResponseAuthorityIssuer(Protocol):
 
 
 @dataclass(frozen=True, slots=True)
-class BoundOperationSecureResponseAuthority:
+class BoundOperationSecureResponseAuthority(BoundOperationSecureResponseAuthorityMixin):
     """One runtime-only bearer bound to an exact pending REVIEW decision."""
 
     operation_id: OperationId
@@ -172,98 +224,6 @@ class BoundOperationSecureResponseAuthority:
     clock: Callable[[], datetime]
     _token: bytearray = field(repr=False)
     _closed: bool = field(default=False, init=False, repr=False)
-
-    @classmethod
-    def bind(
-        cls,
-        *,
-        operation_id: OperationId,
-        interaction_id: OperationInteractionId,
-        revision: int,
-        reviewed_proposal_digest: ContentDigest,
-        actor_ref: OperationActorReference,
-        expires_at: datetime | None,
-        intents: frozenset[OperationResponseIntent],
-        response_token: OperationResponseToken,
-        clock: Callable[[], datetime],
-    ) -> BoundOperationSecureResponseAuthority:
-        """Bind one mutable bearer to an exact pending REVIEW decision."""
-        if not intents or not intents <= frozenset({OperationResponseIntent.APPLY, OperationResponseIntent.REJECT}):
-            raise ValueError("secure response authority requires supported REVIEW intents")
-        return cls(
-            operation_id=operation_id,
-            interaction_id=interaction_id,
-            revision=revision,
-            reviewed_proposal_digest=reviewed_proposal_digest,
-            actor_ref=actor_ref,
-            expires_at=expires_at,
-            intents=intents,
-            clock=clock,
-            _token=bytearray(response_token, "ascii"),
-        )
-
-    async def permitted_intents(
-        self,
-        request: OperationResponseControlRequestV1,
-        pending: OperationPendingInteraction,
-        /,
-    ) -> frozenset[OperationResponseIntent]:
-        """Validate the binding and return its still-permitted response intents."""
-        self._validate_binding(request, pending)
-        return self.intents
-
-    def _validate_binding(
-        self,
-        request: OperationResponseControlRequestV1,
-        pending: OperationPendingInteraction,
-    ) -> None:
-        """Enforce every runtime bearer check before exposing its intent set."""
-        if self._closed:
-            raise ValueError("secure response authority is closed")
-        if not _response_authority_binding_matches(self, request, pending):
-            raise ValueError("secure response authority binding is stale")
-        if self.expires_at is not None and self.clock() > self.expires_at:
-            raise ValueError("secure response authority is expired")
-        token_digest = content_hash_hex(self._token.decode("ascii"))
-        if not compare_digest(token_digest, pending.response_token_digest):
-            raise ValueError("secure response authority bearer does not match the pending interaction")
-
-    async def response_token(
-        self,
-        request: OperationResponseControlRequestV1,
-        pending: OperationPendingInteraction,
-        intent: OperationResponseIntent,
-        /,
-    ) -> OperationResponseToken:
-        """Return the private token only after exact authority validation."""
-        intents = await self.permitted_intents(request, pending)
-        if intent not in intents:
-            raise ValueError("secure response authority does not permit the requested intent")
-        return self._token.decode("ascii")
-
-    def close(self) -> None:
-        """Zeroize the in-memory response bearer and prevent reuse."""
-        zeroize_secret_buffer(self._token)
-        object.__setattr__(self, "_closed", True)
-
-
-def _response_authority_binding_matches(
-    authority: BoundOperationSecureResponseAuthority,
-    request: OperationResponseControlRequestV1,
-    pending: OperationPendingInteraction,
-) -> bool:
-    """Match request and checkpoint coordinates to the bound bearer exactly."""
-    return (
-        request.operation_id == authority.operation_id
-        and request.interaction_id == authority.interaction_id
-        and request.revision == authority.revision
-        and request.actor_ref == authority.actor_ref
-        and pending.request.identity.operation_id == authority.operation_id
-        and pending.request.interaction_id == authority.interaction_id
-        and pending.request.revision == authority.revision
-        and pending.reviewed_proposal_digest == authority.reviewed_proposal_digest
-        and pending.request.expires_at == authority.expires_at
-    )
 
 
 class UnavailableOperationSecureResponseAuthority:
@@ -332,261 +292,10 @@ class OperationResponseCapability:
         self.__closed = True
 
 
-class OperationResponseAuthorityBroker:
+class OperationResponseAuthorityBroker(OperationResponseAuthorityBrokerMixin):
     """Process-local REVIEW bearer custody that cannot survive restart."""
 
-    def __init__(self) -> None:
-        self._entries: dict[
-            OperationId,
-            tuple[OperationActorReference, ContentDigest, OperationPendingInteraction | None, bytearray | None],
-        ] = {}
-        self._lock = RLock()
-
-    def reserve(
-        self,
-        operation_id: OperationId,
-        actor_ref: OperationActorReference,
-    ) -> OperationResponseCapability:
-        """Issue an actor-bound opaque handle before operation execution starts."""
-        handle = bytearray(secrets.token_bytes(32))
-        digest = content_hash_hex(handle.hex())
-        capability = OperationResponseCapability(operation_id, actor_ref, handle, _issuer=_CAPABILITY_ISSUER)
-        with self._lock:
-            if operation_id in self._entries:
-                capability.close()
-                raise ValueError("response capability is already reserved")
-            self._entries[operation_id] = (actor_ref, digest, None, None)
-        return capability
-
-    def issue(self, pending: OperationPendingInteraction, response_token: OperationResponseToken) -> None:
-        """Retain one mutable bearer only after its digest-bound checkpoint exists."""
-        operation_id = pending.request.identity.operation_id
-        token = bytearray(response_token, "ascii")
-        with self._lock:
-            entry = self._entries.get(operation_id)
-            if entry is None:
-                zeroize_secret_buffer(token)
-                return
-            actor_ref, capability_digest, issued_pending, issued_token = entry
-            if issued_pending is not None or issued_token is not None:
-                zeroize_secret_buffer(token)
-                raise ValueError("response authority is already issued")
-            self._entries[operation_id] = (actor_ref, capability_digest, pending, token)
-
-    def bind(
-        self,
-        request: OperationResponseControlRequestV1,
-        pending: OperationPendingInteraction,
-        capability: OperationResponseCapability,
-        *,
-        clock: Callable[[], datetime],
-    ) -> OperationSecureResponseAuthority:
-        """Transfer one exact live bearer into an actor-bound response service."""
-        token: bytearray | None = None
-        with self._lock:
-            entry = self._entries.get(request.operation_id)
-            if entry is None:
-                return UnavailableOperationSecureResponseAuthority()
-            actor_ref, capability_digest, issued_pending, issued_token = entry
-            valid = (
-                capability.matches(request.operation_id, actor_ref, capability_digest)
-                and request.actor_ref == actor_ref
-                and issued_pending == pending
-                and issued_token is not None
-                and pending.request.identity.operation_id == request.operation_id
-                and pending.request.interaction_id == request.interaction_id
-                and pending.request.revision == request.revision
-            )
-            if not valid:
-                return UnavailableOperationSecureResponseAuthority()
-            self._entries.pop(request.operation_id)
-            token = issued_token
-        capability.close()
-        if token is None:
-            raise ValueError("a bound secure-response authority requires the token its capability issued")
-        try:
-            return BoundOperationSecureResponseAuthority.bind(
-                operation_id=request.operation_id,
-                interaction_id=request.interaction_id,
-                revision=request.revision,
-                reviewed_proposal_digest=pending.reviewed_proposal_digest,
-                actor_ref=request.actor_ref,
-                expires_at=pending.request.expires_at,
-                intents=frozenset({OperationResponseIntent.APPLY, OperationResponseIntent.REJECT}),
-                response_token=token.decode("ascii"),
-                clock=clock,
-            )
-        finally:
-            zeroize_secret_buffer(token)
-
-    def close(self) -> None:
-        """Wipe every unbound bearer during application shutdown."""
-        with self._lock:
-            entries = tuple(self._entries.values())
-            self._entries.clear()
-        for _actor_ref, _capability_digest, _pending, token in entries:
-            if token is not None:
-                zeroize_secret_buffer(token)
-
-
-@dataclass(frozen=True, slots=True)
-class _ReviewContext:
-    """Durable facts that have passed the safe REVIEW reference checks."""
-
-    reference: OperationReviewProjectionReferenceV1
-    snapshot: OperationPersistedSnapshot
-    pending: OperationPendingInteraction
-    interaction: OperationInteractionRequest
-
-
-@dataclass(frozen=True, slots=True)
-class _ReviewRegistration:
-    """One REVIEW context bound to its immutable public registration."""
-
-    context: _ReviewContext
-    registration: OperationPublicDefinitionRegistrationV1
-
-
-def _review_request_or_refusal(
-    request: OperationReviewProjectionVersionHeader | OperationReviewProjectionRequestV1,
-) -> OperationReviewProjectionReferenceV1 | OperationReviewProjectionRefusalV1:
-    """Validate the versioned request envelope before reading durable state."""
-    if request.review_projection_version != _SUPPORTED_VERSION:
-        return _review_refusal(
-            OperationReviewProjectionRefusalCode.UNSUPPORTED_VERSION,
-            requested_version=request.review_projection_version,
-        )
-    if not isinstance(request, OperationReviewProjectionRequestV1):
-        return _review_refusal(
-            OperationReviewProjectionRefusalCode.REVIEW_PROJECTION_UNAVAILABLE,
-            requested_version=_SUPPORTED_VERSION,
-        )
-    return request.reference
-
-
-def _review_reference_is_current(
-    reference: OperationReviewProjectionReferenceV1,
-    interaction: OperationInteractionRequest,
-) -> bool:
-    """Require every public reference coordinate to match the checkpoint."""
-    return (
-        interaction.identity.operation_id == reference.operation_id
-        and interaction.interaction_id == reference.interaction_id
-        and interaction.revision == reference.revision
-        and interaction.expires_at == reference.expires_at
-    )
-
-
-def _review_is_expired(interaction: OperationInteractionRequest, clock: Callable[[], datetime]) -> bool:
-    """Check expiry only when the checkpoint carries a deadline."""
-    return interaction.expires_at is not None and clock() > interaction.expires_at
-
-
-async def _load_review_context(
-    reader: OperationObservationReader,
-    reference: OperationReviewProjectionReferenceV1,
-    clock: Callable[[], datetime],
-) -> _ReviewContext | OperationReviewProjectionRefusalV1:
-    """Read and validate the exact live REVIEW checkpoint for a reference."""
-    snapshot = await read_snapshot(reader, reference.operation_id)
-    if snapshot is None:
-        return _review_refusal(OperationReviewProjectionRefusalCode.UNKNOWN_OPERATION, requested_version=1)
-    if isinstance(snapshot, UnavailableSnapshot):
-        return _review_refusal(
-            OperationReviewProjectionRefusalCode.REVIEW_PROJECTION_UNAVAILABLE,
-            requested_version=1,
-        )
-    pending = snapshot.pending_interaction
-    if pending is None or pending.request.kind is not OperationInteractionKind.REVIEW:
-        return _review_refusal(OperationReviewProjectionRefusalCode.REVIEW_NOT_PENDING, requested_version=1)
-    interaction = pending.request
-    if not _review_reference_is_current(reference, interaction):
-        return _review_refusal(OperationReviewProjectionRefusalCode.STALE_REVIEW_REFERENCE, requested_version=1)
-    if _review_is_expired(interaction, clock):
-        return _review_refusal(OperationReviewProjectionRefusalCode.REVIEW_EXPIRED, requested_version=1)
-    return _ReviewContext(reference=reference, snapshot=snapshot, pending=pending, interaction=interaction)
-
-
-def _review_definition_contract_is_current(
-    context: _ReviewContext,
-    registration: OperationPublicDefinitionRegistrationV1,
-) -> bool:
-    """Require both durable and requested contract digests to be current."""
-    digest = registration.contract.definition_contract_digest
-    return (
-        context.snapshot.definition_contract_digest == digest and context.reference.definition_contract_digest == digest
-    )
-
-
-def _review_response_schema_is_current(
-    context: _ReviewContext,
-    registration: OperationPublicDefinitionRegistrationV1,
-) -> bool:
-    """Require the interaction response schema to be the registered identity."""
-    response_schema = registration.contract.interaction_response_schema
-    return response_schema is not None and context.interaction.response_schema_ref == operation_public_schema_reference(
-        response_schema
-    )
-
-
-def _lookup_review_registration(
-    registry: OperationRegistry,
-    context: _ReviewContext,
-) -> _ReviewRegistration | OperationReviewProjectionRefusalV1:
-    """Bind the checkpoint to the exact public contract and schema identities."""
-    try:
-        registration = registry.lookup_public_registration(context.snapshot.identity.definition_id)
-    except Exception:
-        return _review_refusal(
-            OperationReviewProjectionRefusalCode.DEFINITION_CONTRACT_MISMATCH,
-            requested_version=1,
-        )
-    if not _review_definition_contract_is_current(context, registration):
-        return _review_refusal(
-            OperationReviewProjectionRefusalCode.DEFINITION_CONTRACT_MISMATCH,
-            requested_version=1,
-        )
-    if context.reference.review_projection_schema != registration.contract.review_projection_schema:
-        return _review_refusal(OperationReviewProjectionRefusalCode.REVIEW_SCHEMA_MISMATCH, requested_version=1)
-    if not _review_response_schema_is_current(context, registration):
-        return _review_refusal(
-            OperationReviewProjectionRefusalCode.DEFINITION_CONTRACT_MISMATCH,
-            requested_version=1,
-        )
-    return _ReviewRegistration(context=context, registration=registration)
-
-
-async def _resolve_review_projection[ReviewProjectionT: BaseModel](
-    registry: OperationRegistry,
-    operands: OperationSecureReferenceStore,
-    bound: _ReviewRegistration,
-) -> OperationReviewProjectionResultV1[ReviewProjectionT]:
-    """Resolve, project, and strictly validate one registered REVIEW model."""
-    projector = bound.registration.review_projector
-    operand_type = bound.registration.reviewed_operand_type
-    if projector is None or operand_type is None:
-        return _review_refusal(
-            OperationReviewProjectionRefusalCode.REVIEW_PROJECTION_UNAVAILABLE,
-            requested_version=1,
-        )
-    try:
-        binding = registry.lookup_public_schema_binding(bound.context.reference.review_projection_schema)
-        operand = await operands.resolve(bound.context.pending.reviewed_proposal_digest, operand_type)
-        projected = projector(operand, bound.context.interaction)
-        del operand
-        if type(projected) is not binding.model_type:
-            raise TypeError("REVIEW projector returned an unregistered model")
-        validated = binding.model_type.model_validate(projected.model_dump(mode="python"))
-        return OperationReviewProjectionSuccessV1[ReviewProjectionT](
-            projection_schema=binding.identity,
-            definition_contract_digest=bound.registration.contract.definition_contract_digest,
-            projection=cast(ReviewProjectionT, validated),
-        )
-    except Exception:
-        return _review_refusal(
-            OperationReviewProjectionRefusalCode.REVIEW_PROJECTION_UNAVAILABLE,
-            requested_version=1,
-        )
+    _capability_issuer = _CAPABILITY_ISSUER
 
 
 @dataclass(frozen=True, slots=True)
@@ -616,131 +325,6 @@ class OperationReviewProjectionService:
 
 
 @dataclass(frozen=True, slots=True)
-class _RefreshContext:
-    """Durable terminal facts that passed the workspace-refresh checks."""
-
-    request: OperationWorkspaceRefreshTargetRequestV1
-    snapshot: OperationPersistedSnapshot
-    receipt: OperationTerminalReceipt
-
-
-@dataclass(frozen=True, slots=True)
-class _RefreshRegistration:
-    """One refresh context bound to its registered adapter and contract."""
-
-    context: _RefreshContext
-    registration: OperationPublicDefinitionRegistrationV1
-    adapter: OperationWorkspaceRefreshAdapter
-
-
-def _refresh_request_or_refusal(
-    request: OperationWorkspaceRefreshTargetVersionHeader | OperationWorkspaceRefreshTargetRequestV1,
-) -> OperationWorkspaceRefreshTargetRequestV1 | OperationWorkspaceRefreshTargetRefusalV1:
-    """Validate the refresh-target request envelope before reading state."""
-    if request.refresh_target_version != _SUPPORTED_VERSION:
-        return _refresh_refusal(
-            OperationWorkspaceRefreshTargetRefusalCode.UNSUPPORTED_VERSION,
-            requested_version=request.refresh_target_version,
-        )
-    if not isinstance(request, OperationWorkspaceRefreshTargetRequestV1):
-        return _refresh_refusal(
-            OperationWorkspaceRefreshTargetRefusalCode.UNSAFE_REFRESH_TARGET,
-            requested_version=1,
-        )
-    return request
-
-
-async def _load_refresh_context(
-    reader: OperationObservationReader,
-    request: OperationWorkspaceRefreshTargetRequestV1,
-) -> _RefreshContext | OperationWorkspaceRefreshTargetRefusalV1:
-    """Read and validate the exact successful terminal snapshot requested."""
-    snapshot = await read_snapshot(reader, request.operation_id)
-    if snapshot is None:
-        return _refresh_refusal(OperationWorkspaceRefreshTargetRefusalCode.UNKNOWN_OPERATION, requested_version=1)
-    if isinstance(snapshot, UnavailableSnapshot):
-        return _refresh_refusal(
-            OperationWorkspaceRefreshTargetRefusalCode.UNSAFE_REFRESH_TARGET,
-            requested_version=1,
-        )
-    receipt = snapshot.terminal_receipt
-    if snapshot.lifecycle is not OperationLifecycle.TERMINAL or receipt is None:
-        return _refresh_refusal(
-            OperationWorkspaceRefreshTargetRefusalCode.OPERATION_NOT_TERMINAL,
-            requested_version=1,
-        )
-    if snapshot.revision != request.terminal_revision:
-        return _refresh_refusal(
-            OperationWorkspaceRefreshTargetRefusalCode.UNSAFE_REFRESH_TARGET,
-            requested_version=1,
-        )
-    if receipt.condition is not OperationTerminalCondition.SUCCEEDED:
-        return _refresh_refusal(
-            OperationWorkspaceRefreshTargetRefusalCode.OPERATION_NOT_SUCCESSFUL,
-            requested_version=1,
-        )
-    return _RefreshContext(request=request, snapshot=snapshot, receipt=receipt)
-
-
-def _lookup_refresh_registration(
-    registry: OperationRegistry,
-    context: _RefreshContext,
-) -> _RefreshRegistration | OperationWorkspaceRefreshTargetRefusalV1:
-    """Bind terminal facts to the exact refresh adapter and schema contract."""
-    try:
-        registration = registry.lookup_public_registration(context.snapshot.identity.definition_id)
-    except Exception:
-        return _refresh_refusal(
-            OperationWorkspaceRefreshTargetRefusalCode.DEFINITION_CONTRACT_MISMATCH,
-            requested_version=1,
-        )
-    contract = registration.contract
-    if (
-        context.snapshot.definition_contract_digest != contract.definition_contract_digest
-        or context.request.definition_contract_digest != contract.definition_contract_digest
-    ):
-        return _refresh_refusal(
-            OperationWorkspaceRefreshTargetRefusalCode.DEFINITION_CONTRACT_MISMATCH,
-            requested_version=1,
-        )
-    adapter = registration.workspace_refresh_adapter
-    if contract.workspace_refresh_target_schema is None or adapter is None:
-        return _refresh_refusal(
-            OperationWorkspaceRefreshTargetRefusalCode.REFRESH_ADAPTER_UNAVAILABLE,
-            requested_version=1,
-        )
-    if context.request.target_schema != contract.workspace_refresh_target_schema:
-        return _refresh_refusal(
-            OperationWorkspaceRefreshTargetRefusalCode.REFRESH_SCHEMA_MISMATCH,
-            requested_version=1,
-        )
-    return _RefreshRegistration(context=context, registration=registration, adapter=adapter)
-
-
-async def _resolve_refresh_target[RefreshTargetT: BaseModel](
-    registry: OperationRegistry,
-    bound: _RefreshRegistration,
-) -> OperationWorkspaceRefreshTargetResultV1[RefreshTargetT]:
-    """Resolve, adapt, and strictly validate one registered refresh target."""
-    try:
-        binding = registry.lookup_public_schema_binding(bound.context.request.target_schema)
-        target = bound.adapter(bound.context.receipt)
-        if type(target) is not binding.model_type:
-            raise TypeError("Workspace refresh adapter returned an unregistered model")
-        validated = binding.model_type.model_validate(target.model_dump(mode="python"))
-        return OperationWorkspaceRefreshTargetSuccessV1[RefreshTargetT](
-            target_schema=binding.identity,
-            definition_contract_digest=bound.registration.contract.definition_contract_digest,
-            target=cast(RefreshTargetT, validated),
-        )
-    except Exception:
-        return _refresh_refusal(
-            OperationWorkspaceRefreshTargetRefusalCode.UNSAFE_REFRESH_TARGET,
-            requested_version=1,
-        )
-
-
-@dataclass(frozen=True, slots=True)
 class OperationWorkspaceRefreshTargetService:
     """Resolve safe typed workspace refresh targets after terminal success."""
 
@@ -762,158 +346,6 @@ class OperationWorkspaceRefreshTargetService:
         if isinstance(registration_or_refusal, OperationWorkspaceRefreshTargetRefusalV1):
             return registration_or_refusal
         return await _resolve_refresh_target(self.registry, registration_or_refusal)
-
-
-@dataclass(frozen=True, slots=True)
-class _ResultContext:
-    """Durable terminal facts that passed the settled-result checks."""
-
-    request: OperationResultProjectionRequestV1
-    snapshot: OperationPersistedSnapshot
-    receipt: OperationTerminalReceipt
-    result_ref: OperationReference
-
-
-@dataclass(frozen=True, slots=True)
-class _ResultRegistration:
-    """One settled-result context bound to its projector and public contract."""
-
-    context: _ResultContext
-    registration: OperationPublicDefinitionRegistrationV1
-    projector: OperationResultProjector
-
-
-def _result_request_or_refusal(
-    request: OperationResultProjectionVersionHeader | OperationResultProjectionRequestV1,
-) -> OperationResultProjectionRequestV1 | OperationResultProjectionRefusalV1:
-    """Validate the result-projection request envelope before reading state."""
-    if request.result_projection_version != _SUPPORTED_VERSION:
-        return _result_projection_refusal(
-            OperationResultProjectionRefusalCode.UNSUPPORTED_VERSION,
-            requested_version=request.result_projection_version,
-        )
-    if not isinstance(request, OperationResultProjectionRequestV1):
-        return _result_projection_refusal(
-            OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE,
-            requested_version=1,
-        )
-    return request
-
-
-async def _load_result_context(
-    reader: OperationObservationReader,
-    request: OperationResultProjectionRequestV1,
-) -> _ResultContext | OperationResultProjectionRefusalV1:
-    """Read and validate the exact terminal snapshot named by the request."""
-    snapshot = await read_snapshot(reader, request.operation_id)
-    if snapshot is None:
-        return _result_projection_refusal(
-            OperationResultProjectionRefusalCode.UNKNOWN_OPERATION,
-            requested_version=1,
-        )
-    if isinstance(snapshot, UnavailableSnapshot):
-        return _result_projection_refusal(
-            OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE,
-            requested_version=1,
-        )
-    receipt = snapshot.terminal_receipt
-    if snapshot.lifecycle is not OperationLifecycle.TERMINAL or receipt is None:
-        return _result_projection_refusal(
-            OperationResultProjectionRefusalCode.OPERATION_NOT_TERMINAL,
-            requested_version=1,
-        )
-    if snapshot.revision != request.terminal_revision:
-        return _result_projection_refusal(
-            OperationResultProjectionRefusalCode.STALE_OPERATION_REVISION,
-            requested_version=1,
-        )
-    # A settled result is resolvable whenever the receipt carries one, not only
-    # on SUCCEEDED: a FAILED settlement may still carry committed evidence.
-    result_ref = receipt.result_ref
-    if result_ref is None:
-        return _result_projection_refusal(
-            OperationResultProjectionRefusalCode.OPERATION_NOT_SUCCESSFUL,
-            requested_version=1,
-        )
-    return _ResultContext(request=request, snapshot=snapshot, receipt=receipt, result_ref=result_ref)
-
-
-def _lookup_result_registration(
-    registry: OperationRegistry,
-    context: _ResultContext,
-) -> _ResultRegistration | OperationResultProjectionRefusalV1:
-    """Bind terminal facts to the exact projector and public schema contract."""
-    try:
-        registration = registry.lookup_public_registration(context.snapshot.identity.definition_id)
-    except Exception:
-        return _result_projection_refusal(
-            OperationResultProjectionRefusalCode.DEFINITION_CONTRACT_MISMATCH,
-            requested_version=1,
-        )
-    contract = registration.contract
-    if (
-        context.snapshot.definition_contract_digest != contract.definition_contract_digest
-        or context.request.definition_contract_digest != contract.definition_contract_digest
-    ):
-        return _result_projection_refusal(
-            OperationResultProjectionRefusalCode.DEFINITION_CONTRACT_MISMATCH,
-            requested_version=1,
-        )
-    projector = registration.result_projector
-    if contract.result_schema is None or projector is None:
-        return _result_projection_refusal(
-            OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE,
-            requested_version=1,
-        )
-    if context.request.result_schema != contract.result_schema:
-        return _result_projection_refusal(
-            OperationResultProjectionRefusalCode.RESULT_SCHEMA_MISMATCH,
-            requested_version=1,
-        )
-    return _ResultRegistration(context=context, registration=registration, projector=projector)
-
-
-def _result_digest_or_refusal(
-    context: _ResultContext,
-) -> ContentDigest | OperationResultProjectionRefusalV1:
-    """Validate the persisted result reference as the canonical digest type."""
-    try:
-        return _CONTENT_DIGEST_ADAPTER.validate_python(context.result_ref)
-    except ValidationError:
-        return _result_projection_refusal(
-            OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE,
-            requested_version=1,
-        )
-
-
-async def _resolve_result_projection[ResultProjectionT: BaseModel](
-    registry: OperationRegistry,
-    operands: OperationSecureReferenceStore,
-    bound: _ResultRegistration,
-    digest: ContentDigest,
-) -> OperationResultProjectionResultV1[ResultProjectionT]:
-    """Resolve, project, and strictly validate one registered result model."""
-    try:
-        binding = registry.lookup_public_schema_binding(bound.context.request.result_schema)
-        definition = registry.lookup(bound.context.snapshot.identity.definition_id)
-        if definition.result_type is None:
-            raise TypeError("result-less operation definition cannot resolve a settled result")
-        resolved = await operands.resolve(digest, definition.result_type)
-        projected = bound.projector(resolved, bound.context.receipt)
-        del resolved
-        if type(projected) is not binding.model_type:
-            raise TypeError("result projector returned an unregistered model")
-        validated = binding.model_type.model_validate(projected.model_dump(mode="python"))
-        return OperationResultProjectionSuccessV1[ResultProjectionT](
-            result_schema=binding.identity,
-            definition_contract_digest=bound.registration.contract.definition_contract_digest,
-            projection=cast(ResultProjectionT, validated),
-        )
-    except Exception:
-        return _result_projection_refusal(
-            OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE,
-            requested_version=1,
-        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -954,137 +386,6 @@ class OperationResultProjectionService:
             registration_or_refusal,
             digest_or_refusal,
         )
-
-
-@dataclass(frozen=True, slots=True)
-class _ResponseControlContext:
-    """Durable REVIEW facts that passed the response-control identity checks."""
-
-    request: OperationResponseControlRequestV1
-    snapshot: OperationPersistedSnapshot
-    pending: OperationPendingInteraction
-
-
-def _response_control_request_or_refusal(
-    request: OperationResponseControlVersionHeader | OperationResponseControlRequestV1,
-) -> OperationResponseControlRequestV1 | OperationResponseControlRefusalV1:
-    """Validate the versioned response-control envelope before reading state."""
-    if request.response_control_version != _SUPPORTED_VERSION:
-        return _response_refusal(
-            OperationResponseControlRefusalCode.UNSUPPORTED_VERSION,
-            requested_version=request.response_control_version,
-        )
-    if not isinstance(request, OperationResponseControlRequestV1):
-        return _response_refusal(
-            OperationResponseControlRefusalCode.RESPONSE_AUTHORITY_UNAVAILABLE,
-            requested_version=1,
-        )
-    return request
-
-
-async def _load_response_control_context(
-    reader: OperationObservationReader,
-    request: OperationResponseControlRequestV1,
-) -> _ResponseControlContext | OperationResponseControlRefusalV1:
-    """Read and validate the exact live REVIEW checkpoint for response control."""
-    snapshot = await read_snapshot(reader, request.operation_id)
-    if snapshot is None:
-        return _response_refusal(OperationResponseControlRefusalCode.UNKNOWN_OPERATION, requested_version=1)
-    if isinstance(snapshot, UnavailableSnapshot):
-        return _response_refusal(
-            OperationResponseControlRefusalCode.RESPONSE_AUTHORITY_UNAVAILABLE,
-            requested_version=1,
-        )
-    pending = snapshot.pending_interaction
-    if (
-        pending is None
-        or pending.request.kind is not OperationInteractionKind.REVIEW
-        or pending.request.interaction_id != request.interaction_id
-    ):
-        return _response_refusal(
-            OperationResponseControlRefusalCode.RESPONSE_NOT_PENDING,
-            requested_version=1,
-        )
-    if snapshot.revision != request.revision or pending.request.revision != request.revision:
-        return _response_refusal(
-            OperationResponseControlRefusalCode.STALE_OPERATION_REVISION,
-            requested_version=1,
-        )
-    return _ResponseControlContext(request=request, snapshot=snapshot, pending=pending)
-
-
-def _response_control_contract_is_current(
-    registry: OperationRegistry,
-    context: _ResponseControlContext,
-) -> bool:
-    """Require the checkpoint response schema and definition digest to match."""
-    try:
-        contract = registry.lookup_public_contract(context.snapshot.identity.definition_id)
-        response_schema = contract.interaction_response_schema
-        return (
-            context.snapshot.definition_contract_digest == contract.definition_contract_digest
-            and response_schema is not None
-            and context.pending.request.response_schema_ref == operation_public_schema_reference(response_schema)
-        )
-    except Exception:
-        return False
-
-
-async def _inspect_response_authority(
-    authority: OperationSecureResponseAuthority,
-    context: _ResponseControlContext,
-) -> OperationResponseControlResultV1:
-    """Project only the supported intents authorized by the bound bearer."""
-    try:
-        intents = await authority.permitted_intents(context.request, context.pending)
-        if not intents <= frozenset({OperationResponseIntent.APPLY, OperationResponseIntent.REJECT}):
-            raise ValueError("secure response authority returned an unknown intent")
-        return OperationResponseControlSuccessV1(
-            operation_id=context.request.operation_id,
-            interaction_id=context.request.interaction_id,
-            revision=context.request.revision,
-            available=bool(intents),
-            permitted_intents=frozenset(intents),
-        )
-    except Exception:
-        return _response_refusal(
-            OperationResponseControlRefusalCode.RESPONSE_AUTHORITY_UNAVAILABLE,
-            requested_version=1,
-        )
-
-
-def _response_for_mutation(
-    request: OperationResponseMutationRequestV1,
-    pending: OperationPendingInteraction,
-    response_token: OperationResponseToken,
-) -> OperationApplyResponse | OperationRejectResponse:
-    """Materialize the exact response payload accepted by the supervisor."""
-    if isinstance(request, OperationResponseApplyRequestV1):
-        if pending.baseline_digest is None or pending.proposed_effect_digest is None:
-            raise ValueError("pending REVIEW lacks APPLY digests")
-        return OperationApplyResponse(
-            interaction_id=pending.request.interaction_id,
-            operation_id=pending.request.identity.operation_id,
-            revision=pending.request.revision,
-            response_token=response_token,
-            continuation_digest=pending.request.continuation_digest,
-            reviewed_proposal_digest=pending.reviewed_proposal_digest,
-            actor_ref=request.actor_ref,
-            responded_at=request.responded_at,
-            baseline_digest=pending.baseline_digest,
-            proposed_effect_digest=pending.proposed_effect_digest,
-        )
-    return OperationRejectResponse(
-        interaction_id=pending.request.interaction_id,
-        operation_id=pending.request.identity.operation_id,
-        revision=pending.request.revision,
-        response_token=response_token,
-        continuation_digest=pending.request.continuation_digest,
-        reviewed_proposal_digest=pending.reviewed_proposal_digest,
-        actor_ref=request.actor_ref,
-        responded_at=request.responded_at,
-        reason_code=request.reason_code,
-    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -1163,133 +464,6 @@ class OperationResponseControlService:
 
 
 @dataclass(frozen=True, slots=True)
-class _CancellationSnapshot:
-    """Request and durable state that passed cancellation identity checks."""
-
-    request: OperationCancellationRequestV1
-    snapshot: OperationPersistedSnapshot
-
-
-@dataclass(frozen=True, slots=True)
-class _CancellationContext:
-    """One cancellation request bound to its current public contract."""
-
-    request: OperationCancellationRequestV1
-    snapshot: OperationPersistedSnapshot
-    contract: OperationPublicDefinitionContractV1
-
-
-def _cancellation_request_or_refusal(
-    request: OperationCancellationVersionHeader | OperationCancellationRequestV1,
-) -> OperationCancellationRequestV1 | OperationCancellationRefusalV1:
-    """Validate the versioned request envelope before reading durable state."""
-    if request.cancellation_version != _SUPPORTED_VERSION:
-        return _cancellation_refusal(
-            OperationCancellationRefusalCode.UNSUPPORTED_VERSION,
-            requested_version=request.cancellation_version,
-        )
-    if not isinstance(request, OperationCancellationRequestV1):
-        return _cancellation_refusal(
-            OperationCancellationRefusalCode.CANCELLATION_UNAVAILABLE,
-            requested_version=1,
-        )
-    return request
-
-
-async def _load_cancellation_snapshot(
-    reader: OperationObservationReader,
-    request: OperationCancellationRequestV1,
-) -> _CancellationSnapshot | OperationCancellationRefusalV1:
-    """Read and validate the exact live snapshot named by the request."""
-    snapshot = await read_snapshot(reader, request.operation_id)
-    if snapshot is None:
-        return _cancellation_refusal(OperationCancellationRefusalCode.UNKNOWN_OPERATION, requested_version=1)
-    if isinstance(snapshot, UnavailableSnapshot):
-        return _cancellation_refusal(
-            OperationCancellationRefusalCode.CANCELLATION_UNAVAILABLE,
-            requested_version=1,
-        )
-    if snapshot.revision != request.expected_revision:
-        return _cancellation_refusal(
-            OperationCancellationRefusalCode.STALE_OPERATION_REVISION,
-            requested_version=1,
-        )
-    if snapshot.lifecycle is OperationLifecycle.TERMINAL:
-        return _cancellation_refusal(OperationCancellationRefusalCode.OPERATION_TERMINAL, requested_version=1)
-    return _CancellationSnapshot(request=request, snapshot=snapshot)
-
-
-def _authorize_cancellation(
-    registry: OperationRegistry,
-    loaded: _CancellationSnapshot,
-) -> _CancellationContext | OperationCancellationRefusalV1:
-    """Bind the live snapshot to a current contract that permits cancellation."""
-    try:
-        contract = registry.lookup_public_contract(loaded.snapshot.identity.definition_id)
-    except Exception:
-        return _cancellation_refusal(
-            OperationCancellationRefusalCode.CANCELLATION_UNAVAILABLE,
-            requested_version=1,
-        )
-    if loaded.snapshot.definition_contract_digest != contract.definition_contract_digest:
-        return _cancellation_refusal(
-            OperationCancellationRefusalCode.CANCELLATION_UNAVAILABLE,
-            requested_version=1,
-        )
-    if contract.cancellation is OperationCancellation.UNSUPPORTED:
-        return _cancellation_refusal(
-            OperationCancellationRefusalCode.CANCELLATION_UNSUPPORTED,
-            requested_version=1,
-        )
-    if loaded.snapshot.cancellation_deferred or loaded.snapshot.lifecycle not in {
-        OperationLifecycle.RUNNING,
-        OperationLifecycle.WAITING_FOR_INTERACTION,
-        OperationLifecycle.WAITING_FOR_EXTERNAL,
-        OperationLifecycle.CANCELLATION_REQUESTED,
-        OperationLifecycle.SETTLING,
-    }:
-        return _cancellation_refusal(
-            OperationCancellationRefusalCode.CANCELLATION_UNAVAILABLE,
-            requested_version=1,
-        )
-    return _CancellationContext(request=loaded.request, snapshot=loaded.snapshot, contract=contract)
-
-
-async def _execute_cancellation(
-    reader: OperationObservationReader,
-    supervisor: OperationControlSupervisor,
-    context: _CancellationContext,
-) -> OperationCancellationResultV1:
-    """Request cancellation and translate races into stable public outcomes."""
-    try:
-        successor = await supervisor.request_cancel(
-            context.request.operation_id,
-            expected_revision=context.request.expected_revision,
-        )
-        if (
-            successor.identity.operation_id != context.request.operation_id
-            or successor.cancellation_requested_at is None
-        ):
-            raise ValueError("supervisor returned an invalid cancellation state")
-        return OperationCancellationSuccessV1(
-            operation_id=context.request.operation_id,
-            revision=successor.revision,
-            cancellation_acknowledged=successor.cancellation_acknowledged_at is not None,
-        )
-    except Exception:
-        latest = await read_snapshot(reader, context.request.operation_id)
-        if isinstance(latest, OperationPersistedSnapshot) and latest.revision != context.request.expected_revision:
-            return _cancellation_refusal(
-                OperationCancellationRefusalCode.STALE_OPERATION_REVISION,
-                requested_version=1,
-            )
-        return _cancellation_refusal(
-            OperationCancellationRefusalCode.CANCELLATION_UNAVAILABLE,
-            requested_version=1,
-        )
-
-
-@dataclass(frozen=True, slots=True)
 class OperationCancellationService:
     """Request cooperative cancellation through one versioned public boundary."""
 
@@ -1315,53 +489,6 @@ class OperationCancellationService:
 
 
 @dataclass(frozen=True, slots=True)
-class _DetachContext:
-    """Detach request and durable state bound to an allowed public contract."""
-
-    request: OperationDetachRequestV1
-    snapshot: OperationPersistedSnapshot
-
-
-def _detach_request_or_refusal(
-    request: OperationDetachVersionHeader | OperationDetachRequestV1,
-) -> OperationDetachRequestV1 | OperationDetachRefusalV1:
-    """Validate the versioned detach envelope before reading durable state."""
-    if request.detach_version != _SUPPORTED_VERSION:
-        return _detach_refusal(
-            OperationDetachRefusalCode.UNSUPPORTED_VERSION,
-            requested_version=request.detach_version,
-        )
-    if not isinstance(request, OperationDetachRequestV1):
-        return _detach_refusal(OperationDetachRefusalCode.DETACH_NOT_ALLOWED, requested_version=1)
-    return request
-
-
-async def _load_detach_context(
-    reader: OperationObservationReader,
-    registry: OperationRegistry,
-    request: OperationDetachRequestV1,
-) -> _DetachContext | OperationDetachRefusalV1:
-    """Read and authorize the exact live snapshot named by a detach request."""
-    snapshot = await read_snapshot(reader, request.operation_id)
-    if snapshot is None:
-        return _detach_refusal(OperationDetachRefusalCode.UNKNOWN_OPERATION, requested_version=1)
-    if isinstance(snapshot, UnavailableSnapshot):
-        return _detach_refusal(OperationDetachRefusalCode.DETACH_NOT_ALLOWED, requested_version=1)
-    if snapshot.revision != request.expected_revision:
-        return _detach_refusal(OperationDetachRefusalCode.STALE_OPERATION_REVISION, requested_version=1)
-    try:
-        contract = registry.lookup_public_contract(snapshot.identity.definition_id)
-    except Exception:
-        return _detach_refusal(OperationDetachRefusalCode.DETACH_NOT_ALLOWED, requested_version=1)
-    if (
-        snapshot.definition_contract_digest != contract.definition_contract_digest
-        or contract.close_policy is not OperationClosePolicy.DETACH_ALLOWED
-    ):
-        return _detach_refusal(OperationDetachRefusalCode.DETACH_NOT_ALLOWED, requested_version=1)
-    return _DetachContext(request=request, snapshot=snapshot)
-
-
-@dataclass(frozen=True, slots=True)
 class OperationDetachService:
     """Detach a frontend from an operation through one public boundary."""
 
@@ -1374,10 +501,7 @@ class OperationDetachService:
         request: OperationDetachVersionHeader | OperationDetachRequestV1,
     ) -> OperationDetachResultV1:
         """Detach the requested operation or return a stable typed refusal."""
-        request_or_refusal = _detach_request_or_refusal(request)
-        if isinstance(request_or_refusal, OperationDetachRefusalV1):
-            return request_or_refusal
-        context_or_refusal = await _load_detach_context(self.reader, self.registry, request_or_refusal)
+        context_or_refusal = await _load_detach_context(self.reader, self.registry, request)
         if isinstance(context_or_refusal, OperationDetachRefusalV1):
             return context_or_refusal
         try:
@@ -1410,54 +534,6 @@ async def read_snapshot(
         return None
     except Exception:
         return UnavailableSnapshot()
-
-
-def _review_refusal(
-    code: OperationReviewProjectionRefusalCode,
-    *,
-    requested_version: int | None,
-) -> OperationReviewProjectionRefusalV1:
-    return OperationReviewProjectionRefusalV1(code=code, requested_version=requested_version, diagnostic_ref=None)
-
-
-def _refresh_refusal(
-    code: OperationWorkspaceRefreshTargetRefusalCode,
-    *,
-    requested_version: int | None,
-) -> OperationWorkspaceRefreshTargetRefusalV1:
-    return OperationWorkspaceRefreshTargetRefusalV1(code=code, requested_version=requested_version, diagnostic_ref=None)
-
-
-def _result_projection_refusal(
-    code: OperationResultProjectionRefusalCode,
-    *,
-    requested_version: int | None,
-) -> OperationResultProjectionRefusalV1:
-    return OperationResultProjectionRefusalV1(code=code, requested_version=requested_version, diagnostic_ref=None)
-
-
-def _response_refusal(
-    code: OperationResponseControlRefusalCode,
-    *,
-    requested_version: int | None,
-) -> OperationResponseControlRefusalV1:
-    return OperationResponseControlRefusalV1(code=code, requested_version=requested_version, diagnostic_ref=None)
-
-
-def _cancellation_refusal(
-    code: OperationCancellationRefusalCode,
-    *,
-    requested_version: int | None,
-) -> OperationCancellationRefusalV1:
-    return OperationCancellationRefusalV1(code=code, requested_version=requested_version, diagnostic_ref=None)
-
-
-def _detach_refusal(
-    code: OperationDetachRefusalCode,
-    *,
-    requested_version: int | None,
-) -> OperationDetachRefusalV1:
-    return OperationDetachRefusalV1(code=code, requested_version=requested_version, diagnostic_ref=None)
 
 
 __all__ = [

@@ -31,6 +31,42 @@ def _find_modelo_observation(
     return None
 
 
+def _assert_ejercicio_round_trip(
+    repository: CalculationObservationRepository,
+    *,
+    modelo: str,
+    period: str,
+    observation: RegistryModeloObservation,
+    filing_year: int,
+    captured_at: datetime,
+    year_label: str,
+) -> ObservationEnvelopePayload:
+    repository.save(
+        repository.prepare_observation_envelope(
+            observation,
+            source_kind="app_filing",
+            captured_at=captured_at,
+            stamped_revision_id=revision_id_for_observation(observation),
+        )
+    )
+    loaded = _find_modelo_observation(
+        repository,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+    )
+    assert loaded is not None, (
+        f"{year_label} observation not found for ({modelo!r}, {filing_year}, {period!r}) after save"
+    )
+    assert loaded.observation == observation, (
+        f"{modelo} {year_label} observation did not survive the encrypted-SQL roundtrip; "
+        "at least one casilla was silently dropped, coerced, or defaulted away"
+    )
+    assert loaded.source_kind == "app_filing"
+    assert loaded.captured_at == captured_at
+    return loaded
+
+
 def assert_two_ejercicio_round_trip(
     *,
     tmp_path: Path,
@@ -51,54 +87,26 @@ def assert_two_ejercicio_round_trip(
         loaded_n_plus_1: ObservationEnvelopePayload | None = None
 
         if stage in ("year_n", "both"):
-            repository.save(
-                repository.prepare_observation_envelope(
-                    obs_n,
-                    source_kind="app_filing",
-                    captured_at=clock_n,
-                    stamped_revision_id=revision_id_for_observation(obs_n),
-                )
-            )
-            loaded_n = _find_modelo_observation(
+            loaded_n = _assert_ejercicio_round_trip(
                 repository,
                 modelo=modelo,
-                filing_year=year_n,
                 period=period,
+                observation=obs_n,
+                filing_year=year_n,
+                captured_at=clock_n,
+                year_label="year-N",
             )
-            assert loaded_n is not None, (
-                f"year-N observation not found for ({modelo!r}, {year_n}, {period!r}) after save"
-            )
-            assert loaded_n.observation == obs_n, (
-                f"{modelo} year-N observation did not survive the encrypted-SQL roundtrip; "
-                "at least one casilla was silently dropped, coerced, or defaulted away"
-            )
-            assert loaded_n.source_kind == "app_filing"
-            assert loaded_n.captured_at == clock_n
 
         if stage in ("year_n_plus_1", "both"):
-            repository.save(
-                repository.prepare_observation_envelope(
-                    obs_n_plus_1,
-                    source_kind="app_filing",
-                    captured_at=clock_n_plus_1,
-                    stamped_revision_id=revision_id_for_observation(obs_n_plus_1),
-                )
-            )
-            loaded_n_plus_1 = _find_modelo_observation(
+            loaded_n_plus_1 = _assert_ejercicio_round_trip(
                 repository,
                 modelo=modelo,
-                filing_year=year_n_plus_1,
                 period=period,
+                observation=obs_n_plus_1,
+                filing_year=year_n_plus_1,
+                captured_at=clock_n_plus_1,
+                year_label="year-N+1",
             )
-            assert loaded_n_plus_1 is not None, (
-                f"year-N+1 observation not found for ({modelo!r}, {year_n_plus_1}, {period!r}) after save"
-            )
-            assert loaded_n_plus_1.observation == obs_n_plus_1, (
-                f"{modelo} year-N+1 observation did not survive the encrypted-SQL roundtrip; "
-                "at least one casilla was silently dropped, coerced, or defaulted away"
-            )
-            assert loaded_n_plus_1.source_kind == "app_filing"
-            assert loaded_n_plus_1.captured_at == clock_n_plus_1
 
         return loaded_n, loaded_n_plus_1
 

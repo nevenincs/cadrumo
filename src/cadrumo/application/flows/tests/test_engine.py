@@ -37,7 +37,6 @@ from ..engine import (
     SECTION_VERDICT_PREFIX,
     FlowState,
     answer,
-    back_page,
     jump_to,
     next_page,
     page_status,
@@ -155,7 +154,7 @@ def test_start_places_cursor_on_first_visible_page() -> None:
     assert "p_detail" not in _visible_keys(definition, state)
 
 
-def test_next_back_and_boundary_stops_track_the_cursor() -> None:
+def test_next_and_boundary_stop_track_the_cursor() -> None:
     definition = _nav_definition()
     state = start_flow(definition, mode=FlowMode.CREATE)
 
@@ -165,20 +164,12 @@ def test_next_back_and_boundary_stops_track_the_cursor() -> None:
     assert state.cursor == "p_confirm"  # p_detail hidden, skipped
     assert state.visited[-3:] == ("p_name", "p_kind", "p_confirm")
 
-    back = back_page(definition, state)
-    assert back.cursor == "p_kind"
-
     # Walk to the final page; next_page at the end is a no-op.
     walked = state
     for _ in range(10):
         walked = next_page(definition, walked)
     assert walked.cursor == "p_num"
     assert next_page(definition, walked).cursor == "p_num"
-
-    # back_page at the first page is a no-op.
-    first = start_flow(definition, mode=FlowMode.CREATE)
-    assert back_page(definition, first).cursor == "p_name"
-
 
 def test_jump_to_visible_page_and_refusal_on_hidden_target() -> None:
     definition = _nav_definition()

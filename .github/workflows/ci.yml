@@ -185,7 +185,6 @@ jobs:
         # `continue-on-error`.
         run: |
           just check-style
-          just check-relative-imports
           just check-format
 
       - name: Import architecture

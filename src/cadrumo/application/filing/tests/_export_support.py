@@ -14,7 +14,11 @@ from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
-from ....domain.calculations.registry.schema_exports import ExportLayoutDefinition
+from ....domain.calculations.registry.schema_exports import (
+    ExportFieldDefinition,
+    ExportLayoutDefinition,
+    ExportRecordDefinition,
+)
 from ....domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
 from ....domain.submission.models import ModeloDraftStatus
 from ..draft_construction import build_draft
@@ -578,21 +582,33 @@ def _approved_modelo_390_registry_draft():
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
 
+def _record_wire_length(record: ExportRecordDefinition) -> int:
+    return max((field.offset or 0) + (field.length or 0) - 1 for field in record.fields)
+
+
+def _line_ending_length(line_ending: str) -> int:
+    return {"crlf": 2, "lf": 1}.get(line_ending, 0)
+
+
+def _next_record_cursor(cursor: int, record: ExportRecordDefinition, record_length: int) -> int:
+    return cursor + record_length + _line_ending_length(record.line_ending)
+
+
+def _field_slice_in_record(record: ExportRecordDefinition, field_id: str, cursor: int) -> slice:
+    field: ExportFieldDefinition = next(item for item in record.fields if item.id == field_id)
+    if field.offset is None or field.length is None:
+        raise AssertionError(f"export field {field.id!r} does not declare a fixed slice")
+    start = cursor + field.offset - 1
+    return slice(start, start + field.length)
+
+
 def _field_slice(layout: ExportLayoutDefinition, record_id: str, field_id: str) -> slice:
     cursor = 0
     for record in sorted(layout.records, key=lambda item: item.order):
-        record_length = max((field.offset or 0) + (field.length or 0) - 1 for field in record.fields)
+        record_length = _record_wire_length(record)
         if record.id == record_id:
-            field = next(item for item in record.fields if item.id == field_id)
-            if field.offset is None or field.length is None:
-                raise AssertionError(f"export field {field.id!r} does not declare a fixed slice")
-            start = cursor + field.offset - 1
-            return slice(start, start + field.length)
-        cursor += record_length
-        if record.line_ending == "crlf":
-            cursor += 2
-        elif record.line_ending == "lf":
-            cursor += 1
+            return _field_slice_in_record(record, field_id, cursor)
+        cursor = _next_record_cursor(cursor, record, record_length)
     raise AssertionError(f"export record {record_id!r} not found")
 
 

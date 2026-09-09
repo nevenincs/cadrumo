@@ -177,6 +177,42 @@ def _hash_payload(payload: bytes) -> str:
     return sha256_hex(payload)
 
 
+def _load_exact_bundle(
+    repository: EvidenceBundleRepository,
+    *,
+    bucket_id: str,
+    bundle_id: str,
+) -> EvidenceBundle | None:
+    """Load an exact key when supplied and retain only the requested bucket."""
+    if not bundle_id.strip():
+        return None
+    exact = repository.load(bundle_id)
+    if exact is None or exact.bucket_id != bucket_id:
+        return None
+    return exact
+
+
+def _bundle_matches_request(bundle: EvidenceBundle, *, bucket_id: str, bundle_id: str) -> bool:
+    """Match a bundle by bucket and exact-or-prefix ID semantics."""
+    if bundle.bucket_id != bucket_id:
+        return False
+    return bundle.bundle_id == bundle_id or bundle.bundle_id.startswith(bundle_id)
+
+
+def _matching_bundles(
+    repository: EvidenceBundleRepository,
+    *,
+    bucket_id: str,
+    bundle_id: str,
+) -> list[EvidenceBundle]:
+    """Collect matching records in repository order for ambiguity adjudication."""
+    return [
+        bundle
+        for bundle in repository.iter_records()
+        if _bundle_matches_request(bundle, bucket_id=bucket_id, bundle_id=bundle_id)
+    ]
+
+
 class EvidenceBundleService:
     """Application service for the audit verb tree.
 
@@ -282,16 +318,10 @@ class EvidenceBundleService:
             :class:`EvidenceBundle`: The retrieved evidence bundle.
         """
         repository = self._repository_for(bucket_id)
-        if bundle_id.strip():
-            exact = repository.load(bundle_id)
-            if exact is not None and exact.bucket_id == bucket_id:
-                return exact
-        matches = [
-            bundle
-            for bundle in repository.iter_records()
-            if bundle.bucket_id == bucket_id
-            and (bundle.bundle_id == bundle_id or bundle.bundle_id.startswith(bundle_id))
-        ]
+        exact = _load_exact_bundle(repository, bucket_id=bucket_id, bundle_id=bundle_id)
+        if exact is not None:
+            return exact
+        matches = _matching_bundles(repository, bucket_id=bucket_id, bundle_id=bundle_id)
         if not matches:
             raise EvidenceBundleNotFoundError(
                 translated_message="errors.refused.refused_evidence_bundle_not_found",

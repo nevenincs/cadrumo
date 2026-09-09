@@ -25,11 +25,9 @@ from ..application.export.google_operation import (
     GoogleSheetsExportPreparedPort,
     GoogleSheetsExportRemoteResult,
     GoogleSheetsExportRootFolderRequiredError,
-    GoogleSheetsExportService,
     GoogleSheetsExportTokenMissingError,
     build_google_sheets_export_operation_definition,
     build_google_sheets_export_operation_registration,
-    build_google_sheets_export_service,
 )
 from ..application.live.filed_history_operation import (
     build_filed_history_operation_definition,
@@ -130,17 +128,6 @@ def _google_sheets_export_prepare_port(
     return prepare
 
 
-def compose_google_sheets_export_service(
-    *,
-    settings: Settings | None = None,
-) -> GoogleSheetsExportService:
-    """Return the canonical application service with its outer transport bound."""
-    resolved_settings = settings or load_settings()
-    return build_google_sheets_export_service(
-        prepare_port=_google_sheets_export_prepare_port(settings=resolved_settings)
-    )
-
-
 def build_production_operation_registry(
     *,
     settings: Settings | None = None,
@@ -230,6 +217,5 @@ def compose_operation_dependencies(
 
 __all__ = [
     "build_production_operation_registry",
-    "compose_google_sheets_export_service",
     "compose_operation_dependencies",
 ]

@@ -24,9 +24,9 @@ from ..pipeline._record_design_ir import (
     RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,
     RecordDesignIntermediateCompositeRelativeClosing,
     RecordDesignIntermediateRelativeSuffixMarker,
-    RecordDesignWorkbookFormat,
     load_record_design_intermediate,
 )
+from ..pipeline.record_design_intermediate import RecordDesignWorkbookFormat
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

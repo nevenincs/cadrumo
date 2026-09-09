@@ -156,7 +156,7 @@ def test_machine_secret_and_profile_authentication_metadata_matches_live_project
         ("aeat", "config", "login"),
         ("aeat", "config", "passphrase", "change"),
         ("aeat", "config", "profile", "create"),
-        ("aeat", "config", "profile", "restore"),
+        ("aeat", "config", "profile", "archive", "import"),
         ("aeat", "config", "auth", "certificate", "secret", "set"),
     }
 

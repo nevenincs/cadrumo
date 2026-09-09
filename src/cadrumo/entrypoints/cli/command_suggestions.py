@@ -577,33 +577,10 @@ class CadrumoTyperGroup(TyperGroup):
         import sweep.  Lazy registrations already own the operator name and
         short-help metadata, so only eager children need concrete resolution.
         """
-        lazy = self.lazy_table()
-        eager_names = set(super().list_commands(ctx))
-        rows: list[tuple[str, str]] = []
-        visible_names: list[str] = []
-        entries: list[tuple[str, TyCommand | LazySubcommand]] = []
-        for name in self.list_commands(ctx):
-            declaration = lazy.get(name) if name not in eager_names else None
-            if declaration is not None:
-                if declaration.hidden:
-                    continue
-                entries.append((name, declaration))
-                visible_names.append(name)
-                continue
-            command = super().get_command(ctx, name)
-            if command is None or command.hidden:
-                continue
-            entries.append((name, command))
-            visible_names.append(name)
+        entries = _visible_command_entries(self, ctx)
         if not entries:
             return
-        limit = formatter.width - 6 - max(len(name) for name in visible_names)
-        for name, entry in entries:
-            if isinstance(entry, LazySubcommand):
-                short_help = entry.get_short_help_str(limit)
-            else:
-                short_help = entry.get_short_help_str(limit)
-            rows.append((name, short_help))
+        rows = _command_help_rows(entries, formatter_width=formatter.width)
         if rows:
             localise = cast(Callable[[str], str], typer_core.__dict__["_"])
             with formatter.section(localise("Commands")):
@@ -662,6 +639,38 @@ class CadrumoTyperGroup(TyperGroup):
                     message = (exc.message or "").rstrip(".")
                     raise TyUsageError(f"{message}. {hint}", ctx=exc.ctx) from exc
             raise
+
+
+def _visible_command_entries(
+    group: CadrumoTyperGroup,
+    ctx: TyContext,
+) -> list[tuple[str, TyCommand | LazySubcommand]]:
+    """Collect visible eager commands and lazy declarations in CLI order."""
+    lazy = group.lazy_table()
+    eager_names = set(TyperGroup.list_commands(group, ctx))
+    entries: list[tuple[str, TyCommand | LazySubcommand]] = []
+    for name in group.list_commands(ctx):
+        declaration = lazy.get(name) if name not in eager_names else None
+        if declaration is not None:
+            if declaration.hidden:
+                continue
+            entries.append((name, declaration))
+            continue
+        command = TyperGroup.get_command(group, ctx, name)
+        if command is None or command.hidden:
+            continue
+        entries.append((name, command))
+    return entries
+
+
+def _command_help_rows(
+    entries: list[tuple[str, TyCommand | LazySubcommand]],
+    *,
+    formatter_width: int,
+) -> list[tuple[str, str]]:
+    """Render short-help rows using the shared Click width calculation."""
+    limit = formatter_width - 6 - max(len(name) for name, _ in entries)
+    return [(name, entry.get_short_help_str(limit)) for name, entry in entries]
 
 
 def _synonym_hint(group_name: str | None, token: str) -> str | None:

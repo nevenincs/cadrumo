@@ -3,10 +3,9 @@
 Pure functions that derive the workbook's visual layout from the resolved
 :class:`SheetLayout` plus the already-computed structural facets (section
 headers, anchors, provenance / evidence extents). The output is consumed
-verbatim by both transports through the shared ``theme`` palette, so the
-offline xls and online Sheets present the same official-modelo look. Keeping
-this computation in one place is what makes the design uniform across every
-modelo and every transport.
+verbatim by the live Sheets transport through the shared ``theme`` palette.
+Keeping this computation in one place makes the design uniform across every
+modelo.
 
 Both data tabs use the column layout ``A=Sección B=Casilla C=Concepto D=Valor``
 with an anchor column ``F``; the Procedencia / Evidencia / Detalle / Guía tabs

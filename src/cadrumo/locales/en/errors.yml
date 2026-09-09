@@ -355,8 +355,6 @@ errors:
     exchange_rate_provider: The exchange-rate provider did not respond.
     fail_acceleration_receipt_revocation: Could not remove the stored login shortcut
       for this profile; it is still on disk.
-    fail_access_gate_authorization_manifest: The modelo authorization manifest could
-      not be loaded or contains an invalid enrollment entry.
     fail_borrador_parse: The Modelo 100 borrador PDF could not be parsed into a filing.
     fail_browser_evasion: Browser evasion setup could not be applied.
     fail_browser_session_browser: A browser session error occurred.

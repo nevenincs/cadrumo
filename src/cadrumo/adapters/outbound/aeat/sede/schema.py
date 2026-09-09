@@ -36,13 +36,8 @@ the right question and deserves the real answer:
   drives an AEAT control now carries one, each with its own allow-list
   because the surfaces genuinely differ -- the Renta WEB Open simulator
   is served from ``index.zul``, which the censal reader's marker list
-  forbids outright, so one shared list cannot serve the package. The
-  shared rule is ``_adapter_utils.assert_read_landing``; enrollment is
-  enforced by ``tests/test_landing_refusal_enrollment.py``, which fails
-  a module that drives a control without refusing its landing.
-* The filing tool itself is guarded separately in
-  ``_renta_web_open_safety``, whose live-simulator proof asserts a
-  *presentar declaración* click is blocked.
+  forbids outright, so one shared list cannot serve every surface. The
+  shared runtime rule is ``_adapter_utils.assert_read_landing``.
 
 The residual this note previously named -- a ``page.click`` on a filing
 control in a module with no landing refusal, passing the verb scan

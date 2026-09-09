@@ -19,12 +19,6 @@ from threading import Condition, RLock
 from typing import Protocol, override
 
 from .... import __version__
-from ....core.access_gate.authorization import (
-    AuthorizationManifest,
-    ModeloAuthorization,
-    derive_modelo_authorization,
-    load_authorization_manifest,
-)
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.hashing import content_hash_hex
 from ....core.identity import ContentDigest
@@ -443,7 +437,6 @@ class ValidatedRegistryAuthority:
     _registry_validated: bool
     _validated_modelos: set[str]
     _snapshots: dict[_SnapshotKey, RegistrySnapshot]
-    _authorization_manifest: AuthorizationManifest
     _capture_generation: int = field(default=0, init=False, repr=False)
     _capture_reset_epoch: int = field(default=0, init=False, repr=False)
     _capture_state: _AuthorityLoadState | None = field(default=None, init=False, repr=False)
@@ -570,32 +563,13 @@ class ValidatedRegistryAuthority:
         with self._state_lock:
             self._mark_registry_validated()
 
-    @property
-    def authorization_manifest(self) -> AuthorizationManifest:
-        """Return the loaded multi-year-renta authorization manifest.
-
-        The manifest is the single writable authorization surface; the CI
-        meta-test reads it through this accessor to cross-check each
-        enrolling claim against the recorder evidence.
-
-        Returns:
-            The loaded :class:`AuthorizationManifest` object.
-        """
-        return self._authorization_manifest
-
     def modelo_has_engine(self, modelo_id: str) -> bool:
         """Return whether ``modelo_id`` declares a calculation surface.
 
         A modelo "has an engine" when any of its revisions declares an
         application-link whose ``surface`` is ``"calculation"`` — the
         registry's own marker that a runtime calculation consumer is wired
-        for the modelo. This drives the authorization gate's
-        ADVISORY-vs-refusal split (an unauthorized modelo with an engine
-        still computes with an advisory banner; one with no engine is
-        refused at ``work create``). Returns ``False`` for an unknown
-        modelo rather than raising, so the fleet-wide capability sweep can
-        ask about every canonical modelo id including the engine-build
-        modelos that do not load yet.
+        for the modelo. Returns ``False`` for an unknown modelo.
         """
         modelo = self._modelos_by_id.get(modelo_id)
         if modelo is None:
@@ -604,26 +578,6 @@ class ValidatedRegistryAuthority:
             link.surface == "calculation"
             for revision in modelo.revisions.values()
             for link in revision.application_links
-        )
-
-    def authorization(self, modelo_id: str) -> ModeloAuthorization:
-        """Return the derived per-modelo authorization capability.
-
-        This is the layer-(b) derivation of the ``modelo-multiyear-renta``
-        gate: the capability is *computed* from the manifest (layer a)
-        cross-checked against the loaded registry — never an independently
-        authored per-revision flag — so it cannot drift from the manifest.
-        An unknown / not-yet-loadable modelo derives to ``UNAUTHORIZED``
-        with ``has_engine = False``, which is the correct default for the
-        engine-build modelos that carry no loadable definition yet.
-
-        Returns:
-            The derived :class:`ModeloAuthorization` for ``modelo_id``.
-        """
-        return derive_modelo_authorization(
-            modelo_id,
-            manifest=self._authorization_manifest,
-            has_engine=self.modelo_has_engine(modelo_id),
         )
 
     def snapshot(
@@ -1144,11 +1098,6 @@ def construct_authority(
         _registry_validated=False,
         _validated_modelos=set(),
         _snapshots={},
-        # Authorization is derived at this boundary from the manifest
-        # (default-deny-by-absence: an absent manifest authorizes nothing).
-        # The manifest is fingerprinted into _collect_registry_tree_fingerprints
-        # so the current-identity slot invalidates when the manifest changes on disk.
-        _authorization_manifest=load_authorization_manifest(root),
     )
     return authority
 

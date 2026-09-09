@@ -178,27 +178,46 @@ def inventory_profile_custody_capsule(
     return _build_profile_custody_inventory(profile_id, entries)
 
 
+def _ordered_inventory_entries(
+    entries: list[ProfileCustodyInventoryEntry],
+) -> tuple[ProfileCustodyInventoryEntry, ...]:
+    """Sort entries and reject duplicate relative paths before accounting."""
+    ordered = tuple(sorted(entries, key=lambda entry: entry.relative_path))
+    if len(ordered) != len({entry.relative_path for entry in ordered}):
+        raise ProfileCustodyRecordError("profile custody inventory contains duplicate paths")
+    return ordered
+
+
+def _is_content_covered_entry(entry: ProfileCustodyInventoryEntry) -> bool:
+    """Identify durable files whose bytes belong in the custody digest."""
+    return (
+        entry.relative_path not in DATABASE_SIDECAR_RELATIVE_PATHS
+        and entry.relative_path not in HOLDER_LOCK_RELATIVE_PATHS
+        and entry.relative_path not in DATABASE_PRESENCE_ONLY_RELATIVE_PATHS
+    )
+
+
+def _durable_digest_entries(
+    ordered: tuple[ProfileCustodyInventoryEntry, ...],
+) -> tuple[ProfileCustodyInventoryEntry, ...]:
+    """Select content-covered entries and require at least one durable record."""
+    covered = tuple(entry for entry in ordered if _is_content_covered_entry(entry))
+    if not covered:
+        raise ProfileCustodyRecordError("profile custody inventory covers no durable custody record")
+    return covered
+
+
 def _build_profile_custody_inventory(
     profile_id: UUID,
     entries: list[ProfileCustodyInventoryEntry],
 ) -> ProfileCustodyInventory:
     if not entries:
         raise ProfileCustodyRecordError("profile custody inventory cannot be empty")
-    ordered = tuple(sorted(entries, key=lambda entry: entry.relative_path))
-    if len(ordered) != len({entry.relative_path for entry in ordered}):
-        raise ProfileCustodyRecordError("profile custody inventory contains duplicate paths")
+    ordered = _ordered_inventory_entries(entries)
     total_bytes = sum(entry.size_bytes for entry in ordered)
     if total_bytes > PROFILE_CUSTODY_INVENTORY_MAX_TOTAL_BYTES:
         raise ProfileCustodyRecordError("profile custody inventory exceeds its total byte limit")
-    covered = tuple(
-        entry
-        for entry in ordered
-        if entry.relative_path not in DATABASE_SIDECAR_RELATIVE_PATHS
-        and entry.relative_path not in HOLDER_LOCK_RELATIVE_PATHS
-        and entry.relative_path not in DATABASE_PRESENCE_ONLY_RELATIVE_PATHS
-    )
-    if not covered:
-        raise ProfileCustodyRecordError("profile custody inventory covers no durable custody record")
+    covered = _durable_digest_entries(ordered)
     canonical = canonical_json_bytes(_digest_members(ordered))
     return ProfileCustodyInventory(
         profile_id=profile_id,
