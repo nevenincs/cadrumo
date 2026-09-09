@@ -172,7 +172,9 @@ def _record_spelled_envelope(layout: object) -> bool:
     """Whether a layout hides an envelope in its records instead of declaring one."""
     if _typed_envelope(layout):
         return False
-    return any(str(getattr(record, "record_type", "")) == "envelope_header" for record in layout.records)
+    return any(
+        str(getattr(record, "record_type", "")) == "envelope_header" for record in getattr(layout, "records", ())
+    )
 
 
 def _is_xml_dictionary(layout: object) -> bool:

@@ -64,6 +64,9 @@ def collect_residue() -> tuple[ResidueCell, ...]:
         )
         for row in report.refused_rows
     ]
+    supported_filing_years = authority.catalogues.supported_filing_years
+    if supported_filing_years is None:
+        raise ValueError("registry has no supported_filing_years catalogue")
     cells.extend(
         ResidueCell(
             kind="unbacked-declaration",
@@ -74,7 +77,7 @@ def collect_residue() -> tuple[ResidueCell, ...]:
         )
         for gap in audit_supported_filing_years(
             authority.modelos,
-            catalogue=authority.catalogues.supported_filing_years,
+            catalogue=supported_filing_years,
             sources=authority.catalogues.sources,
         )
     )

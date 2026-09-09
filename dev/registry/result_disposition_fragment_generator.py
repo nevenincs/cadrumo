@@ -30,7 +30,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .conformance.manager import reset_conformance_cache
-from .derive_result_dispositions import read_diseno_evidence
+from .derive_result_dispositions import DisenoDispositionEvidence, read_diseno_evidence
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 REGISTRY_MODELOS_ROOT = REPO_ROOT / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
@@ -91,7 +91,7 @@ def plan_fragments(root: Path | None = None) -> tuple[GeneratedFragment, ...]:
     modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelos_root = root if root is not None else REGISTRY_MODELOS_ROOT
     planned: list[GeneratedFragment] = []
-    cache: dict[str, object] = {}
+    cache: dict[str, DisenoDispositionEvidence] = {}
     for definition in modelos:
         if definition.id in CAMPAIGN_OWNED_MODELOS:
             continue
@@ -99,14 +99,14 @@ def plan_fragments(root: Path | None = None) -> tuple[GeneratedFragment, ...]:
         for revision in definition.revisions.values():
             if revision.authority_grade is not RegistryAuthorityGrade.FILING:
                 continue
-            negative = evidence.negative_disposition  # type: ignore[attr-defined]
+            negative = evidence.negative_disposition
             body = _render(
                 definition.id,
                 str(revision.id),
                 negative=negative,
-                zero=evidence.zero_disposition,  # type: ignore[attr-defined]
-                note=evidence.note,  # type: ignore[attr-defined]
-                scanned=evidence.corpus_files_scanned,  # type: ignore[attr-defined]
+                zero=evidence.zero_disposition,
+                note=evidence.note,
+                scanned=evidence.corpus_files_scanned,
             )
             planned.append(
                 GeneratedFragment(

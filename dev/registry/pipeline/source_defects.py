@@ -177,7 +177,7 @@ def adjudicated_literal_for(
     declarations: tuple[SourceDefectDeclaration, ...],
     *,
     sheet: str,
-    source_cell: str,
+    source_cell: str | None,
     published_content: str,
 ) -> str | None:
     """Return the adjudicated literal for this cell, or ``None`` to refuse normally.

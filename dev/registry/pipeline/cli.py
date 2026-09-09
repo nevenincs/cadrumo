@@ -168,7 +168,7 @@ def _supporting_modelos(modelo: str) -> frozenset[str]:
     modelos_root = bundled_path("registry", "aeat", "modelos")
     source_modelo_root = modelos_root / modelo
     referenced = {
-        match.group("modelo")
+        str(match.group("modelo"))
         for path in source_modelo_root.rglob("*.toml")
         for match in _SOURCE_MODELO_RE.finditer(path.read_text(encoding="utf-8"))
     }

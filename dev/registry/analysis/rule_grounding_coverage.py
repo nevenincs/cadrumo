@@ -62,7 +62,7 @@ import collections
 import sys
 from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, Protocol
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
@@ -97,6 +97,30 @@ KINDS: tuple[str, ...] = (
     "grounded_by_design_note",
     "ungrounded",
 )
+
+
+class FieldNeedingGrounding(Protocol):
+    """The attributes :func:`classify_grounding` reads from a field needing a rule.
+
+    Structural rather than nominal so a test double exercising the classifier
+    in isolation, or a real :class:`~.footnote_only_wire_facts.PointerWireFactFinding`,
+    both satisfy it without either depending on the other's module.
+    """
+
+    @property
+    def aeat_type(self) -> str: ...
+
+    @property
+    def cell(self) -> str: ...
+
+    @property
+    def length(self) -> int: ...
+
+    @property
+    def notes(self) -> tuple[str, ...]: ...
+
+    @property
+    def kind(self) -> str: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -259,7 +283,7 @@ def revision_findings(
 
 
 def classify_grounding(
-    needed: tuple[object, ...],
+    needed: tuple[FieldNeedingGrounding, ...],
     *,
     by_type: dict[str, list[str]],
     design_notes: tuple[str, ...],

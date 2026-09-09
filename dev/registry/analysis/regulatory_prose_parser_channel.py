@@ -135,7 +135,14 @@ def load_ledger(path: Path | None = None) -> dict[str, ProseParserEnrolment]:
         return {}
     raw = read_toml(target, error_factory=ProseChannelLedgerError)
     rows: dict[str, ProseParserEnrolment] = {}
-    for entry in raw.get("parser", []):
+    parser_rows = raw.get("parser", [])
+    if not isinstance(parser_rows, list):
+        message = f"{target}: 'parser' must be an array of tables"
+        raise ProseChannelLedgerError(message)
+    for entry in parser_rows:
+        if not isinstance(entry, dict):
+            message = f"{target}: every parser row must be a table"
+            raise ProseChannelLedgerError(message)
         module = entry.get("module")
         corpus = entry.get("corpus", "")
         reason = entry.get("reason", "")
