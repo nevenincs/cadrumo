@@ -21,7 +21,7 @@ from ....adapters.persistence.storage.sql.session import session_scope
 from ....core.classification.policies import SensitivityClass
 from ....core.period import Period
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from ..models import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
+from ..models import ModeloPresentado, SubmissionAttempt, SubmissionStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -41,7 +41,7 @@ def _make_filing(
     period: object = _PERIOD,
 ) -> ModeloPresentado:
     submitted_at = datetime(2026, 4, 27, 10, 0, tzinfo=UTC)
-    submission_id = make_submission_id(draft_id, attempt_ordinal)
+    submission_id = (draft_id.encode().hex() + "0" * 16)[:16]
     attempt = SubmissionAttempt(
         attempt_id=f"{submission_id}.{attempt_ordinal}",
         started_at=submitted_at,

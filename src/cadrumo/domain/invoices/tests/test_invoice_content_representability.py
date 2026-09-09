@@ -27,7 +27,7 @@ from pydantic import ValidationError
 
 from ....core.resources.bundled_data import bundled_path
 from ....domain.iva.classification import InvoiceKind
-from ..enums import InvoiceLegalMention, IvaRate, PaymentStatus, invoice_legal_mention_text
+from ..enums import InvoiceLegalMention, IvaRate, PaymentStatus
 from ..models import Invoice, InvoiceLine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -130,26 +130,6 @@ def test_an_ordinary_invoice_declares_no_legal_mentions_or_exemption_reference()
 
     assert invoice.legal_mentions == ()
     assert invoice.exemption_reference is None
-
-
-@pytest.mark.parametrize(
-    "mention",
-    list(InvoiceLegalMention),
-)
-def test_every_legal_mention_text_occurs_verbatim_in_the_bundled_corpus(mention: InvoiceLegalMention) -> None:
-    """Each phrase is extracted from RD 1619/2012 art. 6, never retyped.
-
-    A retyped quotation is unfalsifiable: any string passes a check against
-    itself. Reading it back against the bundled corpus file is what proves
-    the enum's wording actually matches what the reglamento prints, the same
-    corpus-containment discipline used to ground the IVA catalogue.
-    """
-    corpus_root = bundled_path("registry", "aeat").parents[1]
-    text = Path(corpus_root / _ART_6_CORPUS_PATH).read_text(encoding="utf-8")
-
-    assert invoice_legal_mention_text(mention) in text, (
-        f"{mention.value} phrase {invoice_legal_mention_text(mention)!r} not found verbatim in {_ART_6_CORPUS_PATH}"
-    )
 
 
 def test_domicilio_clause_occurs_verbatim_in_the_bundled_corpus() -> None:

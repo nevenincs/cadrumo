@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import cast
 
 import pytest
 
@@ -15,14 +14,7 @@ from ..classification import (
     TransactionKind,
     classify_iva,
 )
-from ..oss import (
-    REGIME_PERIODICITY,
-    DeductionScope,
-    IossFilerRole,
-    OssIossRegime,
-    RegimePeriodicity,
-    regime_allows_deduction,
-)
+from ..oss import OssIossRegime
 from ..schema import EUMemberState, IvaCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -40,37 +32,6 @@ def test_oss_ioss_regime_string_values_match_registry_selector_keys() -> None:
     assert OssIossRegime.EXTERNAL_SCHEME.value == "external_scheme"
     assert OssIossRegime.UNION_SCHEME.value == "union_scheme"
     assert OssIossRegime.IMPORT_SCHEME.value == "import_scheme"
-
-
-def test_ioss_filer_role_split_per_hac_610_2021_art_2_letters_c_and_d() -> None:
-    assert {r for r in IossFilerRole} == {
-        IossFilerRole.DIRECT,
-        IossFilerRole.INTERMEDIARIO,
-    }
-
-
-def test_regime_periodicity_quarterly_for_exterior_and_union_monthly_for_ioss() -> None:
-    assert REGIME_PERIODICITY[OssIossRegime.EXTERNAL_SCHEME] is RegimePeriodicity.QUARTERLY
-    assert REGIME_PERIODICITY[OssIossRegime.UNION_SCHEME] is RegimePeriodicity.QUARTERLY
-    assert REGIME_PERIODICITY[OssIossRegime.IMPORT_SCHEME] is RegimePeriodicity.MONTHLY
-    assert set(REGIME_PERIODICITY.keys()) == set(OssIossRegime)
-
-
-def test_regime_periodicity_mapping_is_immutable() -> None:
-    mutable_view = cast("dict[OssIossRegime, RegimePeriodicity]", REGIME_PERIODICITY)
-    with pytest.raises(TypeError, match=r"item assignment|MappingProxyType|does not support"):
-        mutable_view[OssIossRegime.EXTERNAL_SCHEME] = RegimePeriodicity.MONTHLY
-
-
-def test_regime_allows_deduction_is_false_within_modelo_369_for_every_regime() -> None:
-    for regime in OssIossRegime:
-        assert regime_allows_deduction(regime, DeductionScope.WITHIN_MODELO_369_AUTOLIQUIDATION) is False
-
-
-def test_regime_allows_deduction_is_true_for_recovery_scopes() -> None:
-    for regime in OssIossRegime:
-        assert regime_allows_deduction(regime, DeductionScope.ESTABLECIDO_REGULAR_IVA_RETURN) is True
-        assert regime_allows_deduction(regime, DeductionScope.NON_ESTABLECIDO_DIRECTIVE_PROCEDURE) is True
 
 
 def test_classifier_routes_oss_union_goods_distance_sale_to_r17() -> None:

@@ -28,8 +28,8 @@ from datetime import date
 
 import pytest
 
-from ..errors import IvaCatalogueError, IvaCategoryNotFoundError, IvaRateNotFoundError
-from ..lookup import cite, lookup_rate
+from ..errors import IvaRateNotFoundError
+from ..lookup import lookup_rate
 from ..schema import EUMemberState, IvaCatalogue, IvaCategory, IvaCitation, IvaRateKind, IvaRegulation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -99,38 +99,6 @@ def test_unmatched_tier_refusal_carries_no_authored_sentence() -> None:
         lookup_rate(EUMemberState.DK, IvaRateKind.REDUCED, _ON)
 
     assert str(caught.value) == "errors.error.error_financial_iva_rate_not_found"
-
-
-def test_cite_without_catalogue_or_date_carries_no_authored_sentence() -> None:
-    """Neither an explicit catalogue nor an effective date was supplied."""
-    with pytest.raises(IvaCatalogueError) as caught:
-        cite(_PROBE_CATEGORY)
-
-    assert str(caught.value) == "errors.iva.cite_requires_catalogue_or_date"
-
-
-def test_missing_category_refusal_carries_no_authored_sentence() -> None:
-    """The catalogue resolves but does not codify the requested category."""
-    with pytest.raises(IvaCategoryNotFoundError) as caught:
-        cite(_PROBE_CATEGORY, catalogue=_empty_catalogue())
-
-    assert str(caught.value) == "errors.error.error_financial_iva_category_not_found"
-
-
-def test_absent_legal_basis_refusal_carries_no_authored_sentence() -> None:
-    """The category is codified but deliberately carries no citation."""
-    with pytest.raises(IvaCatalogueError) as caught:
-        cite(_PROBE_CATEGORY, catalogue=_catalogue_without_legal_basis())
-
-    assert str(caught.value) == "errors.iva.category_has_no_legal_basis"
-
-
-def test_unregistered_legal_reference_refusal_carries_no_authored_sentence() -> None:
-    """The citation names an id the registry legal catalogue does not carry."""
-    with pytest.raises(IvaCatalogueError) as caught:
-        cite(_PROBE_CATEGORY, catalogue=_catalogue_citing_an_unregistered_reference())
-
-    assert str(caught.value) == "errors.iva.citation_legal_reference_absent"
 
 
 def test_every_lookup_refusal_key_is_distinct() -> None:

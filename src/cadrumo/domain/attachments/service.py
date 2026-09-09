@@ -153,20 +153,6 @@ def _link_attachment(
     return updated
 
 
-def load_attachment(store: AttachmentStoreProtocol, attachment_id: str) -> Attachment:
-    """Load one attachment manifest from the store.
-
-    Args:
-        store: Backing :class:`AttachmentStoreProtocol`.
-        attachment_id: SHA-256 of the attachment bytes.
-
-    Returns:
-        The :class:`Attachment`
-        manifest for ``attachment_id``.
-    """
-    return store.load_manifest(attachment_id)
-
-
 def link_attachment_invoice(
     store: AttachmentStoreProtocol,
     *,
@@ -253,33 +239,3 @@ def link_attachment_transaction(
         field="linked_transaction_ids",
         related_kind="transaction",
     )
-
-
-def list_attachments(
-    store: AttachmentStoreProtocol,
-    *,
-    linked_to: str | None = None,
-    kind: AttachmentKind | None = None,
-) -> tuple[Attachment, ...]:
-    """List attachment manifests, optionally filtered by link or kind.
-
-    Args:
-        store: Backing :class:`AttachmentStoreProtocol`.
-        linked_to: When provided, return only attachments whose
-            ``linked_transaction_ids`` or ``linked_invoice_ids``
-            tuple contains this id.
-        kind: When provided, return only attachments of this
-            :class:`AttachmentKind`.
-
-    Returns:
-        Filtered tuple of :class:`Attachment` manifests in store iteration
-        order.
-    """
-    out: list[Attachment] = []
-    for attachment in store.iter_manifests():
-        if kind is not None and attachment.kind is not kind:
-            continue
-        if linked_to is not None and linked_to not in attachment.linked_transaction_ids + attachment.linked_invoice_ids:
-            continue
-        out.append(attachment)
-    return tuple(out)

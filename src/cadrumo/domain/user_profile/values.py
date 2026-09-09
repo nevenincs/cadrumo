@@ -55,12 +55,6 @@ def declared_provenance_sources() -> frozenset[str]:
     return frozenset(load_user_profile_schema().field("provenance.source").enum_values)
 
 
-def declared_field_paths() -> frozenset[str]:
-    """Return the ``section.field`` paths the user-profile schema declares."""
-    schema = load_user_profile_schema()
-    return frozenset(f"{section.key}.{field.key}" for section in schema.sections for field in section.fields)
-
-
 def section_field_key(path: str) -> str:
     """Reduce a fact path to the ``section.field`` form the schema declares.
 

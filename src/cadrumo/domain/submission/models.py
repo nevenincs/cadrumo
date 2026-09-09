@@ -29,8 +29,6 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ...core.errors.severity import BaseSeverity
-from ...core.hashing import sha256_hex
 from ...core.identity import AeatCsv, SubjectTaxId
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -126,26 +124,6 @@ class ModeloDraftStatus(StrEnum):
     RECHAZADA = "RECHAZADA"
     ENMENDADO = "ENMENDADO"
     ANULADO = "ANULADO"
-
-
-class ModeloFinding(BaseModel):
-    """Minimal finding record consumed by the preflight gate.
-
-    Distinct from :class:`domain.filing.ModeloValidationFinding`,
-    which carries the validator's full provenance graph; the submission
-    engine reads only ``severity`` to decide whether the draft is
-    blocked. Structurally conforms to
-    :class:`cadrumo.domain.submission.protocols.ModeloFindingLike`.
-
-    Attributes:
-        severity: The finding severity; ``ERROR`` blocks submission.
-        message: Multilingual finding message.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    severity: BaseSeverity
-    message: str
 
 
 class SubmissionAttempt(BaseModel):
@@ -347,30 +325,3 @@ class ModeloPresentado(BaseModel):
                 f"{terminal.value} attempt; accepted: {accepted}",
             )
         return self
-
-
-def make_submission_id(draft_id: str, attempt_ordinal: int) -> str:
-    """Return a stable 16-hex-char SHA-256 prefix for a submission.
-
-    The output is deterministic: identical ``(draft_id, attempt_ordinal)``
-    pairs always produce identical ids across runs and processes.
-
-    Args:
-        draft_id: The upstream draft identifier.
-        attempt_ordinal: A strictly positive ordinal (``>= 1``)
-            distinguishing multiple submission attempts against the
-            same draft.
-
-    Returns:
-        A 16-character lowercase hex string.
-
-    Raises:
-        SubmissionValidationError: If ``draft_id`` is empty or
-            ``attempt_ordinal`` is not a positive integer.
-    """
-    if not draft_id:
-        raise SubmissionValidationError("draft_id must be non-empty")
-    if attempt_ordinal < 1:
-        raise SubmissionValidationError(f"attempt_ordinal must be >= 1, got {attempt_ordinal}")
-    payload = f"{draft_id}:{attempt_ordinal}".encode()
-    return sha256_hex(payload)[:16]

@@ -12,10 +12,9 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
-from .catalogue import resolve_catalogue
-from .errors import IvaCatalogueError, IvaCategoryNotFoundError, IvaRateNotFoundError
+from .errors import IvaRateNotFoundError
 from .rates import load_iva_rate_table
-from .schema import EUMemberState, IvaCatalogue, IvaCategory, IvaRateKind, IvaRateRecord
+from .schema import EUMemberState, IvaRateKind, IvaRateRecord
 
 
 def lookup_rate(
@@ -166,71 +165,6 @@ def rate_table_covers_any_positive_tier(member_state: EUMemberState, on_date: da
     )
 
 
-def cite(
-    category: IvaCategory,
-    *,
-    on: date | None = None,
-    catalogue: IvaCatalogue | None = None,
-) -> str:
-    """Return the canonical citation string for ``category``.
-
-    Uses the first :class:`cadrumo.domain.iva.IvaCitation` on the matching
-    regulation as the canonical reference. The result includes a
-    human-readable source label and the article reference so it is
-    self-identifying when written to a log line.
-
-    Args:
-        category: The IVA category whose canonical citation is requested.
-        on: Effective date used to resolve the committed catalogue.
-        catalogue: Optional catalogue override.
-
-    Returns:
-        A canonical citation string such as
-        ``"Ley 37/1992, Art. 90.Uno — <quoted_text>"``.
-
-    Raises:
-        IvaCatalogueError: If both ``catalogue`` and ``on`` are ``None``.
-    """
-    if catalogue is not None:
-        return _render_citation(category, catalogue)
-    if on is None:
-        raise IvaCatalogueError(
-            translated_message="errors.iva.cite_requires_catalogue_or_date",
-            context={"catalogue_supplied": False, "effective_date_supplied": False},
-        )
-    return _render_citation(category, resolve_catalogue(on=on))
-
-
-def _render_citation(category: IvaCategory, catalogue: IvaCatalogue) -> str:
-    from ..calculations.registry.authority import bundled_authority
-
-    regulation = catalogue.get(category)
-    if regulation is None:
-        raise IvaCategoryNotFoundError(
-            translated_message="errors.error.error_financial_iva_category_not_found",
-            context={"iva_category": category.value, "category_in_catalogue": False},
-        )
-    if not regulation.citations:
-        raise IvaCatalogueError(
-            translated_message="errors.iva.category_has_no_legal_basis",
-            context={"iva_category": category.value, "citation_count": 0},
-        )
-    citation = regulation.citations[0]
-
-    reference = bundled_authority().catalogues.legal.get(citation.legal_reference)
-    if reference is None:
-        raise IvaCatalogueError(
-            translated_message="errors.iva.citation_legal_reference_absent",
-            context={
-                "iva_category": category.value,
-                "legal_reference": citation.legal_reference,
-                "legal_reference_in_catalogue": False,
-            },
-        )
-    article = f"Art. {reference.article}" if reference.article is not None else citation.legal_reference
-    return f"{reference.document_id}, {article}: {citation.quoted_text}"
-
-
 def coexisting_tier_rates(
     member_state: EUMemberState,
     kind: IvaRateKind,
@@ -344,4 +278,4 @@ def rate_kinds_for_declared_rate(
     return tuple(matched)
 
 
-__all__ = ["cite", "coexisting_tier_rates", "lookup_rate", "rate_kinds_for_declared_rate"]
+__all__ = ["coexisting_tier_rates", "lookup_rate", "rate_kinds_for_declared_rate"]

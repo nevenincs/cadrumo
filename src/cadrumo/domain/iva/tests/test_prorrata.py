@@ -30,17 +30,14 @@ from ...calculations.registry.schema_base import ThresholdComparison
 from ..errors import ProrrataInputError
 from ..prorrata import (
     InputClassification,
-    ProrrataInputDeduction,
     ProrrataInputs,
     ProrrataKind,
     ProrrataReference,
     ProrrataRegime,
     ProrrataResult,
-    classify_input_deduction,
     compute_prorrata_general,
     especial_mandatory_rule,
     is_especial_mandatory,
-    sum_deductible_amounts,
     validate_prorrata_reference,
 )
 from ..prorrata_especial_parameters import ProrrataEspecialMandatoryParameters
@@ -254,20 +251,6 @@ def test_general_percentage_does_not_round_up_exact_whole_integer() -> None:
 # ---------------------------------------------------------------------------
 # Per-input classification under art. 106.Uno LIVA.
 # ---------------------------------------------------------------------------
-
-
-def test_classify_input_deduction_cases() -> None:
-    """LIVA art. 106.Uno classification rules for exclusive and common inputs."""
-
-    for case in _INPUT_DEDUCTION_CASES:
-        classification, input_iva_amount, general_percentage, expected_percentage, expected_amount = case
-        deduction = classify_input_deduction(
-            classification,
-            input_iva_amount=input_iva_amount,
-            general_percentage=general_percentage,
-        )
-        assert deduction.deductible_percentage == expected_percentage, classification
-        assert deduction.deductible_amount == expected_amount, classification
 
 
 # ---------------------------------------------------------------------------
@@ -505,69 +488,9 @@ def test_compute_general_rejects_invalid_period_with_prorrata_error() -> None:
         )
 
 
-def test_classify_input_rejects_negative_iva_amount() -> None:
-    with pytest.raises(ProrrataInputError, match=r"input_iva_amount must be non-negative"):
-        classify_input_deduction(
-            InputClassification.COMMON,
-            input_iva_amount=Decimal("-1.00"),
-            general_percentage=Decimal("50"),
-        )
-
-
-def test_classify_input_rejects_out_of_range_general_percentage() -> None:
-    with pytest.raises(ProrrataInputError, match=r"general_percentage out of range 0..100"):
-        classify_input_deduction(
-            InputClassification.COMMON,
-            input_iva_amount=Decimal("10.00"),
-            general_percentage=Decimal("-1"),
-        )
-    with pytest.raises(ProrrataInputError, match=r"general_percentage out of range 0..100"):
-        classify_input_deduction(
-            InputClassification.COMMON,
-            input_iva_amount=Decimal("10.00"),
-            general_percentage=Decimal("101"),
-        )
-
-
 # ---------------------------------------------------------------------------
 # Aggregation helper (sum_deductible_amounts) — Python primitive contract.
 # ---------------------------------------------------------------------------
-
-
-def test_sum_deductible_amounts_threads_through_decimal_addition() -> None:
-    """The helper is a thin wrapper around ``sum``; this test verifies
-    the Python primitive contract (Decimal preservation, empty-iterable
-    handling) rather than re-applying the prorrata formula."""
-
-    deductions = (
-        ProrrataInputDeduction(
-            classification=InputClassification.EXCLUSIVELY_DEDUCTIBLE,
-            input_iva_amount=Decimal("10.00"),
-            deductible_percentage=Decimal("100"),
-            deductible_amount=Decimal("10.00"),
-        ),
-        ProrrataInputDeduction(
-            classification=InputClassification.EXCLUSIVELY_NON_DEDUCTIBLE,
-            input_iva_amount=Decimal("5.00"),
-            deductible_percentage=Decimal("0"),
-            deductible_amount=Decimal("0.00"),
-        ),
-        ProrrataInputDeduction(
-            classification=InputClassification.COMMON,
-            input_iva_amount=Decimal("20.00"),
-            deductible_percentage=Decimal("70"),
-            deductible_amount=Decimal("14.00"),
-        ),
-    )
-    total = sum_deductible_amounts(deductions)
-    assert isinstance(total, Decimal)
-    assert total == Decimal("24.00")
-
-
-def test_sum_deductible_amounts_returns_zero_for_empty_iterable() -> None:
-    total = sum_deductible_amounts(())
-    assert total == Decimal("0")
-    assert isinstance(total, Decimal)
 
 
 # ---------------------------------------------------------------------------

@@ -28,8 +28,6 @@ from ...calculations.registry.ledger_renta_gastos_estimacion_directa_bindings im
 from ...categories.spending_category import SpendingCategory
 from .._first_slice_routing import (
     FIRST_SLICE_EXPENSE_CASILLAS,
-    expected_casilla_for_category,
-    first_slice_target_casillas,
 )
 from ..ledger_expenses import RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS
 
@@ -47,30 +45,6 @@ def test_ledger_expenses_re_export_is_the_canonical_table() -> None:
     assert RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS is FIRST_SLICE_EXPENSE_CASILLAS
 
 
-def test_expected_casilla_for_category_round_trips_every_entry() -> None:
-    """Every entry in the routing table is reachable via the helper."""
-
-    for category, casilla in FIRST_SLICE_EXPENSE_CASILLAS.items():
-        assert expected_casilla_for_category(category) == casilla
-
-
-def test_expected_casilla_for_category_is_a_direct_lookup_with_no_fallback() -> None:
-    """``expected_casilla_for_category`` is ``Mapping.get`` -- no default casilla.
-
-    The routing table is now total (every :class:`SpendingCategory`
-    member routes to a real casilla), so this asserts the helper never
-    substitutes a fallback casilla for a member it disagrees with: it
-    always returns exactly what the table declares, never a coerced
-    default. A future enum member added without a routing entry is
-    caught by :func:`test_every_spending_category_routes_to_a_first_slice_casilla`
-    (``expected_casilla_for_category`` would return ``None`` for it,
-    not silently fall back to an arbitrary casilla).
-    """
-
-    for category in SpendingCategory:
-        assert expected_casilla_for_category(category) == FIRST_SLICE_EXPENSE_CASILLAS[category]
-
-
 def test_first_slice_target_casillas_is_closed_set() -> None:
     """The targets the routing table can resolve to are exactly these casillas.
 
@@ -80,7 +54,7 @@ def test_first_slice_target_casillas_is_closed_set() -> None:
     test failures so the migration is intentional.
     """
 
-    assert first_slice_target_casillas() == frozenset(
+    assert frozenset(FIRST_SLICE_EXPENSE_CASILLAS.values()) == frozenset(
         {
             "0183",
             "0186",
@@ -111,7 +85,7 @@ def test_every_spending_category_routes_to_a_first_slice_casilla() -> None:
     ``aeat-calculation-aggregation``).
     """
 
-    unrouted = [category for category in SpendingCategory if expected_casilla_for_category(category) is None]
+    unrouted = [category for category in SpendingCategory if category not in FIRST_SLICE_EXPENSE_CASILLAS]
     assert unrouted == []
 
 
@@ -131,7 +105,7 @@ def test_first_slice_routing_targets_exist_in_modelo_100_registry() -> None:
     for revision in modelo_100.revisions.values():
         all_casilla_ids.update(casilla.id for casilla in revision.casillas)
 
-    missing = first_slice_target_casillas() - all_casilla_ids
+    missing = frozenset(FIRST_SLICE_EXPENSE_CASILLAS.values()) - all_casilla_ids
     assert not missing, f"first-slice routing targets casillas absent from modelo-100: {sorted(missing)!r}"
 
 
@@ -145,7 +119,7 @@ def test_first_slice_check_is_registered_with_the_registry_validator() -> None:
     ``renta``).
     """
 
-    from ...calculations.registry.validate_references import _CROSS_DOMAIN_SNAPSHOT_CHECKS
+    from ...calculations.registry.validate_cross_domain_snapshot import _CROSS_DOMAIN_SNAPSHOT_CHECKS
     from ..first_slice_routing_integrity import check_first_slice_routing
 
     assert check_first_slice_routing in _CROSS_DOMAIN_SNAPSHOT_CHECKS
@@ -207,7 +181,7 @@ def test_renta_first_slice_binding_target_casillas_is_revision_scoped() -> None:
     for year in ("2024", "2025"):
         revision = modelo_100.revisions[year]
         targets = renta_first_slice_binding_target_casillas(revision)
-        assert targets == first_slice_target_casillas()
+        assert targets == frozenset(FIRST_SLICE_EXPENSE_CASILLAS.values())
         assert "0195" in targets
 
 

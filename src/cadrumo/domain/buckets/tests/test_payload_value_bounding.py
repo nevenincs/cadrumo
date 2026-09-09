@@ -247,4 +247,3 @@ def test_detector_scans_a_non_empty_production_surface() -> None:
 
     assert len(items) > 100, f"production AST surface implausibly small: {len(items)}"
     assert any(Path(path).name == "event.py" for path, _ in items)
-

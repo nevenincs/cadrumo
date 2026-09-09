@@ -148,15 +148,6 @@ def _by_key() -> dict[str, ProfileKey]:
     return _BY_KEY_CACHE[0]
 
 
-def required_profile_keys() -> tuple[ProfileKey, ...]:
-    """Return only the keys whose ``requirement`` is ``REQUIRED``.
-
-    Returns:
-        Tuple of :class:`ProfileKey` entries that are required.
-    """
-    return tuple(entry for entry in _profile_keys() if entry.requirement is Requirement.REQUIRED)
-
-
 def optional_profile_keys() -> tuple[ProfileKey, ...]:
     """Return only the :class:`ProfileKey` entries whose ``requirement`` is ``OPTIONAL``."""
     return tuple(entry for entry in _profile_keys() if entry.requirement is Requirement.OPTIONAL)
@@ -167,5 +158,4 @@ __all__ = [
     "optional_profile_keys",
     "profile_keys",
     "register_profile_keys",
-    "required_profile_keys",
 ]

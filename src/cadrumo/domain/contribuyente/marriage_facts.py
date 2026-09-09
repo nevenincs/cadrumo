@@ -24,6 +24,8 @@ def marriage_month_start(marriage_date: date, filing_year: int) -> int | None:
     if marriage_date.year == filing_year:
         return marriage_date.month
     return None
+
+
 __all__ = [
     "marriage_full_year",
     "marriage_month_start",
