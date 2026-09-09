@@ -345,7 +345,9 @@ def ensure_private_diagnostic_log() -> None:
     rename always succeeds and there is no block to normalise.
     """
     from cadrumo.core.config import reset_settings_cache
-    from cadrumo.core.logging import allow_logging_reconfiguration, configure_logging
+    from cadrumo.core.logging import configure_logging
+
+    from .logging_rebind import allow_logging_reconfiguration
 
     private_log_dir = Path(os.environ["CADRUMO_LOCAL_STORAGE_ROOT"]) / "logs" / f"pid-{os.getpid()}"
     if os.environ.get("CADRUMO_LOG_DIR") == str(private_log_dir):
