@@ -2,7 +2,7 @@
 
 ``dev/ci/python-runtime-matrix.json`` names ``minimum_minor`` -- the oldest
 CPython minor this project supports. The floor is then RE-DECLARED, as a bare
-literal, in four more places that no gate reads:
+literal, in every site below, none of which any other gate reads:
 
 * ``.python-version`` -- the exact toolchain patch. Its exact value is derived
   properly (``dev.packaging.release_cohort`` reads the file and the workflow
@@ -12,8 +12,20 @@ literal, in four more places that no gate reads:
   the lock; none parses this field, so its value is sealed but never read.
 * the repository-root ``Dockerfile``'s ``ARG PYTHON_BASE_IMAGE`` tag, whose
   minor component is the interpreter every container stage ships.
-* the ``Dockerfile``'s ``uv venv --python <minor>`` lines, which select the
-  interpreter the development image's virtualenv is built on.
+
+A fourth site used to stand beside them: the ``Dockerfile``'s
+``uv venv --python <minor>`` line, which selected the interpreter the
+development image's virtualenv was built on. It is gone by DESIGN, not by
+neglect -- the image now runs ``uv sync --locked``, which creates the
+virtualenv against the lock's own ``requires-python`` rather than against a
+second hand-written minor, and the Dockerfile's "One base, declared once"
+banner records the consolidation. Its scan below is deliberately retained but
+no longer required: if such a line ever returns -- in this Dockerfile or a
+second one -- it is covered on arrival without editing this module, because the
+shape it creates is the sharpest failure this gate knows. Bump the base image
+alone and uv does not fail on the stale minor, it silently DOWNLOADS a managed
+interpreter of that minor into the new image, so the container's tag and its
+virtualenv disagree and everything inside it works.
 
 The published manifests' ``requires-python`` floors are joined to the same
 authority by ``test_classifier_parity``; this gate covers the toolchain side of
@@ -22,13 +34,18 @@ the same field and deliberately does not restate that join.
 Why this seam rots silently. Raising the floor is a routine change, and the
 author is forced past the classifier gate, the security manifest assertion, the
 runtime-matrix literal and all three packaging manifests -- every one of which
-names a DIFFERENT declaration than the four above. Nothing fails when these lag:
-the wheels still build, the lock still resolves, the image still builds, and CI
-still goes green while every lane exercises a runtime the project has just
-declared unsupported. The sharpest of the four is the ``uv venv --python`` line:
-bump the base image alone and uv does not fail on the stale minor, it silently
-DOWNLOADS a managed interpreter of that minor into the new image, so the
-container's tag and its virtualenv disagree and everything inside it works.
+names a DIFFERENT declaration than the sites above. Nothing fails when these
+lag: the wheels still build, the lock still resolves, the image still builds,
+and CI still goes green while every lane exercises a runtime the project has
+just declared unsupported.
+
+Sufficiency of the scan is asserted by NAME, never by a count. A count is the
+weaker instrument in both directions: it passes a map that lost ``uv.lock`` and
+gained an unrelated site, and it has to be edited -- indistinguishably from
+ratcheting it down to clear a red -- whenever the population legitimately
+changes. Naming each required site fails loudly on the one that vanished, and a
+site retired by design is retired here in the same change that retires it in
+the tree, with the reason written down.
 
 Specifiers are PARSED, never string-compared against a pinned literal. A
 legitimate respelling of the same floor must not turn red, while an upper bound
@@ -38,7 +55,7 @@ or a non-bare specifier still cannot pass.
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Final
 
@@ -66,14 +83,22 @@ _BARE_FLOOR: Final = re.compile(r"^>=\s*(?P<minor>3\.\d+)$")
 _BASE_IMAGE_TAG: Final = re.compile(r"^python:(?P<minor>3\.\d+)(?:\.\d+)?(?:[-.]\S*)?$")
 
 #: Every interpreter the Dockerfile selects for a virtualenv, found by scan
-#: rather than by line number, so a second such line is covered on arrival.
+#: rather than by line number. No such line exists today -- `uv sync --locked`
+#: replaced it -- so this yields nothing and is not required below; it is kept
+#: so that one reappearing anywhere in the Dockerfile is covered on arrival.
 _UV_VENV_PYTHON: Final = re.compile(r"uv\s+venv\s+--python\s+(?P<minor>3\.\d+)(?:\.\d+)?\b")
 
-#: Below this the scan has stopped finding declarations, and an agreeing map
-#: proves nothing. A floor rather than a pinned count: adding a fifth
-#: declaration must not require editing this number, but losing one of the four
-#: known ones must not read as unanimous agreement either.
-_MINIMUM_DECLARATIONS: Final = 4
+#: The declaration sites that must be present for an agreeing map to MEAN
+#: agreement, each named by the label its absence is reported under and
+#: recognised by a predicate over the scanned site key. Named rather than
+#: counted: a site that disappears is reported by name instead of being masked
+#: by an unrelated site arriving, and a site retired by design is retired here
+#: explicitly rather than by decrementing a number.
+_REQUIRED_DECLARATION_SITES: Final[Mapping[str, Callable[[str], bool]]] = {
+    ".python-version": lambda site: site == ".python-version",
+    "uv.lock": lambda site: site == "uv.lock",
+    "Dockerfile ARG PYTHON_BASE_IMAGE": lambda site: site.startswith("Dockerfile ARG PYTHON_BASE_IMAGE"),
+}
 
 
 def _base_image_floor_minor(image: str) -> str:
@@ -130,11 +155,21 @@ def _toolchain_floor_minors(root: Path, *, base_image: str) -> dict[str, str]:
     return declared
 
 
+def _unreached_required_sites(declared: Mapping[str, str]) -> list[str]:
+    """Return the required declaration sites the scan did not reach, by name."""
+    return sorted(
+        name for name, matches in _REQUIRED_DECLARATION_SITES.items() if not any(matches(site) for site in declared)
+    )
+
+
 def _assert_floor_agreement(declared: Mapping[str, str], *, minimum_minor: str) -> None:
     """Every toolchain declaration must state exactly the supported floor minor."""
-    assert len(declared) >= _MINIMUM_DECLARATIONS, (
-        f"the scan found only {sorted(declared)}; below {_MINIMUM_DECLARATIONS} declarations "
-        "an agreeing map is not evidence of agreement, it is evidence the scan stopped looking"
+    unreached = _unreached_required_sites(declared)
+    assert not unreached, (
+        f"the scan reached {sorted(declared)} but found no declaration at {unreached}; "
+        "an agreeing map that is missing a known site is not evidence of agreement, it is "
+        "evidence the scan stopped looking. If a site was retired by design, retire it from "
+        "_REQUIRED_DECLARATION_SITES in the same change, with the reason"
     )
     lagging = {site: minor for site, minor in declared.items() if minor != minimum_minor}
     assert not lagging, (
@@ -147,7 +182,7 @@ def _assert_floor_agreement(declared: Mapping[str, str], *, minimum_minor: str) 
 
 
 def test_every_toolchain_declaration_states_the_supported_floor() -> None:
-    """The live tree's four toolchain floor declarations equal the inventory minimum."""
+    """Every toolchain floor declaration in the live tree equals the inventory minimum."""
     inventory = load_runtime_inventory()
 
     declared = _toolchain_floor_minors(_REPO_ROOT, base_image=linux_base_image())
@@ -156,16 +191,14 @@ def test_every_toolchain_declaration_states_the_supported_floor() -> None:
 
 
 def test_the_live_scan_reaches_every_known_declaration_site() -> None:
-    """The scan names the four sites, so a silently narrowed scan cannot read as agreement."""
+    """The scan reaches each named site, so a silently narrowed scan cannot read as agreement.
+
+    Derived from ``_REQUIRED_DECLARATION_SITES`` rather than restating the site
+    list, so the population is declared exactly once in this module too.
+    """
     declared = _toolchain_floor_minors(_REPO_ROOT, base_image=linux_base_image())
 
-    assert ".python-version" in declared
-    assert "uv.lock" in declared
-    assert any(site.startswith("Dockerfile ARG PYTHON_BASE_IMAGE=") for site in declared)
-    assert any("uv venv --python" in site for site in declared), (
-        "the scan found no `uv venv --python` selection in the Dockerfile; the development "
-        "image's virtualenv interpreter is then outside this gate entirely"
-    )
+    assert _unreached_required_sites(declared) == []
 
 
 def _agreeing(minor: str) -> dict[str, str]:
@@ -173,8 +206,7 @@ def _agreeing(minor: str) -> dict[str, str]:
     return {
         ".python-version": minor,
         "uv.lock": minor,
-        "Dockerfile ARG PYTHON_BASE_IMAGE": minor,
-        "Dockerfile:155 uv venv --python": minor,
+        f"Dockerfile ARG PYTHON_BASE_IMAGE=python:{minor}-slim-trixie": minor,
     }
 
 
@@ -197,12 +229,32 @@ def test_a_single_lagging_declaration_is_detected(lagging_site: str) -> None:
         _assert_floor_agreement(declared, minimum_minor="3.14")
 
 
-def test_a_narrowed_scan_cannot_read_as_agreement() -> None:
-    """Dropping a declaration is refused rather than silently reducing the population."""
+@pytest.mark.parametrize("dropped_site", sorted(_agreeing("3.13")))
+def test_a_narrowed_scan_cannot_read_as_agreement(dropped_site: str) -> None:
+    """Dropping any required declaration is refused, and the refusal names it.
+
+    Parametrised over the whole population: each site is separately load-bearing
+    for sufficiency, exactly as each is separately load-bearing for agreement.
+    """
     declared = _agreeing("3.13")
-    del declared["uv.lock"]
+    del declared[dropped_site]
 
     with pytest.raises(AssertionError, match=r"evidence the scan stopped looking"):
+        _assert_floor_agreement(declared, minimum_minor="3.13")
+
+
+def test_an_unrelated_site_cannot_substitute_for_a_missing_one() -> None:
+    """A replacement site does not restore sufficiency -- the named one is still gone.
+
+    This is what naming buys over counting. A count reads this map as the full
+    population and passes it; the missing site is then silently outside the gate
+    while the map still looks unanimous.
+    """
+    declared = _agreeing("3.13")
+    del declared["uv.lock"]
+    declared["Dockerfile:155 uv venv --python 3.13"] = "3.13"
+
+    with pytest.raises(AssertionError, match=r"no declaration at \['uv\.lock'\]"):
         _assert_floor_agreement(declared, minimum_minor="3.13")
 
 
@@ -246,12 +298,29 @@ def test_the_collector_reads_each_file_borne_declaration(tmp_path: Path) -> None
     assert [minor for site, minor in declared.items() if "uv venv --python" in site] == ["3.14"]
 
 
+def test_a_vanished_file_borne_declaration_is_refused(tmp_path: Path) -> None:
+    """A site that disappears from the tree fails closed instead of shortening the map.
+
+    The on-disk counterpart of the named-site check, proved in an isolated tree
+    rather than by removing a file from the worktree: the collector refuses a
+    tree it cannot read the declaration out of, so a deleted `uv.lock` can never
+    reach the agreement check as a smaller unanimous population.
+    """
+    _write_tree(tmp_path, pin="3.14.2", lock=">=3.14", venv="3.14")
+    (tmp_path / "uv.lock").unlink()
+
+    with pytest.raises(OSError):
+        _file_floor_minors(tmp_path)
+
+
 def test_a_drifted_venv_selection_is_read_from_the_isolated_tree(tmp_path: Path) -> None:
     """The Dockerfile's virtualenv interpreter is read independently of the base tag.
 
-    This is the shape the gate exists for: the image moves and the venv line
-    does not, and uv answers the stale minor by downloading it rather than by
-    failing, so the container builds and every command inside it works.
+    No such line exists in the live Dockerfile today, which is why the scan for
+    it is retained but not required. This proves the retained scan still has
+    teeth for the day one returns: the image moves and the venv line does not,
+    and uv answers the stale minor by downloading it rather than by failing, so
+    the container builds and every command inside it works.
     """
     _write_tree(tmp_path, pin="3.14.2", lock=">=3.14", venv="3.13")
 
