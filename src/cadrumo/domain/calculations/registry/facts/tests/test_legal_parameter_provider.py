@@ -23,8 +23,9 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
     ResolvedScalarFact,
     resolve_governed_fact,
 )
-from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
-from cadrumo.domain.calculations.registry.loader import load_legal_parameters_only
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.facts.validation import governed_fact_catalogue_failures
+from cadrumo.domain.calculations.registry.loader import load_legal_parameters_only, load_shared_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -32,6 +33,19 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def _catalogue() -> GovernedFactCatalogue:
     facts = compile_legal_parameter_facts(bundled_path("registry", "aeat"))
     return GovernedFactCatalogue(facts={fact.fact_id: fact for fact in facts})
+
+
+def _grounding_failures(catalogue: GovernedFactCatalogue) -> tuple[str, ...]:
+    source_root = bundled_path()
+    shared = load_shared_catalogues(source_root / "registry" / "aeat")
+    return governed_fact_catalogue_failures(
+        catalogue,
+        legal_ref_ids=shared.legal,
+        source_ref_ids=shared.sources,
+        legal_refs=shared.legal,
+        source_refs=shared.sources,
+        source_root=source_root,
+    )
 
 
 def test_provider_projects_exactly_the_21_ledgered_parameter_ids() -> None:
@@ -42,9 +56,7 @@ def test_provider_projects_exactly_the_21_ledgered_parameter_ids() -> None:
 
 
 def test_legal_parameter_provider_owns_the_existing_legal_catalogue() -> None:
-    registration = next(
-        item for item in FACT_PROVIDER_REGISTRATIONS if item.provider_id == LEGAL_PARAMETER_PROVIDER_ID
-    )
+    registration = next(item for item in FACT_PROVIDER_REGISTRATIONS if item.provider_id == LEGAL_PARAMETER_PROVIDER_ID)
 
     assert registration.owned_directories == (LEGAL_PARAMETER_PROVIDER_DIRECTORY,)
     assert registration.collect_fingerprints(bundled_path("registry", "aeat"))
@@ -65,6 +77,31 @@ def test_scalar_projection_preserves_value_unit_review_and_legal_provenance() ->
     assert resolved.legal_refs == legacy.legal_refs
     assert resolved.review_status is legacy.review_status
     assert resolved.authority_digest == "e" * 64
+
+
+def test_all_legal_parameter_resolutions_retain_anchored_bundled_legal_evidence() -> None:
+    catalogue = _catalogue()
+
+    assert _grounding_failures(catalogue) == ()
+    assert all(variant.legal_refs for fact in catalogue.facts.values() for variant in fact.variants)
+
+
+def test_production_validation_rejects_a_variant_with_both_evidence_lanes_erased() -> None:
+    catalogue = _catalogue()
+    fact = next(iter(catalogue.facts.values()))
+    erased = fact.variants[0].model_copy(
+        update={"legal_refs": (), "source_refs": (), "source_citations": ()},
+    )
+    broken_fact = GovernedFact(
+        fact_id=fact.fact_id,
+        family=fact.family,
+        variants=(erased,),
+    )
+
+    assert any(
+        "must declare a complete legal or source evidence lane" in failure
+        for failure in _grounding_failures(GovernedFactCatalogue(facts={fact.fact_id: broken_fact}))
+    )
 
 
 def test_classification_projection_preserves_nonempty_and_explicit_empty_sets() -> None:

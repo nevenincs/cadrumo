@@ -36,6 +36,11 @@ def governed_fact_catalogue_failures(
     for fact_id, fact in sorted(catalogue.facts.items()):
         failures.extend(_fact_precedence_failures(fact))
         for variant in fact.variants:
+            if not variant.legal_refs and not variant.source_refs:
+                failures.append(
+                    f"governed fact {fact_id!r} variant {variant.variant_id!r} "
+                    "must declare a complete legal or source evidence lane",
+                )
             failures.extend(
                 f"governed fact {fact_id!r} variant {variant.variant_id!r} references unknown legal id {ref!r}"
                 for ref in variant.legal_refs
