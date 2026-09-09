@@ -204,6 +204,23 @@ def _reset_convenio_provider() -> None:
     """Reset the convenio adapter, which deliberately reuses the uncached loader."""
 
 
+def _iva_rate_provider_registration() -> FactProviderRegistration:
+    from ....iva.rates import (
+        IVA_RATE_PROVIDER_ID,
+        collect_iva_rate_fact_fingerprints,
+        compile_iva_rate_facts,
+        reset_iva_rate_fact_provider,
+    )
+
+    return FactProviderRegistration(
+        provider_id=IVA_RATE_PROVIDER_ID,
+        owned_directories=("iva",),
+        compile=compile_iva_rate_facts,
+        collect_fingerprints=collect_iva_rate_fact_fingerprints,
+        reset=reset_iva_rate_fact_provider,
+    )
+
+
 FACT_PROVIDER_REGISTRATIONS = validate_fact_provider_registrations(
     (
         FactProviderRegistration(
@@ -227,6 +244,7 @@ FACT_PROVIDER_REGISTRATIONS = validate_fact_provider_registrations(
             collect_fingerprints=_collect_convenio_provider_fingerprints,
             reset=_reset_convenio_provider,
         ),
+        _iva_rate_provider_registration(),
     ),
 )
 """The sole canonical declaration of governed-fact providers and ownership."""

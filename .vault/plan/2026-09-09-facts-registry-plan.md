@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:36ef2da5938cfb982f4217450d68f80dd5e8023580612bb61ca49f35c2e3784a'
+body_hash: 'sha256:33ca2d43524574d21631071e42859f8b20605b2f089d992a5266ff7491587c81'
 ---
 
 # `facts-registry` plan
@@ -85,7 +85,7 @@ Register existing data-backed domains behind the new authority in parallel, pres
 
 Adapt IVA schedules, recargo schedules, typed lookup behavior, evidence, and precedence into authority-managed providers.
 
-- [ ] `W02.P05.S13` - Register IVA rate schedules as typed dated provider adapters; `src/cadrumo/domain/iva/rates.py`.
+- [x] `W02.P05.S13` - Register IVA rate schedules as typed dated provider adapters; `src/cadrumo/domain/iva/rates.py`.
 - [ ] `W02.P05.S14` - Register recargo by applied rate and operation date; `src/cadrumo/domain/iva/recargo_equivalencia.py`.
 - [ ] `W02.P05.S15` - Move IVA evidence enforcement into provider validation; `src/cadrumo/domain/iva/_grounding.py`.
 

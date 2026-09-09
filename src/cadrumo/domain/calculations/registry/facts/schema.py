@@ -14,11 +14,11 @@ from pydantic import BeforeValidator, Field, model_validator
 from ..errors import RegistryValidationError
 from ..schema_base import (
     DateAxisField,
-    LegalRefs,
+    LegalRefId,
     RegistryModel,
     RevisionReviewStatusField,
     SourceCitation,
-    SourceRefs,
+    SourceRefId,
     coerce_enum_member,
 )
 from ..schema_scalars import DecimalValue
@@ -250,9 +250,9 @@ class GovernedFactVariant(RegistryModel):
     valid_from: date
     valid_to: date | None = None
     payload: FactPayload
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-    source_citations: tuple[SourceCitation, ...] = Field(min_length=1)
+    legal_refs: tuple[LegalRefId, ...] = ()
+    source_refs: tuple[SourceRefId, ...] = ()
+    source_citations: tuple[SourceCitation, ...] = ()
     review_status: RevisionReviewStatusField
     ownership: FactOwnershipField
     precedence_over: tuple[FactVariantId, ...] = ()
@@ -271,6 +271,8 @@ class GovernedFactVariant(RegistryModel):
         cited = {citation.source_ref for citation in self.source_citations}
         if not cited.issubset(set(self.source_refs)):
             raise RegistryValidationError("governed fact citations must name a declared source_ref")
+        if not self.legal_refs and not self.source_refs:
+            raise RegistryValidationError("governed fact variant must declare legal or source evidence")
         return self
 
 

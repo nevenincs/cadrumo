@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
 from datetime import date
+from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
 from types import MappingProxyType
@@ -20,8 +21,22 @@ from pydantic import ValidationError
 from ...core.decimal.coercion import coerce_decimal
 from ...core.paths import path_stat_fingerprint
 from ...core.resources.bundled_data import bundled_path
+from ...core.revision_review import RevisionReviewStatus
 from ...core.toml import read_toml
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
+from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.facts.schema import (
+    FactOwnership,
+    FactSelector,
+    GovernedFact,
+    GovernedFactFamily,
+    GovernedFactVariant,
+    MappingFactEntry,
+    MappingFactPayload,
+)
+from ..calculations.registry.loader_cache import toml_file_fingerprint
+from ..calculations.registry.loader_fingerprints import RegistryPathFingerprints
+from ..calculations.registry.schema_base import DateAxis, SourceCitation
 from ._grounding import legal_ref_failures, registry_catalogues
 from .errors import IvaCatalogueError, IvaRateOverlapError, IvaValidationError
 from .schema import EUMemberState, IvaRateKind, IvaRateRecord
@@ -35,6 +50,8 @@ if TYPE_CHECKING:
 _RATE_REGISTRY_MEMBER_STATES: frozenset[EUMemberState] = frozenset(
     member_state for member_state in EUMemberState if member_state is not EUMemberState.XI
 )
+IVA_RATE_PROVIDER_ID = "iva-rate-schedule"
+IVA_RATE_FACT_ID = "iva-rate-schedule"
 """Jurisdictions that must carry rate rows.
 
 ``XI`` is a Northern Ireland IVA prefix for goods, not a state with its own IVA
@@ -276,4 +293,105 @@ def _assert_no_overlap(
                 )
 
 
-__all__ = ["load_iva_rate_table"]
+def compile_iva_rate_facts(registry_root: Path) -> tuple[GovernedFact, ...]:
+    """Project the legacy IVA schedule into the governed-fact authority."""
+    table = load_iva_rate_table(registry_root.resolve() / "iva" / "rates.toml")
+    return (
+        GovernedFact(
+            fact_id=IVA_RATE_FACT_ID,
+            family=GovernedFactFamily.MAPPING,
+            variants=tuple(
+                _rate_fact_variant(rate)
+                for member_state in sorted(table, key=lambda item: item.value)
+                for rate in table[member_state]
+            ),
+        ),
+    )
+
+
+def collect_iva_rate_fact_fingerprints(registry_root: Path) -> RegistryPathFingerprints:
+    """Fingerprint the exact legacy declaration owned by the adapter."""
+    return (toml_file_fingerprint((registry_root.resolve() / "iva" / "rates.toml").resolve()),)
+
+
+def reset_iva_rate_fact_provider() -> None:
+    """Clear the legacy parser cache under the authority reset barrier."""
+    _load_iva_rate_table_cached.cache_clear()
+
+
+def iva_rate_fact_query(
+    member_state: EUMemberState,
+    kind: IvaRateKind,
+    on_date: date,
+    *,
+    superseding_percentage: Decimal | None = None,
+) -> MappingFactQuery:
+    """Build the exact query for an ordinary or coexisting IVA rate."""
+    role = "ordinary" if superseding_percentage is None else f"coexisting-{superseding_percentage}"
+    return MappingFactQuery(
+        fact_id=IVA_RATE_FACT_ID,
+        date_axis=DateAxis.DEVENGO_DATE,
+        effective_date=on_date,
+        selectors=(
+            FactSelector(name="member_state", value=member_state.value),
+            FactSelector(name="kind", value=kind.value),
+            FactSelector(name="rate_role", value=role),
+        ),
+    )
+
+
+def iva_rate_record_from_fact(resolved: ResolvedMappingFact) -> IvaRateRecord:
+    """Project an authority result onto the retained public record."""
+    selectors = {selector.name: selector.value for selector in resolved.matched_selectors}
+    payload = {str(entry.key): entry.value for entry in resolved.payload.entries}
+    return IvaRateRecord(
+        member_state=EUMemberState(str(selectors["member_state"])),
+        kind=IvaRateKind(str(selectors["kind"])),
+        pct=Decimal(str(payload["pct"])),
+        effective_from=resolved.valid_from,
+        effective_until=resolved.valid_to,
+        legal_refs=resolved.legal_refs,
+        source_refs=resolved.source_refs,
+        supersedes_tier_default=bool(payload["supersedes_tier_default"]),
+    )
+
+
+def _rate_fact_variant(rate: IvaRateRecord) -> GovernedFactVariant:
+    role = "ordinary" if not rate.supersedes_tier_default else f"coexisting-{rate.pct}"
+    return GovernedFactVariant(
+        variant_id=f"iva-rate.{rate.member_state.value}.{rate.kind.value}.{rate.effective_from}.{role}",
+        selectors=(
+            FactSelector(name="member_state", value=rate.member_state.value),
+            FactSelector(name="kind", value=rate.kind.value),
+            FactSelector(name="rate_role", value=role),
+        ),
+        date_axis=DateAxis.DEVENGO_DATE,
+        valid_from=rate.effective_from,
+        valid_to=rate.effective_until,
+        payload=MappingFactPayload(
+            entries=(
+                MappingFactEntry(key="pct", value=rate.pct),
+                MappingFactEntry(key="supersedes_tier_default", value=rate.supersedes_tier_default),
+            ),
+        ),
+        legal_refs=rate.legal_refs,
+        source_refs=rate.source_refs,
+        source_citations=tuple(
+            SourceCitation(source_ref=source_ref, required_text=(str(rate.pct),))
+            for source_ref in rate.source_refs
+        ),
+        review_status=RevisionReviewStatus.AGENT_REVIEWED,
+        ownership=FactOwnership.GENERATED,
+    )
+
+
+__all__ = [
+    "IVA_RATE_FACT_ID",
+    "IVA_RATE_PROVIDER_ID",
+    "collect_iva_rate_fact_fingerprints",
+    "compile_iva_rate_facts",
+    "iva_rate_fact_query",
+    "iva_rate_record_from_fact",
+    "load_iva_rate_table",
+    "reset_iva_rate_fact_provider",
+]
