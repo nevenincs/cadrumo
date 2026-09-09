@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.entrypoints.cli.command_api import command_spec_nodes
+from dev.command_graph import command_spec_nodes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
 
 def test_ci_observes_every_production_node_through_the_public_api() -> None:
     nodes = command_spec_nodes()

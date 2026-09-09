@@ -42,6 +42,7 @@ pytestmark = [pytest.mark.hex_entrypoint, pytest.mark.serial]
 
 _TIMEOUT_SECONDS = 600.0
 
+
 def _development_cli() -> Path:
     """Resolve the ``aeat`` executable installed beside the running interpreter."""
     suffix = ".exe" if sys.platform == "win32" else ""

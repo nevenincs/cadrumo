@@ -52,7 +52,7 @@ from typing import TYPE_CHECKING
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
-from cadrumo.entrypoints.cli.command_api import command_spec_for_path, command_spec_nodes
+from dev.command_graph import command_spec_for_path, command_spec_nodes
 
 from ._locale_chrome import docs_chrome
 
@@ -622,7 +622,7 @@ def collect_live_leaf_paths_in_subprocess() -> list[str]:
     """
     code = textwrap.dedent(
         """
-        from cadrumo.entrypoints.cli.command_api import command_spec_nodes
+        from dev.command_graph import command_spec_nodes
 
         for node in command_spec_nodes():
             if node.spec.kind == "leaf":
