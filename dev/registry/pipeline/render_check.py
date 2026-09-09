@@ -78,6 +78,7 @@ __all__ = [
     "GeneratedExportBootstrapTransport",
     "GeneratedTreeRecordDriftDisposition",
     "GeneratedTreeRenderRefusalDisposition",
+    "GeneratedTreeTypeColumnContradictionDisposition",
     "RenderComparison",
     "compare_export_tree_roots",
     "compare_revision_against_committed",
@@ -85,6 +86,7 @@ __all__ = [
     "parsed_tree_file",
     "record_drift_dispositions",
     "render_refusal_dispositions",
+    "type_column_contradiction_dispositions",
 ]
 
 #: The generation manifest attests which inputs produced the tree, so it changes
@@ -137,6 +139,64 @@ class GeneratedTreeRecordDriftDisposition(_StrictModel):
     republication path that treated every row as permission would have shipped
     that truncation.
     """
+    differing_records: int = Field(gt=0)
+    """How many records this row explains, checked against the live comparison.
+
+    Without it a row asserts only THAT the tree differs, never that the
+    difference is the one it describes. A revision drifting for reason A and
+    later also for reason B stayed green under the row written for A, so the
+    row's scope grew while its wording did not. Modelo 390 proved it: retiring
+    its rows uncovered eighty fields they had been silently covering, and the
+    only reason anyone found out is that the rows were removed.
+
+    An attestation whose scope can outgrow its wording is worse than one that
+    fails, because nothing surfaces it. This is the number that fails.
+    """
+    reason: str = Field(min_length=1)
+    reconsideration_condition: str = Field(min_length=1)
+
+    @property
+    def subject(self) -> str:
+        """Return the canonical modelo/revision disposition identity."""
+        return f"{self.modelo}/{self.revision}"
+
+
+class GeneratedTreeTypeColumnContradictionDisposition(_StrictModel):
+    """One source-bound declaration that a REPRODUCING tree still contradicts its design.
+
+    Distinct from record drift, and the distinction is the reason this class
+    exists. Drift means the shipped bytes and the current inputs disagree, so
+    one of them is stale. Here they AGREE: the tree reproduces byte for byte,
+    and the inputs themselves declare a representation the official type column
+    contradicts. Regenerating changes nothing, so a drift row would be dormant
+    the moment it was written - and the reproduction gate now fails a dormant
+    drift row, correctly.
+
+    Modelo 390 filing year 2025 is the live case. Its "Nota 2: estas casillas
+    deben estar rellenas a 0" slots are declared unsigned while the design's
+    type column says N. The note mandates the VALUE zero and states nothing
+    about sign, so unsigned is a claim the document does not make. It cannot
+    simply be corrected either: a signed amount renders through the ``money``
+    wire type, which carries no value domain, so declaring the field signed
+    would silently drop the mandated zero. The export schema cannot hold a
+    closed domain and a sign at once, and until it can, neither reading is
+    fully derivable.
+
+    ``field_count`` keeps the row honest. It asserts how large the contradiction
+    is, so a row written for eighty fields cannot quietly go on explaining eight
+    hundred, and a row whose population has been repaired away fails rather than
+    standing as a permanent exemption.
+    """
+
+    kind: Literal["type_column_contradiction"]
+    modelo: str = Field(pattern=r"^[0-9]{3}$")
+    revision: str = Field(min_length=1)
+    source_ref: str = Field(min_length=1)
+    source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    derivation_code: str = Field(min_length=1)
+    """The single derivation path the contradicting fields render through."""
+    field_count: int = Field(gt=0)
+    """Exactly how many shipped fields contradict the type column under this row."""
     reason: str = Field(min_length=1)
     reconsideration_condition: str = Field(min_length=1)
 
@@ -178,13 +238,15 @@ class GeneratedTreeRenderRefusalDisposition(_StrictModel):
 
 
 _GeneratedTreeDisposition = Annotated[
-    GeneratedTreeRecordDriftDisposition | GeneratedTreeRenderRefusalDisposition,
+    GeneratedTreeRecordDriftDisposition
+    | GeneratedTreeRenderRefusalDisposition
+    | GeneratedTreeTypeColumnContradictionDisposition,
     Field(discriminator="kind"),
 ]
 
 
 class _GeneratedTreeDispositionLedger(_StrictModel):
-    schema_version: Literal[3]
+    schema_version: Literal[4]
     dispositions: tuple[_GeneratedTreeDisposition, ...]
 
 
@@ -593,3 +655,12 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+
+def type_column_contradiction_dispositions() -> tuple[GeneratedTreeTypeColumnContradictionDisposition, ...]:
+    """Load the strict pipeline-owned type-column contradiction declaration set."""
+    return tuple(
+        item
+        for item in _load_disposition_ledger()
+        if isinstance(item, GeneratedTreeTypeColumnContradictionDisposition)
+    )

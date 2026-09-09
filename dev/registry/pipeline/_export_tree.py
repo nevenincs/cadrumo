@@ -1496,8 +1496,43 @@ def _schema_field(
     )
 
 
+#: The one requirement wording this project has adjudicated, written as the
+#: designs write it once punctuation and case are set aside.
+_STATED_REQUIREMENT: Final[str] = "obligatorio"
+
+#: Trailing punctuation a design may put after the requirement word. It ends a
+#: sentence; it does not qualify the requirement, and reading it as though it
+#: did is what silently downgraded twelve stated requirements in modelo 390.
+_REQUIREMENT_SENTENCE_PUNCTUATION: Final[str] = ".:;"
+
+
 def _is_required(validation: str | None) -> bool:
-    return validation is not None and validation.strip().casefold() == "obligatorio"
+    """Read whether the design states this field's requirement unconditionally.
+
+    A cell is one of three things and only two are answerable here. A SILENT
+    cell makes no requirement claim. A cell stating the bare requirement word,
+    which a design may end as a sentence, states an unconditional requirement.
+    A cell stating a QUALIFIED requirement -- modelo 390's
+    ``OBLIGATORIO (persona fisica)``, modelo 303's ``Obligatorio PI`` -- is
+    neither, and this function's boolean result cannot carry it.
+
+    Only the first two are repaired here. The comparison used to demand exact
+    equality with the bare word, so ``OBLIGATORIO.`` fell through to ``False``
+    and twelve stated requirements shipped as no requirement, defeated by a
+    full stop. Trailing sentence punctuation is now set aside before the
+    comparison.
+
+    The ten qualified cells are NOT repaired and remain declared as unrequired.
+    Carrying their wording needs a new export field, and the export schema is
+    closed by a canonical-JSON round trip over every shipped manifest, so a new
+    key cannot be added without a coordinated migration through the bootstrap
+    transport. That migration is real work with its own decision to make, and
+    guessing a boolean for those ten in the meantime would restate the very
+    defect this function exists to remove.
+    """
+    if validation is None:
+        return False
+    return validation.strip().rstrip(_REQUIREMENT_SENTENCE_PUNCTUATION).strip().casefold() == _STATED_REQUIREMENT
 
 
 def _render_tree_files(

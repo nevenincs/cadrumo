@@ -17,10 +17,18 @@
 # class safe - that every such tree really does reproduce its records - and the
 # screen reports the population.
 #
+# A third class, `type_column_contradiction`, carries a tree that REPRODUCES and
+# still contradicts its design: shipped bytes and inputs agree, and the inputs
+# are what the official type column contradicts. Regenerating changes nothing,
+# so a drift row would be dormant on arrival and the reproduction gate would
+# fail it. These rows carry a field_count instead, which is the only count in
+# this file that is load-bearing: it is the size of the contradiction being
+# explained, and it fails when the population moves in either direction.
+#
 # This is not a ratchet. It stores no counts and no ceilings, and shrinking it
 # is not the measure of progress.
 
-schema_version = 3
+schema_version = 4
 
 [[dispositions]]
 kind = "record_drift"
@@ -29,6 +37,7 @@ revision = "2011-2024"
 source_ref = "aeat-dr-347-2011"
 source_sha256 = "4cdfb401624e26abe3da3758ddcdcfc85b6b05ffa74e724b2d3f5eeb0c58e809"
 remedy = "repair_inputs"
+differing_records = 1
 reason = """
 The shipped declarado record repeats over binding rows and carries nine
 binding-kind fields, so one authored row becomes one emitted record. A fresh
@@ -36,8 +45,24 @@ render of the current inputs produces neither the repeat nor the binding
 fields, which would emit a single declarado record however many counterparties
 the declaration has. The official design requires as many type-two records as
 the declaration has declarados and inmuebles, so the shipped bytes are correct
-and the current inputs are not. This tree must not be republished until the
-inputs reproduce the repeat.
+and the current inputs are not.
+
+The repeat and the binding kinds are expressible today: SemanticMapRecord
+already carries repeat, binding_record and row_field_casilla_ids, and every
+binding the shipped record names is declared under this revision's bindings.
+A second divergence is NOT expressible, and it is what actually blocks this
+tree. The design declares one four-byte cell at offset 77, and its own content
+text splits that cell at stated offsets: "77-78 CODIGO PROVINCIA: Campo
+numerico de dos posiciones" and "79-80 CODIGO PAIS. Campo alfabetico de 2
+posiciones" - two fields of different AEAT type inside one printed slot. The
+shipped tree emits exactly that split, as f009a and f009b. A semantic map
+anchors one entry to one parser slot and has no vocabulary for a composite
+cell, so the generator cannot re-derive the split however the map is authored.
+
+The shipped bytes are therefore derived from the official design and the
+generator is the side that cannot follow. Repairing the inputs is not
+sufficient: this needs a declared composite-cell split, grounded in the
+design's own stated sub-offsets, before either 347 tree can reproduce.
 
 The pipeline already refuses a regeneration that would drop this repeat, in
 `_tree_check._refuse_repeat_the_candidate_would_drop`, and that refusal names
@@ -45,7 +70,7 @@ the three things to author on the map: the record repeat, the binding record,
 and the per-row casilla identities. Read it before attempting the repair; it is
 the authoritative statement of the remedy and it predates this disposition.
 """
-reconsideration_condition = "Remove this pin when the current semantic map reproduces the published binding_rows repeat and all per-row casilla identities."
+reconsideration_condition = "Remove this pin when the generator can express a design cell whose own text declares sub-offsets, and the current semantic map then reproduces the published binding_rows repeat, the per-row casilla identities, and the split provincia/pais fields."
 
 [[dispositions]]
 kind = "record_drift"
@@ -54,11 +79,14 @@ revision = "2025-y-siguientes"
 source_ref = "aeat-dr-347-2025"
 source_sha256 = "14583ea5ee04441356c4572d30630d46bfe0818366e575ac186370dd3fe38361"
 remedy = "repair_inputs"
+differing_records = 1
 reason = """
 Same defect as the earlier revision of this modelo, in the same declarado
-record. Must not be republished.
+record, including the unexpressible composite-cell split at offset 77 that
+the design's own text divides into a two-position provincia code and a
+two-position pais code. Must not be republished.
 """
-reconsideration_condition = "Remove this pin when the current semantic map reproduces the published binding_rows repeat and all per-row casilla identities."
+reconsideration_condition = "Remove this pin when the generator can express a design cell whose own text declares sub-offsets, and the current semantic map then reproduces the published binding_rows repeat, the per-row casilla identities, and the split provincia/pais fields."
 
 [[dispositions]]
 kind = "record_drift"
@@ -67,6 +95,7 @@ revision = "2019-2022"
 source_ref = "aeat-dr-202-2019"
 source_sha256 = "96160cf2a82a4e6f2c9c9848c6061b2cfe5c4877de7a455126704af86f3ac7db"
 remedy = "republish"
+differing_records = 2
 reason = """
 The shipped records declare these amounts unsigned while the official type
 column declares them signed, so a fresh render no longer reproduces the
@@ -83,8 +112,50 @@ The tree must not be republished on the strength of that alone. Publication
 checks through the real authority and demands a filing-complete, reviewed
 revision, and rewriting shipped filing data is a per-revision decision rather
 than a consequence of a code fix.
+
+That per-revision review has now been done and it passed. A fresh render was
+diffed field by field against the shipped tree and every field it changes is
+one the official type column marks N, with no field changing anything outside
+the sign family: 7 fields in 202/2019-2022, 7 in 202/2023-2024, 11 in
+202/2025-y-siguientes and 18 in 222/2025-y-siguientes. Zero unexplained changes.
+
+Publication is nevertheless still refused, by something unrelated to the sign,
+and for modelo 202 the refusal is an artefact of the publication path rather
+than a defect in the declarations.
+
+Republication refuses modelo 202 with twenty-odd semantic-role findings of the
+form "appears on exactly one casilla ... likely typo or missing role
+declarations on sibling casillas". Those roles are NOT singletons. Each appears
+once per revision and three times across the modelo, and the full registry
+validates clean. The findings appear because publication stages ONE revision -
+`_stage_published_modelo` copies the modelo and deletes every sibling revision -
+so a role that repeats across revisions is a singleton in everything the gate
+can see. Modelo 202 trips it where others do not because its roles come in
+near-twin pairs (aumentos/disminuciones, base_tipo_1/base_tipo_2,
+porcentaje_1/porcentaje_2) that the typo heuristic is built to notice.
+
+A singleton-cardinality gate cannot draw a conclusion from a deliberately
+partial corpus, and declaring these roles intentional singletons to quiet it
+would write a falsehood into the declarations to satisfy a check that is asking
+the wrong corpus.
+
+Modelo 222 is refused for a different reason, and it is NOT a defect. The
+revision declares 'applicability' authority grade deliberately - its own
+declaration records an applicability-grade review of the IS consolidacion
+fiscal pago fraccionado - and publication demands a 'calculation' snapshot. So
+the refusal is the coverage ladder working: the revision honestly states that
+it has not been grounded to calculation grade, and publication declines to
+treat it as though it had.
+
+Nothing here should be "fixed" by raising the grade. Promoting an advisory
+revision to filing grade to satisfy a downstream consumer is the precise move
+that no-silent-under-declaration forbids, and the refusal message names the
+grade in a way that makes raising it look like the obvious remedy. It is not.
+This tree stays unpublished until the revision is actually grounded to
+calculation grade on its own evidence, and if that never happens the tree stays
+where it is.
 """
-reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
+reconsideration_condition = "The sign review is complete and passed; remove this pin once the revision's own blocking declaration defect is resolved - the single-casilla semantic role for modelo 202, the applicability authority grade for modelo 222 - and the tree is republished."
 
 [[dispositions]]
 kind = "record_drift"
@@ -93,6 +164,7 @@ revision = "2023-2024"
 source_ref = "aeat-dr-202-2023"
 source_sha256 = "1e4881439e25417df5a8584bffd7149ca0952e2df53963b19c0346572259bec7"
 remedy = "republish"
+differing_records = 2
 reason = """
 The shipped records declare these amounts unsigned while the official type
 column declares them signed, so a fresh render no longer reproduces the
@@ -109,8 +181,50 @@ The tree must not be republished on the strength of that alone. Publication
 checks through the real authority and demands a filing-complete, reviewed
 revision, and rewriting shipped filing data is a per-revision decision rather
 than a consequence of a code fix.
+
+That per-revision review has now been done and it passed. A fresh render was
+diffed field by field against the shipped tree and every field it changes is
+one the official type column marks N, with no field changing anything outside
+the sign family: 7 fields in 202/2019-2022, 7 in 202/2023-2024, 11 in
+202/2025-y-siguientes and 18 in 222/2025-y-siguientes. Zero unexplained changes.
+
+Publication is nevertheless still refused, by something unrelated to the sign,
+and for modelo 202 the refusal is an artefact of the publication path rather
+than a defect in the declarations.
+
+Republication refuses modelo 202 with twenty-odd semantic-role findings of the
+form "appears on exactly one casilla ... likely typo or missing role
+declarations on sibling casillas". Those roles are NOT singletons. Each appears
+once per revision and three times across the modelo, and the full registry
+validates clean. The findings appear because publication stages ONE revision -
+`_stage_published_modelo` copies the modelo and deletes every sibling revision -
+so a role that repeats across revisions is a singleton in everything the gate
+can see. Modelo 202 trips it where others do not because its roles come in
+near-twin pairs (aumentos/disminuciones, base_tipo_1/base_tipo_2,
+porcentaje_1/porcentaje_2) that the typo heuristic is built to notice.
+
+A singleton-cardinality gate cannot draw a conclusion from a deliberately
+partial corpus, and declaring these roles intentional singletons to quiet it
+would write a falsehood into the declarations to satisfy a check that is asking
+the wrong corpus.
+
+Modelo 222 is refused for a different reason, and it is NOT a defect. The
+revision declares 'applicability' authority grade deliberately - its own
+declaration records an applicability-grade review of the IS consolidacion
+fiscal pago fraccionado - and publication demands a 'calculation' snapshot. So
+the refusal is the coverage ladder working: the revision honestly states that
+it has not been grounded to calculation grade, and publication declines to
+treat it as though it had.
+
+Nothing here should be "fixed" by raising the grade. Promoting an advisory
+revision to filing grade to satisfy a downstream consumer is the precise move
+that no-silent-under-declaration forbids, and the refusal message names the
+grade in a way that makes raising it look like the obvious remedy. It is not.
+This tree stays unpublished until the revision is actually grounded to
+calculation grade on its own evidence, and if that never happens the tree stays
+where it is.
 """
-reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
+reconsideration_condition = "The sign review is complete and passed; remove this pin once the revision's own blocking declaration defect is resolved - the single-casilla semantic role for modelo 202, the applicability authority grade for modelo 222 - and the tree is republished."
 
 [[dispositions]]
 kind = "record_drift"
@@ -119,6 +233,7 @@ revision = "2025-y-siguientes"
 source_ref = "aeat-dr-202-2025"
 source_sha256 = "04e7b349b24b982d985195d4ae38b68e72e75d606cf66c7ef30b62b281c7f82c"
 remedy = "republish"
+differing_records = 2
 reason = """
 The shipped records declare these amounts unsigned while the official type
 column declares them signed, so a fresh render no longer reproduces the
@@ -135,8 +250,50 @@ The tree must not be republished on the strength of that alone. Publication
 checks through the real authority and demands a filing-complete, reviewed
 revision, and rewriting shipped filing data is a per-revision decision rather
 than a consequence of a code fix.
+
+That per-revision review has now been done and it passed. A fresh render was
+diffed field by field against the shipped tree and every field it changes is
+one the official type column marks N, with no field changing anything outside
+the sign family: 7 fields in 202/2019-2022, 7 in 202/2023-2024, 11 in
+202/2025-y-siguientes and 18 in 222/2025-y-siguientes. Zero unexplained changes.
+
+Publication is nevertheless still refused, by something unrelated to the sign,
+and for modelo 202 the refusal is an artefact of the publication path rather
+than a defect in the declarations.
+
+Republication refuses modelo 202 with twenty-odd semantic-role findings of the
+form "appears on exactly one casilla ... likely typo or missing role
+declarations on sibling casillas". Those roles are NOT singletons. Each appears
+once per revision and three times across the modelo, and the full registry
+validates clean. The findings appear because publication stages ONE revision -
+`_stage_published_modelo` copies the modelo and deletes every sibling revision -
+so a role that repeats across revisions is a singleton in everything the gate
+can see. Modelo 202 trips it where others do not because its roles come in
+near-twin pairs (aumentos/disminuciones, base_tipo_1/base_tipo_2,
+porcentaje_1/porcentaje_2) that the typo heuristic is built to notice.
+
+A singleton-cardinality gate cannot draw a conclusion from a deliberately
+partial corpus, and declaring these roles intentional singletons to quiet it
+would write a falsehood into the declarations to satisfy a check that is asking
+the wrong corpus.
+
+Modelo 222 is refused for a different reason, and it is NOT a defect. The
+revision declares 'applicability' authority grade deliberately - its own
+declaration records an applicability-grade review of the IS consolidacion
+fiscal pago fraccionado - and publication demands a 'calculation' snapshot. So
+the refusal is the coverage ladder working: the revision honestly states that
+it has not been grounded to calculation grade, and publication declines to
+treat it as though it had.
+
+Nothing here should be "fixed" by raising the grade. Promoting an advisory
+revision to filing grade to satisfy a downstream consumer is the precise move
+that no-silent-under-declaration forbids, and the refusal message names the
+grade in a way that makes raising it look like the obvious remedy. It is not.
+This tree stays unpublished until the revision is actually grounded to
+calculation grade on its own evidence, and if that never happens the tree stays
+where it is.
 """
-reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
+reconsideration_condition = "The sign review is complete and passed; remove this pin once the revision's own blocking declaration defect is resolved - the single-casilla semantic role for modelo 202, the applicability authority grade for modelo 222 - and the tree is republished."
 
 [[dispositions]]
 kind = "record_drift"
@@ -145,6 +302,7 @@ revision = "2025-y-siguientes"
 source_ref = "aeat-dr-222-2025"
 source_sha256 = "0a44cd6bcae3b6ecbdb7bba1e54ddfad519506b91545b655c8da8454a3a63f51"
 remedy = "republish"
+differing_records = 2
 reason = """
 The shipped records declare these amounts unsigned while the official type
 column declares them signed, so a fresh render no longer reproduces the
@@ -161,8 +319,50 @@ The tree must not be republished on the strength of that alone. Publication
 checks through the real authority and demands a filing-complete, reviewed
 revision, and rewriting shipped filing data is a per-revision decision rather
 than a consequence of a code fix.
+
+That per-revision review has now been done and it passed. A fresh render was
+diffed field by field against the shipped tree and every field it changes is
+one the official type column marks N, with no field changing anything outside
+the sign family: 7 fields in 202/2019-2022, 7 in 202/2023-2024, 11 in
+202/2025-y-siguientes and 18 in 222/2025-y-siguientes. Zero unexplained changes.
+
+Publication is nevertheless still refused, by something unrelated to the sign,
+and for modelo 202 the refusal is an artefact of the publication path rather
+than a defect in the declarations.
+
+Republication refuses modelo 202 with twenty-odd semantic-role findings of the
+form "appears on exactly one casilla ... likely typo or missing role
+declarations on sibling casillas". Those roles are NOT singletons. Each appears
+once per revision and three times across the modelo, and the full registry
+validates clean. The findings appear because publication stages ONE revision -
+`_stage_published_modelo` copies the modelo and deletes every sibling revision -
+so a role that repeats across revisions is a singleton in everything the gate
+can see. Modelo 202 trips it where others do not because its roles come in
+near-twin pairs (aumentos/disminuciones, base_tipo_1/base_tipo_2,
+porcentaje_1/porcentaje_2) that the typo heuristic is built to notice.
+
+A singleton-cardinality gate cannot draw a conclusion from a deliberately
+partial corpus, and declaring these roles intentional singletons to quiet it
+would write a falsehood into the declarations to satisfy a check that is asking
+the wrong corpus.
+
+Modelo 222 is refused for a different reason, and it is NOT a defect. The
+revision declares 'applicability' authority grade deliberately - its own
+declaration records an applicability-grade review of the IS consolidacion
+fiscal pago fraccionado - and publication demands a 'calculation' snapshot. So
+the refusal is the coverage ladder working: the revision honestly states that
+it has not been grounded to calculation grade, and publication declines to
+treat it as though it had.
+
+Nothing here should be "fixed" by raising the grade. Promoting an advisory
+revision to filing grade to satisfy a downstream consumer is the precise move
+that no-silent-under-declaration forbids, and the refusal message names the
+grade in a way that makes raising it look like the obvious remedy. It is not.
+This tree stays unpublished until the revision is actually grounded to
+calculation grade on its own evidence, and if that never happens the tree stays
+where it is.
 """
-reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
+reconsideration_condition = "The sign review is complete and passed; remove this pin once the revision's own blocking declaration defect is resolved - the single-casilla semantic role for modelo 202, the applicability authority grade for modelo 222 - and the tree is republished."
 
 [[dispositions]]
 kind = "record_drift"
@@ -171,6 +371,7 @@ revision = "2022"
 source_ref = "aeat-dr-303-2022"
 source_sha256 = "6648f6b319579e49cd5bfdaae69e7451db75767e7f19da0b90383b25b79b3f60"
 remedy = "republish"
+differing_records = 7
 reason = """
 The shipped records declare these amounts unsigned while the official type
 column declares them signed, so a fresh render no longer reproduces the
@@ -197,6 +398,7 @@ revision = "2023"
 source_ref = "aeat-dr-303-2023"
 source_sha256 = "72e463cb29984f535c9f56917d788ff0641965f116aeab47da5f76a59eecfbe4"
 remedy = "republish"
+differing_records = 7
 reason = """
 The shipped records declare these amounts unsigned while the official type
 column declares them signed, so a fresh render no longer reproduces the
@@ -223,6 +425,7 @@ revision = "2024-desde-09-y-3t"
 source_ref = "aeat-dr-303-2024-late"
 source_sha256 = "2095dd633413f4aed28053bc88402461d80865f454156c01ebc4a2ab68cb76a8"
 remedy = "republish"
+differing_records = 7
 reason = """
 The shipped records declare these amounts unsigned while the official type
 column declares them signed, so a fresh render no longer reproduces the
@@ -249,6 +452,7 @@ revision = "2024-hasta-08-y-2t"
 source_ref = "aeat-dr-303-2024-early"
 source_sha256 = "8b1f74b58b9293e60f9ea6fa3cc352a35ca3fe7d09a6705f122585e7f7da65b9"
 remedy = "republish"
+differing_records = 7
 reason = """
 The shipped records declare these amounts unsigned while the official type
 column declares them signed, so a fresh render no longer reproduces the
@@ -275,6 +479,7 @@ revision = "2025"
 source_ref = "aeat-dr-303-2025"
 source_sha256 = "6c3d7eeb714e0deb52f91d7e8dbadeb83f16c1d32d25f9e871756f3ddf0117e6"
 remedy = "republish"
+differing_records = 8
 reason = """
 The shipped records declare these amounts unsigned while the official type
 column declares them signed, so a fresh render no longer reproduces the
@@ -301,6 +506,7 @@ revision = "2026-y-siguientes"
 source_ref = "aeat-dr-303-2026"
 source_sha256 = "0be8b156da2250c6b11f6253e0165221ed2e549ec4c65a562021bec6b9b8489b"
 remedy = "republish"
+differing_records = 8
 reason = """
 The shipped records declare these amounts unsigned while the official type
 column declares them signed, so a fresh render no longer reproduces the
@@ -320,3 +526,41 @@ than a consequence of a code fix.
 """
 reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
 
+[[dispositions]]
+kind = "type_column_contradiction"
+modelo = "390"
+revision = "2025"
+source_ref = "aeat-dr-390-2025"
+source_sha256 = "6d33d8a4245976e55dc31ff85065b420f76d1588110dc1eb541a8039c5e3f252"
+derivation_code = "numeric-note-governed-amount-v1"
+field_count = 80
+reason = """
+This tree reproduces. Its shipped bytes are exactly what its current inputs
+produce, so there is no drift to correct and republishing changes nothing. The
+contradiction is in the inputs: eighty fields are declared unsigned while the
+design's type column declares them N.
+
+All eighty render through one note-governed declaration per sheet, and the note
+those declarations cite is "Nota 2: estas casillas deben estar rellenas a 0".
+That note mandates the VALUE zero. It states nothing about sign, so `unsigned`
+is a representation claim the document does not make, exactly as writing a sign
+constant was before the generator began reading the type column.
+
+Correcting it to signed is not available today. A signed amount renders through
+the `money` wire type, which declares no scale and carries no value domain, so
+declaring these fields signed would silently discard the mandated zero the note
+does state - trading a wrong sign for a lost constraint. The export schema
+cannot carry a closed value domain and a sign on the same field, and neither
+reading is fully derivable until it can.
+
+The emitted bytes coincide either way: AEAT writes a non-negative amount with no
+sign character, and a mandated zero is non-negative, so the wire form is the
+same under both readings. That is why this is a declaration defect rather than a
+filing defect, and why it is explained here rather than refused.
+"""
+reconsideration_condition = """
+Remove this row when the export schema can carry a mandated value domain on a
+signed field, at which point these eighty fields take the sign their design
+states and keep the zero their note mandates. A change in field_count means the
+population moved and the row must be re-derived rather than re-dated.
+"""

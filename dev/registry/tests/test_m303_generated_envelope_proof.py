@@ -14,6 +14,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pytest
+
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from pydantic import ValidationError
 
 from cadrumo.application.aggregation import IvaDifferentiatedDeductionContribution
@@ -447,9 +449,26 @@ def test_m303_2026_publication_is_twice_reproducible_and_check_mode_is_non_mutat
             if (parsed := parsed_tree_file(name, committed_bytes[name])) is None
             or parsed != parsed_tree_file(name, raw)
         ]
-        assert semantically_differing == [], (
-            f"records whose meaning differs from the shipped tree: {semantically_differing}"
-        )
+        # Matching the shipped tree is claimed only where nothing explains a
+        # difference. This revision carries a record-drift row: the generator now
+        # derives the sign from the official type column and the committed bytes
+        # predate that, which is the correction being landed rather than drift
+        # away from a correct tree. Asserting equality here would make the gate
+        # demand the defect back. The row is consulted rather than the subject
+        # hard-coded, so this reverts to a strict equality claim the moment the
+        # revision is republished and its row retires.
+        from ..pipeline.render_check import record_drift_dispositions
+
+        drifting = {item.subject for item in record_drift_dispositions()}
+        subject = f"{tree.modelo}/{tree.revision}"
+        if subject in drifting:
+            assert semantically_differing != [], (
+                f"{subject}: a record-drift row stands but the tree now reproduces; retire the row"
+            )
+        else:
+            assert semantically_differing == [], (
+                f"records whose meaning differs from the shipped tree: {semantically_differing}"
+            )
         assert collect_export_fragment_output_digests(first_export_root) == collect_export_fragment_output_digests(
             second_export_root
         )
@@ -485,6 +504,41 @@ def test_m303_2026_publication_is_twice_reproducible_and_check_mode_is_non_mutat
                 shutil.rmtree(sibling)
         semantic_map, render_profile, joined, evidence, transport = _authorities(tree)
         before = _committed_tree_hashes(tree)
+        # While the revision is drift-pinned, check mode REFUSES rather than
+        # agreeing: the shipped manifest attests digests the corrected generator
+        # no longer produces. Non-mutation is the property this half is named
+        # for and it is asserted in both branches, because a refusal that
+        # scribbled on the committed tree on its way out would be the worse bug.
+        if subject in drifting:
+            with pytest.raises(RegistryValidationError, match="do not match generated tree"):
+                check_generated_export_tree(
+                    context=GeneratedExportTreeCheckContext(
+                        validation=GeneratedExportTreeValidationContext(
+                            registry_root=check_registry_root,
+                            source_root=bundled_path(),
+                            target=ExportFragmentTarget(
+                                modelo=tree.modelo, revision_id=tree.revision, design_epoch=tree.epoch
+                            ),
+                            filing_year=tree.filing_year,
+                            period=tree.period,
+                            supporting_modelos=_supporting_modelos(tree),
+                            continuity_metadata_modelo_root=metadata_root,
+                        ),
+                        temporary_root=check_root,
+                        target_registry_root=bundled_path("registry", "aeat"),
+                        target_export_root=tree.committed,
+                        published_modelo_root=published_modelo_root,
+                    ),
+                    joined=joined,
+                    semantic_map=semantic_map,
+                    transport_profile=transport,
+                    render_profile=render_profile,
+                    render_profile_source_evidence=evidence,
+                )
+            assert _committed_tree_hashes(tree) == before
+            assert transport.encoding is ExportEncoding.ISO_8859_1
+            return
+
         checked = check_generated_export_tree(
             context=GeneratedExportTreeCheckContext(
                 validation=GeneratedExportTreeValidationContext(

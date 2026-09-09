@@ -622,6 +622,19 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
             assert comparison.disposition_class == "record_drift", (
                 f"{tree}: record-drift pin is dormant and must be removed"
             )
+            # The row states HOW MUCH it explains, and that is checked here.
+            # Asserting only that a difference exists let a row written for one
+            # cause silently cover a second: modelo 390's rows were explaining
+            # eighty type-column contradictions nobody had declared, and the
+            # only reason it surfaced is that the rows were removed. A scope
+            # that can grow without its wording changing is an exemption, not
+            # an explanation.
+            assert len(comparison.record_differing) == disposition.differing_records, (
+                f"{tree}: row explains {disposition.differing_records} record(s), "
+                f"the comparison reports {len(comparison.record_differing)}: "
+                f"{sorted(comparison.record_differing)}. Re-derive the row rather than "
+                "widening it; a second cause needs its own declaration."
+            )
             return
         reproduction_pin = _REPRODUCTION_PENDING.get(str(tree))
         assert reproduction_pin is not None, (

@@ -2027,3 +2027,29 @@ def test_a_signed_official_type_derives_a_signed_slot() -> None:
     signed = _joined_fields_by_aeat_type("390")["N"]
 
     assert _derive_sign_from_official_type(signed) is True
+
+
+def test_requirement_reading_sets_aside_sentence_punctuation_but_not_a_qualifier() -> None:
+    """Prove the punctuation repair lands and the qualified cells stay unclaimed.
+
+    The defect was an exact-match comparison: ``OBLIGATORIO.`` fell through to
+    ``False``, so twelve stated requirements in modelo 390 shipped as no
+    requirement, defeated by a full stop. Sentence punctuation is now set
+    aside.
+
+    The qualified wordings below are asserted to remain ``False`` deliberately,
+    and this is the assertion to change when the export schema can carry them.
+    They are NOT a claim that those fields are optional -- they are a claim
+    that this boolean does not decide, which is why the wording is preserved in
+    the shipped derivation records rather than only here.
+    """
+    from ..pipeline._export_tree import _is_required
+
+    assert _is_required(None) is False
+    assert _is_required("Obligatorio") is True
+    assert _is_required("OBLIGATORIO") is True
+    assert _is_required("  obligatorio  ") is True
+    assert _is_required("OBLIGATORIO.") is True
+
+    for qualified in ("Obligatorio PI", "OBLIGATORIO (persona fisica)", "Obligatorio si procede"):
+        assert _is_required(qualified) is False

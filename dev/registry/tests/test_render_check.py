@@ -264,7 +264,7 @@ def test_every_manifest_stale_tree_really_does_reproduce_its_records(
 _VALID_SHA = "0" * 64
 
 
-def _ledger_text(rows: str, *, version: int = 3) -> str:
+def _ledger_text(rows: str, *, version: int = 4) -> str:
     return f"schema_version = {version}\n{rows}"
 
 
@@ -287,8 +287,23 @@ modelo = "347"
 revision = "2011-2024"
 source_ref = "aeat-dr-347-2011"
 source_sha256 = "{_VALID_SHA}"
+remedy = "repair_inputs"
+differing_records = 1
 reason = "Shipped bytes are right and the inputs are not."
 reconsideration_condition = "Remove when the inputs reproduce the repeat."
+'''
+
+_CONTRADICTION_ROW = f'''
+[[dispositions]]
+kind = "type_column_contradiction"
+modelo = "390"
+revision = "2025"
+source_ref = "aeat-dr-390-2025"
+source_sha256 = "{_VALID_SHA}"
+derivation_code = "numeric-note-governed-amount-v1"
+field_count = 80
+reason = "The tree reproduces and its inputs contradict the type column."
+reconsideration_condition = "Remove when the schema carries a domain on a signed field."
 '''
 
 

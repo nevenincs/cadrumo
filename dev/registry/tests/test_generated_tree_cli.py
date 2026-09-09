@@ -531,7 +531,12 @@ def test_republish_admits_record_drift_a_disposition_explains() -> None:
     ledger's own gate fails once its cause is gone.
     """
     digest = "a" * 64
-    explained = next(iter(record_drift_dispositions()))
+    # Explicitly a row whose remedy is `republish`. Taking whichever row sorted
+    # first silently selected modelo 347, whose remedy is `repair_inputs` -- so
+    # the test asserted that republication is admitted using the one subject for
+    # which it must be refused, and only stopped passing when the remedy field
+    # made the two directions distinguishable.
+    explained = next(item for item in record_drift_dispositions() if item.remedy == "republish")
     state = GeneratedExportTreeTargetStateReceipt(manifest_sha256=digest, output_files=())
 
     _require_republication_eligibility(
