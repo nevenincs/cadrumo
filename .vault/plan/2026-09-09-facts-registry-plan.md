@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:d0b07a1da5f0da703619b14e1cec5d2363092c8ae366039766a9b020538bb1eb'
+body_hash: 'sha256:3a0b9188777a1c822abf29f4dac1d1e2f92b3947ba1696bfa15d2b35438ab35a'
 ---
 
 <!-- LINK RULES:
@@ -196,7 +196,7 @@ Add provider enrollment, catalogue compilation, authority identity, validation, 
 
 Classify every discovered candidate and record exact source symbols, consumers, destination fact families, migration dependencies, and files or symbols to delete, retain, or rewire.
 
-- [ ] `W01.P03.S07` - Classify every statutory declaration and production consumer; `src/cadrumo/core/external_constants.py`.
+- [x] `W01.P03.S07` - Classify every statutory declaration and production consumer; `src/cadrumo/core/external_constants.py`.
 - [ ] `W01.P03.S08` - Record exact IVA recargo grounding and repository retirement conditions; `src/cadrumo/domain/iva`.
 - [ ] `W01.P03.S09` - Record exact global legal-parameter adapter callers and closure conditions; `src/cadrumo/domain/calculations/registry/loader.py`.
 - [ ] `W01.P03.S42` - Record retained domain facades and excluded technical configuration readers; `src/cadrumo/domain and src/cadrumo/core/external_constants.py`.
