@@ -29,6 +29,7 @@ from pydantic import Field, field_validator, model_validator
 from ....core.decimal.constants import ONE, ZERO
 from ....core.directory_scan import scan_directory
 from ....core.irnr import ConvenioOverrideKind, TipoRentaIrnr
+from ....core.revision_review import RevisionReviewStatus
 from ....core.toml import freeze_toml, read_toml
 from .errors import RegistryLoadError, RegistryValidationError
 from .facts.resolution import OverrideFactQuery
@@ -311,7 +312,7 @@ def compile_convenio_facts(registry_root: Path) -> tuple[GovernedFact, ...]:
                             required_text=("Art", f"{row.legal_ref_anchor.rsplit('-', 1)[-1]}"),
                         ),
                     ),
-                    review_status="agent_reviewed",
+                    review_status=RevisionReviewStatus.AGENT_REVIEWED,
                     ownership=FactOwnership.GENERATED,
                 ),
             )
