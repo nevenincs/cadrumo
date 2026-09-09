@@ -34,7 +34,7 @@ from packaging.utils import canonicalize_name, parse_wheel_filename
 
 from cadrumo.core.directory_scan import scan_directory
 
-from ._hashing import sha256_path
+from .hashing import sha256_path
 from .uv_constraints import export_runtime_constraints
 
 _UTF_8: Final[str] = "utf-8"

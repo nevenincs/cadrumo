@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from .._hashing import sha256_path
+from ..hashing import sha256_path
 from ..python_cohort import (
     _artifact_command_projection,
     _assert_probe_reads_are_wheel_members,

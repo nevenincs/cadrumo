@@ -18,7 +18,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_semantics import ExportComputedKey, ExportDraftAttribute
 from cadrumo.domain.calculations.registry.schema_exports import RecordDiscriminator
 
-from ..pipeline._semantic_map_loader import (
+from ..pipeline.semantic_map import (
     SEMANTIC_MAP_FRAGMENT_SCHEMA_VERSION,
     SemanticMapFragment,
     load_semantic_map,
@@ -624,8 +624,12 @@ def test_public_loader_has_one_toml_parser_owner() -> None:
         "cadrumo.domain.calculations.registry.errors",
         "cadrumo.domain.calculations.registry.export_semantics",
         "cadrumo.domain.calculations.registry.ids",
+        "cadrumo.core.casilla_id",
+        "cadrumo.domain.calculations.export_field_kind",
+        "cadrumo.domain.calculations.registry.schema_base",
+        "cadrumo.domain.calculations.registry.schema_exports",
         "_pydantic_error_detail",
-        "_semantic_map",
+        "record_design_intermediate",
     }
     imported_names_by_module = {
         node.module: {alias.name for alias in node.names}
@@ -637,27 +641,47 @@ def test_public_loader_has_one_toml_parser_owner() -> None:
             "cadrumo.core.toml",
             "cadrumo.core.filing_projection_ref",
             "cadrumo.core.directory_scan",
+            "cadrumo.core.casilla_id",
+            "cadrumo.domain.calculations.export_field_kind",
             "cadrumo.domain.calculations.registry.errors",
             "cadrumo.domain.calculations.registry.export_semantics",
             "cadrumo.domain.calculations.registry.ids",
+            "cadrumo.domain.calculations.registry.schema_base",
+            "cadrumo.domain.calculations.registry.schema_exports",
             "_pydantic_error_detail",
-            "_semantic_map",
+            "record_design_intermediate",
         }
     }
     assert imported_names_by_module == {
         "cadrumo.core.link_safety": {"is_link_like"},
         "cadrumo.core.filing_producer_key": {"FilingProducerKey"},
         "cadrumo.core.toml": {"freeze_toml", "read_toml"},
-        "cadrumo.core.filing_projection_ref": {"compile_filing_projection_ref"},
+        "cadrumo.core.filing_projection_ref": {
+            "FilingProjectionRef",
+            "compile_filing_projection_ref",
+            "hydrate_filing_projection_ref",
+        },
         "cadrumo.core.directory_scan": {"iter_directory"},
+        "cadrumo.core.casilla_id": {"CasillaId"},
+        "cadrumo.domain.calculations.export_field_kind": {"CasillaFieldKindValue"},
         "cadrumo.domain.calculations.registry.errors": {"RegistryValidationError"},
         "cadrumo.domain.calculations.registry.export_semantics": {
             "ExportComputedKey",
             "ExportDraftAttribute",
+            "ExportSemanticPayloadAxis",
+            "export_semantic_payload_axis",
         },
-        "cadrumo.domain.calculations.registry.ids": {"ModeloId", "SourceRefId"},
+        "cadrumo.domain.calculations.registry.ids": {
+            "BindingId",
+            "ExportFieldId",
+            "ModeloId",
+            "RecordId",
+            "SourceRefId",
+        },
+        "cadrumo.domain.calculations.registry.schema_base": {"LegalRefs", "SourceRefs"},
+        "cadrumo.domain.calculations.registry.schema_exports": {"FilingEnvelopePrefixRole", "RecordDiscriminator"},
         "_pydantic_error_detail": {"validation_error_detail"},
-        "_semantic_map": {"VariableEnvelopeSemantic", "SemanticMap", "SemanticMapEntry", "SemanticMapRecord"},
+        "record_design_intermediate": {"AnchorKey", "RecordKey"},
     }
     assert direct_imports == {("re", None)}
     assert not any(
@@ -670,14 +694,19 @@ def test_public_loader_has_one_toml_parser_owner() -> None:
 
 
 def test_projection_ref_hydration_cannot_spread_beyond_the_loader() -> None:
-    """Raw TOML-to-union conversion has one dev-registry caller."""
+    """Raw TOML-to-union conversion has one dev-registry caller.
+
+    ``semantic_map.py`` is the caller, so it is not screened here: the compiled
+    map types and the fragment loader share that module, and this check can no
+    longer separate the two halves. Every other consumer of a compiled map must
+    still take the hydrated union rather than re-running the conversion.
+    """
     package_root = Path(__file__).resolve().parents[1]
     for module_name in (
-        "_semantic_map.py",
         "_semantic_map_validation.py",
-        "_semantic_map_join.py",
+        "joined_record_design.py",
         "_export_tree.py",
-        "_provenance_manifest.py",
+        "export_fragment_provenance.py",
     ):
         module_path = package_root / "pipeline" / module_name
         assert "compile_filing_projection_ref" not in module_path.read_text(encoding="utf-8")

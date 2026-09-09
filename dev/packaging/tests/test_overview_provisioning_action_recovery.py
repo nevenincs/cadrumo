@@ -27,7 +27,7 @@ from cadrumo.application.provisioning import ProvisioningPreconditionCondition
 from cadrumo.core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 
-from .._smoke_common import (
+from ..lane_verification_core import (
     build_companion_wheels,
     build_wheel,
     create_pip_venv,

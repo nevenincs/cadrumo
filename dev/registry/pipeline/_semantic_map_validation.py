@@ -21,25 +21,25 @@ from cadrumo.domain.calculations.registry.ids import SourceRefId
 from cadrumo.domain.calculations.registry.schema_exports import ProjectionEndpointDeclaration
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactInspection
 
-from ._record_design_ir import (
+from ._variable_envelope import validate_variable_envelope
+from .record_design_intermediate import (
     AnchorKey,
     RecordDesignIntermediate,
     RecordKey,
     intermediate_anchor_key,
     intermediate_record_key,
+    validate_inspection_source_authority,
 )
-from ._semantic_map import (
+from .semantic_map import (
     SemanticMap,
     SemanticMapEntry,
     semantic_anchor_key,
     semantic_record_key,
 )
-from ._variable_envelope import validate_variable_envelope
 
 __all__ = [
     "SemanticMapAnomalyException",
     "resolve_semantic_map_casilla_tokens",
-    "validate_inspection_source_authority",
     "validate_semantic_map",
 ]
 
@@ -216,37 +216,6 @@ def _validate_scope(
     if semantic_map.source_sha256 != intermediate.source.source_sha256:
         raise RegistryValidationError(
             "semantic map SHA-256 does not match parser intermediate source",
-        )
-
-
-def validate_inspection_source_authority(
-    intermediate: RecordDesignIntermediate,
-    inspection: GeneratedArtifactInspection,
-) -> None:
-    """Require parser evidence to belong to the selected static revision."""
-    source = inspection.sources.get(intermediate.source.source_ref)
-    if source is None:
-        raise RegistryValidationError(
-            f"parser intermediate source {intermediate.source.source_ref!r} is absent from the target "
-            "registry source catalogue",
-        )
-    if source.kind != "record_design":
-        raise RegistryValidationError(
-            f"parser intermediate source {source.id!r} must resolve to a record-design source",
-        )
-    if source.sha256 != intermediate.source.source_sha256:
-        raise RegistryValidationError(
-            f"parser intermediate source {source.id!r} SHA-256 does not match the target registry catalogue",
-        )
-    if source.record_design_epoch != intermediate.source.design_epoch:
-        raise RegistryValidationError(
-            f"parser intermediate source {source.id!r} design epoch {intermediate.source.design_epoch!r} "
-            "does not match the target registry catalogue",
-        )
-    if intermediate.source.source_ref not in inspection.revision_source_refs:
-        raise RegistryValidationError(
-            f"parser intermediate source {intermediate.source.source_ref!r} is not an authority of selected "
-            f"revision {inspection.revision_id!r}",
         )
 
 

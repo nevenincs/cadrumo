@@ -15,7 +15,6 @@ from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..pipeline._export_tree import render_complete_export_tree
-from ..pipeline._provenance_manifest import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ..pipeline._tree_publication import (
     GeneratedExportTreePublicationContext,
     GeneratedExportTreeTargetStateReceipt,
@@ -35,6 +34,7 @@ from ..pipeline.cli import (
     _require_republication_eligibility,
     app,
 )
+from ..pipeline.export_fragment_provenance import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ..pipeline.render_check import (
     GeneratedExportBootstrapTransport,
     RenderComparison,

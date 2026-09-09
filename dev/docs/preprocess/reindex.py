@@ -12,6 +12,10 @@ port (``--port 8766``); the local-file Qdrant store is single-writer, so a
 competing in-process index would strand on the lock. The sweep step calls
 ``run_incremental_reindex`` first, then proceeds only once the index is
 current.
+
+The one caller is the sweep runner in ``dev.docs.terminology``: this step is the
+contract that package depends on before it queries the index, so it is a public
+module rather than an internal of the preprocessing package.
 """
 
 from __future__ import annotations

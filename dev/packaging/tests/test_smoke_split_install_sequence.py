@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from ..._paths import REPO_ROOT
-from .._smoke_common import (
+from ..lane_verification_core import (
     build_companion_wheels,
     build_wheel,
     create_pip_venv,

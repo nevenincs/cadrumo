@@ -31,15 +31,15 @@ import pytest
 
 from ..._paths import REPO_ROOT
 from .._distribution_names import normalise_distribution_name
-from .._hashing import sha256_path
-from .._smoke_common import (
+from ..hashing import sha256_path
+from ..installed_mcp_oracle import run_installed_mcp_oracle
+from ..installed_tax_oracle import run_installed_tax_oracle
+from ..lane_verification_core import (
     create_pip_venv,
     run_checked,
     venv_bin_dir,
     venv_python_path,
 )
-from ..installed_mcp_oracle import run_installed_mcp_oracle
-from ..installed_tax_oracle import run_installed_tax_oracle
 from ..python_cohort import PythonCohort, build_python_cohort
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]

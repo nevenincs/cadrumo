@@ -4,6 +4,12 @@ Render profiles are reviewed inputs, not inference recipes.  A profile may name
 only fixed-record numeric fields whose exact official ``Contenido`` cell is
 blank.  It must enumerate that eligible set exactly and is rejected before a
 renderer can observe it when any authority, anchor, or representation drifts.
+
+A reviewed render profile is authored evidence read back by callers outside this
+package: the filing-export proof loads a profile and its source evidence to prove
+an emitted layout was rendered under a reviewed reading. The schema and its loader
+are that contract and are defined here; the eligibility question they are checked
+against lives beside them in ``render_profile_eligibility``.
 """
 
 from __future__ import annotations
@@ -32,7 +38,7 @@ from cadrumo.domain.calculations.registry.ids import (
 )
 
 from ._pydantic_error_detail import validation_error_detail
-from ._semantic_map_join import JoinedRecordDesign
+from .joined_record_design import JoinedRecordDesign
 from .record_design_intermediate import RecordDesignIntermediateField
 from .render_profile_eligibility import (
     RenderProfileEligibility,

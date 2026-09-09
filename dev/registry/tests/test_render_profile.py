@@ -21,12 +21,19 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 from cadrumo.domain.calculations.registry.loader import load_catalogue_file
 
-from ..pipeline import _export_tree, _render_profile, render_profile_eligibility
-from ..pipeline._record_design_ir import (
+from ..pipeline import _export_tree, render_profile, render_profile_eligibility
+from ..pipeline.joined_record_design import (
+    JoinedRecordDesign,
+    JoinedRecordDesignField,
+    JoinedRecordDesignRecord,
+)
+from ..pipeline.record_design_intermediate import (
     RecordDesignIntermediate,
+    RecordDesignIntermediateField,
+    RecordDesignWorkbookFormat,
     load_record_design_intermediate,
 )
-from ..pipeline._render_profile import (
+from ..pipeline.render_profile import (
     OfficialSourceEvidence,
     RenderProfile,
     RenderProfileAnchor,
@@ -44,20 +51,11 @@ from ..pipeline._render_profile import (
     validate_render_profile,
     validate_render_profile_authority,
 )
-from ..pipeline._semantic_map import SemanticMap
-from ..pipeline._semantic_map_join import (
-    JoinedRecordDesign,
-    JoinedRecordDesignField,
-    JoinedRecordDesignRecord,
-)
-from ..pipeline.record_design_intermediate import (
-    RecordDesignIntermediateField,
-    RecordDesignWorkbookFormat,
-)
 from ..pipeline.render_profile_eligibility import (
     _is_source_reserved_field,
     project_render_profile_eligibility,
 )
+from ..pipeline.semantic_map import SemanticMap
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -287,7 +285,7 @@ def test_singleton_rules_consume_the_public_closed_value_policy_axis() -> None:
     profile = _profile()
 
     assert all(isinstance(rule.value_policy, ExportValuePolicy) for rule in profile.singleton_rules)
-    source = Path("dev/registry/pipeline/_render_profile.py").read_text(encoding="utf-8")
+    source = Path("dev/registry/pipeline/render_profile.py").read_text(encoding="utf-8")
     assert "SingletonValuePolicy" not in source
     assert "BeforeValidator(coerce_export_value_policy)" not in source
 
@@ -334,7 +332,7 @@ def test_wire_authority_profiles_have_one_unambiguous_class_home() -> None:
         assert "ExportRenderProfile" not in path.read_text(encoding="utf-8")
 
     assert class_homes == {
-        "RenderProfile": ["_render_profile.py"],
+        "RenderProfile": ["render_profile.py"],
         "ExportTreeTransportProfile": ["_export_tree.py"],
     }
 
@@ -1215,7 +1213,7 @@ def test_profile_authority_has_no_legacy_tree_or_layout_oracle() -> None:
     before projecting. It is source-side evidence, not a tree or layout oracle. A
     new local import outside either set still fails, which is the point.
     """
-    module = ast.parse(inspect.getsource(_render_profile))
+    module = ast.parse(inspect.getsource(render_profile))
     local_imports = {
         node.module
         for node in ast.walk(module)
@@ -1223,7 +1221,7 @@ def test_profile_authority_has_no_legacy_tree_or_layout_oracle() -> None:
     }
     assert local_imports == {
         "_pydantic_error_detail",
-        "_semantic_map_join",
+        "joined_record_design",
         "record_design_intermediate",
         "render_profile_eligibility",
     }
@@ -1472,8 +1470,8 @@ def test_width_17_type_order_covers_every_declared_aeat_type() -> None:
     as though the rule had never been authored. Nothing else fails when that
     happens, which is why this is asserted rather than left to review.
     """
-    declared = set(get_args(_render_profile.Width17MembershipRule.model_fields["aeat_type"].annotation))
-    ordered = set(_render_profile._WIDTH_17_TYPE_ORDER)
+    declared = set(get_args(render_profile.Width17MembershipRule.model_fields["aeat_type"].annotation))
+    ordered = set(render_profile._WIDTH_17_TYPE_ORDER)
     assert ordered == declared, (
         f"width-17 emit order {sorted(ordered)} does not cover the declared aeat_type set "
         f"{sorted(declared)}; a type admitted by the model but missing from the order is "
