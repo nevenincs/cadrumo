@@ -25,7 +25,6 @@ from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_va
 from ....core.decimal.constants import HUNDRED, MONEY_ZERO, ONE
 from ....core.errors.hierarchy import CadrumoError as _CadrumoError
 from ....core.errors.hierarchy import CoreValidationError as _CoreValidationError
-from ....core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT as _DEFAULT_IVA_GENERAL_RATE_PCT
 from ....core.filing_year import FilingYear
 from ....core.hashing import content_hash_hex as _content_hash_hex
 from ....core.identity import ContentDigest
@@ -543,11 +542,29 @@ class MovementRecord(BaseModel):
     quantity: Decimal = Field(gt=Decimal("0"))
     unit_cost: Decimal | None = Field(default=None, ge=Decimal("0"))
     taxable_base: Decimal | None = Field(default=None, ge=Decimal("0"))
-    iva_rate: Percentage = _DEFAULT_IVA_GENERAL_RATE_PCT
+    iva_rate: Percentage = Field(default=None, validate_default=True)
     iva_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
     deductible_iva_ratio: UnitProportion = Decimal("1.00")
     acquisition_cost: InventoryAcquisitionCost | None = None
     schema_version: str = INVENTORY_SCHEMA_VERSION
+
+    @field_validator("iva_rate", mode="before")
+    @classmethod
+    def _default_iva_rate_from_movement_devengo(
+        cls,
+        value: object,
+        info: ValidationInfo,
+    ) -> object:
+        """Resolve an omitted rate through the dated Spanish IVA facade."""
+        if value is not None:
+            return value
+        movement_date = info.data.get("movement_date")
+        if not isinstance(movement_date, date):
+            raise InventoryValidationError("inventory IVA default requires a valid movement_date")
+        from ...iva.lookup import lookup_rate
+        from ...iva.schema import EUMemberState, IvaRateKind
+
+        return lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, movement_date).pct
 
     @classmethod
     def from_purchase_acquisition(

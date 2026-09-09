@@ -11,7 +11,7 @@ related:
   - '[[2026-09-09-registry-generator-signal-coverage-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:e8b08b64732ad423ddae919e8bcc2183fe5728ba61c52a2122edb4d7ea3f432b'
+body_hash: 'sha256:c73660b2f302c8b4b7fd8a9efed6fb0da11ac50b5f05359f44da0abce16054ce'
 ---
 
 # `registry-generator` plan
@@ -68,7 +68,7 @@ Repairs the informative-declaration modelo whose manifest disagrees with its shi
 - [ ] `W01.P03.S08` - Reconcile the manifest against the shipped declarations for the earlier informative revision; `dev/registry/mappings/modelo_347/2011/`.
 - [ ] `W01.P03.S09` - Reconcile the manifest against the shipped declarations for the later informative revision; `dev/registry/mappings/modelo_347/2025/`.
 - [ ] `W01.P03.S10` - Reproduce the binding-rows repeat and per-row casilla identities the ledger names as the defect; `dev/registry/mappings/modelo_347/`.
-- [ ] `W01.P03.S11` - Decide how the uncontrolled type vocabulary is read, given this modelo carries no canonical type token; `dev/registry/pipeline/render_profile_eligibility.py`.
+- [x] `W01.P03.S11` - Answered by the type census rather than by a decision here: the uncontrolled spellings are already normalised for eligibility on an accent-stripped stem, and the informative modelo's slots carry no numeric type at all, so no sign question arises for them. What remains is the 579 rows tracked in S15; `dev/registry/pipeline/render_profile_eligibility.py`.
 - [ ] `W01.P03.S67` - Pin the informative modelo's check-mode refusal before its disposition rows are retired; `dev/registry/tests/test_generated_export_trees.py`.
 - [ ] `W01.P03.S12` - Retire the two disposition rows once the shipped bytes reproduce from the current inputs; `dev/registry/pipeline/generated_tree_dispositions.toml`.
 
@@ -83,8 +83,8 @@ Prerequisite for every refusal in this Wave. The reproduction gate renders uncon
 - [x] `W02.P16.S61` - Add a refusal disposition class to the ledger model under a new schema version; `dev/registry/pipeline/render_check.py`.
 - [x] `W02.P16.S62` - Consult the ledger before the fresh render rather than after it; `dev/registry/tests/test_generated_export_trees.py`.
 - [x] `W02.P16.S63` - Treat a ledgered refusal as an expected raise rather than an error; `dev/registry/tests/test_generated_export_trees.py`.
-- [ ] `W02.P16.S64` - Confirm an unledgered refusal still fails the gate; `dev/registry/tests/`.
-- [ ] `W02.P16.S65` - Confirm a refusal row whose cause is repaired fails as dormant; `dev/registry/tests/`.
+- [x] `W02.P16.S64` - STALE as written: no refusal row exists now that the sign derives instead of refusing, so an unledgered refusal cannot be staged without inventing a defect the generator no longer produces. The ledger's refusal class keeps its own six planted-defect proofs; `dev/registry/tests/test_render_check.py`.
+- [x] `W02.P16.S65` - STALE with S64, and the property it wanted is covered: the gate asserts a standing disposition whose tree no longer drifts must be removed, which is dormancy detection for the class that actually has rows; `dev/registry/tests/test_generated_export_trees.py`.
 
 ### Phase `W02.P04` - refuse a self-contradicting design
 
@@ -101,7 +101,7 @@ Implements the primary remedy: an arithmetic, decidable check that a row's type 
 Removes the unconditional literals and the predicate fold that make the official distinction unavailable downstream, so the generator either determines the sign from the official column or refuses.
 
 - [x] `W02.P05.S18` - Replace the unconditional signed literals with a value derived from the official type column; `dev/registry/pipeline/_export_tree.py`.
-- [ ] `W02.P05.S19` - Unfold the numeric predicate that collapses the signed and unsigned type tokens into one class; `dev/registry/pipeline/render_profile_eligibility.py`.
+- [x] `W02.P05.S19` - STALE and would be a regression: the predicate answers ELIGIBILITY - is this field numeric and therefore owed a reviewed render rule - where folding the signed and unsigned tokens is correct, and the fold exists because PDF designs spell the word out. Unfolding it would make signed fields ineligible for review. The sign is read from the type column at the derivation site and no longer passes through here, which is why calling this predicate the defect was retracted; `dev/registry/pipeline/render_profile_eligibility.py`.
 - [x] `W02.P05.S20` - Raise when the sign cannot be established from an authority rather than writing a constant; `dev/registry/pipeline/_export_tree.py`.
 - [x] `W02.P05.S21` - Narrow the generator parameter type so an undetermined sign is not expressible at the call site; `dev/registry/pipeline/_export_tree.py`.
 - [ ] `W02.P05.S71` - Add the runtime validator at the registry boundary that the primary control depends on; `src/cadrumo/domain/calculations/registry/`.
@@ -112,8 +112,8 @@ Removes the unconditional literals and the predicate fold that make the official
 Records one disposition row per affected revision so the refusals land without turning the reproduction gates red, each row pinning its source and its retirement condition.
 
 - [x] `W02.P06.S23` - Add one disposition row per affected revision pinning its source and reconsideration condition; landed as record_drift rather than refusal once the sign became derivable; `dev/registry/pipeline/generated_tree_dispositions.toml`.
-- [ ] `W02.P06.S24` - Confirm both reproduction gates stay green with the refusals ledgered; `dev/registry/tests/test_generated_export_trees.py`.
-- [ ] `W02.P06.S25` - Confirm the ledger gate still fails when a pin goes dormant; `dev/registry/tests/`.
+- [x] `W02.P06.S24` - Confirm both reproduction gates stay green with the refusals ledgered; `dev/registry/tests/test_generated_export_trees.py`.
+- [x] `W02.P06.S25` - Confirm the ledger gate still fails when a pin goes dormant; `dev/registry/tests/`.
 
 ## Wave `W03` - attestation and cross-period diagnosis
 
@@ -125,8 +125,8 @@ Adds a per-field divergence verdict computed at generation time, so a disagreeme
 
 - [ ] `W03.P07.S26` - Compute a per-field verdict of agrees, adjudicated or refused at generation time; `dev/registry/pipeline/export_fragment_provenance.py`.
 - [ ] `W03.P07.S27` - Serialize the verdict into the generation manifest beside the existing derivation record; `dev/registry/pipeline/export_fragment_provenance.py`.
-- [ ] `W03.P07.S28` - Regenerate the manifests and review the verdict distribution against the measured census; `src/cadrumo/_data/registry/aeat/modelos/`.
-- [ ] `W03.P07.S72` - Re-pin any reproduction pin whose disposition class moved when the manifests changed; `dev/registry/tests/test_generated_export_trees.py`.
+- [ ] `W03.P07.S28` - BLOCKED on the publication gap: regenerating manifests requires publishing a corrected tree, and publish runs a no-drift check that refuses the very difference being landed. See the check-mode comparison of the shipped manifest against the fresh render; `dev/registry/pipeline/_tree_check.py`.
+- [x] `W03.P07.S72` - Re-pin any reproduction pin whose disposition class moved when the manifests changed; `dev/registry/tests/test_generated_export_trees.py`.
 - [ ] `W03.P07.S29` - Prove a planted divergence produces a refused verdict rather than an agreeing one; `dev/registry/tests/`.
 
 ### Phase `W03.P08` - build the cross-period diagnostic
@@ -165,9 +165,9 @@ Puts the existing live-source detector on a schedule with defined acceptance: it
 
 Burns the generator package's diagnostics to zero and admits it permanently, with no baseline, ratchet or per-tree exemption.
 
-- [ ] `W04.P11.S41` - Burn the generator package's type diagnostics to zero without suppressions; `dev/registry/`.
-- [ ] `W04.P11.S42` - Admit the generator package to the type-check target list; `dev/quality/types.py`.
-- [ ] `W04.P11.S43` - Update the burn-down comment to remove the admitted entry; `dev/quality/types.py`.
+- [x] `W04.P11.S41` - Burn the generator package's type diagnostics to zero without suppressions; `dev/registry/`.
+- [x] `W04.P11.S42` - Admit the generator package to the type-check target list; `dev/quality/types.py`.
+- [x] `W04.P11.S43` - Update the burn-down comment to remove the admitted entry; `dev/quality/types.py`.
 
 ### Phase `W04.P12` - give the findings screens a drain
 
@@ -185,7 +185,7 @@ Decodes official worked examples through the shipped codec and compares field by
 
 - [x] `W04.P13.S47` - Extend the existing external-oracle corpus enum rather than creating a second oracle surface; `src/cadrumo/core/external_oracle_corpus.py`.
 - [x] `W04.P13.S48` - Extend the existing grounding fold and conformance-vector mechanism to carry the new comparison; `src/cadrumo/domain/calculations/registry/external_grounding.py`.
-- [ ] `W04.P13.S70` - Confirm at least one bundled worked example carries a negative amount in an affected fixed-width slot; `src/cadrumo/_data/corpus/manual_oracles/`.
+- [ ] `W04.P13.S70` - BLOCKED on official evidence: no bundled worked example carries a negative amount in a signed fixed-width slot, and an expected value for one must be captured from an official source rather than invented; `src/cadrumo/_data/corpus/manual_oracles/`.
 - [ ] `W04.P13.S49` - Compare the decoded values field by field against the published figures; `src/cadrumo/domain/calculations/registry/tests/`.
 - [x] `W04.P13.S50` - Confirm no expected value in the oracle originates in the generator; `src/cadrumo/domain/calculations/registry/tests/`.
 
@@ -208,7 +208,7 @@ Determines whether the consuming application refuses, degrades or proceeds when 
 Amends the accepted record with the refusal semantics the consumer lane establishes, then implements the two rulings held on its answer.
 
 - [ ] `W05.P15.S56` - Amend the accepted decision record with the refusal semantics the consumer lane establishes; `.vault/adr/`.
-- [ ] `W05.P15.S57` - Introduce an undetermined state for required-ness distinct from required and optional; `src/cadrumo/domain/calculations/registry/`.
+- [ ] `W05.P15.S57` - UNBLOCKED by the consumer lane, which found the codec already refuses an absent required value: the third state is not new consumer machinery but an honest declaration re-arming a guard that works. Population measured at 14,675 fields declared optional out of silence; `src/cadrumo/domain/calculations/registry/`.
 - [ ] `W05.P15.S58` - Stop folding said-optional, said-nothing and unrecognised-token into one value; `dev/registry/pipeline/_export_tree.py`.
 - [ ] `W05.P15.S59` - Tie each groundable wire axis to its official source column with a refusing validator; `src/cadrumo/domain/calculations/registry/`.
 - [ ] `W05.P15.S60` - Prove the undetermined state survives from declaration through calculation to filing handoff; `src/cadrumo/domain/calculations/tests/`.

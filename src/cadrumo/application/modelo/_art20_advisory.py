@@ -24,8 +24,8 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 from ...core.casilla_id import CasillaId
-from ...core.external_constants import MODELO_100_ART_20_TRABAJO_REDUCCION_RNT_CEILING_EUR
 from ...domain.modelos.errors import ModeloError
+from ...domain.modelos.modelo_fact_context import ModeloFactResolutionContext
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -35,11 +35,14 @@ from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla
 
 _ART20_RNT_ROLE = "irpf_rendimiento_trabajo_rendimiento_neto"
 _ART20_REDUCCION_ROLE = "irpf_rendimiento_trabajo_reduccion_gastos_generales"
+_ART20_RNT_CEILING_FACT_ID = "lirpf-art-20-trabajo-reduccion-rnt-ceiling"
 
 
 def _art20_reduccion_advisory_finding(
     revision: object,
     casilla_values: Mapping[CasillaId, Decimal],
+    *,
+    context: ModeloFactResolutionContext,
 ) -> ModeloVerificationFinding | None:
     """Warn when RNT is within the art. 20 band but no general reduction is declared.
 
@@ -73,7 +76,8 @@ def _art20_reduccion_advisory_finding(
     rnt_value = casilla_values.get(rnt_id, Decimal(0))
     reduccion_value = casilla_values.get(reduccion_id, Decimal(0))
 
-    if Decimal(0) < rnt_value < MODELO_100_ART_20_TRABAJO_REDUCCION_RNT_CEILING_EUR and reduccion_value == Decimal(0):
+    resolved_ceiling = context.resolved_decimal(_ART20_RNT_CEILING_FACT_ID)
+    if Decimal(0) < rnt_value < resolved_ceiling.payload.value and reduccion_value == Decimal(0):
         return ModeloVerificationFinding(
             kind=ModeloVerificationFindingKind.ADVISORY,
             severity=ModeloVerificationFindingSeverity.WARNING,
@@ -84,7 +88,7 @@ def _art20_reduccion_advisory_finding(
                 "rnt_value": rnt_value,
                 "reduccion_id": reduccion_id,
             },
-            legal_refs=("ley-35-2006:art-20",),
+            legal_refs=resolved_ceiling.legal_refs,
         )
     return None
 

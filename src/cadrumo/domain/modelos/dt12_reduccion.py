@@ -22,16 +22,16 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
 
-from ...core.external_constants import (
-    DT12_CLIFF_LAST_YEAR,
-    DT12_GENERAL_WINDOW_FOLLOWING_YEARS,
-    DT12_RESCATE_REDUCCION_RATE,
-    DT12_TRANSITIONAL_CONTINGENCIA_FIRST_YEAR,
-    DT12_TRANSITIONAL_CONTINGENCIA_LAST_YEAR,
-    DT12_TRANSITIONAL_WINDOW_FOLLOWING_YEARS,
-)
 from ...core.money.rounding import round_to_cents
 from .errors import PensionReduccionError
+from .modelo_fact_context import ModeloFactResolutionContext
+
+_DT12_RESCATE_REDUCCION_RATE_FACT_ID = "lirpf-dt12-rescate-reduction-rate"
+_DT12_GENERAL_WINDOW_FOLLOWING_YEARS_FACT_ID = "lirpf-dt12-general-window-following-years"
+_DT12_TRANSITIONAL_CONTINGENCIA_FIRST_YEAR_FACT_ID = "lirpf-dt12-transitional-contingency-first-year"
+_DT12_TRANSITIONAL_CONTINGENCIA_LAST_YEAR_FACT_ID = "lirpf-dt12-transitional-contingency-last-year"
+_DT12_TRANSITIONAL_WINDOW_FOLLOWING_YEARS_FACT_ID = "lirpf-dt12-transitional-window-following-years"
+_DT12_CLIFF_LAST_YEAR_FACT_ID = "lirpf-dt12-cliff-last-year"
 
 
 def compute_dt12_reduccion_plan_pensiones(
@@ -39,6 +39,7 @@ def compute_dt12_reduccion_plan_pensiones(
     gross_rescate: Decimal,
     aportaciones_pre_2007: Decimal,
     aportaciones_totales: Decimal,
+    context: ModeloFactResolutionContext,
 ) -> Decimal:
     """Compute the DT 12ª LIRPF 40% reducción for a plan-de-pensiones capital rescate.
 
@@ -79,7 +80,11 @@ def compute_dt12_reduccion_plan_pensiones(
             },
         )
 
-    reduccion = (aportaciones_pre_2007 / aportaciones_totales) * gross_rescate * DT12_RESCATE_REDUCCION_RATE
+    reduccion = (
+        (aportaciones_pre_2007 / aportaciones_totales)
+        * gross_rescate
+        * context.decimal(_DT12_RESCATE_REDUCCION_RATE_FACT_ID)
+    )
     return round_to_cents(reduccion)
 
 
@@ -127,6 +132,7 @@ def dt12_regime_window_eligibility(
     *,
     contingencia_year: int,
     rescate_year: int,
+    context: ModeloFactResolutionContext,
 ) -> Dt12WindowEligibility:
     """Evaluate the LIRPF DT 12ª apartado-3 time-window eligibility (pure predicate).
 
@@ -150,6 +156,7 @@ def dt12_regime_window_eligibility(
     Args:
         contingencia_year: The year the contingencia occurred.
         rescate_year: The year the prestación is percibida.
+        context: Governed-fact authority and filing-period coordinate.
 
     Returns:
         A :class:`Dt12WindowEligibility` verdict carrying the governing branch,
@@ -166,15 +173,17 @@ def dt12_regime_window_eligibility(
                 context={"field": field_name, "value": str(value)},
             )
 
-    if contingencia_year <= 2010:
+    transitional_first_year = context.integer(_DT12_TRANSITIONAL_CONTINGENCIA_FIRST_YEAR_FACT_ID)
+    transitional_last_year = context.integer(_DT12_TRANSITIONAL_CONTINGENCIA_LAST_YEAR_FACT_ID)
+    if contingencia_year <= transitional_first_year - 1:
         branch = Dt12WindowBranch.CLIFF_2010_OR_EARLIER
-        eligible_through_year = DT12_CLIFF_LAST_YEAR
-    elif DT12_TRANSITIONAL_CONTINGENCIA_FIRST_YEAR <= contingencia_year <= DT12_TRANSITIONAL_CONTINGENCIA_LAST_YEAR:
+        eligible_through_year = context.integer(_DT12_CLIFF_LAST_YEAR_FACT_ID)
+    elif transitional_first_year <= contingencia_year <= transitional_last_year:
         branch = Dt12WindowBranch.TRANSITIONAL_2011_2014
-        eligible_through_year = contingencia_year + DT12_TRANSITIONAL_WINDOW_FOLLOWING_YEARS
+        eligible_through_year = contingencia_year + context.integer(_DT12_TRANSITIONAL_WINDOW_FOLLOWING_YEARS_FACT_ID)
     else:
         branch = Dt12WindowBranch.GENERAL
-        eligible_through_year = contingencia_year + DT12_GENERAL_WINDOW_FOLLOWING_YEARS
+        eligible_through_year = contingencia_year + context.integer(_DT12_GENERAL_WINDOW_FOLLOWING_YEARS_FACT_ID)
 
     eligible = contingencia_year <= rescate_year <= eligible_through_year
     return Dt12WindowEligibility(

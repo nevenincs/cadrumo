@@ -42,10 +42,14 @@ class ModeloFactResolutionContext:
 
     def decimal(self, fact_id: str) -> Decimal:
         """Resolve a Decimal-valued modelo governed fact."""
-        value = self._scalar(fact_id)
-        if not isinstance(value, Decimal):
+        return self.resolved_decimal(fact_id).payload.value
+
+    def resolved_decimal(self, fact_id: str) -> ResolvedScalarFact:
+        """Resolve a Decimal modelo fact while preserving its provenance."""
+        resolved = self.resolved_scalar(fact_id)
+        if not isinstance(resolved.payload.value, Decimal):
             raise RegistryValidationError(f"modelo fact {fact_id!r} must resolve to a Decimal")
-        return value
+        return resolved
 
     def resolved_scalar(self, fact_id: str) -> ResolvedScalarFact:
         """Resolve a modelo fact on its declared temporal coordinate."""

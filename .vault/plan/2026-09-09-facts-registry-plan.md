@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:ecfaa3ca602b801c5815e487ce64ea41a8929d2e1ef4cef751a139c64f0a6886'
+body_hash: 'sha256:057abb0a8b6f44535e267941ba6916e2cb178f94ce14ce3ba680aa78c06d1cc6'
 ---
 
 # `facts-registry` plan
@@ -144,7 +144,7 @@ Rewire invoice rate interpretation, IVA calculations, recargo lookup, inventory 
 
 - [x] `W03.P12.S26` - Rewire IVA lookups while preserving domain facades; `src/cadrumo/domain/iva`.
 - [x] `W03.P12.S27` - Rewire invoice slot percentage interpretation; `src/cadrumo/domain/invoices/enums.py`.
-- [ ] `W03.P12.S51` - Rewire extraction recargo aggregation and inventory defaults; `src/cadrumo/application/ledger and src/cadrumo/application/aggregation and src/cadrumo/domain/contribuyente/inventory`.
+- [x] `W03.P12.S51` - Rewire extraction recargo aggregation and inventory defaults; `src/cadrumo/application/ledger and src/cadrumo/application/aggregation and src/cadrumo/domain/contribuyente/inventory`.
 
 ### Phase `W03.P13` - Migrate treaty authorization and deadline consumers
 

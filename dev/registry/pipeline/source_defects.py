@@ -262,15 +262,26 @@ class NoteGovernedAmountDeclaration(BaseModel):
     sign_policy: Literal["unsigned", "n-prefix-negative-blank-nonnegative"]
     """Whether the slot spends a byte on a sign marker, READ per declaration.
 
-    Deliberately not derived from the design's ``Tipo`` column. The AEAT type
-    and the sign are paired by the individual design, not by the corpus:
-    modelo 200's 2025 design pairs ``N`` with a sign position, spelling it
-    ``N + 14`` beside the unsigned ``15`` in ``DP200001!A121``, while modelo
-    390's 2025 design prints ``Tipo`` ``N`` on width-17 rows whose own
-    ``Contenido`` says ``15 enteros 2 decimales`` -- fifteen digits and two
-    decimals filling all seventeen bytes with no room for a marker. A rule
-    mapping ``N`` to signed would be right for one design and wrong for the
-    other, so the pairing is declared and reviewed here, once per run.
+    Declared per run, though no longer because the corpus disagrees with itself.
+
+    This once argued that ``Tipo`` could not settle the sign, on the grounds
+    that modelo 200 pairs ``N`` with a sign position while modelo 390 prints
+    ``Tipo`` ``N`` on width-17 rows whose ``Contenido`` says ``15 enteros 2
+    decimales`` -- seventeen digits with no room for a marker. **That reasoning
+    is withdrawn.** It read one cell and missed the note beside it.
+
+    AEAT states the convention for every design in "Disenos de registro - breve
+    manual de uso" (v.2, 12/12/2022): numeric fields are right-aligned and
+    zero-filled ``sin signos``, and only NEGATIVE amounts are ``precedidos del
+    caracter 'N'``. The marker therefore DISPLACES the leading digit instead of
+    demanding an extra byte, which is exactly what modelo 200's own note means
+    by ``15 enteros (o N + 14)``. The two designs never disagreed: ``Contenido``
+    states the non-negative capacity, which is why the identical string sits on
+    signed and unsigned rows throughout the corpus.
+
+    So ``Tipo`` does settle the sign, and the generator now derives it. What is
+    still declared here is the per-run REPRESENTATION - integer and decimal
+    extent - which the type column does not state.
     """
     mandated_values: tuple[str, ...] | None
     """The closed value domain the note MANDATES, or ``None`` when it mandates none.
