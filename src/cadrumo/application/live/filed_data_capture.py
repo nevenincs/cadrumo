@@ -851,6 +851,99 @@ def _empty_bulk_filed_capture_report(
     )
 
 
+@dataclass(slots=True)
+class _CapturePairPhaseState:
+    """Track the one-time phases emitted while a bulk capture walks pairs."""
+
+    declaration_capture_started: bool = False
+    persistence_started: bool = False
+
+
+async def _emit_filed_capture_pair_phases(
+    *,
+    events: OperationEventEmitter | None,
+    declarations: tuple[Declaracion, ...],
+    dry_run: bool,
+    state: _CapturePairPhaseState,
+) -> None:
+    """Emit declaration and persistence phases when a pair yields rows."""
+    if not declarations:
+        return
+    if not state.declaration_capture_started:
+        await _emit_filed_history_phase(events, FILED_HISTORY_PHASE_DECLARATION_CAPTURE)
+        state.declaration_capture_started = True
+    if dry_run or state.persistence_started:
+        return
+    await _emit_filed_history_phase(events, FILED_HISTORY_PHASE_PERSISTENCE)
+    state.persistence_started = True
+
+
+async def _capture_filed_data_query_pair(
+    code: str,
+    year: int,
+    *,
+    opened_register: DeclaracionesRegisterSession,
+    walk_timeout_ms: int,
+    accumulator: _CaptureAccumulator,
+    store: FiledDeclaracionObservationStore,
+    bucket_id: str,
+    output_root: Path,
+    limit: int | None,
+    dry_run: bool,
+    failures: list[FiledDataCaptureFailureRow],
+    events: OperationEventEmitter | None,
+    pair_completed: int,
+    pair_total: int,
+    phase_state: _CapturePairPhaseState,
+) -> tuple[int, bool]:
+    """Walk and absorb one pair, returning progress and whether the cap is met."""
+    declarations = await _walk_or_failure_row(
+        opened_register.walk(modelo=code, ejercicio=year),
+        modelo=code,
+        year=year,
+        timeout_ms=walk_timeout_ms,
+        failures=failures,
+    )
+    pair_completed += 1
+    if declarations is None:
+        await _emit_filed_history_refusal(events, FILED_HISTORY_PAIR_REFUSAL_CODE)
+    await _emit_filed_history_progress(
+        events,
+        completed=pair_completed,
+        total=pair_total,
+        unit_code=FILED_HISTORY_PAIR_PROGRESS_UNIT,
+    )
+    if declarations is None:
+        return pair_completed, False
+    within_limit = _declarations_within_limit(
+        declarations,
+        limit=limit,
+        reached_count=accumulator.reached_count,
+    )
+    if within_limit is None:
+        return pair_completed, True
+    await _emit_filed_capture_pair_phases(
+        events=events,
+        declarations=within_limit,
+        dry_run=dry_run,
+        state=phase_state,
+    )
+    await _absorb_declarations(
+        within_limit,
+        opened_register=opened_register,
+        accumulator=accumulator,
+        store=store,
+        bucket_id=bucket_id,
+        output_root=output_root,
+        dry_run=dry_run,
+        modelo=code,
+        year=year,
+        failures=failures,
+        events=events,
+    )
+    return pair_completed, limit is not None and accumulator.reached_count >= limit
+
+
 async def _capture_filed_data_query_pairs(
     query_pairs: Sequence[tuple[str, int]],
     *,
@@ -870,59 +963,30 @@ async def _capture_filed_data_query_pairs(
     total = pair_total if pair_total is not None else len(query_pairs)
     await _emit_filed_history_phase(events, FILED_HISTORY_PHASE_REGISTER_ACCESS)
     await _emit_filed_history_phase(events, FILED_HISTORY_PHASE_PAIR_WALK)
-    declaration_capture_started = False
-    persistence_started = False
+    phase_state = _CapturePairPhaseState()
     async with _resolved_declarations_register(register, operation="live-expedientes-read") as (
         opened_register,
         walk_timeout_ms,
     ):
         for code, year in query_pairs:
-            declarations = await _walk_or_failure_row(
-                opened_register.walk(modelo=code, ejercicio=year),
-                modelo=code,
-                year=year,
-                timeout_ms=walk_timeout_ms,
-                failures=failures,
-            )
-            pair_completed += 1
-            if declarations is None:
-                await _emit_filed_history_refusal(events, FILED_HISTORY_PAIR_REFUSAL_CODE)
-            await _emit_filed_history_progress(
-                events,
-                completed=pair_completed,
-                total=total,
-                unit_code=FILED_HISTORY_PAIR_PROGRESS_UNIT,
-            )
-            if declarations is None:
-                continue
-            within_limit = _declarations_within_limit(
-                declarations,
-                limit=limit,
-                reached_count=accumulator.reached_count,
-            )
-            if within_limit is None:
-                return pair_completed
-            if within_limit:
-                if not declaration_capture_started:
-                    await _emit_filed_history_phase(events, FILED_HISTORY_PHASE_DECLARATION_CAPTURE)
-                    declaration_capture_started = True
-                if not dry_run and not persistence_started:
-                    await _emit_filed_history_phase(events, FILED_HISTORY_PHASE_PERSISTENCE)
-                    persistence_started = True
-            await _absorb_declarations(
-                within_limit,
+            pair_completed, limit_reached = await _capture_filed_data_query_pair(
+                code,
+                year,
                 opened_register=opened_register,
+                walk_timeout_ms=walk_timeout_ms,
                 accumulator=accumulator,
                 store=store,
                 bucket_id=bucket_id,
                 output_root=output_root,
+                limit=limit,
                 dry_run=dry_run,
-                modelo=code,
-                year=year,
                 failures=failures,
                 events=events,
+                pair_completed=pair_completed,
+                pair_total=total,
+                phase_state=phase_state,
             )
-            if limit is not None and accumulator.reached_count >= limit:
+            if limit_reached:
                 return pair_completed
     return pair_completed
 
@@ -999,6 +1063,47 @@ def _persisted_bulk_filed_capture_report(
     )
 
 
+async def _announce_bulk_capture_plan(
+    *,
+    query_pairs: Sequence[tuple[str, int]],
+    failures: Sequence[FiledDataCaptureFailureRow],
+    events: OperationEventEmitter | None,
+) -> int:
+    """Publish initial pair progress and local refusal rows in walk order."""
+    pair_total = len(query_pairs) + len(failures)
+    if pair_total:
+        await _emit_filed_history_progress(
+            events,
+            completed=0,
+            total=pair_total,
+            unit_code=FILED_HISTORY_PAIR_PROGRESS_UNIT,
+        )
+    for _failure in failures:
+        await _emit_filed_history_refusal(events, FILED_HISTORY_PAIR_REFUSAL_CODE)
+    if failures:
+        await _emit_filed_history_progress(
+            events,
+            completed=len(failures),
+            total=pair_total,
+            unit_code=FILED_HISTORY_PAIR_PROGRESS_UNIT,
+        )
+    return pair_total
+
+
+def _require_bulk_capture_dependencies(
+    *,
+    dry_run: bool,
+    sync_run_repository: SyncRunRecordRepositoryProtocol | None,
+) -> str:
+    """Validate persistence authority before resolving the active bucket."""
+    if not dry_run and sync_run_repository is None:
+        raise LiveApplicationInputError(
+            translated_message="application.live.filed_data.errors.sync_run_repository_required",
+            context={"dry_run": dry_run, "sync_run_repository_present": False},
+        )
+    return require_active_bucket_id()
+
+
 async def capture_filed_data_bulk(
     *,
     year_from: int,
@@ -1048,23 +1153,11 @@ async def capture_filed_data_bulk(
     store = FiledDeclaracionObservationStore(output_root)
     accumulator = _CaptureAccumulator()
     query_pairs, failures = _plan_filed_capture_queries(resolved_modelos, year_from=year_from, year_to=year_to)
-    pair_total = len(query_pairs) + len(failures)
-    if pair_total:
-        await _emit_filed_history_progress(
-            events,
-            completed=0,
-            total=pair_total,
-            unit_code=FILED_HISTORY_PAIR_PROGRESS_UNIT,
-        )
-    for _failure in failures:
-        await _emit_filed_history_refusal(events, FILED_HISTORY_PAIR_REFUSAL_CODE)
-    if failures:
-        await _emit_filed_history_progress(
-            events,
-            completed=len(failures),
-            total=pair_total,
-            unit_code=FILED_HISTORY_PAIR_PROGRESS_UNIT,
-        )
+    pair_total = await _announce_bulk_capture_plan(
+        query_pairs=query_pairs,
+        failures=failures,
+        events=events,
+    )
 
     if not query_pairs:
         return _empty_bulk_filed_capture_report(
@@ -1075,13 +1168,10 @@ async def capture_filed_data_bulk(
             failures=failures,
         )
 
-    if not dry_run and sync_run_repository is None:
-        raise LiveApplicationInputError(
-            translated_message="application.live.filed_data.errors.sync_run_repository_required",
-            context={"dry_run": dry_run, "sync_run_repository_present": False},
-        )
-
-    bucket_id = require_active_bucket_id()
+    bucket_id = _require_bulk_capture_dependencies(
+        dry_run=dry_run,
+        sync_run_repository=sync_run_repository,
+    )
 
     await _capture_filed_data_query_pairs(
         query_pairs,

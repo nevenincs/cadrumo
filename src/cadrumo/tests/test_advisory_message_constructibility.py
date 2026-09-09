@@ -304,7 +304,7 @@ def test_every_advisory_message_is_constructible(advisory_builders: tuple[_Build
 _KNOWN_CRAMPED_BUILDERS: frozenset[str] = frozenset(
     {
         "cadrumo/application/modelo/_prior_payment_advisory.py:184",
-        "cadrumo/application/modelo/_prorrata_regularizacion_advisory.py:333",
+        "cadrumo/application/modelo/_prorrata_regularizacion_advisory.py:444",
     },
 )
 

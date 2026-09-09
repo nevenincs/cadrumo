@@ -392,8 +392,6 @@ errors:
     exchange_rate_provider: El proveedor de tipos de cambio no respondió.
     fail_acceleration_receipt_revocation: No se ha podido eliminar el acceso rápido
       de inicio de sesión guardado de este perfil; sigue en el disco.
-    fail_access_gate_authorization_manifest: No se pudo cargar el manifiesto de autorización
-      de modelos o contiene una entrada de habilitación no válida.
     fail_borrador_parse: No se pudo interpretar el PDF del borrador de Modelo 100
       como una declaración.
     fail_browser_evasion: No se pudo aplicar la configuración de evasión del navegador.

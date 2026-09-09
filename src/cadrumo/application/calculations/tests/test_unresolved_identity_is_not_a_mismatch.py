@@ -5,7 +5,7 @@ contract: ``filing_external_evidence_blockers`` reports
 a justificante against, and ``MISMATCHED_EXTERNAL_EVIDENCE_RECORD`` only when an
 identity IS available and disagrees with the stored receipt.
 
-Both once produced the mismatch code, so an operator whose profile simply
+Both once _produced the mismatch code, so an operator whose profile simply
 carried no NIF was told their filed evidence was mismatched. That points at the
 receipt -- a document they cannot change -- instead of at the profile field they
 had not filled in. The gate stays fail-closed in both cases: an unidentifiable
@@ -126,3 +126,5 @@ def test_an_absent_identity_still_blocks(tmp_path: Path) -> None:
     gate for a filing nobody proved belongs to this taxpayer.
     """
     assert _blockers_for(tmp_path, None), "an unidentifiable receipt must still block"
+
+

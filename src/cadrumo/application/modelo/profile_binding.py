@@ -373,6 +373,84 @@ def resolve_maternidad_meses(
     return _resolve_maternidad_meses_from_fact_index(fact_index, snapshot)
 
 
+def _fact_index_declares_maternidad_months(fact_index: Mapping[str, UserProfileFactValue]) -> bool:
+    """Return whether the profile fact projection declares maternity months."""
+    return any(
+        key.startswith("renta_family.descendiente.") and key.endswith(".meses_madre_trabajo")
+        for key in fact_index
+    )
+
+
+def _maternidad_ceiling_unavailable_resolution(*, declares_meses: bool) -> MaternidadMesesResolution:
+    """Withhold pre-2023 maternity months when the statutory ceiling is unavailable."""
+    return MaternidadMesesResolution(
+        pairs=(),
+        withheld_indices=(),
+        ceilings_resolved=True,
+        declares_meses=declares_meses,
+        cotizaciones_ceiling_inexpressible=True,
+    )
+
+
+def _maternidad_thresholds_unresolved_resolution(*, declares_meses: bool) -> MaternidadMesesResolution:
+    """Withhold maternity months when the revision exposes no required thresholds."""
+    return MaternidadMesesResolution(
+        pairs=(),
+        withheld_indices=(),
+        ceilings_resolved=False,
+        declares_meses=declares_meses,
+    )
+
+
+def _maternidad_withheld_indices(
+    profile: RentaFamilyProfile,
+    contributed: Mapping[str, int],
+) -> tuple[str, ...]:
+    """Name descendants declaring months that contributed no eligible months."""
+    return tuple(
+        str(index)
+        for index, descendant in enumerate(profile.descendientes)
+        if descendant.meses_madre_trabajo and contributed.get(str(index), 0) == 0
+    )
+
+
+def _maternidad_alta_posterior_hijos(
+    profile: RentaFamilyProfile,
+    contributed: Mapping[str, int],
+    *,
+    filing_year: int,
+) -> frozenset[str]:
+    """Return eligible descendants carrying the post-birth alta increment."""
+    return frozenset(
+        str(index)
+        for index, descendant in enumerate(profile.descendientes)
+        if contributed.get(str(index), 0) > 0
+        and descendant.maternidad_alta_posterior_increment_applies(filing_year)
+    )
+
+
+def _maternidad_resolved_resolution(
+    profile: RentaFamilyProfile,
+    pairs: tuple[tuple[str, int], ...],
+    *,
+    filing_year: int,
+    declares_meses: bool,
+) -> MaternidadMesesResolution:
+    """Project eligible pairs and their dependent maternity diagnostics."""
+    contributed = dict(pairs)
+    return MaternidadMesesResolution(
+        pairs=pairs,
+        withheld_indices=_maternidad_withheld_indices(profile, contributed),
+        ceilings_resolved=True,
+        declares_meses=declares_meses,
+        alta_posterior_hijos=_maternidad_alta_posterior_hijos(
+            profile,
+            contributed,
+            filing_year=filing_year,
+        ),
+    )
+
+
 def _resolve_maternidad_meses_from_fact_index(
     fact_index: Mapping[str, UserProfileFactValue],
     snapshot: RegistrySnapshot,
@@ -384,9 +462,7 @@ def _resolve_maternidad_meses_from_fact_index(
     projection while resolving bindings, so it calls this helper rather than
     reconstructing the family a second way.
     """
-    declares_meses = any(
-        key.startswith("renta_family.descendiente.") and key.endswith(".meses_madre_trabajo") for key in fact_index
-    )
+    declares_meses = _fact_index_declares_maternidad_months(fact_index)
     if snapshot.filing_year < DEDUCCION_MATERNIDAD_COTIZACIONES_CEILING_RETIRED_FILING_YEAR:
         # Until 2022 the deducción was capped at the mother's cotizaciones
         # devengadas in the period. The engine cannot apply that cap: the
@@ -394,19 +470,12 @@ def _resolve_maternidad_meses_from_fact_index(
         # fact is 2024-pinned, so no figure is reachable for these years.
         # Computing anyway would grant an un-ceilinged deducción, which
         # over-grants and therefore under-declares.
-        return MaternidadMesesResolution(
-            pairs=(),
-            withheld_indices=(),
-            ceilings_resolved=True,
+        return _maternidad_ceiling_unavailable_resolution(
             declares_meses=declares_meses,
-            cotizaciones_ceiling_inexpressible=True,
         )
     thresholds = _resolved_minimo_descendientes_thresholds(snapshot)
     if thresholds is None:
-        return MaternidadMesesResolution(
-            pairs=(),
-            withheld_indices=(),
-            ceilings_resolved=False,
+        return _maternidad_thresholds_unresolved_resolution(
             declares_meses=declares_meses,
         )
     profile = _renta_family_profile_from_facts(fact_index)
@@ -415,25 +484,11 @@ def _resolve_maternidad_meses_from_fact_index(
     # computed the same thing with no production caller -- two authorities for
     # one answer, which is how the guarderia half once drifted from its record.
     pairs = profile.meses_maternidad_por_descendiente(snapshot.filing_year, thresholds=thresholds)
-    contributed = dict(pairs)
-    return MaternidadMesesResolution(
-        pairs=pairs,
-        withheld_indices=tuple(
-            str(index)
-            for index, descendant in enumerate(profile.descendientes)
-            if descendant.meses_madre_trabajo and contributed.get(str(index), 0) == 0
-        ),
-        ceilings_resolved=True,
+    return _maternidad_resolved_resolution(
+        profile,
+        pairs,
+        filing_year=snapshot.filing_year,
         declares_meses=declares_meses,
-        # Consulted only for a hijo_id already carried in `pairs` above: the
-        # increment can only ever add to a contributing pair, never grant one
-        # a withheld or zero-months descendant does not have.
-        alta_posterior_hijos=frozenset(
-            str(index)
-            for index, descendant in enumerate(profile.descendientes)
-            if contributed.get(str(index), 0) > 0
-            and descendant.maternidad_alta_posterior_increment_applies(snapshot.filing_year)
-        ),
     )
 
 
@@ -1499,15 +1554,53 @@ def _derived_binding_diagnostics(
     return tuple(diagnostics)
 
 
+def _economic_activity_binding_value(
+    fact_index: Mapping[str, UserProfileFactValue],
+) -> Decimal:
+    """Derive the numeric activity predicate from the canonical category fact."""
+    raw_categories = str(fact_index.get("taxpayer_type.irpf_income_categories", ""))
+    categories = {token.strip() for token in raw_categories.split(",") if token.strip()}
+    return Decimal("1") if _ECONOMIC_ACTIVITY_INCOME_CATEGORY in categories else Decimal("0")
+
+
+def _profile_selector_value(
+    selector: str,
+    fact_index: Mapping[str, UserProfileFactValue],
+) -> UserProfileFactValue | None:
+    """Read and normalize one profile selector, treating blank text as absent."""
+    value = fact_index.get(selector)
+    if value is None:
+        return None
+    if isinstance(value, str):
+        value = value.strip()
+        if not value:
+            return None
+    return value
+
+
+def _first_profile_binding_selector_value(
+    binding: DataBindingDefinition,
+    fact_index: Mapping[str, UserProfileFactValue],
+    *,
+    gate_selector: object | None,
+) -> UserProfileFactValue | None:
+    """Resolve the first non-gate selector value in declared selector order."""
+    for selector in profile_binding_selectors(binding.selector):
+        if gate_selector is not None and selector == gate_selector:
+            continue
+        value = _profile_selector_value(selector, fact_index)
+        if value is not None:
+            return value
+    return None
+
+
 def resolve_profile_binding_value(
     binding: DataBindingDefinition,
     fact_index: Mapping[str, UserProfileFactValue],
 ) -> UserProfileFactValue | None:
     """Return the typed profile fact value for one profile binding, or None if absent."""
     if binding.id.endswith(_ECONOMIC_ACTIVITY_PREDICATE_BINDING_SUFFIX):
-        raw_categories = str(fact_index.get("taxpayer_type.irpf_income_categories", ""))
-        categories = {token.strip() for token in raw_categories.split(",") if token.strip()}
-        return Decimal("1") if _ECONOMIC_ACTIVITY_INCOME_CATEGORY in categories else Decimal("0")
+        return _economic_activity_binding_value(fact_index)
     # ``profile_binding_selectors`` returns the binding's DEPENDENCY set -- every
     # fact it references -- and that includes ``required_when_profile_key``. The
     # gate fact states WHETHER the binding applies, never WHAT it holds, so it
@@ -1526,18 +1619,11 @@ def resolve_profile_binding_value(
     # accessor answers both shapes, so the gate cannot be defeated by an input
     # shape the type already permits.
     gate_selector = selector_as_dict(binding).get("required_when_profile_key")
-    for selector in profile_binding_selectors(binding.selector):
-        if gate_selector is not None and selector == gate_selector:
-            continue
-        value = fact_index.get(selector)
-        if value is None:
-            continue
-        # Blank strings are treated as absent; all other typed values (bool,
-        # Decimal, date, int) are non-blank by definition.
-        if isinstance(value, str) and not value.strip():
-            continue
-        return value.strip() if isinstance(value, str) else value
-    return None
+    return _first_profile_binding_selector_value(
+        binding,
+        fact_index,
+        gate_selector=gate_selector,
+    )
 
 
 __all__ = [

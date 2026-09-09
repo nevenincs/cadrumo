@@ -10,7 +10,7 @@ reclassified downstream of it.
 
 Two shapes, following the tree's existing convention rather than a new one:
 row structs are frozen slotted dataclasses (as
-:class:`~cadrumo.entrypoints.tui.profile.sync_review.CensalFieldReviewRowV1`
+the application-owned censal review projection
 and the ``status_projection`` rows are), and projection narrowings are
 pydantic models on the canonical :data:`STRICT_FROZEN_CONFIG`.
 

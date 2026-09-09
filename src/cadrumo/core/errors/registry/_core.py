@@ -348,16 +348,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.access_gate.errors.AuthorizationManifestError",
-        ErrorCode(
-            code="FAIL_ACCESS_GATE_AUTHORIZATION_MANIFEST",
-            category=ErrorCategory.FAIL,
-            message_key="errors.fail.fail_access_gate_authorization_manifest",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.core.resources.errors.ResourceLoadError",
         ErrorCode(
             code="ERROR_RESOURCES_LOAD",

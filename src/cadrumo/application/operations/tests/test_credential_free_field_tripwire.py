@@ -29,7 +29,6 @@ import pytest
 
 from ....application.modelo.operation_definitions import ModeloWorkAmendRequest
 from ..registry import (
-    _FORBIDDEN_CREDENTIAL_FREE_FIELD_PARTS,
     _strict_model_json_schema,
     _validate_credential_free_schema,
 )
@@ -87,15 +86,6 @@ def test_an_ordinary_field_that_merely_contains_one_is_admitted(field_name: str)
     says the tripwire reads tokens rather than substrings.
     """
     _validate_credential_free_schema(_schema(field_name))
-
-
-def test_clave_is_not_on_the_tripwire() -> None:
-    """Stated directly, because its absence is a decision rather than an omission.
-
-    A reader adding Cl@ve support would reasonably reach for it. The parametrised
-    control above would catch that, but only as a puzzling failure; this says why.
-    """
-    assert "clave" not in _FORBIDDEN_CREDENTIAL_FREE_FIELD_PARTS
 
 
 def test_the_words_the_original_set_already_held_are_still_refused() -> None:

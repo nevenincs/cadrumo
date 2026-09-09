@@ -8,6 +8,7 @@ catalogue path.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import typer
 
@@ -15,32 +16,44 @@ from ...adapters.persistence.profile.transactions import TransactionCatalogueRep
 from ...application.ledger.actions_classification import bulk_classify_from_csv as _bulk_classify
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.i18n.render import tr
-from ...core.json_contract import Notice, NoticeSeverity
+from ...core.json_contract import Notice, NoticeSeverity, OutputSchema
 from ...domain.transactions.enums import BusinessClassification, is_classified
 from ._common import bad, emit_envelope
 from ._ledger_support import TransactionRepo
 
+if TYPE_CHECKING:
+    from ...application.ledger.models import BulkClassifyResult
 
-def ledger_classify_bulk_csv(
-    ctx: typer.Context,
-    *,
-    transaction_repository: TransactionRepo,
+
+def _validate_bulk_classification_route(
     transaction_id: str | None,
     classification: BusinessClassification | None,
-    file: str,
-    actor: str | None,
 ) -> None:
+    """Reject single-row arguments before opening the bulk input file."""
     if transaction_id is not None or classification is not None:
         raise bad(
             tr("cli.ledger.classify.file_exclusive"),
         )
+
+
+def _read_bulk_classification_file(file: str) -> str:
+    """Read the operator-provided CSV after checking its transport path."""
     csv_path = Path(file)
     if not csv_path.exists():
         raise bad(
             tr("cli.ledger.classify.file_not_found", path=file),
         )
-    csv_text = csv_path.read_text(encoding="utf-8")
-    result = _bulk_classify(
+    return csv_path.read_text(encoding="utf-8")
+
+
+def _run_bulk_classification(
+    *,
+    transaction_repository: TransactionRepo,
+    csv_text: str,
+    actor: str | None,
+) -> BulkClassifyResult:
+    """Delegate CSV parsing, classification, and atomic persistence to application code."""
+    return _bulk_classify(
         bucket_id=transaction_repository.bucket_id,
         csv_text=csv_text,
         actor=actor or resolve_active_bucket_id() or "operator",
@@ -49,6 +62,14 @@ def ledger_classify_bulk_csv(
         if isinstance(transaction_repository, TransactionCatalogueRepository)
         else None,
     )
+
+
+def _bulk_classification_output(
+    result: BulkClassifyResult,
+) -> tuple[OutputSchema, list[str], list[Notice]]:
+    """Build the canonical bulk payload, text lines, and all-failed warning."""
+    from ._ledger_payloads import LedgerClassifyBulkResult
+
     lines = [
         tr(
             "cli.ledger.classify.bulk_summary",
@@ -58,11 +79,11 @@ def ledger_classify_bulk_csv(
             fail=len(result.failures),
         ),
     ]
-    from ._ledger_payloads import LedgerClassifyBulkResult
-
-    for failure in result.failures:
-        # MACHINE-FORMAT-RATIONALE-LEDGER-BULK-CLASSIFY-FAILURE: tab-separated machine record (id, reason).
-        lines.append(f"  failed\t{failure.transaction_id}\t{failure.reason}")
+    # MACHINE-FORMAT-RATIONALE-LEDGER-BULK-CLASSIFY-FAILURE: tab-separated machine record (id, reason).
+    lines.extend(
+        f"  failed\t{failure.transaction_id}\t{failure.reason}"
+        for failure in result.failures
+    )
     classify_result = LedgerClassifyBulkResult.model_validate(
         {
             "total": result.total,
@@ -88,6 +109,25 @@ def ledger_classify_bulk_csv(
                 },
             ),
         )
+    return classify_result, lines, notices
+
+
+def ledger_classify_bulk_csv(
+    ctx: typer.Context,
+    *,
+    transaction_repository: TransactionRepo,
+    transaction_id: str | None,
+    classification: BusinessClassification | None,
+    file: str,
+    actor: str | None,
+) -> None:
+    _validate_bulk_classification_route(transaction_id, classification)
+    result = _run_bulk_classification(
+        transaction_repository=transaction_repository,
+        csv_text=_read_bulk_classification_file(file),
+        actor=actor,
+    )
+    classify_result, lines, notices = _bulk_classification_output(result)
     emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines, notices=notices)
     if notices:
         raise typer.Exit(code=1)

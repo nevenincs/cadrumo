@@ -8,13 +8,11 @@ serialised through an :class:`~adapters.persistence.storage.Envelope` by
 :class:`~adapters.persistence.storage.SecureBoundRepository`; no plaintext
 draft JSON or envelope file lands on disk.
 
-This concrete repository is the persistence adapter behind the
-:class:`~domain.filing.ModeloDraftRepositoryProtocol` port. It lives in
-the persistence adapter (not in :mod:`domain.filing`) because its
+This concrete repository lives in the persistence adapter (not in
+:mod:`domain.filing`) because its
 :class:`~adapters.persistence.storage.SecureBoundRepository` base is
-SQL/crypto-coupled; the domain package owns only the typed
-:class:`~domain.filing.ModeloDraft` payload and the narrow read/save
-port that domain-facing service code depends on.
+SQL/crypto-coupled; the domain package owns the typed
+:class:`~domain.filing.ModeloDraft` payload.
 
 See Also:
     :class:`~domain.filing.ModeloDraft`

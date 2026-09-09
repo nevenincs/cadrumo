@@ -2,23 +2,20 @@
 
 from __future__ import annotations
 
-import inspect
 from collections.abc import Callable
 from enum import StrEnum
 from functools import cached_property
-from typing import Annotated, Literal, Protocol, TypedDict, cast, runtime_checkable
+from typing import Annotated, Literal, Protocol, cast, runtime_checkable
 
 from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
-    PydanticInvalidForJsonSchema,
     field_validator,
     model_validator,
 )
 
 from ...core.hashing import content_hash_hex
-from ...core.hex import HEX_PATTERN_64
 from ...core.identity import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import (
@@ -30,7 +27,27 @@ from ...core.operations import (
     OperationInteractionKind,
 )
 from ..operator_actions.models import ActionReference
-from ._model_contract import require_strict_frozen_operation_model_graph
+from ._registry_contracts import (
+    build_public_contract as _build_public_contract,
+)
+from ._registry_contracts import (
+    contract_set_digest as _contract_set_digest,
+)
+from ._registry_contracts import (
+    definition_contract_digest as _definition_contract_digest,
+)
+from ._registry_contracts import (
+    require_positional_callable_signature as _require_positional_callable_signature,
+)
+from ._registry_contracts import (
+    validate_public_registration as _validate_public_registration,
+)
+from ._registry_schema_validation import (
+    strict_model_json_schema as _strict_model_json_schema,
+)
+from ._registry_schema_validation import (
+    validate_credential_free_schema as _validate_credential_free_schema,
+)
 from .capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -58,63 +75,6 @@ from .models import (
 from .owner import OperationExecutor, OperationResumableExecutor
 from .secret_submission import OperationEphemeralSecretDeclaration
 
-#: Field-name tokens a credential-free journal request may not carry.
-#:
-#: A NAME tripwire, not the wall. What actually keeps a secret out of the
-#: journal is the storage policy plus the separate ephemeral-secret channel;
-#: this catches the case where a field is added whose name says plainly what it
-#: holds. Matching is on whole ``_``-separated tokens, so it never fires on a
-#: word that merely contains one of these.
-#:
-#: The second group are the words THIS codebase uses for credential material
-#: and that the first group missed: the certificate path spells its material
-#: ``cert``/``certificate``/``pem``/``private``, and the Cl@ve factors are a
-#: ``pin`` and a one-time code. ``certificate_pem``, ``clave_pin`` and
-#: ``otp_code`` all split into tokens the original set did not hold, so each
-#: would have journalled its own name unchallenged.
-#:
-#: ``clave`` is deliberately ABSENT despite naming the Cl@ve authentication
-#: system, because it is a homonym: AEAT also spells an operation key
-#: ``clave``, and ``clave``/``clave_operacion``/``clave_declarado`` are real
-#: fields on the detail rows an amendment journals. Adding it would refuse a
-#: lawful M184 or M347 amendment to catch a credential nothing names that way.
-_FORBIDDEN_CREDENTIAL_FREE_FIELD_PARTS = frozenset(
-    {
-        "auth",
-        "bearer",
-        "callback",
-        "cookie",
-        "credential",
-        "ciphertext",
-        "digest",
-        "encrypted",
-        "frontend",
-        "hash",
-        "key",
-        "passphrase",
-        "password",
-        "proof",
-        "secret",
-        "session",
-        "signature",
-        "token",
-        "transport",
-        "verifier",
-        "wrapped",
-        "cert",
-        "certificate",
-        "challenge",
-        "jwt",
-        "nonce",
-        "otp",
-        "pem",
-        "pin",
-        "private",
-        "salt",
-        "totp",
-    }
-)
-_FORBIDDEN_OPERATION_SCHEMA_FORMATS = frozenset({"binary", "byte", "password"})
 _STRICT_RUNTIME_BINDING_CONFIG = ConfigDict(
     strict=True,
     frozen=True,
@@ -462,31 +422,6 @@ def resolve_effect_receipt(
     )
 
 
-class _PublicDefinitionContractValues(TypedDict):
-    definition_id: OperationDefinitionId
-    action_reference: ActionReference | None
-    request_schema: OperationSchemaIdentityV1
-    result_schema: OperationSchemaIdentityV1 | None
-    review_projection_schema: OperationSchemaIdentityV1 | None
-    interaction_response_schema: OperationSchemaIdentityV1 | None
-    workspace_refresh_target_schema: OperationSchemaIdentityV1 | None
-    interaction_kinds: frozenset[OperationInteractionKind]
-    request_storage: OperationRequestStoragePolicy
-    durability: OperationDurability
-    cancellation: OperationCancellation
-    deadline: OperationDeadline
-    replay: OperationReplayPolicy
-    baseline: OperationBaselinePolicy
-    sensitive_input: OperationSensitiveInputPolicy
-    conflict_scope: OperationConflictScope
-    owned_resources: frozenset[OperationOwnedResource]
-    permitted_effects: frozenset[OperationEffect]
-    close_policy: OperationClosePolicy
-    reconciliation_policy: OperationReconciliationPolicy
-    permitted_frontends: frozenset[OperationFrontendProjection]
-    ephemeral_secret_required: bool
-
-
 class OperationSchemaBindingV1(BaseModel):
     """Runtime-only binding from a public schema identity to its exact model."""
 
@@ -715,16 +650,11 @@ class OperationRegistry(BaseModel):
         definition: OperationDefinition,
         registration: OperationPublicDefinitionRegistrationV1,
     ) -> None:
-        contract = registration.contract
-        bindings = _public_schema_bindings(registration)
-        declared_identities = _declared_public_schema_identities(contract)
-        _validate_public_schema_manifest(bindings, declared_identities)
-        _validate_public_request_binding(definition, contract, bindings)
-        _validate_public_result_registration(definition, registration, contract, bindings)
-        _validate_public_result_projector(registration)
-        _validate_public_review_registration(definition, registration, contract)
-        _validate_public_refresh_registration(registration, contract)
-        _validate_public_contract_fixed_point(definition, contract)
+        _validate_public_registration(
+            definition,
+            registration,
+            contract_builder=_public_contract_for_definition,
+        )
 
     @cached_property
     def public_contract_set(self) -> OperationPublicContractSetV1:
@@ -798,516 +728,9 @@ class OperationRegistry(BaseModel):
         return definition.request_type.model_validate_json(raw)
 
 
-def _public_schema_bindings(
-    registration: OperationPublicDefinitionRegistrationV1,
-) -> dict[tuple[str, int, ContentDigest], type[BaseModel]]:
-    """Index each registered public schema binding by its complete identity."""
-    return {_schema_identity_key(binding.identity): binding.model_type for binding in registration.schema_bindings}
-
-
-def _declared_public_schema_identities(
-    contract: OperationPublicDefinitionContractV1,
-) -> set[tuple[str, int, ContentDigest]]:
-    """Collect every schema identity declared by one public contract manifest."""
-    return {
-        _schema_identity_key(identity)
-        for identity in (
-            contract.request_schema,
-            contract.result_schema,
-            contract.review_projection_schema,
-            contract.interaction_response_schema,
-            contract.workspace_refresh_target_schema,
-        )
-        if identity is not None
-    }
-
-
-def _validate_public_schema_manifest(
-    bindings: dict[tuple[str, int, ContentDigest], type[BaseModel]],
-    declared_identities: set[tuple[str, int, ContentDigest]],
-) -> None:
-    """Require schema bindings to cover exactly the contract's declared manifest."""
-    if set(bindings) != declared_identities:
-        raise ValueError("public operation schema bindings must exactly match the declared manifest")
-
-
-def _validate_public_request_binding(
-    definition: OperationDefinition,
-    contract: OperationPublicDefinitionContractV1,
-    bindings: dict[tuple[str, int, ContentDigest], type[BaseModel]],
-) -> None:
-    """Require the declared request identity to bind the definition request model."""
-    if bindings[_schema_identity_key(contract.request_schema)] is not definition.request_type:
-        raise ValueError("public operation request schema must bind the definition request type")
-
-
-def _validate_public_result_registration(
-    definition: OperationDefinition,
-    registration: OperationPublicDefinitionRegistrationV1,
-    contract: OperationPublicDefinitionContractV1,
-    bindings: dict[tuple[str, int, ContentDigest], type[BaseModel]],
-) -> None:
-    """Match result schema/projector declarations to the definition's result model."""
-    if definition.result_type is None:
-        _validate_resultless_public_registration(registration, contract)
-        return
-    _validate_resultful_public_registration(definition, registration, contract, bindings)
-
-
-def _validate_resultless_public_registration(
-    registration: OperationPublicDefinitionRegistrationV1,
-    contract: OperationPublicDefinitionContractV1,
-) -> None:
-    """Refuse result declarations for an operation without a result model."""
-    if contract.result_schema is not None:
-        raise ValueError("result-less operation definition cannot declare a public result schema")
-    if registration.result_projector is not None:
-        raise ValueError("result-less operation definition cannot declare a result projector")
-
-
-def _validate_resultful_public_registration(
-    definition: OperationDefinition,
-    registration: OperationPublicDefinitionRegistrationV1,
-    contract: OperationPublicDefinitionContractV1,
-    bindings: dict[tuple[str, int, ContentDigest], type[BaseModel]],
-) -> None:
-    """Match a result-bearing operation's schema and optional projection adapter."""
-    if contract.result_schema is not None:
-        bound_result_type = bindings[_schema_identity_key(contract.result_schema)]
-        distinct_result_projection = bound_result_type is not definition.result_type
-        if distinct_result_projection != (registration.result_projector is not None):
-            raise ValueError(
-                "a public result schema distinct from the definition result type requires one registered "
-                "result projector, and one identical to it must not declare one"
-            )
-    elif registration.result_projector is not None:
-        raise ValueError("a result projector requires a declared public result schema")
-
-
-def _validate_public_result_projector(registration: OperationPublicDefinitionRegistrationV1) -> None:
-    """Require a registered result projector to expose the public two-argument shape."""
-    if registration.result_projector is not None:
-        _require_positional_callable_signature(
-            registration.result_projector,
-            arity=2,
-            label="result projector",
-        )
-
-
-def _validate_public_review_registration(
-    definition: OperationDefinition,
-    registration: OperationPublicDefinitionRegistrationV1,
-    contract: OperationPublicDefinitionContractV1,
-) -> None:
-    """Match REVIEW declarations, operand validation, and projector signature in order."""
-    declares_review = OperationInteractionKind.REVIEW in definition.interaction_kinds
-    _validate_public_review_declarations(declares_review, registration, contract)
-    _validate_public_review_implementations(registration)
-
-
-def _validate_public_review_declarations(
-    declares_review: bool,
-    registration: OperationPublicDefinitionRegistrationV1,
-    contract: OperationPublicDefinitionContractV1,
-) -> None:
-    """Require each REVIEW contract and runtime registration arm together."""
-    if declares_review != (contract.review_projection_schema is not None):
-        raise ValueError("REVIEW operation definitions require one public review schema")
-    if declares_review != (registration.review_projector is not None):
-        raise ValueError("REVIEW operation definitions require one registered review projector")
-    if declares_review != (registration.reviewed_operand_type is not None):
-        raise ValueError("REVIEW operation definitions require one registered reviewed operand type")
-
-
-def _validate_public_review_implementations(registration: OperationPublicDefinitionRegistrationV1) -> None:
-    """Validate the reviewed operand graph before the REVIEW projector signature."""
-    if registration.reviewed_operand_type is not None:
-        require_strict_frozen_operation_model_graph(
-            registration.reviewed_operand_type,
-            path="reviewed operand",
-            reject_mutable_annotations=True,
-            require_validated_defaults=True,
-        )
-    if registration.review_projector is not None:
-        _require_positional_callable_signature(
-            registration.review_projector,
-            arity=2,
-            label="REVIEW projector",
-        )
-
-
-def _validate_public_refresh_registration(
-    registration: OperationPublicDefinitionRegistrationV1,
-    contract: OperationPublicDefinitionContractV1,
-) -> None:
-    """Require Workspace refresh schema and adapter declarations to move together."""
-    declares_refresh = contract.workspace_refresh_target_schema is not None
-    if declares_refresh != (registration.workspace_refresh_adapter is not None):
-        raise ValueError("Workspace refresh schema and adapter must be declared together")
-    if registration.workspace_refresh_adapter is not None:
-        _require_positional_callable_signature(
-            registration.workspace_refresh_adapter,
-            arity=1,
-            label="Workspace refresh adapter",
-        )
-
-
-def _validate_public_contract_fixed_point(
-    definition: OperationDefinition,
-    contract: OperationPublicDefinitionContractV1,
-) -> None:
-    """Require the public contract to equal the value derived from live definition data."""
-    expected = _public_contract_for_definition(
-        definition,
-        request_schema=contract.request_schema,
-        result_schema=contract.result_schema,
-        review_projection_schema=contract.review_projection_schema,
-        interaction_response_schema=contract.interaction_response_schema,
-        workspace_refresh_target_schema=contract.workspace_refresh_target_schema,
-    )
-    if expected != contract:
-        raise ValueError("public operation definition contract is not a live-registry fixed point")
-
-
-_HEX64_DIGEST_PATTERN = HEX_PATTERN_64
-
-
-def _is_hex64_shaped_schema(value: object) -> bool:
-    """Report whether one field's JSON-schema fragment matches the Hex64Str/ContentDigest shape.
-
-    ``ContentDigest`` is a bare assignment to ``Hex64Str`` (``ContentDigest
-    is Hex64Str``), not a distinct type, and ``Hex64Str`` is deliberately
-    shared by several unrelated concepts (``WorkUnitId``,
-    ``CalculationRevisionId``, ``SnapshotId``, ``TransactionId``). There is
-    therefore no runtime type-identity test for "declared as
-    ``ContentDigest`` specifically" - only a SHAPE test for "64 lowercase
-    hex characters", which every one of those sibling concepts also
-    satisfies. Recurses through ``anyOf`` (an ``X | None`` field) and
-    ``items`` (a ``tuple[X, ...]`` field) to reach the underlying string
-    schema.
-    """
-    if not isinstance(value, dict):
-        return False
-    mapping = cast(dict[str, object], value)
-    if _is_hex64_string_schema(mapping):
-        return True
-    if _is_hex64_any_of_schema(mapping):
-        return True
-    return _is_hex64_items_schema(mapping)
-
-
-def _is_hex64_string_schema(mapping: dict[str, object]) -> bool:
-    """Recognize the direct JSON-schema shape of one lowercase Hex64 value."""
-    return (
-        mapping.get("type") == "string"
-        and mapping.get("pattern") == _HEX64_DIGEST_PATTERN
-        and mapping.get("minLength") == 64
-        and mapping.get("maxLength") == 64
-    )
-
-
-def _is_hex64_any_of_schema(mapping: dict[str, object]) -> bool:
-    """Search non-null branches of an optional JSON-schema value for Hex64."""
-    any_of = mapping.get("anyOf")
-    if not isinstance(any_of, list):
-        return False
-    return any(
-        _is_hex64_shaped_schema(cast(dict[str, object], item))
-        for item in cast(list[object], any_of)
-        if isinstance(item, dict) and cast(dict[str, object], item).get("type") != "null"
-    )
-
-
-def _is_hex64_items_schema(mapping: dict[str, object]) -> bool:
-    """Search a homogeneous tuple/array item schema for Hex64."""
-    items = mapping.get("items")
-    if isinstance(items, dict):
-        return _is_hex64_shaped_schema(cast(dict[str, object], items))
-    return False
-
-
-def _validate_credential_free_schema(schema: object) -> None:
-    """Reject request schemas capable of carrying credentials or opaque transports.
-
-    A field name matching ONLY the ``digest`` forbidden token (no other
-    forbidden token also matches) is admitted when its schema shape is
-    exactly Hex64 - a compare-and-swap content digest, never a bearer token
-    or passphrase by shape. A field matching any OTHER forbidden token is
-    refused regardless of shape, and regardless of whether it also matches
-    ``digest``; the exemption never widens any token but ``digest`` and
-    never overrides a second, independently-matched forbidden token on the
-    same field. The residual risk this accepts: a Hex64-shaped field
-    declared as one of ``ContentDigest``'s shape-sharing siblings, named
-    ``*_digest``, is also admitted by this rule.
-    """
-    if isinstance(schema, list):
-        _validate_credential_free_schema_items(cast(list[object], schema))
-        return
-    if not isinstance(schema, dict):
-        return
-    mapping = cast(dict[str, object], schema)
-    _validate_credential_free_schema_format(mapping)
-    _validate_credential_free_schema_properties(mapping)
-    for value in mapping.values():
-        _validate_credential_free_schema(value)
-
-
-def _validate_credential_free_schema_items(items: list[object]) -> None:
-    """Recursively inspect every branch in a JSON-schema list container."""
-    for item in items:
-        _validate_credential_free_schema(item)
-
-
-def _validate_credential_free_schema_format(mapping: dict[str, object]) -> None:
-    """Reject schema formats that can carry credentials in journal input."""
-    if mapping.get("format") in _FORBIDDEN_OPERATION_SCHEMA_FORMATS:
-        raise ValueError("credential-free journal request schema contains a secret-capable format")
-
-
-def _validate_credential_free_schema_properties(mapping: dict[str, object]) -> None:
-    """Reject forbidden credential field names while admitting only digest-shaped exceptions."""
-    properties = mapping.get("properties")
-    if not isinstance(properties, dict):
-        return
-    for field_name, field_schema in cast(dict[str, object], properties).items():
-        parts = set(field_name.lower().replace("-", "_").split("_"))
-        matched = parts & _FORBIDDEN_CREDENTIAL_FREE_FIELD_PARTS
-        if not matched:
-            continue
-        if matched == {"digest"} and _is_hex64_shaped_schema(field_schema):
-            continue
-        raise ValueError(f"credential-free journal request field {field_name!r} has a forbidden security meaning")
-
-
-def _strict_model_json_schema(model_type: type[BaseModel]) -> dict[str, object]:
-    """Return one exact closed schema after enforcing the public model baseline."""
-    require_strict_frozen_operation_model_graph(model_type, path="public schema")
-    try:
-        validation_schema = model_type.model_json_schema(mode="validation")
-        serialization_schema = model_type.model_json_schema(mode="serialization")
-    except PydanticInvalidForJsonSchema as error:
-        raise ValueError("public operation schema model must have a closed JSON schema") from error
-    if validation_schema != serialization_schema:
-        raise ValueError("public operation schema validation and serialization shapes must be identical")
-    closed_schema = cast(dict[str, object], validation_schema)
-    _validate_closed_json_schema(closed_schema, path=model_type.__name__)
-    return closed_schema
-
-
-def _validate_closed_json_schema(schema: dict[str, object], *, path: str) -> None:
-    """Refuse every untyped or open branch of one generated public schema."""
-    _reject_secret_capable_schema_branch(schema, path=path)
-    _validate_schema_definitions(schema, path=path)
-    if schema.get("patternProperties") is not None:
-        raise ValueError(f"public operation schema {path} contains a pattern-properties payload bag")
-    if "$ref" in schema or "enum" in schema or "const" in schema:
-        return
-    if _validate_schema_combinator(schema, path=path):
-        return
-    schema_type = schema.get("type")
-    if not isinstance(schema_type, str):
-        raise ValueError(f"public operation schema {path} contains an untyped branch")
-    if schema_type == "object":
-        _validate_closed_object_schema(schema, path=path)
-    elif schema_type == "array":
-        _validate_closed_array_schema(schema, path=path)
-
-
-def _reject_secret_capable_schema_branch(schema: dict[str, object], *, path: str) -> None:
-    if schema.get("format") in _FORBIDDEN_OPERATION_SCHEMA_FORMATS or schema.get("writeOnly") is True:
-        raise ValueError(f"public operation schema {path} contains a secret-capable branch")
-
-
-def _validate_schema_definitions(schema: dict[str, object], *, path: str) -> None:
-    definitions = schema.get("$defs")
-    if not isinstance(definitions, dict):
-        return
-    for definition_name, definition in cast(dict[str, object], definitions).items():
-        if not isinstance(definition, dict):
-            raise ValueError(f"public operation schema {path} has an invalid definition")
-        _validate_closed_json_schema(
-            cast(dict[str, object], definition),
-            path=f"{path}.$defs.{definition_name}",
-        )
-
-
-def _validate_schema_combinator(schema: dict[str, object], *, path: str) -> bool:
-    for combinator in ("anyOf", "oneOf", "allOf"):
-        branches = schema.get(combinator)
-        if branches is None:
-            continue
-        if not isinstance(branches, list) or not branches:
-            raise ValueError(f"public operation schema {path} has an invalid {combinator}")
-        for index, branch in enumerate(cast(list[object], branches)):
-            if not isinstance(branch, dict):
-                raise ValueError(f"public operation schema {path} has an invalid {combinator} branch")
-            _validate_closed_json_schema(
-                cast(dict[str, object], branch),
-                path=f"{path}.{combinator}[{index}]",
-            )
-        return True
-    return False
-
-
-def _validate_closed_object_schema(schema: dict[str, object], *, path: str) -> None:
-    if schema.get("additionalProperties") is not False:
-        raise ValueError(f"public operation schema {path} contains an open object branch")
-    properties = schema.get("properties", {})
-    if not isinstance(properties, dict):
-        raise ValueError(f"public operation schema {path} has invalid properties")
-    for field_name, field_schema in cast(dict[str, object], properties).items():
-        if not isinstance(field_schema, dict):
-            raise ValueError(f"public operation schema {path}.{field_name} is invalid")
-        _validate_closed_json_schema(
-            cast(dict[str, object], field_schema),
-            path=f"{path}.{field_name}",
-        )
-
-
-def _validate_closed_array_schema(schema: dict[str, object], *, path: str) -> None:
-    prefix_items = schema.get("prefixItems")
-    if prefix_items is not None:
-        _validate_closed_tuple_schema(schema, prefix_items, path=path)
-        return
-    items = schema.get("items")
-    if not isinstance(items, dict):
-        raise ValueError(f"public operation schema {path} contains an untyped array")
-    _validate_closed_json_schema(cast(dict[str, object], items), path=f"{path}.items")
-
-
-def _validate_closed_tuple_schema(
-    schema: dict[str, object],
-    prefix_items: object,
-    *,
-    path: str,
-) -> None:
-    if not isinstance(prefix_items, list) or not prefix_items:
-        raise ValueError(f"public operation schema {path} has invalid fixed tuple items")
-    typed_prefix_items = cast(list[object], prefix_items)
-    item_count = len(typed_prefix_items)
-    if schema.get("minItems") != item_count or schema.get("maxItems") != item_count:
-        raise ValueError(f"public operation schema {path} contains an open fixed tuple")
-    trailing_items = schema.get("items")
-    if trailing_items is not None and trailing_items is not False:
-        raise ValueError(f"public operation schema {path} permits undeclared trailing tuple items")
-    for index, item in enumerate(typed_prefix_items):
-        if not isinstance(item, dict):
-            raise ValueError(f"public operation schema {path} has an invalid fixed tuple item")
-        _validate_closed_json_schema(
-            cast(dict[str, object], item),
-            path=f"{path}.prefixItems[{index}]",
-        )
-
-
-def _definition_contract_digest(contract: OperationPublicDefinitionContractV1) -> ContentDigest:
-    return content_hash_hex(_definition_contract_value(contract, include_digest=False))
-
-
-def _contract_set_digest(
-    definitions: tuple[OperationPublicDefinitionContractV1, ...],
-) -> ContentDigest:
-    payload = {
-        "contract_set_version": 1,
-        "definitions": [_definition_contract_value(definition, include_digest=True) for definition in definitions],
-    }
-    return content_hash_hex(payload)
-
-
-def _schema_identity_key(identity: OperationSchemaIdentityV1) -> tuple[str, int, ContentDigest]:
-    return identity.schema_id, identity.schema_version, identity.schema_fingerprint
-
-
 def operation_public_schema_reference(identity: OperationSchemaIdentityV1) -> str:
     """Return the canonical internal reference for one registered public schema."""
     return f"schema:{identity.schema_id}.v{identity.schema_version}"
-
-
-def _definition_contract_value(
-    contract: OperationPublicDefinitionContractV1,
-    *,
-    include_digest: bool,
-) -> dict[str, object]:
-    """Return the explicitly ordered, JSON-safe value governed by the digest."""
-    payload: dict[str, object] = {}
-    payload.update(_definition_contract_identity_value(contract))
-    payload.update(_definition_contract_schema_value(contract))
-    payload.update(_definition_contract_policy_value(contract))
-    if include_digest:
-        payload["definition_contract_digest"] = contract.definition_contract_digest
-    return payload
-
-
-def _definition_contract_identity_value(contract: OperationPublicDefinitionContractV1) -> dict[str, object]:
-    """Return the manifest and operation identity fields in digest order."""
-    return {
-        "manifest_version": contract.manifest_version,
-        "definition_id": contract.definition_id,
-        "action_reference": (
-            None if contract.action_reference is None else contract.action_reference.model_dump(mode="json")
-        ),
-    }
-
-
-def _definition_contract_schema_value(contract: OperationPublicDefinitionContractV1) -> dict[str, object]:
-    """Return the declared public schema identities in digest order."""
-    return {
-        "request_schema": contract.request_schema.model_dump(mode="json"),
-        "result_schema": None if contract.result_schema is None else contract.result_schema.model_dump(mode="json"),
-        "review_projection_schema": (
-            None
-            if contract.review_projection_schema is None
-            else contract.review_projection_schema.model_dump(mode="json")
-        ),
-        "interaction_response_schema": (
-            None
-            if contract.interaction_response_schema is None
-            else contract.interaction_response_schema.model_dump(mode="json")
-        ),
-        "workspace_refresh_target_schema": (
-            None
-            if contract.workspace_refresh_target_schema is None
-            else contract.workspace_refresh_target_schema.model_dump(mode="json")
-        ),
-    }
-
-
-def _definition_contract_policy_value(contract: OperationPublicDefinitionContractV1) -> dict[str, object]:
-    """Return the policy and capability fields in digest order."""
-    return {
-        "interaction_kinds": tuple(sorted(item.value for item in contract.interaction_kinds)),
-        "request_storage": contract.request_storage.value,
-        "durability": contract.durability.value,
-        "cancellation": contract.cancellation.value,
-        "deadline": contract.deadline.value,
-        "replay": contract.replay.value,
-        "baseline": contract.baseline.value,
-        "sensitive_input": contract.sensitive_input.value,
-        "conflict_scope": contract.conflict_scope.value,
-        "owned_resources": tuple(sorted(item.value for item in contract.owned_resources)),
-        "permitted_effects": tuple(sorted(item.value for item in contract.permitted_effects)),
-        "close_policy": contract.close_policy.value,
-        "reconciliation_policy": contract.reconciliation_policy.value,
-        "permitted_frontends": tuple(sorted(item.value for item in contract.permitted_frontends)),
-        "ephemeral_secret_required": contract.ephemeral_secret_required,
-    }
-
-
-def _require_positional_callable_signature(
-    callable_value: Callable[..., object],
-    *,
-    arity: int,
-    label: str,
-) -> None:
-    if inspect.iscoroutinefunction(callable_value) or inspect.iscoroutinefunction(type(callable_value).__call__):
-        raise ValueError(f"operation {label} must be synchronous")
-    try:
-        signature = inspect.signature(callable_value)
-    except (TypeError, ValueError) as error:
-        raise ValueError(f"operation {label} must expose an inspectable signature") from error
-    parameters = tuple(signature.parameters.values())
-    positional_kinds = (inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD)
-    if len(parameters) != arity or any(parameter.kind not in positional_kinds for parameter in parameters):
-        raise ValueError(f"operation {label} must accept exactly {arity} positional arguments")
 
 
 def _public_contract_for_definition(
@@ -1319,38 +742,17 @@ def _public_contract_for_definition(
     interaction_response_schema: OperationSchemaIdentityV1 | None,
     workspace_refresh_target_schema: OperationSchemaIdentityV1 | None,
 ) -> OperationPublicDefinitionContractV1:
-    capabilities = definition.capabilities
-    values: _PublicDefinitionContractValues = {
-        "definition_id": definition.definition_id,
-        "action_reference": definition.action_reference,
-        "request_schema": request_schema,
-        "result_schema": result_schema,
-        "review_projection_schema": review_projection_schema,
-        "interaction_response_schema": interaction_response_schema,
-        "workspace_refresh_target_schema": workspace_refresh_target_schema,
-        "interaction_kinds": definition.interaction_kinds,
-        "request_storage": capabilities.request_storage,
-        "durability": capabilities.durability,
-        "cancellation": capabilities.cancellation,
-        "deadline": capabilities.deadline,
-        "replay": capabilities.replay,
-        "baseline": capabilities.baseline,
-        "sensitive_input": capabilities.sensitive_input,
-        "conflict_scope": capabilities.conflict_scope,
-        "owned_resources": capabilities.owned_resources,
-        "permitted_effects": capabilities.permitted_effects,
-        "close_policy": capabilities.close_policy,
-        "reconciliation_policy": definition.reconciliation_policy,
-        "permitted_frontends": definition.permitted_frontends,
-        "ephemeral_secret_required": definition.ephemeral_secret is not None,
-    }
-    provisional = OperationPublicDefinitionContractV1.model_construct(
-        **values,
-        definition_contract_digest=cast(ContentDigest, "0" * 64),
-    )
-    return OperationPublicDefinitionContractV1(
-        **values,
-        definition_contract_digest=_definition_contract_digest(provisional),
+    return cast(
+        OperationPublicDefinitionContractV1,
+        _build_public_contract(
+            contract_type=OperationPublicDefinitionContractV1,
+            definition=definition,
+            request_schema=request_schema,
+            result_schema=result_schema,
+            review_projection_schema=review_projection_schema,
+            interaction_response_schema=interaction_response_schema,
+            workspace_refresh_target_schema=workspace_refresh_target_schema,
+        ),
     )
 
 

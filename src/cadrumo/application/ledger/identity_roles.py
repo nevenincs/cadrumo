@@ -214,56 +214,22 @@ def _own_identity_is_excludable(taxpayer_tax_id: str | None) -> bool:
     return taxpayer_tax_id is not None and bool(normalise_nif_iva(taxpayer_tax_id))
 
 
-def resolve_counterparty_identity(
+def _verified_identity_candidates(
     *,
     field: str,
     candidates: tuple[IdentityCandidate, ...],
     taxpayer_tax_id: str | None,
-    origin: FieldOrigin,
-) -> IdentityRoleResolution:
-    """Resolve which observed identifier holds the counterparty role.
-
-    Never returns a first match. Exactly one surviving candidate resolves; two or
-    more resolve to ``AMBIGUOUS`` carrying every one of them; none resolves to
-    ``UNANCHORED`` with an unresolved-role finding.
-
-    Args:
-        field: Name of the draft field being resolved.
-        candidates: Every tax identifier observed on the document, in document
-            order. Order is preserved for display only and is never used to
-            break a tie -- breaking a tie by position is first-match under
-            another name.
-        taxpayer_tax_id: This profile's own identifier, excluded from candidacy.
-            Never required to be checksum-valid or Spanish -- exclusion is an
-            identity comparison. ``None`` or blank means unknown, which weakens
-            the resolution and is reported in the note rather than passed over.
-        origin: How the candidates were obtained.
-
-    Returns:
-        The resolution, carrying the envelope, any resolved value, and every
-        deterministic finding raised on the way.
-    """
+) -> tuple[list[tuple[IdentityCandidate, str]], list[DraftDiscrepancyFinding]]:
+    """Exclude the filer, verify candidates, and retain every failed finding."""
     findings: list[DraftDiscrepancyFinding] = []
-    own_excludable = _own_identity_is_excludable(taxpayer_tax_id)
-
     verified: list[tuple[IdentityCandidate, str]] = []
     for candidate in candidates:
         # Exclusion runs BEFORE verification, and on the checksum-free identity
-        # predicate, because "is this the filer's own identifier" is an identity
-        # question rather than a validity one. Routing it through
-        # `canonical_identity_token` made it a validity question, and a filer
-        # whose stored identifier is foreign -- or Spanish with a bad control
-        # character -- then excluded nothing at all, leaving the identifier that
-        # appears on every invoice in the corpus competing for the one role it
-        # can never hold. Excluding first also keeps the filer's own identifier
-        # from being reported as an unverifiable *counterparty*, which it is not.
+        # predicate, because the filer's own identifier is not a counterparty.
         if same_tax_identifier(candidate.value, taxpayer_tax_id):
             continue
         token = canonical_identity_token(candidate.value, country_code=candidate.country_code)
         if token is None:
-            # Recorded, never dropped: an identifier failing its control
-            # character is exactly what hides the true supplier from a scan that
-            # only keeps valid ones.
             findings.append(
                 DraftDiscrepancyFinding(
                     kind=DraftDiscrepancyKind.IDENTITY_UNVERIFIED,
@@ -276,46 +242,46 @@ def resolve_counterparty_identity(
             )
             continue
         verified.append((candidate, token))
+    return verified, findings
 
-    if not verified:
-        return _unanchored_identity_resolution(
+
+def _anchored_identity_resolution(
+    *,
+    field: str,
+    origin: FieldOrigin,
+    candidate: IdentityCandidate,
+    token: str,
+    findings: list[DraftDiscrepancyFinding],
+    own_excludable: bool,
+) -> IdentityRoleResolution:
+    """Build the resolution selected by exactly one positive role evidence."""
+    return IdentityRoleResolution(
+        provenance=FieldProvenance(
             field=field,
-            candidates=candidates,
             origin=origin,
-            findings=findings,
-            own_excludable=own_excludable,
-        )
-
-    # An identity resolves on POSITIVE role evidence, never on survival. This is
-    # the distinction the measured defect turns on: when the true supplier's
-    # identifier fails its control character, a single unrelated but valid
-    # identifier is left standing, and "exactly one candidate remained" would
-    # ground it with full confidence. Sole survivorship is first-match with the
-    # competitors removed beforehand -- the same guess, harder to see.
-    evidenced = [(candidate, token) for candidate, token in verified if candidate.role_evidence]
-
-    if len(evidenced) == 1:
-        candidate, token = evidenced[0]
-        return IdentityRoleResolution(
-            provenance=FieldProvenance(
-                field=field,
-                origin=origin,
-                grounding=FieldGroundingOutcome.ANCHORED,
-                anchor=candidate.printed_anchor,
-                note=(
-                    f"role evidence picks exactly one identifier: {candidate.role_evidence}"
-                    f"{_own_exclusion_note(own_excludable)}"
-                ),
+            grounding=FieldGroundingOutcome.ANCHORED,
+            anchor=candidate.printed_anchor,
+            note=(
+                f"role evidence picks exactly one identifier: {candidate.role_evidence}"
+                f"{_own_exclusion_note(own_excludable)}"
             ),
-            resolved=token,
-            findings=tuple(findings),
-        )
+        ),
+        resolved=token,
+        findings=tuple(findings),
+    )
 
-    # Nothing picks one. Every verified identifier is surfaced; none is promoted.
-    # When several carry role evidence they compete on it; when none does, they
-    # compete on nothing, and both cases are ambiguity rather than a ranking.
+
+def _unanchored_verified_identity_resolution(
+    *,
+    field: str,
+    origin: FieldOrigin,
+    verified: list[tuple[IdentityCandidate, str]],
+    evidenced: list[tuple[IdentityCandidate, str]],
+    findings: list[DraftDiscrepancyFinding],
+    own_excludable: bool,
+) -> IdentityRoleResolution:
+    """Build the unresolved result when verified identities lack a unique role."""
     competing = evidenced if len(evidenced) > 1 else verified
-
     if len(competing) == 1:
         candidate, _token = competing[0]
         return IdentityRoleResolution(
@@ -372,6 +338,76 @@ def resolve_counterparty_identity(
                 ),
             ),
         ),
+    )
+
+
+def resolve_counterparty_identity(
+    *,
+    field: str,
+    candidates: tuple[IdentityCandidate, ...],
+    taxpayer_tax_id: str | None,
+    origin: FieldOrigin,
+) -> IdentityRoleResolution:
+    """Resolve which observed identifier holds the counterparty role.
+
+    Never returns a first match. Exactly one surviving candidate resolves; two or
+    more resolve to ``AMBIGUOUS`` carrying every one of them; none resolves to
+    ``UNANCHORED`` with an unresolved-role finding.
+
+    Args:
+        field: Name of the draft field being resolved.
+        candidates: Every tax identifier observed on the document, in document
+            order. Order is preserved for display only and is never used to
+            break a tie -- breaking a tie by position is first-match under
+            another name.
+        taxpayer_tax_id: This profile's own identifier, excluded from candidacy.
+            Never required to be checksum-valid or Spanish -- exclusion is an
+            identity comparison. ``None`` or blank means unknown, which weakens
+            the resolution and is reported in the note rather than passed over.
+        origin: How the candidates were obtained.
+
+    Returns:
+        The resolution, carrying the envelope, any resolved value, and every
+        deterministic finding raised on the way.
+    """
+    own_excludable = _own_identity_is_excludable(taxpayer_tax_id)
+    verified, findings = _verified_identity_candidates(
+        field=field,
+        candidates=candidates,
+        taxpayer_tax_id=taxpayer_tax_id,
+    )
+
+    if not verified:
+        return _unanchored_identity_resolution(
+            field=field,
+            candidates=candidates,
+            origin=origin,
+            findings=findings,
+            own_excludable=own_excludable,
+        )
+
+    # An identity resolves on POSITIVE role evidence, never on survival. Sole
+    # survivorship is first-match with the competitors removed beforehand.
+    evidenced = [(candidate, token) for candidate, token in verified if candidate.role_evidence]
+
+    if len(evidenced) == 1:
+        candidate, token = evidenced[0]
+        return _anchored_identity_resolution(
+            field=field,
+            origin=origin,
+            candidate=candidate,
+            token=token,
+            findings=findings,
+            own_excludable=own_excludable,
+        )
+
+    return _unanchored_verified_identity_resolution(
+        field=field,
+        origin=origin,
+        verified=verified,
+        evidenced=evidenced,
+        findings=findings,
+        own_excludable=own_excludable,
     )
 
 

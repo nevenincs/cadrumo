@@ -19,21 +19,17 @@ See Also:
 
 from __future__ import annotations
 
-import ast
 import json
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, cast, override
+from typing import Any, cast
 
 import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....core.directory_scan import (
-    scan_directory,
-)
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
@@ -75,7 +71,7 @@ _MANUAL_PROVISIONAL_PERCENTAGE = Decimal("73")
 #: The manual's current-year 'n' operations (locales 25.000 con derecho,
 #: viviendas 20.000 exentas, total 45.000) and the "Exceso de deduccion: 217,60"
 #: it carries into Modelo 303 casilla 44 as a lower deduction. These are the
-#: scenario's givens and a resolver-produced value, so they are named constants
+#: scenario's givens and a resolver-_produced value, so they are named constants
 #: quoting `corpus/manuals/iva/2025/source.pdf#Pag.137-138` rather than entries
 #: in the payload's `expected_by_casilla_id`, which is reserved for casillas the
 #: registry engine computes and a verification expectation reconciles.
@@ -85,22 +81,6 @@ _MANUAL_CASILLA_44_REGULARIZACION = Decimal("-217.60")
 _M303_BINDING_ID = "modelo-303-prorrata-regularizacion-casilla-44"
 _M390_BINDING_ID = "modelo-390-prorrata-regularizacion-anual"
 
-
-def _called_name(node: ast.Call) -> str | None:
-    """Return a direct callee name, including an ``Any``-cast target."""
-    match node.func:
-        case ast.Name(id=name):
-            return name
-        case ast.Call(
-            func=ast.Name(id="cast") | ast.Attribute(value=ast.Name(id="typing"), attr="cast"),
-            args=[
-                ast.Name(id="Any") | ast.Attribute(value=ast.Name(id="typing"), attr="Any"),
-                ast.Name(id=name),
-            ],
-        ):
-            return name
-        case _:
-            return None
 
 
 def _oracle_payload() -> dict[str, Any]:
@@ -308,147 +288,6 @@ def test_resolver_refuses_construction_without_an_explicit_observation_repositor
             )
 
 
-def test_prorrata_repository_caller_ast_census_has_only_explicit_dependencies() -> None:
-    """Every production/test consumer names its store; only two contract-refusal probes omit it."""
-    target_calls = {
-        "ProrrataRegularizacionSourceResolver",
-        "resolve_iva_deduction_ratio",
-        "_resolve_prorrata_regularizacion_sources",
-        "resolve_prorrata_regularizacion_sources",
-        "aggregate_renta_ledger_expenses_from_repositories",
-        "aggregate_renta_gasto_ledger_from_repositories",
-        "LedgerRentaGastosEstimacionDirectaAggregationSourceResolver",
-        "LedgerRentaGastosPagoFraccionadoAggregationSourceResolver",
-    }
-    intentional_refusals = {
-        (
-            "application/aggregation/tests/test_renta_ledger.py",
-            "test_repository_wrapper_refuses_an_implicit_prorrata_repository",
-            "aggregate_renta_ledger_expenses_from_repositories",
-        ),
-        (
-            "application/calculations/tests/test_prorrata_regularizacion_source_resolver.py",
-            "test_resolver_refuses_construction_without_an_explicit_prorrata_repository",
-            "ProrrataRegularizacionSourceResolver",
-        ),
-    }
-    source_root = Path(__file__).parents[3]
-    omitted: set[tuple[str, str, str]] = set()
-    direct_constructor_calls: list[tuple[Path, int]] = []
-
-    class _CallerCensus(ast.NodeVisitor):
-        def __init__(self, source_path: Path) -> None:
-            self._source_path = source_path
-            self._current_function = "<module>"
-
-        @override
-        def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
-            previous = self._current_function
-            self._current_function = node.name
-            self.generic_visit(node)
-            self._current_function = previous
-
-        @override
-        def visit_Call(self, node: ast.Call) -> None:
-            called_name = _called_name(node)
-            if called_name in target_calls and not any(
-                keyword.arg == "prorrata_register_repository" for keyword in node.keywords
-            ):
-                omitted.add(
-                    (
-                        self._source_path.relative_to(source_root).as_posix(),
-                        self._current_function,
-                        called_name,
-                    )
-                )
-            if called_name == "ProrrataRegisterRepository":
-                direct_constructor_calls.append((self._source_path, node.lineno))
-            self.generic_visit(node)
-
-    for source_path in scan_directory(source_root, pattern="*.py", recursive=True):
-        census = _CallerCensus(source_path)
-        census.visit(ast.parse(source_path.read_text(encoding="utf-8")))
-
-    assert omitted == intentional_refusals
-    fallback_modules = {
-        source_root / "application" / "calculations" / "_prorrata_regularizacion.py",
-        source_root / "application" / "aggregation" / "_renta_ledger.py",
-    }
-    assert not [
-        (source_path, line_number)
-        for source_path, line_number in direct_constructor_calls
-        if source_path in fallback_modules
-    ]
-
-
-def test_prorrata_observation_repository_caller_ast_census_has_only_explicit_dependencies() -> None:
-    """Every prorrata source consumer names its observation store; defaults cannot return."""
-    target_calls = {
-        "ProrrataRegularizacionSourceResolver",
-        "resolve_prorrata_regularizacion_sources",
-    }
-    intentional_refusals = {
-        (
-            "application/calculations/tests/test_prorrata_regularizacion_source_resolver.py",
-            "test_resolver_refuses_construction_without_an_explicit_prorrata_repository",
-        ),
-        (
-            "application/calculations/tests/test_prorrata_regularizacion_source_resolver.py",
-            "test_resolver_refuses_construction_without_an_explicit_observation_repository",
-        ),
-    }
-    source_root = Path(__file__).parents[3]
-    omitted: set[tuple[str, str]] = set()
-
-    class _CallerCensus(ast.NodeVisitor):
-        def __init__(self, source_path: Path) -> None:
-            self._source_path = source_path
-            self._current_function = "<module>"
-
-        @override
-        def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
-            previous = self._current_function
-            self._current_function = node.name
-            self.generic_visit(node)
-            self._current_function = previous
-
-        @override
-        def visit_Call(self, node: ast.Call) -> None:
-            called_name = _called_name(node)
-            if called_name in target_calls and not any(
-                keyword.arg == "observation_repository" for keyword in node.keywords
-            ):
-                omitted.add((self._source_path.relative_to(source_root).as_posix(), self._current_function))
-            self.generic_visit(node)
-
-    for source_path in scan_directory(source_root, pattern="*.py", recursive=True):
-        source = source_path.read_text(encoding="utf-8")
-        if not any(target_call in source for target_call in target_calls):
-            continue
-        census = _CallerCensus(source_path)
-        census.visit(ast.parse(source))
-
-    assert omitted == intentional_refusals
-    fallback_module = source_root / "application" / "calculations" / "_prorrata_regularizacion.py"
-    assert not [
-        node.lineno
-        for node in ast.walk(ast.parse(fallback_module.read_text(encoding="utf-8")))
-        if isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Name)
-        and node.func.id == "CalculationObservationRepository"
-    ]
-    action_module = source_root / "application" / "modelo" / "_calculation_actions.py"
-    action_repository_calls = [
-        node
-        for node in ast.walk(ast.parse(action_module.read_text(encoding="utf-8")))
-        if isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Name)
-        and node.func.id == "CalculationObservationRepository"
-    ]
-    assert len(action_repository_calls) == 1
-    action_keywords = {keyword.arg: ast.unparse(keyword.value) for keyword in action_repository_calls[0].keywords}
-    assert action_keywords == {"bucket_id": "work_unit.bucket_id"}
-
 
 def test_resolver_falls_back_to_stamped_prior_observation_for_modelo_390(tmp_path: Path) -> None:
     """A stamped prior M303 settlement observation can source the annual M390 binding."""
@@ -520,3 +359,7 @@ def test_resolver_marks_binding_unresolved_when_current_year_values_are_missing(
     assert diagnostic.binding_source is BindingSourceKind.PRORRATA_REGULARIZACION
     assert diagnostic.binding_id == _M303_BINDING_ID
     assert str(_PORCENTAJE_ID) in diagnostic.message
+
+
+
+

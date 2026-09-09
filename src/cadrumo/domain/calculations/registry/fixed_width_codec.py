@@ -5,17 +5,11 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import ROUND_DOWN, ROUND_HALF_UP, Decimal
 from enum import StrEnum
-from typing import TYPE_CHECKING, Annotated, Protocol
+from typing import Annotated, Protocol
 
 from pydantic import BeforeValidator
 
 from ....core.casilla_id import CasillaId
-
-if TYPE_CHECKING:
-    # Imported for typing only: schema_exports imports this module at runtime,
-    # so a runtime import here would close the cycle.
-    from .schema_exports import ExportLineEnding
-
 from ....core.decimal.fixed_width import coerce_fixed_width_decimal
 from ....core.errors.hierarchy import CadrumoError
 from ....core.money.rounding import round_to_cents
@@ -136,9 +130,6 @@ class _ExportRecord(Protocol):
     def encoding(self) -> str: ...
 
     @property
-    def line_ending(self) -> ExportLineEnding: ...
-
-    @property
     def fields(self) -> tuple[_ExportField, ...]: ...
 
 
@@ -173,9 +164,6 @@ class FixedWidthRecordRenderError(CadrumoError):
         self.field_id = field_id
         self.reason = reason
         self.export_record_id = export_record_id
-
-
-_LINE_ENDINGS: Mapping[str, bytes] = {"none": b"", "lf": b"\n", "crlf": b"\r\n"}
 
 
 def validate_fixed_width_shape(field: _ExportField) -> None:
@@ -304,9 +292,8 @@ def render_fixed_width_export_record_body(
 ) -> bytes:
     """Render one registry-owned fixed-width record without its terminator.
 
-    This is the sole record-byte producer. Callers that compose a multi-record
-    payload must use :func:`render_fixed_width_export_record_payload` so the
-    declared line ending remains part of the exact emitted member bytes.
+    This is the sole registry-owned record-byte producer. The outbound payload
+    assembly owner appends record terminators while composing the final stream.
     """
     fields = tuple(sorted(record.fields, key=lambda field: (-1 if field.offset is None else field.offset, field.id)))
     if not fields:
@@ -332,15 +319,6 @@ def render_fixed_width_export_record_body(
             record_id=record.id,
         )
     return bytes(buffer)
-
-
-def render_fixed_width_export_record_payload(
-    record: _ExportRecord,
-    *,
-    field_values: Mapping[CasillaId, str | None],
-) -> bytes:
-    """Render one registry-owned record with its declared line terminator."""
-    return render_fixed_width_export_record_body(record, field_values=field_values) + _LINE_ENDINGS[record.line_ending]
 
 
 def _require_record_coordinates(field: _ExportField, *, record_id: str) -> tuple[int, int]:
@@ -693,6 +671,5 @@ __all__ = [
     "parse_fixed_width_export_field",
     "render_fixed_width_export_field",
     "render_fixed_width_export_record_body",
-    "render_fixed_width_export_record_payload",
     "validate_fixed_width_shape",
 ]

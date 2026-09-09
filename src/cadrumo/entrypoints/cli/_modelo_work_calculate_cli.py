@@ -1,4 +1,3 @@
-# ruff: noqa: E501
 """Behavior for modelo work calculation commands.
 
 This CLI module is a transport boundary around
@@ -52,7 +51,6 @@ from ._modelo_cli_support import (
 )
 from ._modelo_payloads import WorkCalculateResult
 from ._modelo_rendering import (
-    advisory_notice,
     calculation_revision_lines,
     calculation_revision_payload,
     calculation_revision_state_label,
@@ -176,9 +174,6 @@ def _run_work_calculate(
         unit_for_modality = calculation_result.work_unit
         saved_confirmation = _work_calculate_saved_confirmation(calculation_revision, unit_for_modality)
         modality_payload, modality_lines = _work_calculate_modality_output(calculation_result)
-        authorization_payload, authorization_notices, authorization_lines = _work_calculate_authorization_output(
-            calculation_result, work_unit=unit_for_modality
-        )
         source_advisory_notices, source_advisory_lines = _work_calculate_source_advisory_output(
             calculation_result.source_diagnostics
         )
@@ -189,7 +184,6 @@ def _run_work_calculate(
                 "saved_confirmation": saved_confirmation,
                 **calculation_revision_payload(calculation_revision).model_dump(mode="python"),
                 **modality_payload,
-                **authorization_payload,
                 "deadline": deadline_payload.model_dump(mode="python") if deadline_payload is not None else None,
             }
         )
@@ -200,7 +194,6 @@ def _run_work_calculate(
         *calculation_revision_lines(calculation_revision),
         *modality_lines,
         *work_unit_plazo_lines(unit_for_modality),
-        *authorization_lines,
         *source_advisory_lines,
         saved_confirmation,
     ]
@@ -210,7 +203,6 @@ def _run_work_calculate(
         result=result,
         lines=lines,
         notices=[
-            *authorization_notices,
             *source_advisory_notices,
             *(m210_plazo_notice(resolution) for resolution in calculation_result.plazo_resolutions),
             *deadline_notices,
@@ -236,38 +228,6 @@ def _work_calculate_modality_output(
     if modality is None:
         return ({}, [])
     return ({"modality": modality.modality, "modality_reason": modality.reason}, [f"modality\t{modality.modality}"])
-
-
-def _work_calculate_authorization_output(
-    calculation_result: ModeloWorkCalculationServiceResult, *, work_unit: WorkUnit
-) -> tuple[dict[str, object], list[Notice], list[str]]:
-    """Project the unauthorized-backend advisory onto a notice + payload state + lines.
-
-    ``authorization_state`` remains structured result data (the backend's
-    authorization lifecycle state); the advisory prose moves onto the
-    uniform :class:`Notice` channel so it is no longer a
-    bespoke ``authorization_advisory`` payload field. The text lines are
-    unchanged.
-    """
-    advisory = calculation_result.authorization_advisory
-    if advisory is None:
-        return ({}, [], [])
-    advisory_text = tr(
-        "cli.app.modelo.work.calculate_unauthorized_advisory",
-        modelo=str(work_unit.modelo),
-        default="ADVISORY: modelo %{modelo} calculation backend is UNAUTHORIZED - it has not yet been proven by an end-to-end test across at least two renta years (multi-year-renta authorization gate). The result was computed and saved, but treat it as provisional until the modelo is authorized.",
-    )
-    return (
-        {"authorization_state": advisory.state},
-        [
-            advisory_notice(
-                "modelo.work.calculate.unauthorized_backend",
-                advisory_text,
-                context={"authorization_state": str(advisory.state)},
-            )
-        ],
-        [f"authorization_state\t{advisory.state}", advisory_text],
-    )
 
 
 def _work_calculate_source_advisory_output(

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import unicodedata
 from datetime import date, datetime
 from typing import ClassVar, Final, cast
 
@@ -34,6 +33,7 @@ from ....application.overview.calendar_models import (
 )
 from ....application.overview.home import HomeAvailability
 from ....core.i18n.render import tr
+from ....core.text_fold import fold_diacritics
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecordStatus
@@ -383,11 +383,7 @@ def calendar_focus_key(row: DeclarationsCalendarEntryRefV1) -> str:
 
 
 def _fold(value: str) -> str:
-    return "".join(
-        character
-        for character in unicodedata.normalize("NFKD", value).casefold()
-        if not unicodedata.combining(character)
-    )
+    return fold_diacritics(value.casefold())
 
 
 def _calendar_search_text(row: DeclarationsCalendarEntryRefV1) -> str:

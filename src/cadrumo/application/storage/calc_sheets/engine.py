@@ -4,8 +4,8 @@ The engine walks every casilla, binding, and parameter declared in the
 :class:`ModeloRevision` embedded in the snapshot and maps each to a
 typed cell or range in the generated workbook plan.
 
-The result is renderer-neutral: Google Sheets and offline XLSX renderers both
-consume the same :class:`SheetExportPlan`. The engine stamps registry identity,
+The result is renderer-neutral: Google Sheets consumes the
+:class:`SheetExportPlan`. The engine stamps registry identity,
 formula provenance, relation prefills, styling facets, and row-set layout; the
 ledger-evidence facet is supplied separately when the caller has bundled
 :class:`cadrumo.domain.modelos.ledger_filing_snapshot.LedgerFilingEvidence`.
@@ -836,9 +836,9 @@ def _protected_ranges(layout: SheetLayout) -> tuple[SheetProtectedRange, ...]:
             description=tr("application.storage.calc_sheets.engine.protected.guide"),
         ),
         # Evidencia is generated fact basis, never an operator surface. It was
-        # protected offline by a bespoke whole-sheet call that the plan never
-        # mentioned, so the online transport had nothing to act on and left it
-        # editable. Declaring it here is what makes the two agree: the plan is
+        # once protected by a bespoke renderer call that the plan never
+        # mentioned, so the live transport had nothing to act on and left it
+        # editable. Declaring it here makes the plan authoritative:
         # the protection contract, and a transport that protects something the
         # plan does not name is as wrong as one that skips something it does.
         SheetProtectedRange(
@@ -1046,8 +1046,7 @@ def build_export_plan(
             contributor.
 
     Returns:
-        A complete :class:`SheetExportPlan` ready for the Google apply adapter
-        or offline workbook serializer.
+        A complete :class:`SheetExportPlan` ready for the Google apply adapter.
     """
     inputs = operator_inputs if operator_inputs is not None else OperatorInputs()
     if relation_values is not None:

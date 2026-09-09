@@ -1,20 +1,11 @@
-"""Online Sheets Evidencia rendering + offline/online evidence parity.
-
-The apply adapter must write the Evidencia surface to Google Sheets identically
-to the offline xls workbook. Both transports consume the single ``evidence_table``
-source, so the surfaces are byte-identical by construction; this test pins that
-offline (no network) by comparing the apply adapter's Evidencia value-writes
-against the offline workbook's Evidencia cells.
-"""
+"""Online Sheets Evidencia rendering behavior."""
 
 from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
-from io import BytesIO
 
 import pytest
-from openpyxl import load_workbook
 
 from .....application.storage.calc_sheets.records import (
     SheetCellAddress,
@@ -27,7 +18,6 @@ from .....application.storage.calc_sheets.records import (
     SheetValueCell,
     TabName,
 )
-from .....application.storage.calc_sheets.workbook_export import serialize_offline_workbook
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from ..calc_sheets_apply import build_evidence_value_data
@@ -110,25 +100,3 @@ def test_apply_adapter_renders_evidencia_surface() -> None:
     assert grid[f"'{tab}'!A3"][0] == "Tipo"
     assert grid[f"'{tab}'!A4"][:3] == ["ledger", "cuota", "c" * 64]
     assert grid[f"'{tab}'!A5"][:2] == ["manual", "resultado.contable"]
-
-
-def test_online_evidencia_is_byte_identical_to_offline() -> None:
-    plan = _evidence_plan()
-    online = _online_cell_grid(plan)
-
-    workbook = load_workbook(BytesIO(serialize_offline_workbook(plan)), data_only=False)
-    sheet = workbook[TabName.EVIDENCIA.value]
-
-    def _offline_row(row: int, width: int) -> list[object]:
-        # openpyxl reads an empty cell back as None; the online transport writes
-        # "" for the same blank. Normalise that representation difference — the
-        # logical evidence content is what must match.
-        return [(sheet.cell(row=row, column=col).value or "") for col in range(1, width + 1)]
-
-    tab = TabName.EVIDENCIA.value
-    # A1 banner (2 cols), header row 3, contributor row 4, manual row 5 — the
-    # online value-writes must equal the offline cell values cell-for-cell.
-    assert online[f"'{tab}'!A1"] == _offline_row(1, 2)
-    assert online[f"'{tab}'!A3"] == _offline_row(3, len(online[f"'{tab}'!A3"]))
-    assert online[f"'{tab}'!A4"] == _offline_row(4, len(online[f"'{tab}'!A4"]))
-    assert online[f"'{tab}'!A5"] == _offline_row(5, len(online[f"'{tab}'!A5"]))

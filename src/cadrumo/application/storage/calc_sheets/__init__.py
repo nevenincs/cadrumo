@@ -4,9 +4,8 @@ Translates a
 :class:`domain.calculations.registry.RegistrySnapshot` into a
 :class:`application.storage.calc_sheets.records.SheetExportPlan` whose formulas
 produce the same per-casilla rounded values as the local registry runtime. The
-plan is shared by the Google Sheets apply adapter and the offline XLSX
-materializer, so layout, formulas, styling, provenance, and evidence stay on
-one contract.
+plan is consumed by the Google Sheets apply adapter, so layout, formulas,
+styling, provenance, and evidence stay on one contract.
 
 The package exposes three layers:
 
@@ -27,9 +26,8 @@ The package exposes three layers:
   assembles a
   :class:`application.storage.calc_sheets.records.SheetExportPlan` ready for the
   apply adapter.
-- Offline export
-  (:mod:`application.storage.calc_sheets.workbook_export`) — serializes
-  the same plan into XLSX bytes plus the machine-readable evidence sidecar.
+- Export tables (:mod:`application.storage.calc_sheets.export_tables`) — owns
+  the Guide and Evidencia values consumed by the live apply adapter.
 
 Operator-facing CLI surface lives under
 `src/cadrumo/entrypoints/cli/config/google.py`; this package contains
@@ -40,9 +38,8 @@ See Also:
         Registry-authored calculation surface compiled by the engine.
     :class:`application.storage.calc_sheets.records.SheetExportPlan`
         Shared workbook plan consumed by online and offline renderers.
-    :func:`application.storage.calc_sheets.workbook_export.serialize_offline_export`
-        Offline XLSX plus evidence-sidecar serializer for operator-directed
-        exports.
+    :func:`application.storage.calc_sheets.export_tables.evidence_table`
+        Evidencia values consumed by the live apply adapter.
 """
 
 from __future__ import annotations

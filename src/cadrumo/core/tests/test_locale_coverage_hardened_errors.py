@@ -44,11 +44,6 @@ _HARDENED_ERROR_KEYS: frozenset[str] = frozenset(
         "application.workflow.errors.period_registry_unmappable",
         # no-run-for-period (_resume.py)
         "application.workflow.errors.no_run_for_period",
-        # adapter-missing x 4 (_adapters.py)
-        "application.workflow.errors.adapter_missing_submission_engine",
-        "application.workflow.errors.adapter_missing_deadline_engine",
-        "application.workflow.errors.adapter_missing_filing_draft_builder",
-        "application.workflow.errors.adapter_missing_inputs_provider",
         # run-id-invalid x 2 (_persistence.py)
         "application.workflow.errors.run_id_invalid_separators",
         "application.workflow.errors.run_id_invalid_blank",

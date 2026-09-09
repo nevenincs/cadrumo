@@ -288,6 +288,28 @@ def _minimal_fragment_revision_layout(
     return revision_dir
 
 
+def _revision_id_from_line(
+    line: str,
+    current_revision_id: str | None,
+    revision_lines_by_id: dict[str, list[str]],
+) -> str | None:
+    stripped = line.strip()
+    if not (stripped.startswith("[revisions") or stripped.startswith("[[revisions")):
+        return current_revision_id
+
+    match = _REVISION_HEADER_RE.match(stripped)
+    if match is None:
+        raise AssertionError(f"cannot determine revision id from TOML header {stripped!r}")
+    group_1 = match.group(1)
+    group_2 = match.group(2)
+    assert group_1 is None or isinstance(group_1, str)
+    assert group_2 is None or isinstance(group_2, str)
+    revision_id = group_1 or group_2
+    assert revision_id is not None
+    revision_lines_by_id.setdefault(revision_id, [])
+    return revision_id
+
+
 def _split_single_file_modelo_text(text: str) -> tuple[str, str, dict[str, str]]:
     """Split one modelo TOML into manifest text and revision table text."""
 
@@ -295,25 +317,10 @@ def _split_single_file_modelo_text(text: str) -> tuple[str, str, dict[str, str]]
     revision_lines: list[str] = []
     revision_lines_by_id: dict[str, list[str]] = {}
     current_revision_id: str | None = None
-    in_revision = False
     for line in text.splitlines(keepends=True):
-        stripped = line.strip()
-        match = _REVISION_HEADER_RE.match(stripped)
-        if stripped.startswith("[revisions") or stripped.startswith("[[revisions"):
-            in_revision = True
-            if match is None:
-                raise AssertionError(f"cannot determine revision id from TOML header {stripped!r}")
-            group_1 = match.group(1)
-            group_2 = match.group(2)
-            assert group_1 is None or isinstance(group_1, str)
-            assert group_2 is None or isinstance(group_2, str)
-            current_revision_id = group_1 or group_2
-            assert current_revision_id is not None
-            revision_lines_by_id.setdefault(current_revision_id, [])
-        if in_revision:
+        current_revision_id = _revision_id_from_line(line, current_revision_id, revision_lines_by_id)
+        if current_revision_id is not None:
             revision_lines.append(line)
-            if current_revision_id is None:
-                raise AssertionError(f"revision line appeared before a revision header: {line!r}")
             revision_lines_by_id[current_revision_id].append(line)
         else:
             manifest_lines.append(line)

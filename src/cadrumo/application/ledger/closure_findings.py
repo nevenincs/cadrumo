@@ -248,6 +248,58 @@ def _flat_rate_consistency_finding(draft: InvoiceDraft) -> DraftDiscrepancyFindi
     )
 
 
+def _breakdown_base_finding(
+    draft: InvoiceDraft,
+    *,
+    term_count: int,
+) -> DraftDiscrepancyFinding | None:
+    """Compare the per-rate bases with the document's flat taxable base."""
+    if draft.taxable_base is None or not all(entry.taxable_base is not None for entry in draft.iva_breakdown):
+        return None
+
+    summed = sum((_zero_if_absent(entry.taxable_base) for entry in draft.iva_breakdown), Decimal("0"))
+    if within_rounding_allowance(draft.taxable_base - summed, term_count=term_count):
+        return None
+
+    return DraftDiscrepancyFinding(
+        kind=DraftDiscrepancyKind.BREAKDOWN_INCONSISTENT,
+        field="taxable_base",
+        detail=(
+            f"the per-rate bases sum to {summed} while the document states a flat taxable "
+            f"base of {draft.taxable_base}; these are two readings of one document and at "
+            f"least one is wrong"
+        ),
+        expected=summed,
+        observed=draft.taxable_base,
+    )
+
+
+def _breakdown_iva_finding(
+    draft: InvoiceDraft,
+    *,
+    term_count: int,
+) -> DraftDiscrepancyFinding | None:
+    """Compare the per-rate cuotas with the document's flat IVA amount."""
+    if draft.iva_amount is None or not all(entry.iva_amount is not None for entry in draft.iva_breakdown):
+        return None
+
+    summed = sum((_zero_if_absent(entry.iva_amount) for entry in draft.iva_breakdown), Decimal("0"))
+    if within_rounding_allowance(draft.iva_amount - summed, term_count=term_count):
+        return None
+
+    return DraftDiscrepancyFinding(
+        kind=DraftDiscrepancyKind.BREAKDOWN_INCONSISTENT,
+        field="iva_amount",
+        detail=(
+            f"the per-rate cuotas sum to {summed} while the document states a flat cuota "
+            f"of {draft.iva_amount}; these are two readings of one document and at least "
+            f"one is wrong"
+        ),
+        expected=summed,
+        observed=draft.iva_amount,
+    )
+
+
 def _breakdown_sum_findings(draft: InvoiceDraft) -> tuple[DraftDiscrepancyFinding, ...]:
     """Check the per-rate subtotals against the flat base and cuota."""
     if not draft.iva_breakdown:
@@ -256,39 +308,13 @@ def _breakdown_sum_findings(draft: InvoiceDraft) -> tuple[DraftDiscrepancyFindin
     findings: list[DraftDiscrepancyFinding] = []
     term_count = len(draft.iva_breakdown)
 
-    if draft.taxable_base is not None and all(e.taxable_base is not None for e in draft.iva_breakdown):
-        summed = sum((_zero_if_absent(e.taxable_base) for e in draft.iva_breakdown), Decimal("0"))
-        if not within_rounding_allowance(draft.taxable_base - summed, term_count=term_count):
-            findings.append(
-                DraftDiscrepancyFinding(
-                    kind=DraftDiscrepancyKind.BREAKDOWN_INCONSISTENT,
-                    field="taxable_base",
-                    detail=(
-                        f"the per-rate bases sum to {summed} while the document states a flat taxable "
-                        f"base of {draft.taxable_base}; these are two readings of one document and at "
-                        f"least one is wrong"
-                    ),
-                    expected=summed,
-                    observed=draft.taxable_base,
-                ),
-            )
+    base_finding = _breakdown_base_finding(draft, term_count=term_count)
+    if base_finding is not None:
+        findings.append(base_finding)
 
-    if draft.iva_amount is not None and all(e.iva_amount is not None for e in draft.iva_breakdown):
-        summed = sum((_zero_if_absent(e.iva_amount) for e in draft.iva_breakdown), Decimal("0"))
-        if not within_rounding_allowance(draft.iva_amount - summed, term_count=term_count):
-            findings.append(
-                DraftDiscrepancyFinding(
-                    kind=DraftDiscrepancyKind.BREAKDOWN_INCONSISTENT,
-                    field="iva_amount",
-                    detail=(
-                        f"the per-rate cuotas sum to {summed} while the document states a flat cuota "
-                        f"of {draft.iva_amount}; these are two readings of one document and at least "
-                        f"one is wrong"
-                    ),
-                    expected=summed,
-                    observed=draft.iva_amount,
-                ),
-            )
+    iva_finding = _breakdown_iva_finding(draft, term_count=term_count)
+    if iva_finding is not None:
+        findings.append(iva_finding)
 
     return tuple(findings)
 

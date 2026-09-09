@@ -210,7 +210,6 @@ def test_mutation_reverting_154_to_manual_reds_the_gate(tmp_path: Path) -> None:
     shutil.copytree(bundled_root / "modelos" / "303", scratch_root / "modelos" / "303")
     for catalogue_dir in (
         "apoderamientos",
-        "authorization.d",
         "calendars",
         "categories",
         "iva",

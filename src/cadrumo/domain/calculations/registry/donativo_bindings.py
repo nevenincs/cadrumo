@@ -12,16 +12,13 @@ The family follows the established detail-record shape (
 :mod:`domain.calculations.registry._detail_record_bindings`): a typed
 per-row observation model, a strict frozen selector model requiring the
 ``row_field`` fact with the ``rows`` aggregation op, a build-time validator
-registered in the binding validator dispatch table, and a
-``resolve_donativo_binding_row_values`` row-value resolver. No production
+registered in the binding validator dispatch table. No production
 calculation-route resolver owns this source, so a calculate request carrying
 one of these bindings is refused rather than silently blanked.
 """
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
-from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
@@ -29,7 +26,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, Field, field_validator
 
-from ....core.aggregation import BindingAggregationOp, BindingSourceKind
+from ....core.aggregation import BindingAggregationOp
 from ....core.country_code import CountryCodeAlpha2
 from ....core.identity import TaxIdIdentityToken
 from ....core.models import STRICT_FROZEN_CONFIG
@@ -42,13 +39,11 @@ from .binding_selector_utils import (
 )
 from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
-from .ids import BindingId
-from .schema import DataBindingDefinition, ModeloRevision
+from .schema import DataBindingDefinition
 from .schema_base import coerce_enum_member
 
 __all__ = [
     "DonativoDonorObservation",
-    "resolve_donativo_binding_row_values",
     "validate_donativo_binding",
 ]
 
@@ -169,100 +164,6 @@ def validate_donativo_binding(binding: DataBindingDefinition) -> list[str]:
     if failures:
         return failures
     return invariant_diagnostics(binding, "donativo", lambda b: _validated_donativo_selector(b))
-
-
-def resolve_donativo_binding_row_values(
-    revision: ModeloRevision,
-    observations: Iterable[DonativoDonorObservation],
-) -> dict[tuple[BindingId, int], Decimal | str]:
-    """Resolve row-producer donativo bindings into per-row indexed values.
-
-    Args:
-        revision: The :class:`ModeloRevision` whose donativo bindings are resolved.
-        observations: Per-donor donativo observations to group into rows.
-    """
-    available = tuple(observations)
-    members: list[tuple[DataBindingDefinition, _DonativoSelector]] = []
-    for binding in revision.bindings:
-        if binding.source != BindingSourceKind.DONATIVO_DONOR:
-            continue
-        selector = _validated_donativo_selector(binding)
-        members.append((binding, selector))
-    if not members:
-        return {}
-    rows = _build_donativo_rows(available)
-    resolved: dict[tuple[BindingId, int], Decimal | str] = {}
-    for binding, selector in members:
-        row_field = selector.row_field
-        if row_field is None:
-            raise RegistryValidationError(
-                f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key",
-            )
-        for row_index, row in enumerate(rows, start=1):
-            value = row.get(row_field)
-            if value is None:
-                raise RegistryValidationError(
-                    f"binding {binding.id!r} row_field {row_field!r} not produced for donativo rows",
-                )
-            resolved[(binding.id, row_index)] = value
-    return resolved
-
-
-@dataclass(slots=True)
-class _DonativoRowAccumulator:
-    """Per-donor accumulator carrying each row field's own precise type.
-
-    Replaces an earlier ``dict[str, Decimal | str | bool]`` bucket: conflating
-    the string, Decimal, and bool row fields into one mixed-value-type mapping
-    forced every read site to narrow the union back down (bare ``assert
-    isinstance`` calls) before it could be folded into the ``Decimal | str``
-    row shape :func:`resolve_donativo_binding_row_values` consumes.
-    """
-
-    donor_tax_id: TaxIdIdentityToken
-    donor_legal_name: str
-    deduction_percentage: Decimal
-    amount_donated: Decimal = Decimal("0")
-    is_recurrent: bool = False
-
-
-def _build_donativo_rows(
-    observations: tuple[DonativoDonorObservation, ...],
-) -> tuple[Mapping[str, Decimal | str], ...]:
-    """Group donativo observations per donor, summing the year's donated amount.
-
-    A donor who gave more than once during the year folds into one tipo-2 row
-    (the AEAT layout declares one donor row per año-declarante pair); the
-    recurrencia flag is preserved as ``True`` when any contributing observation
-    marked it, per the LIRPF art. 68.3 plurianual loyalty treatment.
-    """
-    accum: dict[tuple[str, str], _DonativoRowAccumulator] = {}
-    for obs in observations:
-        key = (obs.country_code, obs.donor_tax_id)
-        bucket = accum.setdefault(
-            key,
-            _DonativoRowAccumulator(
-                donor_tax_id=obs.donor_tax_id,
-                donor_legal_name=obs.donor_legal_name,
-                deduction_percentage=obs.deduction_percentage,
-            ),
-        )
-        bucket.amount_donated += obs.amount_donated
-        if obs.is_recurrent:
-            bucket.is_recurrent = True
-    rows: list[Mapping[str, Decimal | str]] = []
-    for key in sorted(accum.keys()):
-        bucket = accum[key]
-        rows.append(
-            {
-                "donor_tax_id": bucket.donor_tax_id,
-                "donor_legal_name": bucket.donor_legal_name,
-                "amount_donated": bucket.amount_donated,
-                "deduction_percentage": bucket.deduction_percentage,
-                "is_recurrent": "1" if bucket.is_recurrent else "0",
-            },
-        )
-    return tuple(rows)
 
 
 DonativoSelector = _DonativoSelector

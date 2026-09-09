@@ -318,38 +318,60 @@ class HomeScreen(Screen[None]):
         """Populate display-only lists from the immutable projection."""
         projection = self.projection
         actions = cast("ContentDataTable[str]", self.query_one("#home-actions", ContentDataTable))
-        actions.add_column("")
+        self._populate_actions(actions, projection.actions)
+        declarations = cast("ContentDataTable[str]", self.query_one("#home-declarations", ContentDataTable))
+        self._populate_declarations(declarations, projection.declarations)
+        agenda = cast("ContentDataTable[str]", self.query_one("#home-agenda", ContentDataTable))
+        self._populate_agenda(agenda, projection.agenda)
+        self._render_zone_summaries(projection)
+        self._focus_initial_table((actions, declarations, agenda))
+
+    def _populate_actions(
+        self,
+        table: ContentDataTable[str],
+        items: tuple[HomeNextAction, ...],
+    ) -> None:
+        table.add_column("")
         contexts: list[str] = []
-        for item in projection.actions:
+        for item in items:
             reason, label, context = _action_cells(item)
-            actions.add_row(label, key=self._remember(HomeTargetKind.ACTION, home_action_identity(item)))
+            table.add_row(label, key=self._remember(HomeTargetKind.ACTION, home_action_identity(item)))
             contexts.append(tr("tui.home.action_context", label=label, reason=reason, context=context))
-        actions.display = bool(projection.actions)
+        table.display = bool(items)
         self.query_one("#home-action-contexts", Static).update("\n".join(contexts))
 
-        declarations = cast("ContentDataTable[str]", self.query_one("#home-declarations", ContentDataTable))
-        declarations.add_column("")
-        for item in projection.declarations:
+    def _populate_declarations(
+        self,
+        table: ContentDataTable[str],
+        items: tuple[HomeDeclarationResume, ...],
+    ) -> None:
+        table.add_column("")
+        for item in items:
             address, name, state = _declaration_cells(item)
-            declarations.add_row(
+            table.add_row(
                 f"{address} · {name} · {state}",
                 key=self._remember(HomeTargetKind.DECLARATION, home_declaration_identity(item)),
             )
-        declarations.display = bool(projection.declarations)
+        table.display = bool(items)
 
-        agenda = cast("ContentDataTable[str]", self.query_one("#home-agenda", ContentDataTable))
-        agenda.add_column("")
+    def _populate_agenda(
+        self,
+        table: ContentDataTable[str],
+        items: tuple[HomeAgendaEntry, ...],
+    ) -> None:
+        table.add_column("")
         evidence_rows: list[str] = []
-        for item in projection.agenda:
+        for item in items:
             due, address, state = _agenda_cells(item)
-            agenda.add_row(
+            table.add_row(
                 f"{due} · {address} · {state}",
                 key=self._remember(HomeTargetKind.AGENDA, home_agenda_identity(item)),
             )
             evidence_rows.append(tr("tui.home.agenda_evidence_row", address=address, evidence=_evidence_copy(item)))
-        agenda.display = bool(projection.agenda)
+        table.display = bool(items)
         self.query_one("#home-agenda-evidence", Static).update("\n".join(evidence_rows))
 
+    def _render_zone_summaries(self, projection: HomeProjectionV1) -> None:
         self.query_one("#home-evidence", Static).update(
             tr("tui.home.aeat_evidence", state=_state_copy(projection.agenda_evidence_state))
         )
@@ -371,8 +393,10 @@ class HomeScreen(Screen[None]):
             if messages is None
             else tr("tui.home.messages_summary", count=messages)
         )
-        first = next((table for table in (actions, declarations, agenda) if table.row_count), None)
-        if first is not None and not self._restore((actions, declarations, agenda)):
+
+    def _focus_initial_table(self, tables: tuple[ContentDataTable[str], ...]) -> None:
+        first = next((table for table in tables if table.row_count), None)
+        if first is not None and not self._restore(tables):
             self.set_focus(first)
             self._highlight(first.ordered_rows[0].key.value)
             # Focusing scrolls the target into view, and in the single-column

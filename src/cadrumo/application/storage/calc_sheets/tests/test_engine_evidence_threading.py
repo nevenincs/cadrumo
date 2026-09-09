@@ -1,4 +1,4 @@
-"""Ledger evidence reaches the workbook's ``Evidencia`` tab and JSON sidecar.
+"""Ledger evidence reaches the live export plan's ``Evidencia`` facet.
 
 Three things are proven here against real objects -- the real bundled registry
 tree, a real :class:`LedgerFilingEvidence` bundle, the real engine, and the real
@@ -8,27 +8,16 @@ offline materialiser:
   ledger bundle into the casilla-oriented workbook facet, and refuses an
   unattributed contributor rather than guessing its casilla.
 * :func:`build_export_plan` threads a supplied bundle through that projection,
-  so the plan a renderer receives carries the evidence.
-* The materialised workbook and its sidecar actually show the contributing
-  row -- amount, IVA rate, counterparty -- which is the whole point of the tab:
-  an operator, an asesor, or AEAT in a comprobacion opens it to see why a
-  casilla holds the number it holds.
-
-The defect case is the last test: a plan built WITHOUT a bundle yields an empty
-facet, so a regression that stops threading the evidence stays visible as an
-empty ``Evidencia`` tab rather than as a silently passing export.
+  so the plan consumed by the live Google renderer carries the evidence.
 """
 
 from __future__ import annotations
 
-import json
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from functools import cache
-from io import BytesIO
 
 import pytest
-from openpyxl import load_workbook
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId
@@ -44,8 +33,6 @@ from .....tests.registry_tree import bundled_registry_tree
 from ..engine import build_export_plan
 from ..errors import CalcSheetsEngineError
 from ..evidence import sheet_evidence_from_ledger_filing
-from ..records import TabName
-from ..workbook_export import serialize_offline_export
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -158,56 +145,3 @@ def test_build_export_plan_threads_supplied_ledger_evidence_into_the_plan() -> N
     assert len(plan.evidence.contributor_rows) == 1
     assert plan.evidence.contributor_rows[0].casilla_id == first
     assert len(plan.evidence.manual_entries) == 1
-
-
-def test_the_exported_workbook_and_sidecar_carry_the_threaded_evidence() -> None:
-    first, _, _ = _casilla_ids()
-    plan = build_export_plan(
-        _snapshot(),
-        ledger_filing_evidence=_ledger_evidence(),
-        casilla_ids_by_contributor_id={_CONTRIBUTOR_ID: (first,)},
-    )
-
-    export = serialize_offline_export(plan)
-    workbook = load_workbook(BytesIO(export.workbook_payload), data_only=False)
-    evidencia = workbook[TabName.EVIDENCIA.value]
-
-    assert evidencia["B1"].value == _SNAPSHOT_FINGERPRINT
-    assert evidencia["A4"].value == "ledger"
-    assert evidencia["B4"].value == first
-    assert evidencia["C4"].value == _CONTRIBUTOR_ID
-    assert evidencia["D4"].value == "121.00"
-    assert evidencia["E4"].value == "EUR"
-    assert evidencia["F4"].value == "100.00"
-    assert evidencia["G4"].value == "0.21"
-    assert evidencia["H4"].value == "21.00"
-    assert evidencia["I4"].value == _COUNTERPARTY
-    assert evidencia["A5"].value == "manual"
-
-    sidecar = json.loads(export.evidence_sidecar_payload.decode("utf-8"))
-    assert sidecar["evidence"]["snapshot_fingerprint"] == _SNAPSHOT_FINGERPRINT
-    contributor = sidecar["evidence"]["contributor_rows"][0]
-    assert contributor["transaction_id"] == _CONTRIBUTOR_ID
-    assert contributor["casilla_id"] == first
-    assert contributor["iva_rate"] == "0.21"
-    assert contributor["counterparty"] == _COUNTERPARTY
-    assert sidecar["evidence"]["manual_entries"][0]["kind"] == "casilla_input"
-
-
-def test_a_plan_built_without_ledger_evidence_yields_an_empty_facet() -> None:
-    """Detector teeth: the empty facet is exactly the defect this change closed.
-
-    A workbook exported from a plan carrying no bundle ships an empty
-    ``Evidencia`` tab. If a future change stops threading the bundle through
-    :func:`build_export_plan`, the populated cases above fail and this is the
-    state they collapse into.
-    """
-    plan = build_export_plan(_snapshot())
-
-    assert plan.evidence.snapshot_fingerprint is None
-    assert plan.evidence.contributor_rows == ()
-    assert plan.evidence.manual_entries == ()
-
-    export = serialize_offline_export(plan)
-    evidencia = load_workbook(BytesIO(export.workbook_payload), data_only=False)[TabName.EVIDENCIA.value]
-    assert evidencia["A4"].value is None

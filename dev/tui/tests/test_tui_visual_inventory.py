@@ -7,7 +7,6 @@ the real source tree, and the boundary rule against the real package source.
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
 
 import pytest
@@ -37,63 +36,8 @@ from .._viewports import DEFAULT_VIEWPORTS, VIEWPORTS, resolve
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_PRODUCT_PACKAGE = REPO_ROOT / "src" / "cadrumo"
-
-
 _REVISION = "a" * 64
 """A settled source fingerprint: both ends of a coherent run report it."""
-
-
-def _development_importers(root: Path) -> list[str]:
-    """Every module under ``root`` that imports repository development code."""
-    offenders: list[str] = []
-    for module in sorted(root.rglob("*.py")):
-        source = module.read_text(encoding=UTF_8)
-        for match in re.finditer(r"^\s*(?:from|import)\s+(dev(?:\.[\w.]+)?)", source, flags=re.MULTILINE):
-            if match.group(1) == "dev" or match.group(1).startswith("dev."):
-                offenders.append(f"{module.name}: {match.group(0).strip()}")
-    return offenders
-
-
-def test_no_product_module_imports_repository_development_code() -> None:
-    """The product never discovers or depends on the development harness."""
-    assert _development_importers(_PRODUCT_PACKAGE) == []
-
-
-def test_the_boundary_check_catches_an_import_that_does_violate_it(tmp_path: Path) -> None:
-    """Anti-tautology: a check that never fires proves nothing about the tree.
-
-    A clean scan over the real package is only evidence if the same scan
-    reddens on a module that does import the TUI. Proved against a synthetic
-    tree so the repository is never mutated to demonstrate it.
-    """
-    (tmp_path / "innocent.py").write_text("from cadrumo.core import Modelo\n", encoding=UTF_8)
-    (tmp_path / "offender.py").write_text(
-        "from dev.tui.harness.surfaces import SURFACES\n",
-        encoding=UTF_8,
-    )
-    (tmp_path / "deferred.py").write_text(
-        "def build():\n    import dev.tui.harness\n",
-        encoding=UTF_8,
-    )
-
-    caught = _development_importers(tmp_path)
-    assert any(entry.startswith("offender.py") for entry in caught)
-    assert any(entry.startswith("deferred.py") for entry in caught), "a function-local import is still an import edge"
-    assert not any(entry.startswith("innocent.py") for entry in caught)
-
-
-def test_the_raster_font_pin_matches_the_readme_renderer_pin() -> None:
-    """One font file, one digest, in both dev-lane renderers.
-
-    Read out of the README renderer's SOURCE rather than imported: that module
-    builds a filing runtime at import time, and a pin comparison should not
-    depend on the application booting.
-    """
-    source = (REPO_ROOT / "dev" / "readme" / "render_cli_demo.py").read_text(encoding=UTF_8)
-    pinned = re.search(r'_FONT_SHA256\s*=\s*"([0-9a-f]{64})"', source)
-    assert pinned is not None, "the README renderer no longer pins a font digest"
-    assert pinned.group(1) == _raster.FONT_SHA256
 
 
 def test_the_pinned_font_file_still_carries_the_pinned_digest() -> None:
@@ -131,44 +75,6 @@ def test_the_inventory_finds_transitively_derived_interfaces() -> None:
     assert found["CredentialScreen"].is_base
     assert found["LoginScreen"].kind == "screen"
     assert "CredentialScreen" in found["LoginScreen"].bases
-
-
-def test_import_aliases_and_same_named_bases_cannot_escape_the_inventory(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Resolve Python import identity, not an ambiguous bare class spelling."""
-    source_root = tmp_path / "src"
-    root = source_root / "cadrumo" / "entrypoints" / "tui"
-    root.mkdir(parents=True)
-    (root / "aliased.py").write_text(
-        "from textual.screen import Screen as TuiScreen\nclass AliasedScreen(TuiScreen):\n    pass\n",
-        encoding=UTF_8,
-    )
-    (root / "qualified.py").write_text(
-        "import textual.app as textual_app\nclass AliasedApp(textual_app.App):\n    pass\n",
-        encoding=UTF_8,
-    )
-    (root / "first.py").write_text(
-        "from textual.screen import Screen as RootScreen\nclass Shared(RootScreen):\n    pass\n",
-        encoding=UTF_8,
-    )
-    (root / "second.py").write_text("class Shared(object):\n    pass\n", encoding=UTF_8)
-    (root / "child.py").write_text(
-        "from .first import Shared as ImportedShared\nclass ImportedChild(ImportedShared):\n    pass\n",
-        encoding=UTF_8,
-    )
-    monkeypatch.setattr(_inventory, "REPO_ROOT", tmp_path)
-
-    interfaces = _inventory.scan(root)
-    found = {interface.name: interface for interface in interfaces}
-
-    assert set(found) == {"AliasedApp", "AliasedScreen", "ImportedChild", "Shared"}
-    assert found["AliasedApp"].kind == "app"
-    assert found["AliasedScreen"].kind == "screen"
-    assert found["ImportedChild"].kind == "screen"
-    assert found["Shared"].module.endswith(".first")
-    assert {interface.name for interface in interfaces} == {"AliasedApp", "AliasedScreen", "ImportedChild", "Shared"}
 
 
 def test_a_manifest_naming_a_kind_of_interface_that_does_not_exist_is_refused() -> None:

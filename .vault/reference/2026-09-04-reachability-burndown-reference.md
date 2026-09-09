@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:aa31d68114114877e768768f6250bed3c536d3a3c8d5376583438f5af547a097'
+body_hash: 'sha256:32d2a35a2ebe0898cb9f1b23ee224efac973dc0c41c794c1a37e0675b35d2726'
 related: []
 ---
 # `reachability-burndown` reference: live signals and cadence
@@ -242,6 +242,14 @@ A production module that says an interface is unreachable until future evidence 
 
 When a zero-caller persistence facade duplicates a live command writer, retain shared projection functions and types that reachable commands consume, but delete the facade-specific branch, error vocabulary, locale rows, exports, and misleading test names. A serialization round trip is evidence for serialization only; do not name or describe it as persistence coverage when it performs no durable write.
 
+A dead adapter can expose a dead composition factory after its wrapper peers are removed. Continue through the factory, its missing-dependency errors, locale rows, and tests when no live composition root calls it; do not retain a test-only constructor merely because its docstring claims production ownership. Preserve only concrete adapters with verified live callers, and remove their displaced names from hand-maintained locale-error censuses.
+
+A context variable with a producer but no reader is not retry safety; it is inert production metastate backed by a persuasive comment. When exact reachability reports the getter and search confirms the scope only sets/resets the value, delete the getter, context variable, scope, exports, and wrapper together. Keep the underlying CAS retry loop and classify unrelated focused-test failures by their concrete stack rather than restoring unused machinery.
+
+When typed convenience resolvers merely construct one target variant and delegate to a live unified resolver, migrate retained tests to the unified owner and delete the wrappers and exports. Preserve lower-level target resolution tests only where they exercise a separately live application boundary. A shared persistence failure reached by both old and new paths is not evidence that the wrappers carried unique behavior.
+
+A reported test-only state updater may reveal an entire persisted field family with no production reader or writer. Trace the model field, validators, key builder, mutation helper, serialization fixtures, and dedicated tests as one cluster. If live filing state is owned by work-unit, calculation-revision, and filing repositories, delete the duplicate workflow-state pointer vocabulary instead of preserving it as dormant backward-looking structure.
+
 ## Authority boundaries
 
 A production setting or public parameter that is read only to be discarded is development metastate even when its name describes plausible future policy. Delete the configuration field, parameter, environment spelling, and self-referential tests together; keep the invariant at the live schema or execution mechanism that already enforces it. A focused contract test should assert the dead switch is absent from both the callable signature and the settings model, which gives the removal detector teeth without maintaining an identity list.
@@ -327,3 +335,183 @@ A metastate marker on a module can expose a supersession that symbol reachabilit
 Cryptographic and secure-storage detector fixtures must write through the current production storage owner, including every identity-bound AAD component. A fixture that mints ciphertext through the consumer's obsolete helper can make both sides agree on a broken format. Prove the boundary with a real repository row: a synthetic profile remains admissible while a decryptable real taxpayer identity is refused; corrupting that same production-shaped payload must exercise the fail-closed branch.
 
 A durable writer's test-only parser or direct unlock facade does not become a product read door. When a stronger live artifact or repository boundary already performs the same proof, delete the duplicate parser/unlock vocabulary and drive retained tests through that live boundary. Writer-output tests may validate the emitted model directly, but must not preserve a second public ingestion path that no composition root can call.
+
+A test-enrollment manifest is development status even when production derives it at runtime. Do not ship authorization states, rollout denominators, enrolling-test paths, or evidence recorders that decide product capability from which tests have landed. Delete that regime and keep the tests that exercise real behavior across the relevant years. A test that parses another test's source, embeds production configuration as a string, or maintains a roster of production symbol names is a second textual authority rather than behavioral proof; remove it instead of repairing its census.
+
+A production lifecycle shortcut used only by tests is not a harmless fixture. When the live transition owner requires evidence, clean-state checks, or a verification report, a second helper that stamps the terminal state creates a bypass and forces tests to defend invented behavior. Delete the shortcut. Tests of verification must call the live verifier; tests of downstream refusal may persist the minimal inconsistent domain state directly when that state, rather than the transition mechanism, is their subject.
+
+A policy table is not an owning mechanism when no production boundary resolves through it. An enum, DTO, and lookup used only by a test census merely label intended output treatment while the live renderer follows a different rule path. Delete the unused policy vocabulary and its table-agreement assertions; keep direct redaction behavior tests and gates over policy tables that runtime storage actually consumes.
+
+A boolean capability probe over a production authority table is duplicate vocabulary when only tests call it. If the live resolver already exposes the consequential behavior for present and absent entries, test those outcomes at their legal period boundaries and delete the membership probe plus its roster assertion. The table remains the single authority; tests no longer restate which named modelos it contains.
+
+Deleting a test-only facade can expose the private machinery beneath it as additional exact findings. Treat that increase as evidence about the whole capability boundary, not as a reason to restore the facade. If no product composition reaches the transport, withdraw its DTOs, serializers, renderer-specific helpers, parity suites, and production prose atomically; retain only projections consumed by a live transport and move them to a name that states that ownership.
+
+An operator-facing aggregate does not justify a second public projection of every internal authority row. When only tests consume the detailed report to restate taxonomy membership, axes, and occupancy cases, delete that report, its public DTOs, and the census assertions. Feed the live aggregate through a minimal private shape containing only fields it calculates with, while retaining behavior tests for the public aggregate and destructive-boundary guards.
+
+A development gate backed by a hand-maintained adjudication list is itself forbidden metastate, even when its entries contain thoughtful explanations. It makes production names and module paths a second authority and requires dead DTOs to remain merely so their fields can be classified. Delete the whole gate rather than pruning rows, then delete any production symbols whose only consumers were that list. Runtime types must be justified by runtime owners, not enrollment in a development census.
+
+A source-wide AST style gate with hard-coded corpus floors, subtree populations, production paths, qualified function names, and exemptions is a development-state database disguised as a test. Detector-teeth cases do not redeem it when the detector cannot distinguish binary or guarded writers and therefore needs permanent classifications. Delete the gate; enforce newline behavior at the actual writer or formatter boundary when it materially affects an owned artifact.
+
+Do not duplicate a strict production architecture boundary with a broader development-tree census that requires path-keyed exemptions for tools that must name the excluded tree. Keep the no-allowlist `src/` isolation gate, where the dependency rule is absolute, and delete the `dev/` mirror whose own detector, exclusions, tests, and corpus walkers must exempt themselves. A sound rule does not make every wider static approximation worth maintaining.
+
+A numeric-literal syntax census cannot establish domain identity. When a scanner treats every three-digit string as a modelo code, then exempts an RIRPF article, a casilla number, and the canonical declaration module, its allowlist is performing the missing semantic classification. Delete the census and its copied source fixtures; enforce `Modelo` typing at the live command and domain boundaries where the value's meaning is known.
+
+A static symbol-reference graph rooted at test files is not execution coverage. It can only prove that test source names a production symbol, while transitive approximation, re-export heuristics, hop limits, and dynamic-dispatch exemptions create a second reachability engine and a hand-maintained module ledger. Delete that proxy; use executed coverage for test exercise and the canonical production reachability audit for shipped wiring.
+
+An attribute-name AST census cannot prove two operands share a domain type. If a gate treats every `.classification` comparison as one storage predicate and then exempts peer-coherence, layout dispatch, and other classification domains by production path and function name, its roster is supplying semantics the syntax lacks. Delete the enrollment gate and copied source fixtures; keep the canonical runtime predicate and verify its consequential accept/refuse behavior at the storage boundary.
+
+A parsing-style enrollment gate becomes a development backlog when it records unresolved production sites, provenance narratives, canonical-module exclusions, and path/function exemptions. Static call-shape matching cannot decide whether decimal text is operator input, machine data, a parseability predicate, or a typed rehydration; the ledger supplies that missing runtime provenance. Delete the gate and its private parser engine, while retaining direct behavior tests for canonical decimal grammar, coercion, rounding, and each live input boundary.
+
+Do not test a source detector by embedding a miniature production implementation as text in a test file. Where a no-allowlist detector materially protects a single semantic owner, retain its live-tree assertion, but delete copied-code self-tests; behavior belongs at the canonical owner, and the live corpus supplies the detector's actual input.
+
+Once a suppression backlog reaches zero, delete its enrollment collection, subtraction logic, paydown instructions, and stale-entry test. A strict zero-state gate needs no empty historical roster: it should report every live violation directly. Retiring the roster first separates development metastate from any later decision about whether local rationale comments remain materially useful.
+
+Apply the same terminal-state reduction to parameter-type gates: when an `Any` backlog is empty, remove its coordinate roster, historical narrative, filter, and inert-entry assertion. The live collector should fail directly on every unexplained site; an empty exception mechanism is still forbidden development vocabulary and an invitation to repopulate it.
+
+A gate that judges parameter-level `Any` solely by proximity to a magic rationale comment is not a type-safety mechanism. When removing its empty backlog reveals only a list of functions missing those comments, do not annotate production to satisfy it. Delete the comment-enrollment gate; configured type checkers and behavior at typed boundaries own whether each `Any` is sound.
+
+Likewise, a `cast()` census that fails hundreds of otherwise type-checked calls solely for lacking a magic adjacent comment measures annotation enrollment, not runtime or static correctness. Delete its AST matcher, alias restrictions, inventory exports, and detector-only tests instead of spraying production with marker tokens. Preserve useful local explanations as prose and let the configured type checkers own invalid casts.
+
+A `type: ignore` rationale census has the same ownership error when it accepts a menu of unrelated magic tokens within a fixed line window. It proves only that nearby prose matches one of several prefixes, not that the suppression is necessary, correctly scoped, or accepted by the checker. Delete the comment-token gate and its synthetic string probes; type-checker diagnostics own suppression validity, while useful local explanations need no enrollment vocabulary.
+
+A parsing enrollment gate cannot infer input provenance from syntax. Whole-layer exclusions, seeded import assumptions, a detector-authored boolean vocabulary, and path/line exemptions show that the scanner is reconstructing semantics it does not possess. Delete that second policy engine and its embedded-code probes; canonical parsers remain justified by their direct grammar and boundary behavior tests, not by banning call spellings across the tree.
+
+For a no-allowlist UTC ownership gate, distinguish the live invariant from detector imitation tests. Retain the actual-tree assertion that rejects inline `tzinfo is None` guards outside the canonical validator, but delete parametrized source strings that merely prove the AST matcher recognizes hand-authored examples. The live corpus is the input; UTC coercion and rejection behavior belongs to the canonical time tests.
+
+A translation-error AST gate that cannot resolve exception types and therefore carries lists of permitted class and factory names is a code-name census, not deferred-rendering proof. Delete it rather than maintaining nominal exclusions. Verify deferred translation through the `CadrumoError` contract and renderer with explicit output languages, where eager versus deferred resolution is observable behavior.
+
+A vocabulary-custody gate that hard-codes owning module paths, accepted qualifier words, symbol exemptions, and rename history is development metadata even when its naming distinction is sensible. Delete the census. Prove the two custody mechanisms through their storage location, encryption, resume, and revocation behavior; identifiers bound to external wire or keychain state remain governed by those contracts, not by a regex over source names.
+
+A canonical-encoding ownership gate is not authoritative when it identifies JSON by a callable's trailing name, exempts semantics by formatting syntax, carries a production path/function allowlist, and embeds alternative encoder implementations as strings. Delete that approximation. Exact byte stability, Unicode handling, non-finite refusal, and bounded-size behavior belong to direct tests of the canonical encoder and the persisted/digested boundaries that consume it.
+
+Keep repository-wide import validation about import behavior. An empty broken-import roster adds no value, a minimum-corpus count is a magic threshold, and a path-keyed ``__all__`` deficit cap is development metastate rather than an export contract. Remove all three: resolve every live runtime import with no exceptions, and test deliberate public facades through their supported imports instead of inferring API intent from every sibling import statement.
+
+After extracting a production owner, remeasure the new module for copied configuration that the extracted code does not consume. Delete such residue at once rather than preserving matching names for symmetry: the original live owner remains authoritative, and duplicate unused constants falsely suggest that retry or safety policy has moved with unrelated code.
+
+A persisted-version spelling census is not a durability test when it enrolls class and field names, reserves a path/function exemption mechanism, scans test syntax, and embeds fake constructors to prove its matcher. Delete it. Version correctness belongs to the serializer and reader contracts: roundtrip the live formats and prove current-version acceptance plus incompatible-version refusal without making production names a development registry.
+
+A test filename is not an execution contract. A lint that maps a ``test_live_*`` spelling to either a pytest marker or a mandatory magic banner creates a comment protocol, snapshots development inventory, and needs generated Python strings to verify itself. Delete it; pytest marker selection and the live adapter's actual opt-in/refusal behavior are the mechanisms that matter.
+
+Do not compensate for an unrun CI lane with a hand-maintained catalogue of selected test node IDs and a unit test that launches those tests again. Nested timeouts, JUnit re-attribution, issue-number metadata, and source-mutating anti-tautology fixtures are a second CI scheduler, not product assurance. Delete the catalogue and runner; the owning workflow must select the real integration lane directly.
+
+A three-module per-modelo-token baseline cannot enforce an application-wide architecture boundary. It is a named carve-out registry whose own documentation admits dozens of unexamined modules, and its growing matcher plus embedded source snippets merely standardize spellings that the detector can see. Delete it; move genuinely misplaced behavior through grounded owner refactors, and test each modelo's resulting calculation or projection at that owner.
+
+When a no-allowlist singularity gate protects a material live identifier transform, keep the live-tree assertion but remove copied implementation snippets and path/string owner assertions. Import the canonical callable and derive its source module for exclusion; direct contract tests own accepted and refused values, while the repository scan only detects competing implementations.
+
+When a facade is split into focused production owners, remove policy constants and adapters from the facade as soon as their consumers move. Leaving matching declarations in both files is not harmless scaffolding: it creates two apparent homes for protocol versions and validation, while exact reachability can prove the facade copies are inert.
+
+A deletion tombstone is not a uniqueness test. A gate that asserts an old module remains absent, forbids one historical alias in one named package, and embeds source snippets for every AST binding form preserves migration history as permanent development policy. Delete it; direct tests of the canonical decimal parser own its grammar, and ordinary duplicate-code signals can identify any future competing implementation without reserving the retired name.
+
+For a live provider-policy singularity gate, derive both the provider method and policy-owner module from imported production symbols. A directory exemption for adapter implementations is unnecessary when the detector matches calls rather than method definitions, and synthetic policy functions add no assurance beyond the live scan plus direct service behavior tests.
+
+The same rule applies to enum-mapping singularity: derive the canonical module and member spellings from the imported function and enums, retain only the live-tree competing-decision scan, and delete embedded copies and lookalike consumers. The product mapping's direct behavior tests—not detector imitation—prove what each enum input means.
+
+A function-signature silhouette is not semantic uniqueness. Treating every function that accepts ``SensitivityClass | None`` and returns ``bool`` as a masking authority can miss differently shaped copies and reject unrelated predicates; hardcoded owner names plus embedded rival modules do not repair that gap. Delete the census and verify masking through the live profile projection and redaction behavior.
+
+Do not build a transitive import/re-export analyzer inside a test to preserve one prompting architecture. Hardcoded owner modules, library and method-name sets, custom relative-import resolution, fixpoint export propagation, and an embedded synthetic package are development machinery with known blind spots. Delete it; prompt selection and console refusal belong to direct flow capability and injectable frontend tests, while general layer boundaries own forbidden dependency directions.
+
+Do not equate every public ``override_*`` function with a test hook and then maintain an exemption for each legitimate scoped context manager. Detect the concrete defect instead: module-level mutable ``_override*`` slots and explicit global rebinding. Local variables and context-local production overrides are not process-global dependency injection, so name-only policy over them creates false positives and an inevitable allowlist.
+
+An IVA-classification singularity gate that hardcodes an owner pathname and a roster of category-producing callable names is a second, incomplete architecture registry. Embedding rival classifiers as Python strings only tests that registry's AST matcher; it does not test invoice classification. Delete the gate and keep the ledger corpus, tax-fact manipulation, and modelo behavior suites as the authority for observable IVA outcomes.
+
+A source census that identifies a type's owner by one historical filename and its consumers by raw text will eventually report the owner itself as a consumer after a rename. A keyed omission exemption then fails in the opposite direction for the same rename. Delete both coupled inventories rather than updating their spellings; projection fidelity belongs to direct candidate-to-observation tests and rate-specific routing behavior.
+
+A repository-wide literal ban with a hand-maintained set of canonical path exclusions is not a behavioral contract. It conflates coincidentally equal MIME, encoding, timeout, and browser-state values, adds a magic corpus-size threshold, and tests regexes against copied source strings. Delete it; verify response media handling and browser waits at their live adapters, and consolidate constants only when the code shares one semantic policy owner.
+
+Do not use raw-string searches plus a canonical-file exclusion roster to enforce enum adoption. Equal spellings such as ``invoice`` or ``production`` have different meanings at different boundaries, while a regex over keyword syntax misses aliases and structured inputs. Delete the literal-survivor census and its synthetic lines; typed model validation, serialization roundtrips, and oracle-environment behavior own the actual closed values.
+
+Do not mistake raw Pydantic input annotations for validated-field identity. A field may deliberately accept ``Enum | str`` before a validator hydrates it to the enum, so a ``get_type_hints`` identity assertion can reject the correct boundary design. For Modelo 232, preserve strict hydration, off-catalogue refusal, registry validation, and persistence behavior; delete both that introspection assertion and any exact-literal-set source detector built around it.
+
+A test-support consolidation does not justify a permanent protocol-vocabulary scanner. Inferring an LLM server from a maintained set of URL fragments and token-counter strings, locating its owner by class/function names, and embedding five executable server modules recreates more plumbing than it protects. Delete the gate once the shared helper is adopted; ordinary duplication analysis and the real loopback client suites own future drift and serving behavior.
+
+For development-renderer manifests, test the typed theme vocabulary, CLI resolution, refusal, and serialization directly. Do not parse a second executable's argparse declaration from a hardcoded source path with regex, and do not make a test read its own source to prove it lacks an import; executable boundary gates and direct model behavior own those claims.
+
+Keep visual-inventory tests focused on real inventory output, manifest validation, rasterization, and diffs. Remove a second regex import-boundary linter, copied Python packages used to exercise its inheritance scanner, and cross-tool constant comparison by parsing another script's source. Architecture imports, Python name resolution, and shared configuration each need their own executable owner rather than synthetic modules inside an artifact test.
+
+For container configuration, retain direct parsing of the canonical Dockerfile declaration and the material distribution pin. Do not surround those checks with a repository-wide mixed-format literal scanner, skipped-directory inventory, corpus-size floor, Python AST heuristic, and generated Dockerfile/JSON/Python fixtures. The duplication signal owns competing declarations; the packaging test owns whether the live declaration builds from its argument and pins a compatible distribution.
+
+Runtime-floor agreement is a live configuration contract, not a detector framework. Read the actual runtime inventory, Python pin, project metadata, lock metadata, and resolved container base, then compare their parsed minors directly. Generated Dockerfiles and lockfiles, synthetic agreement maps, per-site mutation matrices, and a minimum-declaration threshold duplicate parser tests without strengthening the live invariant.
+
+For a security-critical subprocess exchange, do not embed a second implementation of the child protocol as a multiline Python program and execute it with ``python -c``. Retain real installed-command success, missing-channel refusal, platform invocation shaping, and forged-possession refusal; together they exercise the production exchange without maintaining an executable imitation inside the test.
+
+A public command-graph test should exercise that API's node identity and path invariants. It should not also maintain generated-artifact filenames, rescan every production module for development imports, impose a corpus-size floor, and embed detector inputs as Python strings. The architecture boundary and packaging ownership mechanisms already own those separate concerns.
+
+When a source architecture rule is already a first-class executable gate registered in the aggregate suite, do not add a unit module that writes miniature Python files solely to test its private scanner. Verify the live gate over the repository; keep detector-specific tests only when they can exercise structured inputs without embedding alternative program source.
+
+If that live source-style gate is already red on dozens of ordinary imports, do not preserve it merely because it is aggregated. Absolute versus relative self-import spelling is not a dependency-direction boundary; retire the custom scanner, CI recipes, changed-path hook, and configuration prose together. Import-linter and actual module imports remain the owning mechanisms for architectural validity.
+
+A secure-storage adoption census is development metadata when it hardcodes namespace prefixes, metadata attribute names, repository ClassVars, writer positional signatures, an authoring-module exemption, and minimum consumer counts. Embedded drifted and compliant repository implementations only test that second policy engine. Delete it; the registry taxonomy, namespace grammar, concrete adapter bindings, and encrypted roundtrips own secure-object correctness.
+
+A namespace-registry test must not infer production correctness by parsing every source file, resolving imports through a custom fixed point, and maintaining sets of repository method and class names. That source census confuses arbitrary namespace-shaped strings with registered storage and produces false reds that invite inventory widening. Delete the detector and its self-test; keep direct registry construction, invariant, lookup, custody, and logical-path behavior as the owning contract.
+
+A canonical exception tuple can be tested directly for its intended members and catchability. Do not add a repository-wide AST scan keyed to the tuple's current variable name, a source-tree exclusion rule, and a minimum module count; those mechanics neither prove caller behavior nor find semantic duplicates, which belong to focused degradation tests and the duplication signal.
+
+A sensitive-persistence policy test must not become a parallel catalogue of sensitive packages, forbidden call spellings, reviewed writer call sites, and prose adjudications. Such an inventory is development metastate: it fails open when code moves, mistakes syntax for data flow, and requires production vocabulary to be curated twice. Delete it and rely on encrypted roundtrips, custody refusal tests, explicit export behavior, and the general duplication and architecture mechanisms.
+
+Once a storage taxonomy alias is checked directly at its core owner, do not repeat the same mapping in an adapter test and surround it with literal scans of named production modules. Consolidate the direct equality and route behavior at the core suite; ordinary duplication analysis owns future retyped literals, while architecture gates own dependency direction.
+
+Pytest already makes skips and xfails observable in real runs. Do not maintain a second 900-line Python interpreter for alias propagation, marker context, and embedded skip programs merely to ban those outcomes; a direct one-time search can ground removal, and the test runner remains the behavioral authority.
+
+A policy singularity detector built from enum-member silhouettes, a canonical module pathname, and a custom production-tree walk does not prove invoice classification correctness. Delete it rather than expanding its known blind spots; keep invoice-kind behavior at the aggregation owner, and let the duplication signal discover semantic copies without embedding production vocabulary in tests.
+
+A shared inventory-helper suite should test discovery and path behavior against real repository files. It must not also infer hexagonal ownership from import names, classify assertion-local structural evidence, or generate miniature owner-specific modules to test that policy engine. Replace that machinery with concise behavioral coverage of the public inventory helpers.
+
+Do not preserve a family of canonical-helper singularity gates by encoding each helper's current filename, call spelling, enum members, or AST silhouette. UTC validation, accent folding, override scoping, FX stamping, CSV normalization, and wall-clock access each have direct owner behavior suites; semantic duplication belongs to the duplication signal, not six bespoke source interpreters with embedded Python examples and exclusions.
+
+Do not hide live production dependencies behind a string-keyed module and attribute table merely to keep a declaration module "import-light". When the split modules have no runtime cycle, import them directly and bind their functions normally; this removes reflective code-name metastate, lets reachability follow the real graph, and preserves deferred behavior targets without an executable-string probe in tests.
+
+A fully implemented browser adapter is still dead code when no production assembly constructs its catalogue or injects the driver, while tests are its only importers. If the shipped mechanism is offline replay, delete the unassembled live adapter, its safety helper, and its dedicated test/policy inventories together; retain the replay oracle and corpus tests that production actually reaches rather than treating tests as wiring.
+
+A parser-metadata helper with no production consumer is not a frontend boundary. When its only test also scans named CLI modules, compares source strings, and maintains a retired-symbol roster, delete the helper and the policy test together; verify the live wizard command construction and actual CLI profile surface instead.
+
+An unwired projection is not made production-ready by extensive tests or by listing it as a public/internal wizard module. When its own documentation admits no caller stamps the result and exact reachability finds only tests, delete the projection, its tests, and the package module-status census; preserve the generic flow definition, copy assembly, and rendering behavior that live callers actually use.
+
+An executable Python program embedded in a test string is a second implementation boundary, not behavioral evidence. When it exists only to drive an unreachable frontend, delete the displaced frontend, its inline program, and its dev fixtures together; retain tests of the reachable application engine and installed entrypoint that exercise real imports and observable outcomes.
+
+A read-only presentation projection and screen are not live merely because dev fixtures and broad visual suites can mount them. If the production destination catalogue never constructs them, delete both layers and their private-helper/module-inventory tests; keep design-system tests coupled to a reachable screen through ordinary callbacks rather than a removed dev fixture.
+
+Scenario enums, fixture registries, interface strings, and completeness tests can make an unrouted journey look deliberate while proving only their own closed development world. Delete that whole fixture-to-test loop with the unreachable screen; preserve the application presentation and live overview contracts that the production route actually consumes.
+
+Do not keep application-facing row builders, request rebuilders, result summaries, and operation-door adapters in an unreachable TUI module merely because its tests exercise them. If no production screen imports the module, delete the entire presentation seam and verify the censal and filed-history behavior at their application owners.
+
+When exact reachability shows an entire pre-release frontend generation is supported only by tests and development fixture registries, remove the generation as one displacement cluster. Delete its action/edit/review/select screens, test-only session wrapper, synthetic generic helpers, fixture registries, and registry-completeness detector together; verify the routed installed workspace and application/CLI owners rather than preserving parallel UI semantics.
+
+When a validation module is consolidated behind a module alias, export only the validators the owning model actually invokes. Copying every helper back into the consumer namespace creates unused pseudo-API symbols without adding indirection value; remove the aliases while retaining direct owner validation tests.
+
+Do not expose validation vocabulary through private compatibility aliases merely so tests can inspect the underlying set. Exercise accepted and refused schemas through the validator itself. Likewise, delete locale-key exports whose only named consumer was an already-removed projection and update detector prose rather than preserving a stale positive-control story.
+
+When a frontend is removed, remeasure its application substrate for navigation verbs that no reachable frontend calls. Delete those test-only verbs and their bespoke boundary assertions; keep tests for the navigation operations still exercised by installed callers.
+
+An external/legal constant with no production or test consumer is not useful centralization; it is unsupported vocabulary that implies a wire contract the code does not implement. Delete the declaration and retain the external-constant owner tests over values that reachable behavior actually consumes.
+
+After replacing reflective dependency lookup with direct module imports, do not retain a broad mirror of every helper from those modules. Alias only the functions the declaration models invoke; unused aliases are duplicated API vocabulary and should be removed as one mechanically grounded cluster.
+
+The same rule applies inside calculation assembly: after extracting a cohesive field-finalization module, the caller should alias only the aggregate functions it invokes. Re-exporting every extracted helper under private names creates a shadow surface that exact reachability correctly reports as unused.
+
+Legal figures must have one executable authority. When dated registry parameters replace undated constants, delete the constants and every doc claim that calls them a fallback or central limit; deriving compound caps from the dated inputs prevents a second figure from drifting.
+
+A closed enum is not a contract when no production branch accepts or emits it and its only consumer enumerates its tokens in a test. After removing the owning frontend, delete its capability and intent vocabularies plus the self-referential taxonomy assertions; retain only flow taxonomies consumed by the live engine and line frontend.
+
+A core registry should store only objects that shipped consumers read. Delete write-only slots, their accessors, and structural protocols with no production consumer; test the remaining registration and caller behavior directly, never by embedding a second Python program in a test string to inspect imports.
+
+A terminal-capability helper is not infrastructure until a shipped renderer calls it. Delete speculative progress-policy functions and their exports when exact reachability finds no consumer; retain the colour and refusal behavior actually used by the CLI.
+
+Do not infer row-field completeness from a hand-maintained family roster, exemption set, Modelo mapping, selected years, and tolerated-residue snapshot. That is development metastate coupled to current implementation structure. When an export resolver has no shipped caller, remove its private builder and builder-only tests as the same displacement cluster; retain validation of live observation models and application row ingestion.
+
+Do not keep a convenience payload wrapper when the outbound adapter deliberately owns record terminators and every shipped caller consumes the terminator-free body renderer. Delete the unused wrapper, its line-ending lookup, and the protocol member needed only by that wrapper; preserve codec and adapter behavior at their live owners.
+
+A registry binding family may legitimately own observation and selector validation without owning export resolution. When no shipped route calls its resolver, delete the resolver and private accumulator together instead of treating their implemented detail-row semantics as future-proofing; verify the live registry snapshot and application ingestion paths.
+
+When two unwired resolvers share a private row builder, delete the entire closed resolver-builder-test loop in one cluster. Field-name tuples and blank-default maps used only by that loop are hand-maintained production-shaped vocabulary, not reusable infrastructure; preserve the observation and selector contracts consumed by shipped ingestion.
+
+A Protocol is not an architectural port merely because adapter docstrings say the concrete repository conforms to it. If no service annotates against it, no runtime check uses it, and no assembly accepts it, delete the aspirational protocol and the false documentation claims; verify the concrete repository behavior that shipped callers actually use.
+
+Do not retain a read-only query Protocol beside a concrete aggregate when no caller types against the Protocol. The aggregate's own query methods and the repository port already carry the live behavior; the unused structural duplicate adds vocabulary without a boundary.
+
+An explicitly documented "exported adapter contract" that the engine does not consume is not a live port. Delete the loader Protocol and the prose defending its non-use; preserve the draft-like shape, deadline/auth probes, preflight behavior, and repository port that submission actually accepts.
+
+When shipped manual handling only reads a bundled corpus, an unused fetch entrypoint can conceal a complete dead acquisition subsystem: URL inventory, result DTO, lookup, HTTP streaming, manifest writing, and exact-roster tests. Delete that closed world and retain direct manifest/PDF verification over the real bundled corpus. Follow any generic helper it uniquely consumed, such as an atomic stream writer, through the same cluster rather than leaving a test-only primitive behind.
+
+Do not keep an immutable catalogue model when the live attachment store persists and iterates individual manifests directly and no caller constructs the aggregate. Its coercion paths, key-validation loop, mapping freezer, and collection methods are speculative duplicate storage semantics; retain the content-addressed Attachment model and store/service behavior.
+
+When the production operation registry binds a prepared transport directly into its definition, a separate service-composition wrapper over the same prepare port is duplicate assembly vocabulary. Delete the wrapper and wrapper-only imports; verify the registry fixed point and submitted operation path at the actual composition owner.

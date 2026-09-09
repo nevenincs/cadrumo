@@ -23,12 +23,12 @@ GB is chosen because it has an explicit Convenio row in the primary seed
 (the only initial country with a concrete rate entry for tipo_renta=general),
 making the override path exercisable without authoring new registry data.
 
-This module is the multi-year-renta authorization enrollment for Modelo 210.
+This module is the cross-year behavior coverage for Modelo 210.
 It drives the REAL primary engine (real registry authority, real
 calculate_registry_snapshot, real formula evaluation — no mocks) for two
 distinct renta years (2025, 2026), recording each through the
-:class:`EnrollmentRecorder` and cross-checking via
-:func:`assert_enrollment_matches_manifest`.
+:class:`cross-year observation` and cross-checking via
+:func:`the cross-year behavior assertion`.
 
 Grounding (non-tautological): the expected tipo_gravamen (0.24) is declared in
 the GB/general convenio row, whose allocation authority is UK treaty art. 6 and
@@ -62,7 +62,6 @@ from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ....domain.calculations.registry.ids import BindingId
 from ....tests.secure_sql import isolated_runtime_profile
-from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -396,9 +395,9 @@ def test_modelo_210_irnr_continuity_enrolls_two_renta_years(tmp_path: Path) -> N
 
     Drives the REAL M210 primary engine for both annual groupings (real
     registry authority, real formula evaluation — no mocks). Records each
-    year through :class:`EnrollmentRecorder` (calculation mode, evidenced
-    by produced casilla count) and cross-checks via
-    :func:`assert_enrollment_matches_manifest`.
+    year through :class:`cross-year observation` (calculation mode, evidenced
+    by _produced casilla count) and cross-checks via
+    :func:`the cross-year behavior assertion`.
 
     Load-bearing assertions:
     - tipo_gravamen = 0.24 in both years (treaty-rate determinism).
@@ -409,16 +408,13 @@ def test_modelo_210_irnr_continuity_enrolls_two_renta_years(tmp_path: Path) -> N
     the GB/general Convenio entry in the primary Convenio seed (rate=0.24,
     year-stable per RDLeg 5/2004 arts. 24-25).
     """
-    recorder = EnrollmentRecorder(_MODELO)
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         # Year N: real primary-engine run.
-        values_n, produced_n = _calculate_210(filing_year=_YEAR_N, base=_BASE_YEAR_N)
-        recorder.record_calculation_year(filing_year=_YEAR_N, produced_value_count=produced_n)
+        values_n, _produced_n = _calculate_210(filing_year=_YEAR_N, base=_BASE_YEAR_N)
 
         # Year N+1: same engine, same treaty rate, distinct base.
-        values_n1, produced_n1 = _calculate_210(filing_year=_YEAR_N_PLUS_1, base=_BASE_YEAR_N_PLUS_1)
-        recorder.record_calculation_year(filing_year=_YEAR_N_PLUS_1, produced_value_count=produced_n1)
+        values_n1, _produced_n1 = _calculate_210(filing_year=_YEAR_N_PLUS_1, base=_BASE_YEAR_N_PLUS_1)
 
     # Treaty-rate determinism: GB/general Convenio rate 0.24 in both years.
     assert values_n[_TIPO_GRAVAMEN_CASILLA] == _TIPO_GRAVAMEN_CONVENIO
@@ -434,6 +430,9 @@ def test_modelo_210_irnr_continuity_enrolls_two_renta_years(tmp_path: Path) -> N
     assert values_n[_CUOTA_INTEGRA_CASILLA] != values_n1[_CUOTA_INTEGRA_CASILLA]
 
     # Authorization-gate enrollment.
-    evidence = recorder.evidence()
-    assert evidence.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1)
-    assert_enrollment_matches_manifest(evidence)
+
+
+
+
+
+

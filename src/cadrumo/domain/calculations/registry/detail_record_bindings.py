@@ -366,17 +366,10 @@ def validate_foreign_asset_binding(binding: DataBindingDefinition) -> list[str]:
     return invariant_diagnostics(binding, "foreign-asset", lambda b: _validated_foreign_asset_selector(b))
 
 
-def resolve_foreign_asset_binding_row_values(
+def _foreign_asset_binding_members(
     revision: ModeloRevision,
-    observations: Iterable[Modelo720RowObservation],
-) -> dict[tuple[BindingId, int], Decimal | str]:
-    """Resolve row-producer foreign-asset bindings into per-row indexed values.
-
-    Args:
-        revision: The :class:`ModeloRevision` whose foreign-asset bindings are resolved.
-        observations: Modelo 720 row observations to group into rows.
-    """
-    available = tuple(observations)
+) -> tuple[list[tuple[DataBindingDefinition, _ForeignAssetSelector]], set[tuple[str, ...]]]:
+    """Collect foreign-asset row bindings and their declared class cohorts."""
     members: list[tuple[DataBindingDefinition, _ForeignAssetSelector]] = []
     cohort_classes: set[tuple[str, ...]] = set()
     for binding in revision.bindings:
@@ -385,13 +378,14 @@ def resolve_foreign_asset_binding_row_values(
         selector = _validated_foreign_asset_selector(binding)
         members.append((binding, selector))
         cohort_classes.add(tuple(sorted(selector.asset_classes)))
-    if not members:
-        return {}
-    # All bindings in a cohort share the same asset_classes filter.
-    sample_classes = next(iter(cohort_classes)) if cohort_classes else ()
-    class_filter = set(sample_classes)
-    filtered = tuple(obs for obs in available if not class_filter or obs.asset_class_code in class_filter)
-    rows = _build_foreign_asset_rows(filtered)
+    return members, cohort_classes
+
+
+def _resolve_foreign_asset_rows(
+    members: list[tuple[DataBindingDefinition, _ForeignAssetSelector]],
+    rows: tuple[Mapping[str, Decimal | str], ...],
+) -> dict[tuple[BindingId, int], Decimal | str]:
+    """Project each foreign-asset row field into its binding/index coordinates."""
     resolved: dict[tuple[BindingId, int], Decimal | str] = {}
     for binding, selector in members:
         row_field = _required_detail_record_row_field(binding, selector.row_field)
@@ -403,6 +397,28 @@ def resolve_foreign_asset_binding_row_values(
                 )
             resolved[(binding.id, row_index)] = value
     return resolved
+
+
+def resolve_foreign_asset_binding_row_values(
+    revision: ModeloRevision,
+    observations: Iterable[Modelo720RowObservation],
+) -> dict[tuple[BindingId, int], Decimal | str]:
+    """Resolve row-producer foreign-asset bindings into per-row indexed values.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose foreign-asset bindings are resolved.
+        observations: Modelo 720 row observations to group into rows.
+    """
+    available = tuple(observations)
+    members, cohort_classes = _foreign_asset_binding_members(revision)
+    if not members:
+        return {}
+    # All bindings in a cohort share the same asset_classes filter.
+    sample_classes = next(iter(cohort_classes)) if cohort_classes else ()
+    class_filter = set(sample_classes)
+    filtered = tuple(obs for obs in available if not class_filter or obs.asset_class_code in class_filter)
+    rows = _build_foreign_asset_rows(filtered)
+    return _resolve_foreign_asset_rows(members, rows)
 
 
 def _build_foreign_asset_rows(

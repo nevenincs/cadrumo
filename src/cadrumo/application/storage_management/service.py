@@ -22,6 +22,7 @@ from __future__ import annotations
 import os
 import shutil
 from collections.abc import Iterable
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
@@ -34,6 +35,7 @@ from ...core.storage_materialization import STORAGE_ROOT_MODE, ensure_storage_tr
 from ...core.storage_taxonomy import (
     StorageArea,
     StorageCategory,
+    StorageGrouping,
     StorageLifecycle,
     StorageLocation,
     StorageNodeKind,
@@ -51,8 +53,6 @@ from .models import (
     StorageAreaInventoryReport,
     StorageAreaInventoryRow,
     StorageInitReport,
-    StorageInventoryReport,
-    StorageInventoryRow,
     StorageOccupancy,
     StorageReclaimReport,
     StorageTreeCheckReport,
@@ -96,29 +96,14 @@ def storage_lifecycle_permits_reclaim(lifecycle: StorageLifecycle) -> bool:
     return lifecycle in RECLAIMABLE_LIFECYCLES
 
 
-def collect_storage_inventory(*, settings: Settings | None = None) -> StorageInventoryReport:
-    """Return every declared location with its resolved path and occupancy.
+@dataclass(frozen=True, slots=True)
+class _InventoryRow:
+    """Minimal internal input to the public area aggregate."""
 
-    Bucket- and keystore-scoped members resolve against the active profile when
-    one is pointed at, and report :attr:`StorageOccupancy.UNRESOLVED` otherwise:
-    with no active profile there is no single path those members occupy, and
-    reporting them absent would assert a fact nothing looked at.
-
-    Args:
-        settings: Settings to resolve against. Defaults to the effective
-            settings for the calling context.
-
-    Returns:
-        One row per taxonomy member, in declaration order.
-    """
-    resolved = settings if settings is not None else load_settings()
-    active_bucket = _active_bucket_id()
-    rows = tuple(_inventory_row(category, resolved, active_bucket) for category in STORAGE_TAXONOMY)
-    return StorageInventoryReport(
-        storage_root=Path(resolved.cadrumo_local_storage_root),
-        active_bucket_id=active_bucket,
-        rows=rows,
-    )
+    grouping: StorageGrouping
+    path: Path | None
+    occupancy: StorageOccupancy
+    reclaimable: bool
 
 
 def collect_storage_area_inventory(*, settings: Settings | None = None) -> StorageAreaInventoryReport:
@@ -456,7 +441,7 @@ def _remove_reclaim_entry(entry: Path) -> None:
         shutil.rmtree(entry)
 
 
-def _area_inventory_occupancy(rows: tuple[StorageInventoryRow, ...]) -> StorageOccupancy:
+def _area_inventory_occupancy(rows: tuple[_InventoryRow, ...]) -> StorageOccupancy:
     """Apply the public occupancy precedence to one area's internal rows."""
     occupancies = {row.occupancy for row in rows}
     if StorageOccupancy.POPULATED in occupancies:
@@ -468,7 +453,7 @@ def _area_inventory_occupancy(rows: tuple[StorageInventoryRow, ...]) -> StorageO
     return StorageOccupancy.UNRESOLVED
 
 
-def _area_inventory_disposition(rows: tuple[StorageInventoryRow, ...]) -> StorageAreaDisposition:
+def _area_inventory_disposition(rows: tuple[_InventoryRow, ...]) -> StorageAreaDisposition:
     """Classify whether an area's selected rows are durable, mixed, or reclaimable."""
     permitted = [row.reclaimable for row in rows]
     if permitted and all(permitted):
@@ -480,7 +465,7 @@ def _area_inventory_disposition(rows: tuple[StorageInventoryRow, ...]) -> Storag
 
 def _area_inventory_row(
     area: StorageArea,
-    rows: tuple[StorageInventoryRow, ...],
+    rows: tuple[_InventoryRow, ...],
 ) -> StorageAreaInventoryRow:
     """Aggregate internal rows without projecting internal nouns to callers."""
     selected = tuple(row for row in rows if row.grouping.value == area.value)
@@ -527,33 +512,21 @@ def _inventory_row(
     category: StorageCategory,
     settings: Settings,
     active_bucket: str | None,
-) -> StorageInventoryRow:
+) -> _InventoryRow:
     """Build one inventory row for ``category``."""
     location = storage_location(category)
     path: Path | None = None
-    bucket_id: str | None = None
 
     if location.scope is StorageScope.ROOT:
         path = storage_path(category, settings=settings)
     elif active_bucket is not None:
         path = bucket_scoped_storage_path(category, active_bucket, settings=settings)
-        bucket_id = active_bucket
 
-    occupancy, entry_count = _occupancy(path, location.node_kind)
-    return StorageInventoryRow(
-        category=category,
-        subpath=location.subpath,
-        node_kind=location.node_kind,
-        scope=location.scope,
+    occupancy, _ = _occupancy(path, location.node_kind)
+    return _InventoryRow(
         grouping=location.grouping,
-        lifecycle=location.lifecycle,
-        override_policy=location.override_policy,
-        fingerprint_participation=location.fingerprint_participation,
-        settings_field=location.settings_field,
         path=path,
-        bucket_id=bucket_id,
         occupancy=occupancy,
-        entry_count=entry_count,
         reclaimable=location.scope is StorageScope.ROOT and storage_lifecycle_permits_reclaim(location.lifecycle),
     )
 
@@ -616,7 +589,6 @@ def _root_mode_is_enforceable() -> bool:
 __all__ = [
     "RECLAIMABLE_LIFECYCLES",
     "collect_storage_area_inventory",
-    "collect_storage_inventory",
     "inspect_storage_tree",
     "materialise_storage_tree",
     "reclaim_storage_area",

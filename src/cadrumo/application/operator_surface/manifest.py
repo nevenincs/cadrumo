@@ -755,6 +755,52 @@ def reconcile_operator_surface_inventory(
     return OperatorSurfaceReconciliation(leaves=reconciled)
 
 
+def _index_reconciled_leaf_paths(
+    *,
+    key: str,
+    leaf: ReconciledOperatorLeaf,
+    path_owners: dict[tuple[str, ...], str],
+    diagnostics: list[str],
+) -> None:
+    live_leaf = leaf.live_leaf
+    for path in (live_leaf.canonical_cli_path, *live_leaf.alias_cli_paths):
+        previous = path_owners.get(path)
+        if previous is not None:
+            diagnostics.append(f"ambiguous reconciled CLI path {' '.join(path)}: {previous} and {key}")
+            continue
+        path_owners[path] = key
+
+
+def _index_reconciled_schema_identities(
+    *,
+    key: str,
+    leaf: ReconciledOperatorLeaf,
+    diagnostics: list[str],
+) -> None:
+    for surface, schema_key in (
+        ("result_schema", leaf.result_schema.subject_leaf_key if leaf.result_schema is not None else None),
+        ("input_schema", leaf.input_schema.subject_leaf_key if leaf.input_schema is not None else None),
+    ):
+        if schema_key is not None and schema_key != key:
+            diagnostics.append(f"reconciled {surface} identity mismatch for {key}: observed {schema_key}")
+
+
+def _index_reconciled_leaf(
+    *,
+    leaf: ReconciledOperatorLeaf,
+    indexed: dict[str, ReconciledOperatorLeaf],
+    path_owners: dict[tuple[str, ...], str],
+    diagnostics: list[str],
+) -> None:
+    key = leaf.live_leaf.subject_leaf_key
+    if key in indexed:
+        diagnostics.append(f"duplicate reconciled live leaf identity: {key}")
+        return
+    _index_reconciled_leaf_paths(key=key, leaf=leaf, path_owners=path_owners, diagnostics=diagnostics)
+    _index_reconciled_schema_identities(key=key, leaf=leaf, diagnostics=diagnostics)
+    indexed[key] = leaf
+
+
 def _index_reconciled_leaves(
     reconciliation: OperatorSurfaceReconciliation,
 ) -> dict[str, ReconciledOperatorLeaf]:
@@ -763,23 +809,12 @@ def _index_reconciled_leaves(
     indexed: dict[str, ReconciledOperatorLeaf] = {}
     path_owners: dict[tuple[str, ...], str] = {}
     for leaf in reconciliation.leaves:
-        key = leaf.live_leaf.subject_leaf_key
-        if key in indexed:
-            diagnostics.append(f"duplicate reconciled live leaf identity: {key}")
-            continue
-        for path in (leaf.live_leaf.canonical_cli_path, *leaf.live_leaf.alias_cli_paths):
-            previous = path_owners.get(path)
-            if previous is not None:
-                diagnostics.append(f"ambiguous reconciled CLI path {' '.join(path)}: {previous} and {key}")
-                continue
-            path_owners[path] = key
-        for surface, schema_key in (
-            ("result_schema", leaf.result_schema.subject_leaf_key if leaf.result_schema is not None else None),
-            ("input_schema", leaf.input_schema.subject_leaf_key if leaf.input_schema is not None else None),
-        ):
-            if schema_key is not None and schema_key != key:
-                diagnostics.append(f"reconciled {surface} identity mismatch for {key}: observed {schema_key}")
-        indexed[key] = leaf
+        _index_reconciled_leaf(
+            leaf=leaf,
+            indexed=indexed,
+            path_owners=path_owners,
+            diagnostics=diagnostics,
+        )
     if not indexed:
         diagnostics.append("operator-surface reconciliation must not be empty")
     _refuse("operator_surface_reconciliation", diagnostics)

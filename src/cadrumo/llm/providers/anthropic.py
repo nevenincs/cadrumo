@@ -15,7 +15,7 @@ envelope. Network I/O is async; all SDK exceptions are mapped to
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, NotRequired, TypedDict, override
+from typing import TYPE_CHECKING, NoReturn, NotRequired, TypedDict, override
 
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ..errors import LLMConfigError, LLMProviderError, LLMTransientTransportError
@@ -178,6 +178,33 @@ def build_message_kwargs(request: ProviderRequest) -> _MessageCreateKwargs:
     return kwargs
 
 
+def _raise_api_status_error(
+    exc: APIStatusError,
+    *,
+    provider_name: str,
+) -> NoReturn:
+    """Map one non-2xx Anthropic status to its retryability boundary."""
+    if exc.status_code >= 500:
+        raise LLMTransientTransportError(
+            context={"provider": provider_name, "http_status": exc.status_code},
+        ) from exc
+    raise LLMProviderError(
+        context={"provider": provider_name, "http_status": exc.status_code},
+    ) from exc
+
+
+def _provider_completion(response: Message, text_block_type: type[TextBlock]) -> ProviderCompletion:
+    """Project Anthropic text blocks and usage into the provider contract."""
+    text_parts = [block.text for block in response.content if isinstance(block, text_block_type)]
+    return ProviderCompletion(
+        text="\n".join(part for part in text_parts if part).strip(),
+        model=response.model,
+        input_tokens=response.usage.input_tokens,
+        output_tokens=response.usage.output_tokens,
+        provider_request_id=response.id,
+    )
+
+
 class AnthropicAdapter(ProviderAdapter):
     """Provider adapter that talks to Anthropic's Messages API.
 
@@ -277,19 +304,9 @@ class AnthropicAdapter(ProviderAdapter):
                 },
             ) from exc
         except sdk.APIStatusError as exc:
-            if exc.status_code >= 500:
-                raise LLMTransientTransportError(
-                    context={"provider": self.provider.value, "http_status": exc.status_code},
-                ) from exc
-            raise LLMProviderError(
-                context={"provider": self.provider.value, "http_status": exc.status_code},
-            ) from exc
+            _raise_api_status_error(
+                exc,
+                provider_name=self.provider.value,
+            )
 
-        text_parts = [block.text for block in response.content if isinstance(block, sdk.TextBlock)]
-        return ProviderCompletion(
-            text="\n".join(part for part in text_parts if part).strip(),
-            model=response.model,
-            input_tokens=response.usage.input_tokens,
-            output_tokens=response.usage.output_tokens,
-            provider_request_id=response.id,
-        )
+        return _provider_completion(response, sdk.TextBlock)

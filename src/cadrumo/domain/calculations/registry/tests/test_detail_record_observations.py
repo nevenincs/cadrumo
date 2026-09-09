@@ -1,6 +1,6 @@
 """Contract tests for non-withholding detail-record observations.
 
-Validates pydantic field constraints and deterministic row-builder helpers for
+Validates pydantic field constraints and live row-builder helpers for
 the related-party (232), foreign-asset (720), atribución (184), IVA refund
 (360), and donativos (182) detail-record observation surfaces.
 """
@@ -22,7 +22,7 @@ from ..detail_record_bindings import (
     RelatedPartyOperationObservation,
     _build_related_party_rows,
 )
-from ..donativo_bindings import DonativoDonorObservation, _build_donativo_rows
+from ..donativo_bindings import DonativoDonorObservation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -299,51 +299,6 @@ def test_donativo_donor_refuses_type_1_declarant_nature() -> None:
                 "declarant_nature": "3",
             },
         )
-
-
-def test_build_donativo_rows_sums_per_donor_and_preserves_recurrencia() -> None:
-    """A donor who gave twice in the year folds into one row; recurrencia sticks."""
-    q1_amount = Decimal("100")
-    q3_amount = Decimal("250")
-    other_donor_amount = Decimal("500")
-    obs = (
-        DonativoDonorObservation(
-            source_id="d1a",
-            donor_tax_id="12345678A",
-            donor_legal_name="Donor One",
-            transaction_date=date(2025, 2, 1),
-            amount_donated=q1_amount,
-            deduction_percentage=Decimal("80"),
-            is_recurrent=False,
-        ),
-        DonativoDonorObservation(
-            source_id="d1b",
-            donor_tax_id="12345678A",
-            donor_legal_name="Donor One",
-            transaction_date=date(2025, 9, 1),
-            amount_donated=q3_amount,
-            deduction_percentage=Decimal("80"),
-            is_recurrent=True,
-        ),
-        DonativoDonorObservation(
-            source_id="d2",
-            donor_tax_id="87654321Z",
-            donor_legal_name="Donor Two",
-            transaction_date=date(2025, 5, 1),
-            amount_donated=other_donor_amount,
-            deduction_percentage=Decimal("35"),
-            is_recurrent=False,
-        ),
-    )
-
-    rows = _build_donativo_rows(obs)
-
-    assert len(rows) == 2
-    by_nif = {row["donor_tax_id"]: row for row in rows}
-    assert by_nif["12345678A"]["amount_donated"] == q1_amount + q3_amount
-    assert by_nif["12345678A"]["is_recurrent"] == "1"
-    assert by_nif["87654321Z"]["amount_donated"] == other_donor_amount
-    assert by_nif["87654321Z"]["is_recurrent"] == "0"
 
 
 def _related_party_observation(**overrides: object) -> RelatedPartyOperationObservation:

@@ -47,7 +47,7 @@ arithmetic.
 concurrently-edited registry the validating authority would refuse outright.
 Every row is then stamped ``registry_validated=false`` and the three axes
 needing that authority — evidence-tier coverage, the support probe, and the
-derived authorization — report ``n/a`` rather than a fabricated zero.
+authority-dependent support data — report ``n/a`` rather than a fabricated zero.
 
 See Also:
     :mod:`~dev.registry.conformance.manager`
@@ -114,7 +114,7 @@ def report(as_json: _AsJson = False, no_validate: _NoValidate = False) -> None:
 
     Composes the shipped conformance profile — declared governance provenance,
     this revision's own capabilities, evidence-tier coverage, the modelo-level
-    support probe and authorization, external-oracle grounding, classification
+    support probe, external-oracle grounding, classification
     coherence, registry-scope diagnostics — and adds schema-local translation
     coverage. Always exits 0: this is a screen, not a gate.
     """

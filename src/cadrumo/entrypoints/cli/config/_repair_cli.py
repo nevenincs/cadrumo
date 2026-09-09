@@ -35,12 +35,19 @@ from .._common import emit_envelope, resolve_cli_precondition_action
 from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
 if TYPE_CHECKING:
-    from ....application.diagnostic_models import ConfigRepairReport, DiagnosticCheck, RegistryIntegrityReport
+    from ....application.diagnostic_models import (
+        ConfigRepairReport,
+        DiagnosticCheck,
+        RegistryIntegrityReport,
+        SecureObjectIntegrityReport,
+    )
     from ....application.workflow.events import WorkflowStateResetFingerprint
     from ..config_payloads import (
         ConfigRepairCheckPayload,
         ConfigRepairResult,
         RepairIntegrityRegistryResult,
+        RepairQuarantineResult,
+        RepairResetProgressResult,
         WorkflowFingerprintPayload,
     )
 
@@ -178,63 +185,13 @@ def repair_logs(
     )
 
 
-def repair_quarantine(
-    ctx: typer.Context,
-    yes: bool = False,
-    dry_run: bool = False,
-) -> None:
-    """Move secure-object rows that fail tag verification into quarantine."""
+def _quarantine_result(report: SecureObjectIntegrityReport, *, dry_run: bool) -> RepairQuarantineResult:
+    """Project one application quarantine report into the CLI result model."""
     from .._config_quarantine_payloads import QuarantineNamespacePayload
     from ..config_payloads import RepairQuarantineResult
 
-    if not dry_run and not yes:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.repair.quarantine_requires_yes",
-        )
-    if _resolve_active_bucket_id() is None:
-        result = RepairQuarantineResult(dry_run=dry_run, quarantined=0, retained=0, reason="no-active-profile")
-        emit_envelope(
-            ctx,
-            command="config.repair.quarantine",
-            result=result,
-            lines=(
-                f"dry_run\t{str(dry_run).lower()}",
-                "quarantined\t0",
-                "retained\t0",
-                "reason\tno active profile; nothing to quarantine",
-            ),
-        )
-        return
-    if dry_run:
-        report = _preview_quarantine_unreadable_secure_objects()
-        result = RepairQuarantineResult(
-            dry_run=True,
-            unreadable_total=report.unreadable_total,
-            readable_total=report.readable_total,
-            namespaces=[
-                QuarantineNamespacePayload(
-                    namespace=item.namespace,
-                    readable=item.readable,
-                    unreadable=item.unreadable,
-                )
-                for item in report.namespaces
-            ],
-        )
-        emit_envelope(
-            ctx,
-            command="config.repair.quarantine",
-            result=result,
-            lines=(
-                "dry_run\ttrue",
-                f"would_quarantine\t{report.unreadable_total}",
-                f"would_retain\t{report.readable_total}",
-                *tuple(f"{item.namespace}\t{item.unreadable}" for item in report.namespaces if item.unreadable > 0),
-            ),
-        )
-        return
-    report = _quarantine_unreadable_secure_objects()
-    result = RepairQuarantineResult(
-        dry_run=False,
+    return RepairQuarantineResult(
+        dry_run=dry_run,
         unreadable_total=report.unreadable_total,
         readable_total=report.readable_total,
         namespaces=[
@@ -246,16 +203,104 @@ def repair_quarantine(
             for item in report.namespaces
         ],
     )
+
+
+def _quarantine_lines(report: SecureObjectIntegrityReport, *, dry_run: bool) -> tuple[str, ...]:
+    """Render the preview or committed quarantine counters in stable order."""
+    quarantine_label = "would_quarantine" if dry_run else "quarantined"
+    retain_label = "would_retain" if dry_run else "retained"
+    return (
+        f"dry_run\t{str(dry_run).lower()}",
+        f"{quarantine_label}\t{report.unreadable_total}",
+        f"{retain_label}\t{report.readable_total}",
+        *tuple(f"{item.namespace}\t{item.unreadable}" for item in report.namespaces if item.unreadable > 0),
+    )
+
+
+def _emit_no_active_quarantine(ctx: typer.Context, *, dry_run: bool) -> None:
+    """Emit the non-mutating no-active-profile quarantine outcome."""
+    from ..config_payloads import RepairQuarantineResult
+
+    result = RepairQuarantineResult(dry_run=dry_run, quarantined=0, retained=0, reason="no-active-profile")
     emit_envelope(
         ctx,
         command="config.repair.quarantine",
         result=result,
         lines=(
-            "dry_run\tfalse",
-            f"quarantined\t{report.unreadable_total}",
-            f"retained\t{report.readable_total}",
-            *tuple(f"{item.namespace}\t{item.unreadable}" for item in report.namespaces if item.unreadable > 0),
+            f"dry_run\t{str(dry_run).lower()}",
+            "quarantined\t0",
+            "retained\t0",
+            "reason\tno active profile; nothing to quarantine",
         ),
+    )
+
+
+def repair_quarantine(
+    ctx: typer.Context,
+    yes: bool = False,
+    dry_run: bool = False,
+) -> None:
+    """Move secure-object rows that fail tag verification into quarantine."""
+    if not dry_run and not yes:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.repair.quarantine_requires_yes",
+        )
+    if _resolve_active_bucket_id() is None:
+        _emit_no_active_quarantine(ctx, dry_run=dry_run)
+        return
+    report = _preview_quarantine_unreadable_secure_objects() if dry_run else _quarantine_unreadable_secure_objects()
+    emit_envelope(
+        ctx,
+        command="config.repair.quarantine",
+        result=_quarantine_result(report, dry_run=dry_run),
+        lines=_quarantine_lines(report, dry_run=dry_run),
+    )
+
+
+def _reset_progress_result(
+    fingerprint: WorkflowStateResetFingerprint,
+    *,
+    dry_run: bool,
+) -> RepairResetProgressResult:
+    """Project a workflow reset fingerprint into the typed CLI result."""
+    from ..config_payloads import RepairResetProgressResult
+
+    return RepairResetProgressResult(dry_run=dry_run, fingerprint=_workflow_fingerprint_payload(fingerprint))
+
+
+def _reset_progress_lines(fingerprint: WorkflowStateResetFingerprint, *, dry_run: bool) -> tuple[str, ...]:
+    """Render the shared workflow fingerprint facts in the existing order."""
+    progress_schema_version = fingerprint.schema_version if fingerprint.schema_version is not None else "<none>"
+    saved_at = fingerprint.written_at.isoformat() if fingerprint.written_at is not None else "<none>"
+    stored_bytes = fingerprint.byte_length if fingerprint.byte_length is not None else "<none>"
+    if dry_run:
+        return (
+            "dry_run\ttrue",
+            f"progress_schema_version\t{progress_schema_version}",
+            f"saved_at\t{saved_at}",
+            f"stored_bytes\t{stored_bytes}",
+            f"read_status\t{fingerprint.reason_class}",
+        )
+    return (
+        "dry_run\tfalse",
+        "cleared\ttrue",
+        f"progress_schema_version\t{progress_schema_version}",
+        f"saved_at\t{saved_at}",
+        f"stored_bytes\t{stored_bytes}",
+        f"read_status\t{fingerprint.reason_class}",
+    )
+
+
+def _emit_no_active_reset_progress(ctx: typer.Context) -> None:
+    """Emit the no-op reset outcome when no active profile exists."""
+    from ..config_payloads import RepairResetProgressResult
+
+    result = RepairResetProgressResult(reset=False, reason="nothing to reset")
+    emit_envelope(
+        ctx,
+        command="config.repair.reset_progress",
+        result=result,
+        lines=("reset\tfalse", "reason\tnothing to reset"),
     )
 
 
@@ -265,52 +310,20 @@ def repair_reset_progress(
     dry_run: bool = False,
 ) -> None:
     """Clear saved interrupted-command progress after summarising the saved record."""
-    from ..config_payloads import RepairResetProgressResult
-
     if not dry_run and not yes:
         raise _CliRefusedBoundaryError(translated_message="cli.config.repair.reset_progress_requires_yes")
     if _resolve_active_bucket_id() is None:
-        result = RepairResetProgressResult(reset=False, reason="nothing to reset")
-        emit_envelope(
-            ctx,
-            command="config.repair.reset_progress",
-            result=result,
-            lines=("reset\tfalse", "reason\tnothing to reset"),
-        )
+        _emit_no_active_reset_progress(ctx)
         return
     from ....application.workflow.persistence import fingerprint_workflow_state, reset_workflow_state
 
-    if dry_run:
-        fingerprint = fingerprint_workflow_state()
-        progress_schema_version = fingerprint.schema_version if fingerprint.schema_version is not None else "<none>"
-        saved_at = fingerprint.written_at.isoformat() if fingerprint.written_at is not None else "<none>"
-        stored_bytes = fingerprint.byte_length if fingerprint.byte_length is not None else "<none>"
-        fp = _workflow_fingerprint_payload(fingerprint)
-        result = RepairResetProgressResult(dry_run=True, fingerprint=fp)
-        lines = (
-            "dry_run\ttrue",
-            f"progress_schema_version\t{progress_schema_version}",
-            f"saved_at\t{saved_at}",
-            f"stored_bytes\t{stored_bytes}",
-            f"read_status\t{fingerprint.reason_class}",
-        )
-        emit_envelope(ctx, command="config.repair.reset_progress", result=result, lines=lines)
-        return
-    fingerprint = reset_workflow_state()
-    progress_schema_version = fingerprint.schema_version if fingerprint.schema_version is not None else "<none>"
-    saved_at = fingerprint.written_at.isoformat() if fingerprint.written_at is not None else "<none>"
-    stored_bytes = fingerprint.byte_length if fingerprint.byte_length is not None else "<none>"
-    fp = _workflow_fingerprint_payload(fingerprint)
-    result = RepairResetProgressResult(dry_run=False, fingerprint=fp)
-    lines = (
-        "dry_run\tfalse",
-        "cleared\ttrue",
-        f"progress_schema_version\t{progress_schema_version}",
-        f"saved_at\t{saved_at}",
-        f"stored_bytes\t{stored_bytes}",
-        f"read_status\t{fingerprint.reason_class}",
+    fingerprint = fingerprint_workflow_state() if dry_run else reset_workflow_state()
+    emit_envelope(
+        ctx,
+        command="config.repair.reset_progress",
+        result=_reset_progress_result(fingerprint, dry_run=dry_run),
+        lines=_reset_progress_lines(fingerprint, dry_run=dry_run),
     )
-    emit_envelope(ctx, command="config.repair.reset_progress", result=result, lines=lines)
 
 
 def repair_integrity_objects(

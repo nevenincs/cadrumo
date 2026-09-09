@@ -152,6 +152,154 @@ def split_transaction(
     )
 
 
+def _split_identity(
+    parent: Transaction,
+    children: tuple[SplitChildCommand, ...],
+) -> tuple[tuple[Decimal, ...], str]:
+    """Derive the ordered child inputs and content-addressed split group."""
+    child_amounts = tuple(child.amount for child in children)
+    child_narratives = tuple(child.description for child in children)
+    split_group_id = derive_split_group_id(
+        parent_transaction_id=parent.transaction_id,
+        child_amounts=child_amounts,
+        child_narratives=child_narratives,
+    )
+    return child_amounts, split_group_id
+
+
+def _build_initial_split_children(
+    *,
+    parent: Transaction,
+    children: tuple[SplitChildCommand, ...],
+    occurred_at: datetime,
+    actor: str,
+    source_command: str,
+) -> tuple[Transaction, ...]:
+    """Build child rows before their cross-referencing lineage is attached."""
+    return tuple(
+        _build_split_child_transaction(
+            parent=parent,
+            child=child,
+            index=index,
+            occurred_at=occurred_at,
+            actor=actor,
+            source_command=source_command,
+        )
+        for index, child in enumerate(children)
+    )
+
+
+def _require_unique_split_child_ids(children: tuple[Transaction, ...]) -> tuple[str, ...]:
+    """Return child IDs, refusing a content-addressed collision in the cohort."""
+    child_ids = tuple(transaction.transaction_id for transaction in children)
+    if len(set(child_ids)) != len(child_ids):
+        raise TransactionValidationError(
+            "ledger split produced duplicate child transaction ids; "
+            "vary amount, description, value_date, or counterparty between siblings",
+            context={"child_ids": child_ids},
+        )
+    return child_ids
+
+
+def _build_split_parent_transition(
+    *,
+    parent: Transaction,
+    split_group_id: str,
+    child_ids: tuple[str, ...],
+    actor: str,
+    source_command: str,
+    reason: str,
+    now: datetime,
+) -> Transaction:
+    """Mark the parent as split and append its lifecycle transition."""
+    parent_lineage = SplitLineage(
+        split_group_id=split_group_id,
+        role=SplitRole.PARENT,
+        sibling_transaction_ids=child_ids,
+    )
+    parent_transition = TransactionLifecycleLineageEntry(
+        previous_state=parent.lifecycle_state,
+        state=TransactionLifecycleState.SPLIT,
+        actor=actor,
+        source_command=source_command,
+        changed_at=now,
+        reason=reason.strip() or "split",
+    )
+    return parent.model_copy(
+        update={
+            "lifecycle_state": TransactionLifecycleState.SPLIT,
+            "lifecycle_lineage": (*parent.lifecycle_lineage, parent_transition),
+            "split_lineage": parent_lineage,
+            # D6: splitting the parent is a mutating edit; re-stamp modified_at.
+            "modified_at": now,
+        },
+    )
+
+
+def _build_final_split_children(
+    *,
+    parent: Transaction,
+    initial_children: tuple[Transaction, ...],
+    split_group_id: str,
+    child_ids: tuple[str, ...],
+    child_eur_values: tuple[Decimal, ...] | None,
+) -> tuple[Transaction, ...]:
+    """Attach reciprocal child lineage and inherited FX values."""
+    return tuple(
+        transaction.model_copy(
+            update={
+                "split_lineage": SplitLineage(
+                    split_group_id=split_group_id,
+                    role=SplitRole.CHILD,
+                    sibling_transaction_ids=(
+                        parent.transaction_id,
+                        *(other for other in child_ids if other != transaction.transaction_id),
+                    ),
+                ),
+                "fx_rate": parent.fx_rate,
+                "value_in_eur": None if child_eur_values is None else child_eur_values[index],
+            },
+        )
+        for index, transaction in enumerate(initial_children)
+    )
+
+
+def _build_split_event(
+    *,
+    bucket_id: str,
+    parent: Transaction,
+    split_group_id: str,
+    child_ids: tuple[str, ...],
+    actor: str,
+    source_command: str,
+    reason: str,
+    now: datetime,
+) -> BucketEvent:
+    """Build the single audit event anchoring the split lineage."""
+    return build_ledger_bucket_event(
+        bucket_id=bucket_id,
+        event_type=BucketEventType.LEDGER_TRANSACTION_SPLIT,
+        occurred_at=now,
+        actor=actor,
+        object_id=parent.transaction_id,
+        payload={
+            "source_command": source_command,
+            "reason": reason.strip(),
+            "split_group_id": split_group_id,
+            "parent_transaction_id": parent.transaction_id,
+            # A count, never the joined child ids. A payload value is capped at
+            # 500 characters and a transaction id is a 64-char SHA-256 digest,
+            # so eight children joined on commas is 519 and a split into eight
+            # or more could not construct the event recording it — the same
+            # arithmetic that broke transaction removal at eight attachments.
+            # Nothing is lost: every child carries this split_group_id as a
+            # required field, and the group id is in this payload, so the cohort
+            # is recoverable from the transaction catalogue.
+            "child_count": str(len(child_ids)),
+        },
+    )
+
+
 def _build_split_state(
     *,
     catalogue: TransactionCatalogue,
@@ -182,97 +330,42 @@ def _build_split_state(
     )
     _validate_split_child_amounts(parent_amount=parent.raw.amount, children=children)
 
-    child_amounts = tuple(child.amount for child in children)
-    child_narratives = tuple(child.description for child in children)
-    split_group_id = derive_split_group_id(
-        parent_transaction_id=parent.transaction_id,
-        child_amounts=child_amounts,
-        child_narratives=child_narratives,
-    )
-
-    child_transactions_initial = tuple(
-        _build_split_child_transaction(
-            parent=parent,
-            child=child,
-            index=index,
-            occurred_at=now,
-            actor=actor,
-            source_command=source_command,
-        )
-        for index, child in enumerate(children)
-    )
-    child_ids = tuple(transaction.transaction_id for transaction in child_transactions_initial)
-    if len(set(child_ids)) != len(child_ids):
-        raise TransactionValidationError(
-            "ledger split produced duplicate child transaction ids; "
-            "vary amount, description, value_date, or counterparty between siblings",
-            context={"child_ids": child_ids},
-        )
-
-    parent_lineage = SplitLineage(
-        split_group_id=split_group_id,
-        role=SplitRole.PARENT,
-        sibling_transaction_ids=child_ids,
-    )
-    parent_transition = TransactionLifecycleLineageEntry(
-        previous_state=parent.lifecycle_state,
-        state=TransactionLifecycleState.SPLIT,
-        actor=actor,
-        source_command=source_command,
-        changed_at=now,
-        reason=reason.strip() or "split",
-    )
-    parent_after = parent.model_copy(
-        update={
-            "lifecycle_state": TransactionLifecycleState.SPLIT,
-            "lifecycle_lineage": (*parent.lifecycle_lineage, parent_transition),
-            "split_lineage": parent_lineage,
-            # D6: splitting the parent is a mutating edit; re-stamp modified_at.
-            "modified_at": now,
-        },
-    )
-
-    child_eur_values = _split_child_eur_values(parent=parent, child_amounts=child_amounts)
-    final_children = tuple(
-        transaction.model_copy(
-            update={
-                "split_lineage": SplitLineage(
-                    split_group_id=split_group_id,
-                    role=SplitRole.CHILD,
-                    sibling_transaction_ids=(
-                        parent.transaction_id,
-                        *(other for other in child_ids if other != transaction.transaction_id),
-                    ),
-                ),
-                "fx_rate": parent.fx_rate,
-                "value_in_eur": None if child_eur_values is None else child_eur_values[index],
-            },
-        )
-        for index, transaction in enumerate(child_transactions_initial)
-    )
-    _require_split_preserves_eur_total(parent=parent, children=final_children)
-
-    event = build_ledger_bucket_event(
-        bucket_id=bucket_id,
-        event_type=BucketEventType.LEDGER_TRANSACTION_SPLIT,
+    child_amounts, split_group_id = _split_identity(parent, children)
+    child_transactions_initial = _build_initial_split_children(
+        parent=parent,
+        children=children,
         occurred_at=now,
         actor=actor,
-        object_id=parent.transaction_id,
-        payload={
-            "source_command": source_command,
-            "reason": reason.strip(),
-            "split_group_id": split_group_id,
-            "parent_transaction_id": parent.transaction_id,
-            # A count, never the joined child ids. A payload value is capped at
-            # 500 characters and a transaction id is a 64-char SHA-256 digest,
-            # so eight children joined on commas is 519 and a split into eight
-            # or more could not construct the event recording it — the same
-            # arithmetic that broke transaction removal at eight attachments.
-            # Nothing is lost: every child carries this split_group_id as a
-            # required field, and the group id is in this payload, so the cohort
-            # is recoverable from the transaction catalogue.
-            "child_count": str(len(child_ids)),
-        },
+        source_command=source_command,
+    )
+    child_ids = _require_unique_split_child_ids(child_transactions_initial)
+    parent_after = _build_split_parent_transition(
+        parent=parent,
+        split_group_id=split_group_id,
+        child_ids=child_ids,
+        actor=actor,
+        source_command=source_command,
+        reason=reason,
+        now=now,
+    )
+    child_eur_values = _split_child_eur_values(parent=parent, child_amounts=child_amounts)
+    final_children = _build_final_split_children(
+        parent=parent,
+        initial_children=child_transactions_initial,
+        split_group_id=split_group_id,
+        child_ids=child_ids,
+        child_eur_values=child_eur_values,
+    )
+    _require_split_preserves_eur_total(parent=parent, children=final_children)
+    event = _build_split_event(
+        bucket_id=bucket_id,
+        parent=parent,
+        split_group_id=split_group_id,
+        child_ids=child_ids,
+        actor=actor,
+        source_command=source_command,
+        reason=reason,
+        now=now,
     )
     return parent_after, final_children, event, split_group_id, child_ids
 

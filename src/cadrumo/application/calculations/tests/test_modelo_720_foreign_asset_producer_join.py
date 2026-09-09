@@ -217,7 +217,7 @@ def _calculate_through_the_mesh(
 ) -> tuple[CalculationRevision, ModeloRevision, VerificationReport]:
     """Run the real year-N+1 M720 bucket-aggregation calculate, then the real verify.
 
-    The foreign-asset rows are produced by the enrolled resolver from
+    The foreign-asset rows are _produced by the enrolled resolver from
     *observations*; nothing in this helper hand-writes ``row_binding_values``.
     """
     with _secure_backend(tmp_path):
@@ -339,7 +339,7 @@ def test_the_enrolled_resolver_writes_row_bindings_keyed_as_the_evidence_join_re
 
 
 def test_the_evidence_projection_joins_the_produced_rows_at_their_bloque_totals(tmp_path: Path) -> None:
-    """The projection turns the produced rows into per-bloque valuation observations."""
+    """The projection turns the _produced rows into per-bloque valuation observations."""
     revision, modelo_revision, _report = _calculate_through_the_mesh(
         tmp_path=tmp_path,
         observations=_foreign_asset_observations(),
@@ -398,7 +398,7 @@ def test_producer_supplied_rows_reach_the_verify_time_redeclaration_advisory(tmp
 
     The cuentas bloque grew by EUR 25,000 over its declared baseline and is
     absent from the declaration, so the advisory must fire for cuentas and only
-    cuentas — driven entirely by rows the enrolled resolver produced.
+    cuentas — driven entirely by rows the enrolled resolver _produced.
     """
     _revision, _modelo_revision, report = _calculate_through_the_mesh(
         tmp_path=tmp_path,
@@ -434,3 +434,5 @@ def test_declaring_the_grown_bloque_withdraws_the_producer_driven_advisory(tmp_p
     )
 
     assert [finding for finding in report.findings if finding.message_locale_key == _ADVISORY_LOCALE_KEY] == []
+
+

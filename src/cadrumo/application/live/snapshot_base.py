@@ -152,6 +152,68 @@ class SnapshotRepository[TPayload: BaseModel](Protocol):
         ...
 
 
+def _enforce_active_snapshot_state(
+    *,
+    state: SnapshotLifecycleState,
+    has_supersession_pointer: bool,
+    discard_metadata_present: bool,
+) -> None:
+    """Enforce the ACTIVE state identity and audit invariants."""
+    if has_supersession_pointer:
+        raise LiveApplicationInputError(
+            translated_message="application.live.snapshot_base.errors.state_active_supersession_pointer",
+            context={"state": state.value, "has_supersession_pointer": True},
+        )
+    if discard_metadata_present:
+        raise LiveApplicationInputError(
+            translated_message="application.live.snapshot_base.errors.state_discard_metadata_forbidden",
+            context={"state": state.value, "discard_metadata_present": True},
+        )
+
+
+def _enforce_superseded_snapshot_state(
+    *,
+    state: SnapshotLifecycleState,
+    has_supersession_pointer: bool,
+    discard_metadata_present: bool,
+) -> None:
+    """Enforce the SUPERSEDED state identity and audit invariants."""
+    if not has_supersession_pointer:
+        raise LiveApplicationInputError(
+            translated_message="application.live.snapshot_base.errors.state_supersession_pointer_required",
+            context={"state": state.value, "has_supersession_pointer": False},
+        )
+    if discard_metadata_present:
+        raise LiveApplicationInputError(
+            translated_message="application.live.snapshot_base.errors.state_discard_metadata_forbidden",
+            context={"state": state.value, "discard_metadata_present": True},
+        )
+
+
+def _enforce_discarded_snapshot_state(
+    *,
+    state: SnapshotLifecycleState,
+    has_supersession_pointer: bool,
+    discarded_at: datetime | None,
+    discarded_by: str,
+) -> None:
+    """Enforce the DISCARDED state identity and audit invariants."""
+    if has_supersession_pointer:
+        raise LiveApplicationInputError(
+            translated_message="application.live.snapshot_base.errors.state_discarded_supersession_pointer",
+            context={"state": state.value, "has_supersession_pointer": True},
+        )
+    if discarded_at is None or not discarded_by.strip():
+        raise LiveApplicationInputError(
+            translated_message="application.live.snapshot_base.errors.state_discard_audit_required",
+            context={
+                "state": state.value,
+                "has_discarded_at": discarded_at is not None,
+                "has_discarded_by": bool(discarded_by.strip()),
+            },
+        )
+
+
 def enforce_snapshot_state_invariants(
     *,
     state: SnapshotLifecycleState,
@@ -171,44 +233,25 @@ def enforce_snapshot_state_invariants(
     """
     discard_metadata_present = discarded_at is not None or bool(discarded_by) or bool(discard_reason)
     if state is SnapshotLifecycleState.ACTIVE:
-        if has_supersession_pointer:
-            raise LiveApplicationInputError(
-                translated_message="application.live.snapshot_base.errors.state_active_supersession_pointer",
-                context={"state": state.value, "has_supersession_pointer": True},
-            )
-        if discard_metadata_present:
-            raise LiveApplicationInputError(
-                translated_message="application.live.snapshot_base.errors.state_discard_metadata_forbidden",
-                context={"state": state.value, "discard_metadata_present": True},
-            )
+        _enforce_active_snapshot_state(
+            state=state,
+            has_supersession_pointer=has_supersession_pointer,
+            discard_metadata_present=discard_metadata_present,
+        )
         return
     if state is SnapshotLifecycleState.SUPERSEDED:
-        if not has_supersession_pointer:
-            raise LiveApplicationInputError(
-                translated_message="application.live.snapshot_base.errors.state_supersession_pointer_required",
-                context={"state": state.value, "has_supersession_pointer": False},
-            )
-        if discard_metadata_present:
-            raise LiveApplicationInputError(
-                translated_message="application.live.snapshot_base.errors.state_discard_metadata_forbidden",
-                context={"state": state.value, "discard_metadata_present": True},
-            )
+        _enforce_superseded_snapshot_state(
+            state=state,
+            has_supersession_pointer=has_supersession_pointer,
+            discard_metadata_present=discard_metadata_present,
+        )
         return
-    # DISCARDED
-    if has_supersession_pointer:
-        raise LiveApplicationInputError(
-            translated_message="application.live.snapshot_base.errors.state_discarded_supersession_pointer",
-            context={"state": state.value, "has_supersession_pointer": True},
-        )
-    if discarded_at is None or not discarded_by.strip():
-        raise LiveApplicationInputError(
-            translated_message="application.live.snapshot_base.errors.state_discard_audit_required",
-            context={
-                "state": state.value,
-                "has_discarded_at": discarded_at is not None,
-                "has_discarded_by": bool(discarded_by.strip()),
-            },
-        )
+    _enforce_discarded_snapshot_state(
+        state=state,
+        has_supersession_pointer=has_supersession_pointer,
+        discarded_at=discarded_at,
+        discarded_by=discarded_by,
+    )
 
 
 class SnapshotService[TPayload: BaseModel, TCapture: BaseModel](ABC):

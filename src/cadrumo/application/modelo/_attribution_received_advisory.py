@@ -164,6 +164,69 @@ def _attribution_received_uncaptured_finding(
     )
 
 
+def _received_fact_parts(fact: UserProfileFact) -> tuple[int, str, object] | None:
+    """Extract one indexed attribution fact, skipping malformed/empty values."""
+    match = _RECEIVED_FACT_RE.match(fact.path)
+    if match is None or fact.value is None:
+        return None
+    return int(match.group("index")), match.group("field"), fact.value
+
+
+def _group_received_facts(facts: tuple[UserProfileFact, ...]) -> dict[int, dict[str, object]]:
+    """Group attribution facts by their persisted row index in input order."""
+    grouped: dict[int, dict[str, object]] = {}
+    for fact in facts:
+        parts = _received_fact_parts(fact)
+        if parts is None:
+            continue
+        index, field, value = parts
+        grouped.setdefault(index, {})[field] = value
+    return grouped
+
+
+def _row_matches_filing_year(row: Mapping[str, object], filing_year: int) -> bool:
+    """Return whether one grouped attribution row belongs to the requested year."""
+    row_year = row.get("filing_year")
+    if row_year is None:
+        return False
+    return str(row_year).strip() == str(filing_year)
+
+
+def _coerce_received_base(row: Mapping[str, object]) -> Decimal | None:
+    """Coerce a row's attributed base, treating malformed stored text as absent."""
+    base = row.get("base_imponible_attributed")
+    if base is None:
+        return None
+    try:
+        # DECIMAL-TEXT-RATIONALE-ATTRIBUTION-FACT-SUM: sums an already
+        # persisted profile fact, whose write boundary owns the text
+        # grammar. Same residual as the rule-3 exemption for
+        # ``domain/deadlines/profiles.py``, and recorded as one rather than
+        # tightened here: promoting the string at read time would leave the
+        # unguarded write still writing it.
+        return coerce_decimal_strict(base if isinstance(base, Decimal) else str(base).strip())
+    except (InvalidOperation, ValueError):
+        return None
+
+
+def _sum_received_bases_for_year(
+    grouped: Mapping[int, Mapping[str, object]],
+    filing_year: int,
+) -> Decimal | None:
+    """Sum parseable attributed bases from rows matching the filing year."""
+    total = Decimal("0")
+    matched = False
+    for row in grouped.values():
+        if not _row_matches_filing_year(row, filing_year):
+            continue
+        base = _coerce_received_base(row)
+        if base is None:
+            continue
+        total += base
+        matched = True
+    return total if matched else None
+
+
 def _attribution_received_base_for_year(
     facts: tuple[UserProfileFact, ...],
     filing_year: int,
@@ -176,34 +239,8 @@ def _attribution_received_base_for_year(
     or ``None`` when no row applies to the year (so the caller can distinguish
     "no facts" from "facts summing to zero").
     """
-    grouped: dict[int, dict[str, object]] = {}
-    for fact in facts:
-        match = _RECEIVED_FACT_RE.match(fact.path)
-        if match is None or fact.value is None:
-            continue
-        grouped.setdefault(int(match.group("index")), {})[match.group("field")] = fact.value
-
-    total = Decimal("0")
-    matched = False
-    for row in grouped.values():
-        row_year = row.get("filing_year")
-        if row_year is None or str(row_year).strip() != str(filing_year):
-            continue
-        base = row.get("base_imponible_attributed")
-        if base is None:
-            continue
-        try:
-            # DECIMAL-TEXT-RATIONALE-ATTRIBUTION-FACT-SUM: sums an already
-            # persisted profile fact, whose write boundary owns the text
-            # grammar. Same residual as the rule-3 exemption for
-            # ``domain/deadlines/profiles.py``, and recorded as one rather than
-            # tightened here: promoting the string at read time would leave the
-            # unguarded write still writing it.
-            total += coerce_decimal_strict(base if isinstance(base, Decimal) else str(base).strip())
-        except (InvalidOperation, ValueError):
-            continue
-        matched = True
-    return total if matched else None
+    grouped = _group_received_facts(facts)
+    return _sum_received_bases_for_year(grouped, filing_year)
 
 
 __all__ = ["_attribution_received_omission_advisory_findings"]

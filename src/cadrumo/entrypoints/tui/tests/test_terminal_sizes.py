@@ -33,7 +33,6 @@ from ....adapters.persistence.operations.journal import OperationJournalReposito
 from ....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ....adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....application.auth.apoderado_flow import build_apoderado_flow_definition
 from ....application.modelo.operation_definitions import (
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
     build_modelo_work_verify_definition,
@@ -49,13 +48,10 @@ from ....application.user_profile.login_session import login_profile, logout_act
 from ....application.user_profile.overview import ProfileOverview, build_profile_overview
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
-from ....core.flows import FlowMode
 from ....core.time.clock import now
-from ....domain.auth.apoderamientos.catalogue import load_default_catalogue
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..components.host import ScreenHostApp
-from ..flows.app import FlowScreen
 from ..operations.controller import OperationController
 from ..operations.modal import OperationModal
 from ..profile.overview import ProfileManagerScreen
@@ -163,20 +159,6 @@ async def test_the_secret_surface_fits_every_terminal_width(tmp_path: Path, size
             await pilot.pause()
             _assert_horizontally_contained(cast(App[object], app), size, "login screen")
             app.app.exit(None)
-
-
-@pytest.mark.parametrize("size", _SIZES)
-@pytest.mark.asyncio
-async def test_the_flow_surface_fits_every_terminal_width(size: tuple[int, int]) -> None:
-    """The guided-flow surface keeps its answer controls inside the terminal."""
-    definition = build_apoderado_flow_definition(load_default_catalogue())
-    flow = FlowScreen(definition, mode=FlowMode.CREATE, registered_values={})
-    host = ScreenHostApp(flow)
-    async with host.run_test(size=size) as pilot:
-        await pilot.pause()
-        await pilot.pause()
-        _assert_horizontally_contained(cast(App[object], host), size, "guided flow")
-        host.exit(None)
 
 
 @contextmanager

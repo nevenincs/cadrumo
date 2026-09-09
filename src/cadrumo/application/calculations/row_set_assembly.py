@@ -628,11 +628,8 @@ def _assemble_withholding296_row(
 def _coerce_flag(value: Decimal | str | None) -> bool:
     """Parse a row-set boolean-flag cell (``"1"``/``"0"``) into a real bool.
 
-    Mirrors the ``"1"`` / ``"0"`` string convention
-    :func:`~domain.calculations.registry._donativo_bindings._build_donativo_rows`
-    writes for the ``is_recurrent`` field on the resolve-time (registry ->
-    Sheets) side of the same detail-record family, so the pull-side reassembly
-    round-trips the same wire shape.
+    Accepts the ``"1"`` / ``"0"`` string convention used by row-set boolean
+    columns and maps it to the observation model's real boolean field.
     """
     if value is None:
         return False

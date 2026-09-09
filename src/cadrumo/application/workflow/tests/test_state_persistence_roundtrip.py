@@ -12,7 +12,6 @@ from pathlib import Path
 
 import pytest
 
-from ....core.period import Period
 from ....tests.secure_sql import isolated_runtime_profile
 from ...auth.models import AuthState
 from ...review.models import (
@@ -21,11 +20,7 @@ from ...review.models import (
 )
 from ..persistence import WorkflowStateRepository
 from ..profile_bucket_scan import list_profile_buckets
-from ..state_models import (
-    DeclaracionPointer,
-    WorkflowEvent,
-    WorkflowState,
-)
+from ..state_models import WorkflowEvent, WorkflowState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -39,7 +34,6 @@ def _populated_workflow_state() -> WorkflowState:
 
     * an AuthState with non-default values
     * two profile bucket pointers (the keyed mapping must round-trip)
-    * a declarations mapping with one DeclaracionPointer
     * a tuple of WorkflowEvent entries (append-only audit log)
 
     The active-profile selector lives in the precedence chain
@@ -49,17 +43,6 @@ def _populated_workflow_state() -> WorkflowState:
 
     return WorkflowState(
         auth=AuthState(),
-        declarations={
-            "303:2025:1T": DeclaracionPointer(
-                modelo="303",
-                period=Period.from_year_and_code(2025, "1T"),
-                draft_id="d" * 64,
-                status="BORRADOR",
-                exported_path="exports/303-2025-1T.txt",
-                verified=False,
-                updated_at=_WORKFLOW_TIMESTAMP,
-            ),
-        },
         invoice_reviews={
             "a" * 64: InvoiceReviewRecord(
                 invoice_id="a" * 64,
@@ -100,7 +83,6 @@ def test_workflow_state_survives_encrypted_storage_roundtrip(
 
     Per-field witnesses pin the most fragile pieces:
 
-    * the declarations mapping with its nested DeclaracionPointer,
     * the bucket_events tuple with a non-empty audit record.
 
     ``WorkflowState.profiles`` is no longer a persisted field; it is
@@ -117,11 +99,6 @@ def test_workflow_state_survives_encrypted_storage_roundtrip(
         loaded_normalised = loaded.model_copy(update={"updated_at": original.updated_at})
         assert loaded_normalised == original
         assert loaded.updated_at >= original.updated_at
-        assert "303:2025:1T" in loaded.declarations
-        loaded_decl = loaded.declarations["303:2025:1T"]
-        assert loaded_decl.period == Period.from_year_and_code(2025, "1T")
-        assert loaded_decl.draft_id == "d" * 64
-        assert loaded_decl.exported_path == "exports/303-2025-1T.txt"
         assert len(loaded.bucket_events) == 1
         assert loaded.bucket_events[0].action == "profile.bucket.created"
         assert loaded.bucket_events[0].bucket_id == "b" * 32
@@ -150,5 +127,4 @@ def test_workflow_state_absent_load_returns_empty_state(
         loaded = repo.load()
 
         assert set(list_profile_buckets(root=profile.storage_root)) == {profile.bucket_id}
-        assert loaded.declarations == {}
         assert loaded.bucket_events == ()

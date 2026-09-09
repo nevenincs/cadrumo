@@ -551,14 +551,34 @@ class ConfigResetOperationPayload(OutputSchema):
         return self
 
     def _validate_completion_reconciliation(self) -> None:
+        summary = self._require_completion_summary()
+        self._validate_completed_target_phases()
+        expected_counts = self._expected_completion_counts()
+        self._validate_completion_counts(summary, expected_counts)
+        self._validate_completion_timestamp(summary)
+
+    def _require_completion_summary(self) -> ConfigResetSummaryPayload:
         summary = self.summary
         if summary is None:
             raise ValueError("complete reset operation requires exactly one summary")
+        return summary
+
+    def _validate_completed_target_phases(self) -> None:
         if any(target.phase is not ConfigResetTargetPhase.DELETED for target in self.targets):
             raise ValueError("complete reset operation requires every target to be deleted")
+
+    def _expected_completion_counts(self) -> tuple[int, int, int]:
         expected_deleted_count = sum(target.exists_at_snapshot for target in self.targets)
         expected_already_absent_count = len(self.targets) - expected_deleted_count
         expected_override_count = sum(bool(target.retention_override_approved) for target in self.targets)
+        return expected_deleted_count, expected_already_absent_count, expected_override_count
+
+    def _validate_completion_counts(
+        self,
+        summary: ConfigResetSummaryPayload,
+        expected_counts: tuple[int, int, int],
+    ) -> None:
+        expected_deleted_count, expected_already_absent_count, expected_override_count = expected_counts
         if summary.target_count != len(self.targets):
             raise ValueError("complete reset summary target count does not match targets")
         if summary.deleted_count != expected_deleted_count:
@@ -567,6 +587,8 @@ class ConfigResetOperationPayload(OutputSchema):
             raise ValueError("complete reset summary absent count does not match targets")
         if summary.retention_override_count != expected_override_count:
             raise ValueError("complete reset summary retention override count does not match targets")
+
+    def _validate_completion_timestamp(self, summary: ConfigResetSummaryPayload) -> None:
         if summary.completed_at != self.updated_at:
             raise ValueError("complete reset summary timestamp must match operation update timestamp")
 

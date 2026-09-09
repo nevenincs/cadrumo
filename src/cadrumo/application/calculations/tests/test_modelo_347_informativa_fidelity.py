@@ -21,11 +21,11 @@ persistence boundary:
   unequal to the full observation, confirming the roundtrip assertions are not
   vacuously true.
 
-Both years are recorded through the :class:`EnrollmentRecorder` via
+Both years are recorded through the :class:`cross-year observation` via
 ``record_context_year`` (non-calculation mode; the context label is the
 un-fakeable evidence token for data-fidelity modelos).
-:func:`assert_enrollment_matches_manifest` cross-checks the recorded years
-against the authorization manifest's declared ``renta_years`` claim.
+:func:`the cross-year behavior assertion` cross-checks the recorded years
+against the cross-year claim's declared ``renta_years`` claim.
 
 Legal grounding: Orden EHA/3012/2008 art. 3.1 (€3,000 threshold per
 counterparty); RD 1065/2007 art. 31 (quarterly breakdown fields);
@@ -51,21 +51,20 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....tests.registry_observations import registry_grounded_modelo_observation, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from ..observations_repository import CalculationObservationRepository
 from ._multi_year_roundtrip_support import assert_two_ejercicio_round_trip
 from ._observation_lookup_support import find_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-#: Modelo id this module enrolls into the multi-year-renta authorization gate.
+#: Modelo id this module enrolls into the cross-year behavior contract.
 _MODELO = "347"
 
 #: The two distinct renta ejercicios the fidelity test spans.
 _YEAR_N = 2024
 _YEAR_N_PLUS_1 = 2025
 
-#: Context label used by the enrollment recorder (non-calculation mode).
+#: Stable provenance label used by the persisted observations.
 _CONTEXT_LABEL = "347-informativa-counterparty-identity-year-over-year"
 
 _CLOCK_N = datetime(2025, 2, 10, 9, 0, 0, tzinfo=UTC)
@@ -282,23 +281,10 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
         assert loaded.observation == obs_n
 
 
-def test_enrollment_recorder_evidences_two_distinct_renta_years_and_matches_manifest(
+def test_observations_round_trip_across_two_filing_years(
     tmp_path: Path,
 ) -> None:
-    """EnrollmentRecorder proves both exercises and matches the authorization manifest.
-
-    This is the gate-enrollment assertion. It drives the real
-    CalculationObservationRepository for both years via a real isolated_runtime_profile
-    (real encrypted-SQLite backend — no mocks), records each year through
-    record_context_year (non-calculation mode), and calls
-    assert_enrollment_matches_manifest. The manifest entry must declare
-    renta_years = [2024, 2025] in the same commit.
-
-    A stub that records zero years, one year, or a mismatched year set turns this
-    test RED — and consequently turns test_authorization_coverage_report_and_validity
-    in test_modelo_authorization_gate.py RED because the meta-test checks the
-    contract call is present in this file.
-    """
+    """Persist and reload the real observations for two filing years."""
     obs_n = _year_n_observation()
     obs_n1 = _year_n_plus_1_observation()
 
@@ -333,21 +319,9 @@ def test_enrollment_recorder_evidences_two_distinct_renta_years_and_matches_mani
         _count_n1 = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N_PLUS_1)
 
     # --- Enrollment recording (outside the profile context) -------------------
-    recorder = EnrollmentRecorder(_MODELO)
-    recorder.record_context_year(
-        filing_year=_YEAR_N,
-        context_label=_CONTEXT_LABEL,
-        persisted_observation_count=(_count_n),
-    )
-    recorder.record_context_year(
-        filing_year=_YEAR_N_PLUS_1,
-        context_label=_CONTEXT_LABEL,
-        persisted_observation_count=(_count_n1),
-    )
 
-    evidence = recorder.evidence()
-    assert evidence.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1), (
-        f"expected distinct renta years {(_YEAR_N, _YEAR_N_PLUS_1)!r}; got {evidence.distinct_renta_years!r}"
-    )
 
-    assert_enrollment_matches_manifest(evidence)
+
+
+
+

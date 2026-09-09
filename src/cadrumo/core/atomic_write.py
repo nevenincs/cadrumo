@@ -11,13 +11,12 @@ collision-hardened ``O_EXCL`` + mode ``0o600`` variant reserved for the
 master-key store. This module collapses all of that onto four named tiers
 so a new writer picks one deliberately instead of inventing a fifth dialect:
 
-- **Standard tier** (:func:`atomic_write_bytes`, :func:`atomic_write_stream`,
-  :func:`atomic_write_text`): a :func:`tempfile.NamedTemporaryFile` sibling in
+- **Standard tier** (:func:`atomic_write_bytes`, :func:`atomic_write_text`):
+  a :func:`tempfile.NamedTemporaryFile` sibling in
   the target's own parent directory (``{stem}.`` prefix, ``.tmp`` suffix),
   write, flush, ``fsync``, :func:`os.replace`, then a best-effort
   parent-directory ``fsync`` via :func:`~cadrumo.core.fsync.fsync_parent_dir`.
-  The stream variant bounds memory to its caller's chunk size. Suitable for
-  ordinary durable application data with a single writer.
+  Suitable for ordinary durable application data with a single writer.
 
 - **Hardened tier** (:func:`atomic_write_hardened_bytes`,
   :func:`atomic_write_hardened_text`): the master-key store's pattern --
@@ -89,7 +88,7 @@ from __future__ import annotations
 import os
 import secrets
 import tempfile
-from collections.abc import Generator, Iterable
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -105,7 +104,6 @@ __all__ = [
     "atomic_write_hardened_bytes",
     "atomic_write_hardened_text",
     "atomic_write_publish_once_bytes",
-    "atomic_write_stream",
     "atomic_write_text",
     "durable_write_batch",
     "hardened_staged_publication",
@@ -196,45 +194,6 @@ def atomic_write_bytes(path: Path, data: bytes) -> None:
     except BaseException as exc:
         _log.error(
             "atomic_write: standard-tier write failed target=%s error_type=%s",
-            path,
-            type(exc).__name__,
-        )
-        raise
-    finally:
-        if tmp_path is not None:
-            tmp_path.unlink(missing_ok=True)
-
-
-def atomic_write_stream(path: Path, chunks: Iterable[bytes]) -> int:
-    """Atomically stream ``chunks`` to ``path`` and return the byte count.
-
-    The stream is staged in a sibling tempfile, flushed and fsynced before it
-    replaces the target. An iterator failure therefore preserves the prior
-    target and removes its partial staging file without requiring callers to
-    buffer an unbounded payload in memory.
-    """
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp_path: Path | None = None
-    length = 0
-    try:
-        with tempfile.NamedTemporaryFile(
-            dir=path.parent,
-            prefix=f"{path.stem}.",
-            suffix=".tmp",
-            delete=False,
-        ) as handle:
-            tmp_path = Path(handle.name)
-            for chunk in chunks:
-                handle.write(chunk)
-                length += len(chunk)
-            handle.flush()
-            os.fsync(handle.fileno())
-        _replace_and_fsync(tmp_path, path)
-        tmp_path = None
-        return length
-    except BaseException as exc:
-        _log.error(
-            "atomic_write: streamed write failed target=%s error_type=%s",
             path,
             type(exc).__name__,
         )

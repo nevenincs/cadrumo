@@ -471,13 +471,6 @@ LATIN_1_ENCODING: Final[str] = "latin-1"
 #: UTF-8 character encoding used for all text file I/O in the application layer.
 UTF_8_ENCODING: Final[str] = "utf-8"
 
-#: Allowed wire encodings for fichero-BOE payloads.
-#:
-#: Windows-1252 is a superset of ISO-8859-1 that adds characters in the
-#: 0x80-0x9F range; AEAT treats them as equivalent for fichero-BOE
-#: purposes.  ISO-8859-15 adds the Euro symbol at 0xA4 plus minor deltas.
-BOE_ENCODING_CHOICES: Final[tuple[str, ...]] = ("cp1252", "iso-8859-1", "iso-8859-15")
-
 CSV_ENCODING_FALLBACK_CHAIN: tuple[str, ...] = ("utf-8-sig", "utf-8", "cp1252", "iso-8859-1")
 
 #: Provenance source identifier for facts entered interactively via the CLI.
@@ -549,24 +542,6 @@ M347_THRESHOLD_EUR: Final[Decimal] = Decimal("3005.06")
 #: counterparty can carry both ordinary and clave-C operations in the same
 #: year, and each is judged against its own floor.
 M347_CLAVE_C_THRESHOLD_EUR: Final[Decimal] = Decimal("300.51")
-
-#: Art. 108.Dos.5.º bienes-de-escaso-valor exclusion: a good "cuyo valor de adquisición
-#: sea inferior a quinientas mil pesetas" is NOT a bien de inversión. The consolidated
-#: corpus still states the figure in pesetas; 500.000 ptas is the historic amount whose
-#: euro equivalent is 3.005,06 € (the same figure the Modelo 347 floor carries). A good
-#: whose acquisition value is at or above this threshold may qualify; below it is
-#: excluded. Binding provision: Art. 108.Dos.5.º LIVA (Ley 37/1992).
-#:
-#: DECLARED, NOT YET APPLIED. Nothing compares a good against this figure. The
-#: bienes-de-inversión register carries ``art108_elegible`` as an
-#: operator-supplied boolean and stores ``cuota_soportada``, the input IVA
-#: borne, with no acquisition-value field to compare at all -- so eligibility is
-#: whatever the operator asserted, not what art. 108 derives. Applying the
-#: figure means adding that field and deriving eligibility instead of trusting
-#: the flag, which is a schema change and a decision about whether the product
-#: judges art. 108 or the operator does. Said here because a legally grounded
-#: threshold sitting in this file reads as enforced, and this one is not.
-IVA_BIEN_ESCASO_VALOR_UMBRAL_EUR: Final[Decimal] = Decimal("3005.06")
 
 #: IAE art. 82.1.c net-turnover exemption ceiling for Modelo 840 threshold
 #: continuity. Binding provision: TRLRHL RDL 2/2004 art. 82.1.c ("importe
@@ -696,32 +671,6 @@ IVA_REGIME_MODELOS: Final[tuple[Modelo, ...]] = (Modelo.M303, Modelo.M390)
 #: Binding provision: Ley 19/1994 art. 75.1 (BOE-A-1994-15794) fixes the 50 por 100
 #: renta exenta; art. 73 establishes REBECA eligibility. Catalogue: ley-19-1994:art-75.
 REBECA_MARITIME_EXEMPTION_FRACTION: Final[Decimal] = Decimal("0.50")
-
-#: Art. 81 LIRPF (Ley 35/2006, BOE-A-2006-20764) monthly accrual per hijo menor de tres años.
-#: Proration of the €1,200 annual cap; casilla 0611 carries integer euros only.
-DEDUCCION_MATERNIDAD_MENSUAL_EUR: Final[int] = 100
-
-#: Art. 81 LIRPF (Ley 35/2006, BOE-A-2006-20764) annual cap per hijo menor de tres años.
-#: The deducción accrues at €100/month and is capped at this amount per hijo; casilla 0611.
-DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR: Final[int] = 1200
-
-#: Art. 81.1 LIRPF one-off increment for the calendar month in which a madre not
-#: registered with the Seguridad Social (or a mutualidad) at the birth completes the
-#: 30-day minimum contribution period the article requires for the post-birth alta
-#: route ("estén dadas de alta en el régimen correspondiente de la Seguridad Social o
-#: Mutualidad con un período mínimo, en este último caso, de 30 días cotizados"). The
-#: bundled Manual Práctico de Renta 2023 worked example ("Alta en la Seguridad Social
-#: con posterioridad al nacimiento y 30 días cotizados en el mes de mayo") reproduces the
-#: arithmetic verbatim: the completion month counts once at the ordinary monthly rate
-#: AND once again at this increment — ``[(8 meses x 100 euros) + (1 mes x 150)] = 950``.
-DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_INCREMENTO_EUR: Final[int] = 150
-
-#: The per-hijo annual cap while the Art. 81.1 post-birth alta increment applies:
-#: DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR raised by
-#: DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_INCREMENTO_EUR. Matches the "Límite de la
-#: deducción por hijo (1.350 euros)" the Manual Práctico de Renta 2023 worked example
-#: states for both children it covers.
-DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_ANUAL_CAP_EUR: Final[int] = 1350
 
 #: First filing year the post-birth alta route (and its 150 euro increment) reaches.
 #: Before it, Art. 81 LIRPF granted the deducción only to a madre already registered

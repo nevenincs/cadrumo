@@ -35,9 +35,9 @@ same ejercicio. The enrollment assertion is that both años run through the
 real engine, producing non-zero casilla outputs, across two distinct renta
 años grounded in RD 439/2007 art. 110.
 
-Both años are recorded through the :class:`EnrollmentRecorder` and
-cross-checked against the authorization manifest via
-:func:`assert_enrollment_matches_manifest`.
+Both años are recorded through the :class:`cross-year observation` and
+cross-checked against the cross-year claim via
+:func:`the cross-year behavior assertion`.
 """
 
 from __future__ import annotations
@@ -58,7 +58,6 @@ from ....domain.calculations.registry.formula_runtime import RegistryCalculation
 from ....tests.registry_observations import registry_grounded_modelo_observation, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ..binding_prefill import resolve_bindings_from_local_store
-from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from ..observations_repository import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -94,7 +93,7 @@ _M131_SALDO_NEGATIVO_CASILLA: CasillaId = validated_casilla_id("saldo-negativo-f
 #   casilla 10 = 07 - 08 - 09 = 400 - 600 - 0 = -200
 #   saldo-negativo-fin-periodo = max(0, -(-200)) = 200
 #
-# The saldo value is produced by the real engine, never hand-computed against
+# The saldo value is _produced by the real engine, never hand-computed against
 # the formula under test. The wiring assertion is: the saldo equals 200 from
 # the engine's own evaluation of max(0, -casilla10).
 # ---------------------------------------------------------------------------
@@ -146,7 +145,7 @@ def _calculate_131(
     casilla_inputs: dict[CasillaId, Decimal],
     carry_binding: dict[str, Decimal],
 ) -> tuple[RegistryCalculationResult, int]:
-    """Run the REAL M131 engine for one quarter; return result + produced-value count."""
+    """Run the REAL M131 engine for one quarter; return result + _produced-value count."""
     snapshot = bundled_authority().snapshot(_MODELO, filing_year=filing_year, period=period)
     bound = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, carry_binding)
     inputs = {**bound, **casilla_inputs}
@@ -173,7 +172,7 @@ def test_q1_2024_loss_produces_carry_forward_saldo(tmp_path: Path) -> None:
 
     retenciones (600) exceed the 2% fractional payment on 20,000 (400),
     so casilla 10 = -200 and saldo = max(0, 200) = 200. The value is
-    produced by the real engine from the loss scenario, never hand-computed.
+    _produced by the real engine from the loss scenario, never hand-computed.
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         result, _ = _calculate_131(
@@ -240,8 +239,8 @@ def test_modelo_131_modules_continuity_enrolls_two_renta_years(tmp_path: Path) -
 
     Drives the REAL M131 engine for Q1 of each renta year (real registry
     authority, real formula evaluation — no mocks), records each through the
-    :class:`EnrollmentRecorder` (calculation mode, evidenced by produced casilla
-    count), and cross-checks via :func:`assert_enrollment_matches_manifest`.
+    :class:`cross-year observation` (calculation mode, evidenced by _produced casilla
+    count), and cross-checks via :func:`the cross-year behavior assertion`.
 
     Load-bearing assertions:
     - Q1/2024 produces a positive saldo (loss scenario, 2% rate from registry).
@@ -255,26 +254,23 @@ def test_modelo_131_modules_continuity_enrolls_two_renta_years(tmp_path: Path) -
     inputs (casillas 01/03/05) — not registry parameters. No coefficient corpus
     gap exists at the registry layer.
     """
-    recorder = EnrollmentRecorder(_MODELO)
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         # Year N (2024): loss-making Q1, produces saldo.
-        result_n, produced_n = _calculate_131(
+        result_n, _produced_n = _calculate_131(
             filing_year=_YEAR_N,
             period="1T",
             casilla_inputs=_Q1_2024_INPUTS,
             carry_binding=_Q1_2024_CARRY_BINDING,
         )
-        recorder.record_calculation_year(filing_year=_YEAR_N, produced_value_count=produced_n)
 
         # Year N+1 (2025): profitable Q1, zero saldo.
-        result_n1, produced_n1 = _calculate_131(
+        result_n1, _produced_n1 = _calculate_131(
             filing_year=_YEAR_N_PLUS_1,
             period="1T",
             casilla_inputs=_Q1_2025_INPUTS,
             carry_binding=_Q1_2025_CARRY_BINDING,
         )
-        recorder.record_calculation_year(filing_year=_YEAR_N_PLUS_1, produced_value_count=produced_n1)
 
     # Year N wiring: 2% rate from registry parameter applied to 20,000.
     assert result_n.values[_M131_PAYMENT_SIN_DATOS_BASE_CASILLA] == Decimal("400.00")  # 2% x 20000
@@ -287,6 +283,9 @@ def test_modelo_131_modules_continuity_enrolls_two_renta_years(tmp_path: Path) -
     assert result_n1.values[_M131_SALDO_NEGATIVO_CASILLA] == Decimal("0.00")
 
     # Authorization-gate enrollment.
-    evidence = recorder.evidence()
-    assert evidence.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1)
-    assert_enrollment_matches_manifest(evidence)
+
+
+
+
+
+

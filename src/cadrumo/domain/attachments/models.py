@@ -1,17 +1,11 @@
-"""Strict immutable pydantic models for the attachment service.
-
-Defines :class:`Attachment` (one manifest entry) and :class:`AttachmentCatalogue`
-(an immutable in-memory mapping of attachments keyed by ``attachment_id``).
-Both models reject extra fields and freeze after validation so they can be
-shared safely across application code without defensive copying.
-"""
+"""Strict immutable attachment-manifest model."""
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Iterable, Mapping
 from datetime import datetime
 from types import MappingProxyType
-from typing import Self, override
+from typing import Self
 
 from pydantic import (
     BaseModel,
@@ -30,7 +24,7 @@ from ...core.hex import Hex64Str
 from ...core.identity import BucketId, ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.utc import UtcInstant, parse_iso_datetime, validate_utc_aware
-from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
+from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from .enums import AttachmentKind, AttachmentSource
 from .errors import AttachmentValidationError
 
@@ -271,111 +265,3 @@ class Attachment(BaseModel):
         if self.attachment_id != self.sha256:
             raise AttachmentValidationError("attachment_id must equal sha256")
         return self
-
-
-class AttachmentCatalogue(BaseModel):
-    """In-memory immutable catalogue keyed by ``attachment_id``.
-
-    Accepts construction from either a bare mapping, an iterable of
-    :class:`Attachment` instances, or attachment payload dictionaries via
-    :meth:`from_attachments`. Every mapping key is verified to match the
-    embedded :attr:`Attachment.attachment_id` so lookups cannot drift from
-    the manifest content.
-
-    Attributes:
-        attachments: Frozen mapping from ``attachment_id`` to :class:`Attachment`.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    attachments: Mapping[str, Attachment] = Field(default_factory=dict)
-
-    @model_validator(mode="before")
-    @classmethod
-    def _coerce_catalogue_input(cls, data: object) -> object:
-        """Accept either a bare mapping or an iterable of attachments."""
-        if isinstance(data, cls):
-            return data
-        if isinstance(data, Mapping):
-            payload = STR_KEYED_MAPPING_ADAPTER.validate_python(data)
-            if "attachments" in payload:
-                return payload
-            return {"attachments": payload}
-        if isinstance(data, Iterable) and not isinstance(data, str | bytes):
-            attachments: dict[str, Attachment] = {}
-            for item in OBJECT_TUPLE_ADAPTER.validate_python(data):
-                attachment = item if isinstance(item, Attachment) else Attachment.model_validate(item)
-                if attachment.attachment_id in attachments:
-                    raise AttachmentValidationError(f"duplicate attachment_id: {attachment.attachment_id}")
-                attachments[attachment.attachment_id] = attachment
-            return {"attachments": attachments}
-        return data
-
-    @model_validator(mode="after")
-    def _validate_mapping_keys(self) -> Self:
-        """Ensure every mapping key matches the embedded attachment ID."""
-        for key, attachment in self.attachments.items():
-            if key != attachment.attachment_id:
-                raise AttachmentValidationError(
-                    f"catalogue key {key!r} does not match attachment_id {attachment.attachment_id!r}",
-                )
-        return self
-
-    @field_validator("attachments")
-    @classmethod
-    def _freeze_attachments(cls, value: Mapping[str, Attachment]) -> Mapping[str, Attachment]:
-        """Freeze the catalogue mapping to preserve immutability."""
-        return MappingProxyType(dict(value))
-
-    @field_serializer("attachments")
-    def _serialize_attachments(self, value: Mapping[str, Attachment]) -> dict[str, Attachment]:
-        """Serialize the immutable mapping back to a JSON object."""
-        return dict(value)
-
-    @classmethod
-    def from_attachments(cls, attachments: Iterable[Attachment | Mapping[str, object]]) -> Self:
-        """Build a catalogue from an iterable, rejecting duplicates explicitly.
-
-        Args:
-            attachments: Attachments or attachment payloads to load.
-
-        Returns:
-            A validated immutable attachment catalogue.
-        """
-        return cls.model_validate(tuple(attachments))
-
-    @override
-    def __iter__(self) -> Iterator[Attachment]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional Pydantic catalogue iteration adapter; the established public API yields Attachment records, not BaseModel field-value tuples
-        """Iterate over catalogue attachments."""
-        return iter(self.attachments.values())
-
-    def __len__(self) -> int:
-        """Return the number of attachments in the catalogue."""
-        return len(self.attachments)
-
-    def __contains__(self, attachment_id: object) -> bool:
-        """Return whether the catalogue contains ``attachment_id``."""
-        if isinstance(attachment_id, Attachment):
-            return attachment_id.attachment_id in self.attachments
-        if isinstance(attachment_id, str):
-            return attachment_id in self.attachments
-        return False
-
-    def get(self, attachment_id: str) -> Attachment | None:
-        """Return one :class:`Attachment` by ID if present.
-
-        Args:
-            attachment_id: Stable attachment identifier (SHA-256 hex digest).
-
-        Returns:
-            The matching :class:`Attachment`, or ``None`` when absent.
-        """
-        return self.attachments.get(attachment_id)
-
-    def values(self) -> Iterator[Attachment]:
-        """Iterate over catalogue attachments.
-
-        Returns:
-            Iterator over :class:`Attachment` instances.
-        """
-        return iter(self.attachments.values())

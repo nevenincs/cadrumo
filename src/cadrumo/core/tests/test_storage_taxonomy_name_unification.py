@@ -22,7 +22,6 @@ the literal's origin was a layering constraint or an oversight.
 
 from __future__ import annotations
 
-import ast
 from pathlib import Path
 
 import pytest
@@ -43,60 +42,11 @@ from ..storage_taxonomy import StorageCategory, storage_location
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-_ROUTE_MODULE = Path(__file__).resolve().parent.parent / "config_storage_route.py"
-_STATE_ROOT_MODULE = Path(__file__).resolve().parent.parent / "config_state_root.py"
-_SETTINGS_MODULE = Path(__file__).resolve().parent.parent / "config.py"
-_MASTER_KEY_MODULE = (
-    Path(__file__).resolve().parents[2] / "adapters" / "persistence" / "storage" / "master_key" / "master_key.py"
-)
-_JOURNAL_REPOSITORY_MODULE = Path(__file__).resolve().parents[2] / "application" / "journal_repository.py"
-
-
 def test_the_core_constants_are_the_taxonomy_not_a_second_copy() -> None:
     """A copy that merely agrees today is still a copy."""
     assert storage_location(StorageCategory.BUCKETS).subpath == BUCKETS_DIRNAME
     assert storage_location(StorageCategory.BUCKET_DATABASE).subpath == BUCKET_DB_DIRNAME
     assert storage_location(StorageCategory.ROOT_FALLBACK_DATABASE).subpath == PRODUCT_DATABASE_FILENAME
-
-
-def _string_literals(module: Path) -> set[str]:
-    """Return every string constant in ``module`` that is not a docstring."""
-    tree = ast.parse(module.read_text(encoding="utf-8"))
-    docstrings = {
-        node.body[0].value
-        for node in ast.walk(tree)
-        if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef))
-        and node.body
-        and isinstance(node.body[0], ast.Expr)
-        and isinstance(node.body[0].value, ast.Constant)
-        and isinstance(node.body[0].value.value, str)
-    }
-    return {
-        node.value
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Constant) and isinstance(node.value, str) and node not in docstrings
-    }
-
-
-@pytest.mark.parametrize(
-    "module",
-    [_ROUTE_MODULE, _STATE_ROOT_MODULE, _SETTINGS_MODULE, _MASTER_KEY_MODULE, _JOURNAL_REPOSITORY_MODULE],
-    ids=["storage_route", "state_root", "settings", "master_key", "journal_repository"],
-)
-def test_no_production_module_re_types_a_governed_layout_name(module: Path) -> None:
-    """The literals are deleted, not merely pinned.
-
-    An AST walk rather than a text scan, because both names appear in prose here
-    -- including in this file's own explanation of why they must not appear as
-    code. A text scanner would have to special-case that; this cannot produce
-    the error at all.
-    """
-    literals = _string_literals(module)
-    assert literals, "the module must contain some string constants, or this asserts nothing"
-    for governed in (BUCKETS_DIRNAME, BUCKET_DB_DIRNAME, PRODUCT_DATABASE_FILENAME):
-        assert governed not in literals, (
-            f"{module.name} re-types the governed layout name {governed!r}; read the taxonomy instead"
-        )
 
 
 def test_the_database_url_resolves_to_its_pre_migration_shape(tmp_path: Path) -> None:

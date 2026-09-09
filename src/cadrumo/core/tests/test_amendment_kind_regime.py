@@ -29,7 +29,6 @@ import pytest
 from ..amendment_kind_regime import (
     AmendmentLiabilityDirection,
     classify_amendment_liability_direction,
-    modelo_has_codified_amendment_regime,
     permitted_amendment_kind_values,
     resolve_amendment_kind_regime,
 )
@@ -110,14 +109,6 @@ def test_modelo_with_no_codified_regime_never_permits_rectificativa() -> None:
         permitted = permitted_amendment_kind_values(Modelo.M130, Period.from_year_and_code(year, code))
         assert _RECTIFICATIVA not in permitted, f"{year} {code}"
         assert permitted == frozenset({_COMPLEMENTARIA, _SUSTITUTIVA})
-
-
-def test_modelo_has_codified_amendment_regime_probe() -> None:
-    assert modelo_has_codified_amendment_regime(Modelo.M303) is True
-    assert modelo_has_codified_amendment_regime(Modelo.M100) is True
-    assert modelo_has_codified_amendment_regime(Modelo.M200) is True
-    assert modelo_has_codified_amendment_regime(Modelo.M130) is False
-    assert modelo_has_codified_amendment_regime(Modelo.M131) is False
 
 
 def test_uncodified_modelo_defaults_to_pre_rectificativa_never_asserted() -> None:

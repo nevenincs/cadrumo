@@ -111,6 +111,45 @@ if frozenset(_ROUTES_BY_ID) != declared_declarations_destination_ids() or len(_R
     raise ValueError("Declarations routes must cover the closed catalogue exactly once")
 
 
+def _calendar_is_observable(calendar: DeclarationsCalendarProjectionV1) -> bool:
+    """Return whether the authoritative schedule source can be displayed."""
+    return next(
+        item.availability for item in calendar.sources if item.source is DeclarationsCalendarSource.SCHEDULE
+    ) in {HomeAvailability.AVAILABLE, HomeAvailability.STALE}
+
+
+def _workspace_route_is_available(
+    controller: DeclarationsWorkspaceController,
+    route: DeclarationsRouteV1,
+    zone: DeclarationsWorkspaceZone,
+) -> bool:
+    """Require both an observable zone and a concrete screen admission."""
+    state = controller.zone_state(zone)
+    observable = state.availability in {
+        DeclarationsWorkspaceAvailability.AVAILABLE,
+        DeclarationsWorkspaceAvailability.STALE,
+    }
+    return observable and (route.factory is not None or controller.modelo_workspace_factory is not None)
+
+
+def _resolve_calendar_screen(
+    controller: DeclarationsWorkspaceController,
+    target: DeclarationsRouteTargetV1,
+) -> Screen[None]:
+    """Resolve the calendar only after its schedule source is observable."""
+    calendar = controller.calendar_projection
+    if calendar is None or not _calendar_is_observable(calendar):
+        return DeclarationsUnavailableScreen(controller, target)
+    return DeclarationsCalendarScreen(
+        DeclarationsCalendarController(
+            controller.context,
+            calendar,
+            entry_handoff=controller.calendar_entry_handoff,
+            recovery_handoff=controller.calendar_recovery_handoff,
+        )
+    )
+
+
 def resolve_declarations_screen(
     controller: DeclarationsWorkspaceController,
     target: DeclarationsRouteTargetV1,
@@ -120,28 +159,10 @@ def resolve_declarations_screen(
     if target.zone is not route.zone:
         raise ValueError("Declarations route target and zone disagree")
     if route.destination == "declarations.calendar":
-        calendar = controller.calendar_projection
-        observable = calendar is not None and next(
-            item.availability for item in calendar.sources if item.source is DeclarationsCalendarSource.SCHEDULE
-        ) in {HomeAvailability.AVAILABLE, HomeAvailability.STALE}
-        if not observable or calendar is None:
-            return DeclarationsUnavailableScreen(controller, target)
-        return DeclarationsCalendarScreen(
-            DeclarationsCalendarController(
-                controller.context,
-                calendar,
-                entry_handoff=controller.calendar_entry_handoff,
-                recovery_handoff=controller.calendar_recovery_handoff,
-            )
-        )
+        return _resolve_calendar_screen(controller, target)
     if route.zone is None:
         raise ValueError("Declarations non-calendar route requires a workspace zone")
-    state = controller.zone_state(route.zone)
-    observable = state.availability in {
-        DeclarationsWorkspaceAvailability.AVAILABLE,
-        DeclarationsWorkspaceAvailability.STALE,
-    }
-    if not observable or (route.factory is None and controller.modelo_workspace_factory is None):
+    if not _workspace_route_is_available(controller, route, route.zone):
         return DeclarationsUnavailableScreen(controller, target)
     if route.factory is None:
         return DeclarationsModeloWorkspaceLauncherScreen(controller)

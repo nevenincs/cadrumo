@@ -39,10 +39,6 @@ _RENTA_TRABAJO_CASILLA: CasillaId = validated_casilla_id("0180", surface="_RENTA
 _RENTA_COTIZACIONES_CASILLA: CasillaId = validated_casilla_id("0224", surface="_RENTA_COTIZACIONES_CASILLA")
 _RENTA_REDUCCION_CASILLA: CasillaId = validated_casilla_id("0235", surface="_RENTA_REDUCCION_CASILLA")
 _RENTA_RESULTADO_CASILLA: CasillaId = validated_casilla_id("0670", surface="_RENTA_RESULTADO_CASILLA")
-_RENTA_OVERRIDE_CASILLA: CasillaId = validated_casilla_id("0511", surface="_RENTA_OVERRIDE_CASILLA")
-_RENTA_SCRAPE_CASILLA: CasillaId = validated_casilla_id("0695", surface="_RENTA_SCRAPE_CASILLA")
-_RENTA_OVERRIDE_DISPLAY_NUMBER = "0528"
-_RENTA_SCRAPE_DISPLAY_NUMBER = "0695"
 
 
 def _casilla_id_from_payload(value: object) -> CasillaId:
@@ -109,53 +105,6 @@ def test_planned_operations_lists_get_navigate_fill_scrape_and_discard() -> None
     http_operations = tuple(op for op in plan if op.kind == "http")
     assert len(http_operations) == 1
     assert http_operations[0].method == "GET"
-
-
-def test_live_driver_plans_casilla_override_and_scrape_navigation() -> None:
-    from .....adapters.outbound.aeat.sede.renta_web_open import RentaWebOpenSedeDriver
-
-    payload = json.dumps(
-        {
-            "display_overrides_by_casilla_id": {
-                _RENTA_OVERRIDE_CASILLA: {
-                    "display_number": _RENTA_OVERRIDE_DISPLAY_NUMBER,
-                    "value": "5000,00",
-                },
-            },
-            "scrape_display_numbers_by_casilla_id": {
-                _RENTA_SCRAPE_CASILLA: _RENTA_SCRAPE_DISPLAY_NUMBER,
-            },
-        },
-    ).encode()
-    plan = RentaWebOpenSedeDriver().planned_operations(payload, expected={_RENTA_SCRAPE_CASILLA: object()})
-    actions = tuple(op.action for op in plan if op.kind == "browser_action")
-
-    assert f"navigate-to-display-number:{_RENTA_OVERRIDE_DISPLAY_NUMBER}" in actions
-    assert f"apply-display-override:{_RENTA_OVERRIDE_CASILLA}" in actions
-    assert "navigate-to-resumen" in actions
-    assert f"navigate-to-display-number:{_RENTA_SCRAPE_DISPLAY_NUMBER}" in actions
-
-
-def test_live_driver_refuses_payload_without_canonical_scrape_map() -> None:
-    from .....adapters.outbound.aeat.sede.renta_web_open import RentaWebOpenSedeDriver
-
-    with pytest.raises(RegistryValidationError, match=r"keyed by canonical casilla\.id"):
-        RentaWebOpenSedeDriver().planned_operations(b"{}", expected={_RENTA_TRABAJO_CASILLA: object()})
-
-
-def test_live_driver_refuses_expected_casilla_not_declared_for_scraping() -> None:
-    from .....adapters.outbound.aeat.sede.renta_web_open import RentaWebOpenSedeDriver
-
-    payload = json.dumps(
-        {
-            "scrape_display_numbers_by_casilla_id": {
-                _RENTA_SCRAPE_CASILLA: _RENTA_SCRAPE_DISPLAY_NUMBER,
-            },
-        },
-    ).encode()
-
-    with pytest.raises(RegistryValidationError, match=r"does not declare scrape coordinates"):
-        RentaWebOpenSedeDriver().planned_operations(payload, expected={_RENTA_TRABAJO_CASILLA: object()})
 
 
 def test_renta_policy_rejects_unclassified_browser_action() -> None:

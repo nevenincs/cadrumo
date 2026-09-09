@@ -192,6 +192,137 @@ def _parse_sidecar_written_at(value: object) -> datetime:
     return written_at
 
 
+def _validate_put_arguments(
+    namespace: str,
+    object_key_hmac: str,
+    content_hash: str,
+    label: str,
+) -> tuple[str, str, str]:
+    """Normalize and validate the caller-controlled values for ``put``."""
+    namespace_clean = _validate_namespace(namespace)
+    hmac_clean = _validate_hmac(object_key_hmac)
+    label_clean = sanitize_provider_object_label(label)
+    if not content_hash.strip():
+        raise OutboundStorageValidationError(
+            "content_hash must not be blank",
+            translated_message="adapters.outbound.storage.local.errors.content_hash_blank",
+            precondition_verdict=_local_failure_verdict(
+                "storage.local.content_hash.present",
+                facts={"backend": "local", "field": "content_hash", "valid": False},
+                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+            ),
+        )
+    return namespace_clean, hmac_clean, label_clean
+
+
+def _stale_put_pair(
+    existing_path: Path | None,
+    target_name: str,
+) -> tuple[Path, Path] | None:
+    """Return the old payload/sidecar pair when a label changed."""
+    if existing_path is None or existing_path.name == target_name:
+        return None
+    return (
+        existing_path,
+        existing_path.with_name(existing_path.stem + SIDECAR_EXTENSION),
+    )
+
+
+def _write_put_payload(
+    target_path: Path,
+    payload: bytes,
+    batch: DurableWriteBatch | None,
+) -> None:
+    """Write the payload and translate local filesystem failures."""
+    try:
+        atomic_write_hardened_bytes(target_path, payload, batch=batch)
+    except PermissionError as exc:
+        raise OutboundStoragePermissionError(
+            f"cannot write object payload to {target_path}: {exc}",
+            context={"path": str(target_path)},
+            translated_message="adapters.outbound.storage.local.errors.payload_write_permission",
+            precondition_verdict=_local_failure_verdict(
+                "storage.local.payload.writable", facts={"operation": "put", "writable": False}
+            ),
+        ) from None
+    except OSError as exc:
+        if is_windows_long_path_error(exc):
+            raise OutboundStoragePathTooLongError(
+                f"cannot write object payload to {target_path}: path exceeds the Windows MAX_PATH ceiling ({exc})",
+                context={"path": str(target_path)},
+                translated_message="adapters.outbound.storage.local.errors.payload_write_path_too_long",
+                precondition_verdict=_local_failure_verdict(
+                    "storage.local.path.within_limit", facts={"operation": "put_payload", "within_limit": False}
+                ),
+            ) from None
+        raise OutboundStorageConflictError(
+            f"failed to commit object payload to {target_path}: {exc}",
+            context={"path": str(target_path)},
+            translated_message="adapters.outbound.storage.local.errors.payload_commit_failed",
+            precondition_verdict=_local_failure_verdict(
+                "storage.local.payload.commit_succeeded",
+                facts={"operation": "put", "committed": False},
+                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+            ),
+        ) from None
+
+
+def _sidecar_payload(
+    namespace: str,
+    object_key_hmac: str,
+    label: str,
+    payload: bytes,
+    content_hash: str,
+    written_at: datetime,
+) -> dict[str, object]:
+    """Build the canonical metadata persisted beside a local object."""
+    return {
+        "namespace": namespace,
+        "object_key_hmac": object_key_hmac,
+        "label": label,
+        "byte_length": len(payload),
+        "content_hash": content_hash,
+        "written_at": written_at.isoformat(),
+    }
+
+
+def _write_put_sidecar(
+    sidecar_path: Path,
+    target_path: Path,
+    sidecar_payload: Mapping[str, object],
+) -> None:
+    """Write object metadata, removing a new payload when metadata fails."""
+    try:
+        atomic_write_text(sidecar_path, json.dumps(sidecar_payload, sort_keys=True), encoding=UTF_8_ENCODING)
+    except OSError as exc:
+        target_path.unlink(missing_ok=True)
+        if is_windows_long_path_error(exc):
+            raise OutboundStoragePathTooLongError(
+                f"cannot write sidecar {sidecar_path}: path exceeds the Windows MAX_PATH ceiling ({exc})",
+                context={"path": str(sidecar_path)},
+                translated_message="adapters.outbound.storage.local.errors.sidecar_write_path_too_long",
+                precondition_verdict=_local_failure_verdict(
+                    "storage.local.path.within_limit", facts={"operation": "put_sidecar", "within_limit": False}
+                ),
+            ) from None
+        raise OutboundStoragePermissionError(
+            f"failed to write sidecar {sidecar_path}: {exc}",
+            context={"path": str(sidecar_path)},
+            translated_message="adapters.outbound.storage.local.errors.sidecar_write_failed",
+            precondition_verdict=_local_failure_verdict(
+                "storage.local.sidecar.writable", facts={"operation": "put_sidecar", "writable": False}
+            ),
+        ) from None
+
+
+def _remove_stale_put_pair(stale_pair: tuple[Path, Path] | None) -> None:
+    """Remove a superseded label pair after replacement metadata commits."""
+    if stale_pair is None:
+        return
+    for stale in stale_pair:
+        stale.unlink(missing_ok=True)
+
+
 class LocalFileSystemProvider:
     """Bytes-in / bytes-out provider backed by a :class:`pathlib.Path` tree."""
 
@@ -342,118 +473,28 @@ class LocalFileSystemProvider:
         sidecar-write failure the payload is removed so no orphaned object
         lingers without metadata.
         """
-        namespace_clean = _validate_namespace(namespace)
-        hmac_clean = _validate_hmac(object_key_hmac)
-        label_clean = sanitize_provider_object_label(label)
-        if not content_hash.strip():
-            raise OutboundStorageValidationError(
-                "content_hash must not be blank",
-                translated_message="adapters.outbound.storage.local.errors.content_hash_blank",
-                precondition_verdict=_local_failure_verdict(
-                    "storage.local.content_hash.present",
-                    facts={"backend": "local", "field": "content_hash", "valid": False},
-                    outcome=NoRecoveryOutcome.OPERATOR_DECISION,
-                ),
-            )
-
+        namespace_clean, hmac_clean, label_clean = _validate_put_arguments(
+            namespace,
+            object_key_hmac,
+            content_hash,
+            label,
+        )
         namespace_dir = self._ensure_namespace_dir(namespace_clean)
         existing_path = self._resolve_object_path(namespace_clean, hmac_clean)
-        stale_pair: tuple[Path, Path] | None = None
-        if existing_path is not None and existing_path.name != build_provider_object_name(
-            hmac_clean,
-            label_clean,
-            extension=_FILE_EXTENSION,
-        ):
-            # Label drifted; the rename is part of put() semantics. The
-            # coordinator's diff classifier handles "did label change"
-            # via the rename-detection path on push.
-            #
-            # The stale pair is recorded here but removed only after the
-            # replacement payload AND its sidecar have both committed. The
-            # replacement lands under a different filename (the label is part
-            # of the name), so deferring the removal cannot clobber it, while
-            # removing it up front meant a failing sidecar write left neither
-            # the old object nor the new one on disk.
-            stale_pair = (
-                existing_path,
-                existing_path.with_name(existing_path.stem + SIDECAR_EXTENSION),
-            )
-
-        target_path = namespace_dir / build_provider_object_name(
-            hmac_clean,
-            label_clean,
-            extension=_FILE_EXTENSION,
-        )
+        target_name = build_provider_object_name(hmac_clean, label_clean, extension=_FILE_EXTENSION)
+        stale_pair = _stale_put_pair(existing_path, target_name)
+        target_path = namespace_dir / target_name
         sidecar_path = namespace_dir / _sidecar_filename(hmac_clean, label_clean)
 
-        try:
-            atomic_write_hardened_bytes(target_path, payload, batch=batch)
-        except PermissionError as exc:
-            raise OutboundStoragePermissionError(
-                f"cannot write object payload to {target_path}: {exc}",
-                context={"path": str(target_path)},
-                translated_message="adapters.outbound.storage.local.errors.payload_write_permission",
-                precondition_verdict=_local_failure_verdict(
-                    "storage.local.payload.writable", facts={"operation": "put", "writable": False}
-                ),
-            ) from None
-        except OSError as exc:
-            if is_windows_long_path_error(exc):
-                raise OutboundStoragePathTooLongError(
-                    f"cannot write object payload to {target_path}: path exceeds the Windows MAX_PATH ceiling ({exc})",
-                    context={"path": str(target_path)},
-                    translated_message="adapters.outbound.storage.local.errors.payload_write_path_too_long",
-                    precondition_verdict=_local_failure_verdict(
-                        "storage.local.path.within_limit", facts={"operation": "put_payload", "within_limit": False}
-                    ),
-                ) from None
-            raise OutboundStorageConflictError(
-                f"failed to commit object payload to {target_path}: {exc}",
-                context={"path": str(target_path)},
-                translated_message="adapters.outbound.storage.local.errors.payload_commit_failed",
-                precondition_verdict=_local_failure_verdict(
-                    "storage.local.payload.commit_succeeded",
-                    facts={"operation": "put", "committed": False},
-                    outcome=NoRecoveryOutcome.OPERATOR_DECISION,
-                ),
-            ) from None
+        _write_put_payload(target_path, payload, batch)
 
         written_at = now()
-        sidecar_payload = {
-            "namespace": namespace_clean,
-            "object_key_hmac": hmac_clean,
-            "label": label_clean,
-            "byte_length": len(payload),
-            "content_hash": content_hash,
-            "written_at": written_at.isoformat(),
-        }
-        try:
-            atomic_write_text(sidecar_path, json.dumps(sidecar_payload, sort_keys=True), encoding=UTF_8_ENCODING)
-        except OSError as exc:
-            target_path.unlink(missing_ok=True)
-            if is_windows_long_path_error(exc):
-                raise OutboundStoragePathTooLongError(
-                    f"cannot write sidecar {sidecar_path}: path exceeds the Windows MAX_PATH ceiling ({exc})",
-                    context={"path": str(sidecar_path)},
-                    translated_message="adapters.outbound.storage.local.errors.sidecar_write_path_too_long",
-                    precondition_verdict=_local_failure_verdict(
-                        "storage.local.path.within_limit", facts={"operation": "put_sidecar", "within_limit": False}
-                    ),
-                ) from None
-            raise OutboundStoragePermissionError(
-                f"failed to write sidecar {sidecar_path}: {exc}",
-                context={"path": str(sidecar_path)},
-                translated_message="adapters.outbound.storage.local.errors.sidecar_write_failed",
-                precondition_verdict=_local_failure_verdict(
-                    "storage.local.sidecar.writable", facts={"operation": "put_sidecar", "writable": False}
-                ),
-            ) from None
-
-        if stale_pair is not None:
-            # Both halves of the replacement are committed; only now is the
-            # previous label's pair genuinely superseded.
-            for stale in stale_pair:
-                stale.unlink(missing_ok=True)
+        _write_put_sidecar(
+            sidecar_path,
+            target_path,
+            _sidecar_payload(namespace_clean, hmac_clean, label_clean, payload, content_hash, written_at),
+        )
+        _remove_stale_put_pair(stale_pair)
 
         return ProviderObjectMetadata(
             namespace=namespace_clean,

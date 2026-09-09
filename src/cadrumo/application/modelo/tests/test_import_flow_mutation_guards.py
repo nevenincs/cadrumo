@@ -34,7 +34,7 @@ from ..action_errors import (
     WorkUnitNotFoundError,
 )
 from ..amendment_actions import amend_modelo_revision
-from ..calculation_actions import calculate_modelo_revision, get_calculation_revision, mark_revision_verificado_completo
+from ..calculation_actions import calculate_modelo_revision, get_calculation_revision
 from ..external_import_actions import import_external_filing_evidence
 from ..work_lifecycle import (
     create_work_unit,
@@ -176,12 +176,15 @@ def test_amend_locally_filed_still_refused_after_import_path_exists(repos: _Repo
         bucket_event_repository=bv_repo,
         clock=_T1,
     )
-    verified_revision = mark_revision_verificado_completo(
-        revision.calculation_revision_id,
-        actor="operator-A",
-        calculation_repository=cr_repo,
-        clock=_T2,
+    verified_revision = revision.model_copy(
+        update={
+            "state": CalculationRevisionState.VERIFICADO_COMPLETO,
+            "verified_at": _T2,
+            "verified_by": "operator-A",
+            "updated_at": _T2,
+        }
     )
+    cr_repo.save(upsert_calculation_revision(cr_repo.load(), verified_revision))
     locally_filed = _seed_local_filing_record(
         work_unit=work_unit,
         revision_id=verified_revision.calculation_revision_id,
@@ -353,14 +356,6 @@ def test_calculation_revision_actions_refuse_a_foreign_work_unit(tmp_path: Path)
                 calculation_repository=cr_repo,
                 work_unit_repository=wu_repo,
             )
-        with pytest.raises(CalculationRevisionNotFoundError):
-            mark_revision_verificado_completo(
-                revision.calculation_revision_id,
-                actor="operator-A",
-                calculation_repository=cr_repo,
-                work_unit_repository=wu_repo,
-                clock=_GUARD_CLOCK,
-            )
 
         assert cr_repo.load().get(revision.calculation_revision_id) == revision
 
@@ -391,3 +386,5 @@ def _guard_work_unit(bucket_id: str) -> WorkUnit:
         created_at=_T0,
         updated_at=_T0,
     )
+
+

@@ -729,14 +729,8 @@ def casilla_trace_verbose_line(obs: CasillaObservation) -> str:
     )
 
 
-def calculation_revision_lines(rev: CalculationRevision, *, verbose: bool = False) -> list[str]:
-    lines = [
-        f"calculation_revision_id\t{rev.calculation_revision_id}",
-        f"work_unit_id\t{rev.work_unit_id}",
-        f"state\t{_human_state_label(rev.state.value)}",
-        f"created_at\t{rev.created_at.isoformat()}",
-        f"updated_at\t{rev.updated_at.isoformat()}",
-    ]
+def _calculation_revision_lifecycle_lines(rev: CalculationRevision) -> list[str]:
+    lines: list[str] = []
     if rev.verified_at is not None:
         lines.append(f"verified_at\t{rev.verified_at.isoformat()}")
         lines.append(f"verified_by\t{rev.verified_by}")
@@ -745,26 +739,66 @@ def calculation_revision_lines(rev: CalculationRevision, *, verbose: bool = Fals
         lines.append(f"filed_by\t{rev.filed_by}")
     if rev.superseded_at is not None:
         lines.append(f"superseded_at\t{rev.superseded_at.isoformat()}")
-    summary_lines = result_summary_lines(rev)
-    if summary_lines:
-        lines.extend(summary_lines)
+    return lines
+
+
+def _calculation_casilla_row(
+    casilla: str,
+    value: str,
+    observation: CasillaObservation | None,
+    *,
+    verbose: bool,
+) -> list[str]:
+    line = f"casilla\t{casilla}\t{value}"
+    if observation is None:
+        return [line]
+    trace = casilla_inline_trace(observation)
+    if trace is None:
+        return [line]
+    lines = [f"{line}\t{trace}"]
+    if verbose:
+        lines.append(casilla_trace_verbose_line(observation))
+    return lines
+
+
+def _calculation_casilla_lines(rev: CalculationRevision, *, verbose: bool) -> list[str]:
     observation_by_casilla = {obs.casilla_id: obs for obs in visible_calculation_observations(rev)}
+    lines: list[str] = []
     for casilla, value in sorted(visible_calculation_casilla_values(rev).items()):
-        observation = observation_by_casilla.get(casilla)
-        if observation is None:
-            lines.append(f"casilla\t{casilla}\t{value}")
-            continue
-        trace = casilla_inline_trace(observation)
-        if trace is None:
-            lines.append(f"casilla\t{casilla}\t{value}")
-            continue
-        lines.append(f"casilla\t{casilla}\t{value}\t{trace}")
-        if verbose:
-            lines.append(casilla_trace_verbose_line(observation))
+        lines.extend(
+            _calculation_casilla_row(
+                casilla,
+                str(value),
+                observation_by_casilla.get(casilla),
+                verbose=verbose,
+            ),
+        )
+    return lines
+
+
+def _calculation_detail_lines(rev: CalculationRevision) -> list[str]:
+    lines: list[str] = []
     for index, detail_row in enumerate(rev.detail_rows, start=1):
         fields = detail_row.model_dump(mode="json", exclude={"row_type"})
         field_str = " ".join(f"{key}={value}" for key, value in fields.items())
         lines.append(f"detail_row\t{index}\t{detail_row.row_type}\t{field_str}")
+    return lines
+
+
+def calculation_revision_lines(rev: CalculationRevision, *, verbose: bool = False) -> list[str]:
+    lines = [
+        f"calculation_revision_id\t{rev.calculation_revision_id}",
+        f"work_unit_id\t{rev.work_unit_id}",
+        f"state\t{_human_state_label(rev.state.value)}",
+        f"created_at\t{rev.created_at.isoformat()}",
+        f"updated_at\t{rev.updated_at.isoformat()}",
+    ]
+    lines.extend(_calculation_revision_lifecycle_lines(rev))
+    summary_lines = result_summary_lines(rev)
+    if summary_lines:
+        lines.extend(summary_lines)
+    lines.extend(_calculation_casilla_lines(rev, verbose=verbose))
+    lines.extend(_calculation_detail_lines(rev))
     return lines
 
 

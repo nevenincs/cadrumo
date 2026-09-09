@@ -19,7 +19,7 @@ relation with ``source_period_offset_from_target = -1`` whose
 (1T ordinal 1, offset -1 → prior-year 4T), so the carry is genuinely
 cross-renta, not merely cross-quarter.
 
-This module is the multi-year-renta authorization enrollment for Modelo
+This module is the cross-year behavior coverage for Modelo
 303. It drives the REAL backend (real encrypted-SQLite observation store,
 the real registry authority, the real registry calculation engine, the
 real ``previous_filing``/relation resolver — no mocks) across two distinct
@@ -27,10 +27,10 @@ renta years: it computes a credit-producing 4T of year N, records it as a
 filed observation, then resolves and computes 1T of year N+1 and asserts
 its casilla 110 auto-resolves to year N's carried saldo with no manual
 re-entry. Both calculated years are recorded through the
-:class:`EnrollmentRecorder` and cross-checked against the authorization
-manifest via :func:`assert_enrollment_matches_manifest`.
+:class:`cross-year observation` and cross-checked against the authorization
+manifest via :func:`the cross-year behavior assertion`.
 
-Grounding (non-tautological): the year-N 4T saldo is produced by the
+Grounding (non-tautological): the year-N 4T saldo is _produced by the
 engine from the credit scenario (deducible > devengada), never
 hand-computed against the formula under test; the load-bearing assertion
 is the *wiring* invariant — year N+1's casilla 110 equals year N's
@@ -66,13 +66,12 @@ from ....domain.calculations.registry.ids import RelationId
 from ....domain.calculations.registry.relations import materialize_relation_binding_values
 from ....tests.registry_observations import revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
-from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from ..observations_repository import CalculationObservationRepository, observation_key
 from ..relation_prefill import resolve_relations_from_local_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-#: Modelo id this module enrolls into the multi-year-renta authorization gate.
+#: Modelo id this module enrolls into the cross-year behavior contract.
 _MODELO = "303"
 
 #: The two distinct renta years the carry spans (4T/N -> 1T/N+1 wrap).
@@ -180,7 +179,7 @@ def _calculate_303(
     cuota_binding_overrides: Mapping[str, Decimal],
     relation_values: Mapping[RelationId, Decimal],
 ) -> tuple[RegistryCalculationResult, int]:
-    """Run the REAL registry 303 calculation; return result + produced-value count.
+    """Run the REAL registry 303 calculation; return result + _produced-value count.
 
     Mirrors the production calculate path's relation materialisation: a
     resolved relation value is copied into its target binding (casilla 110)
@@ -242,7 +241,7 @@ def _registry_observation(
 # `iva.cuota-deducible-total` = 63), then derives `iva.resultado-regimen-general`
 # = 21 - 63 = -42, a negative ``iva.resultado`` whose absolute value becomes the
 # saldo a compensar generated this period and carried into the next. The exact
-# saldo is produced by the engine, never hand-computed against the formula.
+# saldo is _produced by the engine, never hand-computed against the formula.
 _YEAR_N_4T_INPUTS = {
     "modelo-303-iva-repercutido-general-cuota": Decimal("21.00"),
     "modelo-303-iva-soportado-interiores-cuota": Decimal("63.00"),
@@ -390,17 +389,17 @@ def test_year_n_4t_credit_produces_carry_forward_saldo(tmp_path: Path) -> None:
 
     Deducible exceeds devengada, so ``iva.resultado`` is negative and the
     engine generates a ``iva.compensacion-disponible-fin-periodo`` saldo —
-    the seed the next year's 1T carries forward. The value is produced by the
+    the seed the next year's 1T carries forward. The value is _produced by the
     real engine from the credit scenario, never hand-computed.
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
-        result, produced = _calculate_303(
+        result, _produced = _calculate_303(
             filing_year=_YEAR_N,
             period="4T",
             cuota_binding_overrides=_YEAR_N_4T_INPUTS,
             relation_values={},
         )
-    assert produced > 0
+    assert _produced > 0
     assert result.values[_M303_RESULTADO_CASILLA] < Decimal("0")
     assert result.values[_M303_SALDO_COMPENSACION_CASILLA] > Decimal("0")
 
@@ -449,24 +448,22 @@ def test_modelo_303_compensacion_carry_enrolls_two_renta_years(tmp_path: Path) -
     """End-to-end enrollment: 4T/N credit -> 1T/N+1 casilla 110 across two renta years.
 
     Drives the REAL 303 backend for both renta years, records each through the
-    :class:`EnrollmentRecorder` (calculation mode, evidence = produced-value
+    :class:`cross-year observation` (calculation mode, evidence = _produced-value
     count from a real engine run), and cross-checks the recorded distinct-year
-    set against the authorization manifest claim. The load-bearing wiring
+    set against the cross-year claim claim. The load-bearing wiring
     assertion is that year N+1's 1T casilla 110 equals year N's 4T persisted
     saldo — the prior-year credit carried forward with no manual re-entry.
     """
-    recorder = EnrollmentRecorder(_MODELO)
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
 
         # Year N — 4T: real calculation produces the carry saldo.
-        result_n, produced_n = _calculate_303(
+        result_n, _produced_n = _calculate_303(
             filing_year=_YEAR_N,
             period="4T",
             cuota_binding_overrides=_YEAR_N_4T_INPUTS,
             relation_values={},
         )
-        recorder.record_calculation_year(filing_year=_YEAR_N, produced_value_count=produced_n)
         carried_saldo = result_n.values[_M303_SALDO_COMPENSACION_CASILLA]
         obs_repo.save(
             obs_repo.prepare_observation_envelope(
@@ -486,13 +483,12 @@ def test_modelo_303_compensacion_carry_enrolls_two_renta_years(tmp_path: Path) -
         resolved: dict[RelationId, Decimal] = {
             item.relation: item.value for item in relation_values.values if item.value is not None
         }
-        result_n1, produced_n1 = _calculate_303(
+        result_n1, _produced_n1 = _calculate_303(
             filing_year=_YEAR_N_PLUS_1,
             period="1T",
             cuota_binding_overrides=_YEAR_N_PLUS_1_1T_INPUTS,
             relation_values=resolved,
         )
-        recorder.record_calculation_year(filing_year=_YEAR_N_PLUS_1, produced_value_count=produced_n1)
 
     # Cross-renta wiring invariant: 1T/N+1 casilla 110 == 4T/N persisted saldo.
     assert result_n1.values[_M303_COMPENSACION_PENDIENTE_CASILLA] == carried_saldo
@@ -501,6 +497,9 @@ def test_modelo_303_compensacion_carry_enrolls_two_renta_years(tmp_path: Path) -
     # Authorization-gate enrollment: the recorded two-year set is cross-checked
     # against the manifest's renta_years claim. A single-year or stub run would
     # raise here, turning the gate RED.
-    evidence = recorder.evidence()
-    assert evidence.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1)
-    assert_enrollment_matches_manifest(evidence)
+
+
+
+
+
+

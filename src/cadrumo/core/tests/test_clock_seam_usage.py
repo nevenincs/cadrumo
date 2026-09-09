@@ -30,8 +30,7 @@ an explicit ``now=`` parameter and fall back to real wall-clock only when the se
 deliberately barred (the seam refuses under ``CADRUMO_LIVE_TESTS_ENABLED``), are recorded
 in :data:`_ALLOWLIST` with a stated per-entry reason.
 
-This is the clock-seam companion to the AST gates in ``test_modelo_string_usage.py``
-and ``test_external_constants.py``.
+This is the clock-seam companion to ``test_external_constants.py``.
 
 See Also:
     :mod:`~tests._inventory`

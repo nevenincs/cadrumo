@@ -765,16 +765,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.calculations.multi_year.EnrollmentEvidenceError",
-        ErrorCode(
-            code="ERROR_CALCULATIONS_ENROLLMENT_EVIDENCE",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_calculations_registry",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.application.user_profile.bundle.UnsupportedBundleSchemaVersionError",
         ErrorCode(
             code="REFUSED_USER_PROFILE_BUNDLE_SCHEMA_VERSION",

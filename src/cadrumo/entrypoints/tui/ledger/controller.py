@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import ClassVar, Final, cast
 
+from textual.app import App
 from textual.binding import Binding
 from textual.message import Message
 from textual.screen import Screen
@@ -194,6 +195,16 @@ class LedgerWorkspaceController:
             reason_key="tui.ledger.refusal.selection_required",
         )
 
+    def _submission_door_is_missing(self, area: LedgerWorkspaceArea) -> bool:
+        """Return whether an area lacks the injected command it needs."""
+        if area is LedgerWorkspaceArea.CLASSIFICATION:
+            return self.classify_action is None or self.classification_submitter is None
+        if area is LedgerWorkspaceArea.IMPORT:
+            return not self.prepared_imports or self.import_submitter is None
+        return area is LedgerWorkspaceArea.EVIDENCE and (
+            self.evidence_action is None or self.evidence_items is None
+        )
+
     def refusal_for(self, area: LedgerWorkspaceArea) -> LedgerRouteRefusalV1 | None:
         """Preserve application refusal separately from deferred screen availability."""
         target = self.route_target(area)
@@ -207,14 +218,7 @@ class LedgerWorkspaceController:
         selection_refusal = self._selection_refusal(area, target)
         if selection_refusal is not None:
             return selection_refusal
-        missing_door = (
-            area is LedgerWorkspaceArea.CLASSIFICATION
-            and (self.classify_action is None or self.classification_submitter is None)
-        ) or (area is LedgerWorkspaceArea.IMPORT and (not self.prepared_imports or self.import_submitter is None))
-        missing_door = missing_door or (
-            area is LedgerWorkspaceArea.EVIDENCE and (self.evidence_action is None or self.evidence_items is None)
-        )
-        if missing_door:
+        if self._submission_door_is_missing(area):
             return LedgerRouteRefusalV1(
                 target=target,
                 availability=LedgerWorkspaceAvailability.UNAVAILABLE,
@@ -505,7 +509,7 @@ class LedgerWorkspaceScreen(Screen[None]):
         # for the shared shell; at module scope the two would form a cycle.
         from .routes import resolve_ledger_screen
 
-        replace_workspace_body(self.app, resolve_ledger_screen(self.controller, event.target))
+        replace_workspace_body(cast(App[object], self.app), resolve_ledger_screen(self.controller, event.target))
 
     def on_ledger_back_requested(self, _: LedgerBackRequested) -> None:
         """Leave the workspace by dismissing this child, as the siblings do."""

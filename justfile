@@ -214,11 +214,6 @@ check-types:
 check-imports:
     @uv run --no-sync python -m dev.quality.quiet lint-imports
 
-# Verify that all test modules only use relative imports. Silent on success.
-[group('check')]
-check-relative-imports:
-    @uv run --no-sync python -m dev.quality.relative_imports
-
 # Refuse tracked identity canaries while retaining the value-free advisory report.
 [doc('Verify that tracked content contains no configured identity canary.')]
 [group('check')]
@@ -675,7 +670,7 @@ harness_exclusions := prepend("--ignore=", harness_members)
 # Run the fast test-framework ratchets for discovery, markers, skip/xfail, mock/test-double, monkeypatch, broad raises, bare except, tautology drift, and the exit-code contract.
 [group('test')]
 test-ratchets:
-    @uv run --no-sync pytest -v -p no:cacheprovider dev/tests/test_test_inventory.py src/cadrumo/tests/test_relative_imports_only.py dev/tests/test_no_skip_xfail.py dev/tests/test_no_broad_exception_raises.py dev/tests/test_no_bare_except.py dev/tests/test_exit_code_contract.py
+    @uv run --no-sync pytest -v -p no:cacheprovider dev/tests/test_test_inventory.py dev/tests/test_no_skip_xfail.py dev/tests/test_no_broad_exception_raises.py dev/tests/test_no_bare_except.py dev/tests/test_exit_code_contract.py
 
 # Run the worker-count hook verdict outer-serially so it can inspect the
 # installed pytest hook without nesting another worker pool.
