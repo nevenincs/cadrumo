@@ -53,7 +53,7 @@ the fleet already half-followed:
 
 A published advisory against a version this repository has pinned is a verdict
 about a specific artefact, and the remedy is mechanical: change the pin. A
-duplication, dead-code, complexity or shadowing scan yields a lead to confirm
+duplication, dead-code or complexity scan yields a lead to confirm
 by hand. Dashboard's `audit` verb is *entirely* supply-chain — python, rust and
 node dependency trees — so it gates in full and never collided; it was
 undocumented, not wrong. Its `node-tooling` target audits build tooling that
