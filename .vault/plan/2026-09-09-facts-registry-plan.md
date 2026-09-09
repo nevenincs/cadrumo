@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:8fdef03c2e0675e4e115f2ee2441ab0683ef2dd3a5f5d50e303587bf3a4e3ee2'
+body_hash: 'sha256:a9f143a479cc73ac62cd3c36038f0e67476b6ab1f8241a89f51e7fcf9e9e953f'
 ---
 
 <!-- LINK RULES:
@@ -182,7 +182,7 @@ Create the registry-owned envelope, closed payload families, typed queries, and 
 
 - [x] `W01.P01.S01` - Define governed fact envelope identities and payload families; `src/cadrumo/domain/calculations/registry/facts/schema.py`.
 - [x] `W01.P01.S02` - Define typed queries and provenance-bearing resolved results; `src/cadrumo/domain/calculations/registry/facts/resolution.py`.
-- [ ] `W01.P01.S03` - Implement strict one-fact-per-file TOML parsing; `src/cadrumo/domain/calculations/registry/facts/loader.py`.
+- [x] `W01.P01.S03` - Implement strict one-fact-per-file TOML parsing; `src/cadrumo/domain/calculations/registry/facts/loader.py`.
 
 ### Phase `W01.P02` - Implement greenfield provider authority
 
@@ -199,7 +199,7 @@ Classify every discovered candidate and record exact source symbols, consumers, 
 - [x] `W01.P03.S07` - Classify every statutory declaration and production consumer; `src/cadrumo/core/external_constants.py`.
 - [x] `W01.P03.S08` - Record exact IVA recargo grounding and repository retirement conditions; `src/cadrumo/domain/iva`.
 - [x] `W01.P03.S09` - Record exact global legal-parameter adapter callers and closure conditions; `src/cadrumo/domain/calculations/registry/loader.py`.
-- [ ] `W01.P03.S42` - Record retained domain facades and excluded technical configuration readers; `src/cadrumo/domain and src/cadrumo/core/external_constants.py`.
+- [x] `W01.P03.S42` - Record retained domain facades and excluded technical configuration readers; `src/cadrumo/domain and src/cadrumo/core/external_constants.py`.
 
 ### Phase `W01.P04` - Build facts quality tooling
 
