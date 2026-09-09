@@ -84,10 +84,19 @@ def test_fact_catalogue_identity_prevents_reusing_a_green_validation_memo(tmp_pa
         RegistryValidator(changed_catalogues).validate_registry(())
 
 
-def test_nested_governed_directory_requires_an_exact_provider_owner(tmp_path: Path) -> None:
+def test_top_level_sibling_under_the_governed_root_requires_an_exact_provider_owner(tmp_path: Path) -> None:
     (tmp_path / "facts" / "unregistered").mkdir(parents=True)
 
     with pytest.raises(RegistryValidationError, match="has no registered provider"):
+        validate_fact_provider_directory_ownership(tmp_path)
+
+
+def test_unregistered_governed_top_level_sibling_is_detected_by_the_fragment_census(tmp_path: Path) -> None:
+    sibling = tmp_path / "unregistered-facts"
+    sibling.mkdir()
+    (sibling / "0001-shadow-fact.toml").write_text("[fact]\n", encoding="utf-8")
+
+    with pytest.raises(RegistryValidationError, match=r"unregistered-facts.*has no registered provider"):
         validate_fact_provider_directory_ownership(tmp_path)
 
 

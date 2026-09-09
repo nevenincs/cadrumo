@@ -12,7 +12,7 @@ from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from ..errors import RegistryValidationError
 from ..loader_cache import toml_file_fingerprint
 from ..loader_fingerprints import RegistryPathFingerprints
-from .loader import load_governed_facts
+from .loader import is_governed_fact_filename, load_governed_facts
 from .schema import GovernedFact, GovernedFactCatalogue
 
 __all__ = [
@@ -127,9 +127,17 @@ def reset_registered_fact_providers() -> None:
 
 
 def validate_fact_provider_directory_ownership(registry_root: Path) -> None:
-    """Refuse nested governed directories without an exact registered owner."""
+    """Refuse governed top-level or nested directories without an exact owner."""
     owned = registered_fact_provider_directories()
     root = registry_root.resolve()
+    for entry in scan_directory(root, select=DirectoryEntryKind.DIRECTORIES):
+        if any(
+            is_governed_fact_filename(path.name)
+            for path in scan_directory(entry, pattern="*.toml", select=DirectoryEntryKind.FILES)
+        ):
+            relative = PurePosixPath(*entry.relative_to(root).parts).as_posix()
+            if relative not in owned:
+                raise RegistryValidationError(f"governed fact directory {relative!r} has no registered provider")
     for relative_directory in owned:
         provider_root = root / Path(*PurePosixPath(relative_directory).parts)
         if not provider_root.is_dir():
