@@ -19,12 +19,6 @@ from threading import Condition, RLock
 from typing import Protocol, override
 
 from .... import __version__
-from ....core.access_gate.authorization import (
-    AuthorizationManifest,
-    ModeloAuthorization,
-    derive_modelo_authorization,
-    load_authorization_manifest,
-)
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.hashing import content_hash_hex
 from ....core.identity import ContentDigest
@@ -451,7 +445,6 @@ class ValidatedRegistryAuthority:
     _registry_validated: bool
     _validated_modelos: set[str]
     _snapshots: dict[_SnapshotKey, RegistrySnapshot]
-    _authorization_manifest: AuthorizationManifest
     _identity_digest: str = ""
     _capture_generation: int = field(default=0, init=False, repr=False)
     _capture_reset_epoch: int = field(default=0, init=False, repr=False)
@@ -591,19 +584,6 @@ class ValidatedRegistryAuthority:
         with self._state_lock:
             self._mark_registry_validated()
 
-    @property
-    def authorization_manifest(self) -> AuthorizationManifest:
-        """Return the loaded multi-year-renta authorization manifest.
-
-        The manifest is the single writable authorization surface; the CI
-        meta-test reads it through this accessor to cross-check each
-        enrolling claim against the recorder evidence.
-
-        Returns:
-            The loaded :class:`AuthorizationManifest` object.
-        """
-        return self._authorization_manifest
-
     def modelo_has_engine(self, modelo_id: str) -> bool:
         """Return whether ``modelo_id`` declares a calculation surface.
 
@@ -625,26 +605,6 @@ class ValidatedRegistryAuthority:
             link.surface == "calculation"
             for revision in modelo.revisions.values()
             for link in revision.application_links
-        )
-
-    def authorization(self, modelo_id: str) -> ModeloAuthorization:
-        """Return the derived per-modelo authorization capability.
-
-        This is the layer-(b) derivation of the ``modelo-multiyear-renta``
-        gate: the capability is *computed* from the manifest (layer a)
-        cross-checked against the loaded registry — never an independently
-        authored per-revision flag — so it cannot drift from the manifest.
-        An unknown / not-yet-loadable modelo derives to ``UNAUTHORIZED``
-        with ``has_engine = False``, which is the correct default for the
-        engine-build modelos that carry no loadable definition yet.
-
-        Returns:
-            The derived :class:`ModeloAuthorization` for ``modelo_id``.
-        """
-        return derive_modelo_authorization(
-            modelo_id,
-            manifest=self._authorization_manifest,
-            has_engine=self.modelo_has_engine(modelo_id),
         )
 
     def snapshot(
@@ -1169,11 +1129,6 @@ def construct_authority(
         _registry_validated=False,
         _validated_modelos=set(),
         _snapshots={},
-        # Authorization is derived at this boundary from the manifest
-        # (default-deny-by-absence: an absent manifest authorizes nothing).
-        # The manifest is fingerprinted into _collect_registry_tree_fingerprints
-        # so the current-identity slot invalidates when the manifest changes on disk.
-        _authorization_manifest=load_authorization_manifest(root),
         _identity_digest=identity.digest,
     )
     return authority
