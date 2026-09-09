@@ -747,8 +747,7 @@ def _parse_windows_process_inventory(payload: bytes) -> tuple[_ProcessCommand, .
     decoded: Any = json.loads(decoded_payload)
     win_rows: list[Any] = [decoded] if isinstance(decoded, dict) else decoded
     return tuple(
-        _ProcessCommand(pid=int(row["ProcessId"]), command_line=str(row.get("CommandLine") or ""))
-        for row in win_rows
+        _ProcessCommand(pid=int(row["ProcessId"]), command_line=str(row.get("CommandLine") or "")) for row in win_rows
     )
 
 
@@ -762,6 +761,8 @@ def _posix_process_command_inventory() -> tuple[_ProcessCommand, ...] | None:
         check=True,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         timeout=_PROCESS_INVENTORY_TIMEOUT_SECONDS,
     )
     return _parse_posix_process_inventory(completed.stdout)

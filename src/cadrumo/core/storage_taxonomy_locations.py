@@ -45,7 +45,6 @@ def _location(
     override_policy: StorageOverridePolicy = StorageOverridePolicy.OPERATOR_OVERRIDABLE,
     fingerprint_participation: FingerprintParticipation = FingerprintParticipation.PARTICIPATING,
     derives_settings_default: bool = True,
-    test_pinned_exception: str | None = None,
 ) -> StorageLocation:
     """Build one declaration, defaulting the axes most members share."""
     return StorageLocation(
@@ -61,7 +60,6 @@ def _location(
         dormant_reason=dormant_reason,
         settings_field=settings_field,
         derives_settings_default=derives_settings_default and settings_field is not None,
-        test_pinned_exception=test_pinned_exception,
     )
 
 
@@ -296,14 +294,6 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         grouping=StorageGrouping.CACHE,
         fingerprint_participation=FingerprintParticipation.EXCLUDED,
         derives_settings_default=False,
-        test_pinned_exception=(
-            "Under pytest, with no explicit override, the resolver selects the "
-            "host-shared OS temp directory instead of this member's declared "
-            "subpath, so every xdist worker and subprocess-spawning test shares "
-            "one compiled pickle for the immutable bundled registry tree rather "
-            "than each deriving a private, per-worker cache from a per-pid "
-            "storage root. See loader_cache.registry_disk_cache_dir."
-        ),
     ),
     _location(
         # Fingerprint-keyed flat-map cache of one shared locale catalogue

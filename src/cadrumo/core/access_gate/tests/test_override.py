@@ -29,31 +29,23 @@ def _build_gate() -> AeatAccessGate:
 def test_live_read_override_allows_literal_one_or_operator_context() -> None:
     """Live reads are admitted by literal '1' in tests or by non-pytest operator context."""
 
-    for _case_id, enabled, pytest_current_test in (
+    for _case_id, enabled, guarded_read_context in (
         ("literal-one", "1", None),
         ("operator-context", "0", ""),
     ):
         with override_settings(cadrumo_live_tests_enabled=enabled):
-            _build_gate().require_live_read(pytest_current_test=pytest_current_test)
+            _build_gate().require_live_read(guarded_read_context=guarded_read_context)
 
 
-def test_live_read_override_blocks_non_one_values_during_pytest() -> None:
-    """During pytest, an override to anything other than '1' raises the typed refusal."""
+def test_guarded_live_read_blocks_non_one_values() -> None:
+    """An explicitly guarded read with any non-literal opt-in is refused."""
 
-    assert "pytest" in __import__("sys").modules
-    for case_id, enabled, use_default_current_test in (
-        ("zero-current-test", "0", True),
-        ("zero-hidden-env", "0", False),
-        ("true-string", "true", True),
-    ):
+    for case_id, enabled in (("zero", "0"), ("true-string", "true")):
         with (
             override_settings(cadrumo_live_tests_enabled=enabled),
             pytest.raises(AeatLiveReadNotEnabledError) as excinfo,
         ):
-            if use_default_current_test:
-                _build_gate().require_live_read()
-            else:
-                _build_gate().require_live_read(pytest_current_test=None)
+            _build_gate().require_live_read(guarded_read_context=case_id)
         assert excinfo.type is AeatLiveReadNotEnabledError, case_id
 
 
@@ -74,7 +66,7 @@ def test_live_write_is_permanently_forbidden_regardless_of_override() -> None:
 def test_snapshot_reflects_overridden_value() -> None:
     """The audit-snapshot helper reads from the same Settings surface as the gate check."""
     with override_settings(cadrumo_live_tests_enabled="diagnostic-marker"):
-        snapshot = _build_gate().snapshot_env(pytest_current_test=None)
+        snapshot = _build_gate().snapshot_env(guarded_read_context=None)
     assert snapshot.cadrumo_live_tests_enabled == "diagnostic-marker"
 
 

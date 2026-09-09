@@ -45,7 +45,7 @@ jobs:
   # non-admin runner user); what changes is that dispatching it now fails in
   # minutes with the missing label named, instead of queueing for 24 hours.
   runner-queue-watchdog:
-    name: Cadrumo / runner queue watchdog
+    name: "Check: Runner queue (Linux)"
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 20
     permissions:
@@ -66,7 +66,7 @@ jobs:
         run: python3 -m dev.ci.runner_queue_watchdog
 
   cadrumo-scoop-acquisition:
-    name: Cadrumo / Windows / x64 / Scoop Native
+    name: "Test: Channel acquisition (Windows)"
     runs-on: [self-hosted, Windows, X64, windows-scoop]
     timeout-minutes: 90
     permissions:

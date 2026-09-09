@@ -50,6 +50,6 @@ def test_login_cold_root_preserves_unnamed_certificate_before_no_bucket_refusal(
                 login_operator_auth(
                     AuthProviderKind.CERTIFICATE.value,
                     settings=settings,
-                    pytest_current_test="",
+                    guarded_read_context="",
                 ),
             )

@@ -545,6 +545,11 @@ check-workflow:
     @uv run --no-sync python -m dev.actionlint
     @uv run --no-sync python -m dev.ci_contract
 
+[doc('Mutation-prove each merge-check contract fails and passes in isolation.')]
+[group('check')]
+prove-check-set:
+    @uv run --no-sync python dev/ci/prove_check_set_guards.py
+
 # Run all pre-commit hooks via prek. Silent on success; replays hook output on failure.
 [group('check')]
 check-pre-commit:

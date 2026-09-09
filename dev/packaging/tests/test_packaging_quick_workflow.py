@@ -120,8 +120,10 @@ def test_quick_workflow_triggers_on_artifact_relevant_pushes() -> None:
     assert ".vault/**" in push["paths-ignore"]
     assert "**.md" in push["paths-ignore"]
     concurrency = document["concurrency"]
-    assert concurrency["group"] == "${{ github.workflow }}-${{ github.ref }}"
-    assert concurrency["cancel-in-progress"] == "${{ github.event_name == 'pull_request' }}"
+    assert concurrency["group"] == (
+        "packaging-quick-${{ github.ref }}${{ github.ref == 'refs/heads/main' && format('-{0}', github.sha) || '' }}"
+    )
+    assert concurrency["cancel-in-progress"] == "${{ github.ref != 'refs/heads/main' }}"
     # Future pull-request flow: same T1 probe, but never fork code on the fleet —
     # every job must carry the same-repo guard (see test_change_class_tiers).
     assert triggers["pull_request"]["branches"] == ["main"]
