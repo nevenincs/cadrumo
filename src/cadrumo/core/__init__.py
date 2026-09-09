@@ -22,7 +22,7 @@ cross-platform PID-liveness probe consumed by every crash-recoverable
 lockfile (bucket lockfile, auth-acquisition lock), and :func:`unlink_lockfile`
 is the matching shared removal primitive those same locks use to survive the
 Windows sharing violation a waiter's open handle causes. TOML and option utilities expose
-:func:`read_toml`, :func:`parse_toml_text`, :func:`freeze_toml`,
+:func:`read_toml`, :func:`freeze_toml`,
 :class:`OptionalExtra`, and :func:`require_optional_extra`. Directory
 listing goes through :func:`~cadrumo.core.directory_scan.scan_directory` (sorted
 and materialised) and :func:`~cadrumo.core.directory_scan.iter_directory` (lazy,

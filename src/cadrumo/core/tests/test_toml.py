@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ..toml import freeze_toml, parse_toml_text, read_toml, to_str_keyed_dict
+from ..toml import freeze_toml, read_toml, to_str_keyed_dict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -24,8 +24,8 @@ def test_to_str_keyed_dict_rejects_non_string_key_via_error_factory() -> None:
         to_str_keyed_dict({1: "x"}, error_factory=ValueError)
 
 
-def test_valid_toml_payloads_parse_from_file_and_text(tmp_path: Path) -> None:
-    """Well-formed TOML parses the same from files and in-memory text."""
+def test_valid_toml_payloads_parse_from_file(tmp_path: Path) -> None:
+    """Well-formed TOML parses from files."""
     for case_name, text, expected in (
         (
             "section",
@@ -38,11 +38,10 @@ def test_valid_toml_payloads_parse_from_file_and_text(tmp_path: Path) -> None:
         target.write_text(text, encoding="utf-8")
 
         assert read_toml(target, error_factory=ValueError) == expected
-        assert parse_toml_text(text, error_factory=ValueError) == expected
 
 
 def test_invalid_toml_wraps_decode_failure_via_error_factory(tmp_path: Path) -> None:
-    """Invalid TOML raises the caller-supplied error type for both parser surfaces."""
+    """Invalid TOML raises the caller-supplied error type."""
     target = tmp_path / "bad.toml"
     target.write_text("not = valid = toml", encoding="utf-8")
 
@@ -51,12 +50,6 @@ def test_invalid_toml_wraps_decode_failure_via_error_factory(tmp_path: Path) -> 
     assert str(target) in str(file_exc.value)
     assert "invalid TOML" in str(file_exc.value)
     assert isinstance(file_exc.value.__cause__, tomllib.TOMLDecodeError)
-
-    with pytest.raises(ValueError) as text_exc:
-        parse_toml_text("not = valid = toml", error_factory=ValueError)
-    assert "invalid TOML" in str(text_exc.value)
-    assert isinstance(text_exc.value.__cause__, tomllib.TOMLDecodeError)
-
 
 def test_read_toml_wraps_invalid_utf8_as_invalid_toml(tmp_path: Path) -> None:
     """The file boundary keeps undecodable UTF-8 inside the public TOML error contract."""

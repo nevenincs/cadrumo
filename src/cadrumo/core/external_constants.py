@@ -536,13 +536,6 @@ M347_THRESHOLD_EUR: Final[Decimal] = Decimal("3005.06")
 #: year, and each is judged against its own floor.
 M347_CLAVE_C_THRESHOLD_EUR: Final[Decimal] = Decimal("300.51")
 
-#: IAE art. 82.1.c net-turnover exemption ceiling for Modelo 840 threshold
-#: continuity. Binding provision: TRLRHL RDL 2/2004 art. 82.1.c ("importe
-#: neto de la cifra de negocios inferior a 1.000.000 de euros"). The gate is
-#: STRICTLY BELOW this amount; an INCN equal to 1,000,000.00 EUR is not within
-#: the turnover-based exemption.
-MODELO_840_IAE_CIFRA_NEGOCIOS_EXEMPTION_THRESHOLD_EUR: Final[Decimal] = Decimal("1000000.00")
-
 #: Art. 7.p) LIRPF (Ley 35/2006, BOE-A-2006-20764) annual exemption cap for
 #: foreign-work income of maritime and other qualifying workers.
 #: The exempt amount is the lesser of the proportional daily salary for
@@ -557,14 +550,6 @@ ART_7P_EXEMPTION_CAP_EUR: Final[Decimal] = Decimal("60100")
 #: (Art. 96.3.a.1.º). Binding provision: Art. 96.3 LIRPF (Ley 35/2006). This
 #: trigger is year-stable and has not been revalued.
 MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR: Final[Decimal] = Decimal("1500")
-
-#: Art. 96.2.a) LIRPF (Ley 35/2006) GENERAL filing-exemption ceiling for
-#: rendimientos íntegros del trabajo. A natural person whose work income does not
-#: exceed this amount (single pagador, or multiple pagadores with the 2nd-and-
-#: subsequent aggregate at or below 1.500 €) is NOT obliged to file Modelo 100 on
-#: account of work income. Binding provision: Art. 96.2.a) LIRPF (Ley 35/2006).
-#: This ceiling is year-stable.
-WORK_INCOME_GENERAL_DECLARATION_LIMIT_EUR: Final[Decimal] = Decimal("22000")
 
 #: Art. 96.3 LIRPF (Ley 35/2006) REDUCED filing-exemption ceiling for
 #: rendimientos íntegros del trabajo, keyed by filing year (the year the income

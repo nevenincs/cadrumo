@@ -270,16 +270,6 @@ def result_disposition_requires_bank_account(disposition: ResultDisposition) -> 
     return disposition in _BANK_ACCOUNT_DISPOSITIONS
 
 
-def modelo_has_codified_disposition(modelo: str) -> bool:
-    """Return whether ``modelo`` has a codified, diseño-grounded disposition spec.
-
-    This is the capability probe for callers that need to decide whether
-    :func:`derive_result_disposition` can produce a :class:`ResultDisposition`
-    without falling back to their own documented export default.
-    """
-    return modelo in _DISPOSITION_SPEC
-
-
 def result_disposition_casilla_ids(modelo: str) -> tuple[CasillaId, ...] | None:
     """Return the canonical result ``casilla.id`` values for ``modelo``.
 
@@ -349,7 +339,6 @@ def _reject_non_result_casilla_values(
 __all__ = [
     "ResultDisposition",
     "derive_result_disposition",
-    "modelo_has_codified_disposition",
     "result_disposition_casilla_ids",
     "result_disposition_is_refund",
     "result_disposition_requires_bank_account",

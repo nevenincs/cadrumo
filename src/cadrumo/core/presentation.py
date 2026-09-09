@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
-from dataclasses import dataclass, field
+from collections.abc import Callable
+from dataclasses import dataclass
 from enum import StrEnum
 
 
@@ -38,15 +38,6 @@ class FormField:
 
 
 @dataclass(frozen=True, slots=True)
-class FormPage:
-    """Immutable page title, section, and field descriptors."""
-
-    title: str
-    section: str
-    fields: tuple[FormField, ...] = field(default_factory=tuple)
-
-
-@dataclass(frozen=True, slots=True)
 class NoticePresentation:
     """Already-resolved notice facts safe for inert presentation widgets."""
 
@@ -55,22 +46,9 @@ class NoticePresentation:
     action_target: str | None = None
 
 
-def multi_choice_tokens(value: str) -> tuple[str, ...]:
-    """Split a stored comma-separated choice value into non-empty tokens."""
-    return tuple(token for token in value.split(",") if token)
-
-
-def form_choices(pairs: Sequence[tuple[str, str]]) -> tuple[FormChoice, ...]:
-    """Build immutable choices from compact ``(value, label)`` pairs."""
-    return tuple(FormChoice(value, label) for value, label in pairs)
-
-
 __all__ = [
     "FormChoice",
     "FormField",
     "FormFieldKind",
-    "FormPage",
     "NoticePresentation",
-    "form_choices",
-    "multi_choice_tokens",
 ]

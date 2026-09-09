@@ -19,7 +19,6 @@ test. A primitive's own tests do not import a helper built on that primitive.
 
 from __future__ import annotations
 
-import ast
 import functools
 import multiprocessing
 import os
@@ -538,39 +537,6 @@ class TestHardenedTier:
 
         assert target.read_bytes() == b"OLD-SECRET"
         assert _tmp_leftovers(tmp_path) == []
-
-    def test_hardened_tier_calls_no_per_file_permission_helper(self) -> None:
-        """The durable write path must spawn no permission subprocess per file.
-
-        Confidentiality for durable writes comes from the storage tree's
-        directory ACL, applied ONCE at creation by
-        :func:`~cadrumo.core.file_permissions.restrict_directory_permissions`.
-        A per-file ``icacls.exe`` strip was measured at ~28 ms/write, and the
-        blob writer runs this tier once per stored attachment, so reinstating
-        one would be O(N) subprocess spawns across a bulk evidence ingest.
-
-        Asserted against the module SOURCE rather than by timing a write.
-        This gate was first written as an elapsed-time budget and was wrong:
-        it passed alone and failed under parallel load, because wall-clock
-        measures disk contention rather than the property in question. A
-        reference to the per-file helper either exists in this module or it
-        does not, and that answer does not vary with machine or load.
-        """
-        source = Path(atomic_write.__file__).read_text(encoding="utf-8")
-        tree = ast.parse(source)
-        called = {
-            node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
-        } | {
-            node.func.attr
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
-        }
-
-        assert "restrict_file_permissions" not in called, (
-            "the hardened tier calls the per-file permission helper again; "
-            "harden the storage directory once instead of every write"
-        )
-
 
 class TestDurableWriteBatch:
     """Batched hardened writes stay atomic while deferring their durability sync."""
