@@ -178,12 +178,7 @@ class RegistryValidator:
         source_root_key = self._source_root_key()
         cache_key = (id(self._legal), id(self._sources), id(self._facts), source_root_key, self._source_evidence_key())
         cached = CATALOGUE_FAILURE_CACHE.get(cache_key)
-        if (
-            cached is not None
-            and cached[0] is self._legal
-            and cached[1] is self._sources
-            and cached[2] is self._facts
-        ):
+        if cached is not None and cached[0] is self._legal and cached[1] is self._sources and cached[2] is self._facts:
             self._catalogue_failures = cached[3]
             return self._catalogue_failures
 

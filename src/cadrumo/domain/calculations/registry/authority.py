@@ -18,13 +18,6 @@ from secrets import token_bytes
 from threading import Condition, RLock
 from typing import Protocol, override
 
-from .... import __version__
-from ....core.access_gate.authorization import (
-    AuthorizationManifest,
-    ModeloAuthorization,
-    derive_modelo_authorization,
-    load_authorization_manifest,
-)
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.hashing import content_hash_hex
 from ....core.identity import ContentDigest
@@ -38,24 +31,19 @@ from ._verdict_cache import (
     certify_registry_validation,
     compute_verdict_key,
     registry_validation_is_certified,
-    shipped_verdict_location,
-    stamp_bundled_verdict,
 )
 from .convenio import collect_convenio_fingerprints, load_convenio_authority, validate_convenio_legal_refs
 from .errors import RegistrySnapshotError, RegistryValidationError
 from .facts.providers import (
     collect_registered_fact_provider_fingerprints,
     compile_registered_fact_providers,
-    reset_registered_fact_providers,
     validate_fact_provider_directory_ownership,
 )
 from .facts.resolution import GovernedFactQuery, ResolvedGovernedFact, resolve_governed_fact
 from .identity import (
     FingerprintTuples,
     RegistryIdentity,
-    registry_identity_stamp_location,
     resolve_registry_identity,
-    write_registry_identity_stamp,
 )
 from .ids import LegalRefId, ModeloId, RevisionId, SourceRefId
 from .schema import (
@@ -314,8 +302,8 @@ class _AuthorityLoadBarrier:
 _authority_state_lock = RLock()
 _authority_load_barrier = _AuthorityLoadBarrier()
 _authority_load_states: dict[_AuthorityRootKey, _AuthorityLoadState] = {}
-_authority_generation = 0
-_authority_reset_epoch = 0
+_authority_generation: int = 0
+_authority_reset_epoch: int = 0
 
 
 def canonical_authority_root_pair(root: Path, source_root: Path) -> _AuthorityRootPairIdentity:
@@ -429,15 +417,6 @@ def _publish_authority_failure(state: _AuthorityLoadState, failure: Exception) -
         state.current_failure = failure
 
 
-def _invalidate_authority_generations() -> None:
-    """Invalidate all authority incarnations as one exclusive reset transition."""
-    global _authority_generation, _authority_reset_epoch
-    with _authority_state_lock:
-        _authority_generation += 1
-        _authority_reset_epoch += 1
-        _authority_load_states.clear()
-
-
 @dataclass(slots=True)
 class ValidatedRegistryAuthority:
     """Load, validate, and cache registry material behind one access point."""
@@ -451,7 +430,6 @@ class ValidatedRegistryAuthority:
     _registry_validated: bool
     _validated_modelos: set[str]
     _snapshots: dict[_SnapshotKey, RegistrySnapshot]
-    _authorization_manifest: AuthorizationManifest
     _identity_digest: str = ""
     _capture_generation: int = field(default=0, init=False, repr=False)
     _capture_reset_epoch: int = field(default=0, init=False, repr=False)
@@ -591,32 +569,13 @@ class ValidatedRegistryAuthority:
         with self._state_lock:
             self._mark_registry_validated()
 
-    @property
-    def authorization_manifest(self) -> AuthorizationManifest:
-        """Return the loaded multi-year-renta authorization manifest.
-
-        The manifest is the single writable authorization surface; the CI
-        meta-test reads it through this accessor to cross-check each
-        enrolling claim against the recorder evidence.
-
-        Returns:
-            The loaded :class:`AuthorizationManifest` object.
-        """
-        return self._authorization_manifest
-
     def modelo_has_engine(self, modelo_id: str) -> bool:
         """Return whether ``modelo_id`` declares a calculation surface.
 
         A modelo "has an engine" when any of its revisions declares an
         application-link whose ``surface`` is ``"calculation"`` — the
         registry's own marker that a runtime calculation consumer is wired
-        for the modelo. This drives the authorization gate's
-        ADVISORY-vs-refusal split (an unauthorized modelo with an engine
-        still computes with an advisory banner; one with no engine is
-        refused at ``work create``). Returns ``False`` for an unknown
-        modelo rather than raising, so the fleet-wide capability sweep can
-        ask about every canonical modelo id including the engine-build
-        modelos that do not load yet.
+        for the modelo. Returns ``False`` for an unknown modelo.
         """
         modelo = self._modelos_by_id.get(modelo_id)
         if modelo is None:
@@ -625,26 +584,6 @@ class ValidatedRegistryAuthority:
             link.surface == "calculation"
             for revision in modelo.revisions.values()
             for link in revision.application_links
-        )
-
-    def authorization(self, modelo_id: str) -> ModeloAuthorization:
-        """Return the derived per-modelo authorization capability.
-
-        This is the layer-(b) derivation of the ``modelo-multiyear-renta``
-        gate: the capability is *computed* from the manifest (layer a)
-        cross-checked against the loaded registry — never an independently
-        authored per-revision flag — so it cannot drift from the manifest.
-        An unknown / not-yet-loadable modelo derives to ``UNAUTHORIZED``
-        with ``has_engine = False``, which is the correct default for the
-        engine-build modelos that carry no loadable definition yet.
-
-        Returns:
-            The derived :class:`ModeloAuthorization` for ``modelo_id``.
-        """
-        return derive_modelo_authorization(
-            modelo_id,
-            manifest=self._authorization_manifest,
-            has_engine=self.modelo_has_engine(modelo_id),
         )
 
     def snapshot(
@@ -986,29 +925,6 @@ def bundled_authority() -> ValidatedRegistryAuthority:
     return ValidatedRegistryAuthority.load(root, source_root=_bundled_path())
 
 
-def bundled_revision_inspection(
-    modelo_id: str,
-    *,
-    filing_year: int,
-    period: str,
-    on: date | None = None,
-) -> RegistryRevisionInspection:
-    """Return a static revision inspection without entering the filing gate.
-
-    The authority fully validates the bundled registry and its supporting
-    catalogues, then canonically selects the request's revision.  It
-    intentionally does not certify legal-review status or construct a filing
-    snapshot, because source-design inspection is not a filing operation and
-    must not be represented as one.
-    """
-    return bundled_authority().inspect_revision(
-        modelo_id,
-        filing_year=filing_year,
-        period=period,
-        on=on,
-    )
-
-
 def _load_authority(
     root_identity: _AuthorityRootPairIdentity,
     *,
@@ -1054,33 +970,6 @@ def _load_authority(
                 generation=state.generation,
             )
             return authority
-
-
-def reset_registry_caches(
-    *,
-    lifecycle_observer: RegistryAuthorityLifecycleObserver = _SILENT_AUTHORITY_LIFECYCLE_OBSERVER,
-) -> None:
-    """Drop every memoised registry layer so the next read recompiles from disk.
-
-    The compiled-tree lru, the authority load caches and the tree-fingerprint
-    cache are one staleness surface: clearing a subset leaves a later layer
-    answering from a tree state an earlier layer has already forgotten. Callers
-    that swap the registry root or rewrite bundled TOML need all three, so the
-    package exposes the whole reset rather than its parts.
-    """
-    _guard_authority_process()
-    from .loader import (
-        _load_registry_tree_cached,  # pyright: ignore[reportPrivateUsage]  # reset owns the complete registry cache surface
-    )
-    from .loader_fingerprints import clear_fingerprint_cache
-
-    lifecycle_observer.registry_cache_reset_requested()
-    with _authority_load_barrier.reset():
-        lifecycle_observer.registry_cache_reset_acquired()
-        _invalidate_authority_generations()
-        _load_registry_tree_cached.cache_clear()
-        clear_fingerprint_cache()
-        reset_registered_fact_providers()
 
 
 def _load_validated_authority(
@@ -1169,62 +1058,6 @@ def construct_authority(
         _registry_validated=False,
         _validated_modelos=set(),
         _snapshots={},
-        # Authorization is derived at this boundary from the manifest
-        # (default-deny-by-absence: an absent manifest authorizes nothing).
-        # The manifest is fingerprinted into _collect_registry_tree_fingerprints
-        # so the current-identity slot invalidates when the manifest changes on disk.
-        _authorization_manifest=load_authorization_manifest(root),
         _identity_digest=identity.digest,
     )
     return authority
-
-
-@dataclass(frozen=True, slots=True)
-class StampedRegistryRelease:
-    """The two records the release build stamps beside a packaged registry tree."""
-
-    identity_path: Path
-    verdict_path: Path
-
-
-def stamp_bundled_registry_release(
-    registry_root: Path,
-    *,
-    package_version: str = __version__,
-) -> StampedRegistryRelease:
-    """Stamp the install-stable identity and verdict beside ``registry_root``.
-
-    The release build calls this -- and only this -- against the registry tree
-    it is packaging. Both records are written here, in this order, from ONE
-    fingerprint collection, because they are not independent: the verdict is
-    keyed on the identity, so a caller free to write them separately could
-    certify one tree with another's identity. Fusing them removes that ordering
-    hazard rather than documenting it.
-
-    The fingerprints come from
-    :func:`collect_registry_identity_fingerprints`, the same collector the
-    runtime walk uses, so the stamp cannot describe a narrower set than the
-    runtime would check. The identity states which tree this is; the verdict
-    states that the build found it green. A mismatch of either at runtime falls
-    back to the full walk and a full re-validation.
-
-    Returns:
-        The paths both records were written to.
-    """
-    resolved = registry_root.expanduser().resolve()
-    fingerprints = collect_registry_identity_fingerprints(resolved)
-    stamp = write_registry_identity_stamp(
-        registry_fingerprints=fingerprints,
-        registry_root=resolved,
-        package_version=package_version,
-    )
-    verdict_path = shipped_verdict_location(resolved)
-    stamp_bundled_verdict(
-        identity_digest=stamp.tree_digest,
-        output_path=verdict_path,
-        package_version=package_version,
-    )
-    return StampedRegistryRelease(
-        identity_path=registry_identity_stamp_location(resolved),
-        verdict_path=verdict_path,
-    )

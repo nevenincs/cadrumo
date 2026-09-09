@@ -7,9 +7,10 @@ from dataclasses import replace
 from pathlib import Path
 
 import pytest
+from dev.registry.maintenance_support import reset_registry_caches
 
 from ..._validate import RegistryValidator
-from ...authority import collect_registry_identity_fingerprints, reset_registry_caches
+from ...authority import collect_registry_identity_fingerprints
 from ...errors import RegistryValidationError
 from ...schema import RegistryCatalogues
 from ...schema_references import LegalReference, SourceReference
@@ -25,7 +26,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def _write_fact(path: Path) -> None:
     path.write_text(
-        '''[fact]
+        """[fact]
 fact_id = "test.limit"
 family = "scalar"
 
@@ -46,7 +47,7 @@ required_text = ["limit"]
 kind = "scalar"
 value = "10"
 unit = "EUR"
-''',
+""",
         encoding="utf-8",
     )
 

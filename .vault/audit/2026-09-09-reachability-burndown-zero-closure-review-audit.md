@@ -96,6 +96,36 @@ the reviewed closure contract. The three live zero-target commands for unreachab
 modules, exact unused symbols plus orphaned tests, and unconsumed exports each exit 0,
 but the findings above prevent treating those headlines as final closure.
 
+### closure-rereview | low | All three high findings are resolved in the live tree
+
+Re-review of the current tree confirmed that every previously recorded blocker is
+closed. The focused unreachable-module, unused-symbol, and unconsumed-export
+detector-teeth suite passes all nine tests, including the planted unused-export
+positive control. The filtered exact audit now returns a `CLEAN` outcome and exits 0,
+with 2046 of 2046 shipped modules reachable and empty exact finding, module, symbol,
+and orphan-test populations. Targeted strict checking of the four detector modules
+reports zero errors, warnings, or notes.
+
+The live zero-target gates independently exit 0 and report no unreachable modules, no
+exact unused symbols or orphaned tests, and no unconsumed exports. Whole-tree Ruff,
+whole-tree Ruff formatting, and the import-architecture gate also exit 0. A concurrent
+first attempt at the unused-symbol gate encountered a Windows thread-start failure;
+the required sequential rerun completed normally at exact zero and exit 0, so the
+transient process-resource failure is not product or detector evidence.
+
+Validation: `uv run --no-sync pytest -q
+dev/quality/tests/test_unreachable_module_coverage.py
+dev/quality/tests/test_unused_symbol_coverage.py
+dev/quality/tests/test_unconsumed_export_coverage.py` exits 0 with nine passes;
+`uv run --no-sync python -m dev.audit.unreachable_code --confidence exact --json`,
+`uv run --no-sync python -m dev.quality.unreachable_module_coverage`, `uv run
+--no-sync python -m dev.quality.unused_symbol_coverage`, and `uv run --no-sync python
+-m dev.quality.unconsumed_export_coverage` each exit 0; `uv run --no-sync basedpyright
+dev/audit/unreachable_code.py dev/quality/unconsumed_export_coverage.py
+dev/quality/unused_symbol_coverage.py dev/quality/unreachable_module_coverage.py`
+reports zero diagnostics; and the repository commands behind `check-style`,
+`check-format`, and `check-imports` each exit 0.
+
 ## Recommendations
 
 Make export finding identities relative to the scan root under both production and
@@ -105,3 +135,6 @@ empty exact projection is clean while a non-empty exact projection still fails. 
 all strict checker diagnostics without suppressions, aliases, shims, or widened
 exclusions. Rerun the exact audit, all three zero-target gates, their detector-teeth
 suite, Ruff, and the repository's owning strict type gate before declaring closure.
+
+These recommendations have been satisfied in the re-reviewed tree. No follow-up
+implementation recommendation remains from this audit.

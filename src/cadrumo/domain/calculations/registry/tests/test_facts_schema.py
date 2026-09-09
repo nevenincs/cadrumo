@@ -22,9 +22,7 @@ def _scalar_fact() -> dict[str, object]:
                 "payload": {"kind": "scalar", "value": "3005.06", "unit": "EUR"},
                 "legal_refs": ("ley-37-1992",),
                 "source_refs": ("aeat-m347-instructions",),
-                "source_citations": (
-                    {"source_ref": "aeat-m347-instructions", "required_text": ("3.005,06 euros",)},
-                ),
+                "source_citations": ({"source_ref": "aeat-m347-instructions", "required_text": ("3.005,06 euros",)},),
                 "review_status": "pending_review",
                 "ownership": "authored",
             },

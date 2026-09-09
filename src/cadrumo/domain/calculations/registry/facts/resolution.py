@@ -137,9 +137,7 @@ class _ResolvedFact(RegistryModel):
     def _validate_resolution_context(self) -> _ResolvedFact:
         if self.valid_to is not None and self.valid_to < self.valid_from:
             raise RegistryValidationError("resolved governed fact valid_to must be on or after valid_from")
-        if self.effective_date < self.valid_from or (
-            self.valid_to is not None and self.effective_date > self.valid_to
-        ):
+        if self.effective_date < self.valid_from or (self.valid_to is not None and self.effective_date > self.valid_to):
             raise RegistryValidationError("resolved governed fact effective_date must fall within its validity window")
         names = [selector.name for selector in self.matched_selectors]
         if len(set(names)) != len(names):

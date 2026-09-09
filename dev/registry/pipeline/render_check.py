@@ -187,16 +187,12 @@ def _load_disposition_ledger() -> tuple[_GeneratedTreeDisposition, ...]:
 
 def record_drift_dispositions() -> tuple[GeneratedTreeRecordDriftDisposition, ...]:
     """Load the strict pipeline-owned record-drift declaration set."""
-    return tuple(
-        item for item in _load_disposition_ledger() if isinstance(item, GeneratedTreeRecordDriftDisposition)
-    )
+    return tuple(item for item in _load_disposition_ledger() if isinstance(item, GeneratedTreeRecordDriftDisposition))
 
 
 def render_refusal_dispositions() -> tuple[GeneratedTreeRenderRefusalDisposition, ...]:
     """Load the strict pipeline-owned render-refusal declaration set."""
-    return tuple(
-        item for item in _load_disposition_ledger() if isinstance(item, GeneratedTreeRenderRefusalDisposition)
-    )
+    return tuple(item for item in _load_disposition_ledger() if isinstance(item, GeneratedTreeRenderRefusalDisposition))
 
 
 @dataclass(frozen=True, slots=True)

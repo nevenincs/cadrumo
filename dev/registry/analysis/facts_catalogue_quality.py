@@ -102,9 +102,7 @@ def _fact_findings(provider_id: str, fact: GovernedFact) -> list[FactQualityFind
             ordered = _reaches(left.variant_id, right.variant_id, edges) or _reaches(
                 right.variant_id, left.variant_id, edges
             )
-            directly_ordered = (
-                right.variant_id in edges[left.variant_id] or left.variant_id in edges[right.variant_id]
-            )
+            directly_ordered = right.variant_id in edges[left.variant_id] or left.variant_id in edges[right.variant_id]
             if overlaps and not ordered:
                 findings.append(
                     FactQualityFinding(
@@ -148,9 +146,7 @@ def facts_catalogue_findings(
     }
     for directory in sorted(set(governed_directories)):
         if PurePosixPath(directory).as_posix() not in ownership:
-            findings.append(
-                FactQualityFinding(FactQualityKind.UNOWNED_DIRECTORY, "", detail=directory)
-            )
+            findings.append(FactQualityFinding(FactQualityKind.UNOWNED_DIRECTORY, "", detail=directory))
 
     fact_owners: dict[str, str] = {}
     variant_owners: dict[str, tuple[str, str]] = {}
