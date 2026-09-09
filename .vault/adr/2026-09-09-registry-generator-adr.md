@@ -5,7 +5,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:93392952b7b2ddb0be030bca510ef27b556fee46c9ba0f5382870b83d23c34f1'
+body_hash: 'sha256:1c0d8e4d940bdf4b42fc00a7bd33089db7f470a98b48a5e25e8d9ca25d8e803d'
 related:
   - "[[2026-09-09-registry-generator-corpus-provenance-research]]"
   - "[[2026-09-09-registry-generator-divergence-evidence-research]]"
@@ -291,7 +291,6 @@ principle that a wire fact is declared and never guessed from a token stands and
 only the factual premise attached to one modelo is withdrawn, and "declared" gains a route for
 fields whose content cell is populated.
 
-
 **Amendment, 2026-09-09: the Ordering's ledger premise was false and is corrected.** The Ordering
 above states that refusals land against the disposition ledger so the reproduction gates do not go
 red. Measured against the live gate, that could not have worked: the gate calls the fresh render
@@ -310,7 +309,6 @@ second oracle surface beside them; a parallel implementation would violate the c
 boundary. The bundled corpus already holds twenty-two worked-example payloads across several
 modelos, so the constraint on D10 is whether any of them carries a negative amount in an affected
 fixed-width slot, not whether material exists.
-
 
 **Amendment, 2026-09-09: D2's contradiction definition is withdrawn, and D1a becomes the primary
 remedy.** Executing the plan's first Phase produced the evidence that refutes it. The supposed
@@ -335,3 +333,39 @@ rule rather than by the whole signed population.
 
 This correction is the direct product of sequencing verification ahead of mechanism. Had the
 refusal landed first, the false refusals would have been built, ledgered and then unpicked.
+
+**Amendment, 2026-09-09 (later): the deferred representation question is ANSWERED, and D1a becomes
+a derivation rather than a refusal.** This record deferred whether the largest divergent population
+should be emitted signed, and treated one modelo's per-page legend as its sole unverified premise.
+Both are now settled from a primary official source: AEAT's own "Disenos de registro - breve manual
+de uso", version 2 of 12 December 2022, states the convention that governs every design. Numeric
+fields are right-aligned and zero-filled and are carried without signs; only negative amounts are
+preceded by the character N; and a numeric field with nothing to report is filled with zeros, not
+blanks.
+
+Three consequences follow, and none of them is a refinement.
+
+The shipped codec was wrong, not merely ungrounded. It reserved a leading byte on every signed slot
+and wrote a blank into it, and its parser refused a digit in that position, so it could not read a
+correctly formed official record. The sign marker displaces the leading digit when the value is
+negative and claims no byte otherwise, which is what the corporate-tax design means by "fifteen
+integer digits, or N plus fourteen" on a seventeen-byte slot. That capacity had been
+unrepresentable.
+
+D1a therefore lands as a DERIVATION. The type column states the fact and the manual states the
+representation, so the generator emits the sign rather than refusing it. The refusal was the right
+posture while the representation was ungrounded and it is not the right posture now; the refusal
+disposition rows this record's ordering created are retired by the same change that derives the
+sign.
+
+The unverified premise is withdrawn as a premise. The legend exists, at a stable cell in every
+revision of that modelo, and it agrees with the general manual rather than standing alone. The
+content cell that appeared to contradict the type column never did: it states the NON-NEGATIVE
+capacity, which is why the same string sits on signed and unsigned rows throughout the corpus.
+
+**What this says about the record's method.** Every ruling here was reasoned from the corpus, and
+the corpus could not answer the question that mattered most; a published general manual could, and
+it took one retrieval. The lesson is not that the analysis was wrong but that the authority
+boundary was drawn too narrowly: "no source in this corpus states it" was read as "no source states
+it". D10's independent oracle exists for exactly this gap and should be treated as load-bearing
+rather than last.

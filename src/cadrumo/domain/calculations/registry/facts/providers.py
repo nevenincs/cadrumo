@@ -275,6 +275,24 @@ def _statutory_constant_provider_registration() -> FactProviderRegistration:
     )
 
 
+def _legal_parameter_provider_registration() -> FactProviderRegistration:
+    from .legal_parameters import (
+        LEGAL_PARAMETER_PROVIDER_DIRECTORY,
+        LEGAL_PARAMETER_PROVIDER_ID,
+        collect_legal_parameter_fact_fingerprints,
+        compile_legal_parameter_facts,
+        reset_legal_parameter_fact_provider,
+    )
+
+    return FactProviderRegistration(
+        provider_id=LEGAL_PARAMETER_PROVIDER_ID,
+        owned_directories=(LEGAL_PARAMETER_PROVIDER_DIRECTORY,),
+        compile=compile_legal_parameter_facts,
+        collect_fingerprints=collect_legal_parameter_fact_fingerprints,
+        reset=reset_legal_parameter_fact_provider,
+    )
+
+
 FACT_PROVIDER_REGISTRATIONS = validate_fact_provider_registrations(
     (
         FactProviderRegistration(
@@ -301,6 +319,7 @@ FACT_PROVIDER_REGISTRATIONS = validate_fact_provider_registrations(
         _iva_rate_provider_registration(),
         _holiday_calendar_provider_registration(),
         _statutory_constant_provider_registration(),
+        _legal_parameter_provider_registration(),
     ),
 )
 """The sole canonical declaration of governed-fact providers and ownership."""

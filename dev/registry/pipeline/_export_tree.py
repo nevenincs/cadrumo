@@ -993,6 +993,11 @@ def _labelled_enumeration_values_are_delimited(content: str) -> bool:
 #: defines it: "N: numerico con signo", against "Num: numerico sin signo".
 _SIGNED_AEAT_TYPE: Final[str] = "N"
 
+#: The scale the `money` shape carries in its own type. A signed amount has no
+#: other representable shape, so this is also the only scale a signed amount can
+#: be emitted at.
+_MONEY_SCALE: Final[int] = 2
+
 
 def _derive_sign_from_official_type(joined_field: JoinedRecordDesignField) -> bool:
     """Return whether the official type column declares this amount signed.
@@ -1153,15 +1158,29 @@ def _numeric_derivation(
         whole = whole_value
         decimals = decimals_value
         _require_numeric_extent(joined_field, expected_length=whole + decimals)
+        signed = _derive_sign_from_official_type(joined_field)
+        if signed and decimals != _MONEY_SCALE:
+            # `money` is the only shape the schema lets a signed amount take, and
+            # it carries a two-decimal scale in the type itself. A signed slot at
+            # any other scale has no representable shape, so it is refused rather
+            # than emitted at a scale the registry did not determine.
+            raise RegistryValidationError(
+                f"export field {joined_field.semantic_entry.export_field_id!r} is typed "
+                f"'{_SIGNED_AEAT_TYPE}' (numerico con signo) at {decimals} decimals, and a signed "
+                f"amount is representable only at the {_MONEY_SCALE}-decimal money scale",
+            )
         return _schema_field(
             joined_field,
-            data_type="decimal",
+            # A signed amount is `money`, whose scale lives in the type; only the
+            # unsigned `decimal` shape declares a count, and the schema refuses a
+            # field that declares decimals beside any other data type.
+            data_type="money" if signed else "decimal",
             required=_is_required(parser_field.validation),
             padding=ExportPadding.LEFT_ZERO,
             justification=ExportJustification.RIGHT,
-            signed=_derive_sign_from_official_type(joined_field),
+            signed=signed,
             export_record_id=export_record_id,
-            decimals=decimals,
+            decimals=None if signed else decimals,
             derivation_code="numeric-decimal-v1",
         )
     integer_match = _INTEGER_CONTENT_RE.fullmatch(normalised_content)

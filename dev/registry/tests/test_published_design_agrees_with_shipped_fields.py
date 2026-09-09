@@ -38,6 +38,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _SIGNED_TYPE = "N"
 _UNSIGNED_TYPE = "Num"
 
+#: The sign axis only means something where the slot carries a NUMBER. Some
+#: designs type a constant slot numerically -- the modelo-number slot is typed
+#: "N" and holds the three characters "151" -- and a literal rendered as text
+#: there is correct, not a divergence. Comparing sign on those would report a
+#: design quirk as an implementation defect and bury the real population.
+_NUMERIC_DATA_TYPES = frozenset({"money", "decimal", "integer"})
+
 
 class _Derivation(NamedTuple):
     """One official row paired with the shipped field derived from it."""
@@ -45,6 +52,7 @@ class _Derivation(NamedTuple):
     subject: str
     field_id: str
     aeat_type: str | None
+    data_type: str | None
     derivation_code: str | None
     signed: bool
 
@@ -62,6 +70,7 @@ def _shipped_derivations() -> Iterator[_Derivation]:
                 subject=subject,
                 field_id=str(field.get("id") or entry.get("export_record_id") or "<unnamed>"),
                 aeat_type=parser_field.get("aeat_type"),
+                data_type=field.get("data_type"),
                 derivation_code=entry.get("derivation_code"),
                 signed=bool(field.get("signed")),
             )
@@ -71,6 +80,8 @@ def _sign_disagreements(derivations: Iterator[_Derivation]) -> list[str]:
     """Return one line per field whose shipped sign contradicts its official type."""
     disagreements: list[str] = []
     for derivation in derivations:
+        if derivation.data_type not in _NUMERIC_DATA_TYPES:
+            continue
         if derivation.aeat_type == _SIGNED_TYPE and not derivation.signed:
             disagreements.append(
                 f"{derivation.subject} {derivation.field_id}: design says '{_SIGNED_TYPE}' "
@@ -119,9 +130,12 @@ def test_a_planted_divergence_is_detected() -> None:
     """
     planted = iter(
         (
-            _Derivation("999/2026", "planted-signed", _SIGNED_TYPE, "numeric-decimal-v1", signed=False),
-            _Derivation("999/2026", "planted-unsigned", _UNSIGNED_TYPE, "numeric-decimal-v1", signed=True),
-            _Derivation("999/2026", "agreeing", _SIGNED_TYPE, "numeric-decimal-v1", signed=True),
+            _Derivation("999/2026", "planted-signed", _SIGNED_TYPE, "money", "numeric-decimal-v1", signed=False),
+            _Derivation("999/2026", "planted-unsigned", _UNSIGNED_TYPE, "money", "numeric-decimal-v1", signed=True),
+            _Derivation("999/2026", "agreeing", _SIGNED_TYPE, "money", "numeric-decimal-v1", signed=True),
+            # A constant slot the design types numerically: correct as text, and
+            # not a sign divergence. Present so the filter itself has teeth.
+            _Derivation("999/2026", "literal-in-n-slot", _SIGNED_TYPE, "text", "literal-exact-v1", signed=False),
         ),
     )
 
