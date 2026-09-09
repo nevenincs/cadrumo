@@ -9,36 +9,6 @@ from ._application_profile_bundle import PROFILE_BUNDLE_ERROR_CODES
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
-        "cadrumo.application.state_projection.ProjectionModeloReadinessCaptureError",
-        ErrorCode(
-            code="REFUSED_MODELO_READINESS_CAPTURE_NOT_CURRENT",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.modelo_readiness_capture_not_current",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.calculation.ModeloCalculationCaptureError",
-        ErrorCode(
-            code="REFUSED_MODELO_CALCULATION_CAPTURE_NOT_CURRENT",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.modelo_calculation_capture_not_current",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.work_review.ModeloWorkReviewCaptureError",
-        ErrorCode(
-            code="REFUSED_MODELO_WORK_REVIEW_CAPTURE_NOT_CURRENT",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.modelo_work_review_capture_not_current",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.application.modelo.work_addressing.ModeloWorkCaptureError",
         ErrorCode(
             code="REFUSED_MODELO_WORK_CAPTURE_NOT_CURRENT",
@@ -765,16 +735,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile.bundle.UnsupportedBundleSchemaVersionError",
-        ErrorCode(
-            code="REFUSED_USER_PROFILE_BUNDLE_SCHEMA_VERSION",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_application_registry_input",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.application.workflow.errors.WorkflowInputMismatchError",
         ErrorCode(
             code="REFUSED_WORKFLOW_INPUT_MISMATCH",
@@ -1221,16 +1181,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_MODELO_WORKSPACE_MANIFEST_CAPTURE_NOT_CURRENT",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.modelo_workspace_manifest_capture_not_current",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.registry.closure_capture.RegistryClosureCaptureError",
-        ErrorCode(
-            code="REFUSED_REGISTRY_CLOSURE_CAPTURE_NOT_CURRENT",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.registry_closure_capture_not_current",
             retryable=False,
             runbook_id=None,
         ),

@@ -19,7 +19,6 @@ shapes share the same rule vocabulary as logs and observability.
 from __future__ import annotations
 
 import json
-import logging as _logging_stdlib
 import re
 from collections.abc import Iterable, Mapping, Sequence
 from datetime import date, datetime
@@ -35,11 +34,6 @@ from ..redaction.rules import redact_for_log
 
 if TYPE_CHECKING:
     from ..json_contract import Notice, ResolvedPreconditionAction
-
-# cadrumo.core.logging.get_logger triggers configure_logging() → config → cadrumo.core.errors,
-# creating a circular import at module load. Use the stdlib getter here; the root
-# SecretScrubbingFilter installed by configure_logging() propagates to this logger.
-logger = _logging_stdlib.getLogger(__name__)
 
 _SECRET_FIELD_PATTERN = re.compile(
     r"(credential|token|secret|pkcs12|passphrase|cert_password|cookie|bearer)",
@@ -211,12 +205,6 @@ def _build_declared_code_map(rows: tuple[tuple[str, ErrorCode], ...]) -> Mapping
 
 
 _DECLARED_CODE_BY_QUALNAME: Mapping[str, ErrorCode] = _build_declared_code_map(ALL_DECLARED_ERROR_CODES)
-ERROR_REGISTRY: Mapping[str, ErrorCode] = MappingProxyType(_ERROR_REGISTRY_MUTABLE)
-
-
-def declared_error_codes() -> tuple[tuple[str, ErrorCode], ...]:
-    """Return declared ``(qualified class name, :class:`ErrorCode`)`` registry rows."""
-    return tuple(_DECLARED_CODE_BY_QUALNAME.items())
 
 
 def get_registered_error_code_by_code(code: str) -> ErrorCode:
@@ -619,13 +607,11 @@ def _stringify_collection_context_value(value: object) -> str | None:
 
 
 __all__ = [
-    "ERROR_REGISTRY",
     "ErrorCategory",
     "ErrorCode",
     "ErrorEnvelope",
     "bind_error_code",
     "build_error_envelope",
-    "declared_error_codes",
     "get_error_exit_code",
     "get_registered_error_code",
     "get_registered_error_code_by_code",

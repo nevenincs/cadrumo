@@ -14,7 +14,6 @@ from __future__ import annotations
 import pytest
 
 from ..prorrata_exclusions import (
-    ART_104_TRES_AUTO_DERIVED_EXCLUSIONS,
     ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS,
     Art104TresExclusion,
 )
@@ -44,28 +43,4 @@ def test_operator_declared_set_is_the_two_judgment_exclusions() -> None:
             }
         )
         == ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS
-    )
-
-
-def test_operator_and_auto_partitions_are_disjoint_and_cover_the_closed_set() -> None:
-    """Every member is in exactly one of the two partitions."""
-    assert ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS.isdisjoint(ART_104_TRES_AUTO_DERIVED_EXCLUSIONS)
-    assert (
-        frozenset(Art104TresExclusion)
-        == ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS | ART_104_TRES_AUTO_DERIVED_EXCLUSIONS
-    )
-
-
-def test_auto_derived_set_is_the_four_category_register_structural_exclusions() -> None:
-    """The four auto-derived exclusions are direct cuotas, bienes de inversión, art. 7, art. 9.1.d."""
-    assert (
-        frozenset(
-            {
-                Art104TresExclusion.DIRECT_IVA_CUOTAS,
-                Art104TresExclusion.INVESTMENT_GOODS_DISPOSAL,
-                Art104TresExclusion.NON_SUBJECT_ART_7,
-                Art104TresExclusion.SELF_SUPPLY_ART_9_1_D,
-            }
-        )
-        == ART_104_TRES_AUTO_DERIVED_EXCLUSIONS
     )

@@ -27,4 +27,3 @@ def test_setup_flow_id_is_setup() -> None:
 
     flow = get_setup_flow()
     assert flow.id == "setup", f"Expected flow.id == 'setup', got {flow.id!r}"
-

@@ -41,11 +41,8 @@ See Also:
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Final
 
 __all__ = [
-    "IAE_SUBJECT_TIPOS_ACTIVIDAD",
-    "NON_IAE_SUBJECT_TIPOS_ACTIVIDAD",
     "TipoActividad",
 ]
 
@@ -84,24 +81,3 @@ class TipoActividad(StrEnum):
     B03_FORESTAL = "B03"
     B04_PRODUCCION_DE_MEJILLON = "B04"
     B05_PESQUERA = "B05"
-
-
-IAE_SUBJECT_TIPOS_ACTIVIDAD: Final[frozenset[TipoActividad]] = frozenset(
-    tipo for tipo in TipoActividad if tipo.value.startswith("A")
-)
-"""Codes AEAT lists under activities forming part of the IAE hecho imponible.
-
-Derived from the code prefix rather than hand-listed, so a future ``A06`` joins by
-construction. These are the only codes for which the M036 epígrafe/sección IAE field
-is filled.
-"""
-
-NON_IAE_SUBJECT_TIPOS_ACTIVIDAD: Final[frozenset[TipoActividad]] = frozenset(
-    tipo for tipo in TipoActividad if tipo.value.startswith("B")
-)
-"""Codes AEAT lists under activities outside the IAE hecho imponible.
-
-Complement of :data:`IAE_SUBJECT_TIPOS_ACTIVIDAD` by construction. A filer here
-carries no IAE epígrafe, which is why an epígrafe-based discriminator cannot reach
-the agrarian activities.
-"""

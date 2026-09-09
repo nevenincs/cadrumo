@@ -40,8 +40,8 @@ from ..sink import JsonlRunSink
 from ..store import (
     EVENTS_FILENAME,
     TRACE_FILENAME,
+    iter_events,
     iter_runs,
-    load_events,
     load_trace,
     runs_dir,
     save_events_append,
@@ -69,7 +69,7 @@ class TestJsonlStoreRoundTrip:
             events = tuple(self._make_event(i) for i in range(3))
             for evt in events:
                 save_events_append(evt.run_id, evt)
-            loaded = load_events(events[0].run_id)
+            loaded = tuple(iter_events(events[0].run_id))
             # URL host-only redaction at DIAGNOSTIC class strips the path
             # component but preserves the rest of the event shape; compare
             # everything except the redacted URL.
@@ -94,7 +94,7 @@ class TestJsonlStoreRoundTrip:
             with target.open("a", encoding="utf-8") as handle:
                 handle.write('{"not_a": "valid_run_event"}\n')
             with pytest.raises(RunTraceValidationError, match=r"failed strict validation"):
-                load_events(evt.run_id)
+                tuple(iter_events(evt.run_id))
 
     def test_concurrent_direct_appends_preserve_every_event(self, tmp_path: Path) -> None:
         """Concurrent real writers retain every independently addressable event."""
@@ -110,7 +110,7 @@ class TestJsonlStoreRoundTrip:
                 written = tuple(
                     executor.map(lambda event: save_events_append(run_id, event, settings=settings), events)
                 )
-            loaded = load_events(run_id)
+            loaded = tuple(iter_events(run_id))
 
         assert len(set(written)) == 1
         assert len(loaded) == len(events)
@@ -191,7 +191,7 @@ class TestJsonlRunSinkRunIdFilter:
 
 class TestStoreRunIdValidation:
     def test_load_trace_rejects_path_traversal(self, tmp_path: Path) -> None:
-        from ..store import load_events, load_trace, validate_run_id
+        from ..store import iter_events, load_trace, validate_run_id
 
         bad_run_ids = (
             "../escape",
@@ -211,7 +211,7 @@ class TestStoreRunIdValidation:
                 with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
                     load_trace(bad_run_id)
                 with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
-                    load_events(bad_run_id)
+                    tuple(iter_events(bad_run_id))
 
     def test_load_trace_rejects_run_id_shape_without_creating_dir(
         self,

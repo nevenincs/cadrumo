@@ -179,44 +179,6 @@ class FingerprintParticipation(StrEnum):
     EXCLUDED = "excluded"
 
 
-class ExternalPathRole(StrEnum):
-    """Why a path-valued setting is legitimately outside the taxonomy.
-
-    A location enrolls when the application both chooses it and writes data
-    there. Failing either question is an escape -- but an escape is a positive
-    declaration carrying its reason, never mere absence from a frozenset, so a
-    setting cannot fall outside the taxonomy by being overlooked.
-    """
-
-    BUNDLED_RESOURCE = "bundled_resource"
-    OPERATOR_INPUT = "operator_input"
-    THIRD_PARTY_CACHE = "third_party_cache"
-    EXTERNAL_EXECUTABLE = "external_executable"
-    OPERATOR_DIRECTED_OUTPUT = "operator_directed_output"
-    MAINTAINER_TOOLING_OUTPUT = "maintainer_tooling_output"
-
-
-class ExternalPathDeclaration(BaseModel):
-    """One path-valued setting that legitimately sits outside the taxonomy.
-
-    Frozen and strict for the same reason the location declarations are: an
-    escape is an authority about where data does *not* land, and a mutable one
-    would let a consumer widen it.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    settings_field: str = Field(min_length=1)
-    role: ExternalPathRole
-    reason: str = Field(min_length=1)
-    """Why this field fails the choose test, the write test, or both.
-
-    Required and non-empty: the whole point of declaring an escape rather than
-    omitting a field is that the reason is written down where the next reader
-    finds it.
-    """
-
-
 STORAGE_ROOT_SETTINGS_FIELD: Final[str] = "cadrumo_local_storage_root"
 """The settings field naming the anchor every root-scoped member resolves against.
 
@@ -224,77 +186,7 @@ Neither a member nor an escape, and given its own name so it cannot be mistaken
 for either. It is not a member because the taxonomy declares locations
 *relative to* it -- a member for the root would be a member whose subpath is
 itself. It is not an escape because the application both chooses it and writes
-beneath it, so it passes both of :class:`ExternalPathRole`'s questions; calling
-it external would be false. Every field is therefore exactly one of three
-things, and the binding gate asserts the three are total and disjoint rather
-than letting the anchor fall through an unnamed gap.
-"""
-
-
-EXTERNAL_PATH_SETTINGS_FIELDS: Final[dict[str, ExternalPathDeclaration]] = {
-    declaration.settings_field: declaration
-    for declaration in (
-        ExternalPathDeclaration(
-            settings_field="aeat_manuals_root",
-            role=ExternalPathRole.MAINTAINER_TOOLING_OUTPUT,
-            reason=(
-                "The bundled AEAT Manual practico corpus ships inside the package and the "
-                "*running application* never writes there -- it fails the write test from the "
-                "operator's chair. But domain.manuals.fetch demonstrably does write there: it "
-                "streams a manual part's PDF plus a manifest to disk under this root. That "
-                "module has no entrypoints/ surface (grep confirms only a test references it), "
-                "so it reads as maintainer tooling that refreshes the bundled corpus before a "
-                "release, the same shape as the locales CLI writing into the package's own "
-                "source tree -- but nothing enforces that boundary at the call graph, so the "
-                "prior BUNDLED_RESOURCE declaration's 'never writes there' was false the moment "
-                "this fetcher existed. This role says what is actually true: tooling-written, "
-                "not application-written."
-            ),
-        ),
-        ExternalPathDeclaration(
-            settings_field="aeat_normatives_root",
-            role=ExternalPathRole.BUNDLED_RESOURCE,
-            reason=(
-                "The bundled legal normatives corpus ships inside the package and is read only. "
-                "Legal grounding reads it; nothing writes it."
-            ),
-        ),
-        ExternalPathDeclaration(
-            settings_field="cadrumo_iva_catalogue_file",
-            role=ExternalPathRole.BUNDLED_RESOURCE,
-            reason=(
-                "The hand-reviewed IVA taxonomy catalogue ships inside the package and is read "
-                "only; it is revised in source, never at runtime."
-            ),
-        ),
-        ExternalPathDeclaration(
-            settings_field="cadrumo_certificate_path",
-            role=ExternalPathRole.OPERATOR_INPUT,
-            reason=(
-                "The operator's own PKCS#12 bundle, which they place wherever they keep their "
-                "credentials. The application reads it to authenticate and must never write to "
-                "it, so it fails both the choose test and the write test."
-            ),
-        ),
-        ExternalPathDeclaration(
-            settings_field="cadrumo_wallet_diagnostic_dump_dir",
-            role=ExternalPathRole.OPERATOR_DIRECTED_OUTPUT,
-            reason=(
-                "Unset, the diagnostic capture is off and there is no application-chosen "
-                "location at all; set, the operator names the destination and the application "
-                "writes there on request. Neither state is the application choosing a location, "
-                "so it escapes -- and it fits none of the four original roles, which is the "
-                "correction re-applying the escape test to a real field surfaced."
-            ),
-        ),
-    )
-}
-"""Path-valued settings that are legitimately outside the taxonomy, with reasons.
-
-A location enrolls when the application both chooses it and writes data there.
-Failing either question puts a field here -- as a positive declaration carrying
-its role and its reason, never as mere absence from a frozenset, so no field
-can fall outside the taxonomy by being overlooked.
+beneath it. It is therefore the anchor rather than a member.
 """
 
 
@@ -333,8 +225,6 @@ class StorageCategory(StrEnum):
     CORPUS_SEARCH_INDEX = "corpus-search-cache.index"
     VALIDATION_VERDICT_CACHE = "validation-verdict-cache"
     REGISTRY_DISK_CACHE = "registry-disk-cache"
-    LOCALE_CATALOGUE_CACHE = "locale-catalogue-cache"
-
     # ── Durable generated outputs ───────────────────────────────────────────
     SUBMISSIONS = "submissions"
     SUBMISSIONS_AMENDMENT_RESULTS = "submissions.amendment-results"
@@ -540,15 +430,12 @@ from .storage_taxonomy_locations import (  # noqa: E402 - see comment above
 )
 
 __all__ = [
-    "EXTERNAL_PATH_SETTINGS_FIELDS",
     "FINGERPRINT_EXCLUDED_STORAGE_FIELDS",
     "ROOT_DERIVED_STORAGE_FIELDS",
     "ROOT_DERIVED_STORAGE_LOCATIONS",
     "STORAGE_FIELD_CATEGORIES",
     "STORAGE_ROOT_SETTINGS_FIELD",
     "STORAGE_TAXONOMY",
-    "ExternalPathDeclaration",
-    "ExternalPathRole",
     "FingerprintParticipation",
     "StorageArea",
     "StorageCategory",

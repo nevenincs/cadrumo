@@ -27,7 +27,6 @@ See Also:
 from __future__ import annotations
 
 import ast
-import importlib
 from pathlib import Path
 
 import pytest
@@ -147,37 +146,6 @@ def test_profiles_import_purity_never_loads_the_wizard() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_project_answers_raises_before_registration() -> None:
-    """get_project_answers() must raise ProjectAnswersNotRegisteredError when slot is empty.
-
-    Run as a subprocess to guarantee a clean import state regardless of test
-    execution order — the slot may already be populated in-process when
-    _persistence has been imported by an earlier test.
-    """
-    import subprocess
-    import sys
-    import textwrap
-
-    script = textwrap.dedent("""\
-        from cadrumo.core.setup_answers import get_project_answers, ProjectAnswersNotRegisteredError
-        raised = False
-        try:
-            get_project_answers()
-        except ProjectAnswersNotRegisteredError:
-            raised = True
-        assert raised, "ProjectAnswersNotRegisteredError was not raised"
-    """)
-    result = subprocess.run(
-        [sys.executable, "-c", script],
-        capture_output=True,
-        text=True,
-        timeout=30,
-    )
-    assert result.returncode == 0, (
-        f"Subprocess raised unexpected error.\nstdout: {result.stdout}\nstderr: {result.stderr}"
-    )
-
-
 def test_project_answers_refuses_distinct_second_projector() -> None:
     """The core slot rejects a replacement projector through its exact registered error."""
     import subprocess
@@ -222,19 +190,6 @@ def test_project_answers_refuses_distinct_second_projector() -> None:
     assert result.returncode == 0, (
         f"Second-projector refusal check failed.\nstdout: {result.stdout}\nstderr: {result.stderr}"
     )
-
-
-def test_project_answers_registered_after_persistence_import() -> None:
-    """Importing _persistence registers project_answers in the core slot."""
-    # Importing persistence triggers the module-level registration call.
-    importlib.import_module("cadrumo.application.wizard.persistence")
-
-    from ..setup_answers import _PROJECT_ANSWERS_SLOT, get_project_answers
-
-    assert _PROJECT_ANSWERS_SLOT, "project_answers was not registered after _persistence import"
-
-    fn = get_project_answers()
-    assert callable(fn), f"registered project_answers is not callable: {fn!r}"
 
 
 # ---------------------------------------------------------------------------

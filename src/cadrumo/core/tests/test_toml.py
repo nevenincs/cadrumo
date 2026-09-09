@@ -51,6 +51,7 @@ def test_invalid_toml_wraps_decode_failure_via_error_factory(tmp_path: Path) -> 
     assert "invalid TOML" in str(file_exc.value)
     assert isinstance(file_exc.value.__cause__, tomllib.TOMLDecodeError)
 
+
 def test_read_toml_wraps_invalid_utf8_as_invalid_toml(tmp_path: Path) -> None:
     """The file boundary keeps undecodable UTF-8 inside the public TOML error contract."""
     target = tmp_path / "invalid-encoding.toml"
