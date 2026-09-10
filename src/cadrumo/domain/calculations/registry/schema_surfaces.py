@@ -429,6 +429,19 @@ class CasillaDefinition(RegistryModel):
             "that settles it. Required for every origin except seeded."
         ),
     )
+    inherited_from: RevisionId | None = Field(
+        default=None,
+        exclude=True,
+        repr=False,
+        description=(
+            "The edition that last stated this row, when the edition holding it "
+            "inherits it from its declared predecessor chain; unset when the "
+            "holding edition states the row itself. Set by the loader during "
+            "materialisation and refused when authored. Excluded from "
+            "serialisation, because where a row is stated says nothing about "
+            "what it means."
+        ),
+    )
     semantic_role: str | None = Field(default=None, min_length=1, max_length=128)
     semantic_role_cardinality: SemanticRoleCardinalityField = SemanticRoleCardinality.SHARED
     semantic_role_cardinality_reason: str | None = Field(default=None, min_length=1, max_length=256)

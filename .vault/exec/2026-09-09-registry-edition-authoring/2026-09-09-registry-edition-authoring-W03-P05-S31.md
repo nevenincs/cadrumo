@@ -5,16 +5,11 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:295049919cb695648ec733c75ea94f992cec037819ecbc8ed09d67662e941943'
+body_hash: 'sha256:f0dd3f0d8ad5b99e1f200229272df13179d9e4da02ac36989f6e3c2fb2ec648a'
 step_id: 'S31'
 related:
   - "[[2026-09-09-registry-edition-authoring-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # [M | opus-medium] Give the materialised edition a reader, so a person can see a complete edition without reconstructing it mentally from a delta. Without this the tree is harder to work with, not easier. Proof: the reader renders a migrated edition identically to its pre-migration files.
 

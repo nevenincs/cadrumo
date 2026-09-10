@@ -5,16 +5,11 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:b892e1c8e619ba66b0f814ac46123cde2b4b00776222d1fb99dc71b7bd01f5f7'
+body_hash: 'sha256:aefac1c0d98e4452a0e5a0935b2f4bf0f160408291fe5b99b9d70c4827853f0e'
 step_id: 'S24'
 related:
   - "[[2026-09-09-registry-edition-authoring-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # [M | opus-medium] Add the legal-reference period-correctness gate: a casilla's citations must resolve to the dated reference rows governing its own edition window. This refuses the residual authoring drift and must land before modelo 100 migrates, or its delta will show drift as though it were law. Proof: the known drifting rows are refused by name and the rest of the corpus passes.
 
@@ -23,23 +18,6 @@ related:
 - `src/cadrumo/domain/calculations/registry`
 
 ## Changes
-
-<!-- MECHANICAL LOG. One line per path touched, nothing else:
-       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
-     Paths are repo-relative, in backticks. No prose, no sentences, no
-     narration of intent, outcome, or difficulty - the diff and the plan Step
-     already carry those. Example:
-
-       - `M` `src/vaultspec_core/cli/exec_cmd.py`
-       - `A` `src/vaultspec_core/cli/tests/test_exec_cmd.py`
-       - `D` `src/legacy/shim.py`
-
-     Optional final line, only when a check was run:
-       - `verify:` `<command>` -> `pass` | `fail`
-
-     Optional `## Notes` section, ONLY on exception: data loss, skipped work,
-     a scaffold left in code, or a persistent failure. Omit it otherwise -
-     an absent section is correct; an empty one is a check finding. -->
 
 - `A` `src/cadrumo/domain/calculations/registry/casilla_legal_citation_period.py`
 - `M` `src/cadrumo/domain/calculations/registry/_snapshot_internals.py`

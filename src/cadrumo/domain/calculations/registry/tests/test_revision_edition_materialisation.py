@@ -6,8 +6,9 @@ receives the complete edition. These tests drive the real directory loader over
 an on-disk TOML tree and check the properties that make that resolution safe:
 a stated row replaces the inherited row carrying its lineage in that row's
 position, new rows follow the inherited ones, a retired lineage is dropped, a
-chain resolves transitively, and nothing is inherited unless the key is
-declared. Every ambiguous shape is refused, and each refusal is paired with the
+chain resolves transitively, an inherited row carries no lineage claim and is
+marked with the edition that stated it, and nothing is inherited unless the key
+is declared. Every ambiguous shape is refused, and each refusal is paired with the
 repaired tree loading.
 """
 
@@ -33,7 +34,7 @@ _NO_PREDECESSOR = (
 )
 
 
-def _casilla(revision_id: str, casilla_id: str, *, number: str, lineage: str | None) -> str:
+def _casilla(revision_id: str, casilla_id: str, *, number: str, lineage: str | None, extra: str = "") -> str:
     lineage_line = f'continuidad_id = "{lineage}"\n' if lineage is not None else ""
     return (
         f'[[revisions."{revision_id}".casillas]]\n'
@@ -41,6 +42,7 @@ def _casilla(revision_id: str, casilla_id: str, *, number: str, lineage: str | N
         f'number = "{number}"\n'
         'section = ["liquidacion"]\n'
         f"{lineage_line}"
+        f"{extra}"
         f'legal_refs = ["{_LEGAL_REF}"]\n'
         'source_refs = ["aeat-manual"]\n\n'
     )
@@ -193,6 +195,83 @@ def test_a_chain_of_predecessors_resolves_transitively(tmp_path: Path) -> None:
         ("0004", "4", None),
         ("0005", "5", "recargo-nuevo"),
     ]
+
+
+def test_every_inherited_row_is_marked_with_the_edition_that_last_stated_it(tmp_path: Path) -> None:
+    """The marker follows the edition that stated the row, down the chain, and a stated row carries none."""
+    modelo_dir = _delta_successor_modelo(tmp_path, declare_predecessor=True)
+    _write_edition(
+        modelo_dir,
+        "2026",
+        year=2026,
+        manifest_extra='predecessor = "2025"\n',
+        casillas=_casilla("2026", "0001", number="11", lineage="base-imponible"),
+    )
+    definition = load_modelo_directory(modelo_dir)
+
+    def marks(revision_id: str) -> list[tuple[str, str | None]]:
+        return [(casilla.id, casilla.inherited_from) for casilla in definition.revisions[revision_id].casillas]
+
+    assert marks("2024") == [("0001", None), ("0002", None), ("0003", None), ("0004", None)]
+    assert marks("2025") == [("0001", "2024"), ("0002", None), ("0004", "2024"), ("0005", None)]
+    assert marks("2026") == [("0001", None), ("0002", "2025"), ("0004", "2024"), ("0005", "2025")]
+    # Where a row is stated is not what it means, so the marker never serialises.
+    assert all("inherited_from" not in row for row in definition.revisions["2026"].model_dump()["casillas"])
+
+
+def test_an_authored_inheritance_marker_is_refused_and_the_repaired_tree_loads(tmp_path: Path) -> None:
+    modelo_dir = _delta_successor_modelo(tmp_path, declare_predecessor=True)
+    fragment = modelo_dir / "revisions" / "2024" / "casillas" / "0001-casillas.toml"
+    repaired = fragment.read_text(encoding="utf-8")
+    fragment.write_text(
+        repaired.replace('number = "1"\n', 'number = "1"\ninherited_from = "2023"\n', 1), encoding="utf-8", newline="\n"
+    )
+
+    with pytest.raises(RegistryLoadError, match=r"revision '2024': casillas \['0001'\] author inherited_from"):
+        load_modelo_directory(modelo_dir)
+
+    fragment.write_text(repaired, encoding="utf-8", newline="\n")
+    assert load_modelo_directory(modelo_dir).revisions["2025"].casillas[0].inherited_from == "2024"
+
+
+_EVIDENCE = "Diseño de registro 2024, campo 1: casilla nueva en el formulario."
+
+
+def test_an_inherited_row_never_carries_its_predecessors_lineage_claims(tmp_path: Path) -> None:
+    """A claim that a box is new on its form is false one edition later, so inheriting drops it.
+
+    The predecessor still carries both claims, so their absence on the
+    successor is the merge's doing; a superseding row keeps the claims it
+    states itself.
+    """
+    modelo_dir = _modelo_root(tmp_path)
+    claims = f'continuidad_origin = "new_on_form"\ncontinuidad_evidence = "{_EVIDENCE}"\n'
+    _write_edition(
+        modelo_dir,
+        "2024",
+        year=2024,
+        casillas=(
+            _casilla("2024", "0001", number="1", lineage="base-imponible", extra=claims)
+            + _casilla("2024", "0002", number="2", lineage="cuota-integra", extra=claims)
+        ),
+    )
+    _write_edition(
+        modelo_dir,
+        "2025",
+        year=2025,
+        manifest_extra='predecessor = "2024"\n',
+        casillas=_casilla("2025", "0002", number="22", lineage="cuota-integra", extra=claims),
+    )
+    definition = load_modelo_directory(modelo_dir)
+
+    def claimed(revision_id: str) -> list[tuple[str, str | None, str | None]]:
+        return [
+            (casilla.id, casilla.continuidad_origin, casilla.continuidad_evidence)
+            for casilla in definition.revisions[revision_id].casillas
+        ]
+
+    assert claimed("2024") == [("0001", "new_on_form", _EVIDENCE), ("0002", "new_on_form", _EVIDENCE)]
+    assert claimed("2025") == [("0001", None, None), ("0002", "new_on_form", _EVIDENCE)]
 
 
 def test_an_edition_declaring_no_predecessor_inherits_nothing(tmp_path: Path) -> None:

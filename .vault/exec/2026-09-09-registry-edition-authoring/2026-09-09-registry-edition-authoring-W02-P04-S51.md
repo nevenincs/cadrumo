@@ -5,16 +5,11 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:056a81b20dee3993abe8637cff38fc490f00f0203f9e58ba579bc74aba904b74'
+body_hash: 'sha256:5bfac5e40ee9836659328a154369dc1f3e47a76394b53758c63fb136f0f96df7'
 step_id: 'S51'
 related:
   - "[[2026-09-09-registry-edition-authoring-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # [M | opus-medium] Decide where an inherited row's generated export references are written, because publication refuses without an answer. The real declared-versus-generated comparison is not in any loader caller — it sits one call deeper, where the generated layout's addressed casillas are differenced against the identifiers read from the raw declaration files on disk. Under delta authoring a layout addressing an INHERITED casilla finds no file to write into, and publication fails loudly. That is the right failure mode, but it needs a decision rather than a discovery. Coordinate with the generator lane, which owns that module and has offered to retire it. Proof: a migrated modelo publishes, or refuses for a stated reason that is not this one.
 

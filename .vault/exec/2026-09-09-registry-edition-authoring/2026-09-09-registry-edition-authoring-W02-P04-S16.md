@@ -5,16 +5,11 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:312da3f51a97c751ac31d24b85c023aa63042a0d9513c2fc6c81c81d1645bd0b'
+body_hash: 'sha256:113d7a8dfe0fd84df9a383cb176c24e26b75408084968a3ba9f622efefdf3a13'
 step_id: 'S16'
 related:
   - "[[2026-09-09-registry-edition-authoring-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # [M | opus-medium] Resolve inherited formula and binding references through lineage against the successor edition's own declaration; an unresolvable reference is a validation failure, never an inherited pointer. Proof: a planted dangling reference is refused.
 

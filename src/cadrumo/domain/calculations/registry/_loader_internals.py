@@ -99,7 +99,11 @@ _RETIREMENT_SECTION: Final = "casilla_continuidad_evolutions"
 _EDITION_SOURCE_DEFAULT_FIELD: Final = "casilla_source_refs"
 _EDITION_ORDEN_FIELD: Final = "orden_aplicabilidad"
 _ROW_SOURCE_FIELD: Final = "source_refs"
+_ROW_SOURCE_ADDITIONS_FIELD: Final = "additional_source_refs"
 _ROW_LEGAL_FIELD: Final = "legal_refs"
+_ROW_INHERITED_FROM_FIELD: Final = "inherited_from"
+_ROW_LINEAGE_CLAIM_FIELDS: Final = frozenset({"continuidad_origin", "continuidad_evidence"})
+"""A row's claims about its immediate predecessor, which an inheriting edition never carries forward."""
 _ROW_CONSTRAINTS_FIELD: Final = "constraints"
 _EXPORT_REFS_FIELD: Final = "export_refs"
 _REFERENCE_SECTIONS: Final[Mapping[str, str]] = {
@@ -170,7 +174,8 @@ def _build_modelo_definition_from_data(source_path: Path, data: Mapping[str, obj
                 table=raw_revision_table,
                 label_origins=label_origins,
             )
-        raw_revision_table = _apply_edition_reference_defaults(raw_revision_table)
+        context = f"{source_path}: revision {revision_id!r}"
+        raw_revision_table = _apply_edition_reference_defaults(context, raw_revision_table)
         payload = enroll_revision_localization(
             modelo_id=str(modelo_id_for_context),
             revision_id=revision_id,
@@ -178,11 +183,12 @@ def _build_modelo_definition_from_data(source_path: Path, data: Mapping[str, obj
         )
         if label_origins is not None:
             payload = _enroll_inherited_label_fallbacks(
-                f"{source_path}: revision {revision_id!r}",
+                context,
                 modelo_id=str(modelo_id_for_context),
                 payload=payload,
                 label_origins=label_origins,
             )
+        payload = _mark_inherited_casillas(context, payload=payload, label_origins=label_origins)
         payload = _compile_revision_projection_semantics(source_path, payload)
         _refuse_authored_export_refs(source_path, revision_id, payload)
         try:
@@ -308,13 +314,21 @@ def _materialise_revisions(
 
     Within the casilla family, rows are matched on ``continuidad_id``:
 
-    - an inherited row is kept unchanged unless a stated row carries its
-      lineage, in which case the stated row replaces it in its position;
+    - an inherited row is kept unless a stated row carries its lineage, in
+      which case the stated row replaces it in its position. A kept row loses
+      ``continuidad_origin`` and ``continuidad_evidence`` and is otherwise
+      unchanged: both state the row's relationship to the edition before the
+      one that stated it, which is false one edition later;
     - a stated row carrying no inherited lineage is new and is appended after
       the inherited rows, in stated order;
     - an inherited row whose lineage the successor retires, through a
       ``retired`` casilla evolution whose ``to_revision`` is the successor, is
       dropped.
+
+    That fixes the materialised row order: inherited rows in the predecessor's
+    materialised order, each superseding row in the position of the row it
+    supersedes, and new rows after them in stated order. The order is defined
+    by this merge, not reproduced from any full copy the edition replaced.
 
     Refused, because each would otherwise resolve silently to a guess:
 
@@ -336,6 +350,9 @@ def _materialise_revisions(
     locale identity to the rows either; enrolment afterwards derives every
     row's keys from the edition it now sits in, and the label origins returned
     beside the rows let enrolment add the one fallback an inherited row needs.
+    The same origins become each typed row's ``inherited_from`` marker after
+    enrolment; the raw rows carry no marker, so a materialised table written
+    back as a full copy states nothing the loader would refuse.
     """
     declarations = _raw_predecessor_declarations(raw_revisions)
     if declarations is None or not declarations.named:
@@ -507,7 +524,7 @@ def _inherit_casillas(
             label_origins.append(None)
             superseded.add(lineage)
             continue
-        rows.append(row)
+        rows.append(_without_lineage_claims(row))
         carried_origin = None if inherited_label_origins is None else inherited_label_origins[index]
         label_origins.append(carried_origin if carried_origin is not None else predecessor_id)
         row_id = _row_id(row)
@@ -527,6 +544,14 @@ def _inherit_casillas(
             rows.append(row)
             label_origins.append(None)
     return tuple(rows), tuple(label_origins)
+
+
+def _without_lineage_claims(row: object) -> object:
+    """Return ``row`` without its claims about its predecessor, or ``row`` itself when it states none."""
+    table = _as_toml_table(row)
+    if table is None or not any(field in table for field in _ROW_LINEAGE_CLAIM_FIELDS):
+        return row
+    return {key: value for key, value in table.items() if key not in _ROW_LINEAGE_CLAIM_FIELDS}
 
 
 def _stated_rows_by_lineage(
@@ -582,62 +607,131 @@ def _lineage_label(lineage: str | None) -> str:
     return repr(lineage) if lineage is not None else "(none declared)"
 
 
-def _apply_edition_reference_defaults(table: Mapping[str, object]) -> Mapping[str, object]:
+def _apply_edition_reference_defaults(context: str, table: Mapping[str, object]) -> Mapping[str, object]:
     """Fill the edition's declared reference defaults into the casilla rows that state none.
 
     Two defaults, both declared once on the edition's manifest:
 
     - ``casilla_source_refs`` becomes the ``source_refs`` of every casilla row,
-      and of every row's ``constraints`` table, that states no ``source_refs``;
+      and of every row's ``constraints`` table, that states no ``source_refs``.
+      A row or constraints table stating ``additional_source_refs`` instead
+      takes the default followed by its additions, duplicates removed and the
+      default first, and the additions key is consumed;
     - ``orden_aplicabilidad``, the edition's approving ordenes, becomes the
       ``legal_refs`` of every casilla row and ``constraints`` table that states
       no ``legal_refs``.
 
-    A stated value is kept whole, including a stated empty array, which typed
-    construction then refuses. A default is never merged into a stated value.
+    A stated ``source_refs`` or ``legal_refs`` is kept whole, including a stated
+    empty array, which typed construction then refuses. A default is never
+    merged into a stated value; only additions extend one.
 
     It runs on the materialised edition, so an inherited row is defaulted from
     the edition it now sits in: source references are declared per edition, and
     a row the predecessor did not ground itself must not carry the
-    predecessor's grounding forward. This relies on inheritance reading each
-    predecessor's rows before its own defaults are applied.
+    predecessor's grounding forward. Additions are the row's own and so extend
+    the default of the edition the row now sits in. This relies on inheritance
+    reading each predecessor's rows before its own defaults are applied.
 
     Returns the identical table when it fills nothing, so an edition declaring
-    no default reaches typed construction exactly as authored. A default that is
-    absent, empty or not an array fills nothing and is left to typed
-    construction, as is a casilla section or row that is not the shape it
+    no default and no additions reaches typed construction exactly as authored.
+    A default that is absent, empty or not an array fills nothing and is left to
+    typed construction, as is a casilla section or row that is not the shape it
     should be.
+
+    Raises:
+        RegistryLoadError: When a row or constraints table states both
+            ``source_refs`` and ``additional_source_refs``, states additions that
+            are not a non-empty array of reference ids, or states additions in
+            an edition declaring no ``casilla_source_refs`` for them to extend.
     """
-    defaults: dict[str, tuple[object, ...]] = {}
-    source_default = as_toml_array(table.get(_EDITION_SOURCE_DEFAULT_FIELD))
-    if source_default:
-        defaults[_ROW_SOURCE_FIELD] = source_default
-    orden_default = as_toml_array(table.get(_EDITION_ORDEN_FIELD))
-    if orden_default:
-        defaults[_ROW_LEGAL_FIELD] = orden_default
+    source_default = as_toml_array(table.get(_EDITION_SOURCE_DEFAULT_FIELD)) or ()
+    orden_default = as_toml_array(table.get(_EDITION_ORDEN_FIELD)) or ()
     rows = as_toml_array(table.get(_INHERITED_SECTION, ()))
-    if not defaults or not rows:
+    if not rows:
         return table
-    defaulted = tuple(_default_row_references(row, defaults) for row in rows)
+    defaulted = tuple(
+        _default_row_references(context, row, source_default=source_default, orden_default=orden_default)
+        for row in rows
+    )
     if all(new is old for new, old in zip(defaulted, rows, strict=True)):
         return table
     return {**table, _INHERITED_SECTION: defaulted}
 
 
-def _default_row_references(row: object, defaults: Mapping[str, tuple[object, ...]]) -> object:
-    """Return ``row`` with every default it does not state filled in, or ``row`` itself when it states them all."""
+def _default_row_references(
+    context: str,
+    row: object,
+    *,
+    source_default: tuple[object, ...],
+    orden_default: tuple[object, ...],
+) -> object:
+    """Return ``row`` with its references and its constraints' defaulted, or ``row`` itself when nothing changes."""
     table = _as_toml_table(row)
     if table is None:
         return row
-    filled: dict[str, object] = {name: value for name, value in defaults.items() if name not in table}
+    subject = f"{context}: casilla {_row_id(table)!r}"
+    filled = _defaulted_references(subject, table, source_default=source_default, orden_default=orden_default)
     constraints = _as_toml_table(table.get(_ROW_CONSTRAINTS_FIELD))
     if constraints is not None:
-        missing = {name: value for name, value in defaults.items() if name not in constraints}
-        if missing:
-            filled[_ROW_CONSTRAINTS_FIELD] = {**constraints, **missing}
-    if not filled:
-        return row
-    return {**table, **filled}
+        filled_constraints = _defaulted_references(
+            f"{subject} constraints", constraints, source_default=source_default, orden_default=orden_default
+        )
+        if filled_constraints is not constraints:
+            filled = {**filled, _ROW_CONSTRAINTS_FIELD: filled_constraints}
+    return row if filled is table else filled
+
+
+def _defaulted_references(
+    subject: str,
+    table: Mapping[str, object],
+    *,
+    source_default: tuple[object, ...],
+    orden_default: tuple[object, ...],
+) -> Mapping[str, object]:
+    """Return one row or constraints table with its references resolved, or ``table`` itself when nothing changes."""
+    updates: dict[str, object] = {}
+    if _ROW_SOURCE_ADDITIONS_FIELD in table:
+        updates[_ROW_SOURCE_FIELD] = _extended_source_default(subject, table, source_default)
+    elif source_default and _ROW_SOURCE_FIELD not in table:
+        updates[_ROW_SOURCE_FIELD] = source_default
+    if orden_default and _ROW_LEGAL_FIELD not in table:
+        updates[_ROW_LEGAL_FIELD] = orden_default
+    if not updates:
+        return table
+    kept = {key: value for key, value in table.items() if key != _ROW_SOURCE_ADDITIONS_FIELD}
+    return {**kept, **updates}
+
+
+def _extended_source_default(
+    subject: str,
+    table: Mapping[str, object],
+    source_default: tuple[object, ...],
+) -> tuple[object, ...]:
+    """Return the edition default followed by the table's additions, each reference once, the default first.
+
+    A default holding anything but reference ids is concatenated unchanged and
+    left to typed construction, which refuses it with the field's own error.
+    """
+    if _ROW_SOURCE_FIELD in table:
+        raise RegistryLoadError(
+            f"{subject} states both {_ROW_SOURCE_FIELD} and {_ROW_SOURCE_ADDITIONS_FIELD}; {_ROW_SOURCE_FIELD} "
+            f"replaces the edition's {_EDITION_SOURCE_DEFAULT_FIELD} whole while {_ROW_SOURCE_ADDITIONS_FIELD} "
+            "extends it, so state one of them",
+        )
+    if not source_default:
+        raise RegistryLoadError(
+            f"{subject} states {_ROW_SOURCE_ADDITIONS_FIELD}, but the edition declares no "
+            f"{_EDITION_SOURCE_DEFAULT_FIELD} for them to extend; state {_ROW_SOURCE_FIELD} instead",
+        )
+    additions = as_toml_array(table.get(_ROW_SOURCE_ADDITIONS_FIELD))
+    if not additions or not all(isinstance(item, str) for item in additions):
+        raise RegistryLoadError(
+            f"{subject} {_ROW_SOURCE_ADDITIONS_FIELD} must be a non-empty array of source reference ids; "
+            "omit the key to take the edition default alone",
+        )
+    if not all(isinstance(item, str) for item in source_default):
+        return (*source_default, *additions)
+    return tuple(dict.fromkeys((*source_default, *additions)))
 
 
 def _resolve_inherited_references(
@@ -813,6 +907,49 @@ def _enroll_inherited_label_fallbacks(
         fallback = casilla_occurrence_locale_key(modelo_id, origin, casilla_id, ModeloLocalizationFieldKind.LABEL)
         enrolled.append({**table, "localization_keys": (*keys[:1], fallback, *keys[1:])})
     return {**payload, _INHERITED_SECTION: tuple(enrolled)}
+
+
+def _mark_inherited_casillas(
+    context: str,
+    *,
+    payload: dict[str, object],
+    label_origins: _LabelOrigins | None,
+) -> dict[str, object]:
+    """Give every inherited casilla the ``inherited_from`` marker naming the edition that last stated it.
+
+    The marker is the label origins, the one record of where each row is
+    stated, carried onto the typed row so a consumer can tell a stated row from
+    an inherited one without re-deriving it. A row stated in this edition keeps
+    the marker unset.
+
+    Raises:
+        RegistryLoadError: When any casilla row authors the marker, since only
+            materialisation knows where a row is stated.
+    """
+    casillas = as_toml_array(payload.get(_INHERITED_SECTION)) or ()
+    authored = sorted(
+        str(table.get("id"))
+        for row in casillas
+        if (table := _as_toml_table(row)) is not None and _ROW_INHERITED_FROM_FIELD in table
+    )
+    if authored:
+        raise RegistryLoadError(
+            f"{context}: casillas {authored!r} author {_ROW_INHERITED_FROM_FIELD}, which the loader sets on the "
+            "rows an edition inherits from its declared predecessor; remove it",
+        )
+    if label_origins is None:
+        return payload
+    if len(casillas) != len(label_origins):
+        raise RegistryLoadError(
+            f"{context}: label origins cover {len(label_origins)} of the edition's {len(casillas)} casillas",
+        )
+    marked = tuple(
+        casilla
+        if origin is None or (table := _as_toml_table(casilla)) is None
+        else {**table, _ROW_INHERITED_FROM_FIELD: origin}
+        for casilla, origin in zip(casillas, label_origins, strict=True)
+    )
+    return {**payload, _INHERITED_SECTION: marked}
 
 
 def _raise_on_ambiguous_revision_identity(

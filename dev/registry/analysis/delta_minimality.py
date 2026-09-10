@@ -26,19 +26,29 @@ one declaring an explicit no-predecessor, or the first of an undeclaring modelo
 by validity order - inherits nothing, so its rows are not applicable rather than
 clean, and the census counts them apart.
 
-What "identical" compares. Two rows are compared as loaded ``CasillaDefinition``
-values, never as authored text, after removing the tokens whose only content is
-the edition the row sits in:
+Which rows are judged. Only the rows an edition states. A delta edition's loaded
+casillas also hold the rows it inherits, each marked by the loader with
+``inherited_from``; those are counted apart and never judged, since an inherited
+row is the minimal form by definition.
 
-- ``source_refs`` are dropped, top level and inside ``constraints``: source
-  references are declared per edition and an inheriting row takes the
-  successor's, so they differ between editions by construction.
+What "identical" compares. A stated row is compared with what inheriting the
+predecessor's row would give, both as loaded ``CasillaDefinition`` values, never
+as authored text, after removing the tokens whose only content is the edition
+the row sits in:
+
+- ``source_refs`` are compared as a set after removing each edition's own
+  ``casilla_source_refs`` default, top level and inside ``constraints``, when
+  both editions declare one: what is left is the row's own additions, which
+  travel with an inherited row. Where either edition declares no default they
+  are dropped, since nothing then separates the edition's grounding from the
+  row's.
 - ``export_refs`` are dropped: the slot identifier carries the edition and its
   ordinal moves on insertion, so the field is derived per edition rather than
   inherited.
-- ``continuidad_origin`` and ``continuidad_evidence`` are dropped: they state the
-  row's relationship to its predecessor, which differs between a row and the row
-  it continues by construction. ``continuidad_id`` is the match key and is equal.
+- ``continuidad_origin`` and ``continuidad_evidence`` are unset on the inherited
+  side only: they state a row's relationship to its predecessor and are never
+  inherited, so a stated row carrying either is a statement inheritance cannot
+  reproduce. ``continuidad_id`` is the match key and is equal.
 - ``legal_refs`` are compared as a set after removing the edition's own
   ``orden_aplicabilidad`` entries, top level and inside ``constraints``: an orden
   reissued with the edition re-cites the same content, and array order is not
@@ -58,10 +68,13 @@ Where it stops:
 - Casilla rows only. The completeness manifest does not inherit - a migrated
   edition restates its whole manifest by design - so it is never read here, and
   neither are formulas, bindings, layouts or any other family.
-- The stated rows are read as ``revision.casillas``. That holds while the loader
-  materialises no inheritance; a loader that does would present inherited rows
-  as stated ones, and this screen would then need a statement-origin marker it
-  does not have today.
+- Stated rows are the loaded rows whose ``inherited_from`` is unset. The marker
+  is the loader's; a definition built outside the loader carries whatever
+  markers it was given, and a row wrongly marked inherited escapes judgement.
+- The comparison is of loaded values, which do not show whether the
+  predecessor's row states its ``source_refs`` in full or as additions. Where it
+  states them in full, inheriting would carry the predecessor's design citation
+  forward, yet the row reads as a restatement once both defaults are removed.
 - An edition declaring no predecessor is measured against the adjacent earlier
   edition by validity order - the pairing a declared predecessor must agree with
   wherever the two editions do not overlap. A declared predecessor is always
@@ -99,6 +112,7 @@ from .corpus import bundled_modelo_ids
 __all__ = [
     "EDITION_LOCAL_FIELDS",
     "KINDS",
+    "LINEAGE_CLAIM_FIELDS",
     "EditionPredecessor",
     "MinimalityCensus",
     "MinimalityVerdict",
@@ -109,8 +123,11 @@ __all__ = [
     "inheritable_value",
     "judge_definition",
     "minimality_census",
+    "restatement_differences",
     "restating_modelos",
     "screen_authority",
+    "stated_casillas",
+    "stated_value",
 ]
 
 
@@ -139,11 +156,13 @@ KINDS: Final[tuple[MinimalityVerdict, ...]] = (
     MinimalityVerdict.UNCHECKED_PREDECESSOR_UNDECIDABLE,
 )
 
-#: Casilla fields removed before comparison because they carry the edition, or
-#: the row's relationship to its predecessor, rather than the row's meaning.
-EDITION_LOCAL_FIELDS: Final[frozenset[str]] = frozenset(
-    {"source_refs", "export_refs", "continuidad_origin", "continuidad_evidence"}
-)
+#: Casilla fields compared net of, or not at all beside, the edition they sit in:
+#: ``source_refs`` net of the edition default, ``export_refs`` never.
+EDITION_LOCAL_FIELDS: Final[frozenset[str]] = frozenset({"source_refs", "export_refs"})
+
+#: Casilla fields stating a row's relationship to its predecessor, which an
+#: inherited row never carries.
+LINEAGE_CLAIM_FIELDS: Final[frozenset[str]] = frozenset({"continuidad_origin", "continuidad_evidence"})
 
 
 class PredecessorBasis(StrEnum):
@@ -192,6 +211,7 @@ class MinimalityCensus:
     root_editions: int
     declared_predecessor_editions: int
     rows_judged: int
+    rows_inherited: int
     rows_in_root_editions: int
     verdicts: Mapping[MinimalityVerdict, int]
 
@@ -217,27 +237,42 @@ def edition_predecessors(definition: ModeloDefinition) -> tuple[EditionPredecess
     return tuple(resolved)
 
 
-def _legal_refs(values: object, own_ordenes: frozenset[str]) -> frozenset[str]:
+def _refs_net_of(values: object, own: frozenset[str]) -> frozenset[str]:
     if not isinstance(values, tuple | list):
         return frozenset[str]()
-    return frozenset(str(value) for value in values) - own_ordenes
+    return frozenset(str(value) for value in values) - own
 
 
-def inheritable_value(casilla: CasillaDefinition, revision: ModeloRevision) -> dict[str, object]:
-    """Return the part of a casilla row an inheriting edition would carry unchanged.
+def _source_default(revision: ModeloRevision) -> frozenset[str] | None:
+    default = revision.casilla_source_refs
+    return None if not default else frozenset(str(ref) for ref in default)
 
-    The row's typed dump with every token repeating its own edition removed, as
-    the module docstring lists. Two rows are identical for this screen exactly
-    when these values are equal.
+
+def stated_value(
+    casilla: CasillaDefinition,
+    revision: ModeloRevision,
+    *,
+    source_default: frozenset[str] | None = None,
+) -> dict[str, object]:
+    """Return a casilla row with every token repeating its own edition removed.
+
+    The row's typed dump normalised as the module docstring lists. Its
+    ``source_refs`` are kept net of ``source_default`` when one is given and
+    dropped otherwise; the caller passes the edition's default only when both
+    editions of a comparison declare one.
     """
     revision_id = str(revision.id)
     own_ordenes = frozenset(str(ref) for ref in revision.orden_aplicabilidad)
     value: dict[str, object] = dict(casilla.model_dump(mode="python", exclude=set(EDITION_LOCAL_FIELDS)))
-    value["legal_refs"] = _legal_refs(value.get("legal_refs"), own_ordenes)
+    value["legal_refs"] = _refs_net_of(value.get("legal_refs"), own_ordenes)
+    if source_default is not None:
+        value["source_refs"] = _refs_net_of(casilla.source_refs, source_default)
     constraints = value.get("constraints")
     if isinstance(constraints, dict):
-        constraints.pop("source_refs", None)
-        constraints["legal_refs"] = _legal_refs(constraints.get("legal_refs"), own_ordenes)
+        constraint_sources = constraints.pop("source_refs", None)
+        if source_default is not None:
+            constraints["source_refs"] = _refs_net_of(constraint_sources, source_default)
+        constraints["legal_refs"] = _refs_net_of(constraints.get("legal_refs"), own_ordenes)
     for name in _IDENTIFIER_FIELDS:
         current = value.get(name)
         if isinstance(current, str):
@@ -247,12 +282,44 @@ def inheritable_value(casilla: CasillaDefinition, revision: ModeloRevision) -> d
     return value
 
 
-def _differing_fields(left: Mapping[str, object], right: Mapping[str, object]) -> tuple[str, ...]:
+def inheritable_value(
+    casilla: CasillaDefinition,
+    revision: ModeloRevision,
+    *,
+    source_default: frozenset[str] | None = None,
+) -> dict[str, object]:
+    """Return the part of a casilla row an inheriting edition would carry.
+
+    :func:`stated_value` with the row's lineage claims unset, as an inherited
+    row materialises. A stated row restates its inherited row exactly when its
+    stated value equals the inherited row's inheritable value.
+    """
+    value = stated_value(casilla, revision, source_default=source_default)
+    value.update(dict.fromkeys(LINEAGE_CLAIM_FIELDS))
+    return value
+
+
+def restatement_differences(
+    stated: CasillaDefinition,
+    revision: ModeloRevision,
+    inherited: CasillaDefinition,
+    predecessor: ModeloRevision,
+) -> tuple[str, ...]:
+    """Return the fields in which a stated row differs from inheriting ``inherited``; empty means restated."""
+    own_default, predecessor_default = _source_default(revision), _source_default(predecessor)
+    compare_sources = own_default is not None and predecessor_default is not None
+    left = stated_value(stated, revision, source_default=own_default if compare_sources else None)
+    right = inheritable_value(inherited, predecessor, source_default=predecessor_default if compare_sources else None)
     return tuple(sorted(name for name in set(left) | set(right) if left.get(name) != right.get(name)))
 
 
+def stated_casillas(revision: ModeloRevision) -> tuple[CasillaDefinition, ...]:
+    """Return the casilla rows the edition states itself, in order: every row the loader did not mark inherited."""
+    return tuple(casilla for casilla in revision.casillas if casilla.inherited_from is None)
+
+
 def judge_definition(definition: ModeloDefinition, *, modelo_id: str) -> tuple[RowJudgement, ...]:
-    """Return a verdict for every stated casilla row of every non-root edition.
+    """Return a verdict for every stated casilla row of every non-root edition; inherited rows get none.
 
     Takes the definition rather than the authority, as the sibling screens do,
     so a test can hand it a copy of a real definition carrying a constructed
@@ -274,8 +341,9 @@ def judge_definition(definition: ModeloDefinition, *, modelo_id: str) -> tuple[R
                 RowJudgement(modelo_id, edition.revision, edition.predecessor, str(casilla.id), kind, detail)
             )
 
+        stated = stated_casillas(revision)
         if edition.basis == PredecessorBasis.UNDECIDABLE:
-            for casilla in revision.casillas:
+            for casilla in stated:
                 judged(
                     casilla,
                     MinimalityVerdict.UNCHECKED_PREDECESSOR_UNDECIDABLE,
@@ -287,7 +355,7 @@ def judge_definition(definition: ModeloDefinition, *, modelo_id: str) -> tuple[R
         for candidate in predecessor.casillas:
             if candidate.continuidad_id:
                 by_chain[str(candidate.continuidad_id)].append(candidate)
-        for casilla in revision.casillas:
+        for casilla in stated:
             chain = str(casilla.continuidad_id) if casilla.continuidad_id else None
             if chain is None:
                 judged(casilla, MinimalityVerdict.UNCHECKED_NO_LINEAGE, "row carries no continuidad_id")
@@ -302,9 +370,7 @@ def judge_definition(definition: ModeloDefinition, *, modelo_id: str) -> tuple[R
                     f"chain {chain} sits on {len(inherited)} rows of {edition.predecessor}",
                 )
             else:
-                differing = _differing_fields(
-                    inheritable_value(casilla, revision), inheritable_value(inherited[0], predecessor)
-                )
+                differing = restatement_differences(casilla, revision, inherited[0], predecessor)
                 if differing:
                     judged(casilla, MinimalityVerdict.STATED_DIFFERENCE, f"differs in {', '.join(differing)}")
                 else:
@@ -336,23 +402,26 @@ def restating_modelos(findings: tuple[RowJudgement, ...]) -> tuple[str, ...]:
 
 def minimality_census(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]) -> MinimalityCensus:
     """Return corpus-wide edition and row counts, every verdict counted apart."""
-    editions = roots = declared = root_rows = 0
+    editions = roots = declared = root_rows = inherited_rows = 0
     verdicts: collections.Counter[MinimalityVerdict] = collections.Counter()
     for modelo_id in modelo_ids:
         definition = authority.modelo(modelo_id)
         for edition in edition_predecessors(definition):
             editions += 1
+            revision = definition.revisions[edition.revision]
+            inherited_rows += len(revision.casillas) - len(stated_casillas(revision))
             if edition.basis == PredecessorBasis.DECLARED:
                 declared += 1
             if edition.predecessor is None:
                 roots += 1
-                root_rows += len(definition.revisions[edition.revision].casillas)
+                root_rows += len(revision.casillas)
         verdicts.update(item.kind for item in judge_definition(definition, modelo_id=modelo_id))
     return MinimalityCensus(
         editions=editions,
         root_editions=roots,
         declared_predecessor_editions=declared,
         rows_judged=sum(verdicts.values()),
+        rows_inherited=inherited_rows,
         rows_in_root_editions=root_rows,
         verdicts=dict(sorted(verdicts.items())),
     )
@@ -373,6 +442,7 @@ def main() -> int:
     sys.stdout.write(
         f"summary findings={len(findings)} editions={census.editions} root_editions={census.root_editions} "
         f"declared_predecessor_editions={census.declared_predecessor_editions} rows_judged={census.rows_judged} "
+        f"rows_inherited={census.rows_inherited} "
         f"rows_in_root_editions={census.rows_in_root_editions} restating_modelos={len(restating_modelos(findings))} "
         f"{verdicts}\n"
     )

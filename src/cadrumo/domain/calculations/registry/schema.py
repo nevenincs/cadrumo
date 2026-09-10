@@ -909,6 +909,16 @@ class ModeloRevision(RegistryModel):
     references are declared per edition. Like ``predecessor`` it is excluded
     from serialisation when absent, and manifest-only, since it grounds rows
     across every fragment of the edition.
+
+    A casilla row or its ``constraints`` table may instead state
+    ``additional_source_refs``: the procedure or form citations that belong to
+    the box's concept rather than to the edition's design. Such a table's
+    ``source_refs`` is the edition's ``casilla_source_refs`` followed by those
+    additions, duplicates removed and the default first. The additions travel
+    with the row, so an inherited row extends the default of the edition it now
+    sits in. A table stating both keys, additions that are empty, or additions
+    in an edition declaring no ``casilla_source_refs`` is refused. The key is
+    consumed by the loader and never reaches this model.
     """
 
     id: RevisionId

@@ -9,6 +9,8 @@ the acceptance evidence for each such move. For a migrated modelo it proves:
   ``ModeloRevision`` dump, compared element-wise over the whole edition. Casilla
   row order is asserted separately from casilla content, so an ordering failure
   reports distinctly from a changed row;
+- the live casilla rows stand in the merge order: the pre-migration rows
+  rearranged the way materialisation orders an edition, as defined below;
 - where an edition has an export surface, the canonical filing export path
   emits the same bytes from both authorities.
 
@@ -29,6 +31,20 @@ is instead two explicit parts:
   after the first where that key is the same casilla's occurrence key in a
   sibling edition; and every casilla label must resolve to the same text in
   every supported output language.
+
+How order is defined
+-------------------
+A delta-authored edition's row order is defined by the merge, not by its full
+copy, whose order is an artefact of fragment filename sorting. So the expected
+order is the pre-migration edition's rows rearranged: every row matching a row
+of the expected order of the predecessor the live edition declares takes that
+row's position, and every other row follows in its pre-migration relative
+order. A row matches on ``continuidad_id``, or on ``id`` where neither row
+carries one. An edition declaring no predecessor keeps its pre-migration order
+exactly. The rearrangement reads only the pre-migration rows and the live
+predecessor declaration, never the materialised edition, so it stays
+independent of the materialiser it judges; a live order the merge could not
+have produced, such as new rows stated out of their pre-migration order, fails.
 
 What the reference is, and why
 ------------------------------
@@ -103,7 +119,7 @@ import shutil
 import subprocess
 import tarfile
 import tomllib
-from collections import Counter
+from collections import Counter, deque
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from decimal import Decimal
@@ -312,10 +328,13 @@ def edition_round_trip_report(
         for revision_id in _delta_authored(reference)
     ]
     findings.extend(_edition_set_findings(reference, live))
+    expected_orders = merge_orders(reference, live)
     for revision_id, reference_revision in reference.revisions.items():
         live_revision = live.revisions.get(revision_id)
         if live_revision is not None:
-            findings.extend(_edition_findings(revision_id, reference_revision, live_revision))
+            findings.extend(
+                _edition_findings(revision_id, reference_revision, live_revision, expected_orders[revision_id])
+            )
             locale_differences = localization_differences(
                 modelo_id=modelo_id,
                 sibling_revision_ids=frozenset(reference.revisions) - {revision_id},
@@ -369,25 +388,81 @@ def _edition_set_findings(reference: ModeloDefinition, live: ModeloDefinition) -
     ]
 
 
+type RowKey = tuple[str, str | None]
+"""A casilla row as the merge order sees it: its ``id`` and its ``continuidad_id``."""
+
+
+def _match_key(row: RowKey) -> tuple[str, str]:
+    casilla_id, lineage = row
+    return ("lineage", lineage) if lineage is not None else ("id", casilla_id)
+
+
+def merge_order(full_copy: tuple[RowKey, ...], predecessor_order: tuple[RowKey, ...]) -> tuple[RowKey, ...]:
+    """Rearrange one edition's full-copy rows into the order its merge with ``predecessor_order`` defines.
+
+    Each predecessor row, in order, places the first unplaced full-copy row
+    matching it; every full-copy row left unplaced follows in full-copy order.
+    """
+    positions: dict[tuple[str, str], deque[int]] = {}
+    for index, row in enumerate(full_copy):
+        positions.setdefault(_match_key(row), deque()).append(index)
+    order = [queue.popleft() for row in predecessor_order if (queue := positions.get(_match_key(row)))]
+    placed = frozenset(order)
+    order.extend(index for index in range(len(full_copy)) if index not in placed)
+    return tuple(full_copy[index] for index in order)
+
+
+def merge_orders(reference: ModeloDefinition, live: ModeloDefinition) -> dict[str, tuple[RowKey, ...]]:
+    """Every pre-migration edition's rows in the merge order its live predecessor declaration defines.
+
+    A live declaration naming an edition the reference lacks, or closing a
+    cycle, leaves the edition in its pre-migration order; the edition-set
+    finding and the live load report those trees respectively.
+    """
+    orders: dict[str, tuple[RowKey, ...]] = {}
+
+    def order_of(revision_id: str, trail: frozenset[str]) -> tuple[RowKey, ...]:
+        cached = orders.get(revision_id)
+        if cached is not None:
+            return cached
+        rows = tuple(
+            (str(casilla.id), str(casilla.continuidad_id) if casilla.continuidad_id is not None else None)
+            for casilla in reference.revisions[revision_id].casillas
+        )
+        live_revision = live.revisions.get(revision_id)
+        declared = None if live_revision is None else live_revision.predecessor
+        if isinstance(declared, DeclaredPredecessor):
+            predecessor_id = str(declared.revision_id)
+            if predecessor_id in reference.revisions and predecessor_id not in trail:
+                rows = merge_order(rows, order_of(predecessor_id, trail | {revision_id}))
+        orders[revision_id] = rows
+        return rows
+
+    for revision_id in reference.revisions:
+        order_of(revision_id, frozenset({revision_id}))
+    return orders
+
+
 def _edition_findings(
     revision_id: str,
     reference: ModeloRevision,
     live: ModeloRevision,
+    expected_order: tuple[RowKey, ...],
 ) -> list[RoundTripFinding]:
-    """Order of casilla rows, then the whole edition element-wise with rows aligned by id."""
+    """Order of casilla rows against the merge order, then the whole edition element-wise with rows aligned by id."""
     findings: list[RoundTripFinding] = []
-    reference_ids = [casilla.id for casilla in reference.casillas]
-    live_ids = [casilla.id for casilla in live.casillas]
-    if reference_ids != live_ids and Counter(reference_ids) == Counter(live_ids):
+    expected_ids = [casilla_id for casilla_id, _ in expected_order]
+    live_ids = [str(casilla.id) for casilla in live.casillas]
+    if expected_ids != live_ids and Counter(expected_ids) == Counter(live_ids):
         position = next(
-            index for index, pair in enumerate(zip(reference_ids, live_ids, strict=True)) if pair[0] != pair[1]
+            index for index, pair in enumerate(zip(expected_ids, live_ids, strict=True)) if pair[0] != pair[1]
         )
         findings.append(
             RoundTripFinding(
                 RoundTripFindingKind.ROW_ORDER,
                 revision_id,
-                f"casilla rows first diverge at position {position}: "
-                f"pre-migration {reference_ids[position]!r}, live {live_ids[position]!r}",
+                f"casilla rows first diverge from the merge order at position {position}: "
+                f"expected {expected_ids[position]!r}, live {live_ids[position]!r}",
             )
         )
     reference_dump = reference.model_dump(exclude=set(_EXCLUDED_FROM_EQUALITY))
@@ -671,12 +746,14 @@ def test_every_bundled_modelo_either_is_unmigrated_or_round_trips(modelo_id: str
 # corpus gate does, then plants a migration in a separate live tree. Modelo 303
 # carries the inheritance proofs: its 2025 edition restates two rows identically
 # to the September-2024 edition, so a correct migration genuinely inherits
-# them; its 2026 edition inserts a row mid-sequence, which inheritance can only
-# append. Modelo 131 carries the byte proof, exporting from general filing facts.
+# them; its 2026 edition inserts a row mid-sequence, which inheritance appends,
+# and its September-2024 edition adds several rows, whose stated order the merge
+# keeps. Modelo 131 carries the byte proof, exporting from general filing facts.
 
 _CASILLA_ROW_HEADER = re.compile(r'^\[\[revisions\.(?:"[^"\n]+"|[^".\]\n]+)\.casillas\]\]$', re.MULTILINE)
 _SCRATCH_REGISTRY = PurePosixPath("registry/aeat")
 _M303 = "303"
+_M303_SUMMER_2024 = "2024-hasta-08-y-2t"
 _M303_SEPTEMBER_2024 = "2024-desde-09-y-3t"
 _M303_2025 = "2025"
 _M303_2026 = "2026-y-siguientes"
@@ -746,7 +823,12 @@ def _raw_rows(edition_dir: Path) -> list[dict[str, object]]:
 
 
 def _rows_stated_identically(modelo_dir: Path, *, successor: str, predecessor: str) -> frozenset[str]:
-    """Successor rows whose authored table equals the predecessor row carrying the same lineage."""
+    """Successor rows whose authored table equals the predecessor row carrying the same lineage.
+
+    A row stating a lineage claim is never among them: an inherited row carries
+    no ``continuidad_origin`` or ``continuidad_evidence``, so dropping it would
+    lose the claim however identical it is.
+    """
     by_lineage = {
         row["continuidad_id"]: row
         for row in _raw_rows(modelo_dir / "revisions" / predecessor)
@@ -755,7 +837,9 @@ def _rows_stated_identically(modelo_dir: Path, *, successor: str, predecessor: s
     return frozenset(
         str(row["id"])
         for row in _raw_rows(modelo_dir / "revisions" / successor)
-        if row.get("continuidad_id") is not None and by_lineage.get(row["continuidad_id"]) == row
+        if row.get("continuidad_id") is not None
+        and by_lineage.get(row["continuidad_id"]) == row
+        and not {"continuidad_origin", "continuidad_evidence"} & row.keys()
     )
 
 
@@ -921,10 +1005,10 @@ def test_a_migration_that_drops_a_row_its_successor_restated_differently_fails(
     assert "export_refs" not in detail
 
 
-def test_a_content_perfect_migration_that_moves_a_row_fails_on_order_alone(
+def test_a_migration_moving_an_inserted_row_to_the_end_round_trips_in_merge_order(
     scratch_repository: _ScratchRepository, m303_reference: Path, tmp_path: Path
 ) -> None:
-    """2026 inserts a row mid-sequence; inheritance appends new rows, so only the order can differ."""
+    """2026 inserts a row mid-sequence; the merge appends it, and that order is the defined one."""
     live = _live_tree(scratch_repository, _M303, tmp_path / "registry" / "aeat")
     inherited = _migrate(live / _MODELOS_DIR / _M303, successor=_M303_2026, predecessor=_M303_2025)
     assert inherited
@@ -933,10 +1017,84 @@ def test_a_content_perfect_migration_that_moves_a_row_fails_on_order_alone(
         live_registry_root=live, reference_registry_root=m303_reference, modelo_id=_M303, export_scenarios={}
     )
 
-    assert _kinds(report) == [
-        (RoundTripFindingKind.ROW_ORDER, _M303_2026),
-        (RoundTripFindingKind.EXPORT_UNCHECKED, _M303_2026),
+    assert _kinds(report) == [(RoundTripFindingKind.EXPORT_UNCHECKED, _M303_2026)]
+    # Non-vacuity: the materialised edition really is in a different order from
+    # its full copy, so the order assertion judged a rearrangement, not a copy.
+    before = [casilla.id for casilla in _load_modelo(m303_reference, _M303).revisions[_M303_2026].casillas]
+    after = [casilla.id for casilla in _load_modelo(live, _M303).revisions[_M303_2026].casillas]
+    assert sorted(before) == sorted(after)
+    assert before != after
+
+
+def _move_row_to_first_fragment(edition_dir: Path, row_id: str) -> None:
+    """Restate one row in a fragment that sorts before every other, changing only where it is stated."""
+    for fragment in sorted((edition_dir / "casillas").glob("*.toml")):
+        preamble, blocks = _split_casilla_rows(fragment.read_text(encoding="utf-8"))
+        moved = [block for block in blocks if str(_row_of(block)["id"]) == row_id]
+        if not moved:
+            continue
+        kept = [block for block in blocks if block not in moved]
+        fragment.write_text(preamble + "".join(kept), encoding="utf-8", newline="\n")
+        (edition_dir / "casillas" / "c0-moved.toml").write_text(moved[0], encoding="utf-8", newline="\n")
+        return
+    raise AssertionError(f"no casilla row {row_id!r} under {edition_dir}")
+
+
+def test_new_rows_stated_out_of_their_pre_migration_order_fail_on_order_alone(
+    scratch_repository: _ScratchRepository, m303_reference: Path, tmp_path: Path
+) -> None:
+    """The merge admits one order; a content-perfect edition in any other order is still refused.
+
+    September 2024 adds several rows the edition before it lacks. The correct
+    migration round-trips; the same migration with the last of those rows
+    stated first among them is identical in content and fails on order alone.
+    """
+    reference = _load_modelo(m303_reference, _M303)
+    earlier = {casilla.continuidad_id for casilla in reference.revisions[_M303_SUMMER_2024].casillas}
+    new_rows = [
+        str(casilla.id)
+        for casilla in reference.revisions[_M303_SEPTEMBER_2024].casillas
+        if casilla.continuidad_id not in earlier
     ]
+    assert len(new_rows) >= 2, new_rows
+
+    correct = _live_tree(scratch_repository, _M303, tmp_path / "correct" / "registry" / "aeat")
+    _migrate(correct / _MODELOS_DIR / _M303, successor=_M303_SEPTEMBER_2024, predecessor=_M303_SUMMER_2024)
+    passing = edition_round_trip_report(
+        live_registry_root=correct, reference_registry_root=m303_reference, modelo_id=_M303, export_scenarios={}
+    )
+    assert _kinds(passing) == [(RoundTripFindingKind.EXPORT_UNCHECKED, _M303_SEPTEMBER_2024)]
+
+    reordered = _live_tree(scratch_repository, _M303, tmp_path / "reordered" / "registry" / "aeat")
+    modelo_dir = reordered / _MODELOS_DIR / _M303
+    _migrate(modelo_dir, successor=_M303_SEPTEMBER_2024, predecessor=_M303_SUMMER_2024)
+    _move_row_to_first_fragment(modelo_dir / "revisions" / _M303_SEPTEMBER_2024, new_rows[-1])
+    failing = edition_round_trip_report(
+        live_registry_root=reordered, reference_registry_root=m303_reference, modelo_id=_M303, export_scenarios={}
+    )
+    assert _kinds(failing) == [
+        (RoundTripFindingKind.ROW_ORDER, _M303_SEPTEMBER_2024),
+        (RoundTripFindingKind.EXPORT_UNCHECKED, _M303_SEPTEMBER_2024),
+    ]
+    assert f"expected {new_rows[0]!r}, live {new_rows[-1]!r}" in failing.findings[0].detail
+
+
+def test_the_merge_order_is_the_predecessors_order_then_new_rows_in_full_copy_order() -> None:
+    """Derived from the ordering rule alone, on rows exercising every case it names.
+
+    The predecessor carries ``a``, ``b``, ``c`` and a row without lineage. The
+    successor's full copy lists a new row first, supersedes ``b`` under a new
+    id, drops ``c``, keeps ``a`` and the lineage-less row, and adds a second
+    new row last.
+    """
+    predecessor: tuple[RowKey, ...] = (("01", "a"), ("02", "b"), ("03", "c"), ("04", None))
+    full_copy: tuple[RowKey, ...] = (("10", "x"), ("22", "b"), ("01", "a"), ("04", None), ("11", "y"))
+
+    assert merge_order(full_copy, predecessor) == (("01", "a"), ("22", "b"), ("04", None), ("10", "x"), ("11", "y"))
+    # With nothing to inherit from, the full copy's own order is the order.
+    assert merge_order(full_copy, ()) == full_copy
+    # A lineage-less row matches on id only: under another id it is new.
+    assert merge_order((("05", None), ("01", "a")), predecessor) == (("01", "a"), ("05", None))
 
 
 def _m131_producer_snapshot() -> FilingProducerSnapshot:
@@ -966,11 +1124,11 @@ _M131_2025_SCENARIO: Final = EditionExportScenario(
     inputs={
         "03": Decimal("1000"),
         "05": Decimal("500"),
-        "modelo-131-2025.page1.110-113.actividad-1-epigrafe": "722",
-        "modelo-131-2025.page1.114-130.actividad-1-rendimiento-neto": Decimal("1200.50"),
-        "modelo-131-2025.dpa.013-016.epigrafe-iae": ["722"],
-        "modelo-131-2025.dpa.031-032.vehiculos-afectos": {"1": "2"},
-        "modelo-131-2025.did.012-045.iban": "ES9121000418450200051332",
+        "modelo-131.page1.110-113.actividad-1-epigrafe": "722",
+        "modelo-131.page1.114-130.actividad-1-rendimiento-neto": Decimal("1200.50"),
+        "modelo-131.dpa.013-016.epigrafe-iae": ["722"],
+        "modelo-131.dpa.031-032.vehiculos-afectos": {"1": "2"},
+        "modelo-131.did.012-045.iban": "ES9121000418450200051332",
     },
     producer_snapshot=_m131_producer_snapshot,
 )

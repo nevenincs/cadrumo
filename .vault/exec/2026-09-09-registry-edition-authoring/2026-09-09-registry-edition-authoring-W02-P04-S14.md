@@ -5,16 +5,11 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:a183e5a9231d120d76abcfd76005c7b80f5cf2af24cff695bf288407fc52ade2'
+body_hash: 'sha256:7a7dbda38bffa4dc685cacf40772db3292af63961c5b1b9470e18b3f0d2c7a31'
 step_id: 'S14'
 related:
   - "[[2026-09-09-registry-edition-authoring-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # [L | opus-medium] Make export references a derived field: the loader computes them from the edition layout's own back-pointer and refuses an authored value. Delete the pipeline module that currently writes them onto casilla declarations. Proof: an authored value is refused; computed values match today's declarations byte for byte.
 

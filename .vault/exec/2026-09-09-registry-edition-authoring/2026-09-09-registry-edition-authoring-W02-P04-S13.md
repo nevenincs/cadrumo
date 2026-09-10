@@ -5,16 +5,11 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:624c49f0b7da056d7ad99bae4193b8815a546ae21efe48cf7cc545deec614c39'
+body_hash: 'sha256:d9affd5eba332035ba70e0efe2d69d820d7b0f17385375da261cf5ce9ab8aeb4'
 step_id: 'S13'
 related:
   - "[[2026-09-09-registry-edition-authoring-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # [M | opus-medium] Declare source references and orden references once on the edition, inherited by rows that state none. Proof: a row stating its own overrides; a row stating none inherits; the materialised row is unchanged from today.
 

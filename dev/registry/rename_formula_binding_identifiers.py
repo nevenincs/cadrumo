@@ -60,12 +60,12 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import sys
 import tomllib
-from collections import Counter, defaultdict
+from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 REGISTRY_MODELOS_ROOT = REPO_ROOT / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
@@ -86,7 +86,7 @@ EXCLUDED_MODELOS: frozenset[str] = frozenset({"185", "222", "347"})
 DEFERRED_MODELOS: frozenset[str] = frozenset({"390"})
 
 # Mirrors identifier_lineage._IDENTIFIER_SEPARATORS; kept in sync by
-# test_separator_set_matches_identifier_lineage below.
+# _check_separator_set_matches_identifier_lineage below.
 _IDENTIFIER_SEPARATORS = "-._:"
 
 # (family, directory name) pairs that declare an ``id`` primary key sharing
@@ -120,6 +120,8 @@ _MERGE_BY_ID_DIRS: frozenset[str] = frozenset({"export_layouts", "constructs"})
 
 @dataclass(frozen=True)
 class DeclaredId:
+    """One declared ``id`` found under a revision's family directory (e.g. ``formulas/``)."""
+
     modelo: str
     revision_id: str
     family: str
@@ -129,6 +131,8 @@ class DeclaredId:
 
 @dataclass
 class ModeloMeasurement:
+    """Per-modelo embedding counts and the resolved old-id to new-id rename map."""
+
     modelo: str
     formula_embedded: int = 0
     formula_total: int = 0
@@ -139,24 +143,25 @@ class ModeloMeasurement:
 
 
 def iter_modelo_dirs() -> list[Path]:
-    return sorted(
-        p for p in REGISTRY_MODELOS_ROOT.iterdir() if p.is_dir() and p.name not in EXCLUDED_MODELOS
-    )
+    """Return every in-scope modelo directory, excluding :data:`EXCLUDED_MODELOS`."""
+    return sorted(p for p in REGISTRY_MODELOS_ROOT.iterdir() if p.is_dir() and p.name not in EXCLUDED_MODELOS)
 
 
 def iter_revision_dirs(modelo_dir: Path) -> list[Path]:
+    """Return a modelo's revision directories, sorted by directory name."""
     revisions_dir = modelo_dir / "revisions"
     if not revisions_dir.is_dir():
         return []
     return sorted(p for p in revisions_dir.iterdir() if p.is_dir())
 
 
-def _load_toml(path: Path) -> dict[str, object]:
+def _load_toml(path: Path) -> dict[str, Any]:
     with path.open("rb") as handle:
         return tomllib.load(handle)
 
 
 def declared_ids_for_dir(modelo: str, revision_dir: Path, revision_id: str, dirname: str) -> list[DeclaredId]:
+    """Return every declared ``id`` for one revision's ``dirname`` family, across its fragment files."""
     target_dir = revision_dir / dirname
     if not target_dir.is_dir():
         return []
@@ -190,7 +195,7 @@ def declared_ids_for_dir(modelo: str, revision_dir: Path, revision_id: str, dirn
 def strip_edition_key(identifier: str, revision_id: str) -> str | None:
     """Return ``identifier`` with its declaring edition's key removed, or ``None`` if it does not embed it.
 
-    Raises :class:`AmbiguousRename` when the revision id occurs as more than
+    Raises :class:`AmbiguousRenameError` when the revision id occurs as more than
     one whole segment, since the rewrite would then have to choose which
     occurrence to collapse against which adjacent separator.
     """
@@ -199,13 +204,13 @@ def strip_edition_key(identifier: str, revision_id: str) -> str | None:
         return None
     occurrences = lineage.count(EDITION_PLACEHOLDER)
     if occurrences > 1:
-        raise AmbiguousRename(identifier, revision_id, occurrences)
+        raise AmbiguousRenameError(identifier, revision_id, occurrences)
     idx = lineage.index(EDITION_PLACEHOLDER)
     prefix = identifier[:idx]
     suffix = identifier[idx + len(revision_id) :]
-    # Sanity: the lineage function replaced exactly this span.
-    assert prefix == lineage[:idx]
-    assert suffix == lineage[idx + len(EDITION_PLACEHOLDER) :]
+    # Sanity: the lineage function must have replaced exactly this span.
+    if prefix != lineage[:idx] or suffix != lineage[idx + len(EDITION_PLACEHOLDER) :]:
+        raise RenameSpanMismatchError(identifier, revision_id, lineage)
     if prefix and prefix[-1] in _IDENTIFIER_SEPARATORS:
         return prefix[:-1] + suffix
     if suffix and suffix[0] in _IDENTIFIER_SEPARATORS:
@@ -213,14 +218,28 @@ def strip_edition_key(identifier: str, revision_id: str) -> str | None:
     return prefix + suffix
 
 
-class AmbiguousRename(Exception):
+class AmbiguousRenameError(Exception):
+    """The revision id occurs as more than one whole segment in the identifier."""
+
     def __init__(self, identifier: str, revision_id: str, occurrences: int) -> None:
+        """Record the identifier, the declaring revision id, and how many segments matched."""
         super().__init__(
             f"identifier {identifier!r} embeds revision {revision_id!r} as {occurrences} separate segments; "
             "refusing to guess which separator to collapse"
         )
         self.identifier = identifier
         self.revision_id = revision_id
+
+
+class RenameSpanMismatchError(Exception):
+    """:func:`identifier_lineage` replaced a span that does not match the identifier/lineage prefix and suffix."""
+
+    def __init__(self, identifier: str, revision_id: str, lineage: str) -> None:
+        """Record the identifier, the declaring revision id, and the lineage it produced."""
+        super().__init__(
+            f"identifier {identifier!r} and its lineage {lineage!r} against revision {revision_id!r} disagree "
+            "outside the placeholder span; identifier_lineage's boundary rule may have changed"
+        )
 
 
 def measure() -> tuple[dict[str, ModeloMeasurement], list[str]]:
@@ -265,7 +284,7 @@ def measure() -> tuple[dict[str, ModeloMeasurement], list[str]]:
                     if dirname in _RENAMED_FAMILIES:
                         try:
                             new_id = strip_edition_key(declared.identifier, revision_id)
-                        except AmbiguousRename as exc:
+                        except AmbiguousRenameError as exc:
                             failures.append(f"{modelo} {revision_id}: {exc}")
                             new_id = None
                         if dirname == "formulas":
@@ -366,23 +385,27 @@ def apply_renames(measurements: dict[str, ModeloMeasurement]) -> dict[str, int]:
     return files_touched
 
 
-def _test_separator_set_matches_identifier_lineage() -> None:
+def _check_separator_set_matches_identifier_lineage() -> None:
     """Self-check: our local separator copy agrees with the module's own boundary test."""
     probe = "modelo-131-2024-total"
     for sep in _IDENTIFIER_SEPARATORS:
         candidate = f"modelo-131{sep}2024{sep}total"
         lineage = identifier_lineage(candidate, "2024")
-        assert lineage == f"modelo-131{sep}{EDITION_PLACEHOLDER}{sep}total", (sep, lineage)
-    assert identifier_lineage(probe, "2024") != probe
+        expected = f"modelo-131{sep}{EDITION_PLACEHOLDER}{sep}total"
+        if lineage != expected:
+            raise RenameSpanMismatchError(candidate, "2024", lineage)
+    if identifier_lineage(probe, "2024") == probe:
+        raise RenameSpanMismatchError(probe, "2024", probe)
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run the measurement pass and, with ``--apply``, the rewrite; return the process exit code."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--apply", action="store_true", help="Rewrite files in place; default is measure-only.")
     parser.add_argument("--json", action="store_true", help="Emit the measurement report as JSON.")
     args = parser.parse_args(argv)
 
-    _test_separator_set_matches_identifier_lineage()
+    _check_separator_set_matches_identifier_lineage()
 
     measurements, failures = measure()
 
@@ -444,7 +467,7 @@ def main(argv: list[str] | None = None) -> int:
             print("No collisions detected in the combined per-revision primary-id namespace.")
         if generated_tree_impact:
             print("Generated export trees needing republish once source renames land:")
-            for modelo, trees in sorted(generated_tree_impact.items()):
+            for trees in sorted(generated_tree_impact.values(), key=lambda group: group[0]):
                 for tree in trees:
                     print(f"  {tree}")
         else:
