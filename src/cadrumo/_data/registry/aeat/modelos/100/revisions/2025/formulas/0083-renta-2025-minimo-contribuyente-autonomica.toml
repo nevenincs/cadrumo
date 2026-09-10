@@ -1,9 +1,9 @@
 [[revisions."2025".formulas]]
-id = "renta-2025-minimo-contribuyente-autonomica"
+id = "renta-minimo-contribuyente-autonomica"
 target_casilla_id = "0512"
 expression = { op = "lookup_parameter_by_entity_type", args = [
     { literal = "0" },
-    { binding = "renta-2025-profile-tax-residence-ccaa" },
+    { binding = "renta-profile-tax-residence-ccaa" },
     { dispatch_table_entries = [
         { key = "andalucia", parameter = "renta-2025-minimo-contribuyente-base-2025" },
         { key = "aragon", parameter = "renta-2025-minimo-contribuyente-base-2025" },

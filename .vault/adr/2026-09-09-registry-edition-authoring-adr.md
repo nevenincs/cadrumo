@@ -317,6 +317,17 @@ positions beside the official design. That template rows carry no back-reference
 choice, not a fact about the data — a template row still fills a real box — so a later rule that
 every box a filing writes carries an export reference would have to give template rows edges too.
 
+A row may state source references **in addition to** the edition default: it materialises as the
+default followed by the row's additions, and those additions inherit with the row. A row stating a
+full `source_refs` still replaces the default. The two are different facts — the default is the
+edition's own design, which changes every edition, while the additions are the procedure or form
+citations belonging to the box's concept, which do not — so collapsing them either drops real
+provenance or restates the design token on every row.
+
+`continuidad_origin` and `continuidad_evidence` state a row's relationship to its immediate
+predecessor. They are never inherited: an inherited row materialises with both unset, because a
+predecessor's claim that a box is new on its form is false one edition later.
+
 `formula` and `binding` references on an inherited row resolve to the successor edition's
 declaration of the same formula or binding lineage. A reference that does not resolve is a
 validation failure, not an inherited pointer. Those identifiers must therefore stop embedding an
@@ -349,11 +360,24 @@ test sweeps every edition asserting each casilla yields a non-empty label, and a
 manager reads labels in a path whose failure mode is a silent missing-title ambiguity rather than
 an error. The loud one is the gate; the quiet one is the reason to get it right.
 
-Ordering of rows is fully determined today by sorted fragment paths and an ordered row tuple, so
-the materialiser must reproduce it: inherited rows first in the predecessor's materialised order, a
-superseding row taking the inherited row's position, and genuinely new rows appended in stated
-order. Superseders are position-pinned by lineage, so a successor renaming its fragment files
-cannot move them.
+**The materialised row order is defined by the merge, not reproduced from the full copy:**
+inherited rows in the predecessor's materialised order, a superseding row in the inherited row's
+position, and genuinely new rows appended in stated order. Superseders are position-pinned by
+lineage, so a successor renaming its fragment files cannot move them. A migration may therefore
+reorder an edition once, and the round-trip gate's order assertion compares the materialised edition
+against its full copy rearranged into this order while the content assertion stays element-wise.
+
+This was measured rather than assumed. A full copy's order is an artefact of lexicographic fragment
+filename sorting — no field on the row reproduces it for more than a third of editions, and on five
+editions it already differs between case-insensitive and case-sensitive filesystems. Reproducing it
+exactly would have needed hundreds of authored position anchors, fields existing only to unlock the
+gate, or would have left most otherwise-migratable editions full-copy. Tuple order carries no filing
+or calculation meaning: the fixed-width export takes positions from its layout records and the
+calculation graph sorts its formulas topologically. What it does change is presentation — the
+casilla listing, the data inventory and calc-sheet row layout follow tuple order — and a migrated
+edition's calc-sheet registry fingerprint changes, so a workbook pushed before the migration is
+refused at pull as stale, failing closed. A consumer that needs printed-form order must take it from
+the export layout or an explicit field, never from tuple position.
 
 This is not a compatibility layer because there is one format, declared explicitly per edition,
 and one reader. The loader does not accept a retired shape; the shape before this decision is the

@@ -11,7 +11,7 @@ related:
   - '[[2026-09-09-registry-edition-authoring-code-shape-and-blast-radius-reference]]'
 modified: '2026-09-10'
 body_schema: body-v2
-body_hash: 'sha256:79f3a39fd1ca8377e96f5c75c39b2b4d084a15b667222e69df04281e8f9751e9'
+body_hash: 'sha256:a9fe8315c4b2a7565d4c8f004e3928dcb8b11defe9a7f66b7613c17d6c7cfb8a'
 ---
 
 # `registry-edition-authoring` plan
@@ -197,6 +197,7 @@ Convert each modelo to delta authoring, ordered by measured similarity. One mode
 One modelo end to end, on the richest instrumentation, before any other modelo moves.
 
 - [x] `W03.P05.S31` - [M | opus-medium] Give the materialised edition a reader, so a person can see a complete edition without reconstructing it mentally from a delta. Without this the tree is harder to work with, not easier. Proof: the reader renders a migrated edition identically to its pre-migration files.; `src/cadrumo/entrypoints/cli`.
+- [ ] `W03.P05.S62` - [M | opus-medium] Implement the amended materialiser contract before the live pilot: (1) the round-trip gate's order assertion compares against the full copy rearranged into the merge order (inherited in predecessor order, superseders in place, new rows appended), with content still element-wise; (2) a row may state source references in addition to the edition's casilla_source_refs, materialising as default followed by additions that inherit with the row, while a full source_refs still replaces (name the additions key canonically); (3) continuidad_origin and continuidad_evidence are never inherited — an inherited row materialises with both unset; (4) the delta-minimality screen judges stated rows only, via a statement-origin marker, not inherited ones. Then re-run the migration script's 303 dry run. Proof: all five 303 successor editions migrate exactly in the dry run, the round-trip gate passes on them, delta-minimality is clean for 303, and the unmigrated corpus is byte-identical.; `src/cadrumo/domain/calculations/registry`.
 - [ ] `W03.P05.S17` - [L | opus-medium] Migrate modelo 303 end to end as the pilot: lift its restatement, author its successor editions as deltas, and prove it. Richest instrumentation in the corpus, so a mistake is cheapest to see here. Proof: round-trip equality, export bytes unchanged, delta-minimality clean for 303.; `src/cadrumo/_data/registry/aeat/modelos/303`.
 - [ ] `W03.P05.S18` - [M | opus-medium] Harden the migration script against what the pilot exposed, and fix the proof obligations that turned out to be weak. Everything after this step depends on the script rather than on judgement. Proof: re-running the pilot from a clean checkout reproduces it exactly.; `dev/registry`.
 - [ ] `W03.P05.S42` - [S | sonnet-high] Verify during the pilot that the temporal-coverage design-authority refusal pin still passes untouched. The decision asserts it does not weaken that refusal; the assertion is cheap to check and expensive to be wrong about, since a live test carries it. Proof: the pin passes before and after the pilot migration, quoted with its result.; `src/cadrumo/domain/calculations/registry/tests`.

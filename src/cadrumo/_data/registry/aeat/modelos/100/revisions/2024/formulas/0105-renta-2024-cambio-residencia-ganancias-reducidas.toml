@@ -1,5 +1,5 @@
 [[revisions."2024".formulas]]
-id = "renta-2024-cambio-residencia-ganancias-reducidas"
+id = "renta-cambio-residencia-ganancias-reducidas"
 target_casilla_id = "0411"
 expression = { op = "subtract", args = [
     { casilla_id = "0408" },

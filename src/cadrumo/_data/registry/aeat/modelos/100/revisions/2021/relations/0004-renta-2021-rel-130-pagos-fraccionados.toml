@@ -5,7 +5,7 @@ dependency_role = "instalment_to_final_settlement"
 source_modelo = "130"
 source_revision_selector = { year = 2021 }
 source_casilla_id = "19"
-target_binding = "renta-2021-modelo-130-pagos-fraccionados"
+target_binding = "renta-modelo-130-pagos-fraccionados"
 period_alignment = { source_periods = "quarters", target_period = "0A" }
 source_periods = ["1T", "2T", "3T", "4T"]
 target_periods = ["0A"]

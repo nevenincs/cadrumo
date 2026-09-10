@@ -8,7 +8,7 @@
 # the payer retains it and the régimen does not apply). Consumed by the cuota
 # escala formulas (0528/0530/0529/0531) inside the régimen predicate.
 [[revisions."2022".bindings]]
-id = "renta-2022-profile-anualidades-sin-minimo-descendientes"
+id = "renta-profile-anualidades-sin-minimo-descendientes"
 source = "profile"
 selector = { profile_key = "renta_family.anualidades_sin_minimo_descendientes_2022" }
 aggregation = { op = "copy" }

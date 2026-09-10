@@ -10,7 +10,7 @@
 # parity with the 2025 renta-2025-ledger-income-0171 binding, closing the gap
 # where the annual M100 silently declared zero actividad-economica income.
 [[revisions."2024".bindings]]
-id = "renta-2024-ledger-income-0171"
+id = "renta-ledger-income-0171"
 source = "ledger_renta_income_aggregation"
 selector = { modelo = "100", target_casilla_id = "0171", fact = "ingresos_integros_sum" }
 aggregation = { op = "sum" }

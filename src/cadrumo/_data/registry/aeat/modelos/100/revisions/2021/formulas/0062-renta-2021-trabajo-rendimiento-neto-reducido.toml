@@ -1,5 +1,5 @@
 [[revisions."2021".formulas]]
-id = "renta-2021-trabajo-rendimiento-neto-reducido"
+id = "renta-trabajo-rendimiento-neto-reducido"
 target_casilla_id = "0025"
 expression = { op = "sum", args = [
         { casilla_id = "0022" },

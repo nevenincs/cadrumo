@@ -1,5 +1,5 @@
 [[revisions."2025".bindings]]
-id = "renta-2025-ledger-expense-0192-deductible"
+id = "renta-ledger-expense-0192-deductible"
 source = "ledger_renta_gastos_estimacion_directa_aggregation"
 selector = { modelo = "100", period = "0A", target_casilla_id = "0192", fact = "deductible_amount_sum" }
 aggregation = { op = "sum" }

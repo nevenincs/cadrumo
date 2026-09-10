@@ -1,5 +1,5 @@
 [[revisions."2024".formulas]]
-id = "renta-2024-atribucion-actividades-economicas-suma"
+id = "renta-atribucion-actividades-economicas-suma"
 target_casilla_id = "1605"
 expression = { op = "sum", args = [
     { casilla_id = "1583" },

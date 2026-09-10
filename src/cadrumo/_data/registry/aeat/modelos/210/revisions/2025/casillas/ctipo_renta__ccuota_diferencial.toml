@@ -149,7 +149,7 @@ data_type = "money"
 semantic_role = "irnr_base_imponible"
 required = true
 input_kind = "computed"
-formula = "m210-base-imponible-2025"
+formula = "m210-base-imponible"
 legal_refs = ["trlirnr-rdleg-5-2004:art-13.1.h", "trlirnr-rdleg-5-2004:art-24", "ley-35-2006:art-85"]
 source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-urbano"]
 
@@ -162,7 +162,7 @@ data_type = "ratio"
 semantic_role = "irnr_tipo_gravamen"
 required = true
 input_kind = "computed"
-formula = "m210-tipo-gravamen-2025-resolve"
+formula = "m210-tipo-gravamen-resolve"
 legal_refs = ["trlirnr-rdleg-5-2004:art-25.1.a", "trlirnr-rdleg-5-2004:art-25.1.b", "trlirnr-rdleg-5-2004:art-25.1.f"]
 source_refs = ["aeat-modelo-210-procedure"]
 
@@ -175,7 +175,7 @@ data_type = "money"
 semantic_role = "irnr_cuota_integra"
 required = true
 input_kind = "computed"
-formula = "m210-cuota-integra-2025"
+formula = "m210-cuota-integra"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.a", "trlirnr-rdleg-5-2004:art-25.1.b"]
 source_refs = ["aeat-modelo-210-procedure"]
 
@@ -188,6 +188,6 @@ data_type = "money"
 semantic_role = "irnr_cuota_diferencial"
 required = true
 input_kind = "computed"
-formula = "m210-cuota-diferencial-2025"
+formula = "m210-cuota-diferencial"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-210-procedure"]

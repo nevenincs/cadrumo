@@ -15,14 +15,14 @@ source_refs = [
     "aeat-dr-210-2022",
 ]
 formulas = [
-    "m210-base-imponible-2025",
-    "m210-tipo-gravamen-2025-resolve",
-    "m210-cuota-integra-2025",
-    "m210-base-ganancias-h-2025",
-    "m210-cuota-ley-irnr-2025",
-    "m210-cuota-integra-reducida-2025",
-    "m210-reduccion-convenio-2025",
-    "m210-cuota-diferencial-2025",
+    "m210-base-imponible",
+    "m210-tipo-gravamen-resolve",
+    "m210-cuota-integra",
+    "m210-base-ganancias-h",
+    "m210-cuota-ley-irnr",
+    "m210-cuota-integra-reducida",
+    "m210-reduccion-convenio",
+    "m210-cuota-diferencial",
 ]
 application_links = [
     "modelo-210-2025-calculation",

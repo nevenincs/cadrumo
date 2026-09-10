@@ -10,7 +10,7 @@
 # 2.700 € / 4.000 € / 4.500 € + 2.800 €); every other CCAA mirrors the
 # estatal aggregate exactly. Feeds casilla 0514 (autonómico).
 [[revisions."2025".bindings]]
-id = "renta-2025-profile-minimo-descendientes-autonomico"
+id = "renta-profile-minimo-descendientes-autonomico"
 source = "profile"
 selector = { profile_key = "renta_family.descendientes_minimos_aggregate_autonomico_2025" }
 aggregation = { op = "copy" }

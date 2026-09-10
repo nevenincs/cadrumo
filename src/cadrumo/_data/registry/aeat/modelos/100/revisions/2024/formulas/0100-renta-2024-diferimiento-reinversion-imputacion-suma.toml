@@ -1,5 +1,5 @@
 [[revisions."2024".formulas]]
-id = "renta-2024-diferimiento-reinversion-imputacion-suma"
+id = "renta-diferimiento-reinversion-imputacion-suma"
 target_casilla_id = "0400"
 expression = { op = "sum", args = [
     { casilla_id = "0399" },

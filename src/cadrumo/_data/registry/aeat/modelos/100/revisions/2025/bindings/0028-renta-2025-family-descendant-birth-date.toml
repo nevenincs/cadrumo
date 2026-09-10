@@ -1,5 +1,5 @@
 [[revisions."2025".bindings]]
-id = "renta-2025-family-descendant-birth-date"
+id = "renta-family-descendant-birth-date"
 source = "profile"
 selector = { profile_model = "RentaFamilyProfile", collection = "descendants", field = "birth_date", xsd_path = "/DatosIdentificativos/Hijos/Hijo/FNACDLG", dictionary_field = "FNACDLG", repeating = true, format = "date" }
 aggregation = { op = "rows" }

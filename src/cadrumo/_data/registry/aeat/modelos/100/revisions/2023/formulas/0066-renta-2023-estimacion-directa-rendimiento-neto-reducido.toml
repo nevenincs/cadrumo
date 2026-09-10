@@ -1,5 +1,5 @@
 [[revisions."2023".formulas]]
-id = "renta-2023-estimacion-directa-rendimiento-neto-reducido"
+id = "renta-estimacion-directa-rendimiento-neto-reducido"
 target_casilla_id = "0226"
 expression = { op = "subtract", args = [
         { op = "subtract", args = [

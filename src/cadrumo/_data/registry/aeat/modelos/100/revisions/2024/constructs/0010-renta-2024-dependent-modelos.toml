@@ -26,19 +26,19 @@ source_refs = [
     "boe-modelo-193-2011-form",
 ]
 bindings = [
-    "renta-2024-modelo-111-retenciones-periodicas",
-    "renta-2024-modelo-123-retenciones-periodicas",
-    "renta-2024-modelo-130-pagos-fraccionados",
-    "renta-2024-modelo-131-pagos-fraccionados",
-    "renta-2024-modelo-131-rendimiento-neto-modulos",
-    "renta-2024-modelo-193-retenciones-anuales",
+    "renta-modelo-111-retenciones-periodicas",
+    "renta-modelo-123-retenciones-periodicas",
+    "renta-modelo-130-pagos-fraccionados",
+    "renta-modelo-131-pagos-fraccionados",
+    "renta-modelo-131-rendimiento-neto-modulos",
+    "renta-modelo-193-retenciones-anuales",
 ]
 casilla_ids = [
     "0604",
     "1481",
 ]
 formulas = [
-    "renta-2024-pagos-fraccionados-ingresados",
+    "renta-pagos-fraccionados-ingresados",
 ]
 relations = [
     "renta-2024-rel-111-retenciones-trimestrales",

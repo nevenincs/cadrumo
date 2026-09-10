@@ -1,5 +1,5 @@
 [[revisions."2025".formulas]]
-id = "renta-2025-estimacion-directa-total-rendimiento-neto-reducido"
+id = "renta-estimacion-directa-total-rendimiento-neto-reducido"
 target_casilla_id = "0231"
 expression = { op = "copy", args = [
     { casilla_id = "0226" },

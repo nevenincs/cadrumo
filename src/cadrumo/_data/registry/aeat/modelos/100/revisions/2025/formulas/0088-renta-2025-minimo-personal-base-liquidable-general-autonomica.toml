@@ -1,5 +1,5 @@
 [[revisions."2025".formulas]]
-id = "renta-2025-minimo-personal-base-liquidable-general-autonomica"
+id = "renta-minimo-personal-base-liquidable-general-autonomica"
 target_casilla_id = "0523"
 expression = { op = "min", args = [
     { casilla_id = "0505" },

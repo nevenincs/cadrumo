@@ -1,5 +1,5 @@
 [[revisions."2024".formulas]]
-id = "renta-2024-capital-mobiliario-ahorro-total-ingresos"
+id = "renta-capital-mobiliario-ahorro-total-ingresos"
 target_casilla_id = "0036"
 expression = { op = "sum", args = [
         { casilla_id = "0027" },

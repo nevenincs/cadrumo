@@ -40,7 +40,7 @@ semantic_role = "pago_fraccionado_previo_sin_datos_base"
 continuidad_id = "pago-fraccionado-previo-sin-datos-base"
 required = false
 input_kind = "computed"
-formula = "modelo-131-2024-pago-fraccionado-sin-datos-base"
+formula = "modelo-131-pago-fraccionado-sin-datos-base"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
 [[revisions."2024".casillas]]
@@ -64,7 +64,7 @@ semantic_role = "pago_fraccionado_previo_agrario"
 continuidad_id = "pago-fraccionado-previo-agrario"
 required = false
 input_kind = "computed"
-formula = "modelo-131-2024-pago-fraccionado-agrario"
+formula = "modelo-131-pago-fraccionado-agrario"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
 [[revisions."2024".casillas]]
@@ -77,7 +77,7 @@ continuidad_id = "pago-fraccionado-previo"
 constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"] }
 required = false
 input_kind = "computed"
-formula = "modelo-131-2024-suma-pagos-previos"
+formula = "modelo-131-suma-pagos-previos"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
 [[revisions."2024".casillas]]
@@ -112,7 +112,7 @@ semantic_role = "irpf_pf_modulos_diferencia"
 continuidad_id = "irpf-pf-modulos-diferencia"
 required = false
 input_kind = "computed"
-formula = "modelo-131-2024-diferencia"
+formula = "modelo-131-diferencia"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
 [[revisions."2024".casillas]]
@@ -124,7 +124,7 @@ semantic_role = "irpf_pf_modulos_resultados_negativos_anteriores"
 continuidad_id = "irpf-pf-modulos-resultados-negativos-anteriores"
 required = false
 input_kind = "bound"
-binding = "modelo-131-2024-resultados-negativos-anteriores"
+binding = "modelo-131-resultados-negativos-anteriores"
 constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-modelo-131-instructions"] }
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
@@ -148,7 +148,7 @@ semantic_role = "irpf_pf_modulos_total"
 continuidad_id = "irpf-pf-modulos-total"
 required = false
 input_kind = "computed"
-formula = "modelo-131-2024-total"
+formula = "modelo-131-total"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
 [[revisions."2024".casillas]]
@@ -171,6 +171,6 @@ semantic_role = "irpf_pf_modulos_resultado_declaracion"
 continuidad_id = "irpf-pf-modulos-resultado-declaracion"
 required = false
 input_kind = "computed"
-formula = "modelo-131-2024-resultado"
+formula = "modelo-131-resultado"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]

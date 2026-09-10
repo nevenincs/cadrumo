@@ -1,5 +1,5 @@
 [[revisions."2025".bindings]]
-id = "renta-2025-profile-unidad-familiar-otros-miembros-base"
+id = "renta-profile-unidad-familiar-otros-miembros-base"
 source = "profile"
 selector = { profile_key = "renta_family.unidad_familiar_otros_miembros_base" }
 aggregation = { op = "copy" }

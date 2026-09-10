@@ -1,5 +1,5 @@
 [[revisions."2023".formulas]]
-id = "renta-2023-trabajo-total-ingresos-integros-computables"
+id = "renta-trabajo-total-ingresos-integros-computables"
 target_casilla_id = "0012"
 expression = { op = "sum", args = [
         { casilla_id = "0003" },

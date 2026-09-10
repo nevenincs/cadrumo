@@ -1,5 +1,5 @@
 [[revisions."2025".formulas]]
-id = "renta-2025-trabajo-especie-importe-integro"
+id = "renta-trabajo-especie-importe-integro"
 target_casilla_id = "0007"
 expression = { op = "subtract", args = [
     { op = "sum", args = [

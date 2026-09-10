@@ -4,7 +4,7 @@ number = "0553"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_deduccion_donativos_autonomica"
 input_kind = "computed"
-formula = "renta-2025-deduccion-donativos-autonomica-50-porciento"
+formula = "renta-deduccion-donativos-autonomica-50-porciento"
 legal_refs = [
     "ley-35-2006:art-68.3",
     "orden-hac-277-2026:art-3",

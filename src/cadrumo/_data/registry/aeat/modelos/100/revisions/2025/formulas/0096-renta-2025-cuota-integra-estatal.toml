@@ -1,5 +1,5 @@
 [[revisions."2025".formulas]]
-id = "renta-2025-cuota-integra-estatal"
+id = "renta-cuota-integra-estatal"
 target_casilla_id = "0545"
 expression = { op = "sum", args = [
     { casilla_id = "0532" },

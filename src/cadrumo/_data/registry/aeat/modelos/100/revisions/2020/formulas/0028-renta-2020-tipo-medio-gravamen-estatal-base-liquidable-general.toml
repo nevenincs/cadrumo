@@ -1,5 +1,5 @@
 [[revisions."2020".formulas]]
-id = "renta-2020-tipo-medio-gravamen-estatal-base-liquidable-general"
+id = "renta-tipo-medio-gravamen-estatal-base-liquidable-general"
 target_casilla_id = "0534"
 expression = { op = "if_then_else", args = [
     { op = "greater_than", args = [{ casilla_id = "0505" }, { literal = "0" }] },

@@ -721,7 +721,7 @@ parameters = [
 formulas = [
     "modelo-200-base-imponible-previa",
     "modelo-200-base-imponible",
-    "modelo-200-2024-bin-aplicada-maxima",
+    "modelo-200-bin-aplicada-maxima",
     "modelo-200-tipo-gravamen-por-forma-juridica",
     "modelo-200-base-imponible-despues-reserva-nivelacion",
     "modelo-200-cuota-integra",
@@ -731,10 +731,10 @@ formulas = [
     "modelo-200-cuota-diferencial",
 ]
 bindings = [
-    "modelo-200-2024-pagos-fraccionados-anuales",
-    "modelo-200-2024-pagos-fraccionados-anuales-40-2",
-    "modelo-200-2024-profile-legal-entity-form",
-    "modelo-200-2024-bin-pendiente-ejercicios-anteriores",
+    "modelo-200-pagos-fraccionados-anuales",
+    "modelo-200-pagos-fraccionados-anuales-40-2",
+    "modelo-200-profile-legal-entity-form",
+    "modelo-200-bin-pendiente-ejercicios-anteriores",
 ]
 relations = ["modelo-200-2024-rel-202-pagos-fraccionados", "modelo-200-2024-rel-self-bin-pendiente-anterior"]
 dependency_classifications = ["modelo-200-2024-dep-202-instalments", "modelo-200-2024-dep-self-bin-pendiente"]

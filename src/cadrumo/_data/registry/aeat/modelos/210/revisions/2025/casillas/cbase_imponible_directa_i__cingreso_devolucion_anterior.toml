@@ -164,7 +164,7 @@ data_type = "money"
 semantic_role = "irnr_base_imponible_ganancias_h"
 required = false
 input_kind = "computed"
-formula = "m210-base-ganancias-h-2025"
+formula = "m210-base-ganancias-h"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
 source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2022"]
 
@@ -234,7 +234,7 @@ data_type = "money"
 semantic_role = "irnr_cuota_ley_irnr"
 required = false
 input_kind = "computed"
-formula = "m210-cuota-ley-irnr-2025"
+formula = "m210-cuota-ley-irnr"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2022"]
 
@@ -273,7 +273,7 @@ data_type = "money"
 semantic_role = "irnr_reduccion_convenio"
 required = false
 input_kind = "computed"
-formula = "m210-reduccion-convenio-2025"
+formula = "m210-reduccion-convenio"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2022"]
 
@@ -286,7 +286,7 @@ data_type = "money"
 semantic_role = "irnr_cuota_integra_reducida"
 required = false
 input_kind = "computed"
-formula = "m210-cuota-integra-reducida-2025"
+formula = "m210-cuota-integra-reducida"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2022"]
 

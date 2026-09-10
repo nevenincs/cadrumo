@@ -1,5 +1,5 @@
 [[revisions."2024".formulas]]
-id = "renta-2024-pagos-fraccionados-ingresados"
+id = "renta-pagos-fraccionados-ingresados"
 target_casilla_id = "0604"
 expression = { op = "sum", args = [
     { relation = "renta-2024-rel-130-pagos-fraccionados" },

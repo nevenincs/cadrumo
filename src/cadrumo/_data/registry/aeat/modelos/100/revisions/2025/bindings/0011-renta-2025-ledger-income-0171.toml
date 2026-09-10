@@ -7,7 +7,7 @@
 # annual income aggregator (modelo == "100" path) feeds this binding; the same
 # source kind serves the M130 cumulative-quarter income.
 [[revisions."2025".bindings]]
-id = "renta-2025-ledger-income-0171"
+id = "renta-ledger-income-0171"
 source = "ledger_renta_income_aggregation"
 selector = { modelo = "100", target_casilla_id = "0171", fact = "ingresos_integros_sum" }
 aggregation = { op = "sum" }

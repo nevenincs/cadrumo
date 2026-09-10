@@ -2,17 +2,17 @@
 # total cuota autonómica is minorada by escala(mínimo + 1.980). Else-branch
 # escala_ccaa(0521) byte-identical to the ordinary chain.
 [[revisions."2025".formulas]]
-id = "renta-2025-cuota-escala-autonomica-sobre-minimo-personal-familiar"
+id = "renta-cuota-escala-autonomica-sobre-minimo-personal-familiar"
 target_casilla_id = "0531"
 expression = { op = "if_then_else", args = [
     { op = "greater_than", args = [{ casilla_id = "0527" }, { literal = "0" }] },
     { op = "if_then_else", args = [
         { op = "less_than", args = [{ casilla_id = "0527" }, { casilla_id = "0505" }] },
         { op = "if_then_else", args = [
-            { binding = "renta-2025-profile-anualidades-sin-minimo-descendientes" },
+            { binding = "renta-profile-anualidades-sin-minimo-descendientes" },
             { op = "lookup_bracket_by_ccaa", args = [
                 { op = "add", args = [{ casilla_id = "0521" }, { literal = "1980" }] },
-                { binding = "renta-2025-profile-tax-residence-ccaa" },
+                { binding = "renta-profile-tax-residence-ccaa" },
                 { dispatch_table_entries = [
                     { key = "andalucia", parameter = "renta-2025-escala-autonomica-andalucia-base-general" },
                     { key = "aragon", parameter = "renta-2025-escala-autonomica-aragon-base-general" },
@@ -33,7 +33,7 @@ expression = { op = "if_then_else", args = [
             ] },
             { op = "lookup_bracket_by_ccaa", args = [
                 { casilla_id = "0521" },
-                { binding = "renta-2025-profile-tax-residence-ccaa" },
+                { binding = "renta-profile-tax-residence-ccaa" },
                 { dispatch_table_entries = [
                     { key = "andalucia", parameter = "renta-2025-escala-autonomica-andalucia-base-general" },
                     { key = "aragon", parameter = "renta-2025-escala-autonomica-aragon-base-general" },
@@ -55,7 +55,7 @@ expression = { op = "if_then_else", args = [
         ] },
         { op = "lookup_bracket_by_ccaa", args = [
             { casilla_id = "0521" },
-            { binding = "renta-2025-profile-tax-residence-ccaa" },
+            { binding = "renta-profile-tax-residence-ccaa" },
             { dispatch_table_entries = [
                 { key = "andalucia", parameter = "renta-2025-escala-autonomica-andalucia-base-general" },
                 { key = "aragon", parameter = "renta-2025-escala-autonomica-aragon-base-general" },
@@ -77,7 +77,7 @@ expression = { op = "if_then_else", args = [
     ] },
     { op = "lookup_bracket_by_ccaa", args = [
         { casilla_id = "0521" },
-        { binding = "renta-2025-profile-tax-residence-ccaa" },
+        { binding = "renta-profile-tax-residence-ccaa" },
         { dispatch_table_entries = [
             { key = "andalucia", parameter = "renta-2025-escala-autonomica-andalucia-base-general" },
             { key = "aragon", parameter = "renta-2025-escala-autonomica-aragon-base-general" },

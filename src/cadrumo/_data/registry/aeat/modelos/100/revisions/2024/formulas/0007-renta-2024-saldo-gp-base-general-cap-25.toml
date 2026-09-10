@@ -1,5 +1,5 @@
 [[revisions."2024".formulas]]
-id = "renta-2024-saldo-gp-base-general-cap-25"
+id = "renta-saldo-gp-base-general-cap-25"
 target_casilla_id = "0433"
 expression = { op = "min", args = [
     { casilla_id = "0421" },

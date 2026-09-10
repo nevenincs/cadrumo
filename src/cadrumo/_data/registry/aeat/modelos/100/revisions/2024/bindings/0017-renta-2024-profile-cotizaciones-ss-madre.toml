@@ -1,5 +1,5 @@
 [[revisions."2024".bindings]]
-id = "renta-2024-profile-cotizaciones-ss-madre"
+id = "renta-profile-cotizaciones-ss-madre"
 source = "profile"
 selector = { profile_key = "renta_family.cotizaciones_ss_madre_2024" }
 aggregation = { op = "copy" }

@@ -6,7 +6,7 @@ data_type = "text"
 semantic_role = "irpf_declarante_nombre"
 required = true
 input_kind = "bound"
-binding = "renta-2024-profile-display-name"
+binding = "renta-profile-display-name"
 legal_refs = ["orden-hac-242-2025:art-3"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
 

@@ -5,7 +5,7 @@ dependency_role = "direct_calculation"
 source_modelo = "131"
 source_revision_selector = { year = 2024 }
 source_casilla_id = "01"
-target_binding = "renta-2024-modelo-131-rendimiento-neto-modulos"
+target_binding = "renta-modelo-131-rendimiento-neto-modulos"
 period_alignment = { source_periods = "quarters", target_period = "0A" }
 source_periods = ["1T", "2T", "3T", "4T"]
 target_periods = ["0A"]

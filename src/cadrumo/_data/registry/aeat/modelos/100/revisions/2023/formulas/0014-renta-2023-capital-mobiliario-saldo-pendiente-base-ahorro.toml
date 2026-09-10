@@ -1,5 +1,5 @@
 [[revisions."2023".formulas]]
-id = "renta-2023-capital-mobiliario-saldo-pendiente-base-ahorro"
+id = "renta-capital-mobiliario-saldo-pendiente-base-ahorro"
 target_casilla_id = "1283"
 expression = { op = "subtract", args = [
     { casilla_id = "0430" },

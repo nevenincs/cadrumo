@@ -1,5 +1,5 @@
 [[revisions."2025-y-siguientes".bindings]]
-id = "modelo-200-2024-pagos-fraccionados-anuales"
+id = "modelo-200-pagos-fraccionados-anuales"
 source = "relation_prefill"
 selector = { source_modelo = "202", source_casilla_id = "34" }
 aggregation = { op = "sum" }
@@ -19,7 +19,7 @@ required_text = [
 # exclusive per filing (the non-elected one computes 0), so the cuota-diferencial
 # formula subtracts BOTH relations and a 40.2 filer's instalments are now credited.
 [[revisions."2025-y-siguientes".bindings]]
-id = "modelo-200-2024-pagos-fraccionados-anuales-40-2"
+id = "modelo-200-pagos-fraccionados-anuales-40-2"
 source = "relation_prefill"
 selector = { source_modelo = "202", source_casilla_id = "03" }
 aggregation = { op = "sum" }
@@ -42,7 +42,7 @@ required_text = [
 # carries no xsd/dictionary addressing because it does not land on the
 # fichero-BOE record.
 [[revisions."2025-y-siguientes".bindings]]
-id = "modelo-200-2024-profile-legal-entity-form"
+id = "modelo-200-profile-legal-entity-form"
 source = "profile"
 selector = { profile_model = "taxpayer", field = "legal_entity_form" }
 aggregation = { op = "copy" }
@@ -62,7 +62,7 @@ required_text = ["tipo de gravamen"]
 # `modelo-200-cuota-integra` `if_then_else` so the override layers on
 # top of the sub-form rate dispatch rather than replacing it.
 [[revisions."2025-y-siguientes".bindings]]
-id = "modelo-200-2024-profile-new-entity-flag"
+id = "modelo-200-profile-new-entity-flag"
 source = "profile"
 selector = { profile_model = "taxpayer", field = "new_entity_first_two_profit_periods" }
 aggregation = { op = "copy" }
@@ -85,7 +85,7 @@ required_text = ["tipo de gravamen"]
 # undeclared INCN raises `binding has no supplied value` so the
 # engine refuses to guess micro-empresa identification.
 [[revisions."2025-y-siguientes".bindings]]
-id = "modelo-200-2024-profile-incn-prior-12-months"
+id = "modelo-200-profile-incn-prior-12-months"
 source = "profile"
 selector = { profile_model = "taxpayer", field = "incn_prior_12_months" }
 aggregation = { op = "copy" }
@@ -108,7 +108,7 @@ required_text = ["tipo de gravamen"]
 # regime profiles store their partial percentage or leave it absent to
 # surface an INCOMPLETE result.
 [[revisions."2025-y-siguientes".bindings]]
-id = "modelo-200-2024-profile-tributacion-estado-porcentaje"
+id = "modelo-200-profile-tributacion-estado-porcentaje"
 source = "profile"
 selector = { profile_model = "taxpayer", field = "tributacion_estado_porcentaje" }
 aggregation = { op = "copy" }
@@ -127,7 +127,7 @@ required_text = ["Casilla [00625] Administración del Estado"]
 # absent value means the SAL has not yet accumulated any prior reserva;
 # the formula treats it as zero.
 [[revisions."2025-y-siguientes".bindings]]
-id = "modelo-200-2024-profile-sal-reserva-especial-dotada"
+id = "modelo-200-profile-sal-reserva-especial-dotada"
 source = "profile"
 selector = { profile_model = "taxpayer", field = "sal_reserva_especial_dotada" }
 aggregation = { op = "copy" }
@@ -143,7 +143,7 @@ required_text = ["base imponible"]
 # dotacion is capped once accumulated reserva reaches the first euro
 # cent above twice capital social.
 [[revisions."2025-y-siguientes".bindings]]
-id = "modelo-200-2024-profile-sal-capital-social"
+id = "modelo-200-profile-sal-capital-social"
 source = "profile"
 selector = { profile_model = "taxpayer", field = "sal_capital_social" }
 aggregation = { op = "copy" }
@@ -166,7 +166,7 @@ required_text = ["base imponible"]
 # the fyd=-1 source resolves present-or-zero-carry even though M200 is modelled
 # only from 2024.
 [[revisions."2025-y-siguientes".bindings]]
-id = "modelo-200-2024-bin-pendiente-ejercicios-anteriores"
+id = "modelo-200-bin-pendiente-ejercicios-anteriores"
 source = "relation_prefill"
 selector = { source_modelo = "200", source_casilla_id = "00671" }
 aggregation = { op = "copy" }
@@ -194,7 +194,7 @@ required_text = ["bases imponibles negativas"]
 # fyd=-1 source resolves present-or-zero-carry even though M200 is modelled only
 # from 2024).
 [[revisions."2025-y-siguientes".bindings]]
-id = "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores"
+id = "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores"
 source = "relation_prefill"
 selector = { source_modelo = "200", source_casilla_id = "01498" }
 aggregation = { op = "copy" }
@@ -206,7 +206,7 @@ source_ref = "aeat-modelo-200-manual-2024"
 required_text = ["deterioro"]
 
 [[revisions."2025-y-siguientes".bindings]]
-id = "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores"
+id = "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores"
 source = "relation_prefill"
 selector = { source_modelo = "200", source_casilla_id = "01499" }
 aggregation = { op = "copy" }
