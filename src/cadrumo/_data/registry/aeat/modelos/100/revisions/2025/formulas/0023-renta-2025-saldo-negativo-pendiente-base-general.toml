@@ -1,5 +1,5 @@
 [[revisions."2025".formulas]]
-id = "renta-2025-saldo-negativo-pendiente-base-general"
+id = "renta-saldo-negativo-pendiente-base-general"
 target_casilla_id = "1257"
 expression = { op = "subtract", args = [
     { casilla_id = "0421" },

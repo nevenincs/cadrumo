@@ -28,6 +28,7 @@
 
 [[revisions."2025".casillas]]
 id = "tipo_renta"
+continuidad_id = "irnr-tipo-renta"
 number = "tipo_renta"
 section = ["identificacion_renta"]
 data_type = "text"
@@ -36,10 +37,10 @@ required = true
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.a", "trlirnr-rdleg-5-2004:art-25.1.b", "trlirnr-rdleg-5-2004:art-25.1.f"]
 source_refs = ["aeat-modelo-210-procedure"]
-export_refs = ["m210-2022.pagina01.f019"]
 
 [[revisions."2025".casillas]]
 id = "rendimientos_integros"
+continuidad_id = "irnr-rendimientos-integros"
 number = "5"
 section = ["rendimientos"]
 data_type = "money"
@@ -48,11 +49,11 @@ required = true
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-13.1", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-210-procedure"]
-export_refs = ["m210-2022.pagina01.f083"]
 constraints = { sign = "non_negative", legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_refs = ["aeat-modelo-210-procedure"] }
 
 [[revisions."2025".casillas]]
 id = "valor_catastral"
+continuidad_id = "irnr-imputacion-inmobiliaria-valor-catastral"
 number = "valor_catastral"
 section = ["renta_inmobiliaria_imputada"]
 data_type = "money"
@@ -65,6 +66,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-85"], sour
 
 [[revisions."2025".casillas]]
 id = "coeficiente_imputacion_inmobiliaria"
+continuidad_id = "irnr-imputacion-inmobiliaria-coeficiente"
 number = "coeficiente_imputacion_inmobiliaria"
 section = ["renta_inmobiliaria_imputada"]
 data_type = "ratio"
@@ -77,6 +79,7 @@ constraints = { min_value = "0", max_value = "1", legal_refs = ["ley-35-2006:art
 
 [[revisions."2025".casillas]]
 id = "dias_imputacion"
+continuidad_id = "irnr-imputacion-inmobiliaria-dias"
 number = "dias_imputacion"
 section = ["renta_inmobiliaria_imputada"]
 data_type = "integer"
@@ -89,6 +92,7 @@ constraints = { min_value = "0", max_value = "366", legal_refs = ["ley-35-2006:a
 
 [[revisions."2025".casillas]]
 id = "valor_adquisicion"
+continuidad_id = "irnr-imputacion-inmobiliaria-valor-adquisicion"
 number = "valor_adquisicion"
 section = ["renta_inmobiliaria_imputada"]
 data_type = "money"
@@ -101,6 +105,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-85"], sour
 
 [[revisions."2025".casillas]]
 id = "valor_comprobado_administracion"
+continuidad_id = "irnr-imputacion-inmobiliaria-valor-comprobado-administracion"
 number = "valor_comprobado_administracion"
 section = ["renta_inmobiliaria_imputada"]
 data_type = "money"
@@ -113,6 +118,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-85"], sour
 
 [[revisions."2025".casillas]]
 id = "gastos_deducibles"
+continuidad_id = "irnr-gastos-deducibles"
 number = "7"
 section = ["rendimientos"]
 data_type = "money"
@@ -121,10 +127,10 @@ required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-210-procedure"]
-export_refs = ["m210-2022.pagina01.f085"]
 
 [[revisions."2025".casillas]]
 id = "retencion_practicada"
+continuidad_id = "irnr-retencion-practicada"
 number = "29"
 section = ["liquidacion"]
 data_type = "money"
@@ -133,56 +139,55 @@ required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-210-procedure"]
-export_refs = ["m210-2022.pagina01.f115"]
 
 [[revisions."2025".casillas]]
 id = "base_imponible"
+continuidad_id = "irnr-base-imponible"
 number = "8"
 section = ["liquidacion"]
 data_type = "money"
 semantic_role = "irnr_base_imponible"
 required = true
 input_kind = "computed"
-formula = "m210-base-imponible-2025"
+formula = "m210-base-imponible"
 legal_refs = ["trlirnr-rdleg-5-2004:art-13.1.h", "trlirnr-rdleg-5-2004:art-24", "ley-35-2006:art-85"]
 source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-urbano"]
-export_refs = ["m210-2022.pagina01.f086"]
 
 [[revisions."2025".casillas]]
 id = "tipo_gravamen"
+continuidad_id = "irnr-tipo-gravamen"
 number = "21"
 section = ["liquidacion"]
 data_type = "ratio"
 semantic_role = "irnr_tipo_gravamen"
 required = true
 input_kind = "computed"
-formula = "m210-tipo-gravamen-2025-resolve"
+formula = "m210-tipo-gravamen-resolve"
 legal_refs = ["trlirnr-rdleg-5-2004:art-25.1.a", "trlirnr-rdleg-5-2004:art-25.1.b", "trlirnr-rdleg-5-2004:art-25.1.f"]
 source_refs = ["aeat-modelo-210-procedure"]
-export_refs = ["m210-2022.pagina01.f107"]
 
 [[revisions."2025".casillas]]
 id = "cuota_integra"
+continuidad_id = "irnr-cuota-integra"
 number = "22"
 section = ["liquidacion"]
 data_type = "money"
 semantic_role = "irnr_cuota_integra"
 required = true
 input_kind = "computed"
-formula = "m210-cuota-integra-2025"
+formula = "m210-cuota-integra"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.a", "trlirnr-rdleg-5-2004:art-25.1.b"]
 source_refs = ["aeat-modelo-210-procedure"]
-export_refs = ["m210-2022.pagina01.f108"]
 
 [[revisions."2025".casillas]]
 id = "cuota_diferencial"
+continuidad_id = "irnr-cuota-diferencial"
 number = "31"
 section = ["liquidacion"]
 data_type = "money"
 semantic_role = "irnr_cuota_diferencial"
 required = true
 input_kind = "computed"
-formula = "m210-cuota-diferencial-2025"
+formula = "m210-cuota-diferencial"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-210-procedure"]
-export_refs = ["m210-2022.pagina01.f117"]

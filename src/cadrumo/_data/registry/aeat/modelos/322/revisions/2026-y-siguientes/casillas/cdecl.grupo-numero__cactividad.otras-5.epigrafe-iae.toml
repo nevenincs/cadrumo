@@ -18,7 +18,6 @@ section = ["identificacion", "grupo"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-page-01-109"]
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -30,7 +29,6 @@ section = ["identificacion", "grupo"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-page-01-119"]
 constraints = { max_length = 1, enum = ["D", "P"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"], source_refs = ["aeat-dr-322-2026"] }
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"]
 source_refs = ["aeat-dr-322-2026"]
@@ -43,7 +41,6 @@ section = ["identificacion", "grupo"]
 data_type = "nif"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-page-01-120"]
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -57,7 +54,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-page-01-129"]
 constraints = { max_length = 1, enum = ["X"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"], source_refs = ["aeat-dr-322-2026"] }
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
@@ -71,7 +67,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-page-01-130"]
 constraints = { max_length = 1, enum = ["1", "2"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"], source_refs = ["aeat-dr-322-2026"] }
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"]
 source_refs = ["aeat-dr-322-2026"]
@@ -85,7 +80,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-page-01-131"]
 constraints = { max_length = 1, enum = ["1", "2"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"], source_refs = ["aeat-dr-322-2026"] }
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
@@ -99,7 +93,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-page-01-132"]
 constraints = { max_length = 1, enum = ["1", "2"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"], source_refs = ["aeat-dr-322-2026"] }
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
@@ -113,7 +106,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-page-01-133"]
 constraints = { max_length = 1, enum = ["0", "1", "2", "3"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-103"], source_refs = ["aeat-dr-322-2026"] }
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-103"]
 source_refs = ["aeat-dr-322-2026"]
@@ -127,7 +119,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-page-01-134"]
 constraints = { max_length = 1, enum = ["0", "1", "2"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"], source_refs = ["aeat-dr-322-2026"] }
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
@@ -141,7 +132,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-page-01-135"]
 constraints = { max_length = 1, enum = ["0", "1", "2"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-121"], source_refs = ["aeat-dr-322-2026"] }
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-121"]
 source_refs = ["aeat-dr-322-2026"]
@@ -156,7 +146,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-page-01-136"]
 constraints = { max_length = 1, enum = ["0", "1", "2"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"], source_refs = ["aeat-dr-322-2026"] }
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
@@ -170,7 +159,6 @@ section = ["actividad"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-page-03-13"]
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -183,7 +171,6 @@ section = ["actividad"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-page-03-16"]
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -196,7 +183,6 @@ section = ["actividad"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-page-03-20"]
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -209,7 +195,6 @@ section = ["actividad"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-page-03-23"]
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -222,7 +207,6 @@ section = ["actividad"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-page-03-27"]
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -235,7 +219,6 @@ section = ["actividad"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-page-03-30"]
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -248,7 +231,6 @@ section = ["actividad"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-page-03-34"]
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -261,7 +243,6 @@ section = ["actividad"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-page-03-37"]
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -274,7 +255,6 @@ section = ["actividad"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-page-03-41"]
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -287,7 +267,6 @@ section = ["actividad"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-page-03-44"]
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -300,7 +279,6 @@ section = ["actividad"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-page-03-48"]
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -313,6 +291,5 @@ section = ["actividad"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-page-03-51"]
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]

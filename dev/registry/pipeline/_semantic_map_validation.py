@@ -8,6 +8,7 @@ does not render, derive, or publish export fragments.
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Literal
 
@@ -25,6 +26,7 @@ from ._variable_envelope import validate_variable_envelope
 from .record_design_intermediate import (
     AnchorKey,
     RecordDesignIntermediate,
+    RecordDesignIntermediateField,
     RecordKey,
     intermediate_anchor_key,
     intermediate_record_key,
@@ -40,6 +42,7 @@ from .semantic_map import (
 __all__ = [
     "SemanticMapAnomalyException",
     "resolve_semantic_map_casilla_tokens",
+    "validate_declared_parts",
     "validate_semantic_map",
 ]
 
@@ -310,12 +313,19 @@ def _validate_exact_bijection(
             "parser intermediate contains duplicate exact anchors; refusing ambiguous semantic-map join: "
             f"{_format_anchor_keys(duplicate_intermediate)}",
         )
-    duplicate_semantic = _duplicate_anchor_keys(semantic_keys)
+    # An anchor may carry several entries only when every one of them names the
+    # part of the cell it fills; those parts are then held to the cell itself.
+    partless_keys = tuple(semantic_anchor_key(entry.anchor) for entry in semantic_map.entries if entry.part is None)
+    parted_keys = {semantic_anchor_key(entry.anchor) for entry in semantic_map.entries if entry.part is not None}
+    duplicate_semantic = _duplicate_anchor_keys(partless_keys) or tuple(sorted(parted_keys.intersection(partless_keys)))
     if duplicate_semantic:
         raise RegistryValidationError(
             "semantic map contains duplicate exact anchors; refusing ambiguous parser join: "
             f"{_format_anchor_keys(duplicate_semantic)}",
         )
+    validate_declared_parts(
+        semantic_map.entries, tuple(field for sheet in intermediate.sheets for field in sheet.fields)
+    )
 
     intermediate_set = set(intermediate_keys)
     semantic_set = set(semantic_keys)
@@ -330,6 +340,57 @@ def _validate_exact_bijection(
         raise RegistryValidationError(
             "semantic map must form a complete exact bijection with parser output; " + "; ".join(details),
         )
+
+
+def validate_declared_parts(
+    entries: Iterable[SemanticMapEntry], fields: Iterable[RecordDesignIntermediateField]
+) -> None:
+    """Hold every declared part to the cell whose text declares it.
+
+    Each part's statement must be the cell's own text, its printed range must be
+    printed by the design, and the parts of one cell must tile it exactly: a
+    byte no part accounts for, or two parts claiming one, is refused.
+    """
+    fields_by_anchor = {intermediate_anchor_key(field): field for field in fields}
+    parts_by_anchor: dict[AnchorKey, list[SemanticMapEntry]] = {}
+    for entry in entries:
+        if entry.part is not None:
+            parts_by_anchor.setdefault(semantic_anchor_key(entry.anchor), []).append(entry)
+    for key, entries in parts_by_anchor.items():
+        field = fields_by_anchor.get(key)
+        if field is None:
+            continue
+        printed = _collapse_whitespace(" ".join(text for text in (field.normalized_description, field.content) if text))
+        content = _collapse_whitespace(field.content or "")
+        cursor = field.offset
+        for entry in sorted(entries, key=lambda item: item.part.offset if item.part is not None else 0):
+            part = entry.part
+            if part is None:
+                continue
+            if part.offset != cursor:
+                raise RegistryValidationError(
+                    f"semantic-map part {entry.export_field_id!r} starts at {part.offset}, but its cell "
+                    f"{field.offset}+{field.length} leaves byte {cursor} unaccounted or claimed twice",
+                )
+            if _collapse_whitespace(part.statement) not in content:
+                raise RegistryValidationError(
+                    f"semantic-map part {entry.export_field_id!r} statement is not the text of its cell",
+                )
+            if part.printed_range not in printed:
+                raise RegistryValidationError(
+                    f"semantic-map part {entry.export_field_id!r} range {part.printed_range!r} is not printed "
+                    "by its cell",
+                )
+            cursor = part.offset + part.length
+        if cursor != field.offset + field.length:
+            raise RegistryValidationError(
+                f"semantic-map parts of cell {field.offset}+{field.length} end at byte {cursor}, "
+                "so the cell is not tiled exactly",
+            )
+
+
+def _collapse_whitespace(text: str) -> str:
+    return " ".join(text.split())
 
 
 def _validate_entry_references(

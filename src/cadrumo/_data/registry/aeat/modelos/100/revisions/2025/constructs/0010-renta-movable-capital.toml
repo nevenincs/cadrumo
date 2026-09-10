@@ -46,15 +46,15 @@ casilla_ids = [
     "0060",
 ]
 formulas = [
-    "renta-2025-capital-mobiliario-ahorro-total-ingresos",
-    "renta-2025-capital-mobiliario-ahorro-rendimiento-neto",
-    "renta-2025-capital-mobiliario-ahorro-rendimiento-neto-reducido",
-    "renta-2025-capital-mobiliario-ahorro-suma-rendimientos-reducidos",
-    "renta-2025-capital-mobiliario-general-total-ingresos",
-    "renta-2025-capital-mobiliario-general-rendimiento-neto",
-    "renta-2025-capital-mobiliario-general-rendimiento-neto-reducido",
-    "renta-2025-capital-mobiliario-general-suma-rendimientos-reducidos",
+    "renta-capital-mobiliario-ahorro-total-ingresos",
+    "renta-capital-mobiliario-ahorro-rendimiento-neto",
+    "renta-capital-mobiliario-ahorro-rendimiento-neto-reducido",
+    "renta-capital-mobiliario-ahorro-suma-rendimientos-reducidos",
+    "renta-capital-mobiliario-general-total-ingresos",
+    "renta-capital-mobiliario-general-rendimiento-neto",
+    "renta-capital-mobiliario-general-rendimiento-neto-reducido",
+    "renta-capital-mobiliario-general-suma-rendimientos-reducidos",
 ]
-bindings = ["renta-2025-modelo-123-retenciones-periodicas", "renta-2025-modelo-193-retenciones-anuales"]
+bindings = ["renta-modelo-123-retenciones-periodicas", "renta-modelo-193-retenciones-anuales"]
 relations = ["renta-2025-rel-123-retenciones-trimestrales", "renta-2025-rel-193-retenciones-anuales"]
 dependency_classifications = ["renta-2025-dep-123", "renta-2025-dep-193"]

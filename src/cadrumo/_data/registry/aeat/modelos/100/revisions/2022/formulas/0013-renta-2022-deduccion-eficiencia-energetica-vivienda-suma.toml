@@ -1,5 +1,5 @@
 [[revisions."2022".formulas]]
-id = "renta-2022-deduccion-eficiencia-energetica-vivienda-suma"
+id = "renta-deduccion-eficiencia-energetica-vivienda-suma"
 target_casilla_id = "0567"
 expression = { op = "sum", args = [
     { casilla_id = "1662" },

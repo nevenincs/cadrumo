@@ -17,7 +17,7 @@ install), so ``importlib.resources.files("cadrumo_data")`` resolves a
 
 This gate builds both real companion wheels and asserts:
 
-1. Each companion packages EXACTLY the git-tracked corpus source binaries under
+1. Each companion packages EXACTLY the tracked corpus source binaries under
    its owned subtree — no more, no fewer — each under the mirrored
    ``cadrumo_data/_data/corpus/<relative>`` path the runtime corpus-locator seam
    resolves.
@@ -32,10 +32,10 @@ This gate builds both real companion wheels and asserts:
 5. Each built wheel is under PyPI's 100 MB per-file cap — the whole point of the
    split, asserted as a hard requirement.
 
-The expected binary set is derived from the git-tracked source tree, not from
-the wheels under test, so the parity assertion is not tautological. No mocks,
-fakes, or skips: the real ``uv build`` pipeline runs, and a missing ``uv``/``git``
-binary fails loudly.
+The expected binary set is derived from the repository's own tracked source
+tree, not from the wheels under test, so the parity assertion is not
+tautological. No mocks, fakes, or skips: the real ``uv build`` pipeline runs,
+and a missing ``uv`` binary fails loudly.
 """
 
 from __future__ import annotations
@@ -53,6 +53,7 @@ import pytest
 from cadrumo.core.directory_scan import scan_directory
 
 from ..._paths import REPO_ROOT
+from ...source_tree import repository_files
 from .._distribution_limits import PYPI_FILE_CAP_BYTES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -103,31 +104,20 @@ class _BuiltWheel:
 
 @cache
 def _tracked_corpus_binaries() -> set[str]:
-    """Return git-tracked corpus source-binary paths relative to the repo root."""
-    result = subprocess.run(
-        [
-            "git",
-            "ls-files",
-            ":(glob)src/cadrumo/_data/corpus/**/*.pdf",
-            ":(glob)src/cadrumo/_data/corpus/**/*.docx",
-            ":(glob)src/cadrumo/_data/corpus/**/*.xls",
-            ":(glob)src/cadrumo/_data/corpus/**/*.xlsm",
-            ":(glob)src/cadrumo/_data/corpus/**/*.xlsx",
-            ":(glob)src/cadrumo/_data/corpus/**/*.zip",
-        ],
-        cwd=_REPO_ROOT,
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    tracked = {line.strip().replace("\\", "/") for line in result.stdout.splitlines() if line.strip()}
+    """Return tracked corpus source-binary paths relative to the repo root."""
+    tracked = {
+        path
+        for path in repository_files(_REPO_ROOT, under=(_CORPUS_SOURCE_PREFIX.rstrip("/"),))
+        if path.lower().endswith(_CORPUS_BINARY_SUFFIXES)
+    }
     # Mirror the companion build hooks: the Cadrumo wheel sheds every tests/ subtree,
     # so test-pool binaries are not runtime corpus data and the companions omit
     # them too.
     tracked = {path for path in tracked if "/tests/" not in path}
     if not tracked:
         raise AssertionError(
-            "git ls-files reported no tracked corpus source binaries; the wheel-split contract has regressed"
+            "the repository enumeration reported no tracked corpus source binaries; "
+            "the wheel-split contract has regressed"
         )
     return tracked
 

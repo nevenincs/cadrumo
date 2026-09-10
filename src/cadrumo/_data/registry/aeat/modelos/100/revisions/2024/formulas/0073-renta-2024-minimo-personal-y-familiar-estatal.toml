@@ -1,5 +1,5 @@
 [[revisions."2024".formulas]]
-id = "renta-2024-minimo-personal-y-familiar-estatal"
+id = "renta-minimo-personal-y-familiar-estatal"
 target_casilla_id = "0519"
 expression = { op = "sum", args = [
     { casilla_id = "0511" },

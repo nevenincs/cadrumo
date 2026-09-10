@@ -1,5 +1,5 @@
 [[revisions."2025".bindings]]
-id = "renta-2025-modelo-193-retenciones-anuales"
+id = "renta-modelo-193-retenciones-anuales"
 source = "relation_prefill"
 selector = { source_modelo = "193", source_casilla_id = "decl.retenciones-total" }
 aggregation = { op = "copy" }

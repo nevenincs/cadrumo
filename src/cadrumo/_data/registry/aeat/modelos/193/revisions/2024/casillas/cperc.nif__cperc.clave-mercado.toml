@@ -3,6 +3,7 @@
 
 [[revisions."2024".casillas]]
 id = "perc.nif"
+continuidad_id = "payee-nif"
 number = "18-26"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -16,6 +17,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.nif-representante"
+continuidad_id = "perc-nif-representante"
 number = "27-35"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -29,6 +31,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.nombre"
+continuidad_id = "payee-name"
 number = "36-75"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -42,6 +45,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.mediador"
+continuidad_id = "payee-mediador-flag"
 number = "76"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -55,6 +59,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.provincia"
+continuidad_id = "payee-province"
 number = "77-78"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -68,6 +73,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.clave-codigo"
+continuidad_id = "payee-clave-codigo"
 number = "79"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -81,6 +87,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.codigo-emisor"
+continuidad_id = "payee-codigo-emisor"
 number = "80-91"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -94,6 +101,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.clave"
+continuidad_id = "payee-clave-percepcion"
 number = "92"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -107,6 +115,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.naturaleza"
+continuidad_id = "payee-naturaleza-percepcion"
 number = "93-94"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -120,6 +129,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.pago"
+continuidad_id = "payee-pago"
 number = "95"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -133,6 +143,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.tipo-codigo"
+continuidad_id = "payee-tipo-codigo"
 number = "96"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -146,6 +157,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.codigo-cuenta"
+continuidad_id = "payee-codigo-cuenta"
 number = "97-116"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -159,6 +171,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.pendiente"
+continuidad_id = "payee-pendiente-flag"
 number = "117"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -172,6 +185,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.ejercicio-devengo"
+continuidad_id = "devengo-year"
 number = "118-121"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -185,6 +199,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.tipo-percepcion"
+continuidad_id = "payee-tipo-percepcion"
 number = "122"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -198,6 +213,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.percepciones"
+continuidad_id = "payee-percepciones-193"
 number = "123-135"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -212,6 +228,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.reducciones"
+continuidad_id = "payee-reducciones-193"
 number = "139-151"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -226,6 +243,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.base"
+continuidad_id = "payee-base-retenciones-193"
 number = "152-164"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -240,6 +258,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.porcentaje"
+continuidad_id = "payee-porcentaje-retencion"
 number = "165-168"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -253,6 +272,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.retenciones"
+continuidad_id = "payee-retenciones-193"
 number = "169-181"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -267,6 +287,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.penalizaciones"
+continuidad_id = "payee-penalizaciones"
 number = "182-192"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -281,6 +302,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.naturaleza-declarante"
+continuidad_id = "payee-naturaleza-declarante"
 number = "208"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -294,6 +316,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.fecha-inicio-prestamo"
+continuidad_id = "payee-fecha-inicio-prestamo"
 number = "209-216"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -307,6 +330,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.fecha-vencimiento-prestamo"
+continuidad_id = "payee-fecha-vencimiento-prestamo"
 number = "217-224"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -320,6 +344,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.compensaciones"
+continuidad_id = "payee-compensaciones"
 number = "225-236"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -334,6 +359,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.garantias"
+continuidad_id = "payee-garantias"
 number = "237-248"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -348,6 +374,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.retenciones-forales-estatal"
+continuidad_id = "payee-retenciones-forales-estatal"
 number = "249-261"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -362,6 +389,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.retenciones-forales-navarra"
+continuidad_id = "payee-retenciones-forales-navarra"
 number = "262-274"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -376,6 +404,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.retenciones-forales-araba"
+continuidad_id = "payee-retenciones-forales-araba"
 number = "275-287"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -390,6 +419,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.retenciones-forales-gipuzkoa"
+continuidad_id = "payee-retenciones-forales-gipuzkoa"
 number = "288-300"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -404,6 +434,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.retenciones-forales-bizkaia"
+continuidad_id = "payee-retenciones-forales-bizkaia"
 number = "301-313"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -418,6 +449,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.ceuta-melilla"
+continuidad_id = "payee-ceuta-melilla-clave"
 number = "314"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -431,6 +463,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.numero-orden"
+continuidad_id = "payee-numero-orden-193"
 number = "315-321"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -444,6 +477,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.nif-pagador-anterior"
+continuidad_id = "payee-nif-pagador-anterior"
 number = "322-330"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -457,6 +491,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.fecha-devengo"
+continuidad_id = "payee-fecha-devengo"
 number = "331-338"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -470,6 +505,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "perc.clave-mercado"
+continuidad_id = "payee-clave-mercado"
 number = "339"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]

@@ -64,8 +64,8 @@ record_identity = "Tipo 2 - Registro De Declarado"
 
 [[entries]]
 export_field_id = "m347-2011.declarado.f005"
-kind = "casilla"
-casilla_id = "contraparte.nif"
+kind = "binding"
+binding = "modelo-347-contraparte-row-nif"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
@@ -92,8 +92,8 @@ record_identity = "Tipo 2 - Registro De Declarado"
 
 [[entries]]
 export_field_id = "m347-2011.declarado.f007"
-kind = "casilla"
-casilla_id = "contraparte.nombre"
+kind = "binding"
+binding = "modelo-347-contraparte-row-nombre"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
@@ -118,19 +118,41 @@ ordinal = "8"
 record_identity = "Tipo 2 - Registro De Declarado"
 
 
+# The design divides this four-byte cell in its own text: 77-78 CODIGO PROVINCIA
+# (numerico) and 79-80 CODIGO PAIS (alfabetico). Each half is its own field.
 [[entries]]
-export_field_id = "m347-2011.declarado.f009"
+export_field_id = "m347-2011.declarado.f009a"
 kind = "casilla"
-casilla_id = "contraparte.pais-codigo"
+casilla_id = "contraparte.provincia-codigo"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
-
 [entries.anchor]
 sheet = "Tipo 2 - Registro De Declarado"
 source_row = 378
 ordinal = "9"
 record_identity = "Tipo 2 - Registro De Declarado"
+[entries.part]
+offset = 77
+length = 2
+aeat_type = "Numérico"
+statement = "Campo numérico de dos posiciones. En el caso de residentes o de no residentes que operen en territorio español mediante establecimiento permanente, se consignará el correspondiente al domicilio fiscal del declarado. Se consignarán los dos dígitos que corresponden a la provincia o ciudad autónoma, del domicilio del declarado, según la siguiente relación: ARABA/ÁLAVA…. ..01 LEÓN ......................... 24 ALBACETE. ............. ..02 LLEIDA ..................... 25 ALICANTE/Alacant. ..03 LUGO ........................ 27 ALMERÍA ................ ..04 MADRID ................... 28 ASTURIAS ............... ..33 MÁLAGA .................. 29 ÁVILA ...................... ..05 MELILLA .................. 52 BADAJOZ ................ ..06 MURCIA ................... 30 BARCELONA .......... ..08 NAVARRA ............... 31 BURGOS .................. ..09 OURENSE ................. 32 CÁCERES ................. ..10 PALENCIA ............... 34 CÁDIZ ....................... ..11 PALMAS, LAS ......... 35 CANTABRIA.. ......... ..39 PONTEVEDRA ........ 36 CASTELLÓN/Castell.12 RIOJA, LA ................. 26 CEUTA ..................... ..51 SALAMANCA ......... 37 CIUDAD REAL ....... ..13 S.C.TENERIFE ......... 38 CÓRDOBA ............... ..14 SEGOVIA .................. 40 CORUÑA, A ............. ..15 SEVILLA ................... 41 CUENCA .................. 16 SORIA ......................... 42 GIRONA ................... 17 TARRAGONA ............ 43 GRANADA .............. 18 TERUEL ...................... 44 cve: BOE-A-2011-19397 BOLETÍN OFICIAL DEL ESTADO Núm. 298 Lunes 12 de diciembre de 2011 Sec. I. Pág. 132698 GUADALAJARA .... 19 TOLEDO ..................... 45 GIPÚZKOA .............. 20 VALENCIA/Valéncia . 46 HUELVA .................. 21 VALLADOLID ........... 47 HUESCA ................... 22 BIZKAIA ..................... 48 ILLES BALEARS .... 07 ZAMORA .................... 49 JAÉN ......................... 23 ZARAGOZA ............... 50 En el caso de no residentes sin establecimiento permanente se consignará 99."
 
+[[entries]]
+export_field_id = "m347-2011.declarado.f009b"
+kind = "binding"
+binding = "modelo-347-contraparte-row-pais-codigo"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2011"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 378
+ordinal = "9"
+record_identity = "Tipo 2 - Registro De Declarado"
+[entries.part]
+offset = 79
+length = 2
+aeat_type = "Alfabético"
+statement = "79-80 CÓDIGO PAÍS. Campo alfabético de 2 posiciones. En el caso de no residentes sin establecimiento permanente se consignará XX, siendo XX el Código del país de residencia del declarado, de acuerdo con los códigos alfabéticos de países y territorios que figuran en la Orden EHA/3202/2008, de 31 de octubre, en su Anexo IV (BOE de 10/11/2008). Adicionalmente se deben considerar los siguientes códigos de país: Curaçao CW San Martín SX Países Bajos, parte caribeña (Bonaire, San Eustaquio y Saba) BQ En cualquier otro caso se rellenará a blancos ."
 
 [[entries]]
 export_field_id = "m347-2011.declarado.f010"
@@ -147,8 +169,8 @@ record_identity = "Tipo 2 - Registro De Declarado"
 
 [[entries]]
 export_field_id = "m347-2011.declarado.f011"
-kind = "casilla"
-casilla_id = "contraparte.clave-operacion"
+kind = "binding"
+binding = "modelo-347-contraparte-row-clave"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
@@ -161,8 +183,8 @@ record_identity = "Tipo 2 - Registro De Declarado"
 
 [[entries]]
 export_field_id = "m347-2011.declarado.f012"
-kind = "casilla"
-casilla_id = "contraparte.importe-anual"
+kind = "binding"
+binding = "modelo-347-contraparte-row-importe"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
@@ -259,8 +281,8 @@ record_identity = "Tipo 2 - Registro De Declarado"
 
 [[entries]]
 export_field_id = "m347-2011.declarado.f019"
-kind = "casilla"
-casilla_id = "contraparte.importe-Q1"
+kind = "binding"
+binding = "modelo-347-contraparte-row-importe-q1"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
@@ -287,8 +309,8 @@ record_identity = "Tipo 2 - Registro De Declarado"
 
 [[entries]]
 export_field_id = "m347-2011.declarado.f021"
-kind = "casilla"
-casilla_id = "contraparte.importe-Q2"
+kind = "binding"
+binding = "modelo-347-contraparte-row-importe-q2"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
@@ -315,8 +337,8 @@ record_identity = "Tipo 2 - Registro De Declarado"
 
 [[entries]]
 export_field_id = "m347-2011.declarado.f023"
-kind = "casilla"
-casilla_id = "contraparte.importe-Q3"
+kind = "binding"
+binding = "modelo-347-contraparte-row-importe-q3"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 
@@ -343,8 +365,8 @@ record_identity = "Tipo 2 - Registro De Declarado"
 
 [[entries]]
 export_field_id = "m347-2011.declarado.f025"
-kind = "casilla"
-casilla_id = "contraparte.importe-Q4"
+kind = "binding"
+binding = "modelo-347-contraparte-row-importe-q4"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
 

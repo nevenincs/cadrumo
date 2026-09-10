@@ -16,10 +16,14 @@ from typing import Annotated, Final, Literal
 from pydantic import (
     BaseModel,
     BeforeValidator,
+    Discriminator,
     Field,
+    SerializerFunctionWrapHandler,
+    Tag,
     ValidationInfo,
     field_serializer,
     field_validator,
+    model_serializer,
     model_validator,
 )
 
@@ -35,6 +39,7 @@ from ....core.tax_domain import TaxDomain
 from ._schema_governance import (
     validate_attribution_names_somebody,
     validate_governance_stamp_coherence,
+    validate_review_scope,
     validate_reviewed_at_within_horizon,
 )
 from ._toml_helpers import as_toml_table as _as_toml_table
@@ -128,9 +133,11 @@ __all__ = [
     "CasillaProducerProvenance",
     "DataBindingDefinition",
     "DecimalValue",
+    "DeclaredPredecessor",
     "FormulaDefinition",
     "ModeloDefinition",
     "ModeloRevision",
+    "NoPredecessor",
     "RegistryCatalogues",
     "RegistrySnapshot",
     "SociedadesAnnualManualCoverageCatalogue",
@@ -143,6 +150,8 @@ from ....core.filing_year import FilingYear
 from .convenio import ConvenioAuthority
 from .facts.schema import GovernedFactCatalogue
 from .modelo_localization import require_modelo_localization, resolve_modelo_localization
+from .revision_predecessor_date_agreement import EditionWindow, validate_predecessor_date_agreement
+from .revision_predecessor_forest import validate_predecessor_forest
 from .schema_base import (
     GOVERNANCE_STAMP,
     MANIFEST_ONLY,
@@ -721,6 +730,108 @@ class SchemaFamilyDispositionDeclaration(RegistryModel):
     source_refs: SourceRefs
 
 
+class DeclaredPredecessor(RegistryModel):
+    """A revision's explicit claim that it is authored relative to a sibling edition.
+
+    Authored as a bare revision id, ``predecessor = "2024"``, and serialised back
+    to exactly that string. The wrapper exists so the declaration is a type
+    rather than a string: the revision id vocabulary admits any lowercase token,
+    so no reserved string could later mean "no predecessor exists" without
+    colliding with a legal revision id. :class:`NoPredecessor` is the distinct
+    declaration kind sharing the field, and a consumer matching on the
+    declaration's type reads an absent key, a predecessor, and an explicit
+    no-predecessor apart.
+    """
+
+    revision_id: RevisionId
+
+    @model_serializer(mode="plain")
+    def _serialise_as_authored(self) -> str:
+        return self.revision_id
+
+
+_NO_PREDECESSOR_KEY: Final = "none"
+_DECLARED_PREDECESSOR_TAG: Final = "revision"
+_PREDECESSOR_KIND_REFUSAL: Final = (
+    "predecessor must be the revision id of a sibling edition, or a single 'none' table "
+    "grounding why no earlier sibling edition exists"
+)
+
+
+class NoPredecessor(RegistryModel):
+    """A revision's explicit, grounded claim that no earlier sibling edition exists.
+
+    Distinct from the key being absent: an absent key is a full-copy revision
+    that says nothing about its siblings, and is shape-identical to a successor
+    whose author forgot the key. This declaration is the positive statement that
+    the revision chains to nothing, so it carries the same burden as any other
+    substantive claim — a reason somebody wrote and the references it stands on.
+
+    Authored as a ``none`` table under the key::
+
+        [revisions."esquema-union".predecessor.none]
+        reason = "..."
+        legal_refs = ["..."]
+        source_refs = ["..."]
+
+    and serialised back to exactly that nesting.
+    """
+
+    reason: str = Field(min_length=1, max_length=1024)
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
+
+    @model_serializer(mode="wrap")
+    def _serialise_as_authored(self, handler: SerializerFunctionWrapHandler) -> dict[str, object]:
+        return {_NO_PREDECESSOR_KEY: handler(self)}
+
+
+def _predecessor_declaration_kind(value: object) -> str | None:
+    """Name the declaration kind an authored ``predecessor`` value spells, if any.
+
+    Dispatch reads the raw authored shape, so a table is the no-predecessor kind
+    only when its single key is ``none``. Every other shape — including a table
+    spelling of a revision id — names no kind and is refused.
+    """
+    if isinstance(value, DeclaredPredecessor | str):
+        return _DECLARED_PREDECESSOR_TAG
+    if isinstance(value, NoPredecessor):
+        return _NO_PREDECESSOR_KEY
+    if isinstance(value, Mapping) and set(value) == {_NO_PREDECESSOR_KEY}:
+        return _NO_PREDECESSOR_KEY
+    return None
+
+
+def _hydrate_declared_predecessor(value: object) -> object:
+    """Hydrate the one authored spelling of a predecessor: a revision id string."""
+    if isinstance(value, str):
+        return {"revision_id": value}
+    return value
+
+
+def _hydrate_no_predecessor(value: object) -> object:
+    """Unwrap the authored ``none`` table into the declaration it carries."""
+    if isinstance(value, Mapping):
+        return value[_NO_PREDECESSOR_KEY]
+    return value
+
+
+DeclaredPredecessorField = Annotated[
+    Annotated[
+        DeclaredPredecessor,
+        BeforeValidator(_hydrate_declared_predecessor),
+        Tag(_DECLARED_PREDECESSOR_TAG),
+    ]
+    | Annotated[NoPredecessor, BeforeValidator(_hydrate_no_predecessor), Tag(_NO_PREDECESSOR_KEY)],
+    Discriminator(
+        _predecessor_declaration_kind,
+        custom_error_type="predecessor_kind",
+        custom_error_message=_PREDECESSOR_KIND_REFUSAL,
+    ),
+]
+"""Registry token hydrated into a :class:`DeclaredPredecessor` or a :class:`NoPredecessor`."""
+
+
 class ModeloRevision(RegistryModel):
     """A single versioned form layout and calculation ruleset for one modelo.
 
@@ -733,8 +844,14 @@ class ModeloRevision(RegistryModel):
     Ordenes that approve or amend the form for its applicability window.
 
     The governance stamp — ``engineered_by``, ``review_status``, ``reviewed_by``,
-    ``reviewed_at`` — is the revision's *declared* provenance, optional and
-    fail-closed to :attr:`RevisionReviewStatus.PENDING_REVIEW` on absence. Its
+    ``reviewed_at``, ``reviewed_against`` — is the revision's *declared*
+    provenance, optional and fail-closed to
+    :attr:`RevisionReviewStatus.PENDING_REVIEW` on absence. ``reviewed_against``
+    is the review's scope on an edition that names a predecessor: the predecessor
+    the stated rows were reviewed against, required on a reviewed delta edition
+    and refused everywhere else. Like ``predecessor`` it is excluded from
+    serialisation when absent, so a revision without it dumps exactly as it did
+    before the key existed. Its
     rules and the reasoning behind them live in :mod:`.._schema_governance`,
     which the validators below delegate to.
 
@@ -763,6 +880,48 @@ class ModeloRevision(RegistryModel):
     field as an unwritten position: it produced 22 confident false
     silent-data-loss findings across modelos 369, 390 and 131, twice, in trees
     that were already stamped and verified.
+
+    ``predecessor`` is the revision's explicit declaration of the sibling
+    edition it is authored relative to. A revision is delta-authored only when
+    it declares one; nothing infers a predecessor from rows the revision leaves
+    out, so a revision without the key is a full-copy revision stating every row
+    itself. Absent reads as ``None`` and is excluded from serialisation, so a
+    revision that does not declare the key dumps exactly as it did before the
+    key existed. A :class:`NoPredecessor` is the grounded statement that the
+    revision chains to no sibling at all, which absence cannot say. Either
+    declaration is a claim about the whole revision, so it is manifest-only: a
+    section fragment declaring it is refused. The modelo validates the declared
+    edges together as a forest through
+    :func:`~.revision_predecessor_forest.validate_predecessor_forest`, and
+    each edge against the editions' validity dates through
+    :func:`~.revision_predecessor_date_agreement.validate_predecessor_date_agreement`.
+
+    ``casilla_source_refs`` is the edition's default source grounding for its
+    casilla rows, declared once rather than restated on every row. It is a
+    different fact from ``source_refs``, which cites what the edition as a whole
+    stands on. The loader fills it into every casilla row, and every row's
+    ``constraints`` table, that states no ``source_refs`` of its own. In the same
+    pass ``orden_aplicabilidad`` fills the ``legal_refs`` of every row and
+    constraints table that states none, because the edition's approving ordenes
+    are already declared there once and a second field would duplicate them. A
+    row or constraints table stating its own value keeps it whole: the default
+    replaces nothing and is never merged into a stated value, and an explicitly
+    empty value is refused rather than defaulted. The defaults are applied after
+    predecessor inheritance, so a row inherited from a predecessor and stating
+    none takes this edition's defaults, never the predecessor's; source
+    references are declared per edition. Like ``predecessor`` it is excluded
+    from serialisation when absent, and manifest-only, since it grounds rows
+    across every fragment of the edition.
+
+    A casilla row or its ``constraints`` table may instead state
+    ``additional_source_refs``: the procedure or form citations that belong to
+    the box's concept rather than to the edition's design. Such a table's
+    ``source_refs`` is the edition's ``casilla_source_refs`` followed by those
+    additions, duplicates removed and the default first. The additions travel
+    with the row, so an inherited row extends the default of the edition it now
+    sits in. A table stating both keys, additions that are empty, or additions
+    in an edition declaring no ``casilla_source_refs`` is refused. The key is
+    consumed by the loader and never reaches this model.
     """
 
     id: RevisionId
@@ -772,9 +931,17 @@ class ModeloRevision(RegistryModel):
     period_selector: PeriodSelector
     legal_refs: Annotated[LegalRefs, MANIFEST_ONLY]
     source_refs: SourceRefs
+    predecessor: Annotated[DeclaredPredecessorField | None, MANIFEST_ONLY] = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+    )
     # Required by validate_orden_aplicabilidad; kept default-empty so the
     # validator can report a grounded registry failure instead of a parse error.
     orden_aplicabilidad: Annotated[tuple[LegalRefId, ...], MANIFEST_ONLY] = ()
+    casilla_source_refs: Annotated[SourceRefs | None, MANIFEST_ONLY] = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+    )
     parameters: Annotated[tuple[ParameterDefinition, ...], SCHEMA_FAMILY] = ()
     casillas: Annotated[tuple[CasillaDefinition, ...], SCHEMA_FAMILY] = ()
     formulas: Annotated[tuple[FormulaDefinition, ...], SCHEMA_FAMILY] = ()
@@ -804,6 +971,10 @@ class ModeloRevision(RegistryModel):
     review_status: Annotated[RevisionReviewStatusField, GOVERNANCE_STAMP] = RevisionReviewStatus.PENDING_REVIEW
     reviewed_by: Annotated[str | None, GOVERNANCE_STAMP] = None
     reviewed_at: Annotated[date | None, GOVERNANCE_STAMP] = None
+    reviewed_against: Annotated[RevisionId | None, GOVERNANCE_STAMP] = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+    )
 
     @field_validator("engineered_by", "reviewed_by")
     @classmethod
@@ -821,6 +992,13 @@ class ModeloRevision(RegistryModel):
     def _validate_window(self) -> ModeloRevision:
         if self.valid_to is not None and self.valid_to < self.valid_from:
             raise RegistryValidationError("revision valid_to must be on or after valid_from")
+        return self
+
+    @model_validator(mode="after")
+    def _validate_predecessor_is_another_edition(self) -> ModeloRevision:
+        """Refuse a revision declaring itself as the edition it is authored relative to."""
+        if isinstance(self.predecessor, DeclaredPredecessor) and self.predecessor.revision_id == self.id:
+            raise RegistryValidationError(f"revision {self.id!r} declares itself as its own predecessor")
         return self
 
     @property
@@ -962,6 +1140,17 @@ class ModeloRevision(RegistryModel):
         )
         return self
 
+    @model_validator(mode="after")
+    def _validate_review_scope(self) -> ModeloRevision:
+        """Bind a delta edition's review claim to the predecessor it was reviewed against."""
+        validate_review_scope(
+            revision_id=self.id,
+            review_status=self.review_status,
+            predecessor_id=self.predecessor.revision_id if isinstance(self.predecessor, DeclaredPredecessor) else None,
+            reviewed_against=self.reviewed_against,
+        )
+        return self
+
 
 REVISION_GOVERNANCE_FIELDS: frozenset[str] = governance_stamp_fields(ModeloRevision)
 """The :class:`ModeloRevision` fields that make up the declared governance stamp.
@@ -995,7 +1184,8 @@ A superset of :data:`REVISION_GOVERNANCE_FIELDS` by construction, since
 :class:`GovernanceStampMarker` is a :class:`ManifestOnlyMarker`. Beyond the
 governance stamp it carries the legally load-bearing scalars ``legal_refs``,
 ``orden_aplicabilidad`` and ``valid_to``, which share the stamp's readability
-hazard and raise its stakes, and ``authority_grade``, which is a claim about how
+hazard and raise its stakes, ``casilla_source_refs``, which grounds rows in
+every fragment of the edition, and ``authority_grade``, which is a claim about how
 far the whole revision's authority reaches and so belongs in the one file a
 reviewer opens; :mod:`.._schema_governance` records how a deep
 fragment can otherwise supply a revision's legal grounding while
@@ -1048,6 +1238,32 @@ class ModeloDefinition(RegistryModel):
         for key, revision in self.revisions.items():
             if key != revision.id:
                 raise RegistryValidationError(f"revision key {key!r} does not match revision id {revision.id!r}")
+        declarations = {key: revision.predecessor for key, revision in self.revisions.items()}
+        named = {
+            key: declaration.revision_id
+            for key, declaration in declarations.items()
+            if isinstance(declaration, DeclaredPredecessor)
+        }
+        validate_predecessor_forest(
+            self.id,
+            named=named,
+            declared_roots=frozenset(
+                key for key, declaration in declarations.items() if isinstance(declaration, NoPredecessor)
+            ),
+            keyless=frozenset(key for key, declaration in declarations.items() if declaration is None),
+        )
+        validate_predecessor_date_agreement(
+            self.id,
+            named=named,
+            windows={
+                key: EditionWindow(
+                    valid_from=revision.valid_from,
+                    valid_to=revision.valid_to,
+                    period_selector=revision.period_selector,
+                )
+                for key, revision in self.revisions.items()
+            },
+        )
         return self
 
 

@@ -1,5 +1,5 @@
 [[revisions."2024".formulas]]
-id = "renta-2024-atribucion-capital-mobiliario-rendimiento-neto-computable"
+id = "renta-atribucion-capital-mobiliario-rendimiento-neto-computable"
 target_casilla_id = "1568"
 expression = { op = "sum", args = [
     { casilla_id = "1565" },

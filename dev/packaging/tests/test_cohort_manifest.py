@@ -48,7 +48,7 @@ def _artifact_files(root: Path) -> tuple[tuple[str, ArtifactKind, Path], ...]:
 def test_manifest_roundtrip_binds_every_file_and_stable_identity(tmp_path: Path) -> None:
     """Build diagnostics and creation time do not change the byte-cohort identity."""
     rows = _artifact_files(tmp_path)
-    source = SourceIdentity(commit="a" * 40, tag="v0.2.1")
+    source = SourceIdentity(source_digest="a" * 64, tag="v0.2.1")
     created = datetime(2026, 7, 17, 4, 0, tzinfo=UTC)
     first = create_manifest(
         root=tmp_path,
@@ -83,7 +83,7 @@ def test_manifest_rejects_changed_or_undeclared_bytes(tmp_path: Path) -> None:
     manifest = create_manifest(
         root=tmp_path,
         version="0.2.1",
-        source=SourceIdentity(commit="b" * 40),
+        source=SourceIdentity(source_digest="b" * 64),
         created_at=datetime.now(UTC),
         builder=_build_identity(),
         artifacts=rows,
@@ -108,7 +108,7 @@ def test_manifest_rejects_an_incomplete_artifact_set(tmp_path: Path) -> None:
         create_manifest(
             root=tmp_path,
             version="0.2.1",
-            source=SourceIdentity(commit="c" * 40),
+            source=SourceIdentity(source_digest="c" * 64),
             created_at=datetime.now(UTC),
             builder=_build_identity(),
             artifacts=rows[:-1],

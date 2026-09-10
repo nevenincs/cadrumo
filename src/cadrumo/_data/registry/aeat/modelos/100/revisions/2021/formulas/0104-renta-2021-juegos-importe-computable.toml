@@ -1,5 +1,5 @@
 [[revisions."2021".formulas]]
-id = "renta-2021-juegos-importe-computable"
+id = "renta-juegos-importe-computable"
 target_casilla_id = "0286"
 expression = { op = "sum", args = [
     { casilla_id = "0283" },

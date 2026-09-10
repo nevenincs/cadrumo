@@ -7,8 +7,7 @@ semantic_role = "is_gastos_financieros_limite_art16_calculo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-16"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200020.f0011"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01246"
 number = "01246"
@@ -18,8 +17,7 @@ semantic_role = "is_gastos_financieros_limite_art16_calculo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-16"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200020.f0012"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01247"
 number = "01247"
@@ -29,8 +27,7 @@ semantic_role = "is_gastos_financieros_limite_art16_calculo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-16"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200020.f0013"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01248"
 number = "01248"
@@ -40,8 +37,7 @@ semantic_role = "is_gastos_financieros_limite_art16_calculo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-16"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200020.f0014"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01249"
 number = "01249"
@@ -51,8 +47,7 @@ semantic_role = "is_gastos_financieros_limite_art16_calculo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-16"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200020.f0015"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01250"
 number = "01250"
@@ -62,8 +57,7 @@ semantic_role = "is_gastos_financieros_limite_art16_calculo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-16"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200020.f0016"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01251"
 number = "01251"
@@ -73,8 +67,7 @@ semantic_role = "is_gastos_financieros_limite_art16_calculo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-16"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200020.f0017"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01252"
 number = "01252"
@@ -84,8 +77,7 @@ semantic_role = "is_gastos_financieros_limite_art16_calculo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-16"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200020.f0018"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01253"
 number = "01253"
@@ -95,8 +87,7 @@ semantic_role = "is_gastos_financieros_limite_art16_calculo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-16"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200020.f0019"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01254"
 number = "01254"
@@ -106,8 +97,7 @@ semantic_role = "is_gastos_financieros_limite_art16_calculo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-16"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200020.f0020"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01255"
 number = "01255"
@@ -117,8 +107,7 @@ semantic_role = "is_gastos_financieros_limite_art16_calculo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-16"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200020.f0022"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01256"
 number = "01256"
@@ -128,8 +117,7 @@ semantic_role = "is_gastos_financieros_limite_art16_calculo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-16"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200020.f0024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01257"
 number = "01257"
@@ -139,8 +127,7 @@ semantic_role = "is_gastos_financieros_limite_art16_calculo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-16"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200020.f0025"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01258"
 number = "01258"
@@ -150,8 +137,7 @@ semantic_role = "is_gastos_financieros_limite_art16_calculo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-16"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200020.f0026"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01259"
 number = "01259"
@@ -161,8 +147,7 @@ semantic_role = "is_gastos_financieros_limite_art16_calculo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-16"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200020.f0027"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01260"
 number = "01260"
@@ -172,5 +157,4 @@ semantic_role = "is_gastos_financieros_limite_art16_calculo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-16"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200020.f0028"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

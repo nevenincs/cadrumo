@@ -1,5 +1,5 @@
 [[revisions."2025".formulas]]
-id = "renta-2025-criptomonedas-ganancia-positiva"
+id = "renta-criptomonedas-ganancia-positiva"
 target_casilla_id = "1809"
 expression = { op = "max", args = [
     { literal = "0" },

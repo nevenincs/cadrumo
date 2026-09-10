@@ -70,7 +70,7 @@ def _evidence(*, mode: str, status: str = "passed", dependency_status: str = "re
         lock_sha256=digest,
         artifact_sha256=compatibility.artifact_map_digest(artifact_digests),
         artifact_digests=artifact_digests,
-        source_commit="a" * 40,
+        source_digest="a" * 64,
         cohort_manifest_sha256=digest if mode == "binary" else None,
         builder_python="3.13.11" if mode == "binary" else None,
         dependency=dependency,

@@ -1,5 +1,5 @@
 [[revisions."2023".formulas]]
-id = "renta-2023-ganancias-patrimoniales-base-ahorro-saldo-negativo"
+id = "renta-ganancias-patrimoniales-base-ahorro-saldo-negativo"
 target_casilla_id = "0425"
 expression = { op = "max", args = [
     { op = "subtract", args = [

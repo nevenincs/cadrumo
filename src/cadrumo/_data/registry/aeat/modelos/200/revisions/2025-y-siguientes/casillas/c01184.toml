@@ -7,5 +7,4 @@ semantic_role = "is_correccion_libertad_amortizacion_vehiculos_saldo_inicial_net
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:da-18"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200026b.f0140"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

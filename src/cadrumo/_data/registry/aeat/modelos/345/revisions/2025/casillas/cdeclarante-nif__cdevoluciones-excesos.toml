@@ -32,7 +32,6 @@ data_type = "name"
 semantic_role = "m345_declarante_razon_social"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-345-t1-razon-social"]
 legal_refs = ["orden-hfp-823-2022:art-1", "orden-hfp-823-2022:art-2"]
 source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 
@@ -44,7 +43,6 @@ data_type = "integer"
 semantic_role = "m345_total_declarados"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-345-t1-total-declarados"]
 legal_refs = ["orden-hfp-823-2022:art-1", "orden-hfp-823-2022:art-3"]
 source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 
@@ -56,7 +54,6 @@ data_type = "money"
 semantic_role = "m345_importe_total_aportaciones"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-345-t1-importe-total-aportaciones"]
 legal_refs = ["orden-hfp-823-2022:art-1", "orden-hfp-823-2022:art-3"]
 source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 
@@ -68,7 +65,6 @@ data_type = "nif"
 semantic_role = "m345_declarado_nif"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-345-t2-nif-declarado"]
 legal_refs = ["orden-hfp-823-2022:art-2", "orden-hfp-823-2022:art-3"]
 source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 
@@ -80,7 +76,6 @@ data_type = "name"
 semantic_role = "m345_declarado_nombre"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-345-t2-nombre-declarado"]
 legal_refs = ["orden-hfp-823-2022:art-2", "orden-hfp-823-2022:art-3"]
 source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 
@@ -92,7 +87,6 @@ data_type = "year"
 semantic_role = "m345_anio_nacimiento"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-345-t2-anio-nacimiento"]
 legal_refs = ["orden-hfp-823-2022:art-3"]
 source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 
@@ -104,7 +98,6 @@ data_type = "text"
 semantic_role = "m345_codigo_provincia"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-345-t2-codigo-provincia"]
 legal_refs = ["orden-hfp-823-2022:art-3"]
 source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 
@@ -116,7 +109,6 @@ data_type = "text"
 semantic_role = "m345_clave"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-345-t2-clave"]
 legal_refs = [
     "orden-hfp-823-2022:art-1",
     "orden-hfp-528-2023:art-unico",
@@ -137,7 +129,6 @@ data_type = "text"
 semantic_role = "m345_subclave"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-345-t2-subclave"]
 legal_refs = [
     "orden-hfp-528-2023:art-unico",
     "orden-hfp-1397-2023:art-sexto",
@@ -158,7 +149,6 @@ data_type = "nif"
 semantic_role = "m345_beneficiario_nif"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-345-t2-beneficiario-nif"]
 legal_refs = ["orden-hfp-823-2022:art-3"]
 source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 
@@ -170,7 +160,6 @@ data_type = "money"
 semantic_role = "m345_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-345-t2-importe"]
 legal_refs = ["orden-hfp-823-2022:art-3"]
 source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 
@@ -181,7 +170,6 @@ section = ["registro_declarado", "datos_adicionales"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-345-t2-datos-adicionales-abc"]
 legal_refs = ["orden-hfp-823-2022:art-3", "orden-hfp-528-2023:art-unico"]
 source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order", "boe-modelo-345-2023-amendment-hfp-528"]
 
@@ -229,7 +217,6 @@ data_type = "nif"
 semantic_role = "m345_entidad_aseguradora_nif"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-345-t2-datos-adicionales-d"]
 constraints = { max_length = 9, legal_refs = ["orden-hfp-823-2022:art-3"], source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"] }
 legal_refs = ["orden-hfp-823-2022:art-3"]
 source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
@@ -241,7 +228,6 @@ section = ["registro_declarado", "datos_adicionales"]
 data_type = "integer"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-345-t2-datos-adicionales-i"]
 legal_refs = ["orden-hfp-823-2022:art-3"]
 source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 
@@ -275,7 +261,6 @@ section = ["registro_declarado", "datos_adicionales"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-345-t2-datos-adicionales-m"]
 legal_refs = ["orden-hfp-528-2023:art-unico"]
 source_refs = ["aeat-dr-345-2025", "boe-modelo-345-2023-amendment-hfp-528"]
 
@@ -323,7 +308,6 @@ data_type = "text"
 semantic_role = "m345_rendimientos_trabajo_superiores_60000"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-345-t2-rendimientos-superiores-60000"]
 legal_refs = [
     "orden-hfp-528-2023:art-unico",
     "orden-hac-1504-2024:art-octavo",
@@ -366,7 +350,6 @@ data_type = "text"
 semantic_role = "m345_devoluciones_excesos"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-345-t2-devoluciones-excesos"]
 legal_refs = ["orden-hfp-528-2023:art-unico"]
 source_refs = ["aeat-dr-345-2025", "boe-modelo-345-2023-amendment-hfp-528"]
 

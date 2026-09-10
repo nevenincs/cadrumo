@@ -1,5 +1,5 @@
 [[revisions."2026".bindings]]
-id = "modelo-131-2026-resultados-negativos-anteriores"
+id = "modelo-131-resultados-negativos-anteriores"
 source = "previous_filing"
 selector = { source_modelo = "131", source_casilla_id = "saldo-negativo-fin-periodo", source_period_offset_from_target = -1, max_year_delta = 0 }
 aggregation = { op = "copy" }

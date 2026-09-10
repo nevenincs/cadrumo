@@ -1,5 +1,5 @@
 [[revisions."2021".formulas]]
-id = "renta-2021-deduccion-cultural-autonomica-50-porciento"
+id = "renta-deduccion-cultural-autonomica-50-porciento"
 target_casilla_id = "0551"
 expression = { op = "percent", args = [{ casilla_id = "0726" }, { literal = "50" }] }
 rounding = "money-2"

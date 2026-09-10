@@ -1,5 +1,5 @@
 [[revisions."2023".formulas]]
-id = "renta-2023-cuota-liquida-estatal"
+id = "renta-cuota-liquida-estatal"
 target_casilla_id = "0570"
 expression = { op = "sum", args = [
     { casilla_id = "0545" },

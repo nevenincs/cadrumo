@@ -1,5 +1,5 @@
 [[revisions."2024".formulas]]
-id = "renta-2024-cambio-residencia-extranjero-suma"
+id = "renta-cambio-residencia-extranjero-suma"
 target_casilla_id = "0412"
 expression = { op = "sum", args = [
     { casilla_id = "0411" },

@@ -1,25 +1,11 @@
 """Recoverable hard-cutover publication for one validated generated export tree.
 
-Generator-owned: ``revisions/<id>/export/`` in full, PLUS the ``export_refs``
-field of exactly those casillas the generated layout addresses.  Everything else
-in the revision -- casilla labels, legal and source refs, constraints, ordering,
-formulae, bindings, parity and application records -- remains outside this
-boundary, as do casillas the layout does not address.
-
-``export_refs`` is inside the boundary because it is DERIVED, not authored: the
-generator has just computed which casilla each export field addresses, and the
-back-reference is that one fact written the other way.  Registry validation
-requires both directions, so a generated layout cannot validate while the
-casillas it addresses stay silent about it.  Hand-authoring it would mean
-copying generated field ids into casilla files by hand -- dual maintenance of a
-single fact, which rots on the next regeneration.  The write is textual and
-touches only that line, so every other byte of a casilla file survives
-unchanged.
-
-The requirement is scoped to fixed-width layouts, and deliberately so: Modelo
-100 documents that its revisions carry no per-casilla ``export_refs`` because
-they export through an ``xml_dictionary`` layout.  That is correct and must not
-be "fixed" by adding refs it should not have.
+Generator-owned: ``revisions/<id>/export/`` in full and nothing else.  Every
+other member of the revision -- casilla declarations, labels, legal and source
+refs, constraints, ordering, formulae, bindings, parity and application records
+-- remains outside this boundary.  A casilla's ``export_refs`` is not written
+here or anywhere: the registry loader derives it from the layout this module
+publishes, so the swapped-in tree is the whole of the change.
 
 The internal JSON provenance member moves with the generated TOML tree, while
 the production registry loader continues to consume only its TOML fragments.
@@ -46,7 +32,6 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from dev.registry.compiler.loader import load_modelo_directory
 
 from ..conformance.manager import reset_conformance_cache
-from ._casilla_export_refs import export_refs_by_casilla, write_generated_casilla_export_refs
 from ._export_tree import RenderedExportTree
 from ._tree_paths import contains
 from ._tree_validation import (
@@ -167,9 +152,8 @@ def publish_validated_generated_export_tree(
             render_profile_source_evidence=render_profile_source_evidence,
         )
         if recovery_completed:
-            # Recovery finalized (or re-finalized) a candidate as live and, on
-            # the target_is_verified path, wrote casilla export_refs -- both
-            # outside anything the conformance snapshot cache's key covers.
+            # Recovery finalized (or re-finalized) a candidate as live, which
+            # is outside anything the conformance snapshot cache's key covers.
             # See reset_conformance_cache.
             reset_conformance_cache()
             return PublishedGeneratedExportTree(
@@ -248,7 +232,6 @@ def publish_validated_generated_export_tree(
             expected_manifest_sha256=candidate_manifest_sha256,
             expected_manifest=candidate_manifest,
         )
-        _write_export_refs(rendered, revision_root)
         journal = journal.model_copy(update={"state": "committed"})
         _write_journal(journal_path, journal)
         if had_target:
@@ -260,18 +243,6 @@ def publish_validated_generated_export_tree(
         validated=validated,
         export_root=target_export_root,
         provenance_manifest_path=target_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME,
-    )
-
-
-def _write_export_refs(rendered: RenderedExportTree, revision_root: Path) -> None:
-    """Write the derived casilla back-references the docstring scopes this module to.
-
-    Idempotent and reconciling, so recovery re-runs may call it again over a
-    partially written revision.
-    """
-    write_generated_casilla_export_refs(
-        revision_root,
-        export_refs_by_casilla=export_refs_by_casilla(rendered),
     )
 
 
@@ -502,7 +473,6 @@ def _recover_interrupted_publication(
             expected_manifest_sha256=journal.candidate_manifest_sha256,
             expected_manifest=target_manifest,
         )
-        _write_export_refs(rendered, target_export_root.parent)
         _delete_opaque_rollback_if_present(backup_export_root)
         _delete_journal(journal_path)
         return True
@@ -559,7 +529,6 @@ def _recover_interrupted_publication(
             expected_manifest_sha256=journal.candidate_manifest_sha256,
             expected_manifest=candidate_manifest,
         )
-        _write_export_refs(rendered, target_export_root.parent)
         _delete_journal(journal_path)
         return True
     if target_export_root.exists():

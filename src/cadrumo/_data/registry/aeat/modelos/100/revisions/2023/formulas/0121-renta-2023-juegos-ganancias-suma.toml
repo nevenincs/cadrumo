@@ -1,5 +1,5 @@
 [[revisions."2023".formulas]]
-id = "renta-2023-juegos-ganancias-suma"
+id = "renta-juegos-ganancias-suma"
 target_casilla_id = "0288"
 expression = { op = "sum", args = [
     { casilla_id = "0282" },

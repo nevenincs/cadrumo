@@ -1,5 +1,5 @@
 [[revisions."2024".formulas]]
-id = "renta-2024-minimo-contribuyente-autonomico"
+id = "renta-minimo-contribuyente-autonomico"
 target_casilla_id = "0512"
 expression = { op = "lookup_parameter", args = [{ parameter = "renta-2024-minimo-contribuyente-base-2024" }] }
 rounding = "money-2"

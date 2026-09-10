@@ -6,7 +6,7 @@
 # (see formula `m210-tipo-gravamen-2025-resolve`).
 
 [[revisions."2025".formulas]]
-id = "m210-cuota-integra-2025"
+id = "m210-cuota-integra"
 target_casilla_id = "cuota_integra"
 expression = { op = "multiply", args = [
     { casilla_id = "base_imponible" },

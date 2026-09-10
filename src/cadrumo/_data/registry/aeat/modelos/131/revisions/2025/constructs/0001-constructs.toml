@@ -60,22 +60,22 @@ casilla_ids = [
     "modulos-rendimiento-neto-actividad",
 ]
 formulas = [
-    "modelo-131-2025-pago-fraccionado-sin-datos-base",
-    "modelo-131-2025-pago-fraccionado-agrario",
-    "modelo-131-2025-suma-pagos-previos",
-    "modelo-131-2025-diferencia",
-    "modelo-131-2025-total",
-    "modelo-131-2025-resultado",
-    "modelo-131-2025-saldo-negativo-fin-periodo",
-    "modelo-131-2025-modulos-rendimiento-neto-previo",
-    "modelo-131-2025-modulos-rendimiento-neto-minorado",
-    "modelo-131-2025-modulos-rendimiento-neto-modulos",
-    "modelo-131-2025-modulos-rendimiento-neto-actividad",
-    "modelo-131-2025-modulos-pequena-dimension-ignorado-flag",
-    "modelo-131-2025-modulos-temporada-inicio-actividad-conflicto-flag",
+    "modelo-131-pago-fraccionado-sin-datos-base",
+    "modelo-131-pago-fraccionado-agrario",
+    "modelo-131-suma-pagos-previos",
+    "modelo-131-diferencia",
+    "modelo-131-total",
+    "modelo-131-resultado",
+    "modelo-131-saldo-negativo-fin-periodo",
+    "modelo-131-modulos-rendimiento-neto-previo",
+    "modelo-131-modulos-rendimiento-neto-minorado",
+    "modelo-131-modulos-rendimiento-neto-modulos",
+    "modelo-131-modulos-rendimiento-neto-actividad",
+    "modelo-131-modulos-pequena-dimension-ignorado-flag",
+    "modelo-131-modulos-temporada-inicio-actividad-conflicto-flag",
 ]
 parameters = ["irpf.objective_no_base_fractional_payment_rate", "irpf.objective_agriculture_fractional_payment_rate", "m131-modulos-coeficientes-2025", "m131-modulos-reduccion-general-2025"]
-bindings = ["modelo-131-2025-resultados-negativos-anteriores"]
+bindings = ["modelo-131-resultados-negativos-anteriores"]
 dependency_classifications = ["modelo-131-2025-dep-131"]
 export_layouts = ["modelo-131-2025-fichero-boe"]
 extraction_profiles = ["modelo-131-2025-submitted-file"]

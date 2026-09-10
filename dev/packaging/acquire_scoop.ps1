@@ -257,7 +257,7 @@ function Invoke-InstalledOracle {
             "--cli", $AeatCommand,
             "--storage-root", (Join-Path $OutputDir "tax-state"),
             "--work-dir", (Join-Path $OutputDir "tax-work"),
-            "--cohort-source-commit", $cohort.source_commit,
+            "--cohort-source-digest", $cohort.source_digest,
             "--cohort-manifest-sha256", $cohortManifestSha256,
             "--cohort-root-wheel-sha256", $cohort.sha256.cadrumo,
             "--output", $taxEvidence
@@ -331,7 +331,7 @@ function Invoke-HostAcquisition {
         bucket = "${Bucket}/${Package}"
         platform = [System.Runtime.InteropServices.RuntimeInformation]::OSDescription
         cohort = @{
-            source_commit = [string]$manifest.source_commit
+            source_digest = [string]$manifest.source_digest
             version = [string]$manifest.version
         }
         verified_artifact_digests = $verifiedDigests

@@ -29,9 +29,9 @@ from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 
 from ..lane_verification_core import (
     build_companion_wheels,
+    build_root_snapshot,
     build_wheel,
     create_pip_venv,
-    head_extract,
     install_targets_with_pip,
     isolated_product_env,
     venv_cadrumo_path,
@@ -78,7 +78,7 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> _InstalledCoho
     assert uv is not None, "uv is required to build the installed action-envelope cohort"
 
     work_dir = tmp_path_factory.mktemp("overview-provisioning-action-recovery")
-    build_root = head_extract(_REPO_ROOT, work_dir)
+    build_root = build_root_snapshot(_REPO_ROOT, work_dir)
     root_wheel = build_wheel(_REPO_ROOT, work_dir, uv, build_root=build_root)
     data_wheels = build_companion_wheels(work_dir, uv, build_root=build_root)
     targets = (str(root_wheel.resolve()), *(str(wheel.resolve()) for wheel in data_wheels))

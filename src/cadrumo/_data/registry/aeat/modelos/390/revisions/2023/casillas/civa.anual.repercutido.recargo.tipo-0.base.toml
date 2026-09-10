@@ -1,10 +1,11 @@
 [[revisions."2023".casillas]]
 id = "iva.anual.repercutido.recargo.tipo-0.base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md:207 (sha256 179c02eddc8b) prints box [663]; corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md (sha256 7c6554f3182d) prints no box [663] and retires none"
 number = "663"
 section = ["iva", "anual", "devengado"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-390-page-02-casilla-repercutido-recargo-tipo-0-base"]
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2023"]

@@ -1,6 +1,8 @@
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-1-nif"
+continuidad_id = "related-party-nif-1"
+continuidad_origin = "seeded"
 number = "3.vinculada.1.nif"
 section = ["vinculadas", "1"]
 data_type = "nif"
@@ -10,10 +12,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.144-158.vinculada-1-nif"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f018"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-1-fjo"
+continuidad_id = "related-party-fjo-1"
+continuidad_origin = "seeded"
 number = "3.vinculada.1.fjo"
 section = ["vinculadas", "1"]
 data_type = "text"
@@ -23,10 +26,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.159-159.vinculada-1-fjo"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f019"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-1-razon-social"
+continuidad_id = "related-party-name-1"
+continuidad_origin = "seeded"
 number = "3.vinculada.1.razon-social"
 section = ["vinculadas", "1"]
 data_type = "text"
@@ -36,10 +40,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.160-219.vinculada-1-razon-social"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f020"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-1-tipo-vinculacion"
+continuidad_id = "related-party-tipo-vinculacion-1"
+continuidad_origin = "seeded"
 number = "3.vinculada.1.tipo-vinculacion"
 section = ["vinculadas", "1"]
 data_type = "text"
@@ -49,10 +54,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.240-240.vinculada-1-tipo-vinculacion"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f022"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-1-provincia-pais"
+continuidad_id = "related-party-location-1"
+continuidad_origin = "seeded"
 number = "3.vinculada.1.provincia-pais"
 section = ["vinculadas", "1"]
 data_type = "text"
@@ -62,10 +68,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.241-242.vinculada-1-provincia-pais"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f023"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-1-tipo-operacion"
+continuidad_id = "related-party-tipo-operacion-1"
+continuidad_origin = "seeded"
 number = "3.vinculada.1.tipo-operacion"
 section = ["vinculadas", "1"]
 data_type = "text"
@@ -75,10 +82,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.243-244.vinculada-1-tipo-operacion"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f024"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-1-ingreso-pago"
+continuidad_id = "related-party-ingreso-pago-1"
+continuidad_origin = "seeded"
 number = "3.vinculada.1.ingreso-pago"
 section = ["vinculadas", "1"]
 data_type = "text"
@@ -88,10 +96,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.245-245.vinculada-1-ingreso-pago"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f025"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-1-metodo-valoracion"
+continuidad_id = "related-party-metodo-1"
+continuidad_origin = "seeded"
 number = "3.vinculada.1.metodo-valoracion"
 section = ["vinculadas", "1"]
 data_type = "text"
@@ -101,10 +110,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.246-247.vinculada-1-metodo-valoracion"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f026"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-1-importe"
+continuidad_id = "related-party-importe-1"
+continuidad_origin = "seeded"
 number = "3.vinculada.1.importe"
 section = ["vinculadas", "1"]
 data_type = "money"
@@ -114,10 +124,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.248-264.vinculada-1-importe"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f027"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-2-nif"
+continuidad_id = "related-party-nif-2"
+continuidad_origin = "seeded"
 number = "3.vinculada.2.nif"
 section = ["vinculadas", "2"]
 data_type = "nif"
@@ -127,10 +138,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.265-279.vinculada-2-nif"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f028"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-2-fjo"
+continuidad_id = "related-party-fjo-2"
+continuidad_origin = "seeded"
 number = "3.vinculada.2.fjo"
 section = ["vinculadas", "2"]
 data_type = "text"
@@ -140,10 +152,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.280-280.vinculada-2-fjo"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f029"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-2-razon-social"
+continuidad_id = "related-party-name-2"
+continuidad_origin = "seeded"
 number = "3.vinculada.2.razon-social"
 section = ["vinculadas", "2"]
 data_type = "text"
@@ -153,10 +166,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.281-340.vinculada-2-razon-social"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f030"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-2-tipo-vinculacion"
+continuidad_id = "related-party-tipo-vinculacion-2"
+continuidad_origin = "seeded"
 number = "3.vinculada.2.tipo-vinculacion"
 section = ["vinculadas", "2"]
 data_type = "text"
@@ -166,10 +180,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.361-361.vinculada-2-tipo-vinculacion"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f032"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-2-provincia-pais"
+continuidad_id = "related-party-location-2"
+continuidad_origin = "seeded"
 number = "3.vinculada.2.provincia-pais"
 section = ["vinculadas", "2"]
 data_type = "text"
@@ -179,10 +194,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.362-363.vinculada-2-provincia-pais"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f033"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-2-tipo-operacion"
+continuidad_id = "related-party-tipo-operacion-2"
+continuidad_origin = "seeded"
 number = "3.vinculada.2.tipo-operacion"
 section = ["vinculadas", "2"]
 data_type = "text"
@@ -192,10 +208,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.364-365.vinculada-2-tipo-operacion"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f034"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-2-ingreso-pago"
+continuidad_id = "related-party-ingreso-pago-2"
+continuidad_origin = "seeded"
 number = "3.vinculada.2.ingreso-pago"
 section = ["vinculadas", "2"]
 data_type = "text"
@@ -205,10 +222,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.366-366.vinculada-2-ingreso-pago"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f035"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-2-metodo-valoracion"
+continuidad_id = "related-party-metodo-2"
+continuidad_origin = "seeded"
 number = "3.vinculada.2.metodo-valoracion"
 section = ["vinculadas", "2"]
 data_type = "text"
@@ -218,10 +236,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.367-368.vinculada-2-metodo-valoracion"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f036"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-2-importe"
+continuidad_id = "related-party-importe-2"
+continuidad_origin = "seeded"
 number = "3.vinculada.2.importe"
 section = ["vinculadas", "2"]
 data_type = "money"
@@ -231,10 +250,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.369-385.vinculada-2-importe"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f037"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-3-nif"
+continuidad_id = "related-party-nif-3"
+continuidad_origin = "seeded"
 number = "3.vinculada.3.nif"
 section = ["vinculadas", "3"]
 data_type = "nif"
@@ -244,10 +264,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.386-400.vinculada-3-nif"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f038"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-3-fjo"
+continuidad_id = "related-party-fjo-3"
+continuidad_origin = "seeded"
 number = "3.vinculada.3.fjo"
 section = ["vinculadas", "3"]
 data_type = "text"
@@ -257,10 +278,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.401-401.vinculada-3-fjo"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f039"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-3-razon-social"
+continuidad_id = "related-party-name-3"
+continuidad_origin = "seeded"
 number = "3.vinculada.3.razon-social"
 section = ["vinculadas", "3"]
 data_type = "text"
@@ -270,10 +292,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.402-461.vinculada-3-razon-social"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f040"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-3-tipo-vinculacion"
+continuidad_id = "related-party-tipo-vinculacion-3"
+continuidad_origin = "seeded"
 number = "3.vinculada.3.tipo-vinculacion"
 section = ["vinculadas", "3"]
 data_type = "text"
@@ -283,10 +306,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.482-482.vinculada-3-tipo-vinculacion"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f042"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-3-provincia-pais"
+continuidad_id = "related-party-location-3"
+continuidad_origin = "seeded"
 number = "3.vinculada.3.provincia-pais"
 section = ["vinculadas", "3"]
 data_type = "text"
@@ -296,10 +320,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.483-484.vinculada-3-provincia-pais"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f043"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-3-tipo-operacion"
+continuidad_id = "related-party-tipo-operacion-3"
+continuidad_origin = "seeded"
 number = "3.vinculada.3.tipo-operacion"
 section = ["vinculadas", "3"]
 data_type = "text"
@@ -309,10 +334,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.485-486.vinculada-3-tipo-operacion"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f044"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-3-ingreso-pago"
+continuidad_id = "related-party-ingreso-pago-3"
+continuidad_origin = "seeded"
 number = "3.vinculada.3.ingreso-pago"
 section = ["vinculadas", "3"]
 data_type = "text"
@@ -322,10 +348,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.487-487.vinculada-3-ingreso-pago"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f045"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-3-metodo-valoracion"
+continuidad_id = "related-party-metodo-3"
+continuidad_origin = "seeded"
 number = "3.vinculada.3.metodo-valoracion"
 section = ["vinculadas", "3"]
 data_type = "text"
@@ -335,10 +362,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.488-489.vinculada-3-metodo-valoracion"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f046"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-3-importe"
+continuidad_id = "related-party-importe-3"
+continuidad_origin = "seeded"
 number = "3.vinculada.3.importe"
 section = ["vinculadas", "3"]
 data_type = "money"
@@ -348,10 +376,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.490-506.vinculada-3-importe"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f047"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-4-nif"
+continuidad_id = "related-party-nif-4"
+continuidad_origin = "seeded"
 number = "3.vinculada.4.nif"
 section = ["vinculadas", "4"]
 data_type = "nif"
@@ -361,10 +390,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.507-521.vinculada-4-nif"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f048"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-4-fjo"
+continuidad_id = "related-party-fjo-4"
+continuidad_origin = "seeded"
 number = "3.vinculada.4.fjo"
 section = ["vinculadas", "4"]
 data_type = "text"
@@ -374,10 +404,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.522-522.vinculada-4-fjo"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f049"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-4-razon-social"
+continuidad_id = "related-party-name-4"
+continuidad_origin = "seeded"
 number = "3.vinculada.4.razon-social"
 section = ["vinculadas", "4"]
 data_type = "text"
@@ -387,10 +418,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.523-582.vinculada-4-razon-social"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f050"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-4-tipo-vinculacion"
+continuidad_id = "related-party-tipo-vinculacion-4"
+continuidad_origin = "seeded"
 number = "3.vinculada.4.tipo-vinculacion"
 section = ["vinculadas", "4"]
 data_type = "text"
@@ -400,10 +432,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.603-603.vinculada-4-tipo-vinculacion"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f052"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-4-provincia-pais"
+continuidad_id = "related-party-location-4"
+continuidad_origin = "seeded"
 number = "3.vinculada.4.provincia-pais"
 section = ["vinculadas", "4"]
 data_type = "text"
@@ -413,10 +446,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.604-605.vinculada-4-provincia-pais"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f053"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-4-tipo-operacion"
+continuidad_id = "related-party-tipo-operacion-4"
+continuidad_origin = "seeded"
 number = "3.vinculada.4.tipo-operacion"
 section = ["vinculadas", "4"]
 data_type = "text"
@@ -426,10 +460,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.606-607.vinculada-4-tipo-operacion"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f054"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-4-ingreso-pago"
+continuidad_id = "related-party-ingreso-pago-4"
+continuidad_origin = "seeded"
 number = "3.vinculada.4.ingreso-pago"
 section = ["vinculadas", "4"]
 data_type = "text"
@@ -439,10 +474,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.608-608.vinculada-4-ingreso-pago"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f055"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-4-metodo-valoracion"
+continuidad_id = "related-party-metodo-4"
+continuidad_origin = "seeded"
 number = "3.vinculada.4.metodo-valoracion"
 section = ["vinculadas", "4"]
 data_type = "text"
@@ -452,10 +488,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.609-610.vinculada-4-metodo-valoracion"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f056"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-4-importe"
+continuidad_id = "related-party-importe-4"
+continuidad_origin = "seeded"
 number = "3.vinculada.4.importe"
 section = ["vinculadas", "4"]
 data_type = "money"
@@ -465,10 +502,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.611-627.vinculada-4-importe"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f057"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-5-nif"
+continuidad_id = "related-party-nif-5"
+continuidad_origin = "seeded"
 number = "3.vinculada.5.nif"
 section = ["vinculadas", "5"]
 data_type = "nif"
@@ -478,10 +516,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.628-642.vinculada-5-nif"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f058"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-5-fjo"
+continuidad_id = "related-party-fjo-5"
+continuidad_origin = "seeded"
 number = "3.vinculada.5.fjo"
 section = ["vinculadas", "5"]
 data_type = "text"
@@ -491,10 +530,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.643-643.vinculada-5-fjo"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f059"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-5-razon-social"
+continuidad_id = "related-party-name-5"
+continuidad_origin = "seeded"
 number = "3.vinculada.5.razon-social"
 section = ["vinculadas", "5"]
 data_type = "text"
@@ -504,10 +544,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.644-703.vinculada-5-razon-social"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f060"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-5-tipo-vinculacion"
+continuidad_id = "related-party-tipo-vinculacion-5"
+continuidad_origin = "seeded"
 number = "3.vinculada.5.tipo-vinculacion"
 section = ["vinculadas", "5"]
 data_type = "text"
@@ -517,10 +558,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.724-724.vinculada-5-tipo-vinculacion"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f062"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-5-provincia-pais"
+continuidad_id = "related-party-location-5"
+continuidad_origin = "seeded"
 number = "3.vinculada.5.provincia-pais"
 section = ["vinculadas", "5"]
 data_type = "text"
@@ -530,10 +572,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.725-726.vinculada-5-provincia-pais"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f063"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-5-tipo-operacion"
+continuidad_id = "related-party-tipo-operacion-5"
+continuidad_origin = "seeded"
 number = "3.vinculada.5.tipo-operacion"
 section = ["vinculadas", "5"]
 data_type = "text"
@@ -543,10 +586,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.727-728.vinculada-5-tipo-operacion"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f064"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-5-ingreso-pago"
+continuidad_id = "related-party-ingreso-pago-5"
+continuidad_origin = "seeded"
 number = "3.vinculada.5.ingreso-pago"
 section = ["vinculadas", "5"]
 data_type = "text"
@@ -556,10 +600,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.729-729.vinculada-5-ingreso-pago"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f065"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-5-metodo-valoracion"
+continuidad_id = "related-party-metodo-5"
+continuidad_origin = "seeded"
 number = "3.vinculada.5.metodo-valoracion"
 section = ["vinculadas", "5"]
 data_type = "text"
@@ -569,10 +614,11 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.730-731.vinculada-5-metodo-valoracion"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f066"]
 
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-5-importe"
+continuidad_id = "related-party-importe-5"
+continuidad_origin = "seeded"
 number = "3.vinculada.5.importe"
 section = ["vinculadas", "5"]
 data_type = "money"
@@ -582,5 +628,4 @@ input_kind = "informational"
 binding = "modelo-232-2018.page_01.732-748.vinculada-5-importe"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
-export_refs = ["m232-2018.dr23201.f067"]
 

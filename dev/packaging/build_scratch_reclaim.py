@@ -36,9 +36,10 @@ before that helper existed carry no readable owner and stay operator-only;
 they are why the ownerless path remains a supported answer rather than an
 error.
 
-Removal is deliberately not ``shutil.rmtree(..., ignore_errors=True)``. The
-largest family here is a Git clone, whose object files are read-only, and on
-Windows unlinking a read-only file fails with ``[WinError 5] Access is
+Removal is deliberately not ``shutil.rmtree(..., ignore_errors=True)``. A
+source tree copied here can carry read-only members (a symlink target, or a
+file whose permissions were preserved from the tree it was copied from), and
+on Windows unlinking a read-only file fails with ``[WinError 5] Access is
 denied``. ``ignore_errors`` swallows exactly that error, so a sweep written
 the obvious way reports success and reclaims nothing; :func:`remove_tree`
 clears the attribute and retries instead.
@@ -77,13 +78,13 @@ RELEASE_COHORT_INTEGRATION_FAMILY: Final[ScratchFamily] = ScratchFamily(
     prefix="release-cohort-integration-",
     suffix="-source",
 )
-"""Bracket the source clone the real double-build integration proof works from.
+"""Bracket the source snapshot the real double-build integration proof works from.
 
-That test clones the repository so both of its builds see one immovable tip,
-and removes the clone in a ``finally`` block. The block covers a test that
-finishes; it covers neither a killed worker nor a killed session, and this
-suite's own ceiling documents that a worker parked in ``subprocess.wait()``
-exits uncleanly rather than unwinding.
+That test snapshots the repository so both of its builds see one immovable
+copy, and removes the snapshot in a ``finally`` block. The block covers a test
+that finishes; it covers neither a killed worker nor a killed session, and
+this suite's own ceiling documents that a worker parked in
+``subprocess.wait()`` exits uncleanly rather than unwinding.
 """
 
 RELEASE_STAGING_FAMILY: Final[ScratchFamily] = ScratchFamily(
@@ -104,17 +105,18 @@ COHORT_BUILD_TREE_FAMILY: Final[ScratchFamily] = ScratchFamily(
     prefix=".",
     suffix="-source",
 )
-"""Bracket the extracted Git archive ``uv build`` packages the cohort from.
+"""Bracket the extracted source snapshot ``uv build`` packages the cohort from.
 
-Some thirty-nine thousand files, extracted beside the cohort output and removed
-in a ``finally`` block -- which is the coverage this module exists because of.
+Some thirty-nine thousand files, snapshotted beside the cohort output and
+removed in a ``finally`` block -- which is the coverage this module exists
+because of.
 """
 
 COHORT_SOURCE_ARCHIVE_FAMILY: Final[ScratchFamily] = ScratchFamily(
     prefix=".",
     suffix="-source.zip",
 )
-"""Bracket the Git archive the build tree is extracted from.
+"""Bracket the archive the build tree's own source snapshot is zipped into.
 
 The one registered family whose member is a FILE rather than a directory: it is
 moved into the cohort on the success path, so what survives a kill is a
@@ -295,8 +297,9 @@ def _is_reclaimable(
 def remove_tree(directory: Path) -> bool:
     """Remove ``directory`` whole, clearing read-only attributes that block it.
 
-    A Git clone -- the shape of the largest family swept here -- stores its
-    objects read-only, and Windows refuses to unlink a read-only file. The
+    A copied source tree -- the shape of the largest family swept here -- can
+    carry members whose permissions were preserved read-only from what they
+    were copied from, and Windows refuses to unlink a read-only file. The
     handler clears the attribute and retries the operation that failed, which
     is what makes the difference between reporting a reclaim and performing
     one.
@@ -320,7 +323,7 @@ def remove_tree(directory: Path) -> bool:
 def remove_scratch(candidate: Path) -> bool:
     """Remove one judged scratch entry, whichever kind it is.
 
-    Most registered families name directories, but the cohort build's Git
+    Most registered families name directories, but the cohort build's source
     archive is a single several-hundred-megabyte FILE at a working name until
     the moment it is moved into the cohort. Leaving files to the next sweep
     would mean the sweep never reclaimed one.

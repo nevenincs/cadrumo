@@ -7,8 +7,7 @@ semantic_role = "is_correccion_asimetrias_hibridas_art15bis_permanente_disminuci
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-15-bis"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200026d.f0012"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02752"
 number = "02752"
@@ -18,8 +17,7 @@ semantic_role = "is_correccion_asimetrias_hibridas_art15bis_temporaria_ejercicio
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-15-bis"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200026d.f0013"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02753"
 number = "02753"
@@ -29,8 +27,7 @@ semantic_role = "is_correccion_asimetrias_hibridas_art15bis_temporaria_anteriore
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-15-bis"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200026d.f0014"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02754"
 number = "02754"
@@ -40,8 +37,7 @@ semantic_role = "is_correccion_asimetrias_hibridas_art15bis_saldo_inicial_neto"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-15-bis"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200026d.f0011"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02755"
 number = "02755"
@@ -51,5 +47,4 @@ semantic_role = "is_correccion_asimetrias_hibridas_art15bis_saldo_final"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-15-bis"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200026d.f0015"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

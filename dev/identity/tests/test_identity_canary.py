@@ -1,31 +1,35 @@
 """The working-tree identity canary, and the proofs that it can actually fire.
 
-The gate itself is one assertion: no TRACKED data payload in this repository
+The gate itself is one assertion: no VISIBLE data payload in this repository
 carries a checksum-valid Spanish taxpayer identity. Everything else here exists
 because that assertion is worthless on its own -- a scanner that enumerates
 nothing, or whose checksum never rejects anything, or whose exclusions have
 quietly grown to cover the tree, reports the same clean result as a clean
 repository.
 
-Untracked and ignored content is swept just as hard and reported in a separate
-non-blocking tier, because a credential file is expected to hold the operator's
-own identity. The tier is keyed on tracking state and never on a path, and the
-proof that matters plants one value in a tracked file and an ignored file at
-once: the tracked copy must red while the ignored copy only reports. A tier that
+Ignored content is swept just as hard and reported in a separate non-blocking
+tier, because a credential file is expected to hold the operator's own
+identity. The tier is keyed on visibility and never on a path, and the proof
+that matters plants one value in a visible file and a gitignored file at once:
+the visible copy must red while the ignored copy only reports. A tier that
 could be reached by naming a directory would be an escape route, and a path
 exclusion for the environment file is the blindness this module was rebuilt to
 remove.
 
-The positive controls run against a REAL temporary git repository rather than a
+The positive controls run against a REAL temporary directory rather than a
 patched enumerator, so what they prove is that the real code path finds a real
 planted value in a real file. Nothing under ``src/`` or ``dev/`` is mutated to
-make them work.
+make them work. The specimen is a plain directory, not a git repository: the
+canary enumerates through :func:`dev.source_tree.repository_files`, which reads
+``.gitignore`` directly rather than asking git, so a specimen carrying a real
+``.gitignore`` exercises the same rule the live tree is governed by without any
+git process ever running.
 
-A specimen repository carries a real ``.gitignore`` wherever the ignore path is
-the thing under test, and a separate proof confirms git really does ignore the
-planted file. Specimens without one exercise the untracked path, which is a
-different path: a control that plants an unignored file while citing the ignore
-scenario proves the scenario it names was never run.
+A specimen carries a real ``.gitignore`` wherever the ignore path is the thing
+under test, and a separate proof confirms the enumerator really excludes the
+planted file. Specimens without one exercise the visible path, which is a
+different path: a control that plants an unignored file while citing the
+ignore scenario proves the scenario it names was never run.
 
 The whole-tree sweeps are computed once per module. Each costs tens of thousands
 of file operations, this lane runs pytest in parallel, and the working copy is
@@ -35,8 +39,6 @@ network-backed, so repeating a sweep per assertion buys nothing but I/O.
 from __future__ import annotations
 
 import json
-import shutil
-import subprocess
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -44,6 +46,7 @@ import pytest
 
 from ..._paths import REPO_ROOT
 from ...sanitizer.residual_identity import ResidualKind
+from ...source_tree import repository_files as _enumerated_repository_files
 from .._tree_scan import (
     BLOCKING_KINDS,
     BLOCKING_TRACKING,
@@ -57,6 +60,7 @@ from .._tree_scan import (
     FileTracking,
     TreeFinding,
     TreeScan,
+    _raw_relative_paths,
     advisory_findings,
     exclusion_reason,
     matching_fragments,
@@ -103,32 +107,15 @@ _PLANTED_CIF = "B00000000"
 _PLANTED_NIF_IVA = "ES00000000T"
 
 
-def _git(*arguments: str, cwd: Path) -> None:
-    """Run one git command in ``cwd``, failing loudly."""
-    executable = shutil.which("git")
-    assert executable is not None, "git is required to build the specimen repository"
-    subprocess.run([executable, *arguments], cwd=cwd, check=True, capture_output=True)  # noqa: S603
-
-
-def _git_output(*arguments: str, cwd: Path) -> list[str]:
-    """One git command's stdout in ``cwd``, as lines."""
-    executable = shutil.which("git")
-    assert executable is not None, "git is required to build the specimen repository"
-    completed = subprocess.run(  # noqa: S603
-        [executable, *arguments], cwd=cwd, check=True, capture_output=True, text=True
-    )
-    return [line for line in completed.stdout.splitlines() if line]
-
-
 @pytest.fixture
 def specimen_repository(tmp_path: Path) -> Iterator[Path]:
-    """A real git repository outside this tree, for planting values into.
+    """A plain temporary directory outside this tree, for planting values into.
 
-    Built rather than patched: the canary enumerates through ``git ls-files``, so
-    a specimen that is not a git repository would exercise a different code path
-    than the one guarding this project.
+    Not a git repository. The canary enumerates through
+    :func:`dev.source_tree.repository_files`, which reads ``.gitignore`` files
+    directly, so a specimen carrying a real ``.gitignore`` exercises the same
+    rule the live tree is governed by without any git process ever running.
     """
-    _git("init", "--quiet", cwd=tmp_path)
     yield tmp_path
 
 
@@ -157,17 +144,17 @@ def repository_advisory(repository_files_once: list[CandidateFile]) -> tuple[Tre
 
 
 def test_the_working_tree_carries_no_identity_in_a_tracked_data_payload(repository_scan: TreeScan) -> None:
-    """The gate. A taxpayer identity in a TRACKED payload is a leak.
+    """The gate. A taxpayer identity in a VISIBLE payload is a leak.
 
-    Tracked content ships, reaches every clone and cannot be taken back out of
-    history, which is what makes an identity there different in kind from one in
-    an ignored credential file. The failure message lists locations only. It
-    cannot disclose a value, which is what makes it safe to print in CI output
-    that anyone can read.
+    Visible content ships, or reaches every clone the moment anyone runs an
+    ordinary ``git add``, which is what makes an identity there different in
+    kind from one in an ignored credential file. The failure message lists
+    locations only. It cannot disclose a value, which is what makes it safe to
+    print in CI output that anyone can read.
     """
     assert repository_scan.files_scanned > 0, "the canary enumerated no files, so a clean verdict proves nothing"
     assert not repository_scan.findings, (
-        f"{len(repository_scan.findings)} checksum-valid taxpayer identities in tracked data payloads "
+        f"{len(repository_scan.findings)} checksum-valid taxpayer identities in visible data payloads "
         f"(values withheld):\n{repository_scan.render()}"
     )
 
@@ -175,15 +162,15 @@ def test_the_working_tree_carries_no_identity_in_a_tracked_data_payload(reposito
 def test_every_blocking_finding_would_come_from_tracked_content(repository_scan: TreeScan) -> None:
     """The tier must not be a route by which anything escapes the blocking set.
 
-    A tier keyed on tracking state is only honest while the two sides stay
-    disjoint and exhaustive: every blocking finding tracked, every operator
-    finding not. A classification bug that quietly moved a tracked file into the
-    operator tier would leave the gate green over the exact case it exists for,
-    and nothing else here would notice.
+    A tier keyed on visibility is only honest while the two sides stay disjoint
+    and exhaustive: every blocking finding visible, every operator finding not.
+    A classification bug that quietly moved a visible file into the operator
+    tier would leave the gate green over the exact case it exists for, and
+    nothing else here would notice.
     """
     assert all(finding.tracking in BLOCKING_TRACKING for finding in repository_scan.findings)
     assert not any(finding.tracking in BLOCKING_TRACKING for finding in repository_scan.operator_findings), (
-        "tracked content reached the non-blocking tier, so the tier is an escape route:\n"
+        "visible content reached the non-blocking tier, so the tier is an escape route:\n"
         + repository_scan.render_operator()
     )
 
@@ -194,7 +181,7 @@ def test_no_enumerated_file_was_silently_skipped(repository_scan: TreeScan) -> N
     An unopenable file contributes no findings, so a scanner that swallowed the
     error would report the same clean verdict whether it read the file or not --
     and would still have counted it towards the number that is supposed to
-    evidence the sweep. In a security scanner a silent skip is the defect.
+    evidence the sweep. In a security scanner a silent skip IS the defect.
     """
     assert repository_scan.unreadable == (), (
         "the sweep enumerated files it could not open, so its clean verdict does not cover them:\n"
@@ -206,7 +193,6 @@ def test_a_planted_identity_in_a_data_payload_is_found(specimen_repository: Path
     """The gate bites: plant a checksum-valid identity in a payload, get a finding."""
     payload = specimen_repository / "captured.json"
     payload.write_text(f'{{"taxpayer": "{_PLANTED_NIF}"}}', encoding="utf-8")
-    _git("add", "captured.json", cwd=specimen_repository)
 
     scan = scan_tree(specimen_repository)
 
@@ -215,40 +201,22 @@ def test_a_planted_identity_in_a_data_payload_is_found(specimen_repository: Path
     assert scan.findings[0].kind in BLOCKING_KINDS
 
 
-def test_an_untracked_payload_is_scanned_into_the_operator_tier(specimen_repository: Path) -> None:
-    """A file that was never added to the index is scanned, and does not block.
-
-    This covers the untracked case only. The specimen carries no ``.gitignore``,
-    so nothing here exercises the ignore path; that is the separate proof below,
-    and conflating the two is how a scanner came to be believed to cover ignored
-    files while omitting them.
-    """
-    payload = specimen_repository / "never-added.csv"
-    payload.write_text(f"nif,importe\n{_PLANTED_NIF},100\n", encoding="utf-8")
-
-    scan = scan_tree(specimen_repository)
-
-    assert scan.findings == ()
-    assert [finding.path for finding in scan.operator_findings] == ["never-added.csv"]
-    assert scan.operator_findings[0].tracking is FileTracking.UNTRACKED
-
-
 def test_a_planted_identity_in_a_gitignored_environment_file_is_reported(specimen_repository: Path) -> None:
     """The ignore path, on a specimen shaped like the exposure that motivated this.
 
     Everything here is load bearing and none of it was exercised before: a REAL
     ``.gitignore``, a directory ignored wholesale by it, and a checksum-valid
-    value inside an environment file in that directory. ``git ls-files
-    --exclude-standard`` omits every one of those files, so a canary enumerating
-    only that way sees nothing at all here. The file is also a bare dotfile,
-    which has no suffix at all, so a suffix-keyed scope misses it a second time
-    for a second reason.
+    value inside an environment file in that directory. The enumerator's own
+    ``.gitignore`` handling omits every one of those files, so a canary
+    enumerating only the visible set sees nothing at all here. The file is also
+    a bare dotfile, which has no suffix at all, so a suffix-keyed scope misses
+    it a second time for a second reason.
 
     It is reported and does NOT block. A Cl@ve Movil credential file must carry
     the operator's own identity to authenticate, and gitignoring it is the
     correct handling; what the report is for is the next proof, which needs this
-    sweep to exist in order to say the same identity is absent from tracked
-    content.
+    sweep to exist in order to say the same identity is absent from the visible
+    set.
     """
     (specimen_repository / ".gitignore").write_text("env/*\n", encoding="utf-8")
     ignored_directory = specimen_repository / "env"
@@ -272,34 +240,36 @@ def test_the_same_identity_blocks_when_tracked_and_only_reports_when_ignored(
     """The tier boundary, proven in both directions at once, on one value.
 
     One identity, two files, one sweep. If the tier were keyed on anything but
-    tracking state -- a path, a filename, a directory -- these two occurrences
+    visibility -- a path, a filename, a directory -- these two occurrences
     would be classified alike, and the tier would either block a credential file
-    or, far worse, let a tracked leak through beside it. This is also the
+    or, far worse, let a visible leak through beside it. This is also the
     cross-check the ignored sweep exists to make possible: the operator's own
-    identity is visible in the credential file AND visibly absent from tracked
-    content, and neither half of that sentence can be said without the other.
+    identity is visible in the credential file AND visibly absent from the
+    blocking set, and neither half of that sentence can be said without the
+    other.
     """
     (specimen_repository / ".gitignore").write_text("env/*\n", encoding="utf-8")
     ignored_directory = specimen_repository / "env"
     ignored_directory.mkdir()
     (ignored_directory / ".env").write_text(f"CADRUMO_CLAVE_MOVIL_DNI_NIE={_PLANTED_NIF}\n", encoding="utf-8")
     (specimen_repository / "captured.json").write_text(f'{{"taxpayer": "{_PLANTED_NIF}"}}', encoding="utf-8")
-    _git("add", "captured.json", cwd=specimen_repository)
 
     scan = scan_tree(specimen_repository)
 
     assert [finding.path for finding in scan.findings] == ["captured.json"], (
-        f"the tracked copy of the identity must fail the gate; got {[finding.rendered() for finding in scan.findings]}"
+        f"the visible copy of the identity must fail the gate; got {[finding.rendered() for finding in scan.findings]}"
     )
     assert [finding.path for finding in scan.operator_findings] == ["env/.env"]
     assert scan.render() != scan.render_operator()
 
 
-def test_the_specimen_confirms_git_really_ignores_the_planted_directory(specimen_repository: Path) -> None:
-    """The proof above means nothing unless the file really was ignored.
+def test_the_specimen_confirms_the_enumerator_really_excludes_the_planted_directory(
+    specimen_repository: Path,
+) -> None:
+    """The proof above means nothing unless the file really was excluded.
 
     A specimen whose ``.gitignore`` did not actually cover the payload would pass
-    the ignore proof through the untracked path instead, which is the shape of
+    the ignore proof through the visible path instead, which is the shape of
     the coverage this canary was faulted for: a docstring citing the ignore
     scenario over a specimen that never exercised it.
     """
@@ -308,10 +278,11 @@ def test_the_specimen_confirms_git_really_ignores_the_planted_directory(specimen
     ignored_directory.mkdir()
     (ignored_directory / ".env").write_text(f"CADRUMO_CLAVE_MOVIL_DNI_NIE={_PLANTED_NIF}\n", encoding="utf-8")
 
-    listed = _git_output("ls-files", "--cached", "--others", "--exclude-standard", cwd=specimen_repository)
-    ignored = _git_output("ls-files", "--others", "--ignored", "--exclude-standard", cwd=specimen_repository)
+    visible = _enumerated_repository_files(specimen_repository)
+    candidates = repository_files(specimen_repository, suffixes=DATA_SUFFIXES)
+    ignored = {candidate.relative for candidate in candidates if candidate.tracking is FileTracking.IGNORED}
 
-    assert "env/.env" not in listed, "the specimen's payload is not actually ignored, so it proves the wrong path"
+    assert "env/.env" not in visible, "the specimen's payload is not actually excluded, so it proves the wrong path"
     assert "env/.env" in ignored
 
 
@@ -337,7 +308,6 @@ def test_every_blocking_class_is_found_in_a_data_payload(
     """
     payload = specimen_repository / "captured.json"
     payload.write_text(f'{{"identificador": "{planted}"}}', encoding="utf-8")
-    _git("add", "captured.json", cwd=specimen_repository)
 
     scan = scan_tree(specimen_repository)
 
@@ -394,12 +364,16 @@ def test_no_finding_and_no_failure_message_carries_the_matched_value(
 
     Everything a reader of this gate can see is built here -- the finding, its
     rendering, the whole-scan rendering -- and none of it may contain the value.
+    Two files carry the same three identities, one visible and one gitignored,
+    so the value-free rule is proven for both tiers on the same planted values.
     """
     planted = (_PLANTED_NIF, _PLANTED_CIF, _PLANTED_NIF_IVA)
     body = json.dumps({"taxpayer": _PLANTED_NIF, "empresa": _PLANTED_CIF, "intracomunitario": _PLANTED_NIF_IVA})
     (specimen_repository / "captured.json").write_text(body, encoding="utf-8")
-    _git("add", "captured.json", cwd=specimen_repository)
-    (specimen_repository / "local.json").write_text(body, encoding="utf-8")
+    (specimen_repository / ".gitignore").write_text("local/*\n", encoding="utf-8")
+    ignored_directory = specimen_repository / "local"
+    ignored_directory.mkdir()
+    (ignored_directory / "local.json").write_text(body, encoding="utf-8")
 
     scan = scan_tree(specimen_repository)
     assert len(scan.findings) == len(planted), "the value-free proof needs one finding per class to render"
@@ -534,21 +508,20 @@ def test_an_ignored_machine_written_tree_is_never_opened(specimen_repository: Pa
 def test_a_tracked_file_is_scanned_even_under_an_unenumerated_name(specimen_repository: Path) -> None:
     """The enumeration skip applies to the ignored sweep alone.
 
-    A directory name that marks scratch when git ignores it marks nothing when a
-    file inside it is tracked: somebody committed that file deliberately. If the
-    skip reached the tracked sweep it would narrow coverage that existed before
-    the ignored sweep did, which is a regression wearing the shape of an
-    optimisation.
+    A directory name that marks scratch when ignored marks nothing when a file
+    inside it is visible: somebody put that file there deliberately and no
+    ``.gitignore`` hides it. If the skip reached the visible sweep it would
+    narrow coverage that existed before the ignored sweep did, which is a
+    regression wearing the shape of an optimisation.
     """
     scratch_like = specimen_repository / "var"
     scratch_like.mkdir()
     (scratch_like / "config.json").write_text(f'{{"nif": "{_PLANTED_NIF}"}}', encoding="utf-8")
-    _git("add", "var/config.json", cwd=specimen_repository)
 
     scan = scan_tree(specimen_repository)
 
     assert [finding.path for finding in scan.findings] == ["var/config.json"], (
-        "a tracked file was dropped by an exclusion that only governs the ignored sweep"
+        "a visible file was dropped by an exclusion that only governs the ignored sweep"
     )
 
 
@@ -600,10 +573,11 @@ def test_an_authored_ignored_file_is_still_enumerated() -> None:
     every other assertion here while restoring exactly the blindness the ignored
     sweep was added to remove.
     """
-    ignored = _git_output("ls-files", "--others", "--ignored", "--exclude-standard", cwd=_REPO_ROOT)
-    enumerated = {path for path in ignored if unenumerated_reason(path) is None}
+    raw = _raw_relative_paths(_REPO_ROOT)
+    visible = set(_enumerated_repository_files(_REPO_ROOT))
+    ignored = {path for path in raw if path not in visible and unenumerated_reason(path) is None}
 
-    assert enumerated, (
+    assert ignored, (
         "every ignored file in this tree is now skipped before it is opened, so the ignored sweep covers nothing at all"
     )
 
@@ -617,7 +591,6 @@ def test_a_planted_identity_in_a_properties_payload_is_found(specimen_repository
     """
     payload = specimen_repository / "application.properties"
     payload.write_text(f"taxpayer.nif={_PLANTED_NIF}\n", encoding="utf-8")
-    _git("add", "application.properties", cwd=specimen_repository)
 
     scan = scan_tree(specimen_repository)
 
@@ -634,7 +607,6 @@ def test_a_planted_identity_in_a_locale_catalogue_is_reported(specimen_repositor
     """
     catalogue = specimen_repository / "messages.po"
     catalogue.write_text(f'msgid "nif"\nmsgstr "{_PLANTED_NIF}"\n', encoding="utf-8")
-    _git("add", "messages.po", cwd=specimen_repository)
 
     assert scan_tree(specimen_repository).findings == ()
     assert [finding.path for finding in advisory_findings(specimen_repository)] == ["messages.po"]

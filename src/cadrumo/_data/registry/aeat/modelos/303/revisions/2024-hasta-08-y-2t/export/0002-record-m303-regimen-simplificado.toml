@@ -5,7 +5,7 @@ id = 'generated-modelo-303-2024-hasta-08-y-2t-fichero'
 id = 'm303-regimen-simplificado'
 record_type = 'regimen-simplificado'
 order = 1
-encoding = "iso-8859-1"
+encoding = 'iso-8859-1'
 line_ending = 'crlf'
 required = true
 repeat = 'projection_rows'
@@ -267,12 +267,11 @@ id = 'm303-2024-early.dp30302.f013'
 offset = 94
 length = 17
 kind = 'projection'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',
@@ -475,12 +474,11 @@ id = 'm303-2024-early.dp30302.f021'
 offset = 192
 length = 17
 kind = 'projection'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',
@@ -1111,12 +1109,11 @@ id = 'm303-2024-early.dp30302.f045'
 offset = 482
 length = 17
 kind = 'projection'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',

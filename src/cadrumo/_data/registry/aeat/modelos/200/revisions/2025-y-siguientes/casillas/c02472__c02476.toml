@@ -7,8 +7,7 @@ semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200018c.f0095"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02473"
 number = "02473"
@@ -18,8 +17,7 @@ semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200018c.f0096"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02474"
 number = "02474"
@@ -29,8 +27,7 @@ semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200018c.f0097"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02475"
 number = "02475"
@@ -40,8 +37,7 @@ semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200018c.f0159"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02476"
 number = "02476"
@@ -51,5 +47,4 @@ semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200018c.f0160"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

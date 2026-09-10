@@ -10,4 +10,4 @@ source_refs = [
     "boe-modelo-100-2025-form",
     "aeat-dr-100-2025-dictionary",
 ]
-formulas = ["renta-2025-deduccion-madrid-nacimiento-adopcion"]
+formulas = ["renta-deduccion-madrid-nacimiento-adopcion"]

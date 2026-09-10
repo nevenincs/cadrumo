@@ -7,7 +7,8 @@ number = "107-108"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "declaracion_periodo_309"
-export_refs = ["modelo-309-p0-periodo", "modelo-309-p1-devengo-periodo"]
+continuidad_id = "declaracion-periodo-309"
+continuidad_origin = "seeded"
 # The settlement period code (PP), AD-HOC.
 required = false
 input_kind = "manual"
@@ -20,7 +21,6 @@ number = "13"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "declaracion_tipo_309"
-export_refs = ["modelo-309-p1-tipo-declaracion"]
 # Design tipo de declaracion.
 required = false
 input_kind = "manual"
@@ -33,7 +33,6 @@ number = "83-102"
 section = ["declarante", "liquidacion"]
 data_type = "name"
 semantic_role = "declarante_nombre_309"
-export_refs = ["modelo-309-p1-nombre"]
 # The person declarante's given name.
 required = false
 input_kind = "manual"
@@ -46,7 +45,8 @@ number = "109-117"
 section = ["declarante", "liquidacion"]
 data_type = "nif"
 semantic_role = "transmitente_nif"
-export_refs = ["modelo-309-p1-transmitente-nif"]
+continuidad_id = "transmitente-nif"
+continuidad_origin = "seeded"
 # Design transmitente NIF.
 required = false
 input_kind = "manual"
@@ -59,7 +59,6 @@ number = "118-177"
 section = ["declarante", "liquidacion"]
 data_type = "name"
 semantic_role = "transmitente_apellidos"
-export_refs = ["modelo-309-p1-transmitente-apellidos"]
 # Design transmitente apellidos o denominacion social.
 required = false
 input_kind = "manual"
@@ -72,7 +71,6 @@ number = "178-197"
 section = ["declarante", "liquidacion"]
 data_type = "name"
 semantic_role = "transmitente_nombre"
-export_refs = ["modelo-309-p1-transmitente-nombre"]
 # Design transmitente nombre.
 required = false
 input_kind = "manual"
@@ -85,7 +83,6 @@ number = "198-199"
 section = ["declarante", "liquidacion"]
 data_type = "country_code"
 semantic_role = "transmitente_pais"
-export_refs = ["modelo-309-p1-transmitente-pais"]
 # Design transmitente pais.
 required = false
 input_kind = "manual"
@@ -98,7 +95,6 @@ number = "200"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "situacion_tributaria"
-export_refs = ["modelo-309-p1-situacion-tributaria"]
 # Design situacion tributaria (5).
 required = false
 input_kind = "manual"
@@ -111,7 +107,6 @@ number = "201"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "hecho_imponible"
-export_refs = ["modelo-309-p1-hecho-imponible"]
 # Design hecho imponible (6).
 required = false
 input_kind = "manual"
@@ -124,7 +119,8 @@ number = "202-241"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "vehiculo_marca"
-export_refs = ["modelo-309-p1-vehiculo-marca"]
+continuidad_id = "vehiculo-marca"
+continuidad_origin = "seeded"
 # Design vehiculo marca.
 required = false
 input_kind = "manual"
@@ -137,7 +133,8 @@ number = "242-281"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "vehiculo_tipo"
-export_refs = ["modelo-309-p1-vehiculo-tipo"]
+continuidad_id = "vehiculo-tipo"
+continuidad_origin = "seeded"
 # Design vehiculo tipo.
 required = false
 input_kind = "manual"
@@ -150,7 +147,8 @@ number = "282-321"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "vehiculo_modelo"
-export_refs = ["modelo-309-p1-vehiculo-modelo"]
+continuidad_id = "vehiculo-modelo"
+continuidad_origin = "seeded"
 # Design vehiculo modelo.
 required = false
 input_kind = "manual"
@@ -163,7 +161,8 @@ number = "322-343"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "vehiculo_bastidor"
-export_refs = ["modelo-309-p1-vehiculo-bastidor"]
+continuidad_id = "vehiculo-bastidor"
+continuidad_origin = "seeded"
 # Design vehiculo bastidor.
 required = false
 input_kind = "manual"
@@ -176,7 +175,8 @@ number = "344-349"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "vehiculo_clasificacion"
-export_refs = ["modelo-309-p1-vehiculo-clasificacion"]
+continuidad_id = "vehiculo-clasificacion"
+continuidad_origin = "seeded"
 # Design vehiculo clasificacion.
 required = false
 input_kind = "manual"
@@ -189,7 +189,8 @@ number = "350-389"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "embarcacion_fabricante"
-export_refs = ["modelo-309-p1-embarcacion-fabricante"]
+continuidad_id = "embarcacion-fabricante"
+continuidad_origin = "seeded"
 # Design embarcacion fabricante.
 required = false
 input_kind = "manual"
@@ -202,7 +203,8 @@ number = "390-469"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "embarcacion_tipo"
-export_refs = ["modelo-309-p1-embarcacion-tipo"]
+continuidad_id = "embarcacion-tipo"
+continuidad_origin = "seeded"
 # Design embarcacion tipo-modelo.
 required = false
 input_kind = "manual"
@@ -215,7 +217,8 @@ number = "470-491"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "mtn_embarcacion_identificacion"
-export_refs = ["modelo-309-p1-embarcacion-identificacion"]
+continuidad_id = "mtn-embarcacion-identificacion"
+continuidad_origin = "seeded"
 # Design embarcacion numero de construccion.
 required = false
 input_kind = "manual"
@@ -228,7 +231,8 @@ number = "492-496"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "embarcacion_eslora"
-export_refs = ["modelo-309-p1-embarcacion-eslora"]
+continuidad_id = "embarcacion-eslora"
+continuidad_origin = "seeded"
 # Design embarcacion eslora maxima.
 required = false
 input_kind = "manual"
@@ -241,7 +245,8 @@ number = "497-536"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "aeronave_fabricante"
-export_refs = ["modelo-309-p1-aeronave-fabricante"]
+continuidad_id = "aeronave-fabricante"
+continuidad_origin = "seeded"
 # Design aeronave fabricante.
 required = false
 input_kind = "manual"
@@ -254,7 +259,8 @@ number = "537-616"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "aeronave_marca"
-export_refs = ["modelo-309-p1-aeronave-marca"]
+continuidad_id = "aeronave-marca"
+continuidad_origin = "seeded"
 # Design aeronave marca-tipo-modelo.
 required = false
 input_kind = "manual"
@@ -267,7 +273,8 @@ number = "617-638"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "aeronave_serie"
-export_refs = ["modelo-309-p1-aeronave-serie"]
+continuidad_id = "aeronave-serie"
+continuidad_origin = "seeded"
 # Design aeronave numero de serie.
 required = false
 input_kind = "manual"
@@ -280,7 +287,8 @@ number = "639-642"
 section = ["declarante", "liquidacion"]
 data_type = "year"
 semantic_role = "aeronave_ano"
-export_refs = ["modelo-309-p1-aeronave-ano"]
+continuidad_id = "aeronave-ano"
+continuidad_origin = "seeded"
 # Design aeronave ano de fabricacion.
 required = false
 input_kind = "manual"
@@ -293,7 +301,8 @@ number = "643-652"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "aeronave_peso"
-export_refs = ["modelo-309-p1-aeronave-peso"]
+continuidad_id = "aeronave-peso"
+continuidad_origin = "seeded"
 # Design aeronave peso maximo despegue.
 required = false
 input_kind = "manual"
@@ -306,7 +315,8 @@ number = "977"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "declaracion_complementaria"
-export_refs = ["modelo-309-p1-complementaria"]
+continuidad_id = "declaracion-complementaria"
+continuidad_origin = "seeded"
 # Design declaracion complementaria (9).
 required = false
 input_kind = "manual"
@@ -319,7 +329,8 @@ number = "978-990"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "justificante_anterior"
-export_refs = ["modelo-309-p1-justificante-anterior"]
+continuidad_id = "justificante-anterior"
+continuidad_origin = "seeded"
 # Design numero de justificante de la declaracion anterior (9).
 required = false
 input_kind = "manual"
@@ -332,7 +343,8 @@ number = "991-1024"
 section = ["declarante", "liquidacion"]
 data_type = "iban"
 semantic_role = "devolucion_iban_309"
-export_refs = ["modelo-309-p1-iban"]
+continuidad_id = "devolucion-iban-309"
+continuidad_origin = "seeded"
 # Design IBAN (10).
 required = false
 input_kind = "manual"
@@ -345,7 +357,7 @@ number = "1025-1039"
 section = ["declarante", "liquidacion"]
 data_type = "nif_iva"
 semantic_role = "transmitente_nif_iva"
-export_refs = ["modelo-309-p1-transmitente-nif-iva"]
+continuidad_id = "transmitente-nif-iva"
 # Design transmitente NIF-IVA.
 required = false
 input_kind = "manual"
@@ -358,7 +370,7 @@ number = "1040-1048"
 section = ["declarante", "liquidacion"]
 data_type = "nif"
 semantic_role = "adjudicatario_nif"
-export_refs = ["modelo-309-p1-adjudicatario-nif"]
+continuidad_id = "adjudicatario-nif"
 # Design adjudicatario NIF.
 required = false
 input_kind = "manual"
@@ -371,7 +383,7 @@ number = "1049-1108"
 section = ["declarante", "liquidacion"]
 data_type = "name"
 semantic_role = "adjudicatario_apellidos"
-export_refs = ["modelo-309-p1-adjudicatario-apellidos"]
+continuidad_id = "adjudicatario-apellidos"
 # Design adjudicatario apellidos o denominacion social.
 required = false
 input_kind = "manual"
@@ -384,7 +396,7 @@ number = "1109-1128"
 section = ["declarante", "liquidacion"]
 data_type = "name"
 semantic_role = "adjudicatario_nombre"
-export_refs = ["modelo-309-p1-adjudicatario-nombre"]
+continuidad_id = "adjudicatario-nombre"
 # Design adjudicatario nombre.
 required = false
 input_kind = "manual"
@@ -398,7 +410,8 @@ form_number = "01"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "rg_base_01"
-export_refs = ["modelo-309-p1-rg-base-01"]
+continuidad_id = "rg-base-01"
+continuidad_origin = "seeded"
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
 # Design regimen general base imponible [01].
 required = false
@@ -413,7 +426,8 @@ form_number = "02"
 section = ["declarante", "liquidacion"]
 data_type = "ratio"
 semantic_role = "rg_tipo_02"
-export_refs = ["modelo-309-p1-rg-tipo-02"]
+continuidad_id = "rg-tipo-02"
+continuidad_origin = "seeded"
 # Design regimen general tipo % [02].
 required = false
 input_kind = "manual"
@@ -427,7 +441,8 @@ form_number = "03"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "rg_cuota_03"
-export_refs = ["modelo-309-p1-rg-cuota-03"]
+continuidad_id = "rg-cuota-03"
+continuidad_origin = "seeded"
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
 # Design regimen general cuota [03].
 required = false
@@ -445,7 +460,8 @@ form_number = "04"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "rg_base_04"
-export_refs = ["modelo-309-p1-rg-base-04"]
+continuidad_id = "rg-base-04"
+continuidad_origin = "seeded"
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
 # Design regimen general base imponible [04].
 required = false
@@ -460,7 +476,8 @@ form_number = "05"
 section = ["declarante", "liquidacion"]
 data_type = "ratio"
 semantic_role = "rg_tipo_05"
-export_refs = ["modelo-309-p1-rg-tipo-05"]
+continuidad_id = "rg-tipo-05"
+continuidad_origin = "seeded"
 # Design regimen general tipo % [05].
 required = false
 input_kind = "manual"
@@ -474,7 +491,8 @@ form_number = "06"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "rg_cuota_06"
-export_refs = ["modelo-309-p1-rg-cuota-06"]
+continuidad_id = "rg-cuota-06"
+continuidad_origin = "seeded"
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
 # Design regimen general cuota [06].
 required = false
@@ -489,7 +507,8 @@ form_number = "07"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "rg_base_07"
-export_refs = ["modelo-309-p1-rg-base-07"]
+continuidad_id = "rg-base-07"
+continuidad_origin = "seeded"
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
 # Design regimen general base imponible [07].
 required = false
@@ -504,7 +523,8 @@ form_number = "08"
 section = ["declarante", "liquidacion"]
 data_type = "ratio"
 semantic_role = "rg_tipo_08"
-export_refs = ["modelo-309-p1-rg-tipo-08"]
+continuidad_id = "rg-tipo-08"
+continuidad_origin = "seeded"
 # Design regimen general tipo % [08].
 required = false
 input_kind = "manual"
@@ -518,7 +538,8 @@ form_number = "09"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "rg_cuota_09"
-export_refs = ["modelo-309-p1-rg-cuota-09"]
+continuidad_id = "rg-cuota-09"
+continuidad_origin = "seeded"
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
 # Design regimen general cuota [09].
 required = false
@@ -533,7 +554,8 @@ form_number = "10"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "re_base_10"
-export_refs = ["modelo-309-p1-re-base-10"]
+continuidad_id = "re-base-10"
+continuidad_origin = "seeded"
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
 # Design recargo equivalencia base imponible [10].
 required = false
@@ -548,7 +570,8 @@ form_number = "11"
 section = ["declarante", "liquidacion"]
 data_type = "ratio"
 semantic_role = "re_tipo_11"
-export_refs = ["modelo-309-p1-re-tipo-11"]
+continuidad_id = "re-tipo-11"
+continuidad_origin = "seeded"
 # Design recargo equivalencia tipo % [11].
 required = false
 input_kind = "manual"
@@ -562,7 +585,8 @@ form_number = "12"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "re_cuota_12"
-export_refs = ["modelo-309-p1-re-cuota-12"]
+continuidad_id = "re-cuota-12"
+continuidad_origin = "seeded"
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
 # Design recargo equivalencia cuota [12].
 required = false
@@ -577,7 +601,8 @@ form_number = "13"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "re_base_13"
-export_refs = ["modelo-309-p1-re-base-13"]
+continuidad_id = "re-base-13"
+continuidad_origin = "seeded"
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
 # Design recargo equivalencia base imponible [13].
 required = false
@@ -592,7 +617,8 @@ form_number = "14"
 section = ["declarante", "liquidacion"]
 data_type = "ratio"
 semantic_role = "re_tipo_14"
-export_refs = ["modelo-309-p1-re-tipo-14"]
+continuidad_id = "re-tipo-14"
+continuidad_origin = "seeded"
 # Design recargo equivalencia tipo % [14].
 required = false
 input_kind = "manual"
@@ -606,7 +632,8 @@ form_number = "15"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "re_cuota_15"
-export_refs = ["modelo-309-p1-re-cuota-15"]
+continuidad_id = "re-cuota-15"
+continuidad_origin = "seeded"
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
 # Design recargo equivalencia cuota [15].
 required = false
@@ -621,7 +648,8 @@ form_number = "16"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "re_base_16"
-export_refs = ["modelo-309-p1-re-base-16"]
+continuidad_id = "re-base-16"
+continuidad_origin = "seeded"
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
 # Design recargo equivalencia base imponible [16].
 required = false
@@ -636,7 +664,8 @@ form_number = "17"
 section = ["declarante", "liquidacion"]
 data_type = "ratio"
 semantic_role = "re_tipo_17"
-export_refs = ["modelo-309-p1-re-tipo-17"]
+continuidad_id = "re-tipo-17"
+continuidad_origin = "seeded"
 # Design recargo equivalencia tipo % [17].
 required = false
 input_kind = "manual"
@@ -650,7 +679,8 @@ form_number = "18"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "re_cuota_18"
-export_refs = ["modelo-309-p1-re-cuota-18"]
+continuidad_id = "re-cuota-18"
+continuidad_origin = "seeded"
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
 # Design recargo equivalencia cuota [18].
 required = false
@@ -665,7 +695,8 @@ form_number = "19"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "re_base_19"
-export_refs = ["modelo-309-p1-re-base-19"]
+continuidad_id = "re-base-19"
+continuidad_origin = "seeded"
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
 # Design recargo equivalencia base imponible [19].
 required = false
@@ -680,7 +711,8 @@ form_number = "20"
 section = ["declarante", "liquidacion"]
 data_type = "ratio"
 semantic_role = "re_tipo_20"
-export_refs = ["modelo-309-p1-re-tipo-20"]
+continuidad_id = "re-tipo-20"
+continuidad_origin = "seeded"
 # Design recargo equivalencia tipo % [20].
 required = false
 input_kind = "manual"
@@ -694,7 +726,8 @@ form_number = "21"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "re_cuota_21"
-export_refs = ["modelo-309-p1-re-cuota-21"]
+continuidad_id = "re-cuota-21"
+continuidad_origin = "seeded"
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
 # Design recargo equivalencia cuota [21].
 required = false
@@ -709,7 +742,8 @@ form_number = "22"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "cuota_devengada_22"
-export_refs = ["modelo-309-p1-cuota-devengada-22"]
+continuidad_id = "cuota-devengada-22"
+continuidad_origin = "seeded"
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
 # Design total cuota devengada [22]: the design's own sum of the eight cuota casillas.
 required = true
@@ -725,7 +759,8 @@ form_number = "23"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "a_deducir_23"
-export_refs = ["modelo-309-p1-a-deducir-23"]
+continuidad_id = "a-deducir-23"
+continuidad_origin = "seeded"
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
 # Design a deducir [23].
 required = false
@@ -740,7 +775,8 @@ form_number = "24"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "resultado_24"
-export_refs = ["modelo-309-p1-resultado-24"]
+continuidad_id = "resultado-24"
+continuidad_origin = "seeded"
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
 # Design resultado a ingresar [24]: the design's own [22]-[23].
 required = true

@@ -679,3 +679,125 @@ def test_allowed_values_enforcement_has_one_canonical_codec_owner() -> None:
     )
 
     assert owners == (production_root / "domain/calculations/registry/fixed_width_codec.py",)
+
+
+def _reserved_sign_field(sign_position: str, **overrides: object) -> ExportFieldDefinition:
+    payload: dict[str, object] = {
+        "data_type": "money",
+        "length": 11,
+        "signed": sign_position == "blank_or_n",
+        "sign_position": sign_position,
+    }
+    payload.update(overrides)
+    return _field(**payload)
+
+
+@pytest.mark.parametrize(
+    ("value", "wire"),
+    (
+        (Decimal("1234.56"), " " + "123456".rjust(10, "0")),
+        (Decimal("-1234.56"), "N" + "123456".rjust(10, "0")),
+        (Decimal(0), " " + "0" * 10),
+        (Decimal("99999999.99"), " 9999999999"),
+    ),
+)
+def test_a_reserved_blank_or_n_sign_byte_writes_a_space_unless_negative(value: Decimal, wire: str) -> None:
+    """The subdivided SIGNO takes 'N' below zero and "en cualquier otro caso ... un espacio".
+
+    A non-negative amount never writes a digit into the sign position, which is
+    what the general N-displaces-a-digit rule would do.
+    """
+    field = _reserved_sign_field("blank_or_n")
+
+    assert render_fixed_width_export_field(field, value) == wire
+    assert parse_fixed_width_export_field(field, wire) == value
+
+
+def test_an_absent_reserved_blank_or_n_amount_writes_a_space_then_zeros() -> None:
+    field = _reserved_sign_field("blank_or_n")
+
+    assert render_fixed_width_export_field(field, None) == " " + "0" * 10
+
+
+def test_a_reserved_blank_or_n_sign_byte_refuses_a_digit_and_the_magnitude_overflow() -> None:
+    field = _reserved_sign_field("blank_or_n")
+
+    with pytest.raises(RegistryValidationError, match="'N' or a space"):
+        parse_fixed_width_export_field(field, "0" * 11)
+    with pytest.raises(RegistryValidationError, match="exceeds length"):
+        render_fixed_width_export_field(field, Decimal("100000000.00"))
+
+
+@pytest.mark.parametrize(
+    ("value", "wire"),
+    (
+        (Decimal("500.25"), "N" + "50025".rjust(10, "0")),
+        (Decimal(0), "0" * 11),
+        (None, "0" * 11),
+    ),
+)
+def test_an_n_unless_zero_sign_byte_writes_n_before_any_magnitude_and_zeros_otherwise(
+    value: Decimal | None, wire: str
+) -> None:
+    """The design fixes the direction ("siempre una 'N'") and zero-fills the empty case."""
+    field = _reserved_sign_field("n_unless_zero")
+
+    assert render_fixed_width_export_field(field, value) == wire
+    assert parse_fixed_width_export_field(field, wire) == (Decimal(0) if value is None else value)
+
+
+def test_an_n_unless_zero_amount_refuses_a_negative_value_and_an_n_before_zero() -> None:
+    """A negative value would contradict the constant 'N'; 'N' over zero is not canonical."""
+    field = _reserved_sign_field("n_unless_zero")
+
+    with pytest.raises(RegistryValidationError, match="cannot render a negative"):
+        render_fixed_width_export_field(field, Decimal("-1"))
+    with pytest.raises(RegistryValidationError, match="noncanonical"):
+        parse_fixed_width_export_field(field, "N" + "0" * 10)
+
+
+@pytest.mark.parametrize(
+    ("overrides", "message"),
+    (
+        ({"sign_position": "blank_or_n", "signed": False}, "requires signed = true"),
+        ({"sign_position": "n_unless_zero", "signed": True}, "requires signed = false"),
+        ({"sign_position": "blank_or_n", "signed": True, "data_type": "integer"}, "only for money"),
+        (
+            {"sign_position": "blank_or_n", "signed": True, "data_type": "money", "length": 1},
+            "at least two bytes",
+        ),
+    ),
+)
+def test_schema_refuses_a_sign_position_the_slot_cannot_carry(overrides: dict[str, object], message: str) -> None:
+    payload: dict[str, object] = {"data_type": "money", "length": 11}
+    payload.update(overrides)
+
+    with pytest.raises(ValidationError, match=message):
+        _field(**payload)
+
+
+def test_schema_refuses_an_unknown_sign_position() -> None:
+    with pytest.raises(ValidationError):
+        _field(data_type="money", length=11, signed=True, sign_position="plus_or_minus")
+
+
+def test_a_signed_money_amount_can_carry_a_mandated_value_domain() -> None:
+    """A design may type an amount N and still mandate its value: both are declared, neither dropped."""
+    field = _field(data_type="money", length=17, signed=True, allowed_values=("0",))
+
+    assert render_fixed_width_export_field(field, Decimal(0)) == "0" * 17
+    assert parse_fixed_width_export_field(field, "0" * 17) == Decimal(0)
+    with pytest.raises(RegistryValidationError, match="outside allowed_values"):
+        render_fixed_width_export_field(field, Decimal("-1"))
+
+
+def test_a_signed_money_domain_member_is_charged_the_implied_decimals() -> None:
+    """Members are whole units, so a 5-byte money slot holds at most three unit digits."""
+    assert _field(data_type="money", length=5, signed=True, allowed_values=("999",)).allowed_values == ("999",)
+    with pytest.raises(ValidationError, match="out-of-width"):
+        _field(data_type="money", length=5, signed=True, allowed_values=("1000",))
+
+
+def test_a_signed_domain_is_refused_on_any_shape_but_money() -> None:
+    with pytest.raises(ValidationError):
+        _field(data_type="decimal", decimals=2, length=17, signed=True, allowed_values=("0",))

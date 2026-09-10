@@ -47,10 +47,9 @@ import tempfile
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Annotated, Literal
+from typing import Literal
 
 import rtoml
-from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
@@ -76,15 +75,10 @@ from .source_defects import source_defects_for
 
 __all__ = [
     "GeneratedExportBootstrapTransport",
-    "GeneratedTreeRecordDriftDisposition",
-    "GeneratedTreeRenderRefusalDisposition",
     "RenderComparison",
     "compare_export_tree_roots",
     "compare_revision_against_committed",
-    "disposition_ledger_from_path",
     "parsed_tree_file",
-    "record_drift_dispositions",
-    "render_refusal_dispositions",
 ]
 
 #: The generation manifest attests which inputs produced the tree, so it changes
@@ -98,125 +92,6 @@ __all__ = [
 #: which this was the one nobody would have found when it changed.
 _PROVENANCE_MANIFEST = EXPORT_FRAGMENT_PROVENANCE_FILENAME
 _AUTHORED_ROOT = Path(__file__).resolve().parent.parent
-_DISPOSITIONS_PATH = Path(__file__).with_name("generated_tree_dispositions.toml")
-
-
-class _StrictModel(BaseModel):
-    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
-
-
-class GeneratedTreeRecordDriftDisposition(_StrictModel):
-    """One source-bound declaration that a tree's records differ from its inputs.
-
-    A row says the shipped records and the current inputs disagree. It does NOT
-    say which side is right, and the two directions demand opposite actions, so
-    ``remedy`` states it and nothing infers it.
-    """
-
-    kind: Literal["record_drift"]
-    modelo: str = Field(pattern=r"^[0-9]{3}$")
-    revision: str = Field(min_length=1)
-    source_ref: str = Field(min_length=1)
-    source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
-    remedy: Literal["republish", "repair_inputs"]
-    """Which side is wrong, and therefore what fixes the difference.
-
-    ``republish`` - the INPUTS are right and the shipped bytes are stale, so
-    regenerating is the fix. The sign corrections are this: the generator now
-    reads the official type column and the committed trees predate it.
-
-    ``repair_inputs`` - the SHIPPED bytes are right and the inputs are wrong, so
-    regenerating would ship the defect. Modelo 347 is the live case: its Tipo-2
-    record must repeat per declarado, a fresh render does not reproduce that, and
-    republishing would emit ONE record and drop every counterparty after the
-    first - turning a complete informative return into one naming a single third
-    party.
-
-    Declared rather than derived, because both directions produce identical
-    record drift and a reader cannot tell them apart from the comparison. A
-    republication path that treated every row as permission would have shipped
-    that truncation.
-    """
-    reason: str = Field(min_length=1)
-    reconsideration_condition: str = Field(min_length=1)
-
-    @property
-    def subject(self) -> str:
-        """Return the canonical modelo/revision disposition identity."""
-        return f"{self.modelo}/{self.revision}"
-
-
-class GeneratedTreeRenderRefusalDisposition(_StrictModel):
-    """One source-bound declaration for a tree the generator REFUSES to render.
-
-    Distinct from record drift, and not a softer form of it. A drifting tree
-    renders and its bytes disagree with the shipped ones; a refused tree does
-    not render at all, because the generator declines to emit a wire fact it
-    could not determine. The two need different remedies and different gate
-    handling: drift is diffed, refusal is raised.
-
-    ``refusal_marker`` is what keeps the row honest. A refusal row asserts not
-    merely that rendering fails but that it fails for the reason declared here,
-    so a row cannot outlive its cause and cannot silently absorb a DIFFERENT
-    refusal that appears later in the same tree.
-    """
-
-    kind: Literal["render_refusal"]
-    modelo: str = Field(pattern=r"^[0-9]{3}$")
-    revision: str = Field(min_length=1)
-    source_ref: str = Field(min_length=1)
-    source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
-    refusal_marker: str = Field(min_length=1)
-    """A substring the raised refusal MUST contain, so the pin names its cause."""
-    reason: str = Field(min_length=1)
-    reconsideration_condition: str = Field(min_length=1)
-
-    @property
-    def subject(self) -> str:
-        """Return the canonical modelo/revision disposition identity."""
-        return f"{self.modelo}/{self.revision}"
-
-
-_GeneratedTreeDisposition = Annotated[
-    GeneratedTreeRecordDriftDisposition | GeneratedTreeRenderRefusalDisposition,
-    Field(discriminator="kind"),
-]
-
-
-class _GeneratedTreeDispositionLedger(_StrictModel):
-    schema_version: Literal[3]
-    dispositions: tuple[_GeneratedTreeDisposition, ...]
-
-
-def disposition_ledger_from_path(path: Path) -> tuple[_GeneratedTreeDisposition, ...]:
-    """Load and identity-check one disposition ledger file.
-
-    The path is a parameter so the ledger's refusals can be proven against an
-    isolated fixture. A detector whose teeth are shown only by patching the
-    module it protects has not been shown to have teeth at all.
-    """
-    ledger = _GeneratedTreeDispositionLedger.model_validate_json(
-        json.dumps(rtoml.load(path)),
-    )
-    subjects = tuple(item.subject for item in ledger.dispositions)
-    if len(subjects) != len(set(subjects)):
-        raise ValueError("generated tree disposition ledger contains duplicate subjects")
-    return ledger.dispositions
-
-
-def _load_disposition_ledger() -> tuple[_GeneratedTreeDisposition, ...]:
-    """Load and identity-check the strict pipeline-owned declaration set."""
-    return disposition_ledger_from_path(_DISPOSITIONS_PATH)
-
-
-def record_drift_dispositions() -> tuple[GeneratedTreeRecordDriftDisposition, ...]:
-    """Load the strict pipeline-owned record-drift declaration set."""
-    return tuple(item for item in _load_disposition_ledger() if isinstance(item, GeneratedTreeRecordDriftDisposition))
-
-
-def render_refusal_dispositions() -> tuple[GeneratedTreeRenderRefusalDisposition, ...]:
-    """Load the strict pipeline-owned render-refusal declaration set."""
-    return tuple(item for item in _load_disposition_ledger() if isinstance(item, GeneratedTreeRenderRefusalDisposition))
 
 
 @dataclass(frozen=True, slots=True)

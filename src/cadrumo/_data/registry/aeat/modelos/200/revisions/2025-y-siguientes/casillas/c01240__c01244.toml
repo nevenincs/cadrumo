@@ -7,8 +7,7 @@ semantic_role = "is_gastos_financieros_limite_art16_calculo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-16", "ley-27-2014:art-83"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200020.f0006"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01241"
 number = "01241"
@@ -18,8 +17,7 @@ semantic_role = "is_gastos_financieros_limite_art16_calculo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-16", "ley-27-2014:art-83"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200020.f0007"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01242"
 number = "01242"
@@ -29,8 +27,7 @@ semantic_role = "is_gastos_financieros_limite_art16_calculo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-16", "ley-27-2014:art-83"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200020.f0008"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01243"
 number = "01243"
@@ -40,8 +37,7 @@ semantic_role = "is_gastos_financieros_limite_art16_calculo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-16", "ley-27-2014:art-83"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200020.f0009"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01244"
 number = "01244"
@@ -51,5 +47,4 @@ semantic_role = "is_gastos_financieros_limite_art16_calculo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-16", "ley-27-2014:art-83"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200020.f0010"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

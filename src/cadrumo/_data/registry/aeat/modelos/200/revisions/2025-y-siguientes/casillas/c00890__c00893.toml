@@ -7,8 +7,7 @@ semantic_role = "is_deduccion_donativos_general"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200018c.f0048"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00891"
 number = "00891"
@@ -18,8 +17,7 @@ semantic_role = "is_deduccion_donativos_general"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200018c.f0049"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00892"
 number = "00892"
@@ -29,8 +27,7 @@ semantic_role = "is_deduccion_donativos_general"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200018c.f0050"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00893"
 number = "00893"
@@ -40,5 +37,4 @@ semantic_role = "is_deduccion_donativos_general"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200018c.f0051"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

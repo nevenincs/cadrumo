@@ -1,5 +1,5 @@
 [[revisions."2021".formulas]]
-id = "renta-2021-juegos-saldo-neto"
+id = "renta-juegos-saldo-neto"
 target_casilla_id = "0290"
 expression = { op = "subtract", args = [
     { casilla_id = "0288" },

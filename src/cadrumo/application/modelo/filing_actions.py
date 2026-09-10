@@ -37,7 +37,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, NamedTuple
 
@@ -491,7 +491,10 @@ def _require_filing_preconditions(
         ),
         taxpayer_tax_id=workflow_profile.tax_id,
         activity_start_date=workflow_profile.activity_start_date,
-        modelo_202_modality=derive_modelo_202_modality(workflow_profile).modality,
+        modelo_202_modality=derive_modelo_202_modality(
+            workflow_profile,
+            effective_date=date(work_unit.filing_year, 12, 31),
+        ).modality,
         taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(workflow_profile),
         workflow_profile=workflow_profile,
         target_revision=target,

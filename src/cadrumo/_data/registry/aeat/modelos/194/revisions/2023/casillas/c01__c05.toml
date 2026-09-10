@@ -1,5 +1,7 @@
 [[revisions."2023".casillas]]
 id = "01"
+continuidad_id = "capital-ajeno-resumen-perceptores-base-positiva"
+continuidad_origin = "seeded"
 number = "01"
 section = ["resumen"]
 data_type = "integer"
@@ -13,6 +15,8 @@ source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
 
 [[revisions."2023".casillas]]
 id = "02"
+continuidad_id = "capital-ajeno-resumen-base-positiva"
+continuidad_origin = "seeded"
 number = "02"
 section = ["resumen"]
 data_type = "money"
@@ -24,6 +28,8 @@ source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
 
 [[revisions."2023".casillas]]
 id = "03"
+continuidad_id = "capital-ajeno-resumen-retenciones"
+continuidad_origin = "seeded"
 number = "03"
 section = ["resumen"]
 data_type = "money"
@@ -35,6 +41,8 @@ source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
 
 [[revisions."2023".casillas]]
 id = "04"
+continuidad_id = "capital-ajeno-resumen-perceptores-base-negativa"
+continuidad_origin = "seeded"
 number = "04"
 section = ["resumen"]
 data_type = "integer"
@@ -48,6 +56,8 @@ source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
 
 [[revisions."2023".casillas]]
 id = "05"
+continuidad_id = "capital-ajeno-resumen-base-negativa"
+continuidad_origin = "seeded"
 number = "05"
 section = ["resumen"]
 data_type = "money"

@@ -10,7 +10,6 @@ import typer
 
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 
-from ._colanding import LAST_CHANGE, STAGED_CHANGE, ColandingResult, check_colanding
 from ._paths import DOCS_SRC_DIR, HARNESS_SRC_DIR, LOCALES_DIR, SRC_DIR
 from ._registry_scanner import scan_modelo_schema_keys
 from ._status import CatalogueStatusRecord, catalogue_status
@@ -433,47 +432,6 @@ def remove_batch(
     typer.echo(f"removed {removed} locale leaf/leaves from {len([1 for _, (f, _) in plan.items() if f])} catalogue(s)")
     for locale, keys in sorted(absent.items()):
         typer.echo(f"  skipped {len(keys)} already-absent key(s) in {locale}")
-
-
-@app.command("co-landing")
-def co_landing(
-    ctx: typer.Context,
-    change: Annotated[
-        str,
-        typer.Option(
-            "--change",
-            help=(
-                f"Change to compare: {STAGED_CHANGE!r} (the index, falling back to "
-                f"{LAST_CHANGE!r} when nothing is staged), {LAST_CHANGE!r} (HEAD~1..HEAD), or a BASE..HEAD range."
-            ),
-        ),
-    ] = STAGED_CHANGE,
-) -> None:
-    """Refuse a change that separates a catalogue key from the code consuming it.
-
-    Every other locale command compares the tree's current state. This one
-    compares the change itself, which is the only moment at which a key and its
-    call site can still be made to land together.
-    """
-    manager = ctx.obj if isinstance(ctx.obj, LocaleManager) else _default_manager()
-    try:
-        result = check_colanding(manager, change)
-    except LocaleError as exc:
-        raise typer.BadParameter(str(exc)) from exc
-    _echo_colanding(result)
-    if not result.ok:
-        raise typer.Exit(code=1)
-
-
-def _echo_colanding(result: ColandingResult) -> None:
-    """Echo the compared change, then every finding as a greppable row."""
-    typer.echo(
-        f"co-landing change={result.change} modules={result.inspected_modules} "
-        f"added={len(result.added_keys)} removed={len(result.removed_keys)} "
-        f"findings={len(result.findings)}",
-    )
-    for finding in result.findings:
-        typer.echo(f"  {finding.render()}")
 
 
 __all__ = ["app"]

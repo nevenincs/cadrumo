@@ -1,5 +1,5 @@
 [[revisions."2021".formulas]]
-id = "renta-2021-deduccion-unidad-familiar-clamp-positiva"
+id = "renta-deduccion-unidad-familiar-clamp-positiva"
 target_casilla_id = "0731"
 expression = { op = "max", args = [
     { literal = "0" },

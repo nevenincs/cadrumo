@@ -7,8 +7,7 @@ semantic_role = "is_deduccion_reinversion_beneficios_dt24a7_periodo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-24"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200016.f0086"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00804"
 number = "00804"
@@ -18,8 +17,7 @@ semantic_role = "is_deduccion_reinversion_beneficios_dt24a7_periodo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-24"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200016.f0087"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00805"
 number = "00805"
@@ -29,5 +27,4 @@ semantic_role = "is_deduccion_dt24a7_pendiente"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-24"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200016.f0088", "m200-2025.dp200045.f0015", "m200-2025.dp200050.f0017"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

@@ -38,7 +38,7 @@ from cadrumo.domain.calculations.registry.ids import (
 )
 
 from ._pydantic_error_detail import validation_error_detail
-from .joined_record_design import JoinedRecordDesign
+from .joined_record_design import JoinedRecordDesign, design_view
 from .record_design_intermediate import RecordDesignIntermediateField
 from .render_profile_eligibility import (
     RenderProfileEligibility,
@@ -577,7 +577,7 @@ def validate_render_profile(
         source_sha256=joined.source.source_sha256,
     )
     eligibility = resolve_render_profile_eligibility(
-        (joined_field.parser_field for joined_field in joined.fields),
+        (design_view(joined_field) for joined_field in joined.fields),
         joined.source,
     )
     validate_render_profile_authority(profile, expected_identity, eligibility, source_evidence)

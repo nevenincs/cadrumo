@@ -32,7 +32,6 @@ data_type = "text"
 semantic_role = "m122_pagina_complementaria"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-122-p1-pagina-complementaria"]
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
 
@@ -45,7 +44,6 @@ data_type = "money"
 semantic_role = "m122_conyuge_discapacidad_deduccion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-122-p1-conyuge-deduccion"]
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"], source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"] }
@@ -59,7 +57,6 @@ data_type = "money"
 semantic_role = "m122_conyuge_discapacidad_abono_anticipado"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-122-p1-conyuge-abono-anticipado"]
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"], source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"] }
@@ -75,7 +72,6 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "aeat-dr-122-2016 places descendientes-discapacidad at 272-280 (form 548) and ascendientes-discapacidad at 395-403 (form 561): separate blocks, one casilla each. Singleton by construction, not a typo of m122_ascendiente_discapacidad_nif."
 required = false
 input_kind = "manual"
-export_refs = ["modelo-122-p1-descendientes-nif"]
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
 
@@ -90,7 +86,6 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "aeat-dr-122-2016 places descendientes-discapacidad at 281-340 (form 549) and ascendientes-discapacidad at 404-463 (form 562): separate blocks, one casilla each. Singleton by construction, not a typo of m122_ascendiente_discapacidad_nombre."
 required = false
 input_kind = "manual"
-export_refs = ["modelo-122-p1-descendientes-nombre"]
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
 
@@ -105,7 +100,6 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "aeat-dr-122-2016 places descendientes-discapacidad at 361-377 (form 557) and ascendientes-discapacidad at 484-500 (form 572): separate blocks, one casilla each. Singleton by construction, not a typo of m122_ascendiente_discapacidad_deduccion."
 required = false
 input_kind = "manual"
-export_refs = ["modelo-122-p1-descendientes-deduccion"]
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"], source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"] }
@@ -121,7 +115,6 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "aeat-dr-122-2016 places descendientes-discapacidad at 378-394 (form 558) and ascendientes-discapacidad at 501-517 (form 573): separate blocks, one casilla each. Singleton by construction, not a typo of m122_ascendiente_discapacidad_abono_anticipado."
 required = false
 input_kind = "manual"
-export_refs = ["modelo-122-p1-descendientes-abono-anticipado"]
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"], source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"] }
@@ -137,7 +130,6 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "aeat-dr-122-2016 places ascendientes-discapacidad at 395-403 (form 561) and descendientes-discapacidad at 272-280 (form 548): separate blocks, one casilla each. Singleton by construction, not a typo of m122_descendiente_discapacidad_nif."
 required = false
 input_kind = "manual"
-export_refs = ["modelo-122-p1-ascendientes-nif"]
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
 
@@ -152,7 +144,6 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "aeat-dr-122-2016 places ascendientes-discapacidad at 404-463 (form 562) and descendientes-discapacidad at 281-340 (form 549): separate blocks, one casilla each. Singleton by construction, not a typo of m122_descendiente_discapacidad_nombre."
 required = false
 input_kind = "manual"
-export_refs = ["modelo-122-p1-ascendientes-nombre"]
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
 
@@ -167,7 +158,6 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "aeat-dr-122-2016 places ascendientes-discapacidad at 484-500 (form 572) and descendientes-discapacidad at 361-377 (form 557): separate blocks, one casilla each. Singleton by construction, not a typo of m122_descendiente_discapacidad_deduccion."
 required = false
 input_kind = "manual"
-export_refs = ["modelo-122-p1-ascendientes-deduccion"]
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"], source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"] }
@@ -183,7 +173,6 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "aeat-dr-122-2016 places ascendientes-discapacidad at 501-517 (form 573) and descendientes-discapacidad at 378-394 (form 558): separate blocks, one casilla each. Singleton by construction, not a typo of m122_descendiente_discapacidad_abono_anticipado."
 required = false
 input_kind = "manual"
-export_refs = ["modelo-122-p1-ascendientes-abono-anticipado"]
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"], source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"] }
@@ -197,7 +186,6 @@ data_type = "text"
 semantic_role = "m122_familia_numerosa_titulo"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-122-p1-familia-numerosa-titulo"]
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
 
@@ -210,7 +198,6 @@ data_type = "money"
 semantic_role = "m122_familia_numerosa_deduccion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-122-p1-familia-numerosa-deduccion"]
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"], source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"] }
@@ -224,7 +211,6 @@ data_type = "money"
 semantic_role = "m122_familia_numerosa_abono_anticipado"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-122-p1-familia-numerosa-abono-anticipado"]
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"], source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"] }
@@ -238,7 +224,6 @@ data_type = "money"
 semantic_role = "m122_ascendiente_dos_hijos_deduccion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-122-p1-ascendiente-dos-hijos-deduccion"]
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"], source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"] }
@@ -252,7 +237,6 @@ data_type = "money"
 semantic_role = "m122_ascendiente_dos_hijos_abono_anticipado"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-122-p1-ascendiente-dos-hijos-abono-anticipado"]
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"], source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"] }
@@ -274,7 +258,6 @@ data_type = "money"
 semantic_role = "m122_resultado_regularizacion_a_ingresar"
 required = true
 input_kind = "manual"
-export_refs = ["modelo-122-p1-resultado-a-ingresar"]
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"], source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"] }
@@ -292,7 +275,6 @@ data_type = "nif"
 semantic_role = "m122_representante_nif"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-122-p1-representante-nif"]
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
 
@@ -304,7 +286,6 @@ data_type = "name"
 semantic_role = "m122_representante_apellidos_razon_social"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-122-p1-representante-apellidos"]
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
 
@@ -316,6 +297,5 @@ data_type = "name"
 semantic_role = "m122_representante_nombre"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-122-p1-representante-nombre"]
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]

@@ -319,7 +319,6 @@ def test_registry_validation_rechecks_repeat_family_after_model_copy() -> None:
         record=derived_record,
         casillas=set(),
         bindings=set(),
-        casilla_by_id={},
         legal_refs={},
         source_refs={},
         evidence=EvidenceValidator(legal_refs={}, source_refs={}, source_root=None),

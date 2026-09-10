@@ -7,5 +7,4 @@ semantic_role = "is_conversion_aid_art130_importe"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-130"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200020c.f0124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

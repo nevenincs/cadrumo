@@ -14,7 +14,7 @@
 # art. 46.1.a), matching the 0511/0512 mínimo-del-contribuyente precedent
 # (`renta-2024-minimo-contribuyente-autonomico`).
 [[revisions."2024".bindings]]
-id = "renta-2024-profile-minimo-descendientes-estatal"
+id = "renta-profile-minimo-descendientes-estatal"
 source = "profile"
 selector = { profile_key = "renta_family.descendientes_minimos_aggregate_2024" }
 aggregation = { op = "copy" }

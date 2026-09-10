@@ -11,7 +11,7 @@
 # 2024 filing's 1391. Art. 48's 25%-limited base-imponible mechanism is
 # distinct and does not ground this base-liquidable carry.
 [[revisions."2024".bindings]]
-id = "renta-2024-base-liquidable-negativa-general-anterior"
+id = "renta-base-liquidable-negativa-general-anterior"
 source = "previous_filing"
 selector = { source_modelo = "100", source_casilla_id = "1391", filing_year_delta = -1, period = "0A" }
 aggregation = { op = "copy" }

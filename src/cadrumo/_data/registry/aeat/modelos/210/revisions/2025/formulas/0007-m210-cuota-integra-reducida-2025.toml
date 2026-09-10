@@ -14,7 +14,7 @@
 # path. Grounded in TRLIRNR Art 24 (the convenio prevalence and cuota framework).
 
 [[revisions."2025".formulas]]
-id = "m210-cuota-integra-reducida-2025"
+id = "m210-cuota-integra-reducida"
 target_casilla_id = "cuota_integra_reducida"
 expression = { op = "if_then_else", args = [
     { op = "greater_than", args = [{ casilla_id = "limite_convenio" }, { literal = "0" }] },

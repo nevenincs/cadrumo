@@ -7,7 +7,7 @@
 # [24] collapses to [22].
 
 [[revisions."2025".formulas]]
-id = "m210-cuota-ley-irnr-2025"
+id = "m210-cuota-ley-irnr"
 target_casilla_id = "cuota_ley_irnr"
 expression = { op = "subtract", args = [
     { casilla_id = "cuota_integra" },

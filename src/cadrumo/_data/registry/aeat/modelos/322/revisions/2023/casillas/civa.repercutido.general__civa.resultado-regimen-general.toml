@@ -6,6 +6,8 @@
 # they are internal_only, mirroring the sibling's identical declaration.
 [[revisions."2023".casillas]]
 id = "iva.repercutido.general"
+continuidad_id = "iva-cuota-repercutida-general"
+continuidad_origin = "seeded"
 number = "iva.repercutido.general"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
@@ -18,6 +20,8 @@ source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "iva.repercutido.reducido"
+continuidad_id = "iva-cuota-repercutida-reducido"
+continuidad_origin = "seeded"
 number = "iva.repercutido.reducido"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
@@ -30,6 +34,8 @@ source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "iva.repercutido.super-reducido"
+continuidad_id = "iva-cuota-repercutida-super-reducido"
+continuidad_origin = "seeded"
 number = "iva.repercutido.super-reducido"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
@@ -42,6 +48,8 @@ source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "iva.soportado.interiores"
+continuidad_id = "iva-cuota-soportada-interiores"
+continuidad_origin = "seeded"
 number = "iva.soportado.interiores"
 section = ["iva", "regimen_general", "deducible"]
 data_type = "money"
@@ -54,6 +62,8 @@ source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "iva.autorepercutido.intracomunitaria"
+continuidad_id = "iva-cuota-autorepercutida-intracomunitaria"
+continuidad_origin = "seeded"
 number = "iva.autorepercutido.intracomunitaria"
 section = ["iva", "regimen_general", "inversion_sujeto_pasivo"]
 data_type = "money"
@@ -66,6 +76,8 @@ source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "iva.cuota-devengada-total"
+continuidad_id = "iva-cuota-devengada-total"
+continuidad_origin = "seeded"
 number = "iva.cuota-devengada-total"
 section = ["iva", "regimen_general", "totales"]
 data_type = "money"
@@ -79,6 +91,8 @@ source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "iva.cuota-deducible-total"
+continuidad_id = "iva-cuota-deducible-total"
+continuidad_origin = "seeded"
 number = "iva.cuota-deducible-total"
 section = ["iva", "regimen_general", "totales"]
 data_type = "money"
@@ -92,6 +106,8 @@ source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "iva.resultado-regimen-general"
+continuidad_id = "iva-resultado-regimen-general"
+continuidad_origin = "seeded"
 number = "iva.resultado-regimen-general"
 section = ["iva", "regimen_general", "totales"]
 data_type = "money"

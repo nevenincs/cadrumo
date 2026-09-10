@@ -56,14 +56,10 @@ from ..pipeline.export_fragment_provenance import (
     export_fragment_provenance_path,
     load_export_fragment_provenance_manifest,
 )
-from ..pipeline.joined_record_design import JoinedRecordDesign, join_record_design_semantics
+from ..pipeline.generated_tree_dispositions import record_drift_dispositions, render_refusal_dispositions
+from ..pipeline.joined_record_design import JoinedRecordDesign, design_view, join_record_design_semantics
 from ..pipeline.record_design_intermediate import load_record_design_intermediate
-from ..pipeline.render_check import (
-    compare_revision_against_committed,
-    parsed_tree_file,
-    record_drift_dispositions,
-    render_refusal_dispositions,
-)
+from ..pipeline.render_check import compare_revision_against_committed, parsed_tree_file
 from ..pipeline.render_profile import (
     RenderProfile,
     RenderProfileSourceEvidence,
@@ -180,99 +176,6 @@ _REPRODUCTION_PENDING = {
         ),
         check_mode_refusal="cannot satisfy the requested 'filing' snapshot authority",
     ),
-    "m202-2019-2022": _ReproductionPendingPin(
-        source_ref="aeat-dr-202-2019",
-        source_sha256="96160cf2a82a4e6f2c9c9848c6061b2cfe5c4877de7a455126704af86f3ac7db",
-        reason="isolated validation makes cross-revision singleton semantic roles appear on exactly one casilla",
-        reconsideration_condition="Reconsider when generated validation preserves Modelo 202 cross-revision facts.",
-        check_mode_refusal="appears on exactly one casilla",
-    ),
-    "m202-2023-2024": _ReproductionPendingPin(
-        source_ref="aeat-dr-202-2023",
-        source_sha256="1e4881439e25417df5a8584bffd7149ca0952e2df53963b19c0346572259bec7",
-        reason="isolated validation makes cross-revision singleton semantic roles appear on exactly one casilla",
-        reconsideration_condition="Reconsider when generated validation preserves Modelo 202 cross-revision facts.",
-        check_mode_refusal="appears on exactly one casilla",
-    ),
-    "m202-2025-y-siguientes": _ReproductionPendingPin(
-        source_ref="aeat-dr-202-2025",
-        source_sha256="04e7b349b24b982d985195d4ae38b68e72e75d606cf66c7ef30b62b281c7f82c",
-        reason="isolated validation loses exact source-revision coverage needed by the cross-modelo relation",
-        reconsideration_condition="Reconsider when generated validation preserves Modelo 202 cross-revision facts.",
-        check_mode_refusal="lacks exact source revision coverage",
-    ),
-    "m303-2022": _ReproductionPendingPin(
-        source_ref="aeat-dr-303-2022",
-        source_sha256="6648f6b319579e49cd5bfdaae69e7451db75767e7f19da0b90383b25b79b3f60",
-        reason=(
-            "the committed attestation predates current record serialization, while attempted republication is "
-            "refused because generated DP30305 fields lack matching casilla export_refs in isolated validation"
-        ),
-        reconsideration_condition=(
-            "Reconsider when every generated field is declared by its owning casilla and the tree can be republished."
-        ),
-        check_mode_refusal="export provenance output-file digests do not match generated tree",
-    ),
-    "m303-2023": _ReproductionPendingPin(
-        source_ref="aeat-dr-303-2023",
-        source_sha256="72e463cb29984f535c9f56917d788ff0641965f116aeab47da5f76a59eecfbe4",
-        reason=(
-            "the committed attestation predates current record serialization, while attempted republication is "
-            "refused because generated DP30305 fields lack matching casilla export_refs in isolated validation"
-        ),
-        reconsideration_condition=(
-            "Reconsider when every generated field is declared by its owning casilla and the tree can be republished."
-        ),
-        check_mode_refusal="export provenance output-file digests do not match generated tree",
-    ),
-    "m303-2024-desde-09-y-3t": _ReproductionPendingPin(
-        source_ref="aeat-dr-303-2024-late",
-        source_sha256="2095dd633413f4aed28053bc88402461d80865f454156c01ebc4a2ab68cb76a8",
-        reason=(
-            "the committed attestation predates current record serialization, while attempted republication is "
-            "refused because generated DP30305 fields lack matching casilla export_refs in isolated validation"
-        ),
-        reconsideration_condition=(
-            "Reconsider when every generated field is declared by its owning casilla and the tree can be republished."
-        ),
-        check_mode_refusal="export provenance output-file digests do not match generated tree",
-    ),
-    "m303-2024-hasta-08-y-2t": _ReproductionPendingPin(
-        source_ref="aeat-dr-303-2024-early",
-        source_sha256="8b1f74b58b9293e60f9ea6fa3cc352a35ca3fe7d09a6705f122585e7f7da65b9",
-        reason=(
-            "the committed attestation predates current record serialization, while attempted republication is "
-            "refused because generated DP30305 fields lack matching casilla export_refs in isolated validation"
-        ),
-        reconsideration_condition=(
-            "Reconsider when every generated field is declared by its owning casilla and the tree can be republished."
-        ),
-        check_mode_refusal="export provenance output-file digests do not match generated tree",
-    ),
-    "m303-2025": _ReproductionPendingPin(
-        source_ref="aeat-dr-303-2025",
-        source_sha256="6c3d7eeb714e0deb52f91d7e8dbadeb83f16c1d32d25f9e871756f3ddf0117e6",
-        reason=(
-            "the committed attestation predates current record serialization, while attempted republication is "
-            "refused because generated DP30305 fields lack matching casilla export_refs in isolated validation"
-        ),
-        reconsideration_condition=(
-            "Reconsider when every generated field is declared by its owning casilla and the tree can be republished."
-        ),
-        check_mode_refusal="export provenance output-file digests do not match generated tree",
-    ),
-    "m303-2026-y-siguientes": _ReproductionPendingPin(
-        source_ref="aeat-dr-303-2026",
-        source_sha256="0be8b156da2250c6b11f6253e0165221ed2e549ec4c65a562021bec6b9b8489b",
-        reason=(
-            "the committed attestation predates current record serialization, while attempted republication is "
-            "refused because generated DP30305 fields lack matching casilla export_refs in isolated validation"
-        ),
-        reconsideration_condition=(
-            "Reconsider when every generated field is declared by its owning casilla and the tree can be republished."
-        ),
-        check_mode_refusal="export provenance output-file digests do not match generated tree",
-    ),
 }
 
 
@@ -328,9 +231,7 @@ def _supporting_modelos(tree: _GeneratedTree) -> frozenset[str]:
     """
     referenced = _referenced_modelos(bundled_path("registry", "aeat", "modelos", tree.modelo))
     depended_on = referenced - {tree.modelo}
-    return frozenset(
-        modelo for modelo in depended_on if bundled_path("registry", "aeat", "modelos", modelo).is_dir()
-    )
+    return frozenset(modelo for modelo in depended_on if bundled_path("registry", "aeat", "modelos", modelo).is_dir())
 
 
 def _referenced_modelos(modelo_root: Path) -> frozenset[str]:
@@ -622,6 +523,19 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
             assert comparison.disposition_class == "record_drift", (
                 f"{tree}: record-drift pin is dormant and must be removed"
             )
+            # The row states HOW MUCH it explains, and that is checked here.
+            # Asserting only that a difference exists let a row written for one
+            # cause silently cover a second: modelo 390's rows were explaining
+            # eighty type-column contradictions nobody had declared, and the
+            # only reason it surfaced is that the rows were removed. A scope
+            # that can grow without its wording changing is an exemption, not
+            # an explanation.
+            assert len(comparison.record_differing) == disposition.differing_records, (
+                f"{tree}: row explains {disposition.differing_records} record(s), "
+                f"the comparison reports {len(comparison.record_differing)}: "
+                f"{sorted(comparison.record_differing)}. Re-derive the row rather than "
+                "widening it; a second cause needs its own declaration."
+            )
             return
         reproduction_pin = _REPRODUCTION_PENDING.get(str(tree))
         assert reproduction_pin is not None, (
@@ -852,17 +766,22 @@ def test_every_official_anchor_reaches_exactly_one_generated_field(tree: _Genera
     _semantic_map, _profile, joined, _evidence, _transport = _authorities(tree)
 
     official_anchors = [
+        (field.record_identity, field.offset) for record in joined.records for field in record.parser_sheet.fields
+    ]
+    assert len(official_anchors) == len(set(official_anchors)), f"{tree}: official anchors are not unique"
+    covered_anchors = {
         (field.parser_field.record_identity, field.parser_field.offset)
         for record in joined.records
         for field in record.fields
-    ]
-    assert len(official_anchors) == len(set(official_anchors)), f"{tree}: official anchors are not unique"
-    mapped_anchors = [
-        (entry.anchor.record_identity, field.parser_field.offset)
+    }
+    assert covered_anchors == set(official_anchors), (
+        f"{tree}: semantic entries do not cover exactly the official design anchors"
+    )
+    # A cell whose own text divides it reaches one field per declared part; every
+    # slot, whole cell or part, reaches exactly one field.
+    slots = [
+        (field.parser_field.record_identity, design_view(field).offset)
         for record in joined.records
         for field in record.fields
-        for entry in (field.semantic_entry,)
     ]
-    assert sorted(mapped_anchors) == sorted(official_anchors), (
-        f"{tree}: semantic entries do not biject the official design anchors"
-    )
+    assert len(slots) == len(set(slots)), f"{tree}: a design slot reaches more than one generated field"

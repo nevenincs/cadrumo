@@ -17,17 +17,17 @@ source_refs = [
     "boe-modelo-100-2023-form",
 ]
 bindings = [
-    "renta-2023-modelo-111-retenciones-periodicas",
-    "renta-2023-modelo-123-retenciones-periodicas",
-    "renta-2023-modelo-130-pagos-fraccionados",
-    "renta-2023-modelo-131-pagos-fraccionados",
+    "renta-modelo-111-retenciones-periodicas",
+    "renta-modelo-123-retenciones-periodicas",
+    "renta-modelo-130-pagos-fraccionados",
+    "renta-modelo-131-pagos-fraccionados",
 ]
 casilla_ids = [
     "0604",
 ]
 formulas = [
-    "renta-2023-pagos-fraccionados-ingresados",
-    "renta-2023-total-pagos-a-cuenta",
+    "renta-pagos-fraccionados-ingresados",
+    "renta-total-pagos-a-cuenta",
 ]
 relations = [
     "renta-2023-rel-111-retenciones-trimestrales",

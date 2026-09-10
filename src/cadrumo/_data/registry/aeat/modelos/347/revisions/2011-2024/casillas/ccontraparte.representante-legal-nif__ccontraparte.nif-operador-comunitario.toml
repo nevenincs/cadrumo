@@ -1,5 +1,6 @@
 [[revisions."2011-2024".casillas]]
 id = "contraparte.representante-legal-nif"
+continuidad_id = "representante-legal-nif"
 number = "contraparte.representante-legal-nif"
 section = ["contraparte", "identificacion"]
 data_type = "nif"
@@ -8,9 +9,9 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
-export_refs = ["m347-2011.declarado.f006"]
 [[revisions."2011-2024".casillas]]
 id = "contraparte.importe-anual"
+continuidad_id = "importe-anual-operaciones"
 number = "contraparte.importe-anual"
 section = ["contraparte", "importes"]
 data_type = "money"
@@ -19,9 +20,9 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
-export_refs = ["m347-2011.declarado.f012"]
 [[revisions."2011-2024".casillas]]
 id = "contraparte.operacion-seguro"
+continuidad_id = "operacion-seguro"
 number = "contraparte.operacion-seguro"
 section = ["contraparte", "operacion"]
 data_type = "text"
@@ -30,9 +31,9 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
-export_refs = ["m347-2011.declarado.f013"]
 [[revisions."2011-2024".casillas]]
 id = "contraparte.arrendamiento-local-negocio"
+continuidad_id = "arrendamiento-local-negocio"
 number = "contraparte.arrendamiento-local-negocio"
 section = ["contraparte", "operacion"]
 data_type = "text"
@@ -41,9 +42,9 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
-export_refs = ["m347-2011.declarado.f014"]
 [[revisions."2011-2024".casillas]]
 id = "contraparte.importe-metalico"
+continuidad_id = "importe-percibido-metalico"
 number = "contraparte.importe-metalico"
 section = ["contraparte", "importes"]
 data_type = "money"
@@ -52,9 +53,9 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
-export_refs = ["m347-2011.declarado.f015", "m347-2011.declarado.f016"]
 [[revisions."2011-2024".casillas]]
 id = "contraparte.importe-transmisiones-inmuebles"
+continuidad_id = "importe-transmisiones-inmuebles"
 number = "contraparte.importe-transmisiones-inmuebles"
 section = ["contraparte", "importes"]
 data_type = "money"
@@ -63,9 +64,9 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
-export_refs = ["m347-2011.declarado.f017"]
 [[revisions."2011-2024".casillas]]
 id = "contraparte.ejercicio-operacion"
+continuidad_id = "ejercicio-operacion"
 number = "contraparte.ejercicio-operacion"
 section = ["contraparte", "operacion"]
 data_type = "year"
@@ -74,9 +75,9 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
-export_refs = ["m347-2011.declarado.f018"]
 [[revisions."2011-2024".casillas]]
 id = "contraparte.importe-transmisiones-Q1"
+continuidad_id = "importe-transmisiones-q1"
 number = "contraparte.importe-transmisiones-Q1"
 section = ["contraparte", "importes"]
 data_type = "money"
@@ -85,9 +86,9 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
-export_refs = ["m347-2011.declarado.f020"]
 [[revisions."2011-2024".casillas]]
 id = "contraparte.importe-transmisiones-Q2"
+continuidad_id = "importe-transmisiones-q2"
 number = "contraparte.importe-transmisiones-Q2"
 section = ["contraparte", "importes"]
 data_type = "money"
@@ -96,9 +97,9 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
-export_refs = ["m347-2011.declarado.f022"]
 [[revisions."2011-2024".casillas]]
 id = "contraparte.importe-transmisiones-Q3"
+continuidad_id = "importe-transmisiones-q3"
 number = "contraparte.importe-transmisiones-Q3"
 section = ["contraparte", "importes"]
 data_type = "money"
@@ -107,9 +108,9 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
-export_refs = ["m347-2011.declarado.f024"]
 [[revisions."2011-2024".casillas]]
 id = "contraparte.importe-transmisiones-Q4"
+continuidad_id = "importe-transmisiones-q4"
 number = "contraparte.importe-transmisiones-Q4"
 section = ["contraparte", "importes"]
 data_type = "money"
@@ -118,9 +119,9 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
-export_refs = ["m347-2011.declarado.f026"]
 [[revisions."2011-2024".casillas]]
 id = "contraparte.nif-operador-comunitario"
+continuidad_id = "nif-operador-comunitario"
 number = "contraparte.nif-operador-comunitario"
 section = ["contraparte", "identificacion"]
 data_type = "text"
@@ -129,4 +130,3 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2011"]
-export_refs = ["m347-2011.declarado.f027"]

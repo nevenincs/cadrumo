@@ -12,7 +12,6 @@ section = ["declaracion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-decl-idioma"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -23,7 +22,6 @@ section = ["declaracion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-decl-tipo-autoliquidacion"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -34,7 +32,6 @@ section = ["sujeto_pasivo"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-sp-codigo-lei"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -45,7 +42,6 @@ section = ["sujeto_pasivo"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-sp-codigo-bic"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -56,7 +52,6 @@ section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-dom-es-tipo-via"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -67,7 +62,6 @@ section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-dom-es-nombre-via"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -78,7 +72,6 @@ section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-dom-es-tipo-numeracion"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -89,7 +82,6 @@ section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-dom-es-numero-casa"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -100,7 +92,6 @@ section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-dom-es-calificador-numero"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -111,7 +102,6 @@ section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-dom-es-bloque"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -122,7 +112,6 @@ section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-dom-es-portal"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -133,7 +122,6 @@ section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-dom-es-escalera"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -144,7 +132,6 @@ section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-dom-es-planta"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -155,7 +142,6 @@ section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-dom-es-puerta"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -166,7 +152,6 @@ section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-dom-es-complemento"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -177,7 +162,6 @@ section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-dom-es-localidad"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -188,7 +172,6 @@ section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-dom-es-codigo-postal"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -199,7 +182,6 @@ section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-dom-es-municipio"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -210,7 +192,6 @@ section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-dom-es-codigo-provincia"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -221,7 +202,6 @@ section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-dom-es-provincia"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -232,7 +212,6 @@ section = ["sujeto_pasivo", "domicilio_extranjero"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-dom-ex-domicilio"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -243,7 +222,6 @@ section = ["sujeto_pasivo", "domicilio_extranjero"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-dom-ex-complemento"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -254,7 +232,6 @@ section = ["sujeto_pasivo", "domicilio_extranjero"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-dom-ex-poblacion"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -265,7 +242,6 @@ section = ["sujeto_pasivo", "domicilio_extranjero"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-dom-ex-codigo-postal"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -276,7 +252,6 @@ section = ["sujeto_pasivo", "domicilio_extranjero"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-dom-ex-provincia-region-estado"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -287,7 +262,6 @@ section = ["sujeto_pasivo", "domicilio_extranjero"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-dom-ex-pais"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -298,7 +272,6 @@ section = ["sujeto_pasivo", "domicilio_extranjero"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-dom-ex-codigo-pais"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -309,7 +282,6 @@ section = ["sujeto_pasivo"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-sp-persona-contacto"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -320,7 +292,6 @@ section = ["sujeto_pasivo"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-sp-telefono-contacto"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -331,7 +302,6 @@ section = ["anexo_informativo"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-anexo-numero-justificante"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -342,7 +312,6 @@ section = ["liquidacion"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-liq-01-base-imponible"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -353,7 +322,6 @@ section = ["liquidacion"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-liq-02-cuota"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -364,7 +332,6 @@ section = ["liquidacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-liq-03-signo-base-sujetas"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -375,7 +342,6 @@ section = ["liquidacion"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-liq-03-base-rectificaciones"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -386,7 +352,6 @@ section = ["liquidacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-liq-04-signo-cuota-rectificaciones"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -397,7 +362,6 @@ section = ["liquidacion"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-liq-04-cuota-rectificaciones"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -408,7 +372,6 @@ section = ["liquidacion"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-liq-05-operaciones-exentas"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -419,7 +382,6 @@ section = ["liquidacion"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-liq-06-a-deducir"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -430,7 +392,6 @@ section = ["liquidacion"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-liq-07-resultado"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -441,7 +402,6 @@ section = ["complementaria"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-compl-declaracion-complementaria"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]
 
@@ -452,6 +412,5 @@ section = ["complementaria"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-604-2021-compl-numero-justificante-anterior"]
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]

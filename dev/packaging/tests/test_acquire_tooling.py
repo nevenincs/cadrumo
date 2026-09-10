@@ -45,7 +45,7 @@ from ..python_cohort import PythonCohort
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _VERSION = "0.99.0.dev1"
-_COMMIT = "a" * 40
+_SOURCE_DIGEST = "a" * 64
 
 
 # ---------------------------------------------------------------------------
@@ -75,7 +75,7 @@ def _make_python_cohort(tmp_path: Path) -> tuple[PythonCohort, Path]:
     cohort = PythonCohort(
         directory=tmp_path,
         manifest=tmp_path / "python-cohort.json",
-        source_commit=_COMMIT,
+        source_digest=_SOURCE_DIGEST,
         version=_VERSION,
         root_wheel=download / wheel_payloads["cadrumo"][0],
         root_sdist=tmp_path / f"cadrumo-{_VERSION}.tar.gz",
@@ -105,7 +105,7 @@ def _make_release_cohort(tmp_path: Path) -> tuple[LoadedReleaseCohort, Path]:
     manifest = create_manifest(
         root=root,
         version="0.99.0",
-        source=SourceIdentity(commit=_COMMIT, tag="v0.99.0"),
+        source=SourceIdentity(source_digest=_SOURCE_DIGEST, tag="v0.99.0"),
         created_at=datetime.now(UTC),
         builder=BuildIdentity(
             implementation="dev.packaging.release_cohort",

@@ -1,5 +1,5 @@
 [[revisions."2024".formulas]]
-id = "renta-2024-cuota-resultante-autoliquidacion"
+id = "renta-cuota-resultante-autoliquidacion"
 target_casilla_id = "0595"
 # Casilla 0414 (deduccion por obtencion de rendimientos del trabajo) does not
 # exist in the 2024 revision (introduced in 2025); omitted from this expression.

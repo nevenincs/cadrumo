@@ -1,5 +1,5 @@
 [[revisions."2025".bindings]]
-id = "renta-2025-profile-tax-residence-ccaa"
+id = "renta-profile-tax-residence-ccaa"
 source = "profile"
 selector = { profile_model = "TaxResidenceProfile", field = "ccaa", xsd_attribute = "codigoCADeclaracion", dictionary_field = "ZCCAD" }
 aggregation = { op = "copy" }

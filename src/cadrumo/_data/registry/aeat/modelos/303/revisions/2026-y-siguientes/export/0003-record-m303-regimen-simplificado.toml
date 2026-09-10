@@ -5,7 +5,7 @@ id = 'generated-modelo-303-2026-y-siguientes-fichero'
 id = 'm303-regimen-simplificado'
 record_type = 'regimen-simplificado'
 order = 1
-encoding = "iso-8859-1"
+encoding = 'iso-8859-1'
 line_ending = 'crlf'
 required = true
 repeat = 'projection_rows'
@@ -272,12 +272,11 @@ id = 'm303-2026.dp30302.f073'
 offset = 828
 length = 17
 kind = 'projection'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',
@@ -403,12 +402,11 @@ offset = 918
 length = 17
 kind = 'casilla'
 casilla_id = '48'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -433,12 +431,11 @@ offset = 952
 length = 17
 kind = 'casilla'
 casilla_id = '50'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -448,12 +445,11 @@ offset = 969
 length = 17
 kind = 'casilla'
 casilla_id = '51'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -463,12 +459,11 @@ offset = 986
 length = 17
 kind = 'casilla'
 casilla_id = '52'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -478,12 +473,11 @@ offset = 1003
 length = 17
 kind = 'casilla'
 casilla_id = '53'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -493,12 +487,11 @@ offset = 1020
 length = 17
 kind = 'casilla'
 casilla_id = '54'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -508,12 +501,11 @@ offset = 1037
 length = 17
 kind = 'casilla'
 casilla_id = '55'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -523,12 +515,11 @@ offset = 1054
 length = 17
 kind = 'casilla'
 casilla_id = '56'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -538,12 +529,11 @@ offset = 1071
 length = 17
 kind = 'casilla'
 casilla_id = '57'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -553,12 +543,11 @@ offset = 1088
 length = 17
 kind = 'casilla'
 casilla_id = '58'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -1377,5 +1366,27 @@ projection_kind = 'm303_regimen_simplificado_fact'
 cohort = 'no_agricola'
 slot = 2
 fact = 'personal_asalariado_horas_convenio_colectivo'
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30302.f128'
+offset = 1305
+length = 4
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+]
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'personal_no_asalariado_horas_titular'
 
 [revisions.2026-y-siguientes.export_layouts.records.row_field_casilla_ids]

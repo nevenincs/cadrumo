@@ -1,5 +1,7 @@
 [[revisions."2023-2025".casillas]]
 id = "decl.ejercicio"
+continuidad_id = "filing-year"
+continuidad_origin = "seeded"
 number = "ejercicio"
 section = ["declarante"]
 data_type = "year"
@@ -11,6 +13,8 @@ source_refs = ["enrolled-modelo-165-procedure"]
 
 [[revisions."2023-2025".casillas]]
 id = "decl.tipo-declaracion"
+continuidad_id = "tipo-declaracion"
+continuidad_origin = "seeded"
 number = "tipo-declaracion"
 section = ["declarante"]
 data_type = "text"

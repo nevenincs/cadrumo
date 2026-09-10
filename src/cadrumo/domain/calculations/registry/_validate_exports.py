@@ -53,6 +53,7 @@ from .binding_selector_utils import (
 )
 from .corpus_catalogue import verify_source_file
 from .errors import RegistryValidationError
+from .export_field_casilla import derive_casilla_export_refs
 from .ids import BindingId
 from .schema import DataBindingDefinition, ModeloRevision
 from .schema_base import RegistrySourceKind
@@ -109,11 +110,11 @@ def validate_export_layout_section(
                 record=record,
                 casillas=casillas,
                 bindings=bindings,
-                casilla_by_id=casilla_by_id,
                 legal_refs=legal_refs,
                 source_refs=source_refs,
                 evidence=evidence,
             )
+    _validate_casilla_export_refs_follow_the_layouts(failures, prefix=prefix, revision=revision)
     _validate_generated_projection_layout_bijection(failures, prefix=prefix, revision=revision)
     _validate_projection_endpoint_declarations(
         failures,
@@ -126,6 +127,33 @@ def validate_export_layout_section(
         evidence=evidence,
     )
     return failures
+
+
+def _validate_casilla_export_refs_follow_the_layouts(
+    failures: list[str],
+    *,
+    prefix: str,
+    revision: ModeloRevision,
+) -> None:
+    """Require every casilla's ``export_refs`` to be exactly the fields that resolve to it.
+
+    The loader derives the value, so a loaded revision always agrees. A
+    revision assembled any other way must agree too: a reference naming a
+    field that does not resolve to the casilla, and a field the casilla omits,
+    are the same disagreement seen from either side.
+    """
+    try:
+        derived = derive_casilla_export_refs(revision.export_layouts, revision.bindings)
+    except RegistryValidationError as exc:
+        failures.append(f"{prefix}: {exc}")
+        return
+    for casilla in revision.casillas:
+        expected = derived.get(casilla.id, ())
+        if tuple(casilla.export_refs) != expected:
+            failures.append(
+                f"{prefix}: casilla {casilla.id!r} declares export_refs {tuple(casilla.export_refs)!r}, but the "
+                f"export fields resolving to it are {expected!r}",
+            )
 
 
 def _validate_embedded_envelope_source_authority(
@@ -289,7 +317,6 @@ def _validate_export_record(
     record: ExportRecordDefinition,
     casillas: set[CasillaId],
     bindings: set[BindingId],
-    casilla_by_id: Mapping[CasillaId, CasillaDefinition],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
@@ -327,7 +354,6 @@ def _validate_export_record(
             field=field,
             casillas=casillas,
             bindings=bindings,
-            casilla_by_id=casilla_by_id,
             legal_refs=legal_refs,
             source_refs=source_refs,
             evidence=evidence,
@@ -379,7 +405,6 @@ def _validate_export_field(
     field: ExportFieldDefinition,
     casillas: set[CasillaId],
     bindings: set[BindingId],
-    casilla_by_id: Mapping[CasillaId, CasillaDefinition],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
@@ -395,10 +420,8 @@ def _validate_export_field(
     _validate_export_field_references(
         failures,
         prefix=prefix,
-        record=record,
         field=field,
         casillas=casillas,
-        casilla_by_id=casilla_by_id,
         legal_refs=legal_refs,
         source_refs=source_refs,
         evidence=evidence,
@@ -413,15 +436,13 @@ def _validate_export_field_references(
     failures: list[str],
     *,
     prefix: str,
-    record: ExportRecordDefinition,
     field: ExportFieldDefinition,
     casillas: set[CasillaId],
-    casilla_by_id: Mapping[CasillaId, CasillaDefinition],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
 ) -> None:
-    """Validate an export field's evidence and casilla ownership references."""
+    """Validate an export field's evidence and the casilla its endpoint names."""
     owner = f"export field {field.id}"
     failures.extend(_missing_refs(prefix, owner, field.legal_refs, legal_refs, "legal"))
     failures.extend(_missing_refs(prefix, owner, field.source_refs, source_refs, "source"))
@@ -429,13 +450,6 @@ def _validate_export_field_references(
     endpoint_casilla_id = field.endpoint_casilla_id
     if endpoint_casilla_id is not None and endpoint_casilla_id not in casillas:
         failures.append(f"{prefix}: export field {field.id!r} references unknown casilla {endpoint_casilla_id!r}")
-    if (
-        endpoint_casilla_id is not None
-        and endpoint_casilla_id in casilla_by_id
-        and field.id not in casilla_by_id[endpoint_casilla_id].export_refs
-        and not _is_binding_record_template_field(record, field)
-    ):
-        failures.append(f"{prefix}: export field {field.id!r} is not declared by casilla {endpoint_casilla_id!r}")
 
 
 def _validate_export_field_literal_length(
@@ -453,11 +467,3 @@ def _validate_export_field_literal_length(
                 f"{prefix}: export field {field.id!r} literal length {literal_length} exceeds "
                 f"declared length {field.length}",
             )
-
-
-def _is_binding_record_template_field(record: ExportRecordDefinition, field: ExportFieldDefinition) -> bool:
-    return (
-        record.binding_record is not None
-        and field.kind == CasillaFieldKind.CASILLA
-        and field.casilla_id in set(record.row_field_casilla_ids.values())
-    )

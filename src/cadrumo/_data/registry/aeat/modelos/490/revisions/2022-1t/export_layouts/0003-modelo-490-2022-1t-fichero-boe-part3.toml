@@ -181,7 +181,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -195,7 +195,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -209,7 +209,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -223,7 +223,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -237,7 +237,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -251,7 +251,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -265,7 +265,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -279,7 +279,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -409,7 +409,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -423,7 +423,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -437,7 +437,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -451,7 +451,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -465,7 +465,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -479,7 +479,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -493,7 +493,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -507,7 +507,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -591,7 +591,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -605,7 +605,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -619,7 +619,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -633,7 +633,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -647,7 +647,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -661,7 +661,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -675,7 +675,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -689,7 +689,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -819,7 +819,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -833,7 +833,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -847,7 +847,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -861,7 +861,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -875,7 +875,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -889,7 +889,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -903,7 +903,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -917,7 +917,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -1001,7 +1001,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -1015,7 +1015,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -1029,7 +1029,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -1043,7 +1043,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -1057,7 +1057,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -1071,7 +1071,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -1085,7 +1085,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -1099,7 +1099,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 

@@ -35,6 +35,7 @@ from .fixed_width_codec import (
     ExportEncodingValue,
     ExportJustificationValue,
     ExportPaddingValue,
+    ExportSignPositionValue,
     validate_fixed_width_shape,
 )
 from .ids import BindingId, ExportFieldId, ExportLayoutId, RecordId, SourceRefId
@@ -472,6 +473,15 @@ class ExportFieldDefinition(RegistryModel):
     date_format: str | None = None
     decimals: int | None = Field(default=None, ge=0)
     signed: bool
+    sign_position: ExportSignPositionValue = None
+    required_for: Literal["natural_person"] | None = None
+    """A requirement the design states for one taxpayer legal form only.
+
+    Modelo 390 marks the sujeto pasivo nombre "OBLIGATORIO (persona fisica)":
+    required when the taxpayer is a natural person, and meaningless for an
+    entity. A layout cannot know the filer, so the condition is carried here
+    and evaluated at export against the filing's own taxpayer.
+    """
     value_policy: ExportValuePolicyValue = None
     allowed_values: tuple[str, ...] | None = None
     legal_refs: LegalRefs
@@ -514,6 +524,7 @@ class ExportFieldDefinition(RegistryModel):
     def _validate_field_kind(self) -> ExportFieldDefinition:
         _validate_field_semantic_payload(self)
         _validate_field_render_shape(self)
+        _validate_required_for(self)
         return self
 
     def wire_shape(self) -> tuple[str, str, str, bool, str | None]:
@@ -582,6 +593,26 @@ def _field_semantic_payloads(field: ExportFieldDefinition) -> dict[ExportSemanti
         ExportSemanticPayloadAxis.DRAFT_ATTRIBUTE: field.draft_attribute,
         ExportSemanticPayloadAxis.COMPUTED_KEY: field.computed_key,
     }
+
+
+def _validate_required_for(field: ExportFieldDefinition) -> None:
+    """Admit a legal-form requirement only where the export can evaluate it.
+
+    Only a producer-supplied header field is evaluated against the taxpayer at
+    render time; declaring the condition anywhere else would store a
+    requirement nothing enforces. An unconditionally required field needs no
+    condition, so declaring both is refused as contradictory.
+    """
+    if field.required_for is None:
+        return
+    if field.kind != CasillaFieldKind.HEADER:
+        raise RegistryValidationError(
+            f"export field {field.id!r} can declare required_for only on a header field, not {field.kind.value!r}",
+        )
+    if field.required:
+        raise RegistryValidationError(
+            f"export field {field.id!r} is required unconditionally and cannot also declare required_for",
+        )
 
 
 def _validate_field_semantic_payload(field: ExportFieldDefinition) -> None:
@@ -656,6 +687,22 @@ _SCALED_AMOUNT_DOMAIN_SHAPE: Final[tuple[str, str, str, bool, str | None]] = (
 )
 
 
+#: The signed money slot, the THIRD shape a closed value domain may take. A
+#: design can type an amount signed and still mandate its value: modelo 390's
+#: "Nota 2: estas casillas deben estar rellenas a 0" slots are typed N. Refusing
+#: a domain on a signed field forced a choice between the sign the type column
+#: states and the zero the note mandates. Members are whole units, as on the
+#: scaled shape, and money spends two implied decimals of the width.
+_SIGNED_MONEY_DOMAIN_SHAPE: Final[tuple[str, str, str, bool, str | None]] = (
+    "money",
+    "left_zero",
+    "right",
+    False,
+    None,
+)
+_MONEY_IMPLIED_DECIMALS: Final[int] = 2
+
+
 def _allowed_values_declaration_failure(
     field: ExportFieldDefinition,
     allowed_values: tuple[str, ...],
@@ -670,7 +717,8 @@ def _allowed_values_declaration_failure(
     if _allowed_values_shape_is_invalid(field):
         return (
             f"export field {field.id!r} allowed_values requires an unsigned right-justified "
-            "left-zero-padded fixed-width integer, or the same shape scaled by a declared decimal count"
+            "left-zero-padded fixed-width integer, the same shape scaled by a declared decimal count, "
+            "or a signed left-zero-padded money amount"
         )
     return None
 
@@ -686,7 +734,8 @@ def _allowed_values_member_failure(
     # the width with the ``decimals`` the scale spends. Charging the member the
     # full slot width would admit a domain whose own canonical wire form
     # overflows the field it constrains.
-    unit_digit_budget = length - (field.decimals or 0)
+    scale = _MONEY_IMPLIED_DECIMALS if field.data_type == "money" else (field.decimals or 0)
+    unit_digit_budget = length - scale
     invalid = tuple(value for value in allowed_values if not _is_canonical_digit_run(value, unit_digit_budget))
     if invalid:
         return f"export field {field.id!r} allowed_values contains noncanonical or out-of-width entries: {invalid!r}"
@@ -705,9 +754,11 @@ def _allowed_values_failure(field: ExportFieldDefinition) -> str | None:
 
 def _allowed_values_shape_is_invalid(field: ExportFieldDefinition) -> bool:
     """Return whether a field cannot render a closed value domain canonically."""
-    if field.kind in _VALUE_POLICY_UNRENDERABLE_KINDS or field.signed or field.length is None:
+    if field.kind in _VALUE_POLICY_UNRENDERABLE_KINDS or field.length is None:
         return True
     shape = _export_field_wire_shape(field)
+    if field.signed:
+        return field.value_policy is not None or shape != _SIGNED_MONEY_DOMAIN_SHAPE
     if field.value_policy is ExportValuePolicy.ENUMERATED_DIGITS:
         return shape != _VALUE_POLICY_SHAPES[ExportValuePolicy.ENUMERATED_DIGITS]
     return shape != _SCALED_AMOUNT_DOMAIN_SHAPE

@@ -9,13 +9,16 @@ contract does not promise.
 from __future__ import annotations
 
 import os
+from collections import Counter
 from collections.abc import Mapping
+from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import cast
+from typing import Final, cast
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, TypeAdapter, ValidationError
 
+from ....core.authority_grade import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
 from ....core.directory_scan import (
     DirectoryEntryKind,
     scan_directory,
@@ -42,7 +45,9 @@ from .errors import (
     RegistryLoadError,
     RegistryValidationError,
 )
+from .export_field_casilla import derive_casilla_export_refs
 from .export_semantics import ExportComputedKey, ExportDraftAttribute
+from .identifier_lineage import identifier_lineage
 from .ids import RevisionId
 from .loader_cache import (
     BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS,
@@ -63,10 +68,13 @@ from .loader_fingerprints import (
     refresh_toml_fingerprint_after_load_error as _refresh_toml_fingerprint_after_load_error,
 )
 from .modelo_localization import (
+    ModeloLocalizationFieldKind,
     as_toml_array,
+    casilla_occurrence_locale_key,
     enroll_revision_localization,
     modelo_locale_key,
 )
+from .revision_predecessor_forest import validate_predecessor_forest
 from .schema import (
     REVISION_GOVERNANCE_FIELDS as _REVISION_GOVERNANCE_FIELDS,
 )
@@ -81,7 +89,31 @@ from .schema import (
     SupportedFilingYearsCatalogue,
 )
 from .schema_references import LegalParameter, LegalReference, SourceReference
+from .schema_surfaces import CasillaDefinition, CasillaEvolutionKind
 from .validate_revision_identity import revision_reference_identity_failures
+
+_PREDECESSOR_FIELD: Final = "predecessor"
+_AUTHORITY_GRADE_FIELD: Final = "authority_grade"
+_NO_PREDECESSOR_TABLE_KEY: Final = "none"
+_INHERITED_SECTION: Final = "casillas"
+_RETIREMENT_SECTION: Final = "casilla_continuidad_evolutions"
+_EDITION_SOURCE_DEFAULT_FIELD: Final = "casilla_source_refs"
+_EDITION_ORDEN_FIELD: Final = "orden_aplicabilidad"
+_ROW_SOURCE_FIELD: Final = "source_refs"
+_ROW_SOURCE_ADDITIONS_FIELD: Final = "additional_source_refs"
+_ROW_LEGAL_FIELD: Final = "legal_refs"
+_ROW_INHERITED_FROM_FIELD: Final = "inherited_from"
+_ROW_LINEAGE_CLAIM_FIELDS: Final = frozenset({"continuidad_origin", "continuidad_evidence"})
+"""A row's claims about its immediate predecessor, which an inheriting edition never carries forward."""
+_ROW_CONSTRAINTS_FIELD: Final = "constraints"
+_EXPORT_REFS_FIELD: Final = "export_refs"
+_REFERENCE_SECTIONS: Final[Mapping[str, str]] = {
+    "formula": "formulas",
+    "binding": "bindings",
+    "alternate_bindings": "bindings",
+}
+"""Each casilla reference field, and the edition section whose declarations it names."""
+_REVISION_ID_ADAPTER: Final = TypeAdapter(RevisionId)
 
 ModeloRevisionSource = _ModeloRevisionSource
 clear_fingerprint_cache = _clear_fingerprint_cache
@@ -126,24 +158,45 @@ def _build_modelo_definition_from_data(source_path: Path, data: Mapping[str, obj
         raise RegistryLoadError(f"{source_path}: [modelo] must be a table")
     modelo_id = modelo_table.get("id")
     modelo_id_for_context = modelo_id if isinstance(modelo_id, str) else source_path.as_posix()
-    raw_revisions = _as_toml_table(data.get("revisions"))
-    if not raw_revisions:
+    declared_revisions = _as_toml_table(data.get("revisions"))
+    if not declared_revisions:
         raise RegistryLoadError(f"{source_path}: missing [revisions.<id>] tables")
+    materialised = _materialise_revisions(source_path, str(modelo_id_for_context), declared_revisions)
     revisions: dict[str, ModeloRevision] = {}
-    for revision_id, raw_revision in raw_revisions.items():
+    for revision_id, raw_revision in materialised.revisions.items():
         raw_revision_table = _as_toml_table(raw_revision)
         if raw_revision_table is None:
             raise RegistryLoadError(f"{source_path}: revision {revision_id!r} must be a table")
+        label_origins = materialised.label_origins.get(revision_id)
+        if label_origins is not None:
+            raw_revision_table = _resolve_inherited_references(
+                source_path,
+                revision_id=revision_id,
+                table=raw_revision_table,
+                label_origins=label_origins,
+            )
+        context = f"{source_path}: revision {revision_id!r}"
+        raw_revision_table = _apply_edition_reference_defaults(context, raw_revision_table)
         payload = enroll_revision_localization(
             modelo_id=str(modelo_id_for_context),
             revision_id=revision_id,
             raw_revision=raw_revision_table,
         )
+        if label_origins is not None:
+            payload = _enroll_inherited_label_fallbacks(
+                context,
+                modelo_id=str(modelo_id_for_context),
+                payload=payload,
+                label_origins=label_origins,
+            )
+        payload = _mark_inherited_casillas(context, payload=payload, label_origins=label_origins)
         payload = _compile_revision_projection_semantics(source_path, payload)
+        _refuse_authored_export_refs(source_path, revision_id, payload)
         try:
             revision = ModeloRevision.model_validate(payload)
         except ValidationError as exc:
             raise RegistryLoadError(f"{source_path}: invalid revision {revision_id!r}: {exc}") from exc
+        revision = _with_derived_export_refs(source_path, revision, payload)
         _raise_on_ambiguous_revision_identity(
             source_path,
             modelo_id=modelo_id_for_context,
@@ -164,6 +217,742 @@ def _build_modelo_definition_from_data(source_path: Path, data: Mapping[str, obj
         raise RegistryLoadError(f"{source_path}: invalid modelo definition: {exc}") from exc
 
 
+@dataclass(frozen=True, slots=True)
+class _RawPredecessorDeclarations:
+    """Each edition's predecessor declaration, read from the raw revision tables."""
+
+    named: Mapping[str, str]
+    declared_roots: frozenset[str]
+    keyless: frozenset[str]
+
+
+def _raw_predecessor_declarations(raw_revisions: Mapping[str, object]) -> _RawPredecessorDeclarations | None:
+    """Project every edition's authored ``predecessor`` onto the three declaration states.
+
+    Returns ``None`` when any edition is not a table or spells its declaration
+    in a shape no state admits. Materialisation then does nothing, and typed
+    construction refuses the malformed edition with the declaration's own
+    error rather than one this projection would have to invent.
+    """
+    named: dict[str, str] = {}
+    declared_roots: set[str] = set()
+    keyless: set[str] = set()
+    for revision_id, raw_revision in raw_revisions.items():
+        table = _as_toml_table(raw_revision)
+        if table is None:
+            return None
+        declaration = table.get(_PREDECESSOR_FIELD)
+        if declaration is None:
+            keyless.add(revision_id)
+        elif isinstance(declaration, str) and _is_revision_id(declaration):
+            named[revision_id] = declaration
+        elif isinstance(declaration, Mapping) and set(declaration) == {_NO_PREDECESSOR_TABLE_KEY}:
+            declared_roots.add(revision_id)
+        else:
+            return None
+    return _RawPredecessorDeclarations(
+        named=named,
+        declared_roots=frozenset(declared_roots),
+        keyless=frozenset(keyless),
+    )
+
+
+def _is_revision_id(value: str) -> bool:
+    try:
+        _REVISION_ID_ADAPTER.validate_python(value)
+    except ValidationError:
+        return False
+    return True
+
+
+type _LabelOrigins = tuple[str | None, ...]
+"""Per casilla row, in row order: the edition that last stated the row, or ``None`` if its own edition states it."""
+
+
+@dataclass(frozen=True, slots=True)
+class _MaterialisedRevisions:
+    """Every edition's raw table after materialisation, with the label origins of the inherited rows.
+
+    The origins travel beside the tables rather than inside them because the
+    raw table must stay the exact shape the closed typed model accepts. Only an
+    edition that inherits appears in ``label_origins``.
+    """
+
+    revisions: Mapping[str, object]
+    label_origins: Mapping[str, _LabelOrigins]
+
+
+@dataclass(frozen=True, slots=True)
+class _MaterialisedRevision:
+    """One edition resolved against its chain; ``label_origins`` is ``None`` when it inherits nothing."""
+
+    table: Mapping[str, object]
+    label_origins: _LabelOrigins | None
+
+
+def _materialise_revisions(
+    source_path: Path,
+    modelo_id: str,
+    raw_revisions: Mapping[str, object],
+) -> _MaterialisedRevisions:
+    """Resolve every edition naming a predecessor into the full raw revision it stands for.
+
+    The output has the shape typed construction already consumes, one raw
+    table per edition in declaration order, so nothing downstream can tell a
+    materialised edition from one that states every row itself.
+
+    An edition is delta-authored only when its manifest names a predecessor.
+    Nothing here infers one: an edition omitting the key, or declaring that no
+    predecessor exists, is returned as the identical object it arrived as, and
+    a modelo none of whose editions names a predecessor is returned whole.
+
+    Inheritance covers the casilla family and nothing else. Every other family
+    is declared in full by every edition. The completeness manifest is excluded
+    deliberately, not by omission: its rows are casilla-shaped, but a manifest
+    is a derived assertion about its own edition's formula closure, and its
+    presence is a graded capability claim, so an inherited one would attest
+    support the successor never earned.
+
+    Within the casilla family, rows are matched on ``continuidad_id``:
+
+    - an inherited row is kept unless a stated row carries its lineage, in
+      which case the stated row replaces it in its position. A kept row loses
+      ``continuidad_origin`` and ``continuidad_evidence`` and is otherwise
+      unchanged: both state the row's relationship to the edition before the
+      one that stated it, which is false one edition later;
+    - a stated row carrying no inherited lineage is new and is appended after
+      the inherited rows, in stated order;
+    - an inherited row whose lineage the successor retires, through a
+      ``retired`` casilla evolution whose ``to_revision`` is the successor, is
+      dropped.
+
+    That fixes the materialised row order: inherited rows in the predecessor's
+    materialised order, each superseding row in the position of the row it
+    supersedes, and new rows after them in stated order. The order is defined
+    by this merge, not reproduced from any full copy the edition replaced.
+
+    Refused, because each would otherwise resolve silently to a guess:
+
+    - a stated row whose id collides with an inherited row it does not
+      supersede, which is a repurpose nobody declared; two rows without lineage
+      sharing an id are refused the same way, since supersession has no key;
+    - two stated rows carrying one lineage, or a stated lineage that the
+      predecessor carries on more than one row;
+    - a stated row carrying a lineage the same edition retires.
+
+    The predecessor graph is checked as a forest first, so the recursion walks
+    a tree and a chain resolves its predecessor before the successor. Every
+    edge is then refused where the successor declares a lower authority grade
+    than its predecessor, before anything is inherited.
+
+    Where it stops: an inherited row keeps the formula and binding references
+    its stating edition authored; the label origins returned beside the rows
+    are what lets them be resolved against the successor afterwards. It adds no
+    locale identity to the rows either; enrolment afterwards derives every
+    row's keys from the edition it now sits in, and the label origins returned
+    beside the rows let enrolment add the one fallback an inherited row needs.
+    The same origins become each typed row's ``inherited_from`` marker after
+    enrolment; the raw rows carry no marker, so a materialised table written
+    back as a full copy states nothing the loader would refuse.
+    """
+    declarations = _raw_predecessor_declarations(raw_revisions)
+    if declarations is None or not declarations.named:
+        return _MaterialisedRevisions(revisions=raw_revisions, label_origins={})
+    try:
+        validate_predecessor_forest(
+            modelo_id,
+            named=declarations.named,
+            declared_roots=declarations.declared_roots,
+            keyless=declarations.keyless,
+        )
+    except RegistryValidationError as exc:
+        raise RegistryLoadError(f"{source_path}: invalid modelo definition: {exc}") from exc
+    _refuse_predecessor_above_successor_grade(source_path, raw_revisions, declarations.named)
+    resolved: dict[str, _MaterialisedRevision] = {}
+    materialised: dict[str, object] = dict(raw_revisions)
+    label_origins: dict[str, _LabelOrigins] = {}
+    for revision_id in declarations.named:
+        revision = _materialise_revision(
+            source_path,
+            raw_revisions,
+            declarations.named,
+            revision_id,
+            resolved,
+        )
+        materialised[revision_id] = revision.table
+        if revision.label_origins is not None:
+            label_origins[revision_id] = revision.label_origins
+    return _MaterialisedRevisions(revisions=materialised, label_origins=label_origins)
+
+
+def _refuse_predecessor_above_successor_grade(
+    source_path: Path,
+    raw_revisions: Mapping[str, object],
+    named: Mapping[str, str],
+) -> None:
+    """Refuse a declared predecessor whose authority grade outranks its successor's.
+
+    A successor declaring a lower grade than its predecessor withholds by
+    design: it deliberately claims less than the edition before it. Inheriting
+    there would carry the predecessor's rows into an edition that chose not to
+    state them, turning an honest deferral into a complete-looking edition, so
+    such a successor must stay full-copy. The minimality screen cannot see this,
+    because a sparse successor's stated rows match nothing inherited.
+
+    The comparison reads the declared ``authority_grade`` of both editions, never
+    their row counts. An undeclared grade reads as
+    :data:`~cadrumo.core.authority_grade.UNDECLARED_REGISTRY_AUTHORITY_GRADE`, the
+    floor, so an ungraded successor of a graded predecessor above that floor is
+    refused. A token that names no grade is left to typed construction, which
+    refuses the edition with the grade field's own error.
+
+    Where it stops: an edition declaring only a header while refusing to state
+    figures it cannot ground is refused only when that refusal also lowers its
+    declared grade. Nothing in the schema declares header-only withholding at an
+    equal grade, and this check does not infer it from how many rows an edition
+    carries.
+    """
+    ladder = tuple(RegistryAuthorityGrade)
+    for successor_id, predecessor_id in named.items():
+        successor_grade = _declared_authority_grade(raw_revisions.get(successor_id))
+        predecessor_grade = _declared_authority_grade(raw_revisions.get(predecessor_id))
+        if successor_grade is None or predecessor_grade is None:
+            continue
+        if ladder.index(successor_grade) >= ladder.index(predecessor_grade):
+            continue
+        raise RegistryLoadError(
+            f"{source_path}: revision {successor_id!r} declares predecessor {predecessor_id!r}, but its authority "
+            f"grade {successor_grade.value!r} is lower than the predecessor's {predecessor_grade.value!r}; an "
+            "edition withholding by design must state every row itself, so remove the predecessor declaration"
+        )
+
+
+def _declared_authority_grade(raw_revision: object) -> RegistryAuthorityGrade | None:
+    """Return the edition's authority grade, the floor when undeclared, ``None`` when unreadable."""
+    table = _as_toml_table(raw_revision)
+    if table is None:
+        return None
+    token = table.get(_AUTHORITY_GRADE_FIELD)
+    if token is None:
+        return UNDECLARED_REGISTRY_AUTHORITY_GRADE
+    if not isinstance(token, str) or token not in RegistryAuthorityGrade:
+        return None
+    return RegistryAuthorityGrade(token)
+
+
+def _materialise_revision(
+    source_path: Path,
+    raw_revisions: Mapping[str, object],
+    named: Mapping[str, str],
+    revision_id: str,
+    resolved: dict[str, _MaterialisedRevision],
+) -> _MaterialisedRevision:
+    """Return one edition with its predecessor chain's casillas resolved into it."""
+    cached = resolved.get(revision_id)
+    if cached is not None:
+        return cached
+    table = _as_toml_table(raw_revisions[revision_id])
+    if table is None:
+        raise RegistryLoadError(f"{source_path}: revision {revision_id!r} must be a table")
+    predecessor_id = named.get(revision_id)
+    result = _MaterialisedRevision(table=table, label_origins=None)
+    if predecessor_id is not None:
+        predecessor = _materialise_revision(source_path, raw_revisions, named, predecessor_id, resolved)
+        rows, label_origins = _inherit_casillas(
+            f"{source_path}: revision {revision_id!r} inheriting from {predecessor_id!r}",
+            revision_id=revision_id,
+            predecessor_id=predecessor_id,
+            inherited=_raw_casilla_rows(source_path, predecessor_id, predecessor.table),
+            inherited_label_origins=predecessor.label_origins,
+            successor=table,
+        )
+        result = _MaterialisedRevision(table={**table, _INHERITED_SECTION: rows}, label_origins=label_origins)
+    resolved[revision_id] = result
+    return result
+
+
+def _raw_casilla_rows(source_path: Path, revision_id: str, table: Mapping[str, object]) -> tuple[object, ...]:
+    rows = as_toml_array(table.get(_INHERITED_SECTION, ()))
+    if rows is None:
+        raise RegistryLoadError(f"{source_path}: revision {revision_id!r} casillas must be an array")
+    return rows
+
+
+def _inherit_casillas(
+    context: str,
+    *,
+    revision_id: str,
+    predecessor_id: str,
+    inherited: tuple[object, ...],
+    inherited_label_origins: _LabelOrigins | None,
+    successor: Mapping[str, object],
+) -> tuple[tuple[object, ...], _LabelOrigins]:
+    """Merge the predecessor's materialised casillas with the successor's stated ones.
+
+    Returns the merged rows and, aligned with them, each row's label origin.
+    A kept inherited row takes the origin it already had in the predecessor,
+    or the predecessor itself when the predecessor stated it, so the origin of
+    a row carried down a chain is the edition that last stated it rather than
+    the immediate predecessor, whose catalogue has no entry for it either.
+    """
+    if inherited_label_origins is not None and len(inherited_label_origins) != len(inherited):
+        raise RegistryLoadError(
+            f"{context}: the predecessor's label origins cover {len(inherited_label_origins)} of its "
+            f"{len(inherited)} casillas",
+        )
+    stated = as_toml_array(successor.get(_INHERITED_SECTION, ()))
+    if stated is None:
+        raise RegistryLoadError(f"{context}: casillas must be an array")
+    retired = _retired_lineages(successor, revision_id)
+    superseders = _stated_rows_by_lineage(context, stated, retired)
+    inherited_lineage_counts = Counter(lineage for row in inherited if (lineage := _row_lineage(row)) is not None)
+    ambiguous = sorted(lineage for lineage in superseders if inherited_lineage_counts[lineage] > 1)
+    if ambiguous:
+        raise RegistryLoadError(
+            f"{context}: the predecessor carries lineage {ambiguous!r} on more than one row, so a stated row "
+            "carrying it cannot say which one it supersedes",
+        )
+    rows: list[object] = []
+    label_origins: list[str | None] = []
+    kept_lineage_by_id: dict[str, str | None] = {}
+    superseded: set[str] = set()
+    for index, row in enumerate(inherited):
+        lineage = _row_lineage(row)
+        if lineage is not None and lineage in retired:
+            continue
+        if lineage is not None and lineage in superseders:
+            rows.append(superseders[lineage])
+            label_origins.append(None)
+            superseded.add(lineage)
+            continue
+        rows.append(_without_lineage_claims(row))
+        carried_origin = None if inherited_label_origins is None else inherited_label_origins[index]
+        label_origins.append(carried_origin if carried_origin is not None else predecessor_id)
+        row_id = _row_id(row)
+        if row_id is not None:
+            kept_lineage_by_id[row_id] = lineage
+    for row in stated:
+        lineage = _row_lineage(row)
+        row_id = _row_id(row)
+        if row_id is not None and row_id in kept_lineage_by_id:
+            raise RegistryLoadError(
+                f"{context}: stated casilla {row_id!r} of lineage {_lineage_label(lineage)} collides with the "
+                f"inherited casilla {row_id!r} of lineage {_lineage_label(kept_lineage_by_id[row_id])}; a stated "
+                "row supersedes only the inherited row carrying its own lineage, so declare the repurpose by "
+                "keeping the lineage, or retire the inherited lineage",
+            )
+        if lineage is None or lineage not in superseded:
+            rows.append(row)
+            label_origins.append(None)
+    return tuple(rows), tuple(label_origins)
+
+
+def _without_lineage_claims(row: object) -> object:
+    """Return ``row`` without its claims about its predecessor, or ``row`` itself when it states none."""
+    table = _as_toml_table(row)
+    if table is None or not any(field in table for field in _ROW_LINEAGE_CLAIM_FIELDS):
+        return row
+    return {key: value for key, value in table.items() if key not in _ROW_LINEAGE_CLAIM_FIELDS}
+
+
+def _stated_rows_by_lineage(
+    context: str,
+    stated: tuple[object, ...],
+    retired: frozenset[str],
+) -> dict[str, object]:
+    by_lineage: dict[str, object] = {}
+    for row in stated:
+        lineage = _row_lineage(row)
+        if lineage is None:
+            continue
+        if lineage in retired:
+            raise RegistryLoadError(
+                f"{context}: states a casilla of lineage {lineage!r}, which the same edition retires",
+            )
+        if lineage in by_lineage:
+            raise RegistryLoadError(
+                f"{context}: states more than one casilla of lineage {lineage!r}, so neither can supersede "
+                "the inherited row",
+            )
+        by_lineage[lineage] = row
+    return by_lineage
+
+
+def _retired_lineages(successor: Mapping[str, object], revision_id: str) -> frozenset[str]:
+    """Return the lineages the successor withdraws through a ``retired`` evolution into itself."""
+    evolutions = as_toml_array(successor.get(_RETIREMENT_SECTION, ())) or ()
+    retired: set[str] = set()
+    for raw_evolution in evolutions:
+        evolution = _as_toml_table(raw_evolution)
+        if evolution is None or evolution.get("to_revision") != revision_id:
+            continue
+        lineage = evolution.get("continuidad_id")
+        if evolution.get("evolution_kind") == CasillaEvolutionKind.RETIRED and isinstance(lineage, str):
+            retired.add(lineage)
+    return frozenset(retired)
+
+
+def _row_lineage(row: object) -> str | None:
+    table = _as_toml_table(row)
+    lineage = None if table is None else table.get("continuidad_id")
+    return lineage if isinstance(lineage, str) else None
+
+
+def _row_id(row: object) -> str | None:
+    table = _as_toml_table(row)
+    row_id = None if table is None else table.get("id")
+    return row_id if isinstance(row_id, str) else None
+
+
+def _lineage_label(lineage: str | None) -> str:
+    return repr(lineage) if lineage is not None else "(none declared)"
+
+
+def _apply_edition_reference_defaults(context: str, table: Mapping[str, object]) -> Mapping[str, object]:
+    """Fill the edition's declared reference defaults into the casilla rows that state none.
+
+    Two defaults, both declared once on the edition's manifest:
+
+    - ``casilla_source_refs`` becomes the ``source_refs`` of every casilla row,
+      and of every row's ``constraints`` table, that states no ``source_refs``.
+      A row or constraints table stating ``additional_source_refs`` instead
+      takes the default followed by its additions, duplicates removed and the
+      default first, and the additions key is consumed;
+    - ``orden_aplicabilidad``, the edition's approving ordenes, becomes the
+      ``legal_refs`` of every casilla row and ``constraints`` table that states
+      no ``legal_refs``.
+
+    A stated ``source_refs`` or ``legal_refs`` is kept whole, including a stated
+    empty array, which typed construction then refuses. A default is never
+    merged into a stated value; only additions extend one.
+
+    It runs on the materialised edition, so an inherited row is defaulted from
+    the edition it now sits in: source references are declared per edition, and
+    a row the predecessor did not ground itself must not carry the
+    predecessor's grounding forward. Additions are the row's own and so extend
+    the default of the edition the row now sits in. This relies on inheritance
+    reading each predecessor's rows before its own defaults are applied.
+
+    Returns the identical table when it fills nothing, so an edition declaring
+    no default and no additions reaches typed construction exactly as authored.
+    A default that is absent, empty or not an array fills nothing and is left to
+    typed construction, as is a casilla section or row that is not the shape it
+    should be.
+
+    Raises:
+        RegistryLoadError: When a row or constraints table states both
+            ``source_refs`` and ``additional_source_refs``, states additions that
+            are not a non-empty array of reference ids, or states additions in
+            an edition declaring no ``casilla_source_refs`` for them to extend.
+    """
+    source_default = as_toml_array(table.get(_EDITION_SOURCE_DEFAULT_FIELD)) or ()
+    orden_default = as_toml_array(table.get(_EDITION_ORDEN_FIELD)) or ()
+    rows = as_toml_array(table.get(_INHERITED_SECTION, ()))
+    if not rows:
+        return table
+    defaulted = tuple(
+        _default_row_references(context, row, source_default=source_default, orden_default=orden_default)
+        for row in rows
+    )
+    if all(new is old for new, old in zip(defaulted, rows, strict=True)):
+        return table
+    return {**table, _INHERITED_SECTION: defaulted}
+
+
+def _default_row_references(
+    context: str,
+    row: object,
+    *,
+    source_default: tuple[object, ...],
+    orden_default: tuple[object, ...],
+) -> object:
+    """Return ``row`` with its references and its constraints' defaulted, or ``row`` itself when nothing changes."""
+    table = _as_toml_table(row)
+    if table is None:
+        return row
+    subject = f"{context}: casilla {_row_id(table)!r}"
+    filled = _defaulted_references(subject, table, source_default=source_default, orden_default=orden_default)
+    constraints = _as_toml_table(table.get(_ROW_CONSTRAINTS_FIELD))
+    if constraints is not None:
+        filled_constraints = _defaulted_references(
+            f"{subject} constraints", constraints, source_default=source_default, orden_default=orden_default
+        )
+        if filled_constraints is not constraints:
+            filled = {**filled, _ROW_CONSTRAINTS_FIELD: filled_constraints}
+    return row if filled is table else filled
+
+
+def _defaulted_references(
+    subject: str,
+    table: Mapping[str, object],
+    *,
+    source_default: tuple[object, ...],
+    orden_default: tuple[object, ...],
+) -> Mapping[str, object]:
+    """Return one row or constraints table with its references resolved, or ``table`` itself when nothing changes."""
+    updates: dict[str, object] = {}
+    if _ROW_SOURCE_ADDITIONS_FIELD in table:
+        updates[_ROW_SOURCE_FIELD] = _extended_source_default(subject, table, source_default)
+    elif source_default and _ROW_SOURCE_FIELD not in table:
+        updates[_ROW_SOURCE_FIELD] = source_default
+    if orden_default and _ROW_LEGAL_FIELD not in table:
+        updates[_ROW_LEGAL_FIELD] = orden_default
+    if not updates:
+        return table
+    kept = {key: value for key, value in table.items() if key != _ROW_SOURCE_ADDITIONS_FIELD}
+    return {**kept, **updates}
+
+
+def _extended_source_default(
+    subject: str,
+    table: Mapping[str, object],
+    source_default: tuple[object, ...],
+) -> tuple[object, ...]:
+    """Return the edition default followed by the table's additions, each reference once, the default first.
+
+    A default holding anything but reference ids is concatenated unchanged and
+    left to typed construction, which refuses it with the field's own error.
+    """
+    if _ROW_SOURCE_FIELD in table:
+        raise RegistryLoadError(
+            f"{subject} states both {_ROW_SOURCE_FIELD} and {_ROW_SOURCE_ADDITIONS_FIELD}; {_ROW_SOURCE_FIELD} "
+            f"replaces the edition's {_EDITION_SOURCE_DEFAULT_FIELD} whole while {_ROW_SOURCE_ADDITIONS_FIELD} "
+            "extends it, so state one of them",
+        )
+    if not source_default:
+        raise RegistryLoadError(
+            f"{subject} states {_ROW_SOURCE_ADDITIONS_FIELD}, but the edition declares no "
+            f"{_EDITION_SOURCE_DEFAULT_FIELD} for them to extend; state {_ROW_SOURCE_FIELD} instead",
+        )
+    additions = as_toml_array(table.get(_ROW_SOURCE_ADDITIONS_FIELD))
+    if not additions or not all(isinstance(item, str) for item in additions):
+        raise RegistryLoadError(
+            f"{subject} {_ROW_SOURCE_ADDITIONS_FIELD} must be a non-empty array of source reference ids; "
+            "omit the key to take the edition default alone",
+        )
+    if not all(isinstance(item, str) for item in source_default):
+        return (*source_default, *additions)
+    return tuple(dict.fromkeys((*source_default, *additions)))
+
+
+def _resolve_inherited_references(
+    source_path: Path,
+    *,
+    revision_id: str,
+    table: Mapping[str, object],
+    label_origins: _LabelOrigins,
+) -> Mapping[str, object]:
+    """Point every inherited casilla's formula and binding references at this edition's own declarations.
+
+    An inherited row arrives with the references its stating edition authored,
+    which name that edition's formulas and bindings. Each reference is replaced
+    by the declaration of this edition carrying the same lineage, as
+    :func:`~cadrumo.domain.calculations.registry.identifier_lineage.identifier_lineage`
+    defines it: the reference's lineage is taken against the stating edition,
+    each declaration's against this one. A reference whose lineage no
+    declaration of this edition carries is refused rather than kept, since the
+    pointer it holds names another edition's declaration.
+
+    Stated rows are returned untouched; their references are this edition's
+    own, and reference validation checks them as authored. A field or row that
+    is not the shape it should be is left for typed construction to refuse.
+
+    Returns the identical table when no reference changes, which is always the
+    case once identifiers stop embedding an edition key and every inherited
+    reference resolves to itself.
+    """
+    context = f"{source_path}: revision {revision_id!r}"
+    rows = _raw_casilla_rows(source_path, revision_id, table)
+    if len(rows) != len(label_origins):
+        raise RegistryLoadError(
+            f"{context}: label origins cover {len(label_origins)} of the edition's {len(rows)} casillas",
+        )
+    declarations = {
+        section: _declarations_by_lineage(table, section, revision_id) for section in _REFERENCE_SECTIONS.values()
+    }
+    resolved = tuple(
+        row
+        if origin is None
+        else _resolve_row_references(context, row, origin=origin, revision_id=revision_id, declarations=declarations)
+        for row, origin in zip(rows, label_origins, strict=True)
+    )
+    if all(new is old for new, old in zip(resolved, rows, strict=True)):
+        return table
+    return {**table, _INHERITED_SECTION: resolved}
+
+
+def _declarations_by_lineage(
+    table: Mapping[str, object],
+    section: str,
+    revision_id: str,
+) -> Mapping[str, tuple[str, ...]]:
+    """Group the edition's declared identifiers of one section by lineage."""
+    by_lineage: dict[str, dict[str, None]] = {}
+    for raw in as_toml_array(table.get(section, ())) or ():
+        declaration_id = _row_id(raw)
+        if declaration_id is not None:
+            by_lineage.setdefault(identifier_lineage(declaration_id, revision_id), {})[declaration_id] = None
+    return {lineage: tuple(ids) for lineage, ids in by_lineage.items()}
+
+
+def _resolve_row_references(
+    context: str,
+    row: object,
+    *,
+    origin: str,
+    revision_id: str,
+    declarations: Mapping[str, Mapping[str, tuple[str, ...]]],
+) -> object:
+    """Return ``row`` with its references resolved, or ``row`` itself when each already names its target."""
+    table = _as_toml_table(row)
+    if table is None:
+        return row
+    casilla_id = _row_id(table)
+    updates: dict[str, object] = {}
+    for field, section in _REFERENCE_SECTIONS.items():
+        value = table.get(field)
+
+        def resolve(reference: str, *, field: str = field, section: str = section) -> str:
+            return _resolve_reference(
+                context,
+                casilla_id=casilla_id,
+                field=field,
+                reference=reference,
+                origin=origin,
+                revision_id=revision_id,
+                section=section,
+                declarations=declarations[section],
+            )
+
+        if isinstance(value, str):
+            resolved: object = resolve(value)
+        elif (items := as_toml_array(value)) is not None:
+            resolved = tuple(resolve(item) if isinstance(item, str) else item for item in items)
+        else:
+            continue
+        if resolved != value:
+            updates[field] = resolved
+    if not updates:
+        return row
+    return {**table, **updates}
+
+
+def _resolve_reference(
+    context: str,
+    *,
+    casilla_id: str | None,
+    field: str,
+    reference: str,
+    origin: str,
+    revision_id: str,
+    section: str,
+    declarations: Mapping[str, tuple[str, ...]],
+) -> str:
+    lineage = identifier_lineage(reference, origin)
+    candidates = declarations.get(lineage, ())
+    if len(candidates) == 1:
+        return candidates[0]
+    found = (
+        f"{len(candidates)} {section} declarations {list(candidates)!r}" if candidates else f"no {section} declaration"
+    )
+    raise RegistryLoadError(
+        f"{context}: inherited casilla {casilla_id!r} {field} reference {reference!r}, stated in revision "
+        f"{origin!r}, has lineage {lineage!r}, and revision {revision_id!r} carries {found} of that lineage; "
+        "an inherited reference must resolve to exactly one of this edition's own declarations, so declare it "
+        "here or state the row in this edition",
+    )
+
+
+def _enroll_inherited_label_fallbacks(
+    context: str,
+    *,
+    modelo_id: str,
+    payload: dict[str, object],
+    label_origins: _LabelOrigins,
+) -> dict[str, object]:
+    """Give every inherited casilla the occurrence key of the edition that last stated it.
+
+    Enrolment keys an inherited row to the edition it now sits in, which is the
+    right identity, but the label catalogue is authored per edition and holds
+    the row's text only under the key of the edition that stated it. That key
+    joins the row's resolution chain directly after its own occurrence key and
+    ahead of its continuity key: an entry the successor authors for the row
+    still wins, the stated edition's exact text comes next, and the lineage-wide
+    text stays the last tier. A row whose chain resolves nowhere still raises on
+    lookup, exactly as before.
+
+    An alias resolves through one key with no chain, so an inherited row that
+    carries aliases is refused here instead of loading with alias labels that
+    raise on first read.
+    """
+    casillas = as_toml_array(payload.get(_INHERITED_SECTION))
+    if casillas is None or len(casillas) != len(label_origins):
+        raise RegistryLoadError(
+            f"{context}: label origins cover {len(label_origins)} casillas but enrolment produced "
+            f"{'no casilla array' if casillas is None else len(casillas)}",
+        )
+    enrolled: list[object] = []
+    for casilla, origin in zip(casillas, label_origins, strict=True):
+        table = None if origin is None else _as_toml_table(casilla)
+        keys = None if table is None else table.get("localization_keys")
+        casilla_id = None if table is None else table.get("id")
+        # A row enrolment could not key is left for typed construction to refuse.
+        if table is None or origin is None or not isinstance(casilla_id, str) or not isinstance(keys, tuple):
+            enrolled.append(casilla)
+            continue
+        if table.get("aliases"):
+            raise RegistryLoadError(
+                f"{context}: inherited casilla {casilla_id!r} carries aliases, whose labels resolve only under "
+                f"this edition's key and have no fallback to {origin!r}; state the row in this edition",
+            )
+        fallback = casilla_occurrence_locale_key(modelo_id, origin, casilla_id, ModeloLocalizationFieldKind.LABEL)
+        enrolled.append({**table, "localization_keys": (*keys[:1], fallback, *keys[1:])})
+    return {**payload, _INHERITED_SECTION: tuple(enrolled)}
+
+
+def _mark_inherited_casillas(
+    context: str,
+    *,
+    payload: dict[str, object],
+    label_origins: _LabelOrigins | None,
+) -> dict[str, object]:
+    """Give every inherited casilla the ``inherited_from`` marker naming the edition that last stated it.
+
+    The marker is the label origins, the one record of where each row is
+    stated, carried onto the typed row so a consumer can tell a stated row from
+    an inherited one without re-deriving it. A row stated in this edition keeps
+    the marker unset.
+
+    Raises:
+        RegistryLoadError: When any casilla row authors the marker, since only
+            materialisation knows where a row is stated.
+    """
+    casillas = as_toml_array(payload.get(_INHERITED_SECTION)) or ()
+    authored = sorted(
+        str(table.get("id"))
+        for row in casillas
+        if (table := _as_toml_table(row)) is not None and _ROW_INHERITED_FROM_FIELD in table
+    )
+    if authored:
+        raise RegistryLoadError(
+            f"{context}: casillas {authored!r} author {_ROW_INHERITED_FROM_FIELD}, which the loader sets on the "
+            "rows an edition inherits from its declared predecessor; remove it",
+        )
+    if label_origins is None:
+        return payload
+    if len(casillas) != len(label_origins):
+        raise RegistryLoadError(
+            f"{context}: label origins cover {len(label_origins)} of the edition's {len(casillas)} casillas",
+        )
+    marked = tuple(
+        casilla
+        if origin is None or (table := _as_toml_table(casilla)) is None
+        else {**table, _ROW_INHERITED_FROM_FIELD: origin}
+        for casilla, origin in zip(casillas, label_origins, strict=True)
+    )
+    return {**payload, _INHERITED_SECTION: marked}
+
+
 def _raise_on_ambiguous_revision_identity(
     source_path: Path,
     *,
@@ -177,6 +966,62 @@ def _raise_on_ambiguous_revision_identity(
         raise RegistryValidationError(
             "registry revision identity is ambiguous:\n" + "\n".join(f" - {failure}" for failure in failures),
         )
+
+
+def _refuse_authored_export_refs(source_path: Path, revision_id: str, payload: Mapping[str, object]) -> None:
+    """Refuse a casilla row that declares ``export_refs``, which the loader derives from the layouts."""
+    rows = as_toml_array(payload.get(_INHERITED_SECTION, ())) or ()
+    authored = sorted(
+        str(table.get("id"))
+        for row in rows
+        if (table := _as_toml_table(row)) is not None and _EXPORT_REFS_FIELD in table
+    )
+    if authored:
+        raise RegistryLoadError(
+            f"{source_path}: revision {revision_id!r} casillas {authored!r} declare export_refs; a casilla's "
+            "export references are derived from the export fields that resolve to it, so remove the key",
+        )
+
+
+def _with_derived_export_refs(
+    source_path: Path,
+    revision: ModeloRevision,
+    payload: Mapping[str, object],
+) -> ModeloRevision:
+    """Return ``revision`` with every casilla's ``export_refs`` derived from the edition's own layouts.
+
+    The derivation runs on the materialised edition, so an inherited row takes
+    the references of the layout it now sits beside and never its origin's.
+    Each re-derived row is constructed again from its enrolled payload, so the
+    casilla's own coherence rules see the derived value exactly as they would
+    an authored one.
+    """
+    try:
+        derived = derive_casilla_export_refs(revision.export_layouts, revision.bindings)
+    except RegistryValidationError as exc:
+        raise RegistryLoadError(f"{source_path}: invalid revision {revision.id!r}: {exc}") from exc
+    if not derived:
+        return revision
+    declared = {casilla.id for casilla in revision.casillas}
+    undeclared = sorted(casilla_id for casilla_id in derived if casilla_id not in declared)
+    if undeclared:
+        raise RegistryLoadError(
+            f"{source_path}: invalid revision {revision.id!r}: export fields resolve to casillas {undeclared!r}, "
+            "which the edition does not declare",
+        )
+    rows = as_toml_array(payload.get(_INHERITED_SECTION, ())) or ()
+    casillas = []
+    for casilla, row in zip(revision.casillas, rows, strict=True):
+        refs = derived.get(casilla.id)
+        table = _as_toml_table(row)
+        if refs is None or table is None:
+            casillas.append(casilla)
+            continue
+        try:
+            casillas.append(CasillaDefinition.model_validate({**table, _EXPORT_REFS_FIELD: refs}))
+        except ValidationError as exc:
+            raise RegistryLoadError(f"{source_path}: invalid revision {revision.id!r}: {exc}") from exc
+    return revision.model_copy(update={_INHERITED_SECTION: tuple(casillas)})
 
 
 def _passthrough_toml_row(raw: object) -> dict[str, object]:

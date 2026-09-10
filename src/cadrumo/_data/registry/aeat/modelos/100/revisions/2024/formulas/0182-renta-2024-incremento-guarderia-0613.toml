@@ -1,5 +1,5 @@
 [[revisions."2024".formulas]]
-id = "renta-2024-incremento-guarderia-0613"
+id = "renta-incremento-guarderia-0613"
 target_casilla_id = "0613"
 # Art. 81.2 LIRPF: incremento deducción maternidad por gastos de guardería.
 #
@@ -25,8 +25,8 @@ target_casilla_id = "0613"
 # article and is under its own review; folding it into the resolved value would
 # decide that question here by accident.
 expression = { op = "min", args = [
-    { binding = "renta-2024-profile-incremento-guarderia" },
-    { binding = "renta-2024-profile-cotizaciones-ss-madre" },
+    { binding = "renta-profile-incremento-guarderia" },
+    { binding = "renta-profile-cotizaciones-ss-madre" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-81"]

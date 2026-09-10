@@ -8,7 +8,6 @@ section = ["identificacion"]
 data_type = "integer"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-714-identificacion-estado-civil"]
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
@@ -20,7 +19,6 @@ section = ["identificacion"]
 data_type = "date"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-714-identificacion-fecha-nacimiento"]
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
@@ -32,7 +30,6 @@ section = ["identificacion"]
 data_type = "integer"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-714-identificacion-discapacidad-porcentaje"]
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
@@ -44,7 +41,6 @@ section = ["identificacion"]
 data_type = "integer"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-714-identificacion-discapacidad-clase"]
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
@@ -56,7 +52,6 @@ section = ["identificacion"]
 data_type = "province_code"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-714-identificacion-codigo-provincia"]
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
@@ -68,7 +63,6 @@ section = ["identificacion"]
 data_type = "integer"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-714-identificacion-nacionalidad"]
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
@@ -80,7 +74,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-714-identificacion-regimen-economico-matrimonio"]
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
@@ -92,7 +85,6 @@ section = ["identificacion"]
 data_type = "nif"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-714-identificacion-representante-nif"]
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
@@ -104,7 +96,6 @@ section = ["identificacion"]
 data_type = "name"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-714-identificacion-representante-nombre"]
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
@@ -116,7 +107,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-714-identificacion-fecha-declaracion-localidad"]
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
@@ -128,7 +118,6 @@ section = ["identificacion"]
 data_type = "integer"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-714-identificacion-fecha-declaracion-dia"]
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
@@ -140,7 +129,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-714-identificacion-fecha-declaracion-mes"]
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
@@ -152,7 +140,6 @@ section = ["identificacion"]
 data_type = "year"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-714-identificacion-fecha-declaracion-anio"]
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
@@ -164,7 +151,6 @@ section = ["identificacion"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-714-identificacion-complementaria-cuotas-anteriores"]
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
@@ -176,7 +162,6 @@ section = ["declarante"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-714-decl-idioma"]
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
@@ -188,7 +173,6 @@ section = ["bienes_y_derechos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-714-bienes-c1-total"]
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
@@ -200,6 +184,5 @@ section = ["bienes_y_derechos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-714-bienes-c2-total"]
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]

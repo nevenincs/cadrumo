@@ -1,5 +1,5 @@
 [[revisions."2024".formulas]]
-id = "renta-2024-perdida-no-exenta-negativa-base-general"
+id = "renta-perdida-no-exenta-negativa-base-general"
 target_casilla_id = "1638"
 expression = { op = "min", args = [
     { literal = "0" },

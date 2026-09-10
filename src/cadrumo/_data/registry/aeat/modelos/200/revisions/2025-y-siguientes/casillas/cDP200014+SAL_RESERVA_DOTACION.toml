@@ -10,4 +10,4 @@ semantic_role_cardinality_reason = "SAL/SLL reserva especial dotacion is the sin
 required = false
 input_kind = "manual"
 legal_refs = ["ley-44-2015:art-14", "ley-44-2015:art-13", "ley-44-2015:art-2"]
-source_refs = ["aeat-modelo-200-manual-2025"]
+source_refs = ["aeat-modelo-200-manual-2024"]

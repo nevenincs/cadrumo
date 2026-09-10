@@ -1,5 +1,5 @@
 [[revisions."2024".bindings]]
-id = "renta-2024-modelo-130-pagos-fraccionados"
+id = "renta-modelo-130-pagos-fraccionados"
 source = "relation_prefill"
 selector = { source_modelo = "130", source_casilla_id = "19" }
 aggregation = { op = "sum" }

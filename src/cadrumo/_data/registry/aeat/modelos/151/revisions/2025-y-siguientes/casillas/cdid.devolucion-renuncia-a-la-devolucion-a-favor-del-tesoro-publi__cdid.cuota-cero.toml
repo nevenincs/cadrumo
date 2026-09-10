@@ -19,7 +19,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.did.f006"]
 
 # AEAT campo: Devolución. Solicita la devolución por transferencia
 [[revisions."2025-y-siguientes".casillas]]
@@ -32,7 +31,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.did.f007"]
 
 # AEAT campo: Ingreso/Domiciliación/Devolución - IBAN
 [[revisions."2025-y-siguientes".casillas]]
@@ -45,7 +43,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.did.f008"]
 
 # AEAT campo: Devolución. SWIFT-BIC
 [[revisions."2025-y-siguientes".casillas]]
@@ -58,11 +55,12 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.did.f009"]
 
 # AEAT campo: Devolución - Banco/Bank name
 [[revisions."2025-y-siguientes".casillas]]
 id = "did.devolucion-banco-bank-name"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M151DID00 campo at byte position 60-129; no counterpart in corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230)."
 number = "60-129"
 segmento = "M151DID00"
 section = ["did", "devolucion_banco_bank_name"]
@@ -71,11 +69,12 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.did.f010"]
 
 # AEAT campo: Devolución - Dirección del Banco/ Bank address
 [[revisions."2025-y-siguientes".casillas]]
 id = "did.devolucion-direccion-del-banco-bank-address"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M151DID00 campo at byte position 130-164; no counterpart in corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230)."
 number = "130-164"
 segmento = "M151DID00"
 section = ["did", "devolucion_direccion_del_banco_bank_address"]
@@ -84,11 +83,12 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.did.f011"]
 
 # AEAT campo: Devolución - Ciudad/City
 [[revisions."2025-y-siguientes".casillas]]
 id = "did.devolucion-ciudad-city"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M151DID00 campo at byte position 165-194; no counterpart in corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230)."
 number = "165-194"
 segmento = "M151DID00"
 section = ["did", "devolucion_ciudad_city"]
@@ -97,11 +97,12 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.did.f012"]
 
 # AEAT campo: Devolución - Código País/Country code
 [[revisions."2025-y-siguientes".casillas]]
 id = "did.devolucion-codigo-pais-country-code"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M151DID00 campo at byte position 195-196; no counterpart in corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230)."
 number = "195-196"
 segmento = "M151DID00"
 section = ["did", "devolucion_codigo_pais_country_code"]
@@ -110,7 +111,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.did.f013"]
 
 # AEAT campo: Cuota cero
 [[revisions."2025-y-siguientes".casillas]]
@@ -123,4 +123,3 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.did.f015"]

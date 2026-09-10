@@ -24,19 +24,19 @@ source_refs = [
     "lirpf-cuota-chain-authority",
 ]
 formulas = [
-    "renta-2024-cuota-liquida-incrementada-total",
-    "renta-2024-retenciones-arrendamientos-urbanos",
-    "renta-2024-cuota-resultante-autoliquidacion",
-    "renta-2024-total-pagos-a-cuenta",
-    "renta-2024-cuota-diferencial",
-    "renta-2024-resultado-declaracion",
+    "renta-cuota-liquida-incrementada-total",
+    "renta-retenciones-arrendamientos-urbanos",
+    "renta-cuota-resultante-autoliquidacion",
+    "renta-total-pagos-a-cuenta",
+    "renta-cuota-diferencial",
+    "renta-resultado-declaracion",
     # Personal-family deduction inputs (Ley 35/2006 art. 82 marriage axis;
     # art. 81-bis incremento por gastos en guardería).
-    "renta-2024-matrimonio-vigente-todo-anio",
-    "renta-2024-matrimonio-mes-inicio",
-    "renta-2024-matrimonio-mes-fin",
-    "renta-2024-deduccion-maternidad-0611",
-    "renta-2024-incremento-guarderia-0613",
+    "renta-matrimonio-vigente-todo-anio",
+    "renta-matrimonio-mes-inicio",
+    "renta-matrimonio-mes-fin",
+    "renta-deduccion-maternidad-0611",
+    "renta-incremento-guarderia-0613",
 ]
 application_links = [
     "modelo-100-2024-calculation",

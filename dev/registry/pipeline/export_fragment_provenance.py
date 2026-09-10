@@ -73,11 +73,14 @@ __all__ = [
     "SHA256_PATTERN",
     "ExportFieldDerivation",
     "ExportFieldDerivationCode",
+    "ExportFieldVerdict",
     "ExportFragmentOutputDigest",
     "ExportFragmentProvenanceManifest",
     "ExportFragmentTarget",
+    "attach_field_verdicts",
     "build_export_fragment_provenance_manifest",
     "collect_export_fragment_output_digests",
+    "design_stated_divergence",
     "emit_export_fragment_provenance_manifest",
     "export_fragment_provenance_manifest_json_bytes",
     "export_fragment_provenance_path",
@@ -143,6 +146,7 @@ _SEMANTIC_MAP_ENTRY_KEYS: Final[frozenset[str]] = frozenset(
         "computed_key",
         "legal_refs",
         "source_refs",
+        "part",
     },
 )
 #: ``ordinal_absent`` joined this set when the parser gained the ability to
@@ -218,12 +222,20 @@ _FIELD_KEYS: Final[frozenset[str]] = frozenset(
         "date_format",
         "decimals",
         "signed",
+        "sign_position",
+        "required_for",
         "value_policy",
         "allowed_values",
         "legal_refs",
         "source_refs",
     },
 )
+#: Field keys added after trees were already attested. Each is serialised and
+#: projected only when a field declares it, so a field without the key attests
+#: exactly the bytes it did before the key existed, and no stored manifest or
+#: loader digest has to be rewritten to admit it. An explicit ``null`` in a
+#: stored manifest is therefore non-canonical and refuses on load.
+_FIELD_KEYS_PRESENT_ONLY_WHEN_DECLARED: Final[tuple[str, ...]] = ("sign_position", "required_for")
 _DISCRIMINATOR_KEYS: Final[frozenset[str]] = frozenset({"offset", "length", "requires"})
 _DICTIONARY_OVERRIDE_KEYS: Final[frozenset[str]] = frozenset({"field_id", "path", "reason"})
 
@@ -279,6 +291,56 @@ class ExportFragmentOutputDigest(_StrictModel):
         return PurePosixPath(value).as_posix()
 
 
+#: The design's own numeric type vocabulary, from its type note: "Num: numerico
+#: sin signo", "N: numerico con signo". A token outside it states nothing about
+#: sign, and no verdict is invented from that silence.
+_DESIGN_SIGNED_TYPE: Final[str] = "N"
+_DESIGN_UNSIGNED_TYPE: Final[str] = "Num"
+
+#: The sign axis means something only where the slot carries a number. Some
+#: designs type a constant slot numerically (the modelo-number slot is typed
+#: "N" and holds "151"), and a literal rendered as text there is correct.
+_SIGN_BEARING_DATA_TYPES: Final[frozenset[str]] = frozenset({"money", "decimal", "integer"})
+
+
+def design_stated_divergence(parser_field: RecordDesignIntermediateField, field: ExportFieldDefinition) -> str | None:
+    """Return how an emitted field contradicts an axis its official row states, or ``None``.
+
+    Only axes the design states are compared. Offset and length are held equal
+    by the derivation itself; the sign is the axis a row states through its type
+    column, and the one that diverged unnoticed across a fifth of the corpus.
+    """
+    if str(field.data_type) not in _SIGN_BEARING_DATA_TYPES:
+        return None
+    if parser_field.aeat_type == _DESIGN_SIGNED_TYPE and not field.signed:
+        return f"design types '{_DESIGN_SIGNED_TYPE}' (numerico con signo), field declares unsigned"
+    if parser_field.aeat_type == _DESIGN_UNSIGNED_TYPE and field.signed:
+        return f"design types '{_DESIGN_UNSIGNED_TYPE}' (numerico sin signo), field declares signed"
+    return None
+
+
+class ExportFieldVerdict(_StrictModel):
+    """How one emitted field stands against the official row it derives from.
+
+    ``agrees``: every axis the design states matches the emitted field.
+    ``adjudicated``: a stated axis diverges and ``ruling`` names the
+    source-pinned declaration that explains why. A divergence nothing rules on
+    never reaches a manifest; generation refuses it, so there is no refused
+    verdict to record.
+    """
+
+    outcome: Literal["agrees", "adjudicated"]
+    ruling: str | None = None
+
+    @model_validator(mode="after")
+    def _ruling_matches_outcome(self) -> ExportFieldVerdict:
+        if self.outcome == "agrees" and self.ruling is not None:
+            raise ValueError("an agreeing verdict carries no ruling")
+        if self.outcome == "adjudicated" and not self.ruling:
+            raise ValueError("an adjudicated verdict must name the ruling that explains it")
+        return self
+
+
 class ExportFieldDerivation(_StrictModel):
     """Complete evidence for one rendered field's reviewed wire normalization.
 
@@ -294,6 +356,8 @@ class ExportFieldDerivation(_StrictModel):
     field: ExportFieldDefinition
     normalization_schema_version: int = Field(ge=1)
     derivation_code: ExportFieldDerivationCode
+    verdict: ExportFieldVerdict | None = None
+    """The field's standing against its official row; attached once generation knows the rulings."""
 
     @model_validator(mode="after")
     def _require_exact_authority_and_emitted_field(self) -> ExportFieldDerivation:
@@ -320,7 +384,13 @@ class ExportFieldDerivation(_StrictModel):
             )
         if self.field.id != self.semantic_entry.export_field_id:
             raise ValueError("field derivation emitted id does not match semantic-map entry")
-        if self.field.offset != self.parser_field.offset or self.field.length != self.parser_field.length:
+        # A field filling a declared part of its cell takes the part's
+        # coordinates; the part itself was held to the cell's text at join.
+        part = self.semantic_entry.part
+        expected = (
+            (part.offset, part.length) if part is not None else (self.parser_field.offset, self.parser_field.length)
+        )
+        if (self.field.offset, self.field.length) != expected:
             raise ValueError("field derivation emitted coordinates do not match parser field")
         for attribute in (
             "kind",
@@ -336,7 +406,40 @@ class ExportFieldDerivation(_StrictModel):
         ):
             if getattr(self.field, attribute) != getattr(self.semantic_entry, attribute):
                 raise ValueError(f"field derivation emitted {attribute} does not match semantic-map entry")
+        if self.verdict is not None:
+            diverges = design_stated_divergence(self.parser_field, self.field) is not None
+            if diverges != (self.verdict.outcome == "adjudicated"):
+                # Recomputed rather than trusted, so a stored manifest cannot
+                # claim agreement for a field that contradicts its own row.
+                raise ValueError(
+                    f"field derivation {self.field.id!r} records verdict {self.verdict.outcome!r}, but the field "
+                    f"{'diverges from' if diverges else 'agrees with'} its official row",
+                )
         return self
+
+
+def attach_field_verdicts(
+    derivations: tuple[ExportFieldDerivation, ...], rulings: Mapping[str, str]
+) -> tuple[ExportFieldDerivation, ...]:
+    """Attach each derivation's verdict, refusing a divergence no ruling explains.
+
+    ``rulings`` maps a derivation code to the identity of the source-pinned
+    declaration that adjudicates divergent fields rendered through it.
+    """
+    attached: list[ExportFieldDerivation] = []
+    for derivation in derivations:
+        divergence = design_stated_divergence(derivation.parser_field, derivation.field)
+        if divergence is None:
+            verdict = ExportFieldVerdict(outcome="agrees")
+        elif (ruling := rulings.get(derivation.derivation_code)) is not None:
+            verdict = ExportFieldVerdict(outcome="adjudicated", ruling=ruling)
+        else:
+            raise RegistryValidationError(
+                f"export field {derivation.field.id!r} diverges from its official row ({divergence}) "
+                f"and no ruling adjudicates derivation {derivation.derivation_code!r}",
+            )
+        attached.append(derivation.model_copy(update={"verdict": verdict}))
+    return tuple(attached)
 
 
 class ExportFragmentProvenanceManifest(_StrictModel):
@@ -638,7 +741,21 @@ def verify_export_fragment_provenance_manifest(
 
 def export_fragment_provenance_manifest_json_bytes(manifest: ExportFragmentProvenanceManifest) -> bytes:
     """Return the sole canonical JSON serialisation for a provenance manifest."""
-    return canonical_json_bytes(manifest.model_dump(mode="json"))
+    payload = manifest.model_dump(mode="json")
+    for derivation in payload["field_derivations"]:
+        _omit_undeclared_field_keys(derivation["field"])
+        if derivation["semantic_entry"]["part"] is None:
+            del derivation["semantic_entry"]["part"]
+        if derivation["verdict"] is None:
+            del derivation["verdict"]
+    return canonical_json_bytes(payload)
+
+
+def _omit_undeclared_field_keys(field: dict[str, object]) -> dict[str, object]:
+    for key in _FIELD_KEYS_PRESENT_ONLY_WHEN_DECLARED:
+        if field[key] is None:
+            del field[key]
+    return field
 
 
 def load_export_fragment_provenance_manifest(raw: bytes) -> ExportFragmentProvenanceManifest:
@@ -935,6 +1052,8 @@ def _normalise_semantic_map_entry(payload: Mapping[str, object]) -> dict[str, ob
         "computed_key": payload["computed_key"],
         "legal_refs": _sorted_strings(payload["legal_refs"], subject="semantic-map legal_refs"),
         "source_refs": _sorted_strings(payload["source_refs"], subject="semantic-map source_refs"),
+        # Digested only when declared, so a map without parts keeps its digest.
+        **({"part": payload["part"]} if payload["part"] is not None else {}),
     }
 
 
@@ -1100,7 +1219,7 @@ def _normalise_loader_record(payload: Mapping[str, object]) -> dict[str, object]
 
 def _normalise_loader_field(payload: Mapping[str, object]) -> dict[str, object]:
     _require_exact_keys(payload, _FIELD_KEYS, subject="loader export field")
-    return {
+    normalised: dict[str, object] = {
         "id": payload["id"],
         "offset": payload["offset"],
         "length": payload["length"],
@@ -1124,6 +1243,9 @@ def _normalise_loader_field(payload: Mapping[str, object]) -> dict[str, object]:
         "legal_refs": _sorted_strings(payload["legal_refs"], subject="loader field legal_refs"),
         "source_refs": _sorted_strings(payload["source_refs"], subject="loader field source_refs"),
     }
+    for key in _FIELD_KEYS_PRESENT_ONLY_WHEN_DECLARED:
+        normalised[key] = payload[key]
+    return _omit_undeclared_field_keys(normalised)
 
 
 def _loader_record_sort_key(payload: Mapping[str, object]) -> tuple[int, str]:

@@ -1,5 +1,7 @@
 [[revisions.2025-y-siguientes.casillas]]
 id = "62"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_202/files/15-202-ejercicio-2025-y-siguientes-actualizado-14-07-2026.xlsx.extracted.md:141 (sha256 04e7b349b24b) prints box [62]; corpus/aeat_official/disenos_registro/modelo_202/files/03-202-ejercicio-2023-a-2024-actualizado-16-04-24-130-kb-xlsx.xlsx.extracted.md (sha256 1e4881439e25) prints no box [62] and retires none"
 number = "62"
 section = ["liquidacion", "modalidad_40_3_lis", "b2_casos_especificos"]
 data_type = "decimal"
@@ -10,4 +12,3 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-202-2025", "aeat-modelo-202-instructions"]
-export_refs = ["m202-2025.pagina02.f021"]

@@ -30,6 +30,7 @@ from typing import IO, Any, cast
 import pytest
 
 from ..._paths import REPO_ROOT
+from ...source_tree import repository_files, snapshot
 from .._distribution_names import normalise_distribution_name
 from ..hashing import sha256_path
 from ..installed_mcp_oracle import run_installed_mcp_oracle
@@ -97,7 +98,7 @@ class InstalledCohort:
     cli: Path
     mcp_server: Path
     cohort_dir: Path
-    source_commit: str
+    source_digest: str
     artifact_sha256: dict[str, str]
     evidence_path: Path
     metadata: dict[str, Any]
@@ -145,26 +146,26 @@ def test_installed_oracle_has_no_prebuilt_or_manual_cohort_fallback() -> None:
 
 @pytest.fixture(scope="module")
 def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohort:
-    """Build HEAD once, install one cohort once, and inspect installed metadata."""
+    """Build one snapshot of the tree once, install one cohort once, and inspect installed metadata."""
     uv = shutil.which("uv")
     assert uv is not None, "uv is required to build the installed oracle cohort"
 
     work_dir = tmp_path_factory.mktemp("installed-oracle-cohort")
     clean_repo = work_dir / "clean-repository"
-    run_checked(
-        ["git", "clone", "--local", "--no-hardlinks", str(_REPO_ROOT), str(clean_repo)],
-        cwd=work_dir,
-    )
-    # Under the clone's OWN var/, not beside it. `build_python_cohort` refuses
+    # An isolated copy of the enumerated tree, not the live one: this fixture
+    # needs a private `var/` to build the cohort into, isolated from whatever
+    # a concurrent agent is doing to the real repository's own `var/`.
+    snapshot(_REPO_ROOT, repository_files(_REPO_ROOT), clean_repo)
+    # Under the snapshot's OWN var/, not beside it. `build_python_cohort` refuses
     # an output that is not below `<repo_root>/var`, and repo_root here is the
-    # clone -- so a sibling of the clone can never satisfy it and this fixture
+    # snapshot -- so a sibling of it can never satisfy it and this fixture
     # raised SystemExit on every platform. The SystemExit then escaped a
     # module-scoped fixture, which left pytest's finalizer bookkeeping
     # inconsistent and reported the module's other tests as bare internal
     # AssertionErrors naming nothing.
     cohort_dir = clean_repo / "var" / "python-cohort"
     supplied = build_python_cohort(clean_repo, cohort_dir)
-    source_commit = supplied.source_commit
+    source_digest = supplied.source_digest
     root_wheel = supplied.root_wheel
     data_wheels = supplied.companion_wheels
     artifact_sha256 = dict(supplied.sha256)
@@ -196,13 +197,13 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
     assert cli.is_file()
     assert mcp_server.is_file()
     evidence_path = (
-        _REPO_ROOT / "var" / "distribution-install-readiness" / "installed-cohorts" / source_commit / "evidence.json"
+        _REPO_ROOT / "var" / "distribution-install-readiness" / "installed-cohorts" / source_digest / "evidence.json"
     )
     _write_evidence(
         evidence_path,
         {
             "artifact_sha256": artifact_sha256,
-            "source_commit": source_commit,
+            "source_digest": source_digest,
         },
     )
     return InstalledCohort(
@@ -213,7 +214,7 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
         cli=cli,
         mcp_server=mcp_server,
         cohort_dir=cohort_dir,
-        source_commit=source_commit,
+        source_digest=source_digest,
         artifact_sha256=artifact_sha256,
         evidence_path=evidence_path,
         metadata=metadata,
@@ -265,7 +266,7 @@ def test_installed_cli_and_mcp_are_one_hashed_cohort(installed_cohort: Installed
             {
                 "artifact_sha256": cohort.artifact_sha256,
                 "evidence_path": str(cohort.evidence_path),
-                "source_commit": cohort.source_commit,
+                "source_digest": cohort.source_digest,
             },
             sort_keys=True,
         ),
@@ -284,7 +285,7 @@ def test_cli_and_mcp_complete_the_same_grounded_oracle_from_that_cohort(
         cohort.cli,
         storage_root=cohort.work_dir / "cli-state",
         work_dir=execution_root / "cli",
-        cohort_source_commit=cohort.source_commit,
+        cohort_source_digest=cohort.source_digest,
         cohort_manifest_sha256=sha256_path(cohort.evidence_path),
         cohort_root_wheel_sha256=cohort.artifact_sha256["cadrumo"],
         timeout_seconds=240.0,
@@ -293,7 +294,7 @@ def test_cli_and_mcp_complete_the_same_grounded_oracle_from_that_cohort(
         cohort.mcp_server,
         storage_root=cohort.work_dir / "mcp-state",
         work_dir=execution_root / "mcp",
-        cohort_source_commit=cohort.source_commit,
+        cohort_source_digest=cohort.source_digest,
         cohort_manifest_sha256=sha256_path(cohort.python_cohort.manifest),
         cohort_root_wheel_sha256=cohort.artifact_sha256["cadrumo"],
         cohort_harness_wheel_sha256=cohort.artifact_sha256["cadrumo"],
@@ -329,7 +330,7 @@ def test_cli_and_mcp_complete_the_same_grounded_oracle_from_that_cohort(
             "artifact_sha256": cohort.artifact_sha256,
             "cli_oracle": cli_evidence.to_jsonable(),
             "mcp_oracle": mcp_evidence.to_jsonable(),
-            "source_commit": cohort.source_commit,
+            "source_digest": cohort.source_digest,
         },
     )
     retained = json.loads(cohort.evidence_path.read_text(encoding="utf-8"))

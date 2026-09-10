@@ -1,5 +1,5 @@
 [[revisions."2025".formulas]]
-id = "renta-2025-deduccion-madrid-nacimiento-adopcion"
+id = "renta-deduccion-madrid-nacimiento-adopcion"
 target_casilla_id = "1039"
 # Comunidad de Madrid, "Por nacimiento o adopción de hijos" (DL 1/2010 arts. 4 y 18.1).
 # 1039 = eligible_count × 721,70 € when BOTH income limits are satisfied, else 0.
@@ -15,7 +15,7 @@ expression = { op = "if_then_else", args = [
         { op = "sum", args = [{ casilla_id = "0435" }, { casilla_id = "0460" }] },
         { op = "if_then_else", args = [
             { op = "equal", args = [
-                { binding = "renta-2025-profile-declaration-type" },
+                { binding = "renta-profile-declaration-type" },
                 { literal = "2" },
             ] },
             { parameter = "renta-2025-deduccion-madrid-nacimiento-adopcion-limite-contribuyente-conjunta" },
@@ -28,13 +28,13 @@ expression = { op = "if_then_else", args = [
             { op = "sum", args = [
                 { casilla_id = "0435" },
                 { casilla_id = "0460" },
-                { binding = "renta-2025-profile-unidad-familiar-otros-miembros-base" },
+                { binding = "renta-profile-unidad-familiar-otros-miembros-base" },
             ] },
             { parameter = "renta-2025-deduccion-madrid-nacimiento-adopcion-limite-unidad-familiar" },
         ] },
         { literal = "0" },
         { op = "multiply", args = [
-            { binding = "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count" },
+            { binding = "renta-profile-madrid-nacimiento-adopcion-eligible-count" },
             { parameter = "renta-2025-deduccion-madrid-nacimiento-adopcion-cuantia" },
         ] },
     ] },

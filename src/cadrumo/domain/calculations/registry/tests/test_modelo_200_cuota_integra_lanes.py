@@ -410,7 +410,7 @@ def test_modelo_202_modality_is_art_40_3_mandatory_above_threshold() -> None:
     fraccionado según la modalidad regulada en el artículo 40.3 LIS").
     Art. 40.2 is not offered for such a profile.
     """
-    verdict = derive_modelo_202_modality(_legal_entity_profile(Decimal("7000000")))
+    verdict = derive_modelo_202_modality(_legal_entity_profile(Decimal("7000000")), effective_date=date(2025, 12, 31))
     assert verdict.modality is Modelo202Modality.ART_40_3_MANDATORY
     assert "ley-27-2014:art-40-3" in verdict.legal_refs
     assert verdict.threshold_fact is not None
@@ -439,8 +439,8 @@ def test_modelo_202_modality_is_art_40_2_optional_at_or_below_threshold() -> Non
     wording: Art. 40.3 mandates only when INCN "ha superado" the
     threshold — equality alone does not exceed it.
     """
-    below = derive_modelo_202_modality(_legal_entity_profile(Decimal("500000")))
-    at_threshold = derive_modelo_202_modality(_legal_entity_profile(Decimal("6000000")))
+    below = derive_modelo_202_modality(_legal_entity_profile(Decimal("500000")), effective_date=date(2025, 12, 31))
+    at_threshold = derive_modelo_202_modality(_legal_entity_profile(Decimal("6000000")), effective_date=date(2025, 12, 31))
     assert below.modality is Modelo202Modality.ART_40_2_OPTIONAL
     assert at_threshold.modality is Modelo202Modality.ART_40_2_OPTIONAL
     assert "ley-27-2014:art-40" in below.legal_refs
@@ -454,7 +454,7 @@ def test_modelo_202_modality_is_incomplete_when_incn_undeclared() -> None:
     not known. The operator must declare the prior-12-months INCN
     first.
     """
-    verdict = derive_modelo_202_modality(_legal_entity_profile(None))
+    verdict = derive_modelo_202_modality(_legal_entity_profile(None), effective_date=date(2025, 12, 31))
     assert verdict.modality is Modelo202Modality.INCOMPLETE
     # The verdict still carries the modality legal_refs so the operator
     # sees what they are being asked to ground their answer against.
@@ -475,7 +475,7 @@ def test_modelo_202_modality_is_incomplete_for_non_legal_entity() -> None:
         iva_regime=IVARegime.GENERAL,
         incn_prior_12_months=Decimal("9000000"),
     )
-    verdict = derive_modelo_202_modality(natural_person)
+    verdict = derive_modelo_202_modality(natural_person, effective_date=date(2025, 12, 31))
     assert verdict.modality is Modelo202Modality.INCOMPLETE
 
 

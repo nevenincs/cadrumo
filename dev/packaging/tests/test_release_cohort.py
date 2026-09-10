@@ -5,7 +5,6 @@ from __future__ import annotations
 import os
 import re
 import subprocess
-import uuid
 import zipfile
 from pathlib import Path
 from typing import Final
@@ -13,8 +12,14 @@ from typing import Final
 import pytest
 
 from ..._paths import REPO_ROOT
+from ...source_tree import content_digest, repository_files
 from .. import release_cohort as release_cohort_module
-from ..release_cohort import _REQUIRED_PYTHON_VERSION, build_release_cohort, deterministic_zip_tree
+from ..release_cohort import (
+    _REQUIRED_PYTHON_VERSION,
+    build_from_clean_source,
+    build_release_cohort,
+    deterministic_zip_tree,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -30,16 +35,16 @@ def _assert_clean_builder_invocation(
     *,
     cwd: Path,
     env: dict[str, str] | None,
-    expected_commit: str,
+    expected_source_digest: str,
 ) -> None:
-    """Protect package imports, clean-source isolation, and commit binding."""
+    """Protect package imports, clean-source isolation, and digest binding."""
     assert argv[1:3] == ["-m", "dev.packaging.release_cohort"], (
         "clean release-cohort construction must invoke the package module"
     )
     assert cwd.name == "source"
     assert env is not None
     assert env["PYTHONPATH"] == os.pathsep.join((str(cwd / "src"), str(cwd)))
-    assert argv[argv.index("--expected-commit") + 1] == expected_commit
+    assert argv[argv.index("--expected-source-digest") + 1] == expected_source_digest
 
 
 def test_clean_builder_subprocess_is_package_correct_and_detector_bites(
@@ -50,11 +55,8 @@ def test_clean_builder_subprocess_is_package_correct_and_detector_bites(
     repo_root = tmp_path / "repo"
     (repo_root / "var").mkdir(parents=True)
     output = repo_root / "var" / "cohort"
-    expected_commit = "a" * 40
+    expected_source_digest = content_digest(repo_root, repository_files(repo_root))
     captured: list[tuple[list[str], Path, dict[str, str] | None]] = []
-
-    def fake_git(_repo: Path, *_args: str) -> str:
-        return expected_commit
 
     def fake_run(
         argv: list[str],
@@ -67,15 +69,12 @@ def test_clean_builder_subprocess_is_package_correct_and_detector_bites(
             raise _CleanBuilderInvocationObservedError
         return subprocess.CompletedProcess(argv, 0, stdout="", stderr="")
 
-    monkeypatch.setattr(release_cohort_module, "_git", fake_git)
     monkeypatch.setattr(release_cohort_module, "_run", fake_run)
-    monkeypatch.setattr(release_cohort_module.shutil, "which", lambda executable: executable)
 
     with pytest.raises(_CleanBuilderInvocationObservedError):
         build_release_cohort(
             repo_root=repo_root,
             output_dir=output,
-            expected_commit=expected_commit,
         )
 
     child_calls = [call for call in captured if "build-clean" in call[0]]
@@ -85,7 +84,7 @@ def test_clean_builder_subprocess_is_package_correct_and_detector_bites(
         argv,
         cwd=cwd,
         env=env,
-        expected_commit=expected_commit,
+        expected_source_digest=expected_source_digest,
     )
 
     file_path_regression = list(argv)
@@ -95,7 +94,7 @@ def test_clean_builder_subprocess_is_package_correct_and_detector_bites(
             file_path_regression,
             cwd=cwd,
             env=env,
-            expected_commit=expected_commit,
+            expected_source_digest=expected_source_digest,
         )
 
 
@@ -141,16 +140,19 @@ def test_deterministic_zip_refuses_empty_or_existing_output(tmp_path: Path) -> N
     assert destination.read_bytes() == b"retained"
 
 
-def test_build_refuses_an_expected_commit_other_than_checked_out_head() -> None:
-    """The commit option is an assertion and never silently selects other bytes."""
-    repo_root = REPO_ROOT
-    output = repo_root / "var" / f"release-cohort-refusal-{uuid.uuid4().hex}"
+def test_build_from_clean_source_refuses_a_digest_other_than_its_own_content(tmp_path: Path) -> None:
+    """The supplied digest is an assertion against the clean source's own content, never a silent select."""
+    clean_root = tmp_path / "clean-source"
+    (clean_root / "src").mkdir(parents=True)
+    (clean_root / "src" / "module.py").write_text("VALUE = 1\n", encoding="utf-8")
+    output = tmp_path / "staged-cohort"
 
-    with pytest.raises(SystemExit, match="does not equal the currently checked-out HEAD"):
-        build_release_cohort(
-            repo_root=repo_root,
+    with pytest.raises(SystemExit, match="clean source digest drifted"):
+        build_from_clean_source(
+            clean_root=clean_root,
             output_dir=output,
-            expected_commit="0" * 40,
+            expected_source_digest="0" * 64,
+            requested_tag=None,
         )
 
     assert not output.exists()

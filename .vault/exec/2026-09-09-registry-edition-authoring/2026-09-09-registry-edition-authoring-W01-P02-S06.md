@@ -1,0 +1,271 @@
+---
+tags:
+  - '#exec'
+  - '#registry-edition-authoring'
+date: '2026-09-10'
+modified: '2026-09-10'
+body_schema: 'body-v2'
+body_hash: 'sha256:4ecf8bfb62fb86770aa9bd7c03355d6d757f5cc9bbc3e725f9e3db09ef4a8895'
+step_id: 'S06'
+related:
+  - "[[2026-09-09-registry-edition-authoring-plan]]"
+---
+
+# [M | sonnet-high] Seed lineage for the mechanical modelos, marking each seeded chain with an origin distinct from a grounded one. Admit a bare chain only when identifier, semantic role and data type all agree, and the box number agrees where both editions state one. COVERAGE AND IDENTITY ARE DIFFERENT QUESTIONS and must be answered from different fields: asking whether a row has a printed box at all, read both the dedicated printed-number field and the general one, because the shipped code does and a gate already asserts that both carry boxes today; asking whether two rows are the SAME box, admit the dedicated field only — the general field is heterogeneous by design, a one-byte wire campo declares a plain integer in it, and keying identity on it produced a false refusal. Conflating the two understates coverage roughly twentyfold in one modelo and fabricates chains in another. NEVER admit a chain on a byte span: a successor can keep record, campo ordinal, offset and width and put a different concept in the slot, and elsewhere 189 of 296 unchanged casillas moved their span across one boundary while every chain a span key offered was refuted by semantic role. Where the edition names a sha-pinned official record design, diff the bundled extract first — it is the strongest oracle available and it settles boundaries no in-registry field can, including proving that no box was retired. A row that chains to nothing must record WHICH kind of nothing: no predecessor existed, or the predecessor edition does not state one. Refuse and record rather than falling through to a weaker signal. Proof: zero contradicted chains written, no chain written on a span, no row written as new that the official design shows was already printed, every refusal recorded with its reason.
+
+## Scope
+
+- `src/cadrumo/_data/registry/aeat/modelos`
+
+## Changes
+
+- `A` `src/cadrumo/domain/calculations/registry/casilla_lineage.py`
+- `M` `src/cadrumo/domain/calculations/registry/schema_surfaces.py`
+- `A` `src/cadrumo/domain/calculations/registry/tests/test_casilla_lineage_origin.py`
+- `M` `src/cadrumo/domain/calculations/registry/tests/test_continuidad_completeness_ratchet.py`
+- `A` `dev/registry/analysis/casilla_lineage_seed.py`
+- `A` `dev/registry/analysis/casilla_lineage_rulings.toml`
+- `A` `dev/registry/analysis/casilla_lineage_ledger.toml`
+- `A` `dev/registry/tests/test_casilla_lineage_seed.py`
+- `M` `dev/registry/tests/test_continuity_integrity.py`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/038/revisions/2024-desde-06/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/038/revisions/2025-y-siguientes/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/123/revisions/2019-2023/casillas/c01__c08.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/123/revisions/2024-y-siguientes/casillas/c01__c14.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2024/casillas/cmodulos-epigrafe__cmodulos-rendimiento-neto-actividad.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2025/casillas/cmodulos-epigrafe__cmodulos-rendimiento-neto-actividad.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/casillas/cmodulos-epigrafe__cmodulos-rendimiento-neto-actividad.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/casillas/cdecl.ejercicio__cimpatriado.cuota-diferencial.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/casillas/cp01.tipo-de-declaracion__cp01.numero-de-justificante.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/casillas/cp02.tipo-de-renta-1-01__cp02.datos-adicionales-de-l-referencia-catastral-14-04.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/casillas/cp03.tipo-de-renta-1-01__cp03.total-retenciones-o-ingresos-a-cuenta-16.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/casillas/cp04.tipo-de-renta-1-01__cp04.total-retenciones-o-ingresos-a-cuenta-9.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/casillas/cp05.tipo-de-renta-1-01__cp05.total-retenciones-o-ingresos-a-cuenta-5.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/casillas/cp06.tipo-de-renta-1-01__cp06.total-retenciones-o-ingresos-a-cuenta-13.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/casillas/cp07.tipo-de-renta-1-01__cp07.ganancia-patrimonial-5-05.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/casillas/cp08.tipo-de-renta-1-01__cp08.resultado-de-la-declaracion-43.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/casillas/cdecl.ejercicio__cimpatriado.cuota-diferencial.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/casillas/cdid.devolucion-renuncia-a-la-devolucion-a-favor-del-tesoro-publi__cdid.cuota-cero.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/casillas/cimpatriado.anexo-transmision-iic.tipo-renta__cimpatriado.anexo-transmision-iic.total-retenciones.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/casillas/cp01.tipo-de-declaracion__cp01.numero-de-justificante-25.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/casillas/cp02.tipo-de-renta-01__cp02.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-14-04.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/casillas/cp03.tipo-de-renta-01__cp03.total-retenciones-o-ingresos-a-cuenta-16.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/casillas/cp04.tipo-de-renta-01__cp04.total-retenciones-o-ingresos-a-cuenta-09.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/casillas/cp05.tipo-de-renta-01__cp05.datos-adicionales-actividad-emprendedora-impuesto-sati-13-05.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/casillas/cp06.tipo-de-renta-01__cp06.total-retenciones-o-ingresos-a-cuenta-09.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/casillas/cp07.tipo-de-renta-01__cp07.total-retenciones-o-ingresos-a-cuenta-05.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/casillas/cp08.tipo-de-renta-01__cp08.total-retenciones-o-ingresos-a-cuenta-13.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/casillas/cp09.tipo-de-renta-01__cp09.ganancia-patrimonial-05-08.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/casillas/cp10.tipo-de-renta-01__cp10.devoluciones-acordadas-por-la-administracion-42.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2013-2015/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2016-2022/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2023-2025/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2026-y-siguientes/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2019-2022/casillas/cdecl.base-total.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2019-2022/casillas/cdecl.retenciones-total.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2019-2022/casillas/cperc.base.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2019-2022/casillas/cperc.retenciones.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2023-y-siguientes/casillas/cdecl.base-total.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2023-y-siguientes/casillas/cdecl.retenciones-total.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2023-y-siguientes/casillas/cperc.base.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2023-y-siguientes/casillas/cperc.retenciones.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2015/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2016-2018/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2019-2021/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2022/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/casillas/cdecl.ejercicio__ctipo2.renta-atribuible-importe.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/casillas/cdecl.tipo-soporte__cdecl.representante-nombre.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/casillas/ctipo2.tipo-hoja__ctipo3.rendimiento-neto-minorado-agricola-eo.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2025-y-siguientes/casillas/cdecl.ejercicio__ctipo2.renta-atribuible-importe.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2025-y-siguientes/casillas/cdecl.tipo-soporte__cdecl.total-registros-entidad.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2025-y-siguientes/casillas/ctipo2.tipo-hoja__ctipo3.rendimiento-neto-minorado-agricola-eo.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/185/revisions/2003-2025/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/185/revisions/2025-y-siguientes/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/casillas/cdecl.persona-contacto-telefono__cdecl.correo-electronico.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/casillas/cdecl.total-percepciones__cdecl.retenciones-total.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/casillas/cperc.descendientes-menores-3-total__cperc.prestamos-vivienda-clave.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/casillas/cperc.excesos-acciones-emergentes.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/casillas/cperc.incapacidad-dineraria-percepcion__cperc.retenciones-forales-bizkaia.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/casillas/cperc.nif-representante-legal__cperc.movilidad-geografica.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/casillas/cperc.nif__cperc.ingresos-a-cuenta.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/casillas/cperc.provincia__cperc.situacion-familiar.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/casillas/cperc.reducciones-aplicables__cperc.anualidades-alimentos.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/casillas/cdecl.persona-contacto-telefono__cdecl.correo-electronico.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/casillas/cdecl.total-percepciones__cdecl.retenciones-total.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/casillas/cperc.descendientes-menores-3-total__cperc.prestamos-vivienda-clave.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/casillas/cperc.excesos-acciones-emergentes.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/casillas/cperc.incapacidad-dineraria-percepcion__cperc.retenciones-forales-bizkaia.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/casillas/cperc.nif-representante-legal__cperc.movilidad-geografica.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/casillas/cperc.nif__cperc.ingresos-a-cuenta.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/casillas/cperc.provincia__cperc.situacion-familiar.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/casillas/cperc.reducciones-aplicables__cperc.anualidades-alimentos.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2024/casillas/cdecl.persona-contacto-telefono__cdecl.naturaleza-declarante.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2024/casillas/cdecl.total-perceptores__cdecl.retenciones-total.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2024/casillas/cgasto.nif__cgasto.importe.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2024/casillas/cperc.nif__cperc.clave-mercado.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/casillas/cdecl.persona-contacto-telefono__cdecl.naturaleza-declarante.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/casillas/cdecl.total-perceptores__cdecl.retenciones-total.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/casillas/cgasto.nif__cgasto.importe.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/casillas/cperc.nif__cperc.clave-mercado.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/194/revisions/2019/casillas/c01__c05.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/194/revisions/2023/casillas/c01__c05.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/194/revisions/2024/casillas/c01__c05.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2019-2022/casillas/c22.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2019-2022/casillas/c25.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2023-2024/casillas/c22.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2023-2024/casillas/c25.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/casillas/c22.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/casillas/c25.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/casillas/c61.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/casillas/c62.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/casillas/c63.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/casillas/c64.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/casillas/c65.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/casillas/c66.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/casillas/c67.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/casillas/cbase_imponible_directa_i__cingreso_devolucion_anterior.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/casillas/ctipo_renta__ccuota_diferencial.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2026-y-siguientes/casillas/cbase_imponible_directa_i__cingreso_devolucion_anterior.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2026-y-siguientes/casillas/ctipo_renta__ccuota_diferencial.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2024/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2025/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/casillas/cdecl.tipo-ejercicio.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/casillas/cvinculada-1-nif__cvinculada-5-importe.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2018-y-siguientes/casillas/cdecl.tipo-ejercicio.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2018-y-siguientes/casillas/cvinculada-1-nif__cvinculada-5-importe.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/270/revisions/2013-2022/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/270/revisions/2013-2022/casillas/cdecl.persona-contacto-telefono__cdecl.total-retenciones.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/270/revisions/2013-2022/casillas/cperc.nif__cperc.pais-residencia.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/270/revisions/2023-y-siguientes/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/270/revisions/2023-y-siguientes/casillas/cdecl.persona-contacto-telefono__cdecl.total-retenciones.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/270/revisions/2023-y-siguientes/casillas/cperc.nif__cperc.pais-residencia.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/casillas/c23__c71.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/casillas/civa.repercutido.general__c22.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/casillas/c22__c71.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/casillas/civa.repercutido.general__c21.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/casillas/c22__c111.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/casillas/civa.repercutido.general__c21.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-hasta-08-y-2t/casillas/c22__c71.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-hasta-08-y-2t/casillas/civa.repercutido.general__c21.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/casillas/c22__c111.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/casillas/civa.repercutido.general__c21.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2026-y-siguientes/casillas/c22__c112.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2026-y-siguientes/casillas/civa.repercutido.general__c21.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2008-2022/casillas/c01__c27.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2008-2022/casillas/c28__c62.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2008-2022/casillas/c63__c91.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2008-2022/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2008-2022/casillas/civa.repercutido.general__civa.resultado-regimen-general.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2023/casillas/c01__c27.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2023/casillas/c28__c62.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2023/casillas/c63__c91.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2023/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2023/casillas/civa.repercutido.general__civa.resultado-regimen-general.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2024-2025/casillas/c01__c27.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2024-2025/casillas/c28__c62.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2024-2025/casillas/c63__c91.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2024-2025/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2024-2025/casillas/civa.repercutido.general__civa.resultado-regimen-general.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2026-y-siguientes/casillas/c01__c50.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2026-y-siguientes/casillas/c125__c521.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2026-y-siguientes/casillas/c51__c124.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2026-y-siguientes/casillas/c522__c735.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2026-y-siguientes/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2026-y-siguientes/casillas/civa.repercutido.general__civa.resultado-regimen-general.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/341/revisions/2005-2015/casillas/c01__c10.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/341/revisions/2005-2015/casillas/cdecl.ejercicio__cwire.observaciones.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/341/revisions/2016-y-siguientes/casillas/c01__c10.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/341/revisions/2016-y-siguientes/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/casillas/ccontraparte.representante-legal-nif__ccontraparte.nif-operador-comunitario.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/casillas/cdecl.ejercicio__ccontraparte.pais-codigo.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/casillas/cdecl.numero-justificante__cdecl.tipo-soporte.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/casillas/cinmueble.arrendatario-nif__cinmueble.direccion.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/casillas/ccontraparte.representante-legal-nif__ccontraparte.numero-convocatoria-bdns.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/casillas/cdecl.ejercicio__ccontraparte.pais-codigo.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/casillas/cdecl.numero-justificante__cdecl.tipo-soporte.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/casillas/cinmueble.arrendatario-nif__cinmueble.direccion.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/casillas/c01__c05.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/casillas/civa.reconciliacion.devengada-322__civa.reconciliacion.resultado-322.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2026-desde-02/casillas/c01__c05.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2026-desde-02/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2026-desde-02/casillas/civa.reconciliacion.devengada-322__civa.reconciliacion.resultado-322.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.aic.bienes.tipo-0.base__civa.anual.aic.servicios.tipo-21.cuota.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.aic.bienes.zero.base__civa.anual.aic.servicios.general.base.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.autorepercutido.interior.base__civa.anual.autorepercutido.interior.cuota.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.deducible.aic-corrientes.tipo-21.cuota__civa.anual.deducible.rectificacion-intragrupo.cuota.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.deducible.interiores-corrientes.tipo-4.base__civa.anual.deducible.intragrupo-inversion.tipo-5.cuota.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.deducible.intragrupo-inversion.tipo-10.base__civa.anual.deducible.aic-corrientes.tipo-21.base.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.especificas.adquisiciones-interiores-exentas__civa.anual.especificas.criterio-caja-adquisiciones.cuota.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.iva-importacion-diferimiento__civa.anual.territorio.resultado-anual-atribuible-comun.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.regimen-simplificado.cuota-resultante-no-agricola__civa.anual.regimen-simplificado.resultado.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.regularizacion-cuotas-art-80-cinco-5__civa.anual.volumen.total.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.repercutido.general.base__civa.anual.soportado.interiores.base.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.repercutido.general__civa.anual.resultado-regimen-general.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.repercutido.intragrupo.tipo-0.base__civa.anual.modificacion.recargo-concurso.cuota.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.repercutido.recargo.tipo-5-2.cuota__civa.anual.repercutido.recargo.tipo-0-5.cuota.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.repercutido.tipo-21.base__civa.anual.repercutido.tipo-0.cuota.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.sector-diferenciado-1.interiores-corrientes.base__civa.anual.sector-diferenciado-3.suma-deducciones.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.volumen.entregas-intracomunitarias__civa.anual.volumen.exportaciones-exentas.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/casillas/civa.anual.repercutido.recargo.tipo-0-62.base.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/casillas/civa.anual.repercutido.recargo.tipo-0.base.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/casillas/civa.anual.repercutido.recargo.tipo-0.cuota.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/casillas/civa.anual.repercutido.recargo.tipo-5-2.cuota__civa.anual.repercutido.recargo.tipo-0-5.cuota.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2024/casillas/civa.anual.aic.bienes.tipo-0.base__civa.anual.aic.servicios.tipo-21.cuota.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2024/casillas/civa.anual.deducible.aic-inversion.tipo-2.base__civa.anual.deducible.aic-servicios.tipo-7-5.cuota.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2024/casillas/civa.anual.repercutido.intragrupo.tipo-2.base__civa.anual.deducible.aic-corrientes.tipo-7-5.cuota.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2024/casillas/civa.anual.repercutido.recargo.tipo-0-26.base.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2024/casillas/civa.anual.repercutido.recargo.tipo-1.base.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2024/casillas/civa.anual.repercutido.recargo.tipo-5-2.cuota__civa.anual.repercutido.recargo.tipo-0-26.cuota.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2024/casillas/civa.anual.repercutido.tipo-21.base__civa.anual.repercutido.tipo-0.cuota.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2021/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-1t/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/casillas/c490-01-indicador-pagina-complementaria-12__creg-cuota-positiva-53.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/casillas/creg-ajuste-total-estado-331__creg-total-cuota-estado-364.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/casillas/creg-base-negativa-113__cterr-comun-per-172.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/casillas/creg-cuota-positiva-74__creg-base-positiva-175.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/casillas/cterr-comun-per-193__cterr-guipuzcoa-per-271.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/casillas/cterr-guipuzcoa-con-reg-209__creg-ajuste-total-estado-310.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/casillas/c490-01-indicador-pagina-complementaria-12__creg-tipo-52.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/casillas/creg-cuota-negativa-264__creg-base-declarada-300.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/casillas/creg-tipo-73__cterr-comun-per-67.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/casillas/cterr-guipuzcoa-per-145__creg-cuota-negativa-243.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/casillas/cterr-vizcaya-per-336__creg-total-cuota-estado-364.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/576/revisions/2007/casillas/cdecl.ejercicio.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/576/revisions/2008-y-siguientes/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/604/revisions/2021-2023/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/604/revisions/2024-y-siguientes/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/604/revisions/2024-y-siguientes/casillas/cdecl.idioma__cterr.estado.importe-operaciones-exentas.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2021/casillas/cdeclaracion-01__cdeclaracion-48.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2021/casillas/cdeclaracion-49__cidentificacion.sexo.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2022/casillas/cdeclaracion-01__cdeclaracion-48.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2022/casillas/cdeclaracion-49__cidentificacion.sexo.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2023/casillas/cdeclaracion-01__cdeclaracion-48.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2023/casillas/cdeclaracion-49__cidentificacion.sexo.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2024/casillas/cdeclaracion-01__cdeclaracion-48.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2024/casillas/cdeclaracion-49__cidentificacion.sexo.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2025/casillas/cdeclaracion-01__cdeclaracion-48.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2025/casillas/cdeclaracion-49__cidentificacion.sexo.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/721/revisions/2023/casillas/cejercicio__cmoneda.saldo-inicio.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/721/revisions/2024/casillas/cejercicio__cmoneda.saldo-inicio.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/763/revisions/2012-2t-3t/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/763/revisions/2013-2014/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/763/revisions/2015-2017/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/763/revisions/2018-1t-3t/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/763/revisions/2018-4t/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/763/revisions/2019-y-siguientes/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `verify:` `uv run --no-sync aeat app registry verify` -> `pass`
+
+## Notes
+
+- Measured at HEAD `1775d81a00cc928f2bde5ea7554301f891ff8c23`; the first apply ran at `9dc3acaed7` and was withdrawn by copy from HEAD and re-applied after the partial-stamp rule was added; the grounded chains were written after the load gate excused fully grounded rows from `semantic_role`.
+- Code review: the executing agent could not launch the reviewer persona; the orchestrating session verified the schema tests, the seeder's zero-contradiction check, insert-only casilla edits, no evidence on seeded rows, and the excluded modelos untouched. A private cross-package import in the seeder was relocated to a public module before commit.
+- Excluded by instruction: modelos 100, 200, 309, 369.
+- Written: 830 seeded, 482 grounded (151: 476, 123: 6), 531 new_on_form, 245 predecessor_edition_silent, 22 not_on_form; seeder contradiction and registry-gate regression checks both 0.
+- Refused and recorded in `dev/registry/analysis/casilla_lineage_ledger.toml`: 1,782 successor rows. All 8 proven 490 continuations stay refused: 2 predecessor boxes print on two paginas of the design (no single locus), 5 wire fields have no design locus, 1 would leave `reg-total-cuota-101` partly stamped.
+- Deviations from written adjudications, all conservative: 390 writes 245 `predecessor_edition_silent` of the ruled 248 (boxes 84, 658 and 659 print on several lines of the 2022 design); 123 writes 6 of 7 grounded chains (the 2019 design prints no own box for campo 06); 151 writes 121 of 123 new (two unsegmented rows carry no design locus); 490 writes 232 of 233 new (`490-03-indicador-pagina-complementaria-12` has no design locus).
+- `test_continuidad_completeness_ratchet` now diverges on modelo 200 only (+13, another session's tree); 309's baseline was lowered to 12, the result of this campaign's step S07; `test_no_registry_source_or_declaration_cites_a_vault_record` and four `test_corpus`/`test_registry_schema_part1`/`test_terminal_preconditions` failures reproduce at pristine HEAD.
+- The totality gate (S08) is left to decide how the unset origin is read; it ruled no split is needed because an id resolved against the adjacent predecessor carries lineage whatever its origin.

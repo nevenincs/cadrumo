@@ -98,17 +98,17 @@ casilla_ids = [
     "0670",
 ]
 formulas = [
-    "renta-2025-cuota-liquida-incrementada-total",
-    "renta-2025-cuota-resultante-autoliquidacion",
-    "renta-2025-retenciones-arrendamientos-urbanos",
-    "renta-2025-pagos-fraccionados-ingresados",
-    "renta-2025-total-pagos-a-cuenta",
-    "renta-2025-cuota-diferencial",
-    "renta-2025-resultado-declaracion",
+    "renta-cuota-liquida-incrementada-total",
+    "renta-cuota-resultante-autoliquidacion",
+    "renta-retenciones-arrendamientos-urbanos",
+    "renta-pagos-fraccionados-ingresados",
+    "renta-total-pagos-a-cuenta",
+    "renta-cuota-diferencial",
+    "renta-resultado-declaracion",
     # Personal-family deduction inputs (Ley 35/2006 art. 82 marriage axis).
-    "renta-2025-matrimonio-vigente-todo-anio",
-    "renta-2025-matrimonio-mes-inicio",
-    "renta-2025-matrimonio-mes-fin",
+    "renta-matrimonio-vigente-todo-anio",
+    "renta-matrimonio-mes-inicio",
+    "renta-matrimonio-mes-fin",
 ]
 relations = [
     "renta-2025-rel-130-pagos-fraccionados",

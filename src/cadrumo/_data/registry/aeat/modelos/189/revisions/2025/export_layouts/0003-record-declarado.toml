@@ -249,7 +249,8 @@ legal_refs = ["orden-eha-3481-2008:art-1"]
 source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
 
 # Posiciones 108-123. VALORACION. 108 SIGNO ('N' si es menor que cero, en otro
-# caso espacio), 109-121 parte entera, 122-123 parte decimal.
+# caso espacio), 109-121 parte entera, 122-123 parte decimal. The sign byte is
+# reserved, so the magnitude owns 109-123.
 [[revisions."2025".export_layouts.records.fields]]
 id = "modelo-189-t2-valoracion"
 offset = 108
@@ -261,6 +262,7 @@ required = false
 padding = "left_zero"
 justification = "right"
 signed = true
+sign_position = "blank_or_n"
 legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1180-2023:art-primero"]
 source_refs = [
     "boe-modelo-189-base-order",

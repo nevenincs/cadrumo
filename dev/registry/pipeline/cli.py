@@ -11,7 +11,7 @@ from __future__ import annotations
 import re
 import shutil
 import tempfile
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Annotated, Literal
@@ -19,12 +19,18 @@ from typing import Annotated, Literal
 import typer
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.core.i18n.render import locale_map, override_locales_root
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.edition_materialisation import MaterialisedEdition, materialise_edition
 from cadrumo.domain.calculations.registry.errors import RegistryError
+from cadrumo.domain.calculations.registry.modelo_localization import (
+    ModeloLocalizationFieldKind,
+    casilla_occurrence_locale_key,
+)
+from dev.locales.manager import LocaleManager, discover_locale_codes
 
-from ._casilla_export_refs import export_refs_by_casilla, write_generated_casilla_export_refs
-from ._export_tree import RenderedExportTree, render_complete_export_tree
+from ._export_tree import RenderedExportTree, _render_toml_bytes, render_complete_export_tree
 from ._tree_check import CheckedGeneratedExportTree, GeneratedExportTreeCheckContext, check_generated_export_tree
 from ._tree_publication import (
     GeneratedExportTreePublicationContext,
@@ -40,6 +46,7 @@ from .candidate_staging import (
     stage_generated_export_candidate,
 )
 from .export_fragment_provenance import SHA256_PATTERN, ExportFragmentTarget
+from .generated_tree_dispositions import record_drift_dispositions
 from .render_check import (
     GeneratedExportBootstrapTransport,
     RenderComparison,
@@ -203,16 +210,107 @@ def _stage_published_modelo(root: Path, *, modelo: str, revision: str) -> Path |
     revisions = tuple((source_modelo_root / "revisions").iterdir())
     if len(revisions) == 1:
         return None
-    staged_root = root / "published-modelo" / modelo
+    staged = _stage_isolated_edition(
+        source_modelo_root,
+        root / "published-modelo" / modelo,
+        revision=revision,
+        source_locales_root=bundled_path().parent / "locales",
+        staged_locales_root=root / "published-locales",
+    )
+    return staged.modelo_root
+
+
+@dataclass(frozen=True, slots=True)
+class _StagedEdition:
+    """An isolated edition and the catalogue its casilla labels resolve from."""
+
+    modelo_root: Path
+    locales_root: Path
+
+
+def _stage_isolated_edition(
+    source_modelo_root: Path,
+    staged_root: Path,
+    *,
+    revision: str,
+    source_locales_root: Path,
+    staged_locales_root: Path,
+) -> _StagedEdition:
+    """Stage ``revision`` as the only edition of a copy of its modelo, complete by construction.
+
+    Pruning the sibling editions is what isolates the target, and it is exactly
+    what an edition inheriting from a predecessor cannot survive: its chain
+    would be deleted with them. Such an edition is therefore resolved first and
+    written back as the full-copy edition it stands for, naming no predecessor,
+    so the staged tree never presents the rows it states as the whole edition.
+    An edition whose named predecessor is absent from the source is refused by
+    that resolution rather than staged thin. An edition stating every row is
+    copied unchanged and keeps resolving its labels from the source catalogue.
+
+    The labels travel with the rows. Casilla labels are catalogued per edition,
+    so an inherited row's text lives under the key of the edition that last
+    stated it, and a full copy names no predecessor through which to reach it.
+    The staged catalogue is a copy of the source catalogue in which each
+    inherited row's own occurrence key carries its origin's text, in each
+    locale where the row has no text of its own, so every staged label resolves
+    to exactly what the live edition resolves.
+    """
+    edition = materialise_edition(source_modelo_root, revision)
     shutil.copytree(source_modelo_root, staged_root)
-    for sibling in (staged_root / "revisions").iterdir():
-        if sibling.name != revision:
-            shutil.rmtree(sibling)
-    return staged_root
+    revisions_root = staged_root / "revisions"
+    for entry in revisions_root.iterdir():
+        if entry.name != revision:
+            shutil.rmtree(entry)
+    if edition.inherits_from is None:
+        return _StagedEdition(modelo_root=staged_root, locales_root=source_locales_root)
+    shutil.rmtree(revisions_root / revision)
+    (revisions_root / f"{revision}.toml").write_bytes(
+        _render_toml_bytes(f"{revision}.toml", {"revisions": {revision: edition.table}}),
+    )
+    shutil.copytree(source_locales_root, staged_locales_root)
+    manager = LocaleManager(src_dir=staged_locales_root, locales_dir=staged_locales_root)
+    for locale in sorted(discover_locale_codes(staged_locales_root)):
+        carried = _inherited_labels(edition, source_locales_root, locale=locale)
+        if carried:
+            manager.set_locale_values(locale, carried)
+    return _StagedEdition(modelo_root=staged_root, locales_root=staged_locales_root)
+
+
+def _inherited_labels(edition: MaterialisedEdition, source_locales_root: Path, *, locale: str) -> dict[str, str | None]:
+    """Return the origin text each inherited row needs under its own occurrence key in ``locale``."""
+    rows = edition.table.get("casillas")
+    origins = edition.label_origins
+    if origins is None or not isinstance(rows, tuple) or len(rows) != len(origins):
+        raise ValueError(
+            f"edition {edition.revision_id!r} of modelo {edition.modelo_id!r} carries no label origin per casilla",
+        )
+    with override_locales_root(source_locales_root):
+        catalogue = locale_map(locale)
+    carried: dict[str, str | None] = {}
+    for row, origin in zip(rows, origins, strict=True):
+        casilla_id = row.get("id") if isinstance(row, Mapping) else None
+        if origin is None or not isinstance(casilla_id, str):
+            continue
+        own_key = casilla_occurrence_locale_key(
+            edition.modelo_id, edition.revision_id, casilla_id, ModeloLocalizationFieldKind.LABEL
+        )
+        origin_key = casilla_occurrence_locale_key(
+            edition.modelo_id, origin, casilla_id, ModeloLocalizationFieldKind.LABEL
+        )
+        origin_text = _authored_text(catalogue, origin_key)
+        if origin_text is not None and _authored_text(catalogue, own_key) is None:
+            carried[own_key] = origin_text
+    return carried
+
+
+def _authored_text(catalogue: Mapping[str, str | None], key: str) -> str | None:
+    """Apply the catalogue's miss rule: an absent key, a null and a key echo all carry no text."""
+    value = catalogue.get(key)
+    return None if value is None or value == key else value
 
 
 def _render_candidate(prepared: _PreparedInvocation) -> RenderedExportTree:
-    """Render one candidate and materialize its generator-owned casilla back-references."""
+    """Render one candidate export tree into the staged revision."""
     candidate_export_root = (
         prepared.candidate_root
         / "modelos"
@@ -230,10 +328,6 @@ def _render_candidate(prepared: _PreparedInvocation) -> RenderedExportTree:
         render_profile=prepared.inputs.render_profile,
         render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
         source_defects=source_defects_for(prepared.invocation.source_ref),
-    )
-    write_generated_casilla_export_refs(
-        candidate_export_root.parent,
-        export_refs_by_casilla=export_refs_by_casilla(rendered),
     )
     return rendered
 
@@ -290,10 +384,6 @@ def _publish(
     target_state: GeneratedExportTreeTargetStateReceipt,
 ) -> None:
     """Publish the exact prepared candidate the read-only check just validated."""
-    write_generated_casilla_export_refs(
-        prepared.candidate_root / "modelos" / prepared.invocation.modelo / "revisions" / prepared.invocation.revision,
-        export_refs_by_casilla=export_refs_by_casilla(rendered),
-    )
     publish_validated_generated_export_tree(
         context=GeneratedExportTreePublicationContext(
             validation=_bootstrap_validation(prepared.validation),

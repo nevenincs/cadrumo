@@ -11,241 +11,261 @@
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "01"
+continuidad_id = "m322-liquidacion-iva-devengado-operaciones-intragrupo-base-imponible"
+continuidad_origin = "seeded"
 number = "01"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_base_imponible"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c01"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "02"
+continuidad_id = "m322-liquidacion-iva-devengado-operaciones-intragrupo-tipo"
+continuidad_origin = "seeded"
 number = "02"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 data_type = "ratio"
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_tipo"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c02"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "03"
+continuidad_id = "m322-liquidacion-iva-devengado-operaciones-intragrupo-cuota"
+continuidad_origin = "seeded"
 number = "03"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_cuota"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c03"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "04"
+continuidad_id = "04"
+continuidad_origin = "seeded"
 number = "04"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_base_imponible"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c04"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "05"
+continuidad_id = "05"
+continuidad_origin = "seeded"
 number = "05"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 data_type = "ratio"
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_tipo"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c05"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "06"
+continuidad_id = "06"
+continuidad_origin = "seeded"
 number = "06"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_cuota"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c06"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "07"
+continuidad_id = "07"
+continuidad_origin = "seeded"
 number = "07"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_base_imponible"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c07"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "08"
+continuidad_id = "08"
+continuidad_origin = "seeded"
 number = "08"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 data_type = "ratio"
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_tipo"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c08"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "09"
+continuidad_id = "09"
+continuidad_origin = "seeded"
 number = "09"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_cuota"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c09"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "10"
+continuidad_id = "m322-liquidacion-iva-devengado-modificacion-bases-y-cuotas-de-operaciones-intragrupo"
+continuidad_origin = "seeded"
 number = "10"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_modificacion_bases_y_cuotas_de_operaciones_intragrupo"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c10"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "11"
+continuidad_id = "11"
+continuidad_origin = "seeded"
 number = "11"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_modificacion_bases_y_cuotas_de_operaciones_intragrupo"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c11"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "12"
+continuidad_id = "m322-liquidacion-iva-devengado-resto-de-operaciones-en-regimen-general"
+continuidad_origin = "seeded"
 number = "12"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c12"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "13"
+continuidad_id = "m322-liquidacion-iva-devengado-resto-de-operaciones-en-regimen-general-tipo"
+continuidad_origin = "seeded"
 number = "13"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "ratio"
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_tipo"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c13"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "14"
+continuidad_id = "m322-liquidacion-iva-devengado-resto-de-operaciones-en-regimen-general-cuota"
+continuidad_origin = "seeded"
 number = "14"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_cuota"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c14"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "15"
+continuidad_id = "15"
+continuidad_origin = "seeded"
 number = "15"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c15"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "16"
+continuidad_id = "16"
+continuidad_origin = "seeded"
 number = "16"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "ratio"
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_tipo"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c16"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "17"
+continuidad_id = "17"
+continuidad_origin = "seeded"
 number = "17"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_cuota"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c17"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "18"
+continuidad_id = "18"
+continuidad_origin = "seeded"
 number = "18"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c18"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "19"
+continuidad_id = "19"
+continuidad_origin = "seeded"
 number = "19"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "ratio"
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_tipo"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c19"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "20"
+continuidad_id = "20"
+continuidad_origin = "seeded"
 number = "20"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_cuota"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c20"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -256,7 +276,6 @@ section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c21"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -267,7 +286,6 @@ section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c22"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -278,7 +296,6 @@ section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c23"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -289,7 +306,6 @@ section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c24"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -300,7 +316,6 @@ section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c25"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -311,115 +326,123 @@ section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c26"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "27"
+continuidad_id = "m322-liquidacion-iva-devengado-recargo-de-equivalencia-base-imponible"
+continuidad_origin = "seeded"
 number = "27"
 section = ["iva", "regimen_general", "recargo"]
 data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_base_imponible"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c27"]
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "28"
+continuidad_id = "m322-liquidacion-iva-devengado-recargo-de-equivalencia-tipo"
+continuidad_origin = "seeded"
 number = "28"
 section = ["iva", "regimen_general", "recargo"]
 data_type = "ratio"
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_tipo"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c28"]
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "29"
+continuidad_id = "m322-liquidacion-iva-devengado-recargo-de-equivalencia-cuota"
+continuidad_origin = "seeded"
 number = "29"
 section = ["iva", "regimen_general", "recargo"]
 data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_cuota"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c29"]
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "30"
+continuidad_id = "30"
+continuidad_origin = "seeded"
 number = "30"
 section = ["iva", "regimen_general", "recargo"]
 data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_base_imponible"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c30"]
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "31"
+continuidad_id = "31"
+continuidad_origin = "seeded"
 number = "31"
 section = ["iva", "regimen_general", "recargo"]
 data_type = "ratio"
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_tipo"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c31"]
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "32"
+continuidad_id = "32"
+continuidad_origin = "seeded"
 number = "32"
 section = ["iva", "regimen_general", "recargo"]
 data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_cuota"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c32"]
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "33"
+continuidad_id = "33"
+continuidad_origin = "seeded"
 number = "33"
 section = ["iva", "regimen_general", "recargo"]
 data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_base_imponible"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c33"]
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "34"
+continuidad_id = "34"
+continuidad_origin = "seeded"
 number = "34"
 section = ["iva", "regimen_general", "recargo"]
 data_type = "ratio"
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_tipo"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c34"]
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "35"
+continuidad_id = "35"
+continuidad_origin = "seeded"
 number = "35"
 section = ["iva", "regimen_general", "recargo"]
 data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_cuota"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c35"]
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -430,7 +453,6 @@ section = ["iva", "regimen_general", "recargo"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c36"]
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -441,7 +463,6 @@ section = ["iva", "regimen_general", "recargo"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c37"]
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -452,7 +473,6 @@ section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c38"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -463,7 +483,6 @@ section = ["iva", "regimen_general", "intragrupo", "deducible"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c39"]
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -474,7 +493,6 @@ section = ["iva", "regimen_general", "intragrupo", "deducible"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c40"]
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -485,7 +503,6 @@ section = ["iva", "regimen_general", "intragrupo", "deducible"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c41"]
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -496,7 +513,6 @@ section = ["iva", "regimen_general", "intragrupo", "deducible"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c42"]
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -507,7 +523,6 @@ section = ["iva", "regimen_general", "intragrupo", "deducible"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c43"]
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -518,7 +533,6 @@ section = ["iva", "regimen_general", "intragrupo", "deducible"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c44"]
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -529,7 +543,6 @@ section = ["iva", "regimen_general", "deducible"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c45"]
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -540,7 +553,6 @@ section = ["iva", "regimen_general", "deducible"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c46"]
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -551,7 +563,6 @@ section = ["iva", "regimen_general", "deducible"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c47"]
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -562,7 +573,6 @@ section = ["iva", "regimen_general", "deducible"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c48"]
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -573,7 +583,6 @@ section = ["iva", "regimen_general", "deducible"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c49"]
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -584,6 +593,5 @@ section = ["iva", "regimen_general", "deducible"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c50"]
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]

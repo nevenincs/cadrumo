@@ -7,8 +7,7 @@ semantic_role = "is_correccion_libertad_amortizacion_otros_art12_permanente_aume
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-12"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200026b.f0121"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02622"
 number = "02622"
@@ -18,8 +17,7 @@ semantic_role = "is_correccion_libertad_amortizacion_otros_art12_temporaria_ejer
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-12"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200026b.f0122"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02623"
 number = "02623"
@@ -29,8 +27,7 @@ semantic_role = "is_correccion_libertad_amortizacion_otros_art12_temporaria_ante
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-12"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200026b.f0123"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02624"
 number = "02624"
@@ -40,8 +37,7 @@ semantic_role = "is_correccion_libertad_amortizacion_otros_art12_saldo_inicial"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-12"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200026b.f0120"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02625"
 number = "02625"
@@ -51,5 +47,4 @@ semantic_role = "is_correccion_libertad_amortizacion_otros_art12_saldo_final_net
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-12"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200026b.f0124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

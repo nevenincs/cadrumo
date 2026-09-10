@@ -65,6 +65,7 @@ from ..packaging.evidence import (
     load_distribution_evidence,
 )
 from ..packaging.python_cohort import load_python_cohort
+from ..source_tree import content_digest, repository_files
 
 _UTF_8: Final = UTF_8
 _VERSION_RE: Final = re.compile(r"^__version__\s*=\s*[\"']([^\"']+)[\"']", re.MULTILINE)
@@ -348,24 +349,9 @@ def check_latest_packaging_smoke_evidence(repo_root: Path) -> ReadinessCheck:
     )
 
 
-def _checked_out_commit(repo_root: Path) -> str:
-    """Return the exact Git commit whose release readiness is being evaluated."""
-    git = shutil.which("git")
-    if git is None:
-        raise ValueError("cannot resolve checked-out Git commit: git is not installed")
-    completed = subprocess.run(
-        [git, "rev-parse", "HEAD"],
-        cwd=repo_root,
-        capture_output=True,
-        text=True,
-        check=False,
-        timeout=_GH_TIMEOUT_SECONDS,
-    )
-    commit = completed.stdout.strip().lower()
-    if completed.returncode != 0 or re.fullmatch(r"[0-9a-f]{40}", commit) is None:
-        detail = completed.stderr.strip()[:200] or completed.stdout.strip()[:200]
-        raise ValueError(f"cannot resolve checked-out Git commit: {detail}")
-    return commit
+def _checked_out_source_digest(repo_root: Path) -> str:
+    """Return the content digest of the working tree whose readiness is being evaluated."""
+    return content_digest(repo_root, repository_files(repo_root))
 
 
 def _passing_identity(record: DistributionEvidence) -> tuple[object, ...]:
@@ -434,18 +420,19 @@ def check_distribution_evidence_set(
     evidence_root = evidence_directory or repo_root / "var" / "distribution-install-readiness"
     try:
         cohort = load_release_cohort(cohort_root)
-        checked_out_commit = _checked_out_commit(repo_root)
+        checked_out_source_digest = _checked_out_source_digest(repo_root)
     except (OSError, SystemExit, ValueError) as exc:
         return ReadinessCheck("distribution-evidence-complete", "blocking", False, str(exc))
 
     manifest = cohort.manifest
     expected_tag = f"v{manifest.version}"
-    if manifest.source.commit != checked_out_commit:
+    if manifest.source.source_digest != checked_out_source_digest:
         return ReadinessCheck(
             "distribution-evidence-complete",
             "blocking",
             False,
-            f"cohort commit {manifest.source.commit} does not match checked-out commit {checked_out_commit}",
+            f"cohort source digest {manifest.source.source_digest} does not match "
+            f"checked-out source digest {checked_out_source_digest}",
         )
     if manifest.source.tag != expected_tag:
         return ReadinessCheck(

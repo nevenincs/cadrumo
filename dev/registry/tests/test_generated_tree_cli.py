@@ -20,6 +20,7 @@ from ..pipeline._tree_publication import (
     GeneratedExportTreeTargetStateReceipt,
     _require_expected_target_state,
 )
+from ..pipeline._tree_validation import GeneratedExportTreeValidationContext
 from ..pipeline.candidate_staging import (
     retarget_bootstrap_construct_export_layout,
     stage_continuity_metadata,
@@ -34,10 +35,9 @@ from ..pipeline.cli import (
     _require_republication_eligibility,
     app,
 )
-from ..pipeline._tree_validation import GeneratedExportTreeValidationContext
 from ..pipeline.export_fragment_provenance import EXPORT_FRAGMENT_PROVENANCE_FILENAME, ExportFragmentTarget
+from ..pipeline.generated_tree_dispositions import record_drift_dispositions
 from ..pipeline.render_check import (
-    record_drift_dispositions,
     GeneratedExportBootstrapTransport,
     RenderComparison,
     RevisionRenderInputs,
@@ -285,16 +285,37 @@ def test_every_bootstrap_target_still_names_a_tree_awaiting_publication() -> Non
     )
 
 
-def test_m390_continuity_witness_closes_the_full_predecessor_chain(tmp_path: Path) -> None:
-    """A 2025 target carries 2024, 2023, and 2022 continuity facts."""
-    metadata_root = stage_continuity_metadata(
-        bundled_path("registry", "aeat", "modelos", "390"),
-        tmp_path,
-        revision="2025",
-    )
+def test_m390_continuity_witness_carries_every_sibling_revision(tmp_path: Path) -> None:
+    """A 2025 target's witness holds every other revision, predecessor chain included.
+
+    The strict-continuity chain back from 2025 is 2024, 2023 and 2022. The
+    witness carries those and 2021 besides, because checks that reason across a
+    modelo's revisions -- the semantic-role singleton check among them -- need
+    every sibling, not only the ones continuity names. The target itself stays
+    out, so the witness cannot validate a stale copy of the candidate.
+    """
+    modelo_root = bundled_path("registry", "aeat", "modelos", "390")
+    metadata_root = stage_continuity_metadata(modelo_root, tmp_path, revision="2025")
 
     assert metadata_root is not None
-    assert {path.name for path in (metadata_root / "revisions").iterdir()} == {"2022", "2023", "2024"}
+    staged = {path.name for path in (metadata_root / "revisions").iterdir()}
+    siblings = {path.name for path in (modelo_root / "revisions").iterdir() if path.name != "2025"}
+    assert {"2022", "2023", "2024"} <= staged
+    assert staged == siblings
+    assert "2025" not in staged
+
+
+def test_a_single_revision_modelo_stages_no_witness(tmp_path: Path) -> None:
+    """With no sibling to supply, there is nothing to stage, and a singleton is real."""
+    registry_root = bundled_path("registry", "aeat", "modelos")
+    single = next(
+        root
+        for root in sorted(registry_root.iterdir())
+        if (root / "revisions").is_dir() and len([child for child in (root / "revisions").iterdir()]) == 1
+    )
+    (only_revision,) = [child.name for child in (single / "revisions").iterdir()]
+
+    assert stage_continuity_metadata(single, tmp_path, revision=only_revision) is None
 
 
 def _publication_context_for_target(
@@ -391,40 +412,13 @@ def _prepared_absent_target(candidate_base: Path, target_root: Path) -> _Prepare
     )
 
 
-def _remove_candidate_export_refs(prepared: _PreparedInvocation) -> None:
-    """Inject the missing-derived-ref defect bootstrap must repair before validation."""
-    for path in (
-        prepared.candidate_root / "modelos" / _ISOLATED_TREE.modelo / "revisions" / _ISOLATED_TREE.revision / "casillas"
-    ).glob("*.toml"):
-        path.write_text(
-            "".join(
-                line
-                for line in path.read_text(encoding="utf-8").splitlines(keepends=True)
-                if not line.startswith("export_refs = ")
-            ),
-            encoding="utf-8",
-        )
-
-
 def test_absent_tree_is_validated_then_published_through_the_canonical_authorities(tmp_path: Path) -> None:
     """An owed tree is bootstrap-publishable only after its fresh candidate validates."""
     first = _prepared_absent_target(tmp_path / "check", tmp_path / "target" / "registry" / "aeat")
     shutil.copytree(first.candidate_root, first.target_root)
-    _remove_candidate_export_refs(first)
 
     result, _rendered, _target_state = _check(first)
     assert result == "publishable_absence"
-    assert any(
-        "export_refs = [" in path.read_text(encoding="utf-8")
-        for path in (
-            first.candidate_root
-            / "modelos"
-            / _ISOLATED_TREE.modelo
-            / "revisions"
-            / _ISOLATED_TREE.revision
-            / "casillas"
-        ).glob("*.toml")
-    )
     assert first.candidate_root.joinpath(
         "modelos",
         _ISOLATED_TREE.modelo,
@@ -531,7 +525,12 @@ def test_republish_admits_record_drift_a_disposition_explains() -> None:
     ledger's own gate fails once its cause is gone.
     """
     digest = "a" * 64
-    explained = next(iter(record_drift_dispositions()))
+    # Explicitly a row whose remedy is `republish`. Taking whichever row sorted
+    # first silently selected modelo 347, whose remedy is `repair_inputs` -- so
+    # the test asserted that republication is admitted using the one subject for
+    # which it must be refused, and only stopped passing when the remedy field
+    # made the two directions distinguishable.
+    explained = next(item for item in record_drift_dispositions() if item.remedy == "republish")
     state = GeneratedExportTreeTargetStateReceipt(manifest_sha256=digest, output_files=())
 
     _require_republication_eligibility(

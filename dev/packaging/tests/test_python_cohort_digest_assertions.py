@@ -23,7 +23,7 @@ from ..python_cohort import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _VERSION = "0.99.0.dev1"
-_SAMPLE_COMMIT = "a" * 40
+_SAMPLE_DIGEST = "a" * 64
 
 
 # ---------------------------------------------------------------------------
@@ -58,7 +58,7 @@ def _make_artifacts(tmp_path: Path) -> tuple[PythonCohort, Path]:
     cohort = PythonCohort(
         directory=tmp_path,
         manifest=tmp_path / "python-cohort.json",
-        source_commit=_SAMPLE_COMMIT,
+        source_digest=_SAMPLE_DIGEST,
         version=_VERSION,
         root_wheel=paths["cadrumo"],
         root_sdist=paths["cadrumo-sdist"],

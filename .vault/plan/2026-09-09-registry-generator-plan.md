@@ -11,7 +11,7 @@ related:
   - '[[2026-09-09-registry-generator-signal-coverage-research]]'
 modified: '2026-09-10'
 body_schema: body-v2
-body_hash: 'sha256:6e3b5d3b417b5930a8ae2ab61292f90acae2ac68b129e2b9665647d3e39795b1'
+body_hash: 'sha256:9f81601caf7e366b8582c4246fc6b6f4884abc808c776dbdaed5cf72bb08ee48'
 ---
 
 # `registry-generator` plan
@@ -185,7 +185,7 @@ Decodes official worked examples through the shipped codec and compares field by
 
 - [x] `W04.P13.S47` - Extend the existing external-oracle corpus enum rather than creating a second oracle surface; `src/cadrumo/core/external_oracle_corpus.py`.
 - [x] `W04.P13.S48` - Extend the existing grounding fold and conformance-vector mechanism to carry the new comparison; `src/cadrumo/domain/calculations/registry/external_grounding.py`.
-- [ ] `W04.P13.S70` - BLOCKED on official evidence, and the note-scope axis it sat beside is now closed: the adrift pointer population is 2, both diagnosed benign, after correcting a screen that over-reported by ninety times; `src/cadrumo/_data/corpus/manual_oracles/`.
+- [x] `W04.P13.S70` - Ground the negative-amount wire form. Closed as satisfied by the normative text, not by a worked example: AEAT's 'Disenos de registro - breve manual de uso' (v.2, 12/12/2022) states that 'N: numerico con signo ... Los datos numericos negativos llevaran una N en la primera posicion del campo' and that negative numerics are 'precedidos del caracter N', zero-filled; the designs that subdivide a SIGNO position state their own rule, carried by sign_position. The codec implements exactly that text, and no check or test gates on a worked negative example; `src/cadrumo/domain/calculations/registry/fixed_width_codec.py`.; `src/cadrumo/_data/corpus/manual_oracles/`.
 - [x] `W04.P13.S49` - Satisfied by the shipped worked-example oracles: the corporate-tax and instalment tests compare computed values field by field against AEAT's printed liquidacion tables, with page locators into the bundled official manuals; `src/cadrumo/application/modelo/tests/`.
 - [x] `W04.P13.S50` - Confirm no expected value in the oracle originates in the generator; `src/cadrumo/domain/calculations/registry/tests/`.
 

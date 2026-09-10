@@ -1,5 +1,5 @@
 [[revisions."2023".formulas]]
-id = "renta-2023-bases-imputadas-suma"
+id = "renta-bases-imputadas-suma"
 target_casilla_id = "0265"
 expression = { op = "sum", args = [
     { casilla_id = "0259" },

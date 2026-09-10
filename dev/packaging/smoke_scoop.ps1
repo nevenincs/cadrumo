@@ -363,7 +363,7 @@ function Invoke-InstalledOracle {
             "--cli", $AeatCommand,
             "--storage-root", $taxState,
             "--work-dir", $taxWork,
-            "--cohort-source-commit", $cohort.source_commit,
+            "--cohort-source-digest", $cohort.source_digest,
             "--cohort-manifest-sha256", $cohortManifestSha256,
             "--cohort-root-wheel-sha256", $cohort.sha256.cadrumo,
             "--output", $taxEvidence

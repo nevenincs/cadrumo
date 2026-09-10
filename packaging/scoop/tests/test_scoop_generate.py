@@ -16,9 +16,9 @@ import pytest
 from dev.packaging.hashing import sha256_path
 from dev.packaging.lane_verification_core import (
     build_companion_wheels,
+    build_root_snapshot,
     build_sdist,
     build_wheel,
-    commit_defined_build_root,
     run_checked,
 )
 from dev.packaging.python_cohort import attest_command_specs
@@ -112,13 +112,13 @@ def built_cohort(tmp_path_factory: pytest.TempPathFactory) -> BuiltCohort:
     assert uv is not None
     root_dir = tmp_path_factory.mktemp("scoop-cohort")
     build_dir = root_dir / "build"
-    # Build from a commit-defined root, not the working tree: in the shared
-    # worktree a peer's uncommitted edit would otherwise ride into the wheels,
-    # and the manifest this test asserts on would describe bytes matching no
-    # commit. On a clean checkout this IS the tree, so CI pays nothing.
+    # Build from a snapshot of the enumerated tree, not the live working tree:
+    # a peer's in-flight edit mid-build would otherwise ride into the sdist
+    # partway through, and the formula this test asserts on would describe
+    # bytes that no single state of the tree ever held.
     # ``build_wheel`` still takes the real repository as well, because its
     # tracked-data queries need Git and the extract has no ``.git``.
-    build_root = commit_defined_build_root(_REPO_ROOT, build_dir)
+    build_root = build_root_snapshot(_REPO_ROOT, build_dir)
     root = build_wheel(_REPO_ROOT, build_dir, uv, build_root=build_root)
     manuals, official = build_companion_wheels(build_dir, uv, build_root=build_root)
     cohort_dir = root_dir / "cohort"
@@ -159,14 +159,14 @@ def built_cohort(tmp_path_factory: pytest.TempPathFactory) -> BuiltCohort:
             {
                 "artifacts": artifacts,
                 "sha256": digests,
-                "source_commit": "a" * 40,
+                "source_digest": "a" * 64,
                 "version": version,
                 "command_spec_attestation": attest_command_specs(
                     site_root=build_root / "src",
                     root_wheel=copied_root,
                     root_sdist=copied_sdists[0],
                     source_archive=source_archive,
-                    source_commit="a" * 40,
+                    source_digest="a" * 64,
                     work_root=root_dir,
                 ),
             },

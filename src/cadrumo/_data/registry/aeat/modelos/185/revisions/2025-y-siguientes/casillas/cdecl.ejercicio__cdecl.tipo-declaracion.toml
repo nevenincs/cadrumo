@@ -11,6 +11,8 @@
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.ejercicio"
+continuidad_id = "filing-year"
+continuidad_origin = "seeded"
 number = "ejercicio"
 section = ["declarante"]
 data_type = "year"
@@ -19,10 +21,11 @@ required = true
 input_kind = "informational"
 legal_refs = ["orden-hac-1197-2025:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure"]
-export_refs = ["m185-2026.declarante.f003"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.tipo-declaracion"
+continuidad_id = "tipo-declaracion"
+continuidad_origin = "seeded"
 number = "tipo-declaracion"
 section = ["declarante"]
 data_type = "text"
@@ -31,4 +34,3 @@ required = true
 input_kind = "informational"
 legal_refs = ["orden-hac-1197-2025:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure"]
-export_refs = ["m185-2026.declarante.f010"]

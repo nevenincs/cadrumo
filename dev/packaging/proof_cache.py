@@ -2,27 +2,29 @@
 
 Operator directive (2026-07-20): installability and tests are ascertained
 ONCE — repeated work is done once and reused. The wheel cohort is a pure
-function of the committed wheel-relevant sources, so an installability proof
-is addressed by ``(proof kind, source fingerprint, environment fingerprint)``:
+function of the wheel-relevant sources, so an installability proof is
+addressed by ``(proof kind, source fingerprint, environment fingerprint)``:
 
-- the **source fingerprint** hashes the committed git object listing of the
+- the **source fingerprint** is the content digest of every file below the
   wheel-relevant paths (``src``, ``packaging``, ``pyproject.toml``,
-  ``uv.lock``). Uncommitted drift in that scope yields NO fingerprint — a
-  dirty tree has no stable identity, so it is never cached against and never
-  served from cache;
+  ``uv.lock``), after the repository's own line-ending rules apply. It is
+  addressed by exact bytes rather than by a version-control revision, so any
+  edit — committed or not — earns its own cache key instead of being
+  collapsed into one "dirty" bucket;
 - the **environment fingerprint** covers what changes install behavior on a
   runner: OS, architecture, OS release, the exact CPython version, and the
   exact uv version. A toolchain bump invalidates every cached proof by
   construction — that is the whole invalidation policy; there is no TTL.
 
 A carried proof is honest bookkeeping, not silent re-stamping: the stored
-record carries its origin (commit, CI run id and attempt, timestamp), and the
-campaign driver prints that provenance when it reuses one. Records live in a
-runner-local store (``CADRUMO_PROOF_CACHE_DIR`` or ``~/.cadrumo/proof-cache``)
-that never leaves the machine and is not evidence: the full campaign's
-promotable ``DistributionEvidence`` rows are always minted fresh from real
-runs — this cache only lets the per-push quick profile answer "this exact
-byte-identity was already proven on this exact toolchain" in seconds.
+record carries its origin (source digest, CI run id and attempt, timestamp),
+and the campaign driver prints that provenance when it reuses one. Records
+live in a runner-local store (``CADRUMO_PROOF_CACHE_DIR`` or
+``~/.cadrumo/proof-cache``) that never leaves the machine and is not
+evidence: the full campaign's promotable ``DistributionEvidence`` rows are
+always minted fresh from real runs — this cache only lets the per-push quick
+profile answer "this exact byte-identity was already proven on this exact
+toolchain" in seconds.
 """
 
 from __future__ import annotations
@@ -40,6 +42,7 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 from cadrumo.core.directory_scan import iter_directory
 
 from .._paths import UTF_8
+from ..source_tree import content_digest, repository_files
 from .hashing import sha256_text
 
 _UTF_8: Final[str] = UTF_8
@@ -52,7 +55,7 @@ _MAX_RECORDS_ENV: Final[str] = "CADRUMO_PROOF_CACHE_MAX_RECORDS"
 # pruned or truncated record is simply a cache miss, never an error.
 _DEFAULT_MAX_RECORDS: Final[int] = 512
 _SCHEMA: Final[str] = "cadrumo.packaging.proof-record.v1"
-# The committed inputs a proof is a function of: everything the wheel cohort
+# The scoped inputs a proof is a function of: everything the wheel cohort
 # is built from, PLUS the prober itself (`dev/packaging` carries the smoke
 # modules, the cohort builder, the campaign driver, and this cache) — a
 # strengthened probe must invalidate every carried proof, or a proof minted
@@ -73,7 +76,7 @@ class ProofOrigin(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    commit: str
+    source_digest: str
     run_id: str | None = None
     run_attempt: str | None = None
 
@@ -91,24 +94,10 @@ class ProofRecord(BaseModel):
     origin: ProofOrigin
 
 
-def _git_output(repo_root: Path, *args: str) -> str:
-    result = subprocess.run(  # noqa: S603 - fixed git argv over the repo root
-        ["git", *args],  # noqa: S607 - git resolved from PATH like every dev gate
-        cwd=repo_root,
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    return result.stdout
-
-
-def source_fingerprint(repo_root: Path) -> str | None:
-    """Return the committed-scope fingerprint, or ``None`` when the scope is dirty."""
-    drift = _git_output(repo_root, "status", "--porcelain", "--", *PROOF_SCOPE_PATHS)
-    if drift.strip():
-        return None
-    listing = _git_output(repo_root, "ls-files", "-s", "--", *PROOF_SCOPE_PATHS)
-    return sha256_text(listing)
+def source_fingerprint(repo_root: Path) -> str:
+    """Return the content-addressed fingerprint of the proof's source scope."""
+    files = repository_files(repo_root, under=PROOF_SCOPE_PATHS)
+    return content_digest(repo_root, files)
 
 
 def environment_fingerprint() -> str:
@@ -173,18 +162,16 @@ def record(
     proof_kind: str,
     source_fp: str,
     env_fp: str,
-    repo_root: Path,
     max_records: int | None = None,
 ) -> Path:
     """Persist a fresh proof record for the key and return its path."""
-    commit = _git_output(repo_root, "rev-parse", "HEAD").strip()
     proof = ProofRecord(
         proof_kind=proof_kind,
         source_fingerprint=source_fp,
         environment_fingerprint=env_fp,
         created_at=datetime.now(UTC).isoformat(timespec="seconds"),
         origin=ProofOrigin(
-            commit=commit,
+            source_digest=source_fp,
             run_id=os.environ.get("GITHUB_RUN_ID"),
             run_attempt=os.environ.get("GITHUB_RUN_ATTEMPT"),
         ),

@@ -6,6 +6,7 @@
 # they are internal_only, mirroring the sibling's identical declaration.
 [[revisions."2008-2022".casillas]]
 id = "iva.repercutido.general"
+continuidad_id = "iva-cuota-repercutida-general"
 number = "iva.repercutido.general"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
@@ -18,6 +19,7 @@ source_refs = ["aeat-dr-322-2022"]
 
 [[revisions."2008-2022".casillas]]
 id = "iva.repercutido.reducido"
+continuidad_id = "iva-cuota-repercutida-reducido"
 number = "iva.repercutido.reducido"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
@@ -30,6 +32,7 @@ source_refs = ["aeat-dr-322-2022"]
 
 [[revisions."2008-2022".casillas]]
 id = "iva.repercutido.super-reducido"
+continuidad_id = "iva-cuota-repercutida-super-reducido"
 number = "iva.repercutido.super-reducido"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
@@ -42,6 +45,7 @@ source_refs = ["aeat-dr-322-2022"]
 
 [[revisions."2008-2022".casillas]]
 id = "iva.soportado.interiores"
+continuidad_id = "iva-cuota-soportada-interiores"
 number = "iva.soportado.interiores"
 section = ["iva", "regimen_general", "deducible"]
 data_type = "money"
@@ -54,6 +58,7 @@ source_refs = ["aeat-dr-322-2022"]
 
 [[revisions."2008-2022".casillas]]
 id = "iva.autorepercutido.intracomunitaria"
+continuidad_id = "iva-cuota-autorepercutida-intracomunitaria"
 number = "iva.autorepercutido.intracomunitaria"
 section = ["iva", "regimen_general", "inversion_sujeto_pasivo"]
 data_type = "money"
@@ -66,6 +71,7 @@ source_refs = ["aeat-dr-322-2022"]
 
 [[revisions."2008-2022".casillas]]
 id = "iva.cuota-devengada-total"
+continuidad_id = "iva-cuota-devengada-total"
 number = "iva.cuota-devengada-total"
 section = ["iva", "regimen_general", "totales"]
 data_type = "money"
@@ -79,6 +85,7 @@ source_refs = ["aeat-dr-322-2022"]
 
 [[revisions."2008-2022".casillas]]
 id = "iva.cuota-deducible-total"
+continuidad_id = "iva-cuota-deducible-total"
 number = "iva.cuota-deducible-total"
 section = ["iva", "regimen_general", "totales"]
 data_type = "money"
@@ -92,6 +99,7 @@ source_refs = ["aeat-dr-322-2022"]
 
 [[revisions."2008-2022".casillas]]
 id = "iva.resultado-regimen-general"
+continuidad_id = "iva-resultado-regimen-general"
 number = "iva.resultado-regimen-general"
 section = ["iva", "regimen_general", "totales"]
 data_type = "money"

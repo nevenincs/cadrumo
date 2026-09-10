@@ -16,7 +16,6 @@ data_type = "name"
 semantic_role = "m165_declarante_razon_social"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-165-t1-razon-social"]
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-165-2016-2022"]
 
@@ -31,7 +30,6 @@ data_type = "text"
 semantic_role = "m165_persona_relacion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-165-t1-persona-relacion"]
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-165-2016-2022"]
 
@@ -45,7 +43,6 @@ data_type = "integer"
 semantic_role = "m165_numero_identificativo_declaracion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-165-t1-numero-identificativo"]
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-165-2016-2022"]
 
@@ -61,7 +58,6 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "One combined 'Declaracion complementaria / sustitutiva' box on this informativa; the role is modelo-scoped, so no sibling casilla can carry it. Modelo 190 records the same decision for its own complementaria and sustitutiva boxes."
 required = false
 input_kind = "manual"
-export_refs = ["modelo-165-t1-complementaria-sustitutiva"]
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-165-2016-2022"]
 
@@ -75,7 +71,6 @@ data_type = "integer"
 semantic_role = "m165_numero_identificativo_anterior"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-165-t1-numero-identificativo-anterior"]
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-165-2016-2022"]
 
@@ -89,7 +84,6 @@ data_type = "integer"
 semantic_role = "m165_numero_total_declarados"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-165-t1-numero-total-declarados"]
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-165-2016-2022"]
 
@@ -105,7 +99,6 @@ data_type = "money"
 semantic_role = "m165_importe_total_suscripciones"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-165-t1-importe-total-suscripciones"]
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-165-2016-2022"]
 
@@ -119,7 +112,6 @@ data_type = "text"
 semantic_role = "m165_fecha_constitucion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-165-t1-fecha-constitucion"]
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-165-2016-2022"]
 
@@ -138,7 +130,6 @@ data_type = "money"
 semantic_role = "m165_importe_fondos_propios"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-165-t1-importe-fondos-propios"]
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-165-2016-2022"]
 
@@ -152,7 +143,6 @@ data_type = "nif"
 semantic_role = "m165_socio_nif"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-165-t2-socio-nif"]
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-165-2016-2022"]
 
@@ -167,7 +157,6 @@ data_type = "nif"
 semantic_role = "m165_representante_legal_nif"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-165-t2-representante-legal-nif"]
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-165-2016-2022"]
 
@@ -181,7 +170,6 @@ data_type = "name"
 semantic_role = "m165_socio_nombre"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-165-t2-socio-nombre"]
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-165-2016-2022"]
 
@@ -195,7 +183,6 @@ data_type = "money"
 semantic_role = "m165_importe_suscripcion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-165-t2-importe-suscripcion"]
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-165-2016-2022"]
 
@@ -209,7 +196,6 @@ data_type = "text"
 semantic_role = "m165_fecha_adquisicion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-165-t2-fecha-adquisicion"]
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-165-2016-2022"]
 
@@ -224,6 +210,5 @@ data_type = "decimal"
 semantic_role = "m165_porcentaje_participacion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-165-t2-porcentaje-participacion"]
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-165-2016-2022"]

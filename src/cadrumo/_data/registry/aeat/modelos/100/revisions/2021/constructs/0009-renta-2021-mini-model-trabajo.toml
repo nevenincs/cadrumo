@@ -11,11 +11,11 @@ source_refs = [
     "lirpf-cuota-chain-authority",
 ]
 formulas = [
-    "renta-2021-trabajo-especie-importe-integro",
-    "renta-2021-trabajo-otros-gastos",
-    "renta-2021-trabajo-rendimiento-neto",
-    "renta-2021-trabajo-rendimiento-neto-previo",
-    "renta-2021-trabajo-rendimiento-neto-reducido",
-    "renta-2021-trabajo-suma-rendimientos-netos-previos",
-    "renta-2021-trabajo-total-ingresos-integros-computables",
+    "renta-trabajo-especie-importe-integro",
+    "renta-trabajo-otros-gastos",
+    "renta-trabajo-rendimiento-neto",
+    "renta-trabajo-rendimiento-neto-previo",
+    "renta-trabajo-rendimiento-neto-reducido",
+    "renta-trabajo-suma-rendimientos-netos-previos",
+    "renta-trabajo-total-ingresos-integros-computables",
 ]

@@ -1,5 +1,5 @@
 [[revisions."2021".formulas]]
-id = "renta-2021-estimacion-directa-gastos-previos"
+id = "renta-estimacion-directa-gastos-previos"
 target_casilla_id = "0218"
 expression = { op = "sum", args = [
         { casilla_id = "0181" },

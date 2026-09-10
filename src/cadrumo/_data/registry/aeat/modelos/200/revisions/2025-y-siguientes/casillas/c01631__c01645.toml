@@ -7,8 +7,7 @@ semantic_role = "is_tributacion_conjunta_opcion_0_7"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-19"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200026.f0093"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01632"
 number = "01632"
@@ -18,8 +17,7 @@ semantic_role = "is_tributacion_conjunta_fraccionamiento_importe"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-19"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200026.f0094"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01633"
 number = "01633"
@@ -29,8 +27,7 @@ semantic_role = "is_tributacion_conjunta_fraccionamiento_importe"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-19"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200026.f0095"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01634"
 number = "01634"
@@ -40,8 +37,7 @@ semantic_role = "is_tributacion_conjunta_fraccionamiento_importe"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-19"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200026.f0096"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01635"
 number = "01635"
@@ -51,8 +47,7 @@ semantic_role = "is_tributacion_conjunta_fraccionamiento_importe"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-19"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200026.f0098"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01636"
 number = "01636"
@@ -62,8 +57,7 @@ semantic_role = "is_tributacion_conjunta_fraccionamiento_importe"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-19"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200026.f0099"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01637"
 number = "01637"
@@ -73,8 +67,7 @@ semantic_role = "is_tributacion_conjunta_fraccionamiento_importe"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-19"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200026.f0100"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01641"
 number = "01641"
@@ -84,8 +77,7 @@ semantic_role = "is_tributacion_conjunta_fraccionamiento_importe"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-19"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200026.f0101"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01642"
 number = "01642"
@@ -95,8 +87,7 @@ semantic_role = "is_tributacion_conjunta_fraccionamiento_importe"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-19"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200026.f0103"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01643"
 number = "01643"
@@ -106,8 +97,7 @@ semantic_role = "is_tributacion_conjunta_fraccionamiento_importe"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-19"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200026.f0104"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01644"
 number = "01644"
@@ -117,8 +107,7 @@ semantic_role = "is_tributacion_conjunta_fraccionamiento_importe"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-19"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200026.f0105"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01645"
 number = "01645"
@@ -128,5 +117,4 @@ semantic_role = "is_tributacion_conjunta_fraccionamiento_importe"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-19"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200026.f0106"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

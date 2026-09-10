@@ -1,5 +1,5 @@
 [[revisions."2024".formulas]]
-id = "renta-2024-reduccion-art-84-conjunta"
+id = "renta-reduccion-art-84-conjunta"
 target_casilla_id = "0461"
 # Art. 84 LIRPF: reducción por tributación conjunta.
 # Tipo 1 (matrimonio, Art. 82.1.1°): declaration_type = 2 AND minor_children_in_unit = 0 → €3.400
@@ -7,12 +7,12 @@ target_casilla_id = "0461"
 # Individual (declaration_type = 1): → €0
 expression = { op = "if_then_else", args = [
     { op = "equal", args = [
-        { binding = "renta-2024-profile-declaration-type" },
+        { binding = "renta-profile-declaration-type" },
         { literal = "2" },
     ] },
     { op = "if_then_else", args = [
         { op = "equal", args = [
-            { binding = "renta-2024-profile-family-minor-children-in-unit" },
+            { binding = "renta-profile-family-minor-children-in-unit" },
             { literal = "0" },
         ] },
         { literal = "3400" },

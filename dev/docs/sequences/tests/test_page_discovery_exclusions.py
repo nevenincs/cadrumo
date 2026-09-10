@@ -20,21 +20,20 @@ floor's own docstring anticipates for one subtree, arriving through the filter
 the floor's population came from.
 
 This module measures the filter from outside it. The candidate set comes from
-``git ls-files`` over ``docs/`` - the index, not the working tree, so a local
-Sphinx build under ``docs/_build`` cannot fabricate or suppress a finding - and
-is narrowed only by file suffix, never by directory. The residue after
-subtracting the engine's own page set is what the directory filter removed, and
-it must equal a declared set. Today that set is empty: the four declared skip
-directories carry no committed markdown at all, so the filter currently removes
-nothing. That is worth pinning precisely because it is easy to lose - the
-declaration reads as though it were load-bearing, and the day it becomes so is
-the day a page stops being verified with nothing to say so.
+the repository's own file enumeration over ``docs/`` - tracked plus untracked,
+minus ``.gitignore`` - so a local Sphinx build under the gitignored
+``docs/_build`` cannot fabricate or suppress a finding - and is narrowed only
+by file suffix, never by directory. The residue after subtracting the engine's
+own page set is what the directory filter removed, and it must equal a
+declared set. Today that set is empty: the four declared skip directories
+carry no committed markdown at all, so the filter currently removes nothing.
+That is worth pinning precisely because it is easy to lose - the declaration
+reads as though it were load-bearing, and the day it becomes so is the day a
+page stops being verified with nothing to say so.
 """
 
 from __future__ import annotations
 
-import shutil
-import subprocess
 from pathlib import Path
 from typing import Final
 
@@ -43,6 +42,7 @@ import pytest
 from cadrumo.core.directory_scan import scan_directory
 
 from ...._paths import REPO_ROOT
+from ....source_tree import repository_files
 from ..checks import _SKIPPED_DOC_DIRS, _page_files, default_docs_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
@@ -64,26 +64,16 @@ _DECLARED_SKIPPED_PAGES: Final[frozenset[str]] = frozenset[str]()
 def _committed_markdown_pages() -> frozenset[str]:
     """Return every committed ``docs/`` markdown page, as docs-relative POSIX paths.
 
-    Enumerated from the git index rather than the filesystem. The working tree
-    carries whatever the contributor's last Sphinx run left behind, so a scan of
-    it would let an untracked build artefact enter or leave this population and
-    move the verdict; the index carries exactly the pages the repository ships.
-
-    The git executable is resolved rather than taken from the argv shorthand, so
-    the enumeration cannot be pointed at a different tree by a PATH entry, and a
-    machine without git gets one sentence instead of a traceback.
+    Enumerated from the repository's own membership rule (tracked files plus
+    untracked files the ``.gitignore`` tree does not exclude) rather than a raw
+    filesystem walk. ``docs/_build`` is itself gitignored, so a contributor's
+    last Sphinx run cannot let a build artefact enter or leave this population
+    and move the verdict.
     """
-    executable = shutil.which("git")
-    assert executable is not None, "git is not on PATH, so the committed page set cannot be enumerated"
-    completed = subprocess.run(  # noqa: S603 - resolved executable, fixed argv, no caller input
-        [executable, "ls-files", "--", "docs"],
-        cwd=REPO_ROOT,
-        capture_output=True,
-        text=True,
-        check=True,
-    )
     prefix = "docs/"
-    return frozenset(entry[len(prefix) :] for entry in completed.stdout.splitlines() if entry.endswith(".md"))
+    return frozenset(
+        path[len(prefix) :] for path in repository_files(REPO_ROOT, under=("docs",)) if path.endswith(".md")
+    )
 
 
 def _residue(candidates: frozenset[str], docs_root: Path) -> frozenset[str]:

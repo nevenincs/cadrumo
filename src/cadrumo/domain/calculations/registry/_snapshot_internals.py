@@ -868,14 +868,16 @@ def collect_snapshot_ref_ids(
 #: private so a caller OUTSIDE the package cannot bind to a validation step or
 #: cache the contract does not promise. Within the package, :mod:`snapshot`
 #: and :mod:`authority` are the sanctioned consumers of the construction
-#: internals below, so this lists every name they (and this module's own test
-#: suite) actually reach across the module boundary -- never a wildcard, and
-#: never widened to symbols nothing outside this file uses.
+#: internals below, and :mod:`casilla_legal_citation_period` shares the one
+#: legal-window predicate, so this lists every name they (and this module's
+#: own test suite) actually reach across the module boundary -- never a
+#: wildcard, and never widened to symbols nothing outside this file uses.
 __all__ = [
     "_SUBSTANTIVE_LAW_KINDS",
     "_build_validated_snapshot",
     "_check_revision_scoped_legal_windows",
     "_check_snapshot_filing_capability",
+    "_legal_window_covers_devengo",
     "_validate_materialized_export_record_families",
     "check_snapshot_filing_review_tier",
     "collect_snapshot_ref_ids",

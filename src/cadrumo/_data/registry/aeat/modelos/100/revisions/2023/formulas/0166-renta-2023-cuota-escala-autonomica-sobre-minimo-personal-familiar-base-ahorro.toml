@@ -1,5 +1,5 @@
 [[revisions."2023".formulas]]
-id = "renta-2023-cuota-escala-autonomica-sobre-minimo-personal-familiar-base-ahorro"
+id = "renta-cuota-escala-autonomica-sobre-minimo-personal-familiar-base-ahorro"
 target_casilla_id = "0539"
 expression = { op = "lookup_bracket", args = [
     { casilla_id = "0524" },

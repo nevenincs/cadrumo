@@ -7,8 +7,7 @@ semantic_role = "is_correccion_rentas_negativas_art11_9_10_permanente_disminucio
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200026b.f0043"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02537"
 number = "02537"
@@ -18,8 +17,7 @@ semantic_role = "is_correccion_rentas_negativas_art11_9_10_temporaria_ejercicio_
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200026b.f0044"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02538"
 number = "02538"
@@ -29,8 +27,7 @@ semantic_role = "is_correccion_rentas_negativas_art11_9_10_temporaria_anteriores
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200026b.f0045"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02539"
 number = "02539"
@@ -40,8 +37,7 @@ semantic_role = "is_correccion_rentas_negativas_art11_9_10_saldo_inicial"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200026b.f0042"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02540"
 number = "02540"
@@ -51,5 +47,4 @@ semantic_role = "is_correccion_rentas_negativas_art11_9_10_saldo_final_neto"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-export_refs = ["m200-2025.dp200026b.f0046"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

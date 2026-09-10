@@ -1,5 +1,5 @@
 [[revisions."2021".formulas]]
-id = "renta-2021-ganancia-no-exenta-positiva-base-general"
+id = "renta-ganancia-no-exenta-positiva-base-general"
 target_casilla_id = "1640"
 expression = { op = "max", args = [
     { literal = "0" },

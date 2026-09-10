@@ -3,6 +3,8 @@
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.nif"
+continuidad_id = "payee-nif"
+continuidad_origin = "seeded"
 number = "18-26"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -16,6 +18,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.nif-representante"
+continuidad_id = "perc-nif-representante"
+continuidad_origin = "seeded"
 number = "27-35"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -29,6 +33,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.nombre"
+continuidad_id = "payee-name"
+continuidad_origin = "seeded"
 number = "36-75"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -42,6 +48,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.mediador"
+continuidad_id = "payee-mediador-flag"
+continuidad_origin = "seeded"
 number = "76"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -55,6 +63,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.provincia"
+continuidad_id = "payee-province"
+continuidad_origin = "seeded"
 number = "77-78"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -68,6 +78,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.clave-codigo"
+continuidad_id = "payee-clave-codigo"
+continuidad_origin = "seeded"
 number = "79"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -81,6 +93,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.codigo-emisor"
+continuidad_id = "payee-codigo-emisor"
+continuidad_origin = "seeded"
 number = "80-91"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -94,6 +108,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.clave"
+continuidad_id = "payee-clave-percepcion"
+continuidad_origin = "seeded"
 number = "92"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -107,6 +123,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.naturaleza"
+continuidad_id = "payee-naturaleza-percepcion"
+continuidad_origin = "seeded"
 number = "93-94"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -120,6 +138,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.pago"
+continuidad_id = "payee-pago"
+continuidad_origin = "seeded"
 number = "95"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -133,6 +153,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.tipo-codigo"
+continuidad_id = "payee-tipo-codigo"
+continuidad_origin = "seeded"
 number = "96"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -146,6 +168,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.codigo-cuenta"
+continuidad_id = "payee-codigo-cuenta"
+continuidad_origin = "seeded"
 number = "97-116"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -159,6 +183,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.pendiente"
+continuidad_id = "payee-pendiente-flag"
+continuidad_origin = "seeded"
 number = "117"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -172,6 +198,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.ejercicio-devengo"
+continuidad_id = "devengo-year"
+continuidad_origin = "seeded"
 number = "118-121"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -185,6 +213,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.tipo-percepcion"
+continuidad_id = "payee-tipo-percepcion"
+continuidad_origin = "seeded"
 number = "122"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -198,6 +228,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.percepciones"
+continuidad_id = "payee-percepciones-193"
+continuidad_origin = "seeded"
 number = "123-135"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -212,6 +244,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.reducciones"
+continuidad_id = "payee-reducciones-193"
+continuidad_origin = "seeded"
 number = "139-151"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -226,6 +260,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.base"
+continuidad_id = "payee-base-retenciones-193"
+continuidad_origin = "seeded"
 number = "152-164"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -240,6 +276,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.porcentaje"
+continuidad_id = "payee-porcentaje-retencion"
+continuidad_origin = "seeded"
 number = "165-168"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -253,6 +291,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.retenciones"
+continuidad_id = "payee-retenciones-193"
+continuidad_origin = "seeded"
 number = "169-181"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -267,6 +307,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.penalizaciones"
+continuidad_id = "payee-penalizaciones"
+continuidad_origin = "seeded"
 number = "182-192"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -294,6 +336,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.naturaleza-declarante"
+continuidad_id = "payee-naturaleza-declarante"
+continuidad_origin = "seeded"
 number = "208"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -307,6 +351,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.fecha-inicio-prestamo"
+continuidad_id = "payee-fecha-inicio-prestamo"
+continuidad_origin = "seeded"
 number = "209-216"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -320,6 +366,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.fecha-vencimiento-prestamo"
+continuidad_id = "payee-fecha-vencimiento-prestamo"
+continuidad_origin = "seeded"
 number = "217-224"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -333,6 +381,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.compensaciones"
+continuidad_id = "payee-compensaciones"
+continuidad_origin = "seeded"
 number = "225-236"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -347,6 +397,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.garantias"
+continuidad_id = "payee-garantias"
+continuidad_origin = "seeded"
 number = "237-248"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -361,6 +413,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.retenciones-forales-estatal"
+continuidad_id = "payee-retenciones-forales-estatal"
+continuidad_origin = "seeded"
 number = "249-261"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -375,6 +429,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.retenciones-forales-navarra"
+continuidad_id = "payee-retenciones-forales-navarra"
+continuidad_origin = "seeded"
 number = "262-274"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -389,6 +445,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.retenciones-forales-araba"
+continuidad_id = "payee-retenciones-forales-araba"
+continuidad_origin = "seeded"
 number = "275-287"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -403,6 +461,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.retenciones-forales-gipuzkoa"
+continuidad_id = "payee-retenciones-forales-gipuzkoa"
+continuidad_origin = "seeded"
 number = "288-300"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -417,6 +477,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.retenciones-forales-bizkaia"
+continuidad_id = "payee-retenciones-forales-bizkaia"
+continuidad_origin = "seeded"
 number = "301-313"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -431,6 +493,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.ceuta-melilla"
+continuidad_id = "payee-ceuta-melilla-clave"
+continuidad_origin = "seeded"
 number = "314"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -444,6 +508,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.numero-orden"
+continuidad_id = "payee-numero-orden-193"
+continuidad_origin = "seeded"
 number = "315-321"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -457,6 +523,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.nif-pagador-anterior"
+continuidad_id = "payee-nif-pagador-anterior"
+continuidad_origin = "seeded"
 number = "322-330"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -470,6 +538,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.fecha-devengo"
+continuidad_id = "payee-fecha-devengo"
+continuidad_origin = "seeded"
 number = "331-338"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -483,6 +553,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.clave-mercado"
+continuidad_id = "payee-clave-mercado"
+continuidad_origin = "seeded"
 number = "339"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]

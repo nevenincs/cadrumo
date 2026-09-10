@@ -15,6 +15,7 @@ from typing import cast
 
 import pytest
 
+from ...source_tree import repository_files, snapshot
 from ..python_cohort import _FORBIDDEN_COMMAND_ARTIFACT_NAMES
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
@@ -158,14 +159,8 @@ def _run(command: list[str], *, cwd: Path) -> None:
 
 
 def _tracked_checkout(tmp_path: Path) -> Path:
-    archive = tmp_path / "tracked.tar"
     checkout = tmp_path / "checkout"
-    git = shutil.which("git")
-    assert git is not None
-    _run([git, "archive", "--format=tar", f"--output={archive}", "HEAD"], cwd=_REPOSITORY)
-    checkout.mkdir()
-    with tarfile.open(archive) as bundle:
-        bundle.extractall(checkout, filter="data")
+    snapshot(_REPOSITORY, repository_files(_REPOSITORY), checkout)
     return checkout
 
 

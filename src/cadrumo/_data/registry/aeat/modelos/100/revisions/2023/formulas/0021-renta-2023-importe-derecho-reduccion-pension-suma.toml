@@ -1,5 +1,5 @@
 [[revisions."2023".formulas]]
-id = "renta-2023-importe-derecho-reduccion-pension-suma"
+id = "renta-importe-derecho-reduccion-pension-suma"
 target_casilla_id = "0467"
 expression = { op = "sum", args = [
     { casilla_id = "0463" },

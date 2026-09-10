@@ -3,8 +3,8 @@
 Two of this screen's conditions hold across the whole corpus and are gated as
 invariants elsewhere. A gate that only ever sees a clean corpus proves nothing
 on its own, so both are constructed here on copies of real revisions and shown
-to be caught. The other two conditions occur live and are pinned against the
-corpus itself.
+to be caught. The singleton and absent-continuity conditions are constructed the
+same way, so their proofs survive the corpus being repaired.
 """
 
 from __future__ import annotations
@@ -29,32 +29,73 @@ def test_a_modelo_with_sound_continuity_reports_nothing(authority: ValidatedRegi
     assert screen_authority(authority, ("100",)) == ()
 
 
-def test_a_singleton_chain_in_the_corpus_is_reported_by_name(authority: ValidatedRegistryAuthority) -> None:
+def test_a_singleton_chain_is_reported_by_name(authority: ValidatedRegistryAuthority) -> None:
     """A chain sitting in a single revision asserts continuity across nothing.
 
-    Held by chain identity rather than by how many exist. A count here fails
-    when a second singleton appears, which is the screen succeeding, and the
-    reader who repairs it by raising the number has been taught to absorb the
-    finding instead of reading it.
-
-    Pinned to a live declaration: chain `dr303-112` sits alone in one revision.
-    When it gains a sibling or is retired this test fails on that name, which is
-    the correction; name another singleton the screen reports, or construct one
-    if none remains, because the condition must keep a proof either way.
+    Constructed on a copy of a modelo whose chains hold together: one chain
+    carried across several revisions is stripped from all but one, the
+    shape a sibling deleted by mistake leaves behind. The screen must report that
+    chain, by name and by the one revision holding it, and nothing else. Held by
+    identity rather than by count, and constructed rather than taken from the
+    corpus, so repairing every live singleton leaves the proof standing.
     """
-    findings = [item for item in screen_authority(authority, ("303",)) if item.kind == "singleton_chain"]
-    assert findings, "the singleton condition lost its live proof"
-    assert any("dr303-112" in item.detail for item in findings)
-    assert all("appears only in revision" in item.detail for item in findings)
+    definition = authority.modelo("100")
+    assert definition_findings(definition, modelo_id="100") == (), "the constructed singleton must be the only one"
+    _, revisions, _ = chain_index(definition)
+    chain = min(name for name, seen in revisions.items() if len(seen) > 1)
+    kept = min(revisions[chain])
+
+    def _strip(revision_id, revision):
+        if revision_id == kept:
+            return revision
+        return revision.model_copy(
+            update={
+                "casillas": tuple(
+                    item.model_copy(update={"continuidad_id": None})
+                    if str(getattr(item, "continuidad_id", "")) == chain
+                    else item
+                    for item in revision.casillas
+                )
+            }
+        )
+
+    planted = definition.model_copy(
+        update={"revisions": {rid: _strip(str(rid), rev) for rid, rev in definition.revisions.items()}}
+    )
+
+    findings = definition_findings(planted, modelo_id="100")
+    assert [(item.kind, item.detail) for item in findings] == [
+        ("singleton_chain", f"chain {chain} appears only in revision {kept}")
+    ]
 
 
 def test_absent_continuity_is_reported_as_its_own_kind(authority: ValidatedRegistryAuthority) -> None:
     """A multi-revision modelo carrying no chain surfaces as absent, not broken.
 
     The remedies differ: a broken chain is corrected, a missing one is authored,
-    and collapsing them would hide which is which.
+    and collapsing them would hide which is which. Constructed on a copy of a
+    real multi-revision modelo with every chain removed, so the proof does not
+    depend on some modelo still lacking continuity.
     """
-    findings = screen_authority(authority, ("714",))
+    definition = authority.modelo("303")
+    assert len(definition.revisions) > 1
+    assert "modelo_without_continuity" not in {item.kind for item in definition_findings(definition, modelo_id="303")}
+    stripped = definition.model_copy(
+        update={
+            "revisions": {
+                revision_id: revision.model_copy(
+                    update={
+                        "casillas": tuple(
+                            item.model_copy(update={"continuidad_id": None}) for item in revision.casillas
+                        ),
+                        "casilla_continuidad_evolutions": (),
+                    }
+                )
+                for revision_id, revision in definition.revisions.items()
+            }
+        }
+    )
+    findings = definition_findings(stripped, modelo_id="303")
     assert [item.kind for item in findings] == ["modelo_without_continuity"]
     # The detail carries the revision count, which is a live figure: asserting
     # it here would fail the day this modelo gains a revision, though nothing
@@ -94,11 +135,7 @@ def test_screen_detects_a_chain_spanning_two_identifier_grammars(
     assert chained, "the fixture revision must carry continuity chains"
     donor = chained[0]
     donor_grammar = classify_casilla_id(str(donor.id))
-    other = next(
-        item
-        for item in revision.casillas
-        if classify_casilla_id(str(item.id)) != donor_grammar and not getattr(item, "continuidad_id", None)
-    )
+    other = next(item for item in revision.casillas if classify_casilla_id(str(item.id)) != donor_grammar)
 
     mutated_casillas = tuple(
         item.model_copy(update={"continuidad_id": donor.continuidad_id}) if item.id == other.id else item

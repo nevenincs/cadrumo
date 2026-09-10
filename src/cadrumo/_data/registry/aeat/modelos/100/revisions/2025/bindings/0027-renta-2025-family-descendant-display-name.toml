@@ -1,5 +1,5 @@
 [[revisions."2025".bindings]]
-id = "renta-2025-family-descendant-display-name"
+id = "renta-family-descendant-display-name"
 source = "profile"
 selector = { profile_model = "RentaFamilyProfile", collection = "descendants", field = "display_name", xsd_path = "/DatosIdentificativos/Hijos/Hijo/APENOMDLG", dictionary_field = "APENOMDLG", repeating = true }
 aggregation = { op = "rows" }

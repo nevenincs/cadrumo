@@ -22,14 +22,14 @@
 # into BLOCKING findings post-engine.
 
 [[revisions."2026-y-siguientes".formulas]]
-id = "m210-tipo-gravamen-2025-resolve"
+id = "m210-tipo-gravamen-resolve"
 target_casilla_id = "tipo_gravamen"
 expression = { op = "irnr_resolve_tipo_gravamen", args = [
     { casilla_id = "tipo_renta" },
     { casilla_id = "base_imponible" },
     { parameter = "m210-tipo-gravamen-2025" },
     { parameter = "m210-pension-tarifa-2025" },
-    { binding = "m210-2025-profile-country-of-fiscal-residence" },
+    { binding = "m210-profile-country-of-fiscal-residence" },
 ] }
 legal_refs = [
     "trlirnr-rdleg-5-2004:art-25.1.a",
