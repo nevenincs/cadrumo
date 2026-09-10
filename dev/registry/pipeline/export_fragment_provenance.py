@@ -146,6 +146,7 @@ _SEMANTIC_MAP_ENTRY_KEYS: Final[frozenset[str]] = frozenset(
         "computed_key",
         "legal_refs",
         "source_refs",
+        "part",
     },
 )
 #: ``ordinal_absent`` joined this set when the parser gained the ability to
@@ -383,7 +384,13 @@ class ExportFieldDerivation(_StrictModel):
             )
         if self.field.id != self.semantic_entry.export_field_id:
             raise ValueError("field derivation emitted id does not match semantic-map entry")
-        if self.field.offset != self.parser_field.offset or self.field.length != self.parser_field.length:
+        # A field filling a declared part of its cell takes the part's
+        # coordinates; the part itself was held to the cell's text at join.
+        part = self.semantic_entry.part
+        expected = (
+            (part.offset, part.length) if part is not None else (self.parser_field.offset, self.parser_field.length)
+        )
+        if (self.field.offset, self.field.length) != expected:
             raise ValueError("field derivation emitted coordinates do not match parser field")
         for attribute in (
             "kind",
@@ -737,6 +744,8 @@ def export_fragment_provenance_manifest_json_bytes(manifest: ExportFragmentProve
     payload = manifest.model_dump(mode="json")
     for derivation in payload["field_derivations"]:
         _omit_undeclared_field_keys(derivation["field"])
+        if derivation["semantic_entry"]["part"] is None:
+            del derivation["semantic_entry"]["part"]
         if derivation["verdict"] is None:
             del derivation["verdict"]
     return canonical_json_bytes(payload)
@@ -1043,6 +1052,8 @@ def _normalise_semantic_map_entry(payload: Mapping[str, object]) -> dict[str, ob
         "computed_key": payload["computed_key"],
         "legal_refs": _sorted_strings(payload["legal_refs"], subject="semantic-map legal_refs"),
         "source_refs": _sorted_strings(payload["source_refs"], subject="semantic-map source_refs"),
+        # Digested only when declared, so a map without parts keeps its digest.
+        **({"part": payload["part"]} if payload["part"] is not None else {}),
     }
 
 

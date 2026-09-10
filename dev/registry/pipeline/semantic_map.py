@@ -676,6 +676,9 @@ def _require_no_collisions(
                     entry.anchor.source_cell,
                     entry.anchor.ordinal,
                     entry.anchor.record_identity,
+                    # Parts of one cell share its anchor and differ by where
+                    # they sit in it; validation holds them to the cell.
+                    None if entry.part is None else entry.part.offset,
                 )
                 for entry in entries
             ),

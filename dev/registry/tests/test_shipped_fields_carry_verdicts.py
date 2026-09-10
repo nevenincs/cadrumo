@@ -21,14 +21,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: to gain them. Checked in both directions: a tree gaining its verdicts must
 #: leave this table, and no other tree may be missing them.
 _UNATTESTED: dict[str, str] = {
-    "347/2011-2024": (
-        "its shipped records are right and its inputs cannot yet reproduce the split provincia/pais "
-        "cell; regenerating would ship the defect its record-drift row describes"
-    ),
-    "347/2025-y-siguientes": (
-        "its shipped records are right and its inputs cannot yet reproduce the split provincia/pais "
-        "cell; regenerating would ship the defect its record-drift row describes"
-    ),
     "185/2025-y-siguientes": (
         "publication demands a calculation-grade revision and this one is honestly graded "
         "applicability; raising the grade to publish would be the under-declaration it prevents"

@@ -32,54 +32,6 @@ schema_version = 4
 
 [[dispositions]]
 kind = "record_drift"
-modelo = "347"
-revision = "2011-2024"
-source_ref = "aeat-dr-347-2011"
-source_sha256 = "4cdfb401624e26abe3da3758ddcdcfc85b6b05ffa74e724b2d3f5eeb0c58e809"
-remedy = "repair_inputs"
-differing_records = 1
-reason = """
-The shipped declarado record repeats over binding rows, once per counterparty,
-and the semantic map now authors that repeat, its per-row casilla identities and
-the eight row-binding fields exactly as the shipped tree carries them. What
-still differs is one cell. The design declares a single four-byte cell at
-offset 77 whose own content text divides it: "77-78 CODIGO PROVINCIA: Campo
-numerico de dos posiciones" and "79-80 CODIGO PAIS. Campo alfabetico de 2
-posiciones". The shipped tree emits that split as f009a and f009b and the
-generator cannot: giving each half its own identity through the join needs a new
-key on the parser field or the semantic anchor, both of which every generation
-manifest stores, so the addition waits on the export-schema migration.
-
-One difference runs the other way. The 2011 design declares offset 264 length
-237 a blank region ("BLANCOS"), and the shipped tree binds a counterparty NIF
-casilla there - a nine-character identifier written into a 237-byte blank run,
-copied from the 2025 design where that slot exists. A republish would correct
-it; the split cell is what prevents republishing.
-"""
-reconsideration_condition = "Remove this pin when the export schema can carry a part identity for a design cell whose own text declares sub-offsets, and the tree is republished; the 2011 revision's blank-region NIF binding is corrected by the same republish."
-
-[[dispositions]]
-kind = "record_drift"
-modelo = "347"
-revision = "2025-y-siguientes"
-source_ref = "aeat-dr-347-2025"
-source_sha256 = "14583ea5ee04441356c4572d30630d46bfe0818366e575ac186370dd3fe38361"
-remedy = "repair_inputs"
-differing_records = 1
-reason = """
-The shipped declarado record repeats over binding rows, once per counterparty,
-and the semantic map now authors that repeat, its per-row casilla identities and
-the eight row-binding fields exactly as the shipped tree carries them. What
-still differs is the one cell the design divides in its own content text:
-"77-78 CODIGO PROVINCIA" and "79-80 CODIGO PAIS", two fields of different AEAT
-type in one printed slot. The shipped tree emits the split as f009a and f009b;
-the generator needs a new stored key to give each half an identity, which waits
-on the export-schema migration.
-"""
-reconsideration_condition = "Remove this pin when the export schema can carry a part identity for a design cell whose own text declares sub-offsets, and the tree is republished; the 2011 revision's blank-region NIF binding is corrected by the same republish."
-
-[[dispositions]]
-kind = "record_drift"
 modelo = "222"
 revision = "2025-y-siguientes"
 source_ref = "aeat-dr-222-2025"

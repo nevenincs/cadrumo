@@ -59,7 +59,7 @@ from .export_fragment_provenance import (
     emit_export_fragment_provenance_manifest,
 )
 from .generated_tree_dispositions import type_column_rulings_for
-from .joined_record_design import JoinedRecordDesign, JoinedRecordDesignField, JoinedRecordDesignRecord
+from .joined_record_design import JoinedRecordDesign, JoinedRecordDesignField, JoinedRecordDesignRecord, design_view
 from .render_profile import (
     RenderProfile,
     RenderProfileAnchor,
@@ -717,14 +717,17 @@ def _require_exact_record_geometry(joined_record: JoinedRecordDesignRecord) -> N
     expected_offset = 1
     for joined_field in joined_record.fields:
         parser_field = joined_field.parser_field
-        if parser_field.offset != expected_offset:
-            defect = "an overlap" if parser_field.offset < expected_offset else "a gap"
+        # A declared part stands in for its share of the cell it divides.
+        part = joined_field.semantic_entry.part
+        offset, length = (part.offset, part.length) if part is not None else (parser_field.offset, parser_field.length)
+        if offset != expected_offset:
+            defect = "an overlap" if offset < expected_offset else "a gap"
             raise RegistryValidationError(
                 f"official record {joined_record.parser_sheet.record_identity!r} has {defect} before "
                 f"field {parser_field.source_cell!r}: expected offset {expected_offset}, "
-                f"got {parser_field.offset}",
+                f"got {offset}",
             )
-        expected_offset = parser_field.offset + parser_field.length
+        expected_offset = offset + length
 
     actual_total = expected_offset - 1
     if actual_total != declared_total:
@@ -735,6 +738,57 @@ def _require_exact_record_geometry(joined_record: JoinedRecordDesignRecord) -> N
 
 
 def _normalise_field(
+    joined_field: JoinedRecordDesignField,
+    transport_profile: ExportTreeTransportProfile,
+    render_profile: RenderProfile,
+    *,
+    export_record_id: str,
+    source_defects: tuple[SourceDefectDeclaration, ...] = (),
+    note_governed_amounts: tuple[NoteGovernedAmountDeclaration, ...] = (),
+    applicability_notes: tuple[NoteStatedApplicabilityDeclaration, ...] = (),
+) -> ExportFieldDerivation:
+    """Derive one emitted field, deriving a declared part from its own printed text.
+
+    A part is derived exactly as a whole cell carrying the part's offset,
+    length, type and statement would be, so it earns no reading a printed cell
+    could not. The derivation then records the real parser row beside the part
+    it filled, and re-validates, so the attested coordinates are the part's.
+    """
+    part = joined_field.semantic_entry.part
+    if part is None:
+        return _normalise_cell(
+            joined_field,
+            transport_profile,
+            render_profile,
+            export_record_id=export_record_id,
+            source_defects=source_defects,
+            note_governed_amounts=note_governed_amounts,
+            applicability_notes=applicability_notes,
+        )
+    view = joined_field.model_copy(update={"parser_field": design_view(joined_field)})
+    derived = _normalise_cell(
+        view,
+        transport_profile,
+        render_profile,
+        export_record_id=export_record_id,
+        source_defects=source_defects,
+        note_governed_amounts=note_governed_amounts,
+        applicability_notes=applicability_notes,
+    )
+    return ExportFieldDerivation.model_validate(
+        {
+            "export_record_id": derived.export_record_id,
+            "parser_field": joined_field.parser_field,
+            "semantic_entry": derived.semantic_entry,
+            "field": derived.field,
+            "normalization_schema_version": derived.normalization_schema_version,
+            "derivation_code": derived.derivation_code,
+            "verdict": derived.verdict,
+        },
+    )
+
+
+def _normalise_cell(
     joined_field: JoinedRecordDesignField,
     transport_profile: ExportTreeTransportProfile,
     render_profile: RenderProfile,
