@@ -149,7 +149,7 @@ def _typed_code_set(selector: ResolvedEntitySetFact) -> frozenset[TipoActividad]
 def tipo_actividad_code_set(
     parameter_id: str,
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> frozenset[TipoActividad]:
     """Return the Modelo 036 codes a registry selector parameter declares.
@@ -174,13 +174,13 @@ def tipo_actividad_code_set(
     return _typed_code_set(
         resolve_tipo_actividad_selector(
             parameter_id,
-            effective_date=effective_date or date.today(),
+            effective_date=effective_date,
             authority=authority,
         ),
     )
 
 
-def load_tipo_actividad_selectors() -> Mapping[str, frozenset[TipoActividad]]:
+def load_tipo_actividad_selectors(*, effective_date: date) -> Mapping[str, frozenset[TipoActividad]]:
     """Return the codes each art. 95 selector parameter declares.
 
     Every selector is present, including the engorde one whose set is empty. An
@@ -197,7 +197,7 @@ def load_tipo_actividad_selectors() -> Mapping[str, frozenset[TipoActividad]]:
     """
     selectors = {
         parameter_id: _typed_code_set(
-            resolve_tipo_actividad_selector(parameter_id, effective_date=date.today()),
+            resolve_tipo_actividad_selector(parameter_id, effective_date=effective_date),
         )
         for parameter_id in _ART_95_SELECTORS
     }

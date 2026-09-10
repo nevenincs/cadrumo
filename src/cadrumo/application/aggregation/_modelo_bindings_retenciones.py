@@ -149,7 +149,9 @@ class RetencionesAggregationSourceResolver:
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             binding_values=resolve_retenciones_aggregation_binding_values(context.revision, aggregation),
-            diagnostics=administrador_retencion_rate_advisory_observations(observations),
+            diagnostics=administrador_retencion_rate_advisory_observations(
+                observations, effective_date=context.period.end_date
+            ),
             provenance=_provenance_for(
                 aggregation.rollups,
                 lambda rollup: CalculationSourceProvenance(
