@@ -3573,6 +3573,12 @@ cli:
       capturat de l'AEAT
     verify_help: Verificar la integritat del registre local
     verify_source_root_help: Ruta al directori d'origen per verificar
+    view_edition_help: Mostra una edició d'un model com l'edició completa que compila
+      el registre, en TOML, indicant si cada fila de casella la declara la mateixa
+      edició o l'hereta i de quina edició, i què cobreix la revisió de l'edició
+    view_edition_modelo_help: Identificador del model l'edició del qual es mostra
+    view_edition_revision_help: Identificador de la revisió del registre corresponent
+      a l'edició que es mostra
   review:
     app_help: Cua de revisió humana per a registres que requereixen criteri de l'operador
     errors:

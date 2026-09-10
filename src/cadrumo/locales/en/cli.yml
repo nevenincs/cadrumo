@@ -3341,6 +3341,11 @@ cli:
       filed AEAT state
     verify_help: Verify the integrity of the local registry
     verify_source_root_help: Path to the source directory to verify
+    view_edition_help: Print one edition of a modelo as the complete edition the registry
+      compiles, in TOML, marking whether each casilla row is stated by the edition
+      or inherited and from which edition, and what the edition's review covers
+    view_edition_modelo_help: Modelo identifier whose edition to print
+    view_edition_revision_help: Registry revision identifier of the edition to print
   review:
     app_help: 'Operator review queue: triage ledger transactions, purchase evidence,
       and modelo findings'

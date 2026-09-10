@@ -29,6 +29,7 @@ from ..corpus import (
     show_registry_manual,
 )
 from ..diff import _revision_for_year, diff_registry_revisions
+from ..edition import read_registry_edition
 from ..errors import RegistryApplicationInputError
 from ..filed_state import _verified_required_casilla_ids
 
@@ -40,6 +41,7 @@ _REGISTRY_ROOT = Path(__file__).resolve().parents[1]
 _TEST_SUPPORT_ROOT = Path(__file__).resolve().parents[3] / "tests"
 _REFUSAL_SOURCES = (
     _REGISTRY_ROOT / "diff.py",
+    _REGISTRY_ROOT / "edition.py",
     _REGISTRY_ROOT / "filed_state.py",
     _TEST_SUPPORT_ROOT / "registry_conformance.py",
     _REGISTRY_ROOT / "corpus.py",
@@ -112,6 +114,32 @@ def test_revision_diff_refusals_preserve_distinct_selection_causes() -> None:
             "candidate_revision_count": len(bundled_authority().modelo("303").revisions),
         },
         provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+    )
+
+
+def test_edition_reader_refusals_distinguish_an_unknown_modelo_from_an_unknown_edition() -> None:
+    modelos = bundled_authority().modelos
+    unknown_modelo = _refusal_error(lambda: read_registry_edition("998", "2025"))
+    _assert_no_action_contract(
+        unknown_modelo,
+        condition_id="registry.edition.modelo.declared",
+        facts={"modelo": "998", "modelo_declared": False, "candidate_modelo_count": len(modelos)},
+        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+        outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+    )
+
+    unknown_edition = _refusal_error(lambda: read_registry_edition("303", "1999"))
+    _assert_no_action_contract(
+        unknown_edition,
+        condition_id="registry.edition.revision.declared",
+        facts={
+            "modelo": "303",
+            "revision_id": "1999",
+            "revision_declared": False,
+            "candidate_revision_count": len(bundled_authority().modelo("303").revisions),
+        },
+        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         outcome=NoRecoveryOutcome.OPERATOR_DECISION,
     )
 
@@ -328,9 +356,26 @@ def _terminal_refusal_calls(path: Path) -> set[tuple[str, str, str, str, str, st
     return calls
 
 
-def test_all_twelve_registry_refusals_delegate_to_the_canonical_no_action_helper() -> None:
+def test_all_fourteen_registry_refusals_delegate_to_the_canonical_no_action_helper() -> None:
     observed = set().union(*(_terminal_refusal_calls(path) for path in _REFUSAL_SOURCES))
     assert observed == {
+        (
+            "edition.py",
+            "read_registry_edition",
+            "RegistryPreconditionCondition.EDITION_REVISION_DECLARED",
+            "{'modelo': source.modelo_id, 'revision_id': revision_id, 'revision_declared': False, "
+            "'candidate_revision_count': len(editions)}",
+            "ActionEvidenceProvenance.RUNTIME_OBSERVATION",
+            "NoRecoveryOutcome.OPERATOR_DECISION",
+        ),
+        (
+            "edition.py",
+            "_modelo_source",
+            "RegistryPreconditionCondition.EDITION_MODELO_DECLARED",
+            "{'modelo': modelo, 'modelo_declared': False, 'candidate_modelo_count': len(by_id)}",
+            "ActionEvidenceProvenance.RUNTIME_OBSERVATION",
+            "NoRecoveryOutcome.OPERATOR_DECISION",
+        ),
         (
             "diff.py",
             "_revision_for_year",

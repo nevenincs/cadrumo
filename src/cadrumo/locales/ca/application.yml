@@ -1303,6 +1303,10 @@ application:
     errors:
       citation_not_found: No s'ha trobat cap cita del registre per a la referència
         legal sol·licitada.
+      edition_modelo_undeclared: 'El registre no declara el model {modelo}. Models
+        declarats: {available_modelos}.'
+      edition_revision_undeclared: 'El model {modelo} no declara l''edició {revision}.
+        Edicions declarades: {available_revisions}.'
       invalid_manual_id: El manual del registre ha de ser un de {allowed_manual_ids};
         sha rebut {manual_id}.
       invalid_manual_rule_kind: El tipus de regla manual ha de ser un de {allowed_rule_kinds};

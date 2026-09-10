@@ -17,9 +17,9 @@ def _graph() -> CommandSpecGraph:
     return CommandSpecGraph((*ROOT_COMMAND_SPECS, *REGISTRY_COMMAND_SPECS))
 
 
-def test_registry_specs_are_the_exact_fifteen_node_surface() -> None:
+def test_registry_specs_are_the_exact_sixteen_node_surface() -> None:
     nodes = [node for node in _graph().nodes() if node.path[1:3] == ("app", "registry")]
-    assert len(nodes) == 15
+    assert len(nodes) == 16
     assert {node.path[-1] for node in nodes if node.spec.kind == "group"} == {
         "registry",
         "citations",
@@ -39,8 +39,12 @@ def test_registry_runtime_preserves_nested_and_repeated_contracts() -> None:
 
     filed = CliRunner().invoke(app, ["verify-filed-state", "--help"])
     manual = CliRunner().invoke(app, ["manuals", "view", "--help"])
+    edition = CliRunner().invoke(app, ["view-edition", "--help"])
 
     assert filed.exit_code == 0, filed.output
     assert "--source-observation" in filed.output and "--casilla" in filed.output
+    assert edition.exit_code == 0, edition.output
+    assert "view-edition [OPTIONS] {modelo} {revision}" in edition.output
+    assert "--registry-root" in edition.output
     assert manual.exit_code == 0, manual.output
     assert "--manual <renta|iva>" in manual.output

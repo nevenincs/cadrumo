@@ -1250,6 +1250,10 @@ application:
   registry:
     errors:
       citation_not_found: Nem található nyilvántartási hivatkozás a kért jogi referenciához.
+      edition_modelo_undeclared: 'A nyilvántartás nem deklarálja a(z) {modelo} modellt.
+        Deklarált modellek: {available_modelos}.'
+      edition_revision_undeclared: 'A(z) {modelo} modell nem deklarálja a(z) {revision}
+        revíziót. Deklarált revíziók: {available_revisions}.'
       invalid_manual_id: 'A nyilvántartási kézikönyvnek ezek egyikének kell lennie:
         {allowed_manual_ids}; kapott érték: {manual_id}.'
       invalid_manual_rule_kind: 'A kézikönyvi szabály típusának ezek egyikének kell

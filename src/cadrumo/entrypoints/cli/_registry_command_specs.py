@@ -220,6 +220,25 @@ REGISTRY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     _leaf(
+        "app_registry_view_edition",
+        "app_registry",
+        "view-edition",
+        "cli.registry.view_edition_help",
+        _ROOT_MODULE,
+        "view_edition_cmd",
+        "cadrumo.entrypoints.cli._registry_edition_payloads",
+        "RegistryViewEditionResult",
+        (
+            ArgumentSpec(
+                "modelo", TEXT_VALUE, ParameterDefault.required(), _key("cli.registry.view_edition_modelo_help")
+            ),
+            ArgumentSpec(
+                "revision", TEXT_VALUE, ParameterDefault.required(), _key("cli.registry.view_edition_revision_help")
+            ),
+            _REGISTRY_ROOT,
+        ),
+    ),
+    _leaf(
         "app_registry_replay_parity",
         "app_registry",
         "replay-parity",

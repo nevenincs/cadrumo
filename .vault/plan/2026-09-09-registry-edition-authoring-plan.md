@@ -11,7 +11,7 @@ related:
   - '[[2026-09-09-registry-edition-authoring-code-shape-and-blast-radius-reference]]'
 modified: '2026-09-10'
 body_schema: body-v2
-body_hash: 'sha256:e62138f527e717aa216ec48523c84dfa3c7d0d4e9953e28bfae908d904927fbc'
+body_hash: 'sha256:cb69f857e3b015faa0d2e779a29d74ec2539f009c44e9b0be2abd6563e0c67c9'
 ---
 
 # `registry-edition-authoring` plan
@@ -196,7 +196,7 @@ Convert each modelo to delta authoring, ordered by measured similarity. One mode
 
 One modelo end to end, on the richest instrumentation, before any other modelo moves.
 
-- [ ] `W03.P05.S31` - [M | opus-medium] Give the materialised edition a reader, so a person can see a complete edition without reconstructing it mentally from a delta. Without this the tree is harder to work with, not easier. Proof: the reader renders a migrated edition identically to its pre-migration files.; `src/cadrumo/entrypoints/cli`.
+- [x] `W03.P05.S31` - [M | opus-medium] Give the materialised edition a reader, so a person can see a complete edition without reconstructing it mentally from a delta. Without this the tree is harder to work with, not easier. Proof: the reader renders a migrated edition identically to its pre-migration files.; `src/cadrumo/entrypoints/cli`.
 - [ ] `W03.P05.S17` - [L | opus-medium] Migrate modelo 303 end to end as the pilot: lift its restatement, author its successor editions as deltas, and prove it. Richest instrumentation in the corpus, so a mistake is cheapest to see here. Proof: round-trip equality, export bytes unchanged, delta-minimality clean for 303.; `src/cadrumo/_data/registry/aeat/modelos/303`.
 - [ ] `W03.P05.S18` - [M | opus-medium] Harden the migration script against what the pilot exposed, and fix the proof obligations that turned out to be weak. Everything after this step depends on the script rather than on judgement. Proof: re-running the pilot from a clean checkout reproduces it exactly.; `dev/registry`.
 - [ ] `W03.P05.S42` - [S | sonnet-high] Verify during the pilot that the temporal-coverage design-authority refusal pin still passes untouched. The decision asserts it does not weaken that refusal; the assertion is cheap to check and expensive to be wrong about, since a live test carries it. Proof: the pin passes before and after the pilot migration, quoted with its result.; `src/cadrumo/domain/calculations/registry/tests`.

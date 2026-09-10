@@ -16,6 +16,8 @@ class RegistryPreconditionCondition(StrEnum):
 
     DIFF_REVISION_SELECTION_UNAMBIGUOUS = "registry.diff.revision_selection.unambiguous"
     DIFF_REVISION_AVAILABLE = "registry.diff.revision.available"
+    EDITION_MODELO_DECLARED = "registry.edition.modelo.declared"
+    EDITION_REVISION_DECLARED = "registry.edition.revision.declared"
     FILED_STATE_CASILLA_ID_CANONICAL = "registry.filed_state.casilla_id.canonical"
     FILED_STATE_CASILLA_DECLARED = "registry.filed_state.casilla.declared"
     CONFORMANCE_CLASSIFICATION_ROW_PRESENT = "registry.conformance.classification_row.present"

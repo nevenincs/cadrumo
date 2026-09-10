@@ -1306,6 +1306,10 @@ application:
     errors:
       citation_not_found: No se encontró ninguna cita del registro para la referencia
         legal solicitada.
+      edition_modelo_undeclared: 'El registro no declara el modelo {modelo}. Modelos
+        declarados: {available_modelos}.'
+      edition_revision_undeclared: 'El modelo {modelo} no declara la edición {revision}.
+        Ediciones declaradas: {available_revisions}.'
       invalid_manual_id: El manual del registro debe ser uno de {allowed_manual_ids};
         se recibió {manual_id}.
       invalid_manual_rule_kind: El tipo de regla del manual del registro debe ser

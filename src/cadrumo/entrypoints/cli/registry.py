@@ -7,11 +7,13 @@ from pathlib import Path
 import typer
 
 from ...application.registry.diff import RegistryRevisionDiffReport, diff_registry_revisions
+from ...application.registry.edition import EditionRowSource, RegistryEditionReport, read_registry_edition
 from ...application.registry.filed_state import verify_filed_state
 from ...application.registry.tree import RegistryTreeReport, inspect_registry_tree, verify_registry_tree
 from ...core.i18n.render import tr
 from ...core.json_contract import strict_round_trip
 from ...core.resources.bundled_data import bundled_path
+from ...core.toml import TomlTablePath, render_toml
 from ...domain.calculations.registry.live_parity import ParityVerdictKind
 from ...domain.calculations.registry.renta_web_open_replay_corpus import (
     RentaWebOpenReplayParityReport,
@@ -19,6 +21,11 @@ from ...domain.calculations.registry.renta_web_open_replay_corpus import (
 )
 from ._common import emit_envelope, resolve_optional_root
 from ._registry_diff_payloads import RegistryDiffRevisionsResult
+from ._registry_edition_payloads import (
+    EditionCasillaRowPayload,
+    EditionReviewScopePayload,
+    RegistryViewEditionResult,
+)
 from ._registry_payloads import (
     RegistryInspectResult,
     RegistryReplayParityPayloadResult,
@@ -256,6 +263,76 @@ def _diff_binding_lines(report: RegistryRevisionDiffReport) -> list[str]:
     return lines
 
 
+def view_edition_cmd(
+    ctx: typer.Context,
+    modelo: str,
+    revision: str,
+    registry_root: Path | None = None,
+) -> None:
+    """Print one edition of one modelo as the complete edition the registry compiles.
+
+    The text form is TOML in the shape a revision file declares. Comments mark
+    the edition that states each casilla row and how far the edition's review
+    stamp reaches; a TOML parser drops them, so the text still reads as the
+    edition's raw table.
+    """
+    report = read_registry_edition(
+        modelo.strip(),
+        revision.strip(),
+        registry_root=resolve_optional_root(registry_root, lambda: bundled_path("registry", "aeat")),
+    )
+    document = render_toml({"revisions": {report.revision_id: report.table}}, comments=_edition_comments(report))
+    emit_envelope(
+        ctx,
+        command="registry.view.edition",
+        result=RegistryViewEditionResult(
+            modelo=report.modelo,
+            revision_id=report.revision_id,
+            inherits_from=report.inherits_from,
+            document=document,
+            rows=[strict_round_trip(EditionCasillaRowPayload, row) for row in report.rows],
+            review_scope=strict_round_trip(EditionReviewScopePayload, report.review_scope),
+        ),
+        lines=document.splitlines(),
+    )
+
+
+def _edition_comments(report: RegistryEditionReport) -> dict[TomlTablePath, str]:
+    """Mark the edition header and every casilla row with stable, untranslated tokens."""
+    scope = report.review_scope
+    stated = sum(1 for row in report.rows if row.source is EditionRowSource.STATED)
+    header = [
+        _tokens("edition", modelo=report.modelo, revision=report.revision_id, inherits_from=report.inherits_from),
+        _tokens("rows", stated=stated, inherited=len(report.rows) - stated),
+        _tokens(
+            "review",
+            declared_status=scope.declared_review_status,
+            coverage=scope.coverage,
+            reviewed_against=scope.reviewed_against,
+            rendered_status=scope.rendered_review_status,
+        ),
+        *(
+            _tokens(
+                "review.inherited",
+                revision=attestation.revision_id,
+                rows=attestation.row_count,
+                review_status=attestation.review_status,
+            )
+            for attestation in scope.inherited_attestations
+        ),
+    ]
+    comments: dict[TomlTablePath, str] = {(): "\n".join(header)}
+    for index, row in enumerate(report.rows):
+        comments["revisions", report.revision_id, "casillas", index] = _tokens(
+            "row", casilla=row.casilla_id, source=row.source, inherited_from=row.inherited_from
+        )
+    return comments
+
+
+def _tokens(label: str, **values: object) -> str:
+    return " ".join((f"{label}:", *(f"{key}={value}" for key, value in values.items() if value is not None)))
+
+
 def _replay_parity_lines(report: RentaWebOpenReplayParityReport) -> list[str]:
     """Project the replay report as metric rows plus one detail row per comparison.
 
@@ -333,4 +410,5 @@ __all__ = [
     "verify_filed_state_cmd",
     "verify_registry_cmd",
     "verify_replay_parity_cmd",
+    "view_edition_cmd",
 ]

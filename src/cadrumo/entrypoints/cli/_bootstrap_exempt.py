@@ -309,6 +309,7 @@ BOOTSTRAP_EXEMPTIONS: tuple[BootstrapExemption, ...] = (
             "replay-parity",
             "verify",
             "verify-filed-state",
+            "view-edition",
         ),
         asserts_family_read_only=True,
     ),
