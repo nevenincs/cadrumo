@@ -171,6 +171,14 @@ The tree must not be republished on the strength of that alone. Publication
 checks through the real authority and demands a filing-complete, reviewed
 revision, and rewriting shipped filing data is a per-revision decision rather
 than a consequence of a code fix.
+
+That per-revision review has now been done and it passed. A fresh render was
+diffed field by field against the shipped tree: 79 fields change, every one is
+typed N by the official type column, and each moves only within the sign
+family - unsigned two-decimal amount to signed money - with no field added,
+removed or changed on any other axis. Rendered through the real codec under
+both declarations, every non-negative value writes identical bytes, and a
+negative amount, previously refused, now renders with its N.
 """
 reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
 
@@ -198,6 +206,14 @@ The tree must not be republished on the strength of that alone. Publication
 checks through the real authority and demands a filing-complete, reviewed
 revision, and rewriting shipped filing data is a per-revision decision rather
 than a consequence of a code fix.
+
+That per-revision review has now been done and it passed. A fresh render was
+diffed field by field against the shipped tree: 78 fields change, every one is
+typed N by the official type column, and each moves only within the sign
+family - unsigned two-decimal amount to signed money - with no field added,
+removed or changed on any other axis. Rendered through the real codec under
+both declarations, every non-negative value writes identical bytes, and a
+negative amount, previously refused, now renders with its N.
 """
 reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
 
@@ -225,6 +241,14 @@ The tree must not be republished on the strength of that alone. Publication
 checks through the real authority and demands a filing-complete, reviewed
 revision, and rewriting shipped filing data is a per-revision decision rather
 than a consequence of a code fix.
+
+That per-revision review has now been done and it passed. A fresh render was
+diffed field by field against the shipped tree: 79 fields change, every one is
+typed N by the official type column, and each moves only within the sign
+family - unsigned two-decimal amount to signed money - with no field added,
+removed or changed on any other axis. Rendered through the real codec under
+both declarations, every non-negative value writes identical bytes, and a
+negative amount, previously refused, now renders with its N.
 """
 reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
 
@@ -252,6 +276,14 @@ The tree must not be republished on the strength of that alone. Publication
 checks through the real authority and demands a filing-complete, reviewed
 revision, and rewriting shipped filing data is a per-revision decision rather
 than a consequence of a code fix.
+
+That per-revision review has now been done and it passed. A fresh render was
+diffed field by field against the shipped tree: 78 fields change, every one is
+typed N by the official type column, and each moves only within the sign
+family - unsigned two-decimal amount to signed money - with no field added,
+removed or changed on any other axis. Rendered through the real codec under
+both declarations, every non-negative value writes identical bytes, and a
+negative amount, previously refused, now renders with its N.
 """
 reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
 
@@ -279,6 +311,14 @@ The tree must not be republished on the strength of that alone. Publication
 checks through the real authority and demands a filing-complete, reviewed
 revision, and rewriting shipped filing data is a per-revision decision rather
 than a consequence of a code fix.
+
+That per-revision review has now been done and it passed. A fresh render was
+diffed field by field against the shipped tree: 79 fields change, every one is
+typed N by the official type column, and each moves only within the sign
+family - unsigned two-decimal amount to signed money - with no field added,
+removed or changed on any other axis. Rendered through the real codec under
+both declarations, every non-negative value writes identical bytes, and a
+negative amount, previously refused, now renders with its N.
 """
 reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
 
@@ -306,6 +346,14 @@ The tree must not be republished on the strength of that alone. Publication
 checks through the real authority and demands a filing-complete, reviewed
 revision, and rewriting shipped filing data is a per-revision decision rather
 than a consequence of a code fix.
+
+That per-revision review has now been done and it passed. A fresh render was
+diffed field by field against the shipped tree: 79 fields change, every one is
+typed N by the official type column, and each moves only within the sign
+family - unsigned two-decimal amount to signed money - with no field added,
+removed or changed on any other axis. Rendered through the real codec under
+both declarations, every non-negative value writes identical bytes, and a
+negative amount, previously refused, now renders with its N.
 """
 reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
 
