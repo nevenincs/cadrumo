@@ -779,3 +779,25 @@ def test_schema_refuses_a_sign_position_the_slot_cannot_carry(overrides: dict[st
 def test_schema_refuses_an_unknown_sign_position() -> None:
     with pytest.raises(ValidationError):
         _field(data_type="money", length=11, signed=True, sign_position="plus_or_minus")
+
+
+def test_a_signed_money_amount_can_carry_a_mandated_value_domain() -> None:
+    """A design may type an amount N and still mandate its value: both are declared, neither dropped."""
+    field = _field(data_type="money", length=17, signed=True, allowed_values=("0",))
+
+    assert render_fixed_width_export_field(field, Decimal(0)) == "0" * 17
+    assert parse_fixed_width_export_field(field, "0" * 17) == Decimal(0)
+    with pytest.raises(RegistryValidationError, match="outside allowed_values"):
+        render_fixed_width_export_field(field, Decimal("-1"))
+
+
+def test_a_signed_money_domain_member_is_charged_the_implied_decimals() -> None:
+    """Members are whole units, so a 5-byte money slot holds at most three unit digits."""
+    assert _field(data_type="money", length=5, signed=True, allowed_values=("999",)).allowed_values == ("999",)
+    with pytest.raises(ValidationError, match="out-of-width"):
+        _field(data_type="money", length=5, signed=True, allowed_values=("1000",))
+
+
+def test_a_signed_domain_is_refused_on_any_shape_but_money() -> None:
+    with pytest.raises(ValidationError):
+        _field(data_type="decimal", decimals=2, length=17, signed=True, allowed_values=("0",))
