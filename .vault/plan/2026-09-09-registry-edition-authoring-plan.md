@@ -11,7 +11,7 @@ related:
   - '[[2026-09-09-registry-edition-authoring-code-shape-and-blast-radius-reference]]'
 modified: '2026-09-10'
 body_schema: body-v2
-body_hash: 'sha256:76062fc0f6fbb84c778d87f73d605314b972c012b8904937518d8101298576a8'
+body_hash: 'sha256:0898cbf7fdfc57d16a88d8e92b6f28fd14f88d7850e22c2f620120c195b6e6a9'
 ---
 
 # `registry-edition-authoring` plan
@@ -218,7 +218,7 @@ The modelos measured at 93 percent or better once restatement is removed. Mechan
 
 The two modelos whose differences are real: legal change in one, renumbering under stable identifiers in the other.
 
-- [ ] `W03.P07.S24` - [M | opus-medium] Add the legal-reference period-correctness gate: a casilla's citations must resolve to the dated reference rows governing its own edition window. This refuses the residual authoring drift and must land before modelo 100 migrates, or its delta will show drift as though it were law. Proof: the known drifting rows are refused by name and the rest of the corpus passes.; `src/cadrumo/domain/calculations/registry`.
+- [x] `W03.P07.S24` - [M | opus-medium] Add the legal-reference period-correctness gate: a casilla's citations must resolve to the dated reference rows governing its own edition window. This refuses the residual authoring drift and must land before modelo 100 migrates, or its delta will show drift as though it were law. Proof: the known drifting rows are refused by name and the rest of the corpus passes.; `src/cadrumo/domain/calculations/registry`.
 - [ ] `W03.P07.S25` - [L | opus-medium] Migrate modelo 100. Three quarters of its citation changes are genuine legal change rather than restatement, so its delta is legitimately large and must not be compressed to look small. It also holds four fifths of all casilla files. Proof: the pilot's three checks, and a delta whose size is explained by the legal gate's classification.; `src/cadrumo/_data/registry/aeat/modelos/100`.
 - [ ] `W03.P07.S26` - [XL | opus-medium] Migrate modelo 309, which renumbers boxes while keeping identifiers stable. Its lineage adjudication must be complete first, and its delta is genuinely large. If this modelo cannot be migrated the decision still stands for the rest. Proof: the pilot's three checks, and every renumbered box traceable to its adjudicated chain.; `src/cadrumo/_data/registry/aeat/modelos/309`.
 - [ ] `W03.P07.S39` - [S | sonnet-high] Modelo 151 is RE-SEQUENCED late and small, not into the divergent phase. Re-measurement with a usable key took it from 620 unchainable to 134, of which 123 are genuinely new rows needing only a no-predecessor value. It is now fifth by volume and its residue is four contested rows, a record-correspondence table to confirm, three retired summary boxes to re-examine, and a glance at six weak matches. Note that the automated key wrongly chains two of the four contested rows, because it matches on label where the declared widths say the opposite — those must be read on width. Proof: the residue resolved, and the two width-contradicted rows refused rather than chained.; `src/cadrumo/_data/registry/aeat/modelos/151`.
