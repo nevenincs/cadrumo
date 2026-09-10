@@ -65,7 +65,9 @@ from .loader_fingerprints import (
     refresh_toml_fingerprint_after_load_error as _refresh_toml_fingerprint_after_load_error,
 )
 from .modelo_localization import (
+    ModeloLocalizationFieldKind,
     as_toml_array,
+    casilla_occurrence_locale_key,
     enroll_revision_localization,
     modelo_locale_key,
 )
@@ -138,9 +140,9 @@ def _build_modelo_definition_from_data(source_path: Path, data: Mapping[str, obj
     declared_revisions = _as_toml_table(data.get("revisions"))
     if not declared_revisions:
         raise RegistryLoadError(f"{source_path}: missing [revisions.<id>] tables")
-    raw_revisions = _materialise_revisions(source_path, str(modelo_id_for_context), declared_revisions)
+    materialised = _materialise_revisions(source_path, str(modelo_id_for_context), declared_revisions)
     revisions: dict[str, ModeloRevision] = {}
-    for revision_id, raw_revision in raw_revisions.items():
+    for revision_id, raw_revision in materialised.revisions.items():
         raw_revision_table = _as_toml_table(raw_revision)
         if raw_revision_table is None:
             raise RegistryLoadError(f"{source_path}: revision {revision_id!r} must be a table")
@@ -149,6 +151,14 @@ def _build_modelo_definition_from_data(source_path: Path, data: Mapping[str, obj
             revision_id=revision_id,
             raw_revision=raw_revision_table,
         )
+        label_origins = materialised.label_origins.get(revision_id)
+        if label_origins is not None:
+            payload = _enroll_inherited_label_fallbacks(
+                f"{source_path}: revision {revision_id!r}",
+                modelo_id=str(modelo_id_for_context),
+                payload=payload,
+                label_origins=label_origins,
+            )
         payload = _compile_revision_projection_semantics(source_path, payload)
         try:
             revision = ModeloRevision.model_validate(payload)
@@ -222,11 +232,36 @@ def _is_revision_id(value: str) -> bool:
     return True
 
 
+type _LabelOrigins = tuple[str | None, ...]
+"""Per casilla row, in row order: the edition that last stated the row, or ``None`` if its own edition states it."""
+
+
+@dataclass(frozen=True, slots=True)
+class _MaterialisedRevisions:
+    """Every edition's raw table after materialisation, with the label origins of the inherited rows.
+
+    The origins travel beside the tables rather than inside them because the
+    raw table must stay the exact shape the closed typed model accepts. Only an
+    edition that inherits appears in ``label_origins``.
+    """
+
+    revisions: Mapping[str, object]
+    label_origins: Mapping[str, _LabelOrigins]
+
+
+@dataclass(frozen=True, slots=True)
+class _MaterialisedRevision:
+    """One edition resolved against its chain; ``label_origins`` is ``None`` when it inherits nothing."""
+
+    table: Mapping[str, object]
+    label_origins: _LabelOrigins | None
+
+
 def _materialise_revisions(
     source_path: Path,
     modelo_id: str,
     raw_revisions: Mapping[str, object],
-) -> Mapping[str, object]:
+) -> _MaterialisedRevisions:
     """Resolve every edition naming a predecessor into the full raw revision it stands for.
 
     The output has the shape typed construction already consumes, one raw
@@ -268,14 +303,15 @@ def _materialise_revisions(
     a tree and a chain resolves its predecessor before the successor.
 
     Where it stops: it does not judge whether a predecessor may be declared at
-    all for the edition's authority grade, it does not resolve formula or
-    binding references on an inherited row against the successor, and it adds
-    no locale identity; enrolment afterwards derives every row's keys from the
-    edition it now sits in.
+    all for the edition's authority grade, and it does not resolve formula or
+    binding references on an inherited row against the successor. It adds no
+    locale identity to the rows either; enrolment afterwards derives every
+    row's keys from the edition it now sits in, and the label origins returned
+    beside the rows let enrolment add the one fallback an inherited row needs.
     """
     declarations = _raw_predecessor_declarations(raw_revisions)
     if declarations is None or not declarations.named:
-        return raw_revisions
+        return _MaterialisedRevisions(revisions=raw_revisions, label_origins={})
     try:
         validate_predecessor_forest(
             modelo_id,
@@ -285,17 +321,21 @@ def _materialise_revisions(
         )
     except RegistryValidationError as exc:
         raise RegistryLoadError(f"{source_path}: invalid modelo definition: {exc}") from exc
-    resolved: dict[str, Mapping[str, object]] = {}
+    resolved: dict[str, _MaterialisedRevision] = {}
     materialised: dict[str, object] = dict(raw_revisions)
+    label_origins: dict[str, _LabelOrigins] = {}
     for revision_id in declarations.named:
-        materialised[revision_id] = _materialise_revision(
+        revision = _materialise_revision(
             source_path,
             raw_revisions,
             declarations.named,
             revision_id,
             resolved,
         )
-    return materialised
+        materialised[revision_id] = revision.table
+        if revision.label_origins is not None:
+            label_origins[revision_id] = revision.label_origins
+    return _MaterialisedRevisions(revisions=materialised, label_origins=label_origins)
 
 
 def _materialise_revision(
@@ -303,8 +343,8 @@ def _materialise_revision(
     raw_revisions: Mapping[str, object],
     named: Mapping[str, str],
     revision_id: str,
-    resolved: dict[str, Mapping[str, object]],
-) -> Mapping[str, object]:
+    resolved: dict[str, _MaterialisedRevision],
+) -> _MaterialisedRevision:
     """Return one edition with its predecessor chain's casillas resolved into it."""
     cached = resolved.get(revision_id)
     if cached is not None:
@@ -313,18 +353,18 @@ def _materialise_revision(
     if table is None:
         raise RegistryLoadError(f"{source_path}: revision {revision_id!r} must be a table")
     predecessor_id = named.get(revision_id)
-    result: Mapping[str, object] = table
+    result = _MaterialisedRevision(table=table, label_origins=None)
     if predecessor_id is not None:
         predecessor = _materialise_revision(source_path, raw_revisions, named, predecessor_id, resolved)
-        result = {
-            **table,
-            _INHERITED_SECTION: _inherit_casillas(
-                f"{source_path}: revision {revision_id!r} inheriting from {predecessor_id!r}",
-                revision_id=revision_id,
-                inherited=_raw_casilla_rows(source_path, predecessor_id, predecessor),
-                successor=table,
-            ),
-        }
+        rows, label_origins = _inherit_casillas(
+            f"{source_path}: revision {revision_id!r} inheriting from {predecessor_id!r}",
+            revision_id=revision_id,
+            predecessor_id=predecessor_id,
+            inherited=_raw_casilla_rows(source_path, predecessor_id, predecessor.table),
+            inherited_label_origins=predecessor.label_origins,
+            successor=table,
+        )
+        result = _MaterialisedRevision(table={**table, _INHERITED_SECTION: rows}, label_origins=label_origins)
     resolved[revision_id] = result
     return result
 
@@ -340,10 +380,24 @@ def _inherit_casillas(
     context: str,
     *,
     revision_id: str,
+    predecessor_id: str,
     inherited: tuple[object, ...],
+    inherited_label_origins: _LabelOrigins | None,
     successor: Mapping[str, object],
-) -> tuple[object, ...]:
-    """Merge the predecessor's materialised casillas with the successor's stated ones."""
+) -> tuple[tuple[object, ...], _LabelOrigins]:
+    """Merge the predecessor's materialised casillas with the successor's stated ones.
+
+    Returns the merged rows and, aligned with them, each row's label origin.
+    A kept inherited row takes the origin it already had in the predecessor,
+    or the predecessor itself when the predecessor stated it, so the origin of
+    a row carried down a chain is the edition that last stated it rather than
+    the immediate predecessor, whose catalogue has no entry for it either.
+    """
+    if inherited_label_origins is not None and len(inherited_label_origins) != len(inherited):
+        raise RegistryLoadError(
+            f"{context}: the predecessor's label origins cover {len(inherited_label_origins)} of its "
+            f"{len(inherited)} casillas",
+        )
     stated = as_toml_array(successor.get(_INHERITED_SECTION, ()))
     if stated is None:
         raise RegistryLoadError(f"{context}: casillas must be an array")
@@ -357,17 +411,21 @@ def _inherit_casillas(
             "carrying it cannot say which one it supersedes",
         )
     rows: list[object] = []
+    label_origins: list[str | None] = []
     kept_lineage_by_id: dict[str, str | None] = {}
     superseded: set[str] = set()
-    for row in inherited:
+    for index, row in enumerate(inherited):
         lineage = _row_lineage(row)
         if lineage is not None and lineage in retired:
             continue
         if lineage is not None and lineage in superseders:
             rows.append(superseders[lineage])
+            label_origins.append(None)
             superseded.add(lineage)
             continue
         rows.append(row)
+        carried_origin = None if inherited_label_origins is None else inherited_label_origins[index]
+        label_origins.append(carried_origin if carried_origin is not None else predecessor_id)
         row_id = _row_id(row)
         if row_id is not None:
             kept_lineage_by_id[row_id] = lineage
@@ -383,7 +441,8 @@ def _inherit_casillas(
             )
         if lineage is None or lineage not in superseded:
             rows.append(row)
-    return tuple(rows)
+            label_origins.append(None)
+    return tuple(rows), tuple(label_origins)
 
 
 def _stated_rows_by_lineage(
@@ -437,6 +496,53 @@ def _row_id(row: object) -> str | None:
 
 def _lineage_label(lineage: str | None) -> str:
     return repr(lineage) if lineage is not None else "(none declared)"
+
+
+def _enroll_inherited_label_fallbacks(
+    context: str,
+    *,
+    modelo_id: str,
+    payload: dict[str, object],
+    label_origins: _LabelOrigins,
+) -> dict[str, object]:
+    """Give every inherited casilla the occurrence key of the edition that last stated it.
+
+    Enrolment keys an inherited row to the edition it now sits in, which is the
+    right identity, but the label catalogue is authored per edition and holds
+    the row's text only under the key of the edition that stated it. That key
+    joins the row's resolution chain directly after its own occurrence key and
+    ahead of its continuity key: an entry the successor authors for the row
+    still wins, the stated edition's exact text comes next, and the lineage-wide
+    text stays the last tier. A row whose chain resolves nowhere still raises on
+    lookup, exactly as before.
+
+    An alias resolves through one key with no chain, so an inherited row that
+    carries aliases is refused here instead of loading with alias labels that
+    raise on first read.
+    """
+    casillas = as_toml_array(payload.get(_INHERITED_SECTION))
+    if casillas is None or len(casillas) != len(label_origins):
+        raise RegistryLoadError(
+            f"{context}: label origins cover {len(label_origins)} casillas but enrolment produced "
+            f"{'no casilla array' if casillas is None else len(casillas)}",
+        )
+    enrolled: list[object] = []
+    for casilla, origin in zip(casillas, label_origins, strict=True):
+        table = None if origin is None else _as_toml_table(casilla)
+        keys = None if table is None else table.get("localization_keys")
+        casilla_id = None if table is None else table.get("id")
+        # A row enrolment could not key is left for typed construction to refuse.
+        if table is None or origin is None or not isinstance(casilla_id, str) or not isinstance(keys, tuple):
+            enrolled.append(casilla)
+            continue
+        if table.get("aliases"):
+            raise RegistryLoadError(
+                f"{context}: inherited casilla {casilla_id!r} carries aliases, whose labels resolve only under "
+                f"this edition's key and have no fallback to {origin!r}; state the row in this edition",
+            )
+        fallback = casilla_occurrence_locale_key(modelo_id, origin, casilla_id, ModeloLocalizationFieldKind.LABEL)
+        enrolled.append({**table, "localization_keys": (*keys[:1], fallback, *keys[1:])})
+    return {**payload, _INHERITED_SECTION: tuple(enrolled)}
 
 
 def _raise_on_ambiguous_revision_identity(

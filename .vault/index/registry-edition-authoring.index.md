@@ -6,7 +6,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:3371d3c5e3ac27eb90bff3cc8240cd9a1ecbb643866ec3518c998004295748ad'
+body_hash: 'sha256:f98177ca7be174ab5023212ce076752188ab946998bbf1ae9bac08cb4cdca54b'
 related:
   - '[[2026-09-09-registry-edition-authoring-W01-P01-S01]]'
   - '[[2026-09-09-registry-edition-authoring-W01-P01-S02]]'
@@ -26,6 +26,7 @@ related:
   - '[[2026-09-09-registry-edition-authoring-W02-P03-S10]]'
   - '[[2026-09-09-registry-edition-authoring-W02-P03-S11]]'
   - '[[2026-09-09-registry-edition-authoring-W02-P03-S35]]'
+  - '[[2026-09-09-registry-edition-authoring-W02-P03-S37]]'
   - '[[2026-09-09-registry-edition-authoring-W02-P03-S41]]'
   - '[[2026-09-09-registry-edition-authoring-W02-P03-S43]]'
   - '[[2026-09-09-registry-edition-authoring-W02-P03-S45]]'
@@ -71,6 +72,7 @@ Auto-generated index of all documents tagged with `#registry-edition-authoring`.
 - `2026-09-09-registry-edition-authoring-W02-P03-S10` - [L | opus-medium] Build the materialiser between raw fragment assembly and typed construction, producing the same merged mapping typed construction already consumes. The construction signature and everything above it are untouched. Proof: consumers observe no change on an unmigrated corpus.
 - `2026-09-09-registry-edition-authoring-W02-P03-S11` - [M | opus-medium] Add the cache-teeth test: fingerprints follow the physical edition files read, never the expanded output. Proof: editing a delta file invalidates; a materialisation difference with identical files does not.
 - `2026-09-09-registry-edition-authoring-W02-P03-S35` - [M | opus-medium] Add the predecessor forest validator: every edition of a modelo declares a predecessor except exactly one, and the graph must be a single tree rooted at that one with no cycle, no unknown or self target, and every edition reachable. The unique root positively identifies a first edition, and a successor that omits its predecessor becomes a second root and is refused naming both. Mark the field manifest-only so a section fragment cannot declare it. Proof: a three-edition fixture whose third omits the key is refused as two roots; restoring it loads.
+- `2026-09-09-registry-edition-authoring-W02-P03-S37` - [M | opus-medium] Position the materialiser inside typed construction immediately after the raw editions resolve and BEFORE per-edition localization enrolment, AND make the label catalogue inherit alongside the declarations in the same change. Locale keys are edition-scoped, so an inherited row enrolled before localization takes the successor's key — the right shape — but has no successor-keyed catalogue entry, and the lookup raises rather than falling back. Rows inheriting while labels do not is not a complete edition. Reuse the shipped locale cascade, which already resolves base, override and exact on this same lineage field. Proof: a migrated edition's locale keys match its pre-migration keys AND every casilla still yields a non-empty label under the historical-epoch sweep that already asserts exactly that.
 - `2026-09-09-registry-edition-authoring-W02-P03-S41` - [S | sonnet-high] Check every enumeration this campaign introduces against the proposed registry enum-canonicalisation ruling — one named enum per closed vocabulary, no inline unions, no allowlist — and reconcile or record the divergence. That ruling is proposed rather than accepted, so this is a compatibility check and not an obligation to obey it. Proof: each new enumeration is either conformant or carries a stated reason.
 - `2026-09-09-registry-edition-authoring-W02-P03-S48` - [S | opus-medium] Give the predecessor key an explicit value meaning no predecessor exists, distinct from the key being absent. One modelo has three editions sharing a single validity date whose own declarations each assert they have no earlier sibling; without an explicit value it would be forced into a false sequence, and with the key merely absent it would be indistinguishable from a forgotten declaration. Proof: that modelo loads with all three editions declared parallel, and the forest rule accepts it without inventing an order.
 - `2026-09-09-registry-edition-authoring-W02-P03-S55` - [S | sonnet-high] Make the materialiser's exclusion of non-casilla families explicit and tested, rather than relying on it merging only what it was told to. The completeness manifest is a revision section merged by the same fragment machinery as the casillas, so a materialiser written against the raw revision mapping picks it up by default; and its casilla collection is an append array whose duplicate-identifier validator would then refuse the load with an error naming a duplicate rather than naming inheritance. Loud but misattributed is still expensive. Proof: a planted delta whose predecessor has manifest rows materialises with the successor's own manifest untouched, and the duplicate-identifier path is never reached.
