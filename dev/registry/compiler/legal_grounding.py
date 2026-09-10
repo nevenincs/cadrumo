@@ -8,7 +8,7 @@ those claims is publisher work and therefore lives here, outside ``src``.
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
@@ -31,6 +31,7 @@ from cadrumo.domain.calculations.registry.schema_references import LegalReferenc
 
 __all__ = [
     "PROVISION_SUFFIXED_FILENAME",
+    "legal_ref_failures",
     "legal_reference_quotes_corpus",
     "published_legal_evidence_text",
     "verify_legal_catalogue",
@@ -51,9 +52,10 @@ _DISPOSITIVE_KINDS = frozenset(
     }
 )
 _DISPOSITIVE_CONTENT_SIGNAL = re.compile(
-    r"articulo\\s+(?:\\d+|primero|segundo|tercero|cuarto|quinto|sexto|septimo|octavo|noveno|decimo|unico)\\.|disposicion\\s+(?:transitoria|final|adicional|derogatoria)\\s+\\w+\\."
+    r"articulo\s+(?:\d+|primero|segundo|tercero|cuarto|quinto|sexto|septimo|octavo|noveno|decimo|unico)\."
+    r"|disposicion\s+(?:transitoria|final|adicional|derogatoria)\s+\w+\.",
 )
-_MODELO_ANCHOR = re.compile(r"^modelo-\\d+$")
+_MODELO_ANCHOR = re.compile(r"^modelo-\d+$")
 _FULL_CONSOLIDATED_SIZE_FLOOR: Final = 5000
 PROVISION_SUFFIXED_FILENAME = re.compile(r"-(art|apartado|anexo|da|dt|df|se|pr|ar|redacciones)[-.]")
 
@@ -122,11 +124,54 @@ def verify_legal_reference(reference: LegalReference, *, source_root: Path) -> N
     verify_legal_reference_grounding(reference, source_root=source_root)
 
 
+def legal_ref_failures(
+    row: str,
+    reference_ids: Iterable[str],
+    legal: Mapping[str, LegalReference],
+    source_root: Path,
+    verified: set[str],
+) -> list[str]:
+    """Resolve and corpus-verify one table row's legal refs, memoising the ids that pass.
+
+    Accumulating rather than raising, so one table reports every ungrounded row
+    it found instead of the first.
+
+    Args:
+        row: A label identifying the row, quoted verbatim into each failure.
+        reference_ids: The provision identifiers the row cites.
+        legal: The legal catalogue the identifiers must resolve in.
+        source_root: The root every ``corpus_ref`` resolves against.
+        verified: Ids already verified in this pass, extended in place. Shared
+            across rows because verification reads and normalises corpus text,
+            which is the expensive half of the check.
+
+    Returns:
+        One message per failure, empty when every citation verified.
+    """
+    failures: list[str] = []
+    for ref_id in reference_ids:
+        if ref_id in verified:
+            continue
+        reference = legal.get(ref_id)
+        if reference is None:
+            failures.append(f"{row}: unknown legal_ref {ref_id!r}")
+            continue
+        try:
+            verify_legal_reference_grounding(reference, source_root=source_root)
+        except RegistryValidationError as exc:
+            failures.append(f"{row}: invalid legal_ref {ref_id!r}: {exc}")
+            continue
+        verified.add(ref_id)
+    return failures
+
+
 def verify_legal_catalogue_grounding(legal: Mapping[str, LegalReference], *, source_root: Path) -> None:
+    """Corpus-verify every catalogue entry's identity and grounding, excluding review eligibility."""
     _verify_catalogue(legal, source_root=source_root, include_review=False)
 
 
 def verify_legal_catalogue(legal: Mapping[str, LegalReference], *, source_root: Path) -> None:
+    """Corpus-verify every catalogue entry and require its filing review eligibility."""
     _verify_catalogue(legal, source_root=source_root, include_review=True)
 
 
@@ -137,18 +182,20 @@ def _verify_catalogue(legal: Mapping[str, LegalReference], *, source_root: Path,
             failures.append(f"legal catalogue key {ref_id!r} does not match reference id {reference.id!r}")
         try:
             if include_review:
-                verify_legal_reference(reference)
-            verify_legal_reference_grounding(reference, source_root=source_root)
+                verify_legal_reference(reference, source_root=source_root)
+            else:
+                verify_legal_reference_grounding(reference, source_root=source_root)
         except RegistryValidationError as exc:
             failures.append(str(exc))
     if failures:
         prefix = (
             "legal catalogue validation failed" if include_review else "legal catalogue grounding validation failed"
         )
-        raise RegistryValidationError(prefix + ":\\n" + "\\n".join(f" - {failure}" for failure in failures))
+        raise RegistryValidationError(prefix + ":\n" + "\n".join(f" - {failure}" for failure in failures))
 
 
 def legal_reference_quotes_corpus(reference: LegalReference, quotation: str, *, source_root: Path) -> bool:
+    """Return whether ``quotation`` occurs in the reference's anchored corpus text."""
     return bool(quotation.strip()) and normalise_corpus_text(quotation) in _legal_corpus_text(source_root, reference)
 
 
@@ -194,14 +241,16 @@ def _validate_legal_corpus_provenance(reference: LegalReference, source_root: Pa
     provenance = classify_normative_corpus_provenance(source_root, reference.corpus_ref)
     if provenance is NormativeCorpusProvenance.AUTHORED:
         raise RegistryValidationError(
-            f"legal reference {reference.id!r} cites authored normative corpus text; filing-grade legal authority requires BOE-attested evidence."
+            f"legal reference {reference.id!r} cites authored normative corpus text; "
+            "filing-grade legal authority requires BOE-attested evidence."
         )
     if (
         provenance is NormativeCorpusProvenance.BOE_PRESUMPTIVE
         and reference.corpus_ref.partition("#")[0] not in _REVIEWED_PRESUMPTIVE_NORMATIVE_CORPUS
     ):
         raise RegistryValidationError(
-            f"legal reference {reference.id!r} cites BOE-presumptive normative corpus text with no reviewed per-file exception."
+            f"legal reference {reference.id!r} cites BOE-presumptive normative corpus text "
+            "with no reviewed per-file exception."
         )
 
 
@@ -227,7 +276,8 @@ def _validate_corpus_tier_declaration(reference: LegalReference, source_root: Pa
         provision_suffixed or path.stat().st_size < _FULL_CONSOLIDATED_SIZE_FLOOR
     ):
         raise RegistryValidationError(
-            f"legal reference {reference.id!r} declares corpus_tier='full_consolidated' but {path.name!r} is not a full consolidated text"
+            f"legal reference {reference.id!r} declares corpus_tier='full_consolidated' "
+            f"but {path.name!r} is not a full consolidated text"
         )
     if (
         reference.corpus_tier is CorpusTier.PROVISION_EXCERPT
@@ -235,7 +285,8 @@ def _validate_corpus_tier_declaration(reference: LegalReference, source_root: Pa
         and not _DISPOSITIVE_CONTENT_SIGNAL.search(_legal_corpus_text(source_root, reference))
     ):
         raise RegistryValidationError(
-            f"legal reference {reference.id!r} declares corpus_tier='provision_excerpt' but its corpus text carries no dispositive article or disposición of its own"
+            f"legal reference {reference.id!r} declares corpus_tier='provision_excerpt' "
+            "but its corpus text carries no dispositive article or disposición of its own"
         )
 
 
@@ -298,6 +349,7 @@ def _assert_redactions_are_not_fused(document: Path, sidecar: Path, reference: L
             f"legal reference {reference.id!r} extracted corpus sidecar could not be counted: {exc}"
         ) from exc
     raise RegistryValidationError(
-        f"legal reference {reference.id!r} cites {path_text!r}, which declares {len(marks)} dated redactions collapsed into {units} extracted unit(s)"
+        f"legal reference {reference.id!r} cites {path_text!r}, which declares {len(marks)} dated redactions "
+        f"collapsed into {units} extracted unit(s)"
         "; cite a consolidated current-text document instead, or reduce the capture to the redaction in force"
     )

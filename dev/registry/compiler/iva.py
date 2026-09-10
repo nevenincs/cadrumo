@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import tomllib
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from functools import lru_cache
@@ -30,9 +30,8 @@ from cadrumo.domain.calculations.registry.facts.schema import (
     MappingFactPayload,
 )
 from cadrumo.domain.calculations.registry.schema_base import DateAxis, SourceCitation
-from cadrumo.domain.calculations.registry.schema_references import SourceReference
-from cadrumo.domain.iva._grounding import legal_ref_failures, verify_table_legal_refs
-from cadrumo.domain.iva.compilation_catalogues import compiling_catalogues, compiling_catalogues_in_scope
+from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+from cadrumo.domain.iva.compilation_catalogues import compiling_catalogues_in_scope
 from cadrumo.domain.iva.errors import IvaCatalogueError, IvaRateOverlapError, IvaValidationError
 from cadrumo.domain.iva.rates import IVA_RATE_FACT_ID
 from cadrumo.domain.iva.recargo_equivalencia import IVA_RECARGO_FACT_ID, RecargoRateRecord
@@ -40,6 +39,7 @@ from cadrumo.domain.iva.schema import EUMemberState, IvaRateKind, IvaRateRecord
 from dev.registry.compiler.loader import load_shared_catalogues
 
 from .corpus_catalogue import verify_source_file
+from .legal_grounding import legal_ref_failures
 from .loader_cache import toml_file_fingerprint
 from .loader_fingerprints import RegistryPathFingerprints
 
@@ -105,9 +105,11 @@ def _reference_ids(data: Mapping[str, object], key: str) -> tuple[str, ...]:
     raw = data.get(key, ())
     if not isinstance(raw, (list, tuple)):
         raise IvaValidationError(f"{key} must be an array")
-    if not all(isinstance(item, str) for item in OBJECT_TUPLE_ADAPTER.validate_python(raw)):
+    items = OBJECT_TUPLE_ADAPTER.validate_python(raw)
+    reference_ids = tuple(item for item in items if isinstance(item, str))
+    if len(reference_ids) != len(items):
         raise IvaValidationError(f"{key} must contain only registry identity strings")
-    return tuple(raw)
+    return reference_ids
 
 
 def _assert_no_overlap(state: EUMemberState, rates: Iterable[IvaRateRecord]) -> None:
@@ -127,9 +129,14 @@ def _assert_no_overlap(state: EUMemberState, rates: Iterable[IvaRateRecord]) -> 
 
 
 def _verify_rate_grounding(table: Mapping[EUMemberState, tuple[IvaRateRecord, ...]], *, registry_root: Path) -> None:
-    catalogues = load_shared_catalogues(registry_root)
-    legal, sources = catalogues.legal, catalogues.sources
-    source_root = registry_root.parents[1]
+    # A compilation names the corpus root it validates against; a candidate
+    # staged outside the package tree has no corpus beside its registry root.
+    compiling = compiling_catalogues_in_scope()
+    if compiling is not None:
+        legal, sources, source_root = compiling
+    else:
+        catalogues = load_shared_catalogues(registry_root)
+        legal, sources, source_root = catalogues.legal, catalogues.sources, registry_root.parents[1]
     verified_legal: set[str] = set()
     verified_sources: set[str] = set()
     failures: list[str] = []
@@ -254,14 +261,32 @@ def _load_recargo_table(path: str, byte_count: int, modified_ns: int) -> tuple[R
         raise IvaValidationError(f"{target}: invalid recargo rate record: {exc}") from exc
     _reject_recargo_overlaps(records)
     citations = [(f"{record.iva_rate}/{record.effective_from.isoformat()}", record.legal_refs) for record in records]
-    if compiling_catalogues_in_scope() is not None:
-        verify_table_legal_refs(str(target), citations)
-        return records
-    registry_root = target.parent.parent
-    shared = load_shared_catalogues(registry_root)
-    with compiling_catalogues(shared.legal, shared.sources, registry_root.parents[1]):
-        verify_table_legal_refs(str(target), citations)
+    compiling = compiling_catalogues_in_scope()
+    if compiling is not None:
+        legal, _sources, source_root = compiling
+    else:
+        registry_root = target.parent.parent
+        legal, source_root = load_shared_catalogues(registry_root).legal, registry_root.parents[1]
+    _verify_table_legal_refs(str(target), citations, legal=legal, source_root=source_root)
     return records
+
+
+def _verify_table_legal_refs(
+    table: str,
+    citations: Sequence[tuple[str, Sequence[str]]],
+    *,
+    legal: Mapping[str, LegalReference],
+    source_root: Path,
+) -> None:
+    """Corpus-verify every citation a compiled IVA table's rows carry, or refuse the table."""
+    verified: set[str] = set()
+    failures: list[str] = []
+    for row, reference_ids in citations:
+        failures.extend(legal_ref_failures(row, reference_ids, legal, source_root, verified))
+    if failures:
+        raise IvaCatalogueError(
+            f"{table}: legal grounding verification failed:\n" + "\n".join(f" - {failure}" for failure in failures),
+        )
 
 
 def _hydrate_recargo_row(row: Mapping[str, object]) -> dict[str, object]:
@@ -269,11 +294,12 @@ def _hydrate_recargo_row(row: Mapping[str, object]) -> dict[str, object]:
     for field in ("iva_rate", "recargo_rate"):
         if isinstance(hydrated.get(field), str):
             hydrated[field] = coerce_decimal_strict(hydrated[field])
-    if is_object_list(hydrated.get("legal_refs")):
-        refs = hydrated["legal_refs"]
-        if not all(isinstance(ref, str) for ref in refs):
+    refs = hydrated.get("legal_refs")
+    if is_object_list(refs):
+        reference_ids = tuple(ref for ref in refs if isinstance(ref, str))
+        if len(reference_ids) != len(refs):
             raise IvaValidationError("legal_refs entries must be strings")
-        hydrated["legal_refs"] = tuple(refs)
+        hydrated["legal_refs"] = reference_ids
     return hydrated
 
 

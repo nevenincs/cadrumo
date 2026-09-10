@@ -18,11 +18,11 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.legal_grounding import legal_ref_failures
 
 from ....core.resources.bundled_data import bundled_path
 from ...calculations.registry.schema_base import EvidenceTier
 from ...calculations.registry.schema_references import LegalReference, SourceReference
-from .._grounding import legal_ref_failures
 from ..errors import IvaCatalogueError
 from ..rates import (
     _source_ref_failures,

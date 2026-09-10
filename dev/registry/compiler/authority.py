@@ -4,18 +4,19 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .source_evidence_fingerprint import collect_source_evidence_fingerprints
-from .supplementary_orden import compile_supplementary_ordenes
-from .validator import RegistryValidator
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-from .identity import RegistryIdentity, resolve_registry_identity
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.iva.compilation_catalogues import compiling_catalogues
 
 from .convenio import load_convenio_authority, validate_convenio_legal_refs
 from .fact_providers import compile_registered_fact_providers, validate_fact_provider_directory_ownership
+from .identity import RegistryIdentity, resolve_registry_identity
 from .loader import collect_registry_tree_fingerprints, load_registry_tree
+from .source_evidence_fingerprint import collect_source_evidence_fingerprints
+from .supplementary_orden import compile_supplementary_ordenes
+from .validator import RegistryValidator
 
 
 def canonical_authoring_root_pair(registry_root: Path, source_root: Path) -> tuple[Path, Path]:
@@ -42,9 +43,62 @@ def compile_validated_authority(
     same way :func:`load_registry_tree` resolves it. A caller that must pin the
     identity it captured earlier, such as publication, passes it explicitly.
     """
+    authority = compile_unvalidated_authority(registry_root, source_root, identity=identity)
+    authority.validate_registry()
+    return authority
+
+
+def compile_unvalidated_authority(
+    registry_root: Path,
+    source_root: Path,
+    *,
+    identity: RegistryIdentity | None = None,
+) -> ValidatedRegistryAuthority:
+    """Compile a source candidate into an authority whose registry scope is not yet validated.
+
+    Snapshot requests still validate each selected modelo on demand, so the
+    result can classify individual revisions after a registry-wide validation
+    has already failed. Anything that admits the registry as a whole uses
+    :func:`compile_validated_authority` instead.
+    """
     root, sources_root = canonical_authoring_root_pair(registry_root, source_root)
     if identity is None:
         identity = resolve_registry_identity(root, collect_fingerprints=collect_registry_tree_fingerprints)
+    modelos, catalogues = compile_registry_tree(root, sources_root, identity=identity)
+    authority = ValidatedRegistryAuthority(
+        root=root,
+        source_root=sources_root,
+        modelos=modelos,
+        catalogues=catalogues,
+        _modelos_by_id={modelo.id: modelo for modelo in modelos},
+        _validator=RegistryValidator(
+            catalogues,
+            source_root=sources_root,
+            source_evidence_fingerprint=collect_source_evidence_fingerprints(sources_root),
+        ),
+        _registry_validated=False,
+        _validated_modelos=set(),
+        _snapshots={},
+        _identity_digest=identity.digest,
+    )
+    return authority
+
+
+def compile_registry_tree(
+    registry_root: Path,
+    source_root: Path,
+    *,
+    identity: RegistryIdentity | None = None,
+) -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
+    """Load a registry tree and compile every catalogue its validation reads.
+
+    The raw tree load yields the modelos and the hand-authored catalogues only;
+    governed facts, the convenio authority and the annual Orden supplements are
+    compiled from their own directories. Every validation of a candidate tree
+    must see the same compiled catalogues the authority publishes, so this is
+    the one place that assembles them. The result is not yet validated.
+    """
+    root, sources_root = canonical_authoring_root_pair(registry_root, source_root)
     modelos, catalogues = load_registry_tree(root, identity=identity)
     validate_fact_provider_directory_ownership(root)
     with compiling_catalogues(catalogues.legal, catalogues.sources, sources_root):
@@ -74,24 +128,7 @@ def compile_validated_authority(
             "supplementary_ordenes": supplementary_ordenes.authorities,
         }
     )
-    authority = ValidatedRegistryAuthority(
-        root=root,
-        source_root=sources_root,
-        modelos=modelos,
-        catalogues=catalogues,
-        _modelos_by_id={modelo.id: modelo for modelo in modelos},
-        _validator=RegistryValidator(
-            catalogues,
-            source_root=sources_root,
-            source_evidence_fingerprint=collect_source_evidence_fingerprints(sources_root),
-        ),
-        _registry_validated=False,
-        _validated_modelos=set(),
-        _snapshots={},
-        _identity_digest=identity.digest,
-    )
-    authority.validate_registry()
-    return authority
+    return modelos, catalogues
 
 
 _COMPILED_BUNDLED_AUTHORITIES: dict[str, ValidatedRegistryAuthority] = {}
