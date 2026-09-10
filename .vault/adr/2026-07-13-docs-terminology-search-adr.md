@@ -11,7 +11,6 @@ related:
   - "[[2026-06-15-docs-terminology-search-adr]]"
 ---
 
-
 # `docs-terminology-search` adr: `next wave: upstream hook wiring, corpus coverage, and the rung-2 gate` | (**status:** `accepted`)
 
 ## Problem Statement

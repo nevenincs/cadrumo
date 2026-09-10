@@ -317,28 +317,21 @@ def test_config_repair_is_config_scoped_not_root(isolated_user_cli: Path) -> Non
     assert help_result.exit_code == 0, help_result.output
     assert text_result.exit_code == 0, text_result.output
     assert "Overall\t" in text_result.output
-    assert "registry.load" in text_result.output
     envelope = json.loads(_json_output(json_result))
     assert envelope["command"] == "config.repair"
     payload = envelope["result"]
-    assert payload["registry"]["available"] is True
-    assert "registry.load" in {check["name"] for check in payload["checks"]}
     assert logs_result.exit_code == 0, logs_result.output
     assert "path\t" in logs_result.output
 
 
-def test_version_flag_renders_backend_registry_summary() -> None:
+def test_version_flag_renders_package_identity_without_registry_summary() -> None:
     report = build_cli_version_report()
-    assert report.registry.available
 
     for command in (["--version", "--detail"], ["-V", "--detail"]):
         result = _invoke(command)
 
         assert result.exit_code == 0, result.output
         assert f"cadrumo {report.package_version}" in result.output
-        assert f"{report.registry.modelo_count} modelos" in result.output
-        assert f"{report.registry.casilla_count} casillas" in result.output
-        assert f"{report.registry.formula_count} formulas" in result.output
 
 
 def test_app_surface_uses_singular_user_domains() -> None:

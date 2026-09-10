@@ -207,8 +207,8 @@ def config_check(ctx: typer.Context) -> None:
     # envelope serialization. A JSON dump here turns tuple/enum action
     # fields into primitives before ConfigCheckResult validates them.
     dependencies = list(dependency_payloads)
-    # Per-provider cert/clave health, storage/corpus/env preflight, and
-    # registry referential integrity. Report-only: a red preflight row is
+    # Per-provider cert/clave health plus storage/corpus/environment and
+    # portal-catalogue preflight. Report-only: a red preflight row is
     # surfaced for operator visibility but does not, on its own, flip the
     # capability/dependency exit contract below.
     # The worst-case object-path suffix is measured from the on-disk grammar the

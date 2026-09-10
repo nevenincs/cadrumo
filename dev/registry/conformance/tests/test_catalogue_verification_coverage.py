@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import inspect
 import json
+import shutil
 from collections.abc import Sequence
 from datetime import date
 from pathlib import Path
@@ -37,7 +38,7 @@ from cadrumo.domain.calculations.registry.schema import filing_period_from_scope
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.domain.calculations.registry.temporal import select_revision
-from dev.registry.tests._catalogue_verification_support import _registry_tree
+from ...tests._catalogue_verification_support import _registry_tree
 from ._loader_directory_mode_support import (
     write_extracted_corpus_sidecar,
     write_fragmented_revision,
@@ -319,10 +320,18 @@ def test_committed_registry_tree_has_required_model_law_coverage() -> None:
 def _synthetic_reviewed_coverage_authority(tmp_path: Path) -> ValidatedRegistryAuthority:
     """Build the smallest validator-backed reviewed corpus with no layout evidence."""
     registry_root = tmp_path / "registry" / "aeat"
+    bundled_registry_root = bundled_path("registry", "aeat")
+    shutil.copytree(bundled_registry_root.parents[1] / "corpus", tmp_path / "corpus")
     legal_dir = registry_root / "legal"
+    shutil.copytree(bundled_registry_root / "legal", legal_dir)
     revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025-2026"
-    legal_dir.mkdir(parents=True)
+    legal_dir.joinpath("supported-filing-years.toml").unlink()
+    legal_dir.joinpath("sociedades-annual-manual-coverage.toml").unlink()
     revision_dir.mkdir(parents=True)
+    for directory in ("facts", "categories", "treaties", "iva", "holidays"):
+        source_directory = bundled_registry_root / directory
+        if source_directory.exists():
+            shutil.copytree(source_directory, registry_root / directory)
 
     corpus_dir = tmp_path / "corpus" / "test"
     corpus_dir.mkdir(parents=True)

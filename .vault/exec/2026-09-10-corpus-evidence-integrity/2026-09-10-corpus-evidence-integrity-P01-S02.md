@@ -5,16 +5,11 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:437be28fc697a415e9e964728abcc5fc8dab5bebe5bef9658c7f1f0c496e3cc1'
+body_hash: 'sha256:684a2ae8ec973a5952e05f22de21610e93139dd8ae9492b26e60fe5a9fe99171'
 step_id: 'S02'
 related:
   - "[[2026-09-10-corpus-evidence-integrity-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Replace the hand-shaped Orden EHA/3290/2008 excerpt with the real BOE consolidated text for articles 1 and 4, preserving both existing anchors
 

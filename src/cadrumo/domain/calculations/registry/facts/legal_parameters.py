@@ -14,7 +14,6 @@ from ..loader_fingerprints import RegistryPathFingerprints
 from ..schema_base import DateAxis
 from ..schema_references import LegalParameter
 from .schema import (
-    EntitySetFactPayload,
     FactOwnership,
     GovernedFact,
     GovernedFactFamily,
@@ -25,10 +24,6 @@ from .schema import (
 LEGAL_PARAMETER_PROVIDER_ID = "global-legal-parameters"
 LEGAL_PARAMETER_PROVIDER_DIRECTORY = "legal"
 
-_ENTITY_SET_PARAMETER_IDS = frozenset(
-    {
-    }
-)
 _SCALAR_PARAMETER_IDS = frozenset(
     {
         "liva-art-161:recargo-rate-general",
@@ -41,7 +36,7 @@ _SCALAR_PARAMETER_IDS = frozenset(
         "lirpf-dt-32:eo-exclusion-compras-eur",
     }
 )
-LEGAL_PARAMETER_FACT_IDS = _SCALAR_PARAMETER_IDS | _ENTITY_SET_PARAMETER_IDS
+LEGAL_PARAMETER_FACT_IDS = _SCALAR_PARAMETER_IDS
 
 
 def compile_legal_parameter_facts(registry_root: Path) -> tuple[GovernedFact, ...]:
@@ -67,16 +62,12 @@ def reset_legal_parameter_fact_provider() -> None:
 
 
 def _parameter_fact(parameter: LegalParameter) -> GovernedFact:
-    if parameter.id in _ENTITY_SET_PARAMETER_IDS:
-        family = GovernedFactFamily.ENTITY_SET
-        payload = EntitySetFactPayload(entities=frozenset(item for item in parameter.value.split(",") if item))
-    else:
-        family = GovernedFactFamily.SCALAR
-        try:
-            value = Decimal(parameter.value)
-        except InvalidOperation as exc:
-            raise RegistryValidationError(f"global legal parameter {parameter.id!r} is not a decimal scalar") from exc
-        payload = ScalarFactPayload(value=value, unit=parameter.unit)
+    family = GovernedFactFamily.SCALAR
+    try:
+        value = Decimal(parameter.value)
+    except InvalidOperation as exc:
+        raise RegistryValidationError(f"global legal parameter {parameter.id!r} is not a decimal scalar") from exc
+    payload = ScalarFactPayload(value=value, unit=parameter.unit)
     return GovernedFact(
         fact_id=parameter.id,
         family=family,

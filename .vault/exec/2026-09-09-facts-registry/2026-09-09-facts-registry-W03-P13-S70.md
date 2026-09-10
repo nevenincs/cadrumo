@@ -5,16 +5,12 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:2de60fcd406ba7d331b6e3c7096f6b08e2a84c5e50c55e183a2aad927dc67b83'
+body_hash: 'sha256:c556125775215ed510844c221b8f9906a813586fb0da73be0573a734d4a2a3ca'
 step_id: 'S70'
 related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
 
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Capture and author the bounded administrator-retention fact slice from BOE redactions
 

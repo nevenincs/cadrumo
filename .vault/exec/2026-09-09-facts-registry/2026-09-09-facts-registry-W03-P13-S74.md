@@ -5,16 +5,12 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:318841c4044d72f317a53779701c74286d7c3df330a7c55e0b45765d5baf47d7'
+body_hash: 'sha256:88b6d470ea3a43bc5e789fda5ff217afed7173f4c620058ca40c8f46298c39b0'
 step_id: 'S74'
 related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
 
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Capture the official M036 activity-code mapping, author source-cited article-95 activity-selector facts, and remove their legacy adapter definitions
 

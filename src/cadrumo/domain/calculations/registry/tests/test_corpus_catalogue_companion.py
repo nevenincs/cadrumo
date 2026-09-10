@@ -13,7 +13,9 @@ root; no repository file is modified and no behaviour is mocked.
 
 from __future__ import annotations
 
+import hashlib
 import shutil
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -41,20 +43,6 @@ def _committed_present_companion_binary() -> SourceReference:
         if on_disk.is_file() and on_disk.stat().st_size < 5_000_000:
             return source
     raise AssertionError("no present companion corpus binary found in the committed catalogue")
-
-
-def _committed_attested_normative_source() -> SourceReference:
-    """Return a hash-pinned normative source whose bytes carry BOE attestation."""
-    _modelos, catalogues = _committed_registry_tree()
-    for source in catalogues.sources.values():
-        if not source.corpus_path.startswith("corpus/normatives/"):
-            continue
-        if (
-            classify_normative_corpus_provenance(bundled_path(), source.corpus_path)
-            is NormativeCorpusProvenance.BOE_ATTESTED
-        ):
-            return source
-    raise AssertionError("no BOE-attested normative source found in the committed catalogue")
 
 
 def _absent_source(*, corpus_path: str, kind: str) -> SourceReference:
@@ -114,12 +102,33 @@ def test_absent_non_companion_corpus_file_still_hard_fails(tmp_path: Path) -> No
         verify_source_catalogue(tmp_path, {source.id: source})
 
 
-def test_normative_source_catalogue_hash_validation_preserves_provenance_classification() -> None:
-    """A catalogue path is hash-verified before its existing provenance is observed."""
-    source = _committed_attested_normative_source()
-
-    verify_source_file(bundled_path(), source)
+def test_changed_provenance_shaped_normative_source_still_fails_hash_validation(tmp_path: Path) -> None:
+    """A provenance-shaped normative file cannot bypass its recorded source hash."""
+    corpus_path = "corpus/normatives/html/provenance-probe.html"
+    target = tmp_path / corpus_path
+    target.parent.mkdir(parents=True)
+    original = b"<!-- Official BOE consolidated source excerpt -->\n<p>original</p>\n"
+    target.write_bytes(original)
+    source = SourceReference.model_validate(
+        {
+            "id": "provenance-probe",
+            "evidence_tier": "official_source_guidance",
+            "authority": "boe",
+            "kind": "form_spec",
+            "corpus_path": corpus_path,
+            "sha256": hashlib.sha256(original).hexdigest(),
+            "bytes": len(original),
+            "retrieved_at": date(2026, 9, 10),
+            "source_url": "https://www.boe.es/",
+            "review_status": "pending_review",
+        }
+    )
+    verify_source_file(tmp_path, source)
     assert (
-        classify_normative_corpus_provenance(bundled_path(), source.corpus_path)
+        classify_normative_corpus_provenance(tmp_path, corpus_path)
         is NormativeCorpusProvenance.BOE_ATTESTED
     )
+    target.write_bytes(b"<!-- Official BOE consolidated source excerpt -->\n<p>changed!</p>\n")
+
+    with pytest.raises(RegistryValidationError, match="sha256 mismatch"):
+        verify_source_file(tmp_path, source)

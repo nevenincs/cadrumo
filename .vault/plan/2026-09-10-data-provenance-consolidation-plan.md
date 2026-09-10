@@ -10,7 +10,7 @@ related:
   - '[[2026-09-10-data-provenance-consolidation-live-lane-map-reference]]'
 modified: '2026-09-10'
 body_schema: body-v2
-body_hash: 'sha256:7fd06ed35d920d5a0af3e4b9dc381da096b26369395ea00ccf4adb0dbe277a04'
+body_hash: 'sha256:2b67f9a081b8cfcdbe2bd31f99229f06aa33317a1bf4af375bbe9afd1b977430'
 ---
 
 # `data-provenance-consolidation` plan
@@ -82,15 +82,15 @@ Delete duplicate off-host and sidecar authority routes only after exact catalog 
 - [x] `W03.P06.S16` - Delete redundant off-host acquisition projection after exact manifest and registry catalog bindings exist; `src/cadrumo/_data/corpus/aeat_official/disenos_registro/off_host_sources.json`.
 - [x] `W03.P06.S17` - Remove off-host loading, schema, and special authority routing after catalog parity; `dev/corpus/sync_aeat_record_design_corpus.py`.
 - [x] `W03.P06.S18` - Remove retired off-host-specific tests while retaining catalog-backed detector teeth; `dev/corpus/tests/test_record_design_support.py`.
-- [ ] `W03.P06.S19` - Replace sync-only extracted-sidecar census with explicit catalog derivation records; `dev/corpus/sync_aeat_record_design_corpus.py`.
+- [x] `W03.P06.S19` - Replace sync-only extracted-sidecar census with explicit catalog derivation records; `dev/corpus/sync_aeat_record_design_corpus.py`.
 
 ### Phase `W03.P07` - Prose and coverage cleanup
 
 Leave prose as documentation and eliminate duplicate role classification from coverage.
 
-- [ ] `W03.P07.S20` - Restrict PROVENANCE documentation checks to readable audit attribution rather than identity admission; `src/cadrumo/_data/corpus/tests/test_corpus_provenance.py`.
-- [ ] `W03.P07.S21` - Remove duplicated payload, metadata, and derivative classification from the retired coverage sweep; `src/cadrumo/domain/calculations/registry/tests/test_corpus_provenance_coverage.py`.
-- [ ] `W03.P07.S22` - Remove duplicate generic full-tree sidecar validation after shared validator parity; `dev/corpus/tests/test_extraction_sidecar_freshness.py`.
+- [x] `W03.P07.S20` - Restrict PROVENANCE documentation checks to readable audit attribution rather than identity admission; `src/cadrumo/_data/corpus/tests/test_corpus_provenance.py`.
+- [x] `W03.P07.S21` - Remove duplicated payload, metadata, and derivative classification from the retired coverage sweep; `src/cadrumo/domain/calculations/registry/tests/test_corpus_provenance_coverage.py`.
+- [x] `W03.P07.S22` - Remove duplicate generic full-tree sidecar validation after shared validator parity; `dev/corpus/tests/test_extraction_sidecar_freshness.py`.
 
 ## Wave `W04` - Verify final quality evidence
 

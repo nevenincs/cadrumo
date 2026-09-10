@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import sys
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from typing import Final, cast
 
 import pytest
@@ -13,17 +13,9 @@ import pytest
 from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.artifact_catalogue import DerivedArtifact
 from cadrumo.domain.calculations.registry.loader import load_shared_catalogues
 from cadrumo.domain.calculations.registry.schema import SociedadesAnnualManualCoverageStatus
 
-from ...docs.preprocess.normatives_html import HTML_EXTRACTOR_ID
-from ...docs.preprocess.sidecar import (
-    EXTRACTED_JSON_SUFFIX,
-    EXTRACTED_TEXT_SUFFIX,
-    PreprocessSidecarError,
-    validate_sidecar,
-)
 from ..extract_corpus_sidecars import check_all as check_corpus_sidecars
 from ..extract_manual_corpus_text import extract_raw_text
 
@@ -48,7 +40,6 @@ def _repository_root_resolved() -> None:
 
 
 _CORPUS_ROOT = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus"
-_BUNDLED_DATA_ROOT = _CORPUS_ROOT.parent
 _MANUAL_CORPUS_TEXT_ROOT = _REPO_ROOT / "src" / "cadrumo" / "_data" / "manual_corpus_text"
 _CORPUS_TEXT_SUFFIX = ".corpus_text.json"
 
@@ -124,75 +115,6 @@ def _sociedades_annual_manual_statuses() -> dict[int, SociedadesAnnualManualCove
     return statuses
 
 
-def _is_legal_citation_evidence_sidecar(json_path: Path) -> bool:
-    """A doubly-suffixed sidecar (``*.extracted.md.extracted.json``) is legal-citation evidence.
-
-    ``verify_legal_reference`` resolves a ``corpus_ref`` whose path already ends in
-    ``.extracted.md`` (a rendered corpus-text file, not an original source document)
-    by appending ``.extracted.json`` to it (``_legal_corpus_text`` in
-    ``domain.calculations.registry._legal``). The result is a small, hand-curated
-    sidecar carrying only the anchored ``units`` a specific legal reference cites —
-    consumed exclusively by ``resolve_anchored_extracted_unit``, which reads
-    ``units`` directly and neither requires nor validates against the full
-    ``PreprocessOutput`` schema. It is a distinct, narrower contract from the
-    source-file sidecars this test polices, not drift from either.
-    """
-    return json_path.name.removesuffix(EXTRACTED_JSON_SUFFIX).endswith(EXTRACTED_TEXT_SUFFIX)
-
-
-def _catalogue_path(path: Path) -> PurePosixPath:
-    """Return ``path`` in the catalog's bundled-data-relative namespace."""
-    return PurePosixPath(path.resolve().relative_to(_BUNDLED_DATA_ROOT).as_posix())
-
-
-def _validated_extraction_derivatives() -> tuple[list[DerivedArtifact], list[str]]:
-    """Return catalog derivations for generic sidecars and named validation failures.
-
-    The shared validator owns strict schema, repository locality, source-digest,
-    and rendered-byte parity. This corpus gate retains corpus containment and
-    extractor-semantic checks, its legal citation exception, and projection of
-    each valid text/JSON pair to the catalog's derived-artifact relation. Legal
-    citation sidecars are semantic evidence with their own narrower consumer
-    contract, not generic extractor outputs, so they are deliberately outside
-    this derivation population.
-    """
-    derivatives: list[DerivedArtifact] = []
-    failures: list[str] = []
-    for json_path in scan_directory(_CORPUS_ROOT, pattern=f"*{EXTRACTED_JSON_SUFFIX}", recursive=True):
-        if _is_legal_citation_evidence_sidecar(json_path):
-            continue
-        rel_json = json_path.relative_to(_REPO_ROOT).as_posix()
-        try:
-            output = validate_sidecar(json_path, repo_root=_REPO_ROOT)
-        except PreprocessSidecarError as exc:
-            failures.append(f"{rel_json}: {exc}")
-            continue
-        text_path = json_path.with_name(json_path.name.removesuffix(EXTRACTED_JSON_SUFFIX) + EXTRACTED_TEXT_SUFFIX)
-        source = (_REPO_ROOT / output.source_relpath).resolve()
-        if not source.is_relative_to(_CORPUS_ROOT):
-            failures.append(f"{rel_json}: declared source escapes corpus root: {output.source_relpath}")
-            continue
-        if not output.units or any(not unit.text.strip() for unit in output.units):
-            failures.append(f"{rel_json}: extraction contains no units or an empty unit")
-            continue
-        if source.suffix == ".html" and output.preprocessor_id != HTML_EXTRACTOR_ID:
-            failures.append(
-                f"{rel_json}: normative HTML sidecar declares retired or unknown "
-                f"preprocessor_id {output.preprocessor_id!r}",
-            )
-            continue
-        for path in (json_path, text_path):
-            derivatives.append(
-                DerivedArtifact(
-                    path=_catalogue_path(path),
-                    input_path=_catalogue_path(source),
-                    input_sha256=output.source_sha256,
-                    producer=output.preprocessor_id,
-                ),
-            )
-    return derivatives, failures
-
-
 def test_enrolled_corpus_html_trees_use_canonical_lf_bytes() -> None:
     """Enrolled HTML trees must hash identically on Windows and Unix checkouts.
 
@@ -233,17 +155,6 @@ def test_enrolled_html_and_workbook_sidecars_match_the_owner_check() -> None:
     """The producer-owned check proves complete enrolled derivative parity."""
     failures = check_corpus_sidecars()
     assert not failures, "enrolled corpus sidecar defects:\n" + "\n".join(failures)
-
-
-def test_committed_extraction_sidecars_match_current_sources() -> None:
-    """Every generic extraction pair validates and derives one catalog relation."""
-    sidecars = scan_directory(_CORPUS_ROOT, pattern=f"*{EXTRACTED_JSON_SUFFIX}", recursive=True)
-    derivatives, failures = _validated_extraction_derivatives()
-    assert sidecars, "no committed extraction sidecars found under src/cadrumo/_data/corpus"
-    assert not failures, f"{len(failures)} stale or malformed extraction sidecars: {failures[:20]!r}"
-    expected_generic_sidecars = sum(not _is_legal_citation_evidence_sidecar(path) for path in sidecars)
-    assert len(derivatives) == expected_generic_sidecars * 2
-    assert all(derivative.path.parent == derivative.input_path.parent for derivative in derivatives)
 
 
 def test_manual_pdf_corpus_text_sidecars_exist_and_match_source_sha256() -> None:

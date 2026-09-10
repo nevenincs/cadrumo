@@ -223,6 +223,39 @@ source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BO
 review_status = "agent_reviewed"
 corpus_tier = "provision_excerpt"
 
+# Exact BOE open-data redactions for the three payment-fraction selector facts.
+# The fact variants begin only when the separately captured AEAT M036 table
+# identifies its activity codes; the older BOE text is retained as the legal
+# authority, not misrepresented as proof of that later vocabulary.
+
+[sources."boe-rirpf-art-109-2007-04-01"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2007-6820-art-109-redaction-20070401.xml"
+sha256 = "ca201b3eb296e5af063ff5bb1ff9944fc9e14f0cf84053cb29c002245397d2c9"
+bytes = 1994
+retrieved_at = 2026-09-10
+published_at = 2007-03-31
+applies_from = 2007-04-01
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2007-6820/texto/bloque/a109"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-rirpf-art-110-2018-12-23"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2007-6820-art-110-redaction-20181223.xml"
+sha256 = "2d2f769c57987b8a14fa8ed861ef921a0345a1d8b898d3342f0c9de87ba5405c"
+bytes = 11554
+retrieved_at = 2026-09-10
+published_at = 2018-12-22
+applies_from = 2018-12-23
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2007-6820/texto/bloque/a110"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
 # Official AEAT guidance gives the exact Modelo 036 activity-code table.  It
 # is intentionally a bounded source: its verified 2026-03-26 update marker
 # supports this vocabulary from that date, but says nothing about older form

@@ -4,14 +4,20 @@ from __future__ import annotations
 
 import hashlib
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 import pytest
+
+from cadrumo.domain.calculations.registry.artifact_catalogue import (
+    ArtifactDiagnosticKind,
+    ArtifactRole,
+    DerivedArtifact,
+)
 
 from .. import sync_aeat_record_design_corpus as record_design_sync
 from ..sync_aeat_record_design_corpus import (
     _CORPUS,
-    _EXTRACTION_SIDECAR_ARTEFACTS,
+    _EXTRACTION_SIDECAR_DERIVATIONS,
     _HISTORICAL_EXCLUSIONS_PATH,
     _PAGES,
     _REQUIRED,
@@ -21,6 +27,7 @@ from ..sync_aeat_record_design_corpus import (
     _authority_failures,
     _load_manifests,
     _Manifest,
+    _record_design_catalogue,
     _root_aggregate,
     check,
     unattested_corpus_files,
@@ -307,7 +314,7 @@ def _configure_isolated_sync_check(
     (tmp_path / "manifest.json").write_text(json.dumps(aggregate), encoding="utf-8")
     monkeypatch.setattr(record_design_sync, "_CORPUS", tmp_path)
     monkeypatch.setattr(record_design_sync, "_REQUIRED", ())
-    monkeypatch.setattr(record_design_sync, "_EXTRACTION_SIDECAR_ARTEFACTS", ())
+    monkeypatch.setattr(record_design_sync, "_EXTRACTION_SIDECAR_DERIVATIONS", ())
     monkeypatch.setattr(record_design_sync, "_load_manifests", lambda: manifests)
     monkeypatch.setattr(
         record_design_sync,
@@ -351,30 +358,58 @@ def test_catalog_backed_sync_rejects_conflicting_acquisition_identity(
     assert "modelo_999/files/02-orden.pdf" in str(failure.value)
 
 
-def test_the_extraction_sidecar_census_is_an_equality_not_a_suffix_rule(tmp_path: Path) -> None:
-    """A third sidecar fails, and so does retiring one while it is still listed."""
+def test_named_sheet_text_is_catalogued_as_a_fresh_derivative(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A named text extraction has one derived role and the exact workbook digest."""
     manifests = _corpus_fixture(tmp_path)
-    # The .txt carries the .xls URL it was extracted from, so a required row
-    # matches it; the census is what says the match is spurious.
     manifests["999"]["artefacts"].append(_artefact("files/01-design.txt", f"{_STATIC}/DR_900/archivos/dr999.pdf"))
-    sidecar = "modelo_999/files/01-design.txt"
+    (tmp_path / "modelo_999" / "files" / "01-design.txt").write_text("# Sheet: Fixture", encoding="utf-8")
+    derivative = DerivedArtifact(
+        path=PurePosixPath("modelo_999/files/01-design.txt"),
+        input_path=PurePosixPath("modelo_999/files/01-design.pdf"),
+        input_sha256="0" * 64,
+        producer="record-design-sheet-text-extractor",
+    )
+    monkeypatch.setattr(record_design_sync, "_EXTRACTION_SIDECAR_DERIVATIONS", (derivative,))
 
-    assert _authority_failures(manifests, (sidecar,)) == []
+    catalogue, failures = _record_design_catalogue(manifests, tmp_path)
 
-    # Present but not censused. The URL match alone would excuse it, so the
-    # reproducibility check is what catches it: the URL serves the .pdf.
-    unlisted = _authority_failures(manifests, ())
-    assert any("not reproducible from its declared URL" in failure for failure in unlisted)
+    assert failures == []
+    assert catalogue is not None
+    assert catalogue.roles[derivative.path] is ArtifactRole.DERIVED_ARTIFACT
+    assert _authority_failures(manifests, catalogue) == []
 
-    # Censused but no longer present.
-    manifests["999"]["artefacts"].pop()
-    retired = _authority_failures(manifests, (sidecar,))
-    assert any("no longer present" in failure for failure in retired)
+    stale = DerivedArtifact(
+        path=derivative.path,
+        input_path=derivative.input_path,
+        input_sha256="1" * 64,
+        producer=derivative.producer,
+    )
+    monkeypatch.setattr(record_design_sync, "_EXTRACTION_SIDECAR_DERIVATIONS", (stale,))
+
+    catalogue, failures = _record_design_catalogue(manifests, tmp_path)
+
+    assert failures == []
+    assert catalogue is not None
+    assert any(
+        diagnostic.kind is ArtifactDiagnosticKind.STALE_DERIVATIVE and diagnostic.path == stale.path
+        for diagnostic in catalogue.diagnostics
+    )
 
 
-def test_the_shipped_extraction_sidecar_census_is_the_two_known_rows() -> None:
-    """Named debt, not a suffix exemption that would swallow a genuine text artefact."""
-    assert _EXTRACTION_SIDECAR_ARTEFACTS == (
-        "modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.txt",
-        "modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.txt",
+def test_the_shipped_sheet_text_derivations_are_named_and_hash_pinned() -> None:
+    """Named records prevent a suffix exemption and bind each source workbook."""
+    assert tuple(
+        (derivative.path.as_posix(), derivative.input_path.as_posix()) for derivative in _EXTRACTION_SIDECAR_DERIVATIONS
+    ) == (
+        (
+            "modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.txt",
+            "modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.xls",
+        ),
+        (
+            "modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.txt",
+            "modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.xls",
+        ),
+    )
+    assert all(
+        derivative.producer == "record-design-sheet-text-extractor" for derivative in _EXTRACTION_SIDECAR_DERIVATIONS
     )

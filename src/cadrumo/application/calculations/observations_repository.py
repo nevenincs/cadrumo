@@ -58,16 +58,15 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.observed_header_fact import ObservedHeaderFact
 from ...core.period import Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
-from ...core.resources.bundled_data import bundled_path
 from ...core.result_disposition import ResultDisposition
 from ...core.secure_object_write import SecureObjectWrite
 from ...core.time.clock import now
 from ...core.time.utc import UtcInstant
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.iva_compensation.filed_derivation import M303CompensationBasisValue
@@ -497,8 +496,10 @@ def _validate_observation_casilla_ids(observation: RegistryModeloObservation) ->
     )
     referenced_casilla_ids = observed_casilla_ids | operand_casilla_refs
     try:
-        modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-        modelo = next((candidate for candidate in modelos if candidate.id == observation.modelo), None)
+        modelo = next(
+            (candidate for candidate in bundled_authority().modelos if candidate.id == observation.modelo),
+            None,
+        )
         if modelo is None:
             raise RegistrySnapshotError(f"modelo {observation.modelo!r} is not present in the calculation registry")
         revision = select_revision(

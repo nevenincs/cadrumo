@@ -29,6 +29,7 @@ from cadrumo.domain.calculations.registry.artifact_catalogue import (  # noqa: E
     ArtifactDiagnostic,
     ArtifactDiagnosticKind,
     ArtifactRole,
+    DerivedArtifact,
     compile_artifact_catalogue,
     record_design_manifest_identities,
 )
@@ -90,24 +91,29 @@ _DERIVED_SUFFIXES: Final[tuple[str, ...]] = (
 #: load-bearing evidence for an AEAT authority check.
 _UNATTESTED_CORPUS_FILES: Final[tuple[str, ...]] = ("modelo_200/files/01-200-ejercicio-2025-10-9-mb-xls.xlsx",)
 
-#: Manifest artefacts that are sheet-text extractions of a sibling payload,
-#: enrolled as artefacts and carrying the sibling's source URL.
+#: Sheet-text extractions of sibling payloads which remain in their historical
+#: manifests.  They are explicitly catalogued as derivatives, rather than
+#: acquisition artefacts: each listed URL serves the sibling ``.xls`` and can
+#: never reproduce the rendered text bytes.
 #:
-#: They cannot resolve to an acquisition authority, and no row could give them
-#: one: the URL each declares serves the ``.xls`` beside it, so fetching it can
-#: never reproduce the ``.txt``. Both begin ``# Sheet:`` followed by ``rNcM:``
-#: cell coordinates, which is extractor output, not a download.
-#:
-#: They are named here rather than excused by a rule, because a suffix-based
-#: exemption would also swallow a genuine text artefact. :func:`check` compares
-#: the observed set against this one for EQUALITY, so a third such row fails and
-#: so does correcting one of these without removing it from here. The correction
-#: - recognise them as derivatives and retire the manifest rows, or re-enrol them
-#: with the extraction recorded as their provenance - is a corpus data change and
-#: is not made by declaring them.
-_EXTRACTION_SIDECAR_ARTEFACTS: Final[tuple[str, ...]] = (
-    "modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.txt",
-    "modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.txt",
+#: These are named records rather than a suffix exemption, so an unrecorded
+#: text file remains unclassified.  The source digests make the existing
+#: relationship fail closed when a workbook changes without re-extraction.
+_EXTRACTION_SIDECAR_DERIVATIONS: Final[tuple[DerivedArtifact, ...]] = (
+    DerivedArtifact(
+        path=PurePosixPath("modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.txt"),
+        input_path=PurePosixPath(
+            "modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.xls"
+        ),
+        input_sha256="85ffe058c1728a50d11d3c6fcfe03f77e172e0458b53920a620aa434d66d07b4",
+        producer="record-design-sheet-text-extractor",
+    ),
+    DerivedArtifact(
+        path=PurePosixPath("modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.txt"),
+        input_path=PurePosixPath("modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.xls"),
+        input_sha256="21ec4feed2950c57c689a772166952b3c2245e7101bce7836c2baedc1f4f8dbd",
+        producer="record-design-sheet-text-extractor",
+    ),
 )
 
 
@@ -1452,12 +1458,17 @@ def _record_design_catalogue(
     either.  Production ``check`` always fails closed on an incomplete
     identity row.
     """
+    derived_paths = {derivative.path for derivative in _EXTRACTION_SIDECAR_DERIVATIONS}
     identities = []
     failures: list[str] = []
     for modelo, manifest in sorted(manifests.items()):
         manifest_path = PurePosixPath(f"modelo_{modelo}/{_MANIFEST_NAME}")
         try:
-            identities.extend(record_design_manifest_identities(manifest, manifest_path=manifest_path))
+            identities.extend(
+                identity
+                for identity in record_design_manifest_identities(manifest, manifest_path=manifest_path)
+                if identity.path not in derived_paths
+            )
         except (TypeError, ValueError) as error:
             failures.append(f"manifest acquisition identity is malformed: M{modelo}: {error}")
     if failures:
@@ -1465,6 +1476,7 @@ def _record_design_catalogue(
     catalogue = compile_artifact_catalogue(
         known_paths=_payload_paths(corpus_root),
         official_identities=identities,
+        derived_artifacts=_EXTRACTION_SIDECAR_DERIVATIONS,
     )
     return catalogue, []
 
@@ -1731,50 +1743,47 @@ def _pull() -> None:
 
 def _authority_failures(
     manifests: dict[str, _Manifest],
-    sidecar_census: tuple[str, ...],
     catalogue: ArtifactCatalogue | None = None,
 ) -> list[str]:
     """Report manifest artefacts that lack one official catalog identity.
 
     The catalog owns the complete immutable acquisition identity, including
     documents acquired from a non-AEAT publisher.  The synchronizer retains
-    byte rehashing and the temporary named sidecar exception until S19 replaces
-    that exception with catalog derivation records.
+    byte rehashing; catalogued derivatives retain their exact input identity.
     """
     failures: list[str] = []
     catalogue_is_local = catalogue is None
     if catalogue_is_local:
+        derived_paths = {derivative.path for derivative in _EXTRACTION_SIDECAR_DERIVATIONS}
         identities = []
         for modelo, manifest in sorted(manifests.items()):
             try:
                 identities.extend(
-                    record_design_manifest_identities(
+                    identity
+                    for identity in record_design_manifest_identities(
                         manifest,
                         manifest_path=PurePosixPath(f"modelo_{modelo}/{_MANIFEST_NAME}"),
                     )
+                    if identity.path not in derived_paths
                 )
             except (TypeError, ValueError) as error:
                 failures.append(f"manifest acquisition identity is malformed: M{modelo}: {error}")
         catalogue = compile_artifact_catalogue(
-            known_paths=tuple(identity.path for identity in identities),
+            known_paths=tuple(identity.path for identity in identities)
+            + tuple(derivative.path for derivative in _EXTRACTION_SIDECAR_DERIVATIONS),
             official_identities=identities,
+            derived_artifacts=_EXTRACTION_SIDECAR_DERIVATIONS,
         )
     if catalogue_is_local:
         failures.extend(_catalogue_diagnostic_message(diagnostic) for diagnostic in catalogue.diagnostics)
-    sidecar_paths = set(sidecar_census)
-
-    observed_sidecars: list[str] = []
     for modelo, manifest in sorted(manifests.items()):
         for artifact in manifest["artefacts"]:
             path = f"modelo_{modelo}/{artifact['stored_path']}"
-            if path in sidecar_paths:
-                observed_sidecars.append(path)
+            catalog_role = catalogue.roles.get(PurePosixPath(path))
+            if catalog_role is ArtifactRole.DERIVED_ARTIFACT:
                 continue
             catalog_identity = catalogue.identities.get(PurePosixPath(path))
-            if (
-                catalog_identity is None
-                or catalogue.roles.get(catalog_identity.path) is not ArtifactRole.OFFICIAL_ARTIFACT
-            ):
+            if catalog_identity is None or catalog_role is not ArtifactRole.OFFICIAL_ARTIFACT:
                 failures.append(f"artefact does not bind an official catalog identity: M{modelo} {path}")
                 continue
             # A catalog identity proves provenance, but not reproducibility by
@@ -1787,11 +1796,6 @@ def _authority_failures(
                     f"artefact is not reproducible from its declared URL: M{modelo} {path} "
                     f"stored {stored_suffix or '<none>'} but {artifact['url']} serves {url_suffix or '<none>'}"
                 )
-
-    if tuple(sorted(observed_sidecars)) != sidecar_census:
-        appeared = sorted(set(observed_sidecars) - sidecar_paths)
-        retired = sorted(sidecar_paths - set(observed_sidecars))
-        failures.append(f"extraction-sidecar census has changed: newly present {appeared}, no longer present {retired}")
     return failures
 
 
@@ -1899,7 +1903,6 @@ def check() -> None:
     failures.extend(
         _authority_failures(
             manifests,
-            _EXTRACTION_SIDECAR_ARTEFACTS,
             catalogue,
         )
     )

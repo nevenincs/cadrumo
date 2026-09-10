@@ -5,16 +5,12 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:4f2ffdeaf18ae192570f2ba6a639c01223b0d36b3e5ca1e2d792fa8677e10526'
+body_hash: 'sha256:a3e9a84575b34438db20b7d0cc6f01e4aa3e97b6faee2fa7af2d7b985d8806f2'
 step_id: 'S68'
 related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
 
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Capture hash-pinned BOE article 95 redactions and author source-cited temporal withholding-rate facts under the governed authority
 

@@ -1555,8 +1555,6 @@ def filed_pull_sources_cmd(
     year: int,
     period: str,
     output_root: Path | None = None,
-    registry_root: Path | None = None,
-    source_root: Path | None = None,
 ) -> None:
     """Capture registry-selected source observations for a target :class:`Period`.
 
@@ -1575,8 +1573,6 @@ def filed_pull_sources_cmd(
             year=year,
             period=_required_live_period_option(period, year=year),
             output_root=resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir),
-            registry_root=registry_root,
-            source_root=source_root,
         ),
     )
     lines = _source_filed_capture_lines(report)

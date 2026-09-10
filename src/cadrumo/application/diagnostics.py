@@ -1,8 +1,7 @@
 """Application-owned diagnostics, version reports, and repair probes.
 
 :func:`build_cli_version_report` and :func:`render_cli_version_text` back the
-root ``aeat --version`` surface. They keep the fast path import-light unless the
-caller requests registry detail.
+root ``aeat --version`` surface without loading the bundled registry.
 
 :func:`build_config_repair_report` composes environment checks,
 :class:`~application.workflow.WorkflowState` loading,
@@ -39,7 +38,6 @@ from __future__ import annotations
 
 import asyncio
 import sys
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from .. import __version__
@@ -76,9 +74,6 @@ from .diagnostic_models import (
     DiagnosticStatusValue as _DiagnosticStatusValue,
 )
 from .diagnostic_models import (
-    RegistryVersionSummary as _RegistryVersionSummary,
-)
-from .diagnostic_models import (
     SecureObjectIntegrityReport as _SecureObjectIntegrityReport,
 )
 from .diagnostic_models import (
@@ -109,34 +104,11 @@ if TYPE_CHECKING:
 
 _log = get_logger(__name__)
 
-def build_cli_version_report(
-    registry_root: Path | None = None,
-    *,
-    with_registry: bool = True,
-) -> _CliVersionReport:
-    """Return the package and registry summary for CLI version surfaces.
-
-    The ``with_registry`` flag controls whether the full registry
-    TOML load fires. The CLI root callback passes
-    ``with_registry=False`` for bare ``aeat --version`` invocations
-    (the operator must see name + version in under a second on cold
-    start). When
-    ``--detail`` is on, the caller re-invokes with
-    ``with_registry=True`` to populate the registry summary.
-
-    Returns a :class:`CliVersionReport` whose registry field is either the
-    fast-path empty :class:`RegistryVersionSummary` or the detailed summary from
-    :class:`~domain.calculations.registry.ValidatedRegistryAuthority`.
-    """
-    if with_registry:
-        root = registry_root or bundled_path("registry", "aeat")
-        summary = _build_registry_version_summary(root)
-    else:
-        summary = _RegistryVersionSummary(available=False, registry_root="")
+def build_cli_version_report() -> _CliVersionReport:
+    """Return package identity for the CLI version surfaces."""
     return _CliVersionReport(
         package_name="cadrumo",
         package_version=__version__,
-        registry=summary,
     )
 
 
@@ -438,32 +410,6 @@ def _finding_tag(finding: _DiagnosticFinding) -> str:
     if finding.requirement == "optional":
         return f"{tr('cli.diagnostics.repair.finding_optional', default='optional')}: "
     return ""
-
-
-def _build_registry_version_summary(registry_root: Path) -> _RegistryVersionSummary:
-    from ..domain.calculations.registry.authority import ValidatedRegistryAuthority
-
-    try:
-        authority = ValidatedRegistryAuthority.load(registry_root, source_root=bundled_path())
-    except Exception as exc:  # pragma: no cover - covered by later repair diagnostics.
-        _log.debug("registry version summary load failed for %s", registry_root, exc_info=True)
-        return _RegistryVersionSummary(
-            available=False,
-            registry_root=str(registry_root),
-            error=f"{type(exc).__name__}: {exc}",
-        )
-
-    modelos = tuple(authority.modelos)
-    revisions = tuple(revision for modelo in modelos for revision in modelo.revisions.values())
-    return _RegistryVersionSummary(
-        available=True,
-        registry_root=str(registry_root),
-        modelo_count=len(modelos),
-        revision_count=len(revisions),
-        casilla_count=sum(len(revision.casillas) for revision in revisions),
-        formula_count=sum(len(revision.formulas) for revision in revisions),
-        revision_ids=tuple(sorted({str(revision.id) for revision in revisions})),
-    )
 
 
 def _probe_secure_objects_integrity() -> _SecureObjectIntegrityReport:
@@ -961,32 +907,7 @@ def _overall_status(checks: tuple[_DiagnosticCheck, ...]) -> _DiagnosticStatusVa
 
 def render_cli_version_text(report: _CliVersionReport) -> str:
     """Render a compact text line for human-facing version output."""
-    registry = report.registry
-    if not registry.available:
-        return tr(
-            "cli.diagnostics.version.registry_unavailable",
-            package=report.package_name,
-            version=report.package_version,
-            error=registry.error or "",
-        )
-    revision_label = (
-        ", ".join(registry.revision_ids) if registry.revision_ids else tr("cli.diagnostics.version.no_revisions")
-    )
-    return tr(
-        "cli.diagnostics.version.registry_summary",
-        default=(
-            "{package} {version}\n"
-            "Registry: {modelos} modelos, {casillas} casillas, "
-            "{formulas} formulas\n"
-            "Revisions: {revisions}"
-        ),
-        package=report.package_name,
-        version=report.package_version,
-        revisions=revision_label,
-        modelos=registry.modelo_count,
-        casillas=registry.casilla_count,
-        formulas=registry.formula_count,
-    )
+    return f"{report.package_name} {report.package_version}"
 
 
 def secure_object_unreadable_total() -> int:

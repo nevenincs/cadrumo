@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -46,10 +47,10 @@ def _grounding_failures(catalogue: GovernedFactCatalogue) -> tuple[str, ...]:
     )
 
 
-def test_provider_projects_exactly_the_11_remaining_adapter_parameter_ids() -> None:
+def test_provider_projects_exactly_the_8_remaining_adapter_parameter_ids() -> None:
     facts = compile_legal_parameter_facts(bundled_path("registry", "aeat"))
 
-    assert len(LEGAL_PARAMETER_FACT_IDS) == 11
+    assert len(LEGAL_PARAMETER_FACT_IDS) == 8
     assert {fact.fact_id for fact in facts} == LEGAL_PARAMETER_FACT_IDS
 
 
@@ -100,9 +101,6 @@ def test_production_validation_rejects_a_variant_with_both_evidence_lanes_erased
             family=fact.family,
             variants=(erased,),
         )
-
-
-
 def test_fact_families_define_the_canonical_query_contract() -> None:
     facts = _catalogue().facts
 

@@ -10,7 +10,7 @@ related:
   - '[[2026-09-10-corpus-evidence-integrity-hand-shaped-corpus-text-research]]'
 modified: '2026-09-10'
 body_schema: body-v2
-body_hash: 'sha256:379efc919299feb686057c405b66edfca66874bc8e3275673f08a08d65de0d12'
+body_hash: 'sha256:4554598f4b117b9d96d2990fd18a4e34aefff6b2e832197cde5d25325095cfb1'
 ---
 
 # `registry-temporal-coverage` plan
@@ -83,8 +83,8 @@ Demonstrate that the repaired committed corpus and the real registry authority r
 
 Exercise the production registry and isolated defects through the same validation boundary used for authority publication.
 
-- [ ] `W06.P12.S33` - Assert every committed legal catalogue entry satisfies its provenance-bound filing-authority contract; `src/cadrumo/domain/calculations/registry/tests/test_registry_legal_grounding.py`.
-- [ ] `W06.P12.S34` - Verify normative corpus catalogue resolution preserves provenance classification without weakening byte-integrity checks; `src/cadrumo/domain/calculations/registry/tests/test_corpus_catalogue_companion.py`.
+- [x] `W06.P12.S33` - Assert every committed legal catalogue entry satisfies its provenance-bound filing-authority contract; `src/cadrumo/domain/calculations/registry/tests/test_registry_legal_grounding.py`.
+- [x] `W06.P12.S34` - Verify normative corpus catalogue resolution preserves provenance classification without weakening byte-integrity checks; `src/cadrumo/domain/calculations/registry/tests/test_corpus_catalogue_companion.py`.
 
 ## Parallelization
 

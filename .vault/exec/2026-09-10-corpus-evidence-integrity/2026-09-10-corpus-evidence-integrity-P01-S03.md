@@ -5,16 +5,11 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:dcca833545a4597c32761c647e664f902286b7bb3bf5947af98648affcdbe50e'
+body_hash: 'sha256:ea61e2f2977e6106c06b843a4ed85e5da6b28e8785091e0975fa034e1f59a7b8'
 step_id: 'S03'
 related:
   - "[[2026-09-10-corpus-evidence-integrity-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Replace the hand-shaped Ley 12/2002 article 29 excerpt with the real BOE consolidated text of the Concierto Economico provision
 

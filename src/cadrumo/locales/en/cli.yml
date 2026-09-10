@@ -3040,7 +3040,7 @@ cli:
         diagnostics_logs: Show the log path and latest lines.
         diagnostics_overview_verbose: Show general state with additional detail.
         diagnostics_repair_json: Return the complete local health report as JSON.
-        diagnostics_version: Show the package and registry fingerprint.
+        diagnostics_version: Show the installed package identity.
         family_app: Open profile-scoped tax-work commands.
         family_config: Open profile, session, custody, storage, and repair commands.
         footer: Add --help for details. Remove sensitive log values, then report bugs

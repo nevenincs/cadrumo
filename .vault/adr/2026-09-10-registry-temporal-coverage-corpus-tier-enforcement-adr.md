@@ -5,12 +5,12 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:21dae8e7c8525e3c1d72748fd9bd36bfd29b882dce6ed5a80f9420e495facc02'
+body_hash: 'sha256:bac0dcce3969ec8e5a8f08918b9d11f6e70a5afe28398c5907d427b35b0ab995'
 related:
   - '[[2026-09-10-registry-temporal-coverage-corpus-tier-enforcement-research]]'
   - '[[2026-09-10-corpus-evidence-integrity-hand-shaped-corpus-text-research]]'
 ---
-# `registry-temporal-coverage` adr: `corpus tier enforcement` | (**status:** accepted)
+# `registry-temporal-coverage` adr: `corpus tier enforcement` | (**status:** `accepted`)
 
 ## Problem Statement
 

@@ -46,7 +46,6 @@ from ...core.irnr import (
 )
 from ...core.modelo import Modelo
 from ...core.rescate_type import RescateType
-from ...core.resources.bundled_data import bundled_path
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.binding_selector_utils import boolean_binding_encoded_values
 from ...domain.calculations.registry.casilla_membership import (
@@ -59,7 +58,6 @@ from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
 )
-from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.runtime_graph import (
     enum_consumed_binding_ids,
     revision_date_binding_ids,
@@ -1465,8 +1463,7 @@ def _dt12_parcial_guidance_advisory(reduccion_casilla_id: CasillaId) -> Calculat
 def _semantic_role_casilla_id(work_unit: WorkUnit, semantic_role: str) -> CasillaId:
     """Resolve one semantic role from the already captured parent work unit."""
     modelo_id = str(work_unit.modelo)
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(candidate for candidate in modelos if candidate.id == modelo_id)
+    modelo = next(candidate for candidate in bundled_authority().modelos if candidate.id == modelo_id)
     revision = select_revision(
         modelo,
         filing_year=work_unit.filing_year,

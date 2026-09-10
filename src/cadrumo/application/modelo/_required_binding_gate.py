@@ -30,9 +30,8 @@ from decimal import Decimal
 
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
-from ...core.resources.bundled_data import bundled_path
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.ids import BindingId
-from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.modelos.calculation_revision import CalculationRevision
@@ -90,8 +89,9 @@ def require_persisted_revision_required_bindings_resolved(
     """
     if str(work_unit.modelo) != Modelo.M202.value:
         return
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo_definition = next(candidate for candidate in modelos if candidate.id == str(work_unit.modelo))
+    modelo_definition = next(
+        candidate for candidate in bundled_authority().modelos if candidate.id == str(work_unit.modelo)
+    )
     registry_revision = select_revision(
         modelo_definition,
         filing_year=work_unit.filing_year,

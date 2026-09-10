@@ -5,45 +5,15 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:5c5628b3ec56fcd695468108990b41fd9885191f75ac2662cb19e50ff826d674'
+body_hash: 'sha256:efef6daa344ccf4770a7962550f4ee2bd67e4ff74a40d1bbb18d85f6826e7c7c'
 related: []
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace registry-authoring-boundary with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-# `registry-authoring-boundary` audit: `{title}`
+# `registry-authoring-boundary` audit: `Production/development registry-authoring boundary`
 
 ## Scope
 
-<!-- What was audited and why -->
-
 ## Findings
-
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
-
-       ### {topic} | {level} | {summary}
-
-     followed by a paragraph carrying the detail. {topic} is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
 
 ### stale-cli-reference-and-doc-contracts | high | Removed registry verbs remain in generated and authored documentation contracts
 
@@ -62,10 +32,6 @@ The live command graph no longer contains `aeat app registry manuals list`, but 
 `src/cadrumo/core/topics/catalogue.py` loads `registry/aeat/topics` and its package documentation still defines its CLI contract as `aeat app registry citations`. The only non-test consumer found by the repository search is `dev/docs/terminology_handbook/_enrolment.py`; the citation CLI adapter that previously rendered those records has been removed. This leaves a shipped core service that is functionally dead on the production path and whose contract names a retired user command. Rehome it to development documentation tooling or remove it after confirming no supported product reference surface needs it.
 
 ## Recommendations
-
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
 
 - Regenerate the CLI-tree artifact through its owning generator, update or remove authored sequences and help fixtures, and replace the retired manual-list assertion with an assertion about an actually supported reference surface.
 - Remove the `app registry` bootstrap exemption, then update packaging smoke/cohort contracts and their tests to exercise the development gate only where a development package workflow is intended.

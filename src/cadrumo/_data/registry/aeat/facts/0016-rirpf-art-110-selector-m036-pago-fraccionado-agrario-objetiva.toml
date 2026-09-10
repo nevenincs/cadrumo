@@ -1,0 +1,21 @@
+[fact]
+fact_id = "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrario-objetiva"
+family = "entity_set"
+
+[[fact.variants]]
+variant_id = "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrario-objetiva:2026-03-26"
+date_axis = "filing_period"
+valid_from = 2026-03-26
+legal_refs = ["rd-439-2007:art-110", "orden-eha-1274-2007:art-1"]
+source_refs = ["aeat-m036-activity-code-table-2026-03-26", "boe-rirpf-art-110-2018-12-23"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-m036-activity-code-table-2026-03-26"
+required_text = ["Ganadería independiente", "Actividad agrícola", "Actividad ganadera dependiente", "Actividad forestal", "Actividad pesquera (excepto producción del mejillón en batea)"]
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-art-110-2018-12-23"
+required_text = ["actividades agrícolas, ganaderas, forestales o pesqueras", "2 por ciento del volumen de ingresos del trimestre"]
+[fact.variants.payload]
+kind = "entity_set"
+entities = ["A02", "B01", "B02", "B03", "B05"]

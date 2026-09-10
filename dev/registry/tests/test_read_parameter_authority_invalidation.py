@@ -1,12 +1,9 @@
-"""`read_parameter` must never serve an authority that predates a registry edit.
+"""Development-only regression coverage for parameter reads after authoring edits.
 
-The default registry root once resolved its authority through a memo keyed on
-its two path arguments. A path key cannot observe a registry edit, so the first
-call in a process pinned the compiled authority for that process's whole life:
-every later read returned values from the superseded compile, unbounded in time
-and invisible to the fingerprint machinery that bounds every other cache above
-the loader. The explicit-root branch never had that memo, so the defect was
-reachable only through the default root -- which is the branch production takes.
+This suite materialises and rewrites a synthetic *authoring* tree. It therefore
+belongs to the development registry boundary rather than the shipped package's
+test tree. Production parameter reads consume only the immutable bundled
+authority and expose no root override.
 
 These tests exercise the default branch by redirecting only the bundled registry
 root, so the code path under test is the real one. The verdict for each tree
@@ -25,19 +22,19 @@ from pathlib import Path
 
 import pytest
 
-from .....core import resources as core_resources
-from .....core.config import override_settings
-from .....tests.attribute_scope import scoped_attribute
-from .. import formula_runtime_ops as formula_runtime_ops
-from .._loader_internals import _collect_registry_tree_fingerprints_uncached
-from .._source_evidence_fingerprint import collect_source_evidence_fingerprints
-from .._verdict_cache import certify_registry_validation, compute_verdict_key
-from ..convenio import collect_convenio_fingerprints
-from ..formula_runtime_ops import read_parameter
-from ..identity import compute_walked_tree_digest
-from ..loader_cache import _bundled_registry_root
-from ..loader_fingerprints import clear_fingerprint_cache
-from ..m303_orden_manifest import collect_m303_annual_orden_fingerprints
+from cadrumo.core import resources as core_resources
+from cadrumo.core.config import override_settings
+from cadrumo.domain.calculations.registry import formula_runtime_ops
+from cadrumo.domain.calculations.registry._loader_internals import _collect_registry_tree_fingerprints_uncached
+from cadrumo.domain.calculations.registry._source_evidence_fingerprint import collect_source_evidence_fingerprints
+from cadrumo.domain.calculations.registry._verdict_cache import certify_registry_validation, compute_verdict_key
+from cadrumo.domain.calculations.registry.convenio import collect_convenio_fingerprints
+from cadrumo.domain.calculations.registry.formula_runtime_ops import read_parameter
+from cadrumo.domain.calculations.registry.identity import compute_walked_tree_digest
+from cadrumo.domain.calculations.registry.loader_cache import _bundled_registry_root
+from cadrumo.domain.calculations.registry.loader_fingerprints import clear_fingerprint_cache
+from cadrumo.domain.calculations.registry.m303_orden_manifest import collect_m303_annual_orden_fingerprints
+from cadrumo.tests.attribute_scope import scoped_attribute
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -80,7 +77,9 @@ valid_to = 2025-12-31
 _SUPPORTED_FILING_YEARS_TEXT = (
     "[supported_filing_years]\nyears = [2025]\n\n"
     "[sociedades_annual_manual_coverage]\n"
-    "dispositions = [{ year = 2025, status = \"unpublished\", official_locator = \"https://example.com/manuals\", observed_at = 2026-09-10, acquisition_condition_key = \"application.registry.manuals.coverage.recheck_aeat_publication\" }]\n"
+    "dispositions = [{ year = 2025, status = \"unpublished\", "
+    "official_locator = \"https://example.com/manuals\", observed_at = 2026-09-10, "
+    "acquisition_condition_key = \"application.registry.manuals.coverage.recheck_aeat_publication\" }]\n"
 )
 
 
@@ -202,49 +201,6 @@ def test_read_parameter_sees_a_registry_edit_under_the_default_root(
     assert after == Decimal("0.06"), (
         "read_parameter served a registry parameter from an authority that predates the edit on disk"
     )
-
-
-def test_read_parameter_resolves_the_default_and_an_explicit_root_identically(
-    tmp_path: Path,
-    redirected_bundled_registry_root: Callable[[Path], Path],
-) -> None:
-    """Both roots take one resolution path, so neither can drift from the other.
-
-    The defect was a branch: the default root had a memo the explicit root did
-    not, so the two answered differently for the same tree once it changed. This
-    pins the collapse -- after an edit, the default root and the explicit root
-    report the same value.
-    """
-    registry_root = _write_registry_tree(tmp_path, value="0.05")
-    source_root = redirected_bundled_registry_root(registry_root)
-
-    with override_settings(cadrumo_validation_verdict_cache_dir=tmp_path / "verdict"):
-        _certify_current_tree(registry_root, source_root)
-        assert read_parameter(
-            _MODELO_ID,
-            _REVISION_ID,
-            _PARAMETER_ID,
-            date_context={"filing_period": date(2025, 6, 30)},
-        ) == Decimal("0.05")
-
-        _write_registry_tree(tmp_path, value="0.07")
-        _certify_current_tree(registry_root, source_root)
-
-        via_default = read_parameter(
-            _MODELO_ID,
-            _REVISION_ID,
-            _PARAMETER_ID,
-            date_context={"filing_period": date(2025, 6, 30)},
-        )
-        via_explicit = read_parameter(
-            _MODELO_ID,
-            _REVISION_ID,
-            _PARAMETER_ID,
-            date_context={"filing_period": date(2025, 6, 30)},
-            registry_root=registry_root,
-        )
-
-    assert via_default == via_explicit == Decimal("0.07")
 
 
 def test_no_memo_in_the_parameter_read_module_can_outlive_a_registry_edit() -> None:

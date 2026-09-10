@@ -5,16 +5,11 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:3721df296a80273f95c12b40ccb11f2fb3ec28d7b03efcd70568bc64c8147365'
+body_hash: 'sha256:f9d2866e9fd8b0bd7df0659bb3d43d68da5c6702dbb95297910a8912183e5e2b'
 step_id: 'S03'
 related:
   - "[[2026-09-10-sociedades-manual-coverage-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Carry annual-manual coverage state through the stable CLI output contract
 
