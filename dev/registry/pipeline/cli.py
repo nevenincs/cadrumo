@@ -11,7 +11,7 @@ from __future__ import annotations
 import re
 import shutil
 import tempfile
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Annotated, Literal
@@ -212,6 +212,50 @@ def _stage_isolated_edition(source_modelo_root: Path, staged_root: Path, *, revi
     return staged_root
 
 
+def _require_target_edition_states_addressed_casillas(
+    prepared: _PreparedInvocation,
+    rendered: RenderedExportTree,
+) -> None:
+    """Refuse, before anything is written, a target edition that cannot take the layout's back-references.
+
+    The comparison is against the target edition as the loader resolves it, so
+    a casilla the edition inherits is found rather than reported missing. The
+    layout must address no casilla absent from that edition. It must also
+    address no inherited casilla: publication writes each addressed casilla's
+    ``export_refs`` onto the edition's own declarations after the export tree
+    has been swapped in, and an inherited row has no declaration in the edition
+    to carry it. Its back-reference belongs to the edition's own layout and must
+    be derived from it, never written onto the declaring predecessor's row, so
+    such an edition is refused here instead of failing after the cutover.
+    """
+    modelo = prepared.invocation.modelo
+    revision = prepared.invocation.revision
+    edition = materialise_edition(prepared.target_root / "modelos" / modelo, revision)
+    rows = edition.table.get("casillas", ())
+    if not isinstance(rows, list | tuple):
+        raise ValueError(f"modelo {modelo} revision {revision} resolves no casilla rows")
+    origins = edition.label_origins if edition.label_origins is not None else (None,) * len(rows)
+    origin_by_casilla = {
+        str(row.get("id")): origin for row, origin in zip(rows, origins, strict=True) if isinstance(row, Mapping)
+    }
+    addressed = export_refs_by_casilla(rendered)
+    undeclared = sorted(set(addressed) - set(origin_by_casilla))
+    if undeclared:
+        raise ValueError(
+            f"the generated layout addresses casillas modelo {modelo} revision {revision} does not declare, "
+            f"stated or inherited: {undeclared!r}",
+        )
+    inherited = sorted(casilla for casilla in addressed if origin_by_casilla[casilla] is not None)
+    if inherited:
+        raise ValueError(
+            f"publication into modelo {modelo} revision {revision} is refused: the generated layout addresses "
+            f"casillas {inherited!r}, which the edition inherits from {edition.inherits_from!r}. An addressed "
+            "casilla's export references are derived from the edition's own layout, and publication still "
+            "records them on casilla declarations the edition does not state; an inheriting edition is "
+            "publishable only once the registry derives them",
+        )
+
+
 def _render_candidate(prepared: _PreparedInvocation) -> RenderedExportTree:
     """Render one candidate and materialize its generator-owned casilla back-references."""
     candidate_export_root = (
@@ -261,6 +305,7 @@ def _check(
             render_profile=prepared.inputs.render_profile,
             render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
         )
+        _require_target_edition_states_addressed_casillas(prepared, rendered)
         return "publishable_absence", rendered, target_state
     checked: CheckedGeneratedExportTree = check_generated_export_tree(
         context=GeneratedExportTreeCheckContext(
@@ -291,6 +336,7 @@ def _publish(
     target_state: GeneratedExportTreeTargetStateReceipt,
 ) -> None:
     """Publish the exact prepared candidate the read-only check just validated."""
+    _require_target_edition_states_addressed_casillas(prepared, rendered)
     write_generated_casilla_export_refs(
         prepared.candidate_root / "modelos" / prepared.invocation.modelo / "revisions" / prepared.invocation.revision,
         export_refs_by_casilla=export_refs_by_casilla(rendered),

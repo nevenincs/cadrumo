@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import shutil
 import tomllib
-from collections.abc import Collection
+from collections.abc import Collection, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, Literal
@@ -18,7 +18,7 @@ from typing import Final, Literal
 import rtoml
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.edition_materialisation import materialise_edition
+from cadrumo.domain.calculations.registry.edition_materialisation import MaterialisedEdition, materialise_edition
 from cadrumo.domain.calculations.registry.loader import load_modelo_directory
 from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor
 
@@ -39,6 +39,9 @@ _EXPORT_AUTHORITY_DIRECTORY_NAMES: Final[frozenset[str]] = frozenset({"export", 
 _BOOTSTRAP_TARGETS_PATH: Final[Path] = Path(__file__).with_name("generated_export_bootstrap_targets.toml")
 _CONTINUITY_SECTIONS: Final[tuple[str, ...]] = ("casillas", "casilla_continuidad_evolutions")
 _PREDECESSOR_DECLARATION: Final = "predecessor"
+_CASILLA_SECTION: Final = "casillas"
+_EXPORT_REFS: Final = "export_refs"
+_COMPLETE_CASILLA_FRAGMENT: Final = "complete-edition.toml"
 
 
 @dataclass(frozen=True, slots=True)
@@ -214,11 +217,20 @@ def stage_generated_export_candidate(
     supporting_modelos: Collection[str],
     bootstrap_target: GeneratedExportBootstrapTarget | None = None,
 ) -> Path:
-    """Stage one revision's complete non-export authority through a single boundary."""
+    """Stage one revision's complete non-export authority through a single boundary.
+
+    The candidate holds the target as its modelo's only edition. An edition
+    naming a predecessor states only the rows it changed, and pruning its
+    siblings deletes the chain the rest come from, so such a target is staged as
+    the complete edition the loader resolves for it, naming no predecessor. An
+    edition whose named predecessor is absent is refused by that resolution.
+    """
     if bootstrap_target is not None and (bootstrap_target.modelo, bootstrap_target.revision) != (modelo, revision):
         raise ValueError(
             f"bootstrap target {bootstrap_target.modelo}/{bootstrap_target.revision} cannot stage {modelo}/{revision}",
         )
+    source_modelo_root = source_root / "modelos" / modelo
+    edition = materialise_edition(source_modelo_root, revision)
     shutil.copytree(source_root / "legal", candidate_root / "legal")
     # The governed-fact provider directories are part of the authority a
     # candidate must validate against, not optional decoration: the registry
@@ -235,7 +247,6 @@ def stage_generated_export_candidate(
         candidate_root,
         modelos={modelo, *supporting_modelos},
     )
-    source_modelo_root = source_root / "modelos" / modelo
     staged_modelo_root = candidate_root / "modelos" / modelo
     shutil.copytree(
         source_modelo_root,
@@ -245,6 +256,8 @@ def stage_generated_export_candidate(
     for sibling in (staged_modelo_root / "revisions").iterdir():
         if sibling.name != revision:
             shutil.rmtree(sibling)
+    if edition.inherits_from is not None:
+        _write_complete_candidate_edition(staged_modelo_root / "revisions" / revision, edition)
     if bootstrap_target is not None and bootstrap_target.supersedes_layout_id is not None:
         retarget_bootstrap_construct_export_layout(
             staged_modelo_root,
@@ -259,6 +272,52 @@ def stage_generated_export_candidate(
             candidate_root / "modelos" / supporting_modelo,
         )
     return staged_modelo_root
+
+
+def _write_complete_candidate_edition(revision_root: Path, edition: MaterialisedEdition) -> None:
+    """Rewrite a staged delta edition's own directory as the complete edition it stands for.
+
+    The directory stays a fragment tree because the generated layout is
+    rendered into it. ``revision.toml`` keeps its own members as resolved, which
+    drops the predecessor and any review claim the full copy does not carry, and
+    the casilla section becomes one fragment holding every resolved row in the
+    loader's order.
+
+    An inherited row is written without ``export_refs``. The back-reference is
+    derived from the edition's own layout, and the value an inherited row
+    carries is its origin edition's, naming slots of another layout; the
+    candidate's references are therefore the ones generation derives for it.
+    """
+    manifest = tomllib.loads((revision_root / "revision.toml").read_text("utf-8"))
+    manifest_members = frozenset(manifest.get("revisions", {}).get(edition.revision_id, {}))
+    revision_table = {key: value for key, value in edition.table.items() if key in manifest_members}
+    rows = edition.table.get(_CASILLA_SECTION, ())
+    origins = edition.label_origins
+    if (
+        not isinstance(rows, list | tuple)
+        or not all(isinstance(row, Mapping) for row in rows)
+        or origins is None
+        or len(origins) != len(rows)
+    ):
+        raise ValueError(
+            f"edition {edition.modelo_id}/{edition.revision_id} resolved no casilla rows aligned with their origins",
+        )
+    staged_rows = [
+        dict(row) if origin is None else {key: value for key, value in row.items() if key != _EXPORT_REFS}
+        for row, origin in zip(rows, origins, strict=True)
+    ]
+    (revision_root / "revision.toml").write_bytes(
+        _render_toml_bytes("revision.toml", {"revisions": {edition.revision_id: revision_table}}),
+    )
+    casillas_root = revision_root / _CASILLA_SECTION
+    shutil.rmtree(casillas_root)
+    casillas_root.mkdir()
+    (casillas_root / _COMPLETE_CASILLA_FRAGMENT).write_bytes(
+        _render_toml_bytes(
+            f"{_CASILLA_SECTION}/{_COMPLETE_CASILLA_FRAGMENT}",
+            {"revisions": {edition.revision_id: {_CASILLA_SECTION: staged_rows}}},
+        ),
+    )
 
 
 def retarget_bootstrap_construct_export_layout(
