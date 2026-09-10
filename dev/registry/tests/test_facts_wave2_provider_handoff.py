@@ -11,12 +11,12 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.facts.modelo_projections import ModeloParameterFact
-from cadrumo.domain.calculations.registry.facts.providers import (
+from cadrumo.domain.calculations.registry.facts.schema import FactSelector
+from dev.registry.compiler.fact_providers import (
     FACT_PROVIDER_REGISTRATIONS,
     compile_registered_fact_providers,
 )
-from cadrumo.domain.calculations.registry.facts.schema import FactSelector
-from cadrumo.domain.calculations.registry.facts.statutory_constants import compile_statutory_constant_facts
+from dev.registry.compiler.statutory_constants import compile_statutory_constant_facts
 
 _ROOT = Path(__file__).resolve().parents[3]
 _MANIFEST = _ROOT / "dev/registry/analysis/facts_wave2_provider_handoff.toml"

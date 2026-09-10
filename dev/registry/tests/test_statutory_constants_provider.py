@@ -7,18 +7,18 @@ from pathlib import Path
 
 import pytest
 
-from ......core import external_constants as constants
-from ...errors import RegistryValidationError
-from ...schema_base import DateAxis
-from ..resolution import (
+from cadrumo.core import external_constants as constants
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.facts.resolution import (
     MappingFactQuery,
     ResolvedMappingFact,
     ResolvedScalarFact,
     ScalarFactQuery,
     resolve_governed_fact,
 )
-from ..schema import GovernedFactCatalogue, GovernedFactFamily
-from ..statutory_constants import compile_statutory_constant_facts
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue, GovernedFactFamily
+from cadrumo.domain.calculations.registry.schema_base import DateAxis
+from dev.registry.compiler.statutory_constants import compile_statutory_constant_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

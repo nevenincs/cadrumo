@@ -8,10 +8,10 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from .....core.directory_scan import scan_directory
-from .....core.toml import freeze_toml, read_toml
-from ..errors import RegistryLoadError
-from .schema import GovernedFact
+from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.toml import freeze_toml, read_toml
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFact
 
 __all__ = ["is_governed_fact_filename", "load_governed_fact_file", "load_governed_facts"]
 

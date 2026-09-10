@@ -5,16 +5,12 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:0c07f74000c61bb285f601dd5b7da5a5b4d77d58fdee6081703da9bc410946ec'
+body_hash: 'sha256:18364a595b519ab4bb3e6a7215078538336e0b2cbc6923943ed5dc31b8ddf384'
 step_id: 'S73'
 related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
 
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Capture hash-pinned BOE article 31 and transitional-provision redactions and author source-cited temporal objective-estimation exclusion facts under the governed authority
 

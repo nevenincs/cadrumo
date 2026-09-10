@@ -17,7 +17,7 @@ from pathlib import Path, PurePosixPath
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.facts.providers import (
+from dev.registry.compiler.fact_providers import (
     FACT_PROVIDER_REGISTRATIONS,
     FactProviderRegistration,
     validate_fact_provider_registrations,

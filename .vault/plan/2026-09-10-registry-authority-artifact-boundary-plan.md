@@ -9,7 +9,7 @@ related:
   - '[[2026-09-10-registry-authority-artifact-boundary-research]]'
 modified: '2026-09-10'
 body_schema: body-v2
-body_hash: 'sha256:00542b2979038d7c6a3c7f294d110d5e774391359d3e5c793027f31d4bdc4578'
+body_hash: 'sha256:c4f7ec032fc94dc22148d7a72ff105752cc5bcc03583ff7610bcaaaf907002e2'
 ---
 
 # `registry-authority-artifact-boundary` plan
@@ -47,7 +47,7 @@ Switch bundled runtime authority to artifact consumption and remove its raw auth
 Construct bundled authority from the published artifact and fail before work when the artifact is invalid.
 
 - [ ] `W02.P03.S03` - Replace bundled source compilation with artifact loading; `src/cadrumo/domain/calculations/registry/authority.py`.
-- [ ] `W02.P03.S04` - Remove runtime compiler cache and raw loader exposure; `src/cadrumo/domain/calculations/registry/loader.py`.
+- [x] `W02.P03.S04` - Remove runtime compiler cache and raw loader exposure; `src/cadrumo/domain/calculations/registry/loader.py`.
 
 ## Wave `W03` - Package boundary and proof
 

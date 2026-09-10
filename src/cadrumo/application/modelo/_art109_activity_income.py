@@ -175,9 +175,9 @@ def derive_art109_activity_income_coverage(
         return _insufficient("period_without_date_span")
 
     threshold = art_109_retained_income_threshold(filing_year=period.filing_year, period=period)
-    exempt_activities = tipo_actividad_code_set(_ART_109_EXEMPT_ACTIVITIES_SELECTOR)
+    exempt_activities = tipo_actividad_code_set(_ART_109_EXEMPT_ACTIVITIES_SELECTOR, effective_date=period.end_date)
     net_of_subvenciones_activities = tipo_actividad_code_set(
-        _ART_109_BASE_NET_OF_SUBVENCIONES_SELECTOR,
+        _ART_109_BASE_NET_OF_SUBVENCIONES_SELECTOR, effective_date=period.end_date,
     )
     numerator = ZERO
     denominator = ZERO

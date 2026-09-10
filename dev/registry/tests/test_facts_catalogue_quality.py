@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.facts.providers import FactProviderRegistration
+from dev.registry.compiler.fact_providers import FactProviderRegistration
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFact
 
 from ..analysis.facts_catalogue_quality import (

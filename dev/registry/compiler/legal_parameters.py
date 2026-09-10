@@ -6,20 +6,21 @@ from datetime import date
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
-from .....core.directory_scan import DirectoryEntryKind, scan_directory
-from ..errors import RegistryValidationError
-from dev.registry.compiler.loader import load_legal_parameters_only
-from ..loader_cache import toml_file_fingerprint
-from ..loader_fingerprints import RegistryPathFingerprints
-from ..schema_base import DateAxis
-from ..schema_references import LegalParameter
-from .schema import (
+from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.facts.schema import (
     FactOwnership,
     GovernedFact,
     GovernedFactFamily,
     GovernedFactVariant,
     ScalarFactPayload,
 )
+from cadrumo.domain.calculations.registry.loader_cache import toml_file_fingerprint
+from cadrumo.domain.calculations.registry.loader_fingerprints import RegistryPathFingerprints
+from cadrumo.domain.calculations.registry.schema_base import DateAxis
+from cadrumo.domain.calculations.registry.schema_references import LegalParameter
+
+from .loader import load_legal_parameters_only
 
 LEGAL_PARAMETER_PROVIDER_ID = "global-legal-parameters"
 LEGAL_PARAMETER_PROVIDER_DIRECTORY = "legal"

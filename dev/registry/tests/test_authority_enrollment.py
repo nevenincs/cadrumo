@@ -7,19 +7,19 @@ from dataclasses import replace
 from pathlib import Path
 
 import pytest
-from dev.registry.maintenance_support import reset_registry_caches
 
 from cadrumo.domain.calculations.registry._validate import RegistryValidator
-from cadrumo.domain.calculations.registry.authority import collect_registry_identity_fingerprints
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
-from cadrumo.domain.calculations.registry.facts import providers as provider_module
-from cadrumo.domain.calculations.registry.facts.providers import (
+from dev.registry.compiler import fact_providers as provider_module
+from dev.registry.compiler.fact_providers import (
     FACT_PROVIDER_REGISTRATIONS,
+    collect_registered_fact_provider_fingerprints,
     compile_registered_fact_providers,
     validate_fact_provider_directory_ownership,
 )
+from dev.registry.maintenance_support import reset_registry_caches
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -61,14 +61,14 @@ def test_fact_content_participates_in_authority_identity(
     facts_dir.mkdir()
     path = facts_dir / "0001-test-limit.toml"
     _write_fact(path)
-    before = collect_registry_identity_fingerprints(tmp_path)
+    before = collect_registered_fact_provider_fingerprints(tmp_path)
     stat = path.stat()
 
     text = path.read_text(encoding="utf-8").replace('value = "10"', 'value = "20"')
     path.write_text(text, encoding="utf-8")
     os.utime(path, ns=(stat.st_atime_ns, stat.st_mtime_ns))
 
-    after = collect_registry_identity_fingerprints(tmp_path)
+    after = collect_registered_fact_provider_fingerprints(tmp_path)
     assert before != after
 
 

@@ -1,11 +1,8 @@
 """Cross-cutting Convenio doble imposición (CDI) treaty-override authority.
 
-A dedicated registry authoring surface — ``registry/aeat/treaties/`` — sibling to
-the cross-cutting ``legal/`` tree. One TOML file per bilateral double-taxation
-treaty declares the counterpart country, the treaty BOE ``document_id``, and a
-list of per-income-type override rows keyed by :class:`~core.TipoRentaIrnr`.
-The loader compiles the tree into a :class:`ConvenioAuthority` projection that any
-IRNR rate formula consumes through the
+A development compiler reads the registry authoring surface into the immutable
+artifact. This runtime module retains only the resulting treaty authority types
+that any IRNR rate formula consumes through the
 :class:`~domain.calculations.registry.RegistrySnapshot` — so a second consumer
 (M216 retenciones a no residentes) reads treaty data without reaching across a
 modelo boundary.
@@ -22,27 +19,14 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
-from pathlib import Path
 
 from pydantic import Field, field_validator, model_validator
 
 from ....core.decimal.constants import ONE, ZERO
-from ....core.directory_scan import scan_directory
 from ....core.irnr import ConvenioOverrideKind, TipoRentaIrnr
-from ....core.revision_review import RevisionReviewStatus
-from ....core.toml import freeze_toml, read_toml
-from .errors import RegistryLoadError, RegistryValidationError
-from .facts.schema import (
-    FactOwnership,
-    FactSelector,
-    GovernedFact,
-    GovernedFactFamily,
-    GovernedFactVariant,
-    OverrideFactPayload,
-)
+from .errors import RegistryValidationError
 from .ids import LegalRefId
-from .loader_cache import toml_file_fingerprint
-from .schema_base import DateAxis, RegistryModel, SourceCitation
+from .schema_base import RegistryModel
 
 
 class ConvenioOverrideRow(RegistryModel):
@@ -210,121 +194,4 @@ class ConvenioAuthority(RegistryModel):
         return frozenset(ref for treaty in self.treaties.values() for row in treaty.overrides for ref in row.legal_refs)
 
 
-def load_convenio_authority(treaties_dir: Path) -> ConvenioAuthority:
-    """Compile the ``treaties/`` TOML tree into a :class:`ConvenioAuthority`.
-
-    Reads one ``[treaty]`` table per file, rejecting a duplicate counterpart
-    country declared across two files. An absent tree yields an empty authority.
-
-    Returns:
-        The compiled :class:`ConvenioAuthority`.
-    """
-    resolved = treaties_dir.resolve()
-    if not resolved.is_dir():
-        return ConvenioAuthority.empty()
-    treaties: dict[str, ConvenioTreaty] = {}
-    for path in scan_directory(resolved, pattern="*.toml"):
-        raw = freeze_toml(read_toml(path, error_factory=RegistryLoadError))
-        table = raw.get("treaty")
-        if not isinstance(table, Mapping):
-            raise RegistryLoadError(f"{path}: treaty file must declare a [treaty] table")
-        try:
-            treaty = ConvenioTreaty.model_validate(table)
-        except RegistryValidationError as exc:
-            raise RegistryLoadError(f"{path}: invalid treaty: {exc}") from exc
-        if treaty.country_code in treaties:
-            raise RegistryLoadError(
-                f"{path}: treaty country {treaty.country_code!r} already declared in another treaties/*.toml file",
-            )
-        treaties[treaty.country_code] = treaty
-    return ConvenioAuthority(treaties=treaties)
-
-
-def collect_convenio_fingerprints(root: Path) -> tuple[tuple[str, int, int, str], ...]:
-    """Return ``(path, size, mtime_ns, content_digest)`` fingerprints for every ``treaties/*.toml``.
-
-    Folded into the authority-level cache key so a treaty content edit (which
-    does not bump the parent directory mtime the registry-tree walk observes)
-    invalidates the compiled authority, per ``aeat-registry-authority-flow``.
-    Shares the loader's per-file fingerprint so a mutable-tree treaty rewrite
-    that collides on ``(size, mtime_ns)`` still re-keys via the content digest.
-    """
-    treaties_dir = root.resolve() / "treaties"
-    return tuple(toml_file_fingerprint(path.resolve()) for path in scan_directory(treaties_dir, pattern="*.toml"))
-
-
 CONVENIO_OVERRIDE_FACT_ID = "irnr.convenio.override"
-
-
-def compile_convenio_facts(registry_root: Path) -> tuple[GovernedFact, ...]:
-    """Project treaty rows into the governed override provider contract.
-
-    The legacy :class:`ConvenioAuthority` remains the public runtime facade until
-    its consumers migrate.  This projection gives those consumers an exact Wave
-    3 query contract without introducing a second parser or copying treaty data.
-    """
-    authority = load_convenio_authority(registry_root.resolve() / "treaties")
-    variants: list[GovernedFactVariant] = []
-    for country_code, treaty in sorted(authority.treaties.items()):
-        for row in treaty.overrides:
-            source_ref = f"boe-{row.legal_ref_anchor.replace(':', '-')}"
-            variants.append(
-                GovernedFactVariant(
-                    variant_id=(
-                        f"{CONVENIO_OVERRIDE_FACT_ID}.{country_code.lower()}."
-                        f"{row.tipo_renta.value}.{row.valid_from.isoformat()}"
-                    ),
-                    selectors=(
-                        FactSelector(name="country_code", value=country_code),
-                        FactSelector(name="tipo_renta", value=row.tipo_renta.value),
-                    ),
-                    date_axis=DateAxis.DEVENGO_DATE,
-                    valid_from=row.valid_from,
-                    valid_to=row.valid_to,
-                    payload=OverrideFactPayload(
-                        override_code=row.kind.value,
-                        value=row.rate_decimal,
-                        unit="ratio" if row.rate_decimal is not None else None,
-                    ),
-                    legal_refs=row.legal_refs,
-                    source_refs=(source_ref,),
-                    source_citations=(
-                        SourceCitation(
-                            source_ref=source_ref,
-                            required_text=("Art", f"{row.legal_ref_anchor.rsplit('-', 1)[-1]}"),
-                        ),
-                    ),
-                    review_status=RevisionReviewStatus.AGENT_REVIEWED,
-                    ownership=FactOwnership.GENERATED,
-                ),
-            )
-    return (
-        GovernedFact(
-            fact_id=CONVENIO_OVERRIDE_FACT_ID,
-            family=GovernedFactFamily.OVERRIDE,
-            variants=tuple(variants),
-        ),
-    ) if variants else ()
-
-
-def validate_convenio_legal_refs(
-    authority: ConvenioAuthority,
-    legal_ref_ids: frozenset[str],
-) -> None:
-    """Raise when a treaty override cites a ``legal_ref`` absent from the catalogue.
-
-    The grounding gate: every treaty rate MUST cite a treaty article defined in
-    the shared ``legal/`` catalogue (which itself resolves to bundled BOE corpus
-    text). An override pointing at an undefined ref is a build-time failure.
-    """
-    missing: list[str] = []
-    for country_code, treaty in sorted(authority.treaties.items()):
-        for row in treaty.overrides:
-            for ref in row.legal_refs:
-                if ref not in legal_ref_ids:
-                    missing.append(f"treaty {country_code} tipo_renta {row.tipo_renta.value}: legal_ref {ref!r}")
-    if missing:
-        raise RegistryValidationError(
-            "convenio treaty legal_refs missing from the legal catalogue:\n"
-            + "\n".join(f" - {entry}" for entry in missing),
-        )
