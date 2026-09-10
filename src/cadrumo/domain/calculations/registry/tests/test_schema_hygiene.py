@@ -14,12 +14,12 @@ from functools import cache
 from pathlib import Path
 
 import pytest
+from dev.registry.parity.renta_web_open_replay_corpus import replay_corpus_directory
 from pydantic import ValidationError
 
 from .....core.aggregation import BindingTypedEnumKind
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.directory_scan import scan_directory
-from .....core.resources.bundled_data import bundled_path
 from ...export_field_kind import CasillaFieldKind
 from ..authority import bundled_authority
 from ..schema import DataBindingDefinition, ModeloDefinition
@@ -225,8 +225,7 @@ def test_every_modelo_100_formula_target_has_oracle_grounded_scenario_coverage()
     formula target, which catches a payload-schema mismatch.
     """
 
-    replay_dir = bundled_path("corpus", "parity_replays", "renta_web_open")
-    captured_targets = _renta_replay_captured_targets(replay_dir)
+    captured_targets = _renta_replay_captured_targets(replay_corpus_directory())
     modelos = _all_modelos()
     declared_casillas = _modelo_100_casilla_ids(modelos)
     dangling_replay_targets = sorted(captured_targets - declared_casillas)

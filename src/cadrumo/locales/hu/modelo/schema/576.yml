@@ -2,8 +2,9 @@ modelo:
   schema:
     '576':
       field:
-        official_name: 576-os modell. Egyes szállítóeszközöket terhelő különadó. Önadózás.
-        title: IEDMT - egyes szállítóeszközök nyilvántartásba vételi önadózása
+        official_name: Modelo 576. Egyes közlekedési eszközök különadója. Önbevallás.
+        title: IEDMT - önbevallás egyes közlekedési eszközök nyilvántartásba vétele
+          után
       revision:
         '2007':
           casilla:

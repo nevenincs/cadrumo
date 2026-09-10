@@ -2,8 +2,10 @@ modelo:
   schema:
     '216':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 216. A külföldi illetőségűek jövedelemadója. Állandó
+          telephely közbenjárása nélkül elért jövedelmek. Adóelőleg-levonások és -befizetések.
+          Bevallás és befizetési dokumentum.
+        title: IRNR adóelőleg-levonások és -befizetések
       revision:
         2024-y-siguientes:
           casilla:

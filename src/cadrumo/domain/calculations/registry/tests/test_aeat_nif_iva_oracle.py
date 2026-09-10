@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 
 import pytest
 from dev.registry.maintenance_support import LiveParityCatalogue, OracleEnvironment
+from dev.registry.parity.live_parity import LiveParityOracle
 from pydantic import ValidationError
 
 from .....core.config import Settings
@@ -17,7 +18,6 @@ from .....tests.aeat_nif_iva_oracle import (
     register_default,
 )
 from ..errors import RegistryValidationError
-from ..live_parity import LiveParityOracle
 from ..remote_state_guard import (
     RemoteOperation,
     RemoteStateGuardPolicy,
@@ -206,7 +206,7 @@ def test_replay_payload_roundtrip_via_nif_iva_driver() -> None:
     """ReplayPayload.model_validate accepts the canonical JSON shape and the
     NIF-IVA replay driver round-trips the same envelope faithfully."""
 
-    from ..live_parity import ReplayPayload
+    from dev.registry.parity.live_parity import ReplayPayload
 
     raw = json.dumps(
         {
@@ -233,7 +233,7 @@ def test_replay_payload_roundtrip_via_nif_iva_driver() -> None:
 def test_replay_payload_strict_rejects_extra_fields_nif_iva() -> None:
     """extra=forbid on ReplayPayload raises ValidationError for unknown keys."""
 
-    from ..live_parity import ReplayPayload
+    from dev.registry.parity.live_parity import ReplayPayload
 
     with pytest.raises(ValidationError, match="Extra"):
         ReplayPayload.model_validate({"observed": {}, "unexpected_key": True})
@@ -242,7 +242,7 @@ def test_replay_payload_strict_rejects_extra_fields_nif_iva() -> None:
 def test_replay_payload_strict_rejects_non_string_value_in_observed_nif_iva() -> None:
     """Mapping[str, str] under strict mode rejects non-string values."""
 
-    from ..live_parity import ReplayPayload
+    from dev.registry.parity.live_parity import ReplayPayload
 
     with pytest.raises(ValidationError):
         ReplayPayload.model_validate({"observed": {"DE111222333": 42}})

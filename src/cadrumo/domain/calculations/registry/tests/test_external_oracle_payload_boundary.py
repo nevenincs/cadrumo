@@ -30,12 +30,11 @@ from dev.registry.maintenance_support import (
     _parse_oracle_payload,
     _read_oracle_payload,
 )
+from dev.registry.parity.external_grounding import ManualWorkedExamplePayload, RentaWebOpenReplayPayload
+from dev.registry.parity.external_oracle_corpus import ExternalOracleCorpus
 
 from .....core.directory_scan import scan_directory
-from .....core.external_oracle_corpus import ExternalOracleCorpus
-from .....core.resources.bundled_data import bundled_path
 from ..errors import RegistryValidationError
-from ..external_grounding import ManualWorkedExamplePayload, RentaWebOpenReplayPayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -46,7 +45,7 @@ _YEAR_LESS_NAME = "modelo-303-prorrata-definitiva.json"
 
 def _bundled_payloads(corpus: ExternalOracleCorpus) -> tuple[Path, ...]:
     """Return every bundled payload of ``corpus``, read the way the fold reads them."""
-    return scan_directory(Path(bundled_path(*_ORACLE_CORPUS_DIRECTORIES[corpus])), pattern="modelo-*.json")
+    return scan_directory(_ORACLE_CORPUS_DIRECTORIES[corpus](), pattern="modelo-*.json")
 
 
 def _stage(
@@ -64,7 +63,7 @@ def _stage(
     ``name`` overrides the filename when the case under test is about the name
     itself.
     """
-    directory = tmp_path.joinpath(*_ORACLE_CORPUS_DIRECTORIES[corpus])
+    directory = tmp_path / _ORACLE_CORPUS_DIRECTORIES[corpus]().name
     directory.mkdir(parents=True, exist_ok=True)
     staged = directory / (source.name if name is None else name)
     staged.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")

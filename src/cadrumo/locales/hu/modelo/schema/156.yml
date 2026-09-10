@@ -2,8 +2,10 @@ modelo:
   schema:
     '156':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 156. A magánszemélyek jövedelemadója. Tagok és önsegélyező-tagok
+          járulékai az anyasági kedvezmény céljából. Éves adatszolgáltatási bevallás.
+        title: Tagok és önsegélyező-tagok járulékai az anyasági kedvezmény céljából
+          (éves adatszolgáltatás)
       revision:
         2003-y-siguientes:
           casilla:

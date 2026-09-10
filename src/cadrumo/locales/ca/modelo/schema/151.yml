@@ -21,8 +21,9 @@ modelo:
             help: null
             label: Retencions i ingressos a compte (pagaments a compte, art. 93.2.f)
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 151. Declaració de l'IRPF per a contribuents del règim
+          especial aplicable als treballadors desplaçats a territori espanyol.
+        title: IRPF règim especial de treballadors desplaçats (impatriats, llei Beckham)
       revision:
         2015-2022:
           casilla:

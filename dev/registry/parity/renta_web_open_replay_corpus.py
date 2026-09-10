@@ -1,18 +1,42 @@
-"""Offline parity fold over the bundled Renta WEB Open replay corpus.
+"""Development-only parity fold over the Renta WEB Open replay captures.
 
-The Renta WEB Open oracle compares a set of expected Modelo 100 figures
-against the figures AEAT's own public simulator produced. Five captures ship
-inside the wheel under ``corpus/parity_replays/renta_web_open``, one per
-autonomous community whose ``minimo personal y familiar`` diverges from the
-state scale. Until this module existed the comparison engine had no shipped
-consumer at all: the captures shipped, the coverage metric counted them, and
-nothing ran them outside the test tree.
+This is a DEVELOPMENT QUALITY SIGNAL, not a product capability. Neither this
+module nor the captures it reads ship inside the wheel: both live in the
+repository-only ``dev`` tree, and an installed Cadrumo has no replay surface at
+all.
 
-This fold is the shipped runner. It is deliberately OFFLINE: every payload is
-decoded by :class:`RentaWebOpenReplayDriver`, whose only planned operation is a
-local parse, and the remote-state guard authorises that plan before any
-comparison happens. No AEAT contact occurs on this path, and none may be added
-to it -- the live browser driver is a separate, operator-initiated surface.
+The captures that exist are
+the 2025 Modelo 100 set under ``parity_replays/renta_web_open`` beside this
+module -- one per autonomous community whose ``minimo personal y familiar``
+diverges from the state scale. That is the whole of the corpus: it covers one
+modelo and one filing year because those are the captures that happen to exist,
+and it makes no claim about any other modelo, year, or scenario.
+
+The fold is deliberately OFFLINE: every payload is decoded by
+:class:`RentaWebOpenReplayDriver`, whose only planned operation is a local
+parse, and the remote-state guard authorises that plan before any comparison
+happens. No AEAT contact occurs on this path, and none may be added to it.
+The live capture driver that produced these payloads no longer exists in the
+tree, so the captures are frozen artefacts that cannot currently be re-derived.
+
+What the fold compares -- read this before trusting a verdict
+-------------------------------------------------------------
+
+Both sides of the comparison come out of the SAME capture file: the expected
+values are read from its ``expected_by_casilla_id`` and matched against its own
+``observed_by_casilla_id``. The registry engine is never evaluated here. A
+``match`` therefore means the capture is internally self-consistent, and means
+nothing whatsoever about whether this registry agrees with AEAT.
+
+That distinction is load-bearing rather than pedantic. Driving the registry
+directly over these same scenarios returns casilla 0520 = 5550.00 for every
+comunidad autonoma, while the captures record 5606.00 for Canarias, 5789.00 for
+Galicia and 5956.65 for Madrid -- three disagreements that this fold reported as
+``match`` for as long as it has existed. Do not cite a green report from here as
+evidence of external grounding, and do not wire the engine in without also
+deciding what a resulting mismatch means: whether the registry is under-modelled
+or the captures measure something else is unresolved and needs official AEAT
+authority to settle.
 
 Reading the guard policy
 ------------------------
@@ -40,23 +64,26 @@ from typing import Final
 
 from pydantic import BaseModel, Field
 
-from ....core.casilla_id import CasillaId
-from ....core.directory_scan import scan_directory
-from ....core.external_oracle_corpus import ExternalOracleCorpus
-from ....core.models import STRICT_FROZEN_CONFIG
-from ....core.resources.bundled_data import bundled_path
-from .authority import bundled_authority
-from .errors import RegistryValidationError
-from .external_grounding import RentaWebOpenReplayPayload
-from .ids import CrossReferenceId, OracleId
-from .live_parity import ParityFieldComparison, ParityResult, ParityVerdict, ParityVerdictKind
-from .remote_state_guard import RemoteStateGuardPolicy, remote_state_policy_from_cross_reference
-from .renta_web_open_oracle import RentaWebOpenOracle, RentaWebOpenReplayDriver
-from .schema import ModeloDefinition
-from .schema_verification import LiveCrossReferenceDecision
+from cadrumo.core.casilla_id import CasillaId
+from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.ids import CrossReferenceId, OracleId
+from cadrumo.domain.calculations.registry.remote_state_guard import (
+    RemoteStateGuardPolicy,
+    remote_state_policy_from_cross_reference,
+)
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision
 
-#: Bundled data subtree holding the Renta WEB Open replay captures.
-_REPLAY_CORPUS_PARTS: Final[tuple[str, ...]] = ("corpus", "parity_replays", "renta_web_open")
+from .external_grounding import RentaWebOpenReplayPayload
+from .external_oracle_corpus import ExternalOracleCorpus
+from .live_parity import ParityFieldComparison, ParityResult, ParityVerdict, ParityVerdictKind
+from .renta_web_open_oracle import RentaWebOpenOracle, RentaWebOpenReplayDriver
+
+#: Repository path of the replay captures, relative to this package directory.
+_REPLAY_CORPUS_PARTS: Final[tuple[str, ...]] = ("parity_replays", "renta_web_open")
 
 #: The capture filenames the corpus publishes, matching the grounding inventory's glob.
 _REPLAY_PAYLOAD_PATTERN: Final[str] = "modelo-*.json"
@@ -69,7 +96,7 @@ class ReplayCorpusModel(BaseModel):
 
 
 class ReplayPayloadParity(ReplayCorpusModel):
-    """One bundled capture's parity outcome, with its per-casilla comparisons."""
+    """One capture's parity outcome, with its per-casilla comparisons."""
 
     payload_name: str = Field(min_length=1, max_length=255)
     scenario_id: str | None = None
@@ -80,7 +107,7 @@ class ReplayPayloadParity(ReplayCorpusModel):
 
 
 class RentaWebOpenReplayParityReport(ReplayCorpusModel):
-    """Every bundled Renta WEB Open capture, replayed through the parity oracle.
+    """Every Renta WEB Open capture, replayed through the parity oracle.
 
     ``registry_validated`` records whether the cross-reference declaration
     behind :attr:`guard_policy_id` came from a fully validated registry or from
@@ -137,19 +164,36 @@ class RentaWebOpenReplayParityReport(ReplayCorpusModel):
 
 
 def replay_corpus_directory() -> Path:
-    """Return the bundled directory holding the Renta WEB Open captures.
+    """Return the repository directory holding the Renta WEB Open captures.
+
+    The captures are repository artefacts, not packaged data, so the location
+    is resolved from this module's own position rather than through the
+    bundled-resource loader. An absent directory is raised, never tolerated: an
+    empty corpus and a corpus that verified clean produce the same report, so a
+    silent fallback would read as "nothing to check" while the parity signal
+    had in fact disappeared.
 
     Returns:
-        The packaged ``corpus/parity_replays/renta_web_open`` path.
+        The ``parity_replays/renta_web_open`` directory beside this module.
+
+    Raises:
+        RegistryValidationError: When the capture directory does not exist.
     """
-    return Path(bundled_path(*_REPLAY_CORPUS_PARTS))
+    directory = Path(__file__).resolve().parent.joinpath(*_REPLAY_CORPUS_PARTS)
+    if not directory.is_dir():
+        raise RegistryValidationError(
+            f"Renta WEB Open replay capture directory is missing: {directory}. "
+            "The captures are repository-only development artefacts; without them the replay "
+            "parity signal cannot be produced and must not be reported as clean."
+        )
+    return directory
 
 
 def replay_corpus_payload_paths(directory: Path | None = None) -> tuple[Path, ...]:
     """Discover the replay captures under ``directory``, newest-name-last.
 
     Args:
-        directory: Corpus directory to scan; defaults to the bundled corpus.
+        directory: Corpus directory to scan; defaults to the repository corpus.
 
     Returns:
         The discovered capture paths in deterministic order.
@@ -232,12 +276,12 @@ def build_renta_web_open_replay_parity(
     payload_paths: Sequence[Path] | None = None,
     registry_validated: bool,
 ) -> RentaWebOpenReplayParityReport:
-    """Replay every bundled capture through the oracle under the declared guard.
+    """Replay every capture through the oracle under the declared guard.
 
     Args:
         modelos: Compiled modelo definitions carrying the cross-reference
             declaration that supplies the guard policy.
-        payload_paths: Captures to replay; defaults to the bundled corpus.
+        payload_paths: Captures to replay; defaults to the repository corpus.
         registry_validated: Whether ``modelos`` came from a validated authority.
             Stamped onto the report so a governance read is never mistaken for
             validated authority.
@@ -260,16 +304,16 @@ def build_renta_web_open_replay_parity(
 
 
 def verify_bundled_renta_web_open_replays() -> RentaWebOpenReplayParityReport:
-    """Replay the bundled Renta WEB Open corpus against the bundled registry.
+    """Replay the repository capture corpus against the bundled registry.
 
-    This product convenience path enters through the canonical bundled
+    A development convenience path. It enters through the canonical bundled
     authority and validates its complete registry before examining the
-    cross-reference that authorises the replay. The report is offline evidence
-    only: replaying a bundled capture neither contacts AEAT nor certifies a
-    filing result.
+    cross-reference that authorises the replay. The report is offline
+    development evidence only: replaying a capture neither contacts AEAT, nor
+    certifies a filing result, nor is reachable from an installed Cadrumo.
 
     Returns:
-        The :class:`RentaWebOpenReplayParityReport` for the bundled corpus.
+        The :class:`RentaWebOpenReplayParityReport` for the repository corpus.
     """
     authority = bundled_authority()
     authority.validate_registry()

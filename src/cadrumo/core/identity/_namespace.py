@@ -131,19 +131,14 @@ AeatBoxNumber = Annotated[
 
 Digits-only, variable width and padding (``"1"``, ``"01"``, ``"0611"``, ``"611"`` all
 appear across the tree with no consistent zero-padding convention observed), at the
-1-16 bound already established independently at the two sites that already carried a
-``Field`` bound before this alias existed
-(``domain.calculations.registry._schema_surfaces.CasillaDefinition.form_number`` and
-``domain.calculations.registry._renta_web_open_oracle``'s ``display_number``). Every
-other value found in the tree -- production code, TOML registry data, and test
-fixtures -- fits inside that same window.
+1-16 bound already established independently by
+``domain.calculations.registry._schema_surfaces.CasillaDefinition.form_number``
+before this alias existed. Every other value found in the tree -- production
+code, TOML registry data, and test fixtures -- fits inside that same window.
 
-Strips surrounding whitespace before the pattern check, preserving a
-behaviour ``domain.calculations.registry._renta_web_open_oracle
-.RentaWebOpenDisplayOverride`` already asserts with its own
-``@field_validator``: that validator runs AFTER this alias's own
-constraints, so a value the pattern would otherwise refuse for untrimmed
-whitespace must already be clean by the time this alias sees it.
+Strips surrounding whitespace before the pattern check. A downstream validator
+running against an already-trimmed value therefore never sees untrimmed input:
+this alias's own constraints run first.
 
 Distinct from :class:`~domain.calculations.registry.CasillaId`: this value is AEAT's
 OWN printed or on-screen numbering, carried by the registry as authored metadata about

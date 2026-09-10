@@ -52,9 +52,9 @@ also keeps some group-only items exclusively in Modelo 220. Those statements
 make an individual Modelo 200 a possible contributor to particular group
 values, but do not identify the source of membership, consolidation adjustments,
 member receipt/provenance, a group calculation version, or an explicit absent
-value. `src/cadrumo/_data/corpus/aeat_official/manuals/modelo_200/files/manual-sociedades-2024.pdf.extracted.md:1371`
-`src/cadrumo/_data/corpus/aeat_official/manuals/modelo_200/files/manual-sociedades-2024.pdf.extracted.md:22406`
-`src/cadrumo/_data/corpus/aeat_official/manuals/modelo_200/files/manual-sociedades-2025.pdf.extracted.md:34017`
+value. `src/cadrumo/_data/corpus/manuals/sociedades/2024/source.pdf.extracted.md:1371`
+`src/cadrumo/_data/corpus/manuals/sociedades/2024/source.pdf.extracted.md:22406`
+`src/cadrumo/_data/corpus/manuals/sociedades/2025/source.pdf.extracted.md:34017`
 
 The BOE records scope the Modelo 220 filing eras, not value origin. The 2025
 excerpt expressly identifies the Modelo 220 filing deadline and applies only to
@@ -115,9 +115,9 @@ or semantic equivalence.
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx.extracted.md:2777`
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_220/files/01-220-ejercicio-2025.xlsx.extracted.md:152`
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_220/files/01-220-ejercicio-2025.xlsx.extracted.md:2744`
-- `src/cadrumo/_data/corpus/aeat_official/manuals/modelo_200/files/manual-sociedades-2024.pdf.extracted.md:1371`
-- `src/cadrumo/_data/corpus/aeat_official/manuals/modelo_200/files/manual-sociedades-2024.pdf.extracted.md:22406`
-- `src/cadrumo/_data/corpus/aeat_official/manuals/modelo_200/files/manual-sociedades-2025.pdf.extracted.md:34017`
+- `src/cadrumo/_data/corpus/manuals/sociedades/2024/source.pdf.extracted.md:1371`
+- `src/cadrumo/_data/corpus/manuals/sociedades/2024/source.pdf.extracted.md:22406`
+- `src/cadrumo/_data/corpus/manuals/sociedades/2025/source.pdf.extracted.md:34017`
 - `src/cadrumo/_data/corpus/normatives/html/orden-hac-529-2026.html:13`
 - `src/cadrumo/_data/corpus/normatives/html/orden-hac-529-2026.html:19`
 - `src/cadrumo/core/_filing_producer_key.py:10`

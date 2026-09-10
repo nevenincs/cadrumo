@@ -2,8 +2,12 @@ modelo:
   schema:
     '360':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 360. Sol·licitud de devolució de l'Impost sobre el Valor
+          Afegit suportat per empresaris o professionals establerts en el territori
+          d'aplicació de l'impost, corresponents a operacions efectuades a la Comunitat
+          amb excepció de les realitzades en aquest territori.
+        title: IVA. Sol·licitud de devolució de l'IVA suportat en altres estats membres
+          (8a Directiva)
       revision:
         2010-y-siguientes:
           casilla:

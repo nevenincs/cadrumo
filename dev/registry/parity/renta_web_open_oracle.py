@@ -8,17 +8,19 @@ from typing import Final, Literal, Protocol
 
 from pydantic import AnyUrl, BaseModel, Field
 
-from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....core.config import Settings
-from ....core.decimal.coercion import coerce_finite_european_decimal, normalize_decimal_separators
-from ....core.models import STRICT_FROZEN_CONFIG
-from .checker_oracle_flow import CheckerDriverMode, CheckerDriverModeValue
-from .errors import RegistryValidationError
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.config import Settings
+from cadrumo.core.decimal.coercion import coerce_finite_european_decimal, normalize_decimal_separators
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
+from cadrumo.domain.calculations.registry.checker_oracle_flow import CheckerDriverMode, CheckerDriverModeValue
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.ids import OracleId
+from cadrumo.domain.calculations.registry.remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
+
 from .external_grounding import (
     BUNDLED_ORACLE_EVIDENCE_LOCATOR_MAX_LENGTH,
     require_bundled_oracle_evidence_locator,
 )
-from .ids import OracleId
 from .live_parity import (
     OracleSurfaceKind,
     ParityFieldComparison,
@@ -28,7 +30,6 @@ from .live_parity import (
     assert_oracle_operations_allowed,
     decode_replay_json_payload,
 )
-from .remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
 
 _RENTA_WEB_OPEN_DEFAULT_YEAR: Final[int] = 2025
 _RENTA_WEB_OPEN_ORACLE_ID: OracleId = "modelo-100-renta-web-open"

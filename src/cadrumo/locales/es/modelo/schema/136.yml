@@ -3,9 +3,9 @@ modelo:
     '136':
       field:
         official_name: Modelo 136. IRPF e IRNR. Gravamen Especial sobre los Premios
-          de determinadas Loterias y Apuestas. Autoliquidacion.
-        title: Gravamen especial sobre los premios de determinadas loterias y apuestas.
-          Autoliquidacion
+          de determinadas Loterías y Apuestas. Autoliquidación.
+        title: Gravamen especial sobre los premios de determinadas loterías y apuestas.
+          Autoliquidación
       revision:
         '2026':
           casilla:

@@ -3579,17 +3579,6 @@ cli:
       modelo_count: Nº modelos
       modelos: Modelos
       observation_paths: Rutas de observación
-      replay_blocked_payload_count: N.º de capturas bloqueadas
-      replay_compared_field_count: N.º de casillas comparadas
-      replay_cross_reference_id: Referencia cruzada de la reproducción
-      replay_guard_policy_id: Política de guarda de la reproducción
-      replay_matched_payload_count: N.º de capturas coincidentes
-      replay_mismatched_payload_count: N.º de capturas discrepantes
-      replay_oracle_id: Oráculo de la reproducción
-      replay_payload_count: N.º de capturas reproducidas
-      replay_registry_validated: Registro validado en la reproducción
-      replay_unverifiable_payload_count: N.º de capturas no verificables
-      replay_verdict: Veredicto de paridad de la reproducción
       revision: Revisión
       revision_count: Nº revisiones
       row_count: Nº filas
@@ -3602,8 +3591,6 @@ cli:
       workbook_parity_ref_count: Nº referencias de paridad de libro
     observation_help: Manifiesto cifrado de observación de declaración presentada
       que se va a verificar
-    replay_parity_help: Reproducir sin conexión las capturas de Renta WEB Open incluidas
-      frente al oráculo de paridad
     source_observation_help: Manifiesto cifrado de observación fuente requerido por
       vínculos de declaraciones previas o relaciones
     verify_filed_state_help: Comparar el cálculo local del registro con el estado

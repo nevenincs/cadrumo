@@ -19,7 +19,7 @@ from .._distribution_limits import PYPI_FILE_CAP_BYTES
 from ..hashing import sha256_path
 from ..lane_verification_core import (
     _CORPUS_SOURCE_PREFIX,
-    _RENTA_PDF_ALLOW_LIST,
+    _MANUAL_PDF_PRESENCE_FLOOR,
     _configured_corpus_binary_suffixes,
     _is_corpus_source_binary,
     assert_wheel_contains_tracked_data,
@@ -216,7 +216,7 @@ def _seed_shipped_data_repository(origin: Path) -> set[str]:
         "__pycache__/\n/src/cadrumo/_data/registry/aeat/.*.lock\n",
         encoding="utf-8",
     )
-    tracked = {"src/cadrumo/_data/registry/aeat/modelos/036/manifest.toml", *_RENTA_PDF_ALLOW_LIST}
+    tracked = {"src/cadrumo/_data/registry/aeat/modelos/036/manifest.toml", *_MANUAL_PDF_PRESENCE_FLOOR}
     for relative in sorted(tracked):
         path = origin / relative
         path.parent.mkdir(parents=True, exist_ok=True)

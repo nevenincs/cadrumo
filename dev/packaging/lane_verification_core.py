@@ -125,10 +125,27 @@ _DATA_COMPANION_PROJECTS = (
     ("cadrumo-data-manuals", "packaging/cadrumo_data_manuals", "cadrumo_data_manuals-*.whl"),
     ("cadrumo-data-official", "packaging/cadrumo_data_official", "cadrumo_data_official-*.whl"),
 )
-_RENTA_PDF_ALLOW_LIST = {
-    f"src/cadrumo/_data/corpus/manuals/renta/{year}/part1/source.pdf"
-    for year in ("2020", "2021", "2022", "2023", "2024", "2025")
-} | {"src/cadrumo/_data/corpus/manuals/renta/2025/part2-deducciones-autonomicas/source.pdf"}
+# Every practical-manual PDF that MUST be git-tracked for the manuals companion to
+# carry it. Stated as explicit literals rather than derived from a walk of the
+# corpus: a floor computed from the tree it is meant to police cannot detect that
+# tree losing a member. Covering Renta alone was the narrow version of the same
+# blindness -- the IVA and Sociedades manuals could have fallen out of tracking
+# with this floor still green.
+_MANUAL_PDF_PRESENCE_FLOOR = (
+    {
+        f"src/cadrumo/_data/corpus/manuals/renta/{year}/part1/source.pdf"
+        for year in ("2020", "2021", "2022", "2023", "2024", "2025")
+    }
+    | {
+        f"src/cadrumo/_data/corpus/manuals/iva/{year}/source.pdf"
+        for year in ("2020", "2021", "2022", "2023", "2024", "2025")
+    }
+    | {
+        f"src/cadrumo/_data/corpus/manuals/renta/{year}/part2-deducciones-autonomicas/source.pdf"
+        for year in ("2024", "2025")
+    }
+    | {f"src/cadrumo/_data/corpus/manuals/sociedades/{year}/source.pdf" for year in ("2024", "2025")}
+)
 _CORE_ABSENT_NAMES = {
     "anthropic",
     "google-api-python-client",
@@ -595,9 +612,9 @@ def tracked_source_data_paths(repo_root: Path) -> set[str]:
     result = run_checked(["git", "ls-files", *TRACKED_DATA_ROOTS], cwd=repo_root, env=_git_env(repo_root))
     tracked = {line.strip().replace("\\", "/") for line in result.stdout.splitlines() if line.strip()}
     tracked = _validated_source_data_inventory(repo_root, tracked, origin="git ls-files")
-    missing_allow_list = sorted(_RENTA_PDF_ALLOW_LIST - tracked)
-    if missing_allow_list:
-        raise SystemExit(f"tracked shipped data is missing Renta PDF allow-list files: {missing_allow_list!r}")
+    missing_floor = sorted(_MANUAL_PDF_PRESENCE_FLOOR - tracked)
+    if missing_floor:
+        raise SystemExit(f"tracked shipped data is missing required manual PDFs: {missing_floor!r}")
     return tracked
 
 

@@ -2,8 +2,8 @@ modelo:
   schema:
     '309':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 309. Value Added Tax. Non-periodic return-settlement.
+        title: VAT. Non-periodic return-settlement
       revision:
         2004-2015:
           casilla:

@@ -73,12 +73,19 @@ class _RegistryCorpusModel(BaseModel):
 class RegistryManualId(StrEnum):
     """Manual identifiers approved for the registry manual operator surface.
 
-    These values intentionally narrow the wider :class:`ManualId` domain to the
-    manual families exposed by ``aeat app registry manuals``.
+    This mirrors the :class:`ManualId` domain rather than narrowing it: manual
+    discovery resolves each directory under the manuals root through
+    :func:`registry_manual_id` and SKIPS what it cannot resolve, so a family
+    missing here is not refused loudly -- it silently does not exist for the
+    operator. Sociedades was in exactly that state: a real bundled manual, cited
+    by nearly every Modelo 200 casilla, invisible to ``aeat app registry
+    manuals``. A family is added here when its corpus tree lands, so the two
+    enums stay in step.
     """
 
     RENTA = "renta"
     IVA = "iva"
+    SOCIEDADES = "sociedades"
 
 
 class RegistryTopicProjection(_RegistryCorpusModel):

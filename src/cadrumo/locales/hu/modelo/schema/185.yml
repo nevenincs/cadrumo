@@ -2,8 +2,9 @@ modelo:
   schema:
     '185':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 185. A tagok és önsegélyező-tagok járulékainak havi
+          adatszolgáltatási bevallása.
+        title: Tagok és önsegélyező-tagok járulékainak havi adatszolgáltatási bevallása
       revision:
         2003-2025:
           casilla:

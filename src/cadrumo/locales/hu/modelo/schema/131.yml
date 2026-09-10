@@ -89,8 +89,9 @@ modelo:
             help: null
             label: null
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 131. IRPF. Objektív megállapítás alá tartozó vállalkozók
+          és szakemberek. Részletfizetés.
+        title: IRPF részletfizetés, objektív megállapítás
       revision:
         2019-2023:
           casilla:

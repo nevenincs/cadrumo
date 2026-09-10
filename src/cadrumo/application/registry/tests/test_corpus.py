@@ -271,6 +271,20 @@ def test_citation_missing_article_uses_structured_registry_logging(
     assert record.__dict__["registry_articulo"] == "999"
 
 
+def test_operator_manual_ids_mirror_the_domain_manual_ids() -> None:
+    """A domain manual family absent here is invisible, not refused.
+
+    ``_discover_manual_parts`` resolves each directory under the manuals root
+    through ``registry_manual_id`` and SKIPS whatever it cannot resolve, logging
+    at debug. So a family present in the corpus and in :class:`ManualId` but
+    missing from :class:`RegistryManualId` does not fail loudly -- it simply does
+    not exist for the operator. Sociedades sat in that hole. Equality is asserted
+    rather than containment so widening either enum alone reds this test and
+    forces the exposure decision to be made deliberately.
+    """
+    assert {item.value for item in RegistryManualId} == {item.value for item in ManualId}
+
+
 def test_manuals_list_report_discovers_real_corpus_parts_and_topics() -> None:
     report = list_registry_manuals(RegistryManualsListCommand(manual=None, year=None))
 
@@ -278,7 +292,7 @@ def test_manuals_list_report_discovers_real_corpus_parts_and_topics() -> None:
     assert report.part_count == len(report.parts)
     assert report.topic_count == len(resources().topics.singleton.topics)
     assert report.part_count >= 1
-    assert {part.manual_id for part in report.parts} >= {"iva", "renta"}
+    assert {part.manual_id for part in report.parts} >= {"iva", "renta", "sociedades"}
 
 
 def test_manuals_list_report_filters_by_year() -> None:

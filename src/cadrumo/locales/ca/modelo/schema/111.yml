@@ -2,8 +2,10 @@ modelo:
   schema:
     '111':
       field:
-        official_name: null
-        title: null
+        official_name: Retencions i ingressos a compte de l'IRPF. Rendiments del treball
+          i d'activitats econòmiques, premis i determinats guanys patrimonials i imputacions
+          de renda.
+        title: IRPF retencions i ingressos a compte
       revision:
         2019-y-siguientes:
           casilla:

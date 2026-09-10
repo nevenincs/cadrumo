@@ -32,7 +32,7 @@ the locale scaffolder reads, which is what makes a newly-declared field
 without labels a loud parity failure rather than a silent English row.
 
 See Also:
-    profile schema
+    :class:`ProfileSchemaDefinition`
         The schema whose sections and fields these keys are derived from.
 """
 
@@ -43,7 +43,7 @@ from typing import TYPE_CHECKING
 from ...core.i18n import tr
 
 if TYPE_CHECKING:
-    from .schema import ProfileFieldDefinition, ProfileSectionDefinition
+    from .schema import ProfileFieldDefinition, ProfileSchemaDefinition, ProfileSectionDefinition
 
 _KEY_ROOT = "profile.schema"
 
@@ -122,9 +122,31 @@ def profile_field_label(
     )
 
 
+def profile_schema_locale_keys(schema: ProfileSchemaDefinition) -> set[str]:
+    """Return every locale key the schema's sections and fields declare.
+
+    This is the enrolment surface the locale scaffolder and the parity gate
+    read, so a field added to the schema TOML without a catalogue entry
+    fails parity instead of silently rendering its description.
+
+    Args:
+        schema: The loaded schema to enumerate.
+
+    Returns:
+        Every section-title and field-label key declared by ``schema``.
+    """
+    keys: set[str] = set()
+    for section in schema.sections:
+        keys.add(profile_section_title_key(section.key))
+        for field in section.fields:
+            keys.add(profile_field_label_key(section.key, field.key))
+    return keys
+
+
 __all__ = [
     "profile_field_label",
     "profile_field_label_key",
+    "profile_schema_locale_keys",
     "profile_section_title",
     "profile_section_title_key",
 ]

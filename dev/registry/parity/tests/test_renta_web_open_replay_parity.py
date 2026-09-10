@@ -8,14 +8,15 @@ from typing import cast
 
 import pytest
 
-from ..errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+
 from ..live_parity import ParityVerdictKind
 from ..renta_web_open_replay_corpus import (
     RentaWebOpenReplayParityReport,
     build_renta_web_open_replay_parity,
     verify_bundled_renta_web_open_replays,
 )
-from ..schema import ModeloDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

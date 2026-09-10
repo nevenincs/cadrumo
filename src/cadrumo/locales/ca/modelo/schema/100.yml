@@ -1829,8 +1829,9 @@ modelo:
             help: null
             label: null
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 100. Declaració de l'Impost sobre la Renda de les Persones
+          Físiques.
+        title: IRPF declaració anual
       revision:
         '2020':
           casilla:

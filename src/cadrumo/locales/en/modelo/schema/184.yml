@@ -2,8 +2,9 @@ modelo:
   schema:
     '184':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 184. Annual informative return of income-attribution
+          entities.
+        title: Income-attribution entities (annual informative return)
       revision:
         '2015':
           casilla:

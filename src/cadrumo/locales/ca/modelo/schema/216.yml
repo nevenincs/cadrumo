@@ -2,8 +2,10 @@ modelo:
   schema:
     '216':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 216. Impost sobre la Renda de no Residents. Rendes obtingudes
+          sense mediació d'establiment permanent. Retencions i ingressos a compte.
+          Declaració-document d'ingrés.
+        title: IRNR retencions i ingressos a compte
       revision:
         2024-y-siguientes:
           casilla:

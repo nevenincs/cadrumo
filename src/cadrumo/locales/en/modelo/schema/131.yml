@@ -89,8 +89,9 @@ modelo:
             help: null
             label: null
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 131. Personal Income Tax. Entrepreneurs and professionals
+          under objective assessment. Instalment payment.
+        title: IRPF instalment payment, objective assessment
       revision:
         2019-2023:
           casilla:

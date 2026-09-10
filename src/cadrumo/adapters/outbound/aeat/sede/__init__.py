@@ -4,7 +4,7 @@ Inert namespace. Every contract is reached at its own defining module:
 ``censal_datos``, ``declarations``, ``declarations_observations``,
 ``declarations_remote``, ``declarations_schema``, ``errors``,
 ``groi_check``, ``iva_compensation_wallet``, ``nif_iva_check``, ``notifications``,
-``observation_store``, ``parse``, ``renta_web_open``, ``schema``, ``walker``.
+``observation_store``, ``parse``, ``schema``, ``walker``.
 
 This package re-exported its surface through the namespace. The map is
 retired: a consumer names the module that defines what it imports.

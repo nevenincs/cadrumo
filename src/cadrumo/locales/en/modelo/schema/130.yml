@@ -2,8 +2,9 @@ modelo:
   schema:
     '130':
       field:
-        official_name: null
-        title: null
+        official_name: Personal Income Tax. Business activities under direct assessment.
+          Instalment payment.
+        title: IRPF instalment payment, direct assessment
       revision:
         2019-y-siguientes:
           casilla:

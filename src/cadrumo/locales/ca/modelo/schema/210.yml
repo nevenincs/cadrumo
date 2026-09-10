@@ -2,8 +2,9 @@ modelo:
   schema:
     '210':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 210. Impost sobre la Renda de no Residents. No residents
+          sense establiment permanent. Autoliquidació.
+        title: IRNR autoliquidació de no residents sense establiment permanent
       revision:
         '2025':
           casilla:

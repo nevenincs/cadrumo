@@ -2,8 +2,10 @@ modelo:
   schema:
     '193':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 193. Informative return. Withholdings and payments on
+          account on certain income from movable capital and certain income. Annual
+          summary.
+        title: Annual summary of withholdings on income from movable capital
       revision:
         '2024':
           casilla:

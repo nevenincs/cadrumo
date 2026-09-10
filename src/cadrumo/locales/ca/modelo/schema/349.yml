@@ -2,8 +2,9 @@ modelo:
   schema:
     '349':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 349. Declaració informativa. Declaració recapitulativa
+          d'operacions intracomunitàries.
+        title: Declaració recapitulativa d'operacions intracomunitàries
       revision:
         2020-y-siguientes:
           casilla:

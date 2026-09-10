@@ -165,7 +165,9 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
     # binding. Single observation lands in 0186; both fiscal+contable
     # observations land in 0199 producing a non-zero aggregate;
     # untouched categories stay zero. Arithmetic correctness against
-    # AEAT is verified by the Renta WEB Open replay-parity layer.
+    # AEAT is NOT externally verified here or by the Renta WEB Open
+    # replay-parity layer, which never drives this resolver; these
+    # assertions pin the routing/aggregation wiring only.
     assert casilla_inputs[_M100_GASTO_SS_CASILLA] > Decimal("0"), (
         "single CUOTAS_AUTONOMOS_SS observation must route to 0186"
     )

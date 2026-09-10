@@ -26,7 +26,8 @@ import json
 
 import pytest
 
-from .....core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+
 from ..external_grounding import (
     BUNDLED_ORACLE_EVIDENCE_LOCATOR_MAX_LENGTH,
     RentaWebOpenReplayPayload,

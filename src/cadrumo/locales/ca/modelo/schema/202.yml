@@ -139,8 +139,10 @@ modelo:
             label: Modalitat art. 40.3 LIS - Retencions i ingressos a compte sobre
               ingressos del període computat
       field:
-        official_name: null
-        title: null
+        official_name: Impost sobre Societats. Impost sobre la Renda de no Residents
+          (establiments permanents i entitats en règim d'atribució de rendes constituïdes
+          a l'estranger amb presència en territori espanyol). Pagament fraccionat.
+        title: IS pagament fraccionat
       revision:
         2019-2022:
           casilla:

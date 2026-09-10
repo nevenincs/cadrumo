@@ -15,13 +15,20 @@ carry guidance prose" probe runs into the same wall for a different reason:
 the tier backs FOUR structurally different claims (a filing deadline, a
 verification expectation, an application-link surface, an applicability
 predicate), a bare-law source like the LIRPF (``ley-35-2006.html``) is cited
-by many unrelated modelos without ever needing to spell out which one, and a
-correctly-cited amending article need not literally restate the numeral of
-the modelo it amends (Orden HAC/1526/2024's own article 1 modifies "los
-articulos 14, 15 y 16" of an earlier order without ever writing "037" -- the
-modelo it suppresses -- so a naive "the source must name its own modelo
-number" check mis-fires on the CORRECT citation and would have been a third
-instance of the same failure class).
+by many unrelated modelos without ever needing to spell out which one, and an
+amending article routinely operates on the ARTICLE numbers of an earlier
+order without ever restating the modelo numeral at stake (Orden
+HAC/1526/2024's own article 1 suppresses "los articulos 14, 15 y 16" of Orden
+EHA/1274/2007 without writing "037" anywhere). A naive "the source must name
+its own modelo number" check would therefore refuse a structurally sound
+citation, and would have been a third instance of the same failure class.
+
+That argument establishes only that naming the modelo cannot be made
+MANDATORY; it does not make a source that omits it the best available
+citation. Which document to cite is a per-source judgement, decided on
+whether the text performs the act being claimed -- see the suppression bullet
+below, where that exact article-1 excerpt turned out to be the weaker of two
+available sources for precisely this reason.
 
 What survived calibration is two independently testable, single-purpose
 sub-checks, each scoped to exactly the claim the site is honestly making --

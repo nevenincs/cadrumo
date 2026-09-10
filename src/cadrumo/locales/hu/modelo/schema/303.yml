@@ -658,8 +658,8 @@ modelo:
           field:
             title: null
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 303. Hozzáadottérték-adó. Önbevallás.
+        title: IVA. Önbevallás (negyedéves)
       revision:
         '2022':
           casilla:

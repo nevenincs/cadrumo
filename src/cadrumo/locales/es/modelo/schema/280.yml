@@ -2,9 +2,9 @@ modelo:
   schema:
     '280':
       field:
-        official_name: Modelo 280. Declaracion informativa anual de Planes de Ahorro
+        official_name: Modelo 280. Declaración informativa anual de Planes de Ahorro
           a Largo Plazo.
-        title: Declaracion informativa anual de Planes de Ahorro a Largo Plazo
+        title: Declaración informativa anual de Planes de Ahorro a Largo Plazo
       revision:
         '2025':
           casilla:

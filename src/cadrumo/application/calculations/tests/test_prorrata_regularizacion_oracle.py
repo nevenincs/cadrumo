@@ -40,22 +40,21 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.parity.external_grounding import ManualWorkedExamplePayload
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.money.rounding import round_to_cents
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
-from ....domain.calculations.registry.external_grounding import ManualWorkedExamplePayload
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.tests.manual_oracle_support import (
     oracle_declared_figures,
     read_manual_worked_example,
 )
 from ....domain.iva.prorrata import (
-    InputClassification,
     ProrrataInputs,
     ProrrataKind,
     RegularizacionProrrataDireccion,
-    classify_input_deduction,
     compute_prorrata_general,
 )
 from ..prorrata_regularizacion import project_prorrata_regularizacion_feed
@@ -211,15 +210,11 @@ def test_m303_prorrata_regularizacion_reproduces_aeat_manual_oracle() -> None:
     assert projection.modelo_303_casilla_44_id == _CASILLA_44_ID
     assert projection.modelo_303_casilla_44_value == _MANUAL_CASILLA_44_REGULARIZACION
 
-    fourth_quarter = classify_input_deduction(
-        InputClassification.COMMON,
-        _FOURTH_QUARTER_INPUT_IVA,
-        definitive_percentage,
+    fourth_quarter_deductible = round_to_cents(
+        _FOURTH_QUARTER_INPUT_IVA * definitive_percentage / Decimal("100")
     )
-    fourth_quarter_deductible = fourth_quarter.deductible_amount
     regularizacion_value = projection.modelo_303_casilla_44_value
     definitive_deduction = result.deduccion_definitiva
-    assert fourth_quarter_deductible is not None
     assert regularizacion_value is not None
     assert definitive_deduction is not None
     assert fourth_quarter_deductible == _MANUAL_FOURTH_QUARTER_CURRENT_DEDUCTION

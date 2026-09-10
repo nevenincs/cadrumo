@@ -90,8 +90,9 @@ modelo:
             help: null
             label: Retencions i ingressos a compte
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 131. IRPF. Empresaris i professionals en estimació objectiva.
+          Pagament fraccionat.
+        title: IRPF pagament fraccionat estimació objectiva
       revision:
         2019-2023:
           casilla:

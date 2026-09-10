@@ -2,8 +2,9 @@ modelo:
   schema:
     '115':
       field:
-        official_name: null
-        title: null
+        official_name: Adóelőleg-levonások és -befizetések. Városi ingatlanok bérbeadásából
+          vagy albérletbe adásából származó jövedelmek.
+        title: IRPF városi ingatlanok bérbeadására vonatkozó adóelőleg-levonások
       revision:
         2019-y-siguientes:
           casilla:

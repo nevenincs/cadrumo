@@ -642,8 +642,8 @@ modelo:
           field:
             title: null
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 303. Value Added Tax. Self-assessment.
+        title: VAT. Self-assessment (quarterly)
       revision:
         '2022':
           casilla:

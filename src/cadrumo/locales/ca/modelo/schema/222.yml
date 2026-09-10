@@ -2,8 +2,9 @@ modelo:
   schema:
     '222':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 222. Impost sobre Societats. Règim de consolidació fiscal.
+          Pagament fraccionat.
+        title: IS pagament fraccionat règim de consolidació fiscal (grups)
       revision:
         2025-y-siguientes:
           casilla:

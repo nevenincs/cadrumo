@@ -2,8 +2,9 @@ modelo:
   schema:
     '189':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 189. Declaració informativa anual sobre valors, assegurances
+          i rendes.
+        title: Declaració informativa anual sobre valors, assegurances i rendes
       revision:
         '2025':
           casilla:

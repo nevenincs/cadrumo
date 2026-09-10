@@ -2,8 +2,10 @@ modelo:
   schema:
     '165':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 165. Az újonnan vagy nemrég alapított szervezetek tagjai
+          vagy résztvevői részére kiadott egyedi igazolások adatszolgáltatási bevallása.
+        title: Újonnan vagy nemrég alapított szervezetek tagjai részére kiadott igazolások
+          (éves adatszolgáltatás)
       revision:
         2013-2015:
           casilla:

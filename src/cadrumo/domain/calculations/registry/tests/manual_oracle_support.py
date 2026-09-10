@@ -3,7 +3,7 @@
 Every AEAT manual worked-example test reads a payload from the same bundled
 corpus directory through the same strict payload model; only the filename
 varies per module. This is deliberately narrower than
-:mod:`domain.calculations.registry._external_grounding`'s
+:mod:`dev.registry.parity.external_grounding`'s
 ``_read_oracle_payload``, which dispatches across every :class:`ExternalOracleCorpus`
 member, cross-validates and returns the richer ``ExternalOracleEvidence`` the
 grounding fold consumes -- a production contract these tests neither need nor
@@ -15,9 +15,10 @@ from __future__ import annotations
 from decimal import Decimal
 from pathlib import Path
 
+from dev.registry.parity.external_grounding import ManualWorkedExamplePayload
+
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
-from ..external_grounding import ManualWorkedExamplePayload
 
 __all__ = ["oracle_declared_figures", "read_manual_worked_example"]
 

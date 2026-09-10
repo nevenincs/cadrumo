@@ -85,7 +85,6 @@ Submodules
    cadrumo.core.export_exemption_reason
    cadrumo.core.export_layout_format
    cadrumo.core.external_constants
-   cadrumo.core.external_oracle_corpus
    cadrumo.core.field_grounding
    cadrumo.core.field_origin
    cadrumo.core.field_role

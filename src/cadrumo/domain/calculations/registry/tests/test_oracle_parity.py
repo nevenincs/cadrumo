@@ -6,6 +6,15 @@ from collections.abc import Mapping
 
 import pytest
 from dev.registry.maintenance_support import LiveParityCatalogue, OracleEnvironment
+from dev.registry.parity.live_parity import (
+    OracleSurfaceKind,
+    ParityFieldComparison,
+    ParityResult,
+    ParityVerdictKind,
+    ReplayPayload,
+    decode_replay_json_payload,
+)
+from dev.registry.parity.renta_web_open_oracle import RentaWebOpenOracle
 from pydantic import AnyUrl, ValidationError
 
 from .....tests.aeat_literal_fixtures import (
@@ -15,16 +24,7 @@ from .....tests.aeat_literal_fixtures import (
 from .....tests.aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from .....tests.groi_oracle import GROI_ORACLE_ID, GroiOracle
 from ..errors import RegistryValidationError
-from ..live_parity import (
-    OracleSurfaceKind,
-    ParityFieldComparison,
-    ParityResult,
-    ParityVerdictKind,
-    ReplayPayload,
-    decode_replay_json_payload,
-)
 from ..remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
-from ..renta_web_open_oracle import RentaWebOpenOracle
 from ..schema_base import EvidenceTier
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

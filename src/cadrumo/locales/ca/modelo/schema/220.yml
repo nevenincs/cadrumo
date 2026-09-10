@@ -2,8 +2,9 @@ modelo:
   schema:
     '220':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 220. Impost sobre Societats. Règim de consolidació fiscal.
+          Declaració.
+        title: IS autoliquidació anual règim de consolidació fiscal (grups)
       revision:
         '2024':
           casilla:

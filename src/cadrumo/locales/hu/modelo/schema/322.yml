@@ -2,8 +2,9 @@ modelo:
   schema:
     '322':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 322. Hozzáadottérték-adó. Cégcsoport. Egyedi nyomtatvány.
+          Havi önbevallás.
+        title: IVA. Cégcsoport. Egyedi nyomtatvány. Havi önbevallás
       revision:
         2008-2022:
           casilla:

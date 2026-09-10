@@ -2,10 +2,10 @@ modelo:
   schema:
     '145':
       field:
-        official_name: Modelo 145. Impuesto sobre la Renta de las Personas Fisicas.
-          Comunicacion de datos del perceptor de rentas del trabajo a su pagador (articulo
+        official_name: Modelo 145. Impuesto sobre la Renta de las Personas Físicas.
+          Comunicación de datos del perceptor de rentas del trabajo a su pagador (artículo
           88 del Reglamento del IRPF).
-        title: IRPF. Retenciones sobre rendimientos del trabajo. Comunicacion de datos
+        title: IRPF. Retenciones sobre rendimientos del trabajo. Comunicación de datos
           al pagador
       revision:
         2012-01-31-y-siguientes:
