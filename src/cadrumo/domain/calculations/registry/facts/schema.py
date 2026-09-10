@@ -9,7 +9,7 @@ from enum import StrEnum
 from itertools import pairwise
 from typing import Annotated, Literal
 
-from pydantic import BeforeValidator, Field, model_validator
+from pydantic import BeforeValidator, Field, ValidationInfo, field_validator, model_validator
 
 from ..errors import RegistryValidationError
 from ..schema_base import (
@@ -100,8 +100,25 @@ class ScalarFactPayload(RegistryModel):
     """One typed scalar value."""
 
     kind: Literal[GovernedFactFamily.SCALAR] = GovernedFactFamily.SCALAR
+    value_type: Literal["decimal"] | None = None
     value: FactAtom
     unit: str = Field(min_length=1, max_length=64)
+
+    @field_validator("value", mode="after")
+    @classmethod
+    def _materialise_declared_decimal(cls, value: FactAtom, info: ValidationInfo) -> FactAtom:
+        """Materialise an authored decimal without treating ordinary strings as numbers."""
+        if info.data.get("value_type") != "decimal":
+            return value
+        if not isinstance(value, str):
+            raise RegistryValidationError("decimal fact value_type requires a decimal string")
+        try:
+            decimal = Decimal(value)
+        except ValueError as exc:
+            raise RegistryValidationError("decimal fact value_type requires a valid decimal string") from exc
+        if not decimal.is_finite():
+            raise RegistryValidationError("decimal fact value_type requires a finite decimal")
+        return decimal
 
 
 class BracketFactRow(RegistryModel):

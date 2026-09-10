@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-10'
 body_schema: body-v2
-body_hash: 'sha256:703d164dc45422af3178c737c5db272c1510c5c8b4bab7ea14e90e843dbd5ced'
+body_hash: 'sha256:5a18f166af595ee068fec8d69fea4b6d19255c8505776ae524cb838e30388d18'
 ---
 
 # `facts-registry` plan
@@ -152,6 +152,7 @@ Rewire treaty and deadline consumers, retain apoderamientos as non-governed voca
 
 - [x] `W03.P13.S52` - Rewire treaty consumers while retaining apoderamientos as classified non-governed product vocabulary; `src/cadrumo/domain/calculations/registry/_formula_runtime_irnr.py and src/cadrumo/entrypoints/cli/config_payloads.py`.
 - [x] `W03.P13.S53` - Rewire deadline and notification consumers while retaining unclassified amendment and foreign-asset projections pending evidence; `src/cadrumo/domain/deadlines and src/cadrumo/core`.
+- [x] `W03.P13.S70` - Capture and author the bounded administrator-retention fact slice from BOE redactions; `dev/corpus and src/cadrumo/_data/corpus/normatives/html and src/cadrumo/_data/registry/aeat/facts`.
 - [ ] `W03.P13.S68` - Capture bounded hash-pinned BOE redaction evidence and author source-cited, fact-specific temporal fragments under the governed facts authority; `src/cadrumo/_data/registry/aeat/facts and src/cadrumo/_data/registry/aeat/legal and src/cadrumo/domain/calculations/registry/facts/legal_parameters.py`.
 - [ ] `W03.P13.S64` - Migrate remaining legal-parameter consumers only after their facts carry source-grounded temporal applicability; `src/cadrumo/application/modelo/_objective_estimation_advisory.py, src/cadrumo/domain/transactions, and src/cadrumo/domain/calculations/registry/facts/legal_parameters.py`.
 - [ ] `W03.P13.S66` - Replace generic fact selectors with provider-owned validated applicability coordinates before consumer-boundary verification; `src/cadrumo/domain/calculations/registry/facts and src/cadrumo/domain/calculations/registry`.

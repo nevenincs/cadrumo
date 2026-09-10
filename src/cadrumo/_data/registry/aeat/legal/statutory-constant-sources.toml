@@ -50,6 +50,101 @@ applies_from = 2007-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 review_status = "agent_reviewed"
 
+# Exact BOE open-data redactions of LIRPF art. 101, retained separately so a
+# governed administrator-retention fact can name the wording that applies to
+# its own window.  The raw API response is deliberately sliced to one unique
+# <version id_norma / fecha_vigencia> element by fetch_article_redaction; the
+# generic consolidated document above remains unsuitable for this chronology.
+
+[sources."boe-lirpf-art-101-administrator-2015-01-01"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2006-20764-a101-redaction-20150101.xml"
+sha256 = "4b8f5b2be9800903182f7006d184815c72ce2757a6971153ab903e290608e6e7"
+bytes = 13830
+retrieved_at = 2026-09-10
+published_at = 2014-11-28
+applies_from = 2015-01-01
+applies_to = 2015-07-11
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2006-20764/texto/bloque/a101"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-lirpf-art-101-administrator-2015-07-12"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2006-20764-a101-redaction-20150712.xml"
+sha256 = "b89e0e8d6f335ba57505bf0c01ace942835bd62deff39f1147d69986d3ad88a1"
+bytes = 13363
+retrieved_at = 2026-09-10
+published_at = 2015-07-11
+applies_from = 2015-07-12
+applies_to = 2018-07-04
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2006-20764/texto/bloque/a101"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-lirpf-art-101-administrator-2018-07-05"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2006-20764-a101-redaction-20180705.xml"
+sha256 = "2b062700efd74dd566ee2fb6079bbcfe827101357c64eac2589c5638ecc45b68"
+bytes = 13105
+retrieved_at = 2026-09-10
+published_at = 2018-07-04
+applies_from = 2018-07-05
+applies_to = 2018-12-28
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2006-20764/texto/bloque/a101"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-lirpf-art-101-administrator-2018-12-29"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2006-20764-a101-redaction-20181229.xml"
+sha256 = "2e41124b76d0c8c297a2766eb050ee6007eb1c756f12dde55f91566d56758795"
+bytes = 13480
+retrieved_at = 2026-09-10
+published_at = 2018-12-29
+applies_from = 2018-12-29
+applies_to = 2020-12-31
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2006-20764/texto/bloque/a101"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-lirpf-art-101-administrator-2021-01-01"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2006-20764-a101-redaction-20210101.xml"
+sha256 = "a24b1dbb77a3fc4eb36ef385e01e1685db4bb999555a1a569433a4048865ef10"
+bytes = 14161
+retrieved_at = 2026-09-10
+published_at = 2020-12-31
+applies_from = 2021-01-01
+applies_to = 2022-12-31
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2006-20764/texto/bloque/a101"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-lirpf-art-101-administrator-2023-01-01"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2006-20764-a101-redaction-20230101.xml"
+sha256 = "ac3514fd4cce0e9136c5afccd2b740390d153b925d1cf09cd4d64a0f94f52c36"
+bytes = 15663
+retrieved_at = 2026-09-10
+published_at = 2022-12-24
+applies_from = 2023-01-01
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2006-20764/texto/bloque/a101"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
 [sources."boe-lis-art-40-statutory-facts"]
 evidence_tier = "legal_authority"
 authority = "boe"
