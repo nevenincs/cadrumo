@@ -5,7 +5,7 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:7cb781bf4b426d98bf79e35b94fc37586432e8aa63792c0afbd2fe6d77863e3c'
+body_hash: 'sha256:09b4de0725887eabdf11d4b273b3cc23fd72b1aff3bfdbb7873cf6030fe16e14'
 related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
