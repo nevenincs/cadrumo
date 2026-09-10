@@ -9,7 +9,7 @@ related:
   - '[[2026-09-10-registry-authority-artifact-boundary-research]]'
 modified: '2026-09-10'
 body_schema: body-v2
-body_hash: 'sha256:057c7e86c67b3c3bd3ad4f349886981959e5c57b3bd02021b01a95c60d181d12'
+body_hash: 'sha256:e6cd1e3973e4e304e3e29d2aceb9b9a395cf4759aa456892582e1801251fc5f8'
 ---
 
 # `registry-authority-artifact-boundary` plan
@@ -46,7 +46,7 @@ Switch bundled runtime authority to artifact consumption and remove its raw auth
 
 Construct bundled authority from the published artifact and fail before work when the artifact is invalid.
 
-- [ ] `W02.P03.S03` - Replace bundled source compilation with artifact loading; `src/cadrumo/domain/calculations/registry/authority.py`.
+- [x] `W02.P03.S03` - Replace bundled source compilation with artifact loading; `src/cadrumo/domain/calculations/registry/authority.py`.
 - [x] `W02.P03.S04` - Remove runtime compiler cache and raw loader exposure; `src/cadrumo/domain/calculations/registry/loader.py`.
 
 ## Wave `W03` - Package boundary and proof
@@ -59,8 +59,8 @@ Place compiler and conformance code in development dependencies and package only
 
 - [ ] `W03.P04.S05` - Restrict distribution contents to runtime authority assets; `pyproject.toml`.
 - [ ] `W03.P04.S06` - Relocate registry authoring tests and compiler-only modules; `src/cadrumo/domain/calculations/registry/`.
-- [ ] `W03.P04.S09` - Embed signed runtime evidence projections in authority artifacts; `src/cadrumo/domain/calculations/registry/authority_artifact.py`.
-- [ ] `W03.P04.S10` - Project runtime provenance and inspection data into signed authority artifacts; `src/cadrumo/domain/calculations/registry/authority_artifact.py`.
+- [x] `W03.P04.S09` - Embed signed runtime evidence projections in authority artifacts; `src/cadrumo/domain/calculations/registry/authority_artifact.py`.
+- [x] `W03.P04.S10` - Project runtime provenance and inspection data into signed authority artifacts; `src/cadrumo/domain/calculations/registry/authority_artifact.py`.
 
 ### Phase `W03.P05` - Behavioral release gates
 
