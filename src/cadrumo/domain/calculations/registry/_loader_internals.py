@@ -94,6 +94,11 @@ _AUTHORITY_GRADE_FIELD: Final = "authority_grade"
 _NO_PREDECESSOR_TABLE_KEY: Final = "none"
 _INHERITED_SECTION: Final = "casillas"
 _RETIREMENT_SECTION: Final = "casilla_continuidad_evolutions"
+_EDITION_SOURCE_DEFAULT_FIELD: Final = "casilla_source_refs"
+_EDITION_ORDEN_FIELD: Final = "orden_aplicabilidad"
+_ROW_SOURCE_FIELD: Final = "source_refs"
+_ROW_LEGAL_FIELD: Final = "legal_refs"
+_ROW_CONSTRAINTS_FIELD: Final = "constraints"
 _REVISION_ID_ADAPTER: Final = TypeAdapter(RevisionId)
 
 ModeloRevisionSource = _ModeloRevisionSource
@@ -148,6 +153,7 @@ def _build_modelo_definition_from_data(source_path: Path, data: Mapping[str, obj
         raw_revision_table = _as_toml_table(raw_revision)
         if raw_revision_table is None:
             raise RegistryLoadError(f"{source_path}: revision {revision_id!r} must be a table")
+        raw_revision_table = _apply_edition_reference_defaults(raw_revision_table)
         payload = enroll_revision_localization(
             modelo_id=str(modelo_id_for_context),
             revision_id=revision_id,
@@ -555,6 +561,64 @@ def _row_id(row: object) -> str | None:
 
 def _lineage_label(lineage: str | None) -> str:
     return repr(lineage) if lineage is not None else "(none declared)"
+
+
+def _apply_edition_reference_defaults(table: Mapping[str, object]) -> Mapping[str, object]:
+    """Fill the edition's declared reference defaults into the casilla rows that state none.
+
+    Two defaults, both declared once on the edition's manifest:
+
+    - ``casilla_source_refs`` becomes the ``source_refs`` of every casilla row,
+      and of every row's ``constraints`` table, that states no ``source_refs``;
+    - ``orden_aplicabilidad``, the edition's approving ordenes, becomes the
+      ``legal_refs`` of every casilla row and ``constraints`` table that states
+      no ``legal_refs``.
+
+    A stated value is kept whole, including a stated empty array, which typed
+    construction then refuses. A default is never merged into a stated value.
+
+    It runs on the materialised edition, so an inherited row is defaulted from
+    the edition it now sits in: source references are declared per edition, and
+    a row the predecessor did not ground itself must not carry the
+    predecessor's grounding forward. This relies on inheritance reading each
+    predecessor's rows before its own defaults are applied.
+
+    Returns the identical table when it fills nothing, so an edition declaring
+    no default reaches typed construction exactly as authored. A default that is
+    absent, empty or not an array fills nothing and is left to typed
+    construction, as is a casilla section or row that is not the shape it
+    should be.
+    """
+    defaults: dict[str, tuple[object, ...]] = {}
+    source_default = as_toml_array(table.get(_EDITION_SOURCE_DEFAULT_FIELD))
+    if source_default:
+        defaults[_ROW_SOURCE_FIELD] = source_default
+    orden_default = as_toml_array(table.get(_EDITION_ORDEN_FIELD))
+    if orden_default:
+        defaults[_ROW_LEGAL_FIELD] = orden_default
+    rows = as_toml_array(table.get(_INHERITED_SECTION, ()))
+    if not defaults or not rows:
+        return table
+    defaulted = tuple(_default_row_references(row, defaults) for row in rows)
+    if all(new is old for new, old in zip(defaulted, rows, strict=True)):
+        return table
+    return {**table, _INHERITED_SECTION: defaulted}
+
+
+def _default_row_references(row: object, defaults: Mapping[str, tuple[object, ...]]) -> object:
+    """Return ``row`` with every default it does not state filled in, or ``row`` itself when it states them all."""
+    table = _as_toml_table(row)
+    if table is None:
+        return row
+    filled: dict[str, object] = {name: value for name, value in defaults.items() if name not in table}
+    constraints = _as_toml_table(table.get(_ROW_CONSTRAINTS_FIELD))
+    if constraints is not None:
+        missing = {name: value for name, value in defaults.items() if name not in constraints}
+        if missing:
+            filled[_ROW_CONSTRAINTS_FIELD] = {**constraints, **missing}
+    if not filled:
+        return row
+    return {**table, **filled}
 
 
 def _enroll_inherited_label_fallbacks(

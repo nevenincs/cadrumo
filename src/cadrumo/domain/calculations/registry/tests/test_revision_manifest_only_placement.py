@@ -54,6 +54,7 @@ _FIELD_LITERALS: dict[str, str] = {
     "authority_grade": '"calculation"',
     "legal_refs": f'["{_LEGAL_REF}"]',
     "orden_aplicabilidad": f'["{_ORDEN_REF}"]',
+    "casilla_source_refs": '["aeat-manual"]',
     "valid_to": "2025-12-31",
     "predecessor": '"2024"',
     "engineered_by": '"registry schema campaign"',
@@ -213,6 +214,7 @@ def test_the_manifest_only_set_is_exactly_todays_marked_fields() -> None:
     """Pin the derived set, so a marker lost in a rebase is a red test."""
     expected = REVISION_GOVERNANCE_FIELDS | {
         "authority_grade",
+        "casilla_source_refs",
         "family_dispositions",
         "legal_refs",
         "orden_aplicabilidad",

@@ -59,6 +59,9 @@ Where the gate stops
   adds to carry a reviewed edition's claim forward: the full-copy review saw
   every row the materialised edition now inherits, which is what this gate
   proves, and the schema holds the scope equal to the declared predecessor.
+  ``casilla_source_refs`` is excluded too: it is the edition-level default a
+  migration introduces to lift restated row references, and every row it fills
+  is still compared, so a default that changed any row's references fails.
   Everything else in the edition is compared.
 - Shared catalogues are taken from the live tree on both sides, so a change to
   the legal, source, or category catalogues is outside this comparison. The
@@ -216,7 +219,7 @@ _MIGRATIONS: Final[Mapping[str, PreMigrationBaseline | AcceptedMigration]] = dic
 
 _BUNDLED_REGISTRY: Final = bundled_path("registry", "aeat")
 _MODELOS_DIR: Final = "modelos"
-_EXCLUDED_FROM_EQUALITY: Final = frozenset({"predecessor", "reviewed_against"})
+_EXCLUDED_FROM_EQUALITY: Final = frozenset({"predecessor", "reviewed_against", "casilla_source_refs"})
 _COMMIT_ID = re.compile(r"^[0-9a-f]{7,64}$")
 _GIT_TIMEOUT_SECONDS: Final = 120
 #: Variables that would point git at a repository other than the one named.

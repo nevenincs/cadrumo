@@ -892,6 +892,23 @@ class ModeloRevision(RegistryModel):
     :func:`~.revision_predecessor_forest.validate_predecessor_forest`, and
     each edge against the editions' validity dates through
     :func:`~.revision_predecessor_date_agreement.validate_predecessor_date_agreement`.
+
+    ``casilla_source_refs`` is the edition's default source grounding for its
+    casilla rows, declared once rather than restated on every row. It is a
+    different fact from ``source_refs``, which cites what the edition as a whole
+    stands on. The loader fills it into every casilla row, and every row's
+    ``constraints`` table, that states no ``source_refs`` of its own. In the same
+    pass ``orden_aplicabilidad`` fills the ``legal_refs`` of every row and
+    constraints table that states none, because the edition's approving ordenes
+    are already declared there once and a second field would duplicate them. A
+    row or constraints table stating its own value keeps it whole: the default
+    replaces nothing and is never merged into a stated value, and an explicitly
+    empty value is refused rather than defaulted. The defaults are applied after
+    predecessor inheritance, so a row inherited from a predecessor and stating
+    none takes this edition's defaults, never the predecessor's; source
+    references are declared per edition. Like ``predecessor`` it is excluded
+    from serialisation when absent, and manifest-only, since it grounds rows
+    across every fragment of the edition.
     """
 
     id: RevisionId
@@ -908,6 +925,10 @@ class ModeloRevision(RegistryModel):
     # Required by validate_orden_aplicabilidad; kept default-empty so the
     # validator can report a grounded registry failure instead of a parse error.
     orden_aplicabilidad: Annotated[tuple[LegalRefId, ...], MANIFEST_ONLY] = ()
+    casilla_source_refs: Annotated[SourceRefs | None, MANIFEST_ONLY] = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+    )
     parameters: Annotated[tuple[ParameterDefinition, ...], SCHEMA_FAMILY] = ()
     casillas: Annotated[tuple[CasillaDefinition, ...], SCHEMA_FAMILY] = ()
     formulas: Annotated[tuple[FormulaDefinition, ...], SCHEMA_FAMILY] = ()
@@ -1150,7 +1171,8 @@ A superset of :data:`REVISION_GOVERNANCE_FIELDS` by construction, since
 :class:`GovernanceStampMarker` is a :class:`ManifestOnlyMarker`. Beyond the
 governance stamp it carries the legally load-bearing scalars ``legal_refs``,
 ``orden_aplicabilidad`` and ``valid_to``, which share the stamp's readability
-hazard and raise its stakes, and ``authority_grade``, which is a claim about how
+hazard and raise its stakes, ``casilla_source_refs``, which grounds rows in
+every fragment of the edition, and ``authority_grade``, which is a claim about how
 far the whole revision's authority reaches and so belongs in the one file a
 reviewer opens; :mod:`.._schema_governance` records how a deep
 fragment can otherwise supply a revision's legal grounding while
