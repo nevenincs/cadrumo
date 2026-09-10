@@ -67,7 +67,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hfp-310-2023:art-4"]
 source_refs = ["aeat-dr-714-2022"]
 
@@ -202,7 +202,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hfp-310-2023:art-4"]
 source_refs = ["aeat-dr-714-2022"]
 
@@ -337,7 +337,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hfp-310-2023:art-4"]
 source_refs = ["aeat-dr-714-2022"]
 
@@ -472,7 +472,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hfp-310-2023:art-4"]
 source_refs = ["aeat-dr-714-2022"]
 

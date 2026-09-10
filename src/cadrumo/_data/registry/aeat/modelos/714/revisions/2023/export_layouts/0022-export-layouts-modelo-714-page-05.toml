@@ -142,7 +142,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-265-2024:art-4"]
 source_refs = ["aeat-dr-714-2023"]
 
@@ -277,7 +277,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-265-2024:art-4"]
 source_refs = ["aeat-dr-714-2023"]
 
@@ -412,7 +412,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-265-2024:art-4"]
 source_refs = ["aeat-dr-714-2023"]
 
@@ -547,7 +547,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-265-2024:art-4"]
 source_refs = ["aeat-dr-714-2023"]
 
@@ -682,7 +682,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-265-2024:art-4"]
 source_refs = ["aeat-dr-714-2023"]
 
@@ -817,7 +817,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-265-2024:art-4"]
 source_refs = ["aeat-dr-714-2023"]
 
@@ -952,7 +952,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-265-2024:art-4"]
 source_refs = ["aeat-dr-714-2023"]
 
@@ -1087,7 +1087,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["orden-hac-265-2024:art-4"]
 source_refs = ["aeat-dr-714-2023"]
 
