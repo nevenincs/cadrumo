@@ -44,6 +44,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "700"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-iva-deducible-en-operaciones-interiores"
+continuidad_origin = "seeded"
 number = "700"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
@@ -56,6 +58,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "701"
+continuidad_id = "701"
+continuidad_origin = "seeded"
 number = "701"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
@@ -68,6 +72,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "702"
+continuidad_id = "702"
+continuidad_origin = "seeded"
 number = "702"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
@@ -80,6 +86,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "703"
+continuidad_id = "703"
+continuidad_origin = "seeded"
 number = "703"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
@@ -92,6 +100,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "704"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-iva-deducible-en-importaciones-bienes-co"
+continuidad_origin = "seeded"
 number = "704"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
@@ -104,6 +114,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "705"
+continuidad_id = "705"
+continuidad_origin = "seeded"
 number = "705"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
@@ -116,6 +128,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "706"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-iva-deducible-en-importaciones-bienes-de"
+continuidad_origin = "seeded"
 number = "706"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
@@ -128,6 +142,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "707"
+continuidad_id = "707"
+continuidad_origin = "seeded"
 number = "707"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
@@ -140,6 +156,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "708"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-iva-deducible-en-adquisiciones-intracomu"
+continuidad_origin = "seeded"
 number = "708"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
@@ -152,6 +170,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "709"
+continuidad_id = "709"
+continuidad_origin = "seeded"
 number = "709"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
@@ -164,6 +184,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "710"
+continuidad_id = "710"
+continuidad_origin = "seeded"
 number = "710"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
@@ -176,6 +198,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "711"
+continuidad_id = "711"
+continuidad_origin = "seeded"
 number = "711"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
@@ -188,6 +212,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "712"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-compensaciones-en-regimen-especial-de-la"
+continuidad_origin = "seeded"
 number = "712"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
@@ -200,6 +226,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "713"
+continuidad_id = "713"
+continuidad_origin = "seeded"
 number = "713"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 data_type = "money"
@@ -256,6 +284,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "718"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-iva-deducible-en-operaciones-interiores"
+continuidad_origin = "seeded"
 number = "718"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
@@ -268,6 +298,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "719"
+continuidad_id = "719"
+continuidad_origin = "seeded"
 number = "719"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
@@ -280,6 +312,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "720"
+continuidad_id = "720"
+continuidad_origin = "seeded"
 number = "720"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
@@ -292,6 +326,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "721"
+continuidad_id = "721"
+continuidad_origin = "seeded"
 number = "721"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
@@ -304,6 +340,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "722"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-iva-deducible-en-importaciones-bienes-co"
+continuidad_origin = "seeded"
 number = "722"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
@@ -316,6 +354,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "723"
+continuidad_id = "723"
+continuidad_origin = "seeded"
 number = "723"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
@@ -328,6 +368,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "724"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-iva-deducible-en-importaciones-bienes-de"
+continuidad_origin = "seeded"
 number = "724"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
@@ -340,6 +382,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "725"
+continuidad_id = "725"
+continuidad_origin = "seeded"
 number = "725"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
@@ -352,6 +396,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "726"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-iva-deducible-en-adquisiciones-intracomu"
+continuidad_origin = "seeded"
 number = "726"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
@@ -364,6 +410,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "727"
+continuidad_id = "727"
+continuidad_origin = "seeded"
 number = "727"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
@@ -376,6 +424,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "728"
+continuidad_id = "728"
+continuidad_origin = "seeded"
 number = "728"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
@@ -388,6 +438,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "729"
+continuidad_id = "729"
+continuidad_origin = "seeded"
 number = "729"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
@@ -400,6 +452,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "730"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-compensaciones-en-regimen-especial-de-la"
+continuidad_origin = "seeded"
 number = "730"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"
@@ -412,6 +466,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "731"
+continuidad_id = "731"
+continuidad_origin = "seeded"
 number = "731"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 data_type = "money"

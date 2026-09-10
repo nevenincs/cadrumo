@@ -1,5 +1,6 @@
 [[revisions.2019-2022.casillas]]
 id = "perc.retenciones"
+continuidad_id = "perc-retenciones"
 number = "97-109"
 section = ["perceptor", "renta"]
 data_type = "money"

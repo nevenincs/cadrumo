@@ -20,6 +20,8 @@
 
 [[revisions."2026-desde-02".casillas]]
 id = "01"
+continuidad_id = "m353-resultado-total-entidades"
+continuidad_origin = "seeded"
 number = "01"
 section = ["iva", "grupo_entidades", "liquidacion"]
 semantic_role = "m353_resultado_total_entidades"
@@ -35,6 +37,8 @@ export_refs = ["m353-2026.pagina01.f121"]
 
 [[revisions."2026-desde-02".casillas]]
 id = "02"
+continuidad_id = "m353-cuotas-a-compensar"
+continuidad_origin = "seeded"
 number = "02"
 section = ["iva", "grupo_entidades", "compensacion"]
 semantic_role = "m353_cuotas_a_compensar"
@@ -47,6 +51,8 @@ export_refs = ["m353-2026.pagina01.f122"]
 
 [[revisions."2026-desde-02".casillas]]
 id = "08"
+continuidad_id = "08"
+continuidad_origin = "seeded"
 number = "08"
 section = ["iva", "grupo_entidades", "compensacion"]
 semantic_role = "m353_cuotas_a_compensar"
@@ -59,6 +65,8 @@ export_refs = ["m353-2026.pagina01.f123"]
 
 [[revisions."2026-desde-02".casillas]]
 id = "09"
+continuidad_id = "09"
+continuidad_origin = "seeded"
 number = "09"
 section = ["iva", "grupo_entidades", "compensacion"]
 semantic_role = "m353_cuotas_a_compensar"
@@ -72,6 +80,8 @@ export_refs = ["m353-2026.pagina01.f124"]
 
 [[revisions."2026-desde-02".casillas]]
 id = "03"
+continuidad_id = "m353-resultado"
+continuidad_origin = "seeded"
 number = "03"
 section = ["iva", "grupo_entidades", "liquidacion"]
 semantic_role = "m353_resultado"
@@ -85,6 +95,8 @@ export_refs = ["m353-2026.pagina01.f125"]
 
 [[revisions."2026-desde-02".casillas]]
 id = "04"
+continuidad_id = "m353-a-deducir-autoliquidaciones-anteriores"
+continuidad_origin = "seeded"
 number = "04"
 section = ["iva", "grupo_entidades", "liquidacion"]
 semantic_role = "m353_a_deducir_autoliquidaciones_anteriores"
@@ -99,6 +111,8 @@ export_refs = ["m353-2026.pagina01.f126"]
 
 [[revisions."2026-desde-02".casillas]]
 id = "10"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_353/files/01-353-ejercicio-2026-y-siguientes-actualizado-03-02-26.xlsx.extracted.md:205 (sha256 cb1374a79a87) prints box [10]; corpus/aeat_official/disenos_registro/modelo_353/files/02-353-ejercicios-2021-a-2025-198-kb-xls.xls.extracted.md (sha256 37f39224edc2) prints no box [10] and retires none"
 number = "10"
 section = ["iva", "grupo_entidades", "liquidacion"]
 semantic_role = "m353_pago_a_cuenta_deposito_distinto_del_aduanero"
@@ -113,6 +127,8 @@ export_refs = ["m353-2026.pagina01.f127"]
 
 [[revisions."2026-desde-02".casillas]]
 id = "05"
+continuidad_id = "05"
+continuidad_origin = "seeded"
 number = "05"
 section = ["iva", "grupo_entidades", "liquidacion"]
 semantic_role = "m353_resultado"

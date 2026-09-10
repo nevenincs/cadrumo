@@ -10,6 +10,8 @@
 
 [[revisions."2023".casillas]]
 id = "01"
+continuidad_id = "m322-liquidacion-iva-devengado-operaciones-intragrupo-base-imponible"
+continuidad_origin = "seeded"
 number = "01"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_base_imponible"
@@ -22,6 +24,8 @@ export_refs = ["m322-2023.page-01.f019"]
 
 [[revisions."2023".casillas]]
 id = "02"
+continuidad_id = "m322-liquidacion-iva-devengado-operaciones-intragrupo-tipo"
+continuidad_origin = "seeded"
 number = "02"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_tipo"
@@ -34,6 +38,8 @@ export_refs = ["m322-2023.page-01.f020"]
 
 [[revisions."2023".casillas]]
 id = "03"
+continuidad_id = "m322-liquidacion-iva-devengado-operaciones-intragrupo-cuota"
+continuidad_origin = "seeded"
 number = "03"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_cuota"
@@ -46,6 +52,8 @@ export_refs = ["m322-2023.page-01.f021"]
 
 [[revisions."2023".casillas]]
 id = "04"
+continuidad_id = "04"
+continuidad_origin = "seeded"
 number = "04"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_base_imponible"
@@ -58,6 +66,8 @@ export_refs = ["m322-2023.page-01.f025"]
 
 [[revisions."2023".casillas]]
 id = "05"
+continuidad_id = "05"
+continuidad_origin = "seeded"
 number = "05"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_tipo"
@@ -70,6 +80,8 @@ export_refs = ["m322-2023.page-01.f026"]
 
 [[revisions."2023".casillas]]
 id = "06"
+continuidad_id = "06"
+continuidad_origin = "seeded"
 number = "06"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_cuota"
@@ -82,6 +94,8 @@ export_refs = ["m322-2023.page-01.f027"]
 
 [[revisions."2023".casillas]]
 id = "07"
+continuidad_id = "07"
+continuidad_origin = "seeded"
 number = "07"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_base_imponible"
@@ -94,6 +108,8 @@ export_refs = ["m322-2023.page-01.f028"]
 
 [[revisions."2023".casillas]]
 id = "08"
+continuidad_id = "08"
+continuidad_origin = "seeded"
 number = "08"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_tipo"
@@ -106,6 +122,8 @@ export_refs = ["m322-2023.page-01.f029"]
 
 [[revisions."2023".casillas]]
 id = "09"
+continuidad_id = "09"
+continuidad_origin = "seeded"
 number = "09"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_cuota"
@@ -118,6 +136,8 @@ export_refs = ["m322-2023.page-01.f030"]
 
 [[revisions."2023".casillas]]
 id = "10"
+continuidad_id = "m322-liquidacion-iva-devengado-modificacion-bases-y-cuotas-de-operaciones-intragrupo"
+continuidad_origin = "seeded"
 number = "10"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_modificacion_bases_y_cuotas_de_operaciones_intragrupo"
@@ -141,6 +161,8 @@ export_refs = ["m322-2023.page-03.f034"]
 
 [[revisions."2023".casillas]]
 id = "11"
+continuidad_id = "11"
+continuidad_origin = "seeded"
 number = "11"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_modificacion_bases_y_cuotas_de_operaciones_intragrupo"
@@ -153,6 +175,8 @@ export_refs = ["m322-2023.page-01.f032"]
 
 [[revisions."2023".casillas]]
 id = "12"
+continuidad_id = "m322-liquidacion-iva-devengado-resto-de-operaciones-en-regimen-general"
+continuidad_origin = "seeded"
 number = "12"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general"
@@ -165,6 +189,8 @@ export_refs = ["m322-2023.page-01.f036"]
 
 [[revisions."2023".casillas]]
 id = "120"
+continuidad_id = "m322-operaciones-no-sujetas-por-reglas-de-localizacion"
+continuidad_origin = "seeded"
 number = "120"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_operaciones_no_sujetas_por_reglas_de_localizacion"
@@ -177,6 +203,8 @@ export_refs = ["m322-2023.page-02.f021"]
 
 [[revisions."2023".casillas]]
 id = "122"
+continuidad_id = "m322-operaciones-sujetas-con-inversion-del-sujeto-pasivo"
+continuidad_origin = "seeded"
 number = "122"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_operaciones_sujetas_con_inversion_del_sujeto_pasivo"
@@ -189,6 +217,8 @@ export_refs = ["m322-2023.page-02.f023"]
 
 [[revisions."2023".casillas]]
 id = "123"
+continuidad_id = "m322-operaciones-no-sujetas-por-reglas-de-localizacion-acogidas-a-los-regimenes-especiales-de-ventanilla-unica"
+continuidad_origin = "seeded"
 number = "123"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_operaciones_no_sujetas_por_reglas_de_localizacion_acogidas_a_los_regimenes_especiales_de_ventanilla_unica"
@@ -201,6 +231,8 @@ export_refs = ["m322-2023.page-02.f024"]
 
 [[revisions."2023".casillas]]
 id = "124"
+continuidad_id = "m322-operaciones-sujetas-y-acogidas-a-los-regimenes-especiales-de-ventanilla-unica"
+continuidad_origin = "seeded"
 number = "124"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_operaciones_sujetas_y_acogidas_a_los_regimenes_especiales_de_ventanilla_unica"
@@ -213,6 +245,8 @@ export_refs = ["m322-2023.page-02.f025"]
 
 [[revisions."2023".casillas]]
 id = "125"
+continuidad_id = "125"
+continuidad_origin = "seeded"
 number = "125"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_operaciones_sujetas_con_inversion_del_sujeto_pasivo"
@@ -225,6 +259,8 @@ export_refs = ["m322-2023.page-03.f035"]
 
 [[revisions."2023".casillas]]
 id = "126"
+continuidad_id = "126"
+continuidad_origin = "seeded"
 number = "126"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_operaciones_no_sujetas_por_reglas_de_localizacion_acogidas_a_los_regimenes_especiales_de_ventanilla_unica"
@@ -237,6 +273,8 @@ export_refs = ["m322-2023.page-03.f036"]
 
 [[revisions."2023".casillas]]
 id = "127"
+continuidad_id = "127"
+continuidad_origin = "seeded"
 number = "127"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_operaciones_sujetas_y_acogidas_a_los_regimenes_especiales_de_ventanilla_unica"
@@ -260,6 +298,8 @@ export_refs = ["m322-2023.page-03.f038"]
 
 [[revisions."2023".casillas]]
 id = "13"
+continuidad_id = "m322-liquidacion-iva-devengado-resto-de-operaciones-en-regimen-general-tipo"
+continuidad_origin = "seeded"
 number = "13"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_tipo"
@@ -272,6 +312,8 @@ export_refs = ["m322-2023.page-01.f037"]
 
 [[revisions."2023".casillas]]
 id = "14"
+continuidad_id = "m322-liquidacion-iva-devengado-resto-de-operaciones-en-regimen-general-cuota"
+continuidad_origin = "seeded"
 number = "14"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_cuota"
@@ -284,6 +326,8 @@ export_refs = ["m322-2023.page-01.f038"]
 
 [[revisions."2023".casillas]]
 id = "15"
+continuidad_id = "15"
+continuidad_origin = "seeded"
 number = "15"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general"
@@ -296,6 +340,7 @@ export_refs = ["m322-2023.page-01.f042"]
 
 [[revisions."2023".casillas]]
 id = "150"
+continuidad_id = "150"
 number = "150"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general"
@@ -308,6 +353,7 @@ export_refs = ["m322-2023.page-01.f033"]
 
 [[revisions."2023".casillas]]
 id = "151"
+continuidad_id = "151"
 number = "151"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_tipo"
@@ -320,6 +366,7 @@ export_refs = ["m322-2023.page-01.f034"]
 
 [[revisions."2023".casillas]]
 id = "152"
+continuidad_id = "152"
 number = "152"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_cuota"
@@ -332,6 +379,7 @@ export_refs = ["m322-2023.page-01.f035"]
 
 [[revisions."2023".casillas]]
 id = "153"
+continuidad_id = "153"
 number = "153"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general"
@@ -344,6 +392,7 @@ export_refs = ["m322-2023.page-01.f039"]
 
 [[revisions."2023".casillas]]
 id = "154"
+continuidad_id = "154"
 number = "154"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_tipo"
@@ -356,6 +405,7 @@ export_refs = ["m322-2023.page-01.f040"]
 
 [[revisions."2023".casillas]]
 id = "155"
+continuidad_id = "155"
 number = "155"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_cuota"
@@ -368,6 +418,7 @@ export_refs = ["m322-2023.page-01.f041"]
 
 [[revisions."2023".casillas]]
 id = "156"
+continuidad_id = "156"
 number = "156"
 section = ["iva", "regimen_general", "recargo"]
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_base_imponible"
@@ -380,6 +431,7 @@ export_refs = ["m322-2023.page-01.f054"]
 
 [[revisions."2023".casillas]]
 id = "157"
+continuidad_id = "157"
 number = "157"
 section = ["iva", "regimen_general", "recargo"]
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_tipo"
@@ -392,6 +444,7 @@ export_refs = ["m322-2023.page-01.f055"]
 
 [[revisions."2023".casillas]]
 id = "158"
+continuidad_id = "158"
 number = "158"
 section = ["iva", "regimen_general", "recargo"]
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_cuota"
@@ -404,6 +457,7 @@ export_refs = ["m322-2023.page-01.f056"]
 
 [[revisions."2023".casillas]]
 id = "159"
+continuidad_id = "159"
 number = "159"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_base_imponible"
@@ -416,6 +470,8 @@ export_refs = ["m322-2023.page-01.f016"]
 
 [[revisions."2023".casillas]]
 id = "16"
+continuidad_id = "16"
+continuidad_origin = "seeded"
 number = "16"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_tipo"
@@ -428,6 +484,7 @@ export_refs = ["m322-2023.page-01.f043"]
 
 [[revisions."2023".casillas]]
 id = "160"
+continuidad_id = "160"
 number = "160"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_tipo"
@@ -440,6 +497,7 @@ export_refs = ["m322-2023.page-01.f017"]
 
 [[revisions."2023".casillas]]
 id = "161"
+continuidad_id = "161"
 number = "161"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_cuota"
@@ -452,6 +510,7 @@ export_refs = ["m322-2023.page-01.f018"]
 
 [[revisions."2023".casillas]]
 id = "162"
+continuidad_id = "162"
 number = "162"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_base_imponible"
@@ -464,6 +523,7 @@ export_refs = ["m322-2023.page-01.f022"]
 
 [[revisions."2023".casillas]]
 id = "163"
+continuidad_id = "163"
 number = "163"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_tipo"
@@ -476,6 +536,7 @@ export_refs = ["m322-2023.page-01.f023"]
 
 [[revisions."2023".casillas]]
 id = "164"
+continuidad_id = "164"
 number = "164"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_cuota"
@@ -488,6 +549,8 @@ export_refs = ["m322-2023.page-01.f024"]
 
 [[revisions."2023".casillas]]
 id = "17"
+continuidad_id = "17"
+continuidad_origin = "seeded"
 number = "17"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_cuota"
@@ -500,6 +563,8 @@ export_refs = ["m322-2023.page-01.f044"]
 
 [[revisions."2023".casillas]]
 id = "18"
+continuidad_id = "18"
+continuidad_origin = "seeded"
 number = "18"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general"
@@ -512,6 +577,8 @@ export_refs = ["m322-2023.page-01.f045"]
 
 [[revisions."2023".casillas]]
 id = "19"
+continuidad_id = "19"
+continuidad_origin = "seeded"
 number = "19"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_tipo"
@@ -524,6 +591,8 @@ export_refs = ["m322-2023.page-01.f046"]
 
 [[revisions."2023".casillas]]
 id = "20"
+continuidad_id = "20"
+continuidad_origin = "seeded"
 number = "20"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_cuota"
@@ -602,6 +671,8 @@ export_refs = ["m322-2023.page-01.f053"]
 
 [[revisions."2023".casillas]]
 id = "27"
+continuidad_id = "m322-liquidacion-iva-devengado-recargo-de-equivalencia-base-imponible"
+continuidad_origin = "seeded"
 number = "27"
 section = ["iva", "regimen_general", "recargo"]
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_base_imponible"

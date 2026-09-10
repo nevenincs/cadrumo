@@ -1,5 +1,6 @@
 [[revisions.2019-2022.casillas]]
 id = "decl.base-total"
+continuidad_id = "base-retenciones-ingresos-a-cuenta"
 number = "145-160"
 section = ["declarante", "resumen"]
 data_type = "money"

@@ -323,6 +323,8 @@ source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".casillas]]
 id = "patrimonio.base-imponible"
+continuidad_id = "patrimonio-base-imponible"
+continuidad_origin = "seeded"
 number = "25"
 segmento = "714-09"
 section = ["resumen_patrimonio_neto"]
@@ -350,6 +352,8 @@ source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".casillas]]
 id = "patrimonio.base-liquidable"
+continuidad_id = "patrimonio-base-liquidable"
+continuidad_origin = "seeded"
 number = "27"
 segmento = "714-09"
 section = ["resumen_patrimonio_neto"]
@@ -377,6 +381,8 @@ source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".casillas]]
 id = "patrimonio.cuota-integra"
+continuidad_id = "patrimonio-cuota-integra"
+continuidad_origin = "seeded"
 number = "29"
 segmento = "714-10"
 section = ["liquidacion"]
@@ -393,6 +399,8 @@ source_refs = ["aeat-dr-714-2025", "aeat-modelo-714-procedure", "boe-modelo-714-
 
 [[revisions."2025".casillas]]
 id = "patrimonio.irpf-bases-imponibles"
+continuidad_id = "patrimonio-irpf-bases-imponibles"
+continuidad_origin = "seeded"
 number = "30"
 segmento = "714-10"
 section = ["liquidacion"]
@@ -408,6 +416,8 @@ source_refs = ["aeat-dr-714-2025", "aeat-modelo-714-procedure", "boe-modelo-714-
 
 [[revisions."2025".casillas]]
 id = "patrimonio.dividendos-no-irpf"
+continuidad_id = "patrimonio-dividendos-no-irpf"
+continuidad_origin = "seeded"
 number = "31"
 segmento = "714-10"
 section = ["liquidacion"]
@@ -422,6 +432,8 @@ source_refs = ["aeat-dr-714-2025", "aeat-modelo-714-procedure", "boe-modelo-714-
 
 [[revisions."2025".casillas]]
 id = "patrimonio.base-ahorro-excluida"
+continuidad_id = "patrimonio-base-ahorro-excluida"
+continuidad_origin = "seeded"
 number = "32"
 segmento = "714-10"
 section = ["liquidacion"]
@@ -436,6 +448,8 @@ source_refs = ["aeat-dr-714-2025", "aeat-modelo-714-procedure", "boe-modelo-714-
 
 [[revisions."2025".casillas]]
 id = "patrimonio.limite-conjunto"
+continuidad_id = "patrimonio-limite-conjunto"
+continuidad_origin = "seeded"
 number = "33"
 segmento = "714-10"
 section = ["liquidacion"]
@@ -451,6 +465,8 @@ source_refs = ["aeat-dr-714-2025", "aeat-modelo-714-procedure", "boe-modelo-714-
 
 [[revisions."2025".casillas]]
 id = "patrimonio.irpf-cuotas-integras"
+continuidad_id = "patrimonio-irpf-cuotas-integras"
+continuidad_origin = "seeded"
 number = "34"
 segmento = "714-10"
 section = ["liquidacion"]
@@ -466,6 +482,8 @@ source_refs = ["aeat-dr-714-2025", "aeat-modelo-714-procedure", "boe-modelo-714-
 
 [[revisions."2025".casillas]]
 id = "patrimonio.irpf-cuotas-excluidas-base-ahorro"
+continuidad_id = "patrimonio-irpf-cuotas-excluidas-base-ahorro"
+continuidad_origin = "seeded"
 number = "35"
 segmento = "714-10"
 section = ["liquidacion"]
@@ -480,6 +498,8 @@ source_refs = ["aeat-dr-714-2025", "aeat-modelo-714-procedure", "boe-modelo-714-
 
 [[revisions."2025".casillas]]
 id = "patrimonio.cuota-integra-susceptible-limitacion"
+continuidad_id = "patrimonio-cuota-integra-susceptible-limitacion"
+continuidad_origin = "seeded"
 number = "36"
 segmento = "714-10"
 section = ["liquidacion"]
@@ -494,6 +514,8 @@ source_refs = ["aeat-dr-714-2025", "aeat-modelo-714-procedure", "boe-modelo-714-
 
 [[revisions."2025".casillas]]
 id = "patrimonio.suma-cuotas-limite"
+continuidad_id = "patrimonio-suma-cuotas-limite"
+continuidad_origin = "seeded"
 number = "37"
 segmento = "714-10"
 section = ["liquidacion"]
@@ -509,6 +531,8 @@ source_refs = ["aeat-dr-714-2025", "aeat-modelo-714-procedure", "boe-modelo-714-
 
 [[revisions."2025".casillas]]
 id = "patrimonio.exceso-limite-conjunto"
+continuidad_id = "patrimonio-exceso-limite-conjunto"
+continuidad_origin = "seeded"
 number = "38"
 segmento = "714-10"
 section = ["liquidacion"]
@@ -524,6 +548,8 @@ source_refs = ["aeat-dr-714-2025", "aeat-modelo-714-procedure", "boe-modelo-714-
 
 [[revisions."2025".casillas]]
 id = "patrimonio.reduccion-limite-80"
+continuidad_id = "patrimonio-reduccion-limite-ochenta"
+continuidad_origin = "seeded"
 number = "39"
 segmento = "714-10"
 section = ["liquidacion"]
@@ -539,6 +565,8 @@ source_refs = ["aeat-dr-714-2025", "aeat-modelo-714-procedure", "boe-modelo-714-
 
 [[revisions."2025".casillas]]
 id = "patrimonio.total-cuota-integra"
+continuidad_id = "patrimonio-total-cuota-integra"
+continuidad_origin = "seeded"
 number = "40"
 segmento = "714-10"
 section = ["liquidacion"]
@@ -602,6 +630,8 @@ source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".casillas]]
 id = "patrimonio.cuota-minorada"
+continuidad_id = "patrimonio-cuota-minorada"
+continuidad_origin = "seeded"
 number = "45"
 segmento = "714-10"
 section = ["liquidacion"]

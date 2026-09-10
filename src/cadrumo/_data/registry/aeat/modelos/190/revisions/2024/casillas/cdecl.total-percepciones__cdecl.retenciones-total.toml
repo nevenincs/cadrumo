@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "decl.total-percepciones"
+continuidad_id = "total-percepciones-count"
 number = "136-144"
 section = ["declarante", "resumen"]
 data_type = "integer"
@@ -19,6 +20,7 @@ source_refs = ["aeat-dr-190-2025", "boe-modelo-190-2025-form"]
 
 [[revisions."2024".casillas]]
 id = "decl.percepciones-total"
+continuidad_id = "total-percepciones-amount"
 number = "145-160"
 section = ["declarante", "resumen"]
 data_type = "money"
@@ -37,6 +39,7 @@ source_refs = ["aeat-dr-190-2025", "boe-modelo-190-2025-form"]
 
 [[revisions."2024".casillas]]
 id = "decl.retenciones-total"
+continuidad_id = "retenciones-ingresos-a-cuenta"
 number = "161-175"
 section = ["declarante", "resumen"]
 data_type = "money"

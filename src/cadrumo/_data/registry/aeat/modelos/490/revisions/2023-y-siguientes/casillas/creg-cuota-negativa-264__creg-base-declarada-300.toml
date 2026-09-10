@@ -453,6 +453,8 @@ source_refs = ["aeat-dr-490-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-navarra-per-212"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:382 (sha256 f55ecbfff8fb) prints box [212]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [212] and retires none"
 number = "212"
 section = ["490_03"]
 data_type = "ratio"
@@ -464,6 +466,8 @@ source_refs = ["aeat-dr-490-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-navarra-per-233"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:383 (sha256 f55ecbfff8fb) prints box [233]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [233] and retires none"
 number = "233"
 section = ["490_03"]
 data_type = "ratio"
@@ -475,6 +479,8 @@ source_refs = ["aeat-dr-490-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-navarra-per-254"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:384 (sha256 f55ecbfff8fb) prints box [254]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [254] and retires none"
 number = "254"
 section = ["490_03"]
 data_type = "ratio"
@@ -486,6 +492,8 @@ source_refs = ["aeat-dr-490-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-navarra-per-275"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:385 (sha256 f55ecbfff8fb) prints box [275]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [275] and retires none"
 number = "275"
 section = ["490_03"]
 data_type = "ratio"
@@ -497,6 +505,8 @@ source_refs = ["aeat-dr-490-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-navarra-con-reg-213"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:386 (sha256 f55ecbfff8fb) prints box [213]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [213] and retires none"
 number = "213"
 section = ["490_03"]
 data_type = "ratio"
@@ -508,6 +518,8 @@ source_refs = ["aeat-dr-490-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-navarra-con-reg-234"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:387 (sha256 f55ecbfff8fb) prints box [234]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [234] and retires none"
 number = "234"
 section = ["490_03"]
 data_type = "ratio"
@@ -519,6 +531,8 @@ source_refs = ["aeat-dr-490-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-navarra-con-reg-255"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:388 (sha256 f55ecbfff8fb) prints box [255]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [255] and retires none"
 number = "255"
 section = ["490_03"]
 data_type = "ratio"
@@ -530,6 +544,8 @@ source_refs = ["aeat-dr-490-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-navarra-con-reg-276"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:389 (sha256 f55ecbfff8fb) prints box [276]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [276] and retires none"
 number = "276"
 section = ["490_03"]
 data_type = "ratio"

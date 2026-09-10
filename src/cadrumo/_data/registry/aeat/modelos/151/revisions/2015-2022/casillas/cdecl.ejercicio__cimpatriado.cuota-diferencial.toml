@@ -81,6 +81,7 @@ export_refs = ["m151-2015.pagina08.f056"]
 # design prints none, not because one was overlooked.
 [[revisions."2015-2022".casillas]]
 id = "impatriado.cuota-diferencial"
+continuidad_id = "impatriado-cuota-diferencial"
 number = "impatriado.cuota-diferencial"
 section = ["liquidacion", "resultado"]
 data_type = "money"

@@ -3,6 +3,7 @@
 
 [[revisions."2012-2t-3t".casillas]]
 id = "decl.ejercicio"
+continuidad_id = "filing-year"
 number = "ejercicio"
 section = ["declarante"]
 data_type = "year"
@@ -14,6 +15,7 @@ source_refs = ["enrolled-modelo-763-procedure"]
 
 [[revisions."2012-2t-3t".casillas]]
 id = "decl.periodo"
+continuidad_id = "filing-period"
 number = "periodo"
 section = ["declarante"]
 data_type = "period_code"

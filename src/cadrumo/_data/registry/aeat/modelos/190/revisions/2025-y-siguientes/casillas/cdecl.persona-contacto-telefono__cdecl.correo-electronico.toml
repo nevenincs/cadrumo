@@ -19,6 +19,8 @@
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.persona-contacto-telefono"
+continuidad_id = "m190-persona-contacto-telefono"
+continuidad_origin = "seeded"
 number = "59-67"
 section = ["declarante", "contacto"]
 data_type = "text"
@@ -33,6 +35,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.persona-contacto-nombre"
+continuidad_id = "m190-persona-contacto-nombre"
+continuidad_origin = "seeded"
 number = "68-107"
 section = ["declarante", "contacto"]
 data_type = "name"
@@ -47,6 +51,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.numero-identificativo"
+continuidad_id = "m190-numero-identificativo"
+continuidad_origin = "seeded"
 number = "108-120"
 section = ["declarante", "identificacion_declaracion"]
 data_type = "text"
@@ -61,6 +67,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.complementaria"
+continuidad_id = "m190-declaracion-complementaria"
+continuidad_origin = "seeded"
 number = "121"
 section = ["declarante", "identificacion_declaracion"]
 data_type = "text"
@@ -75,6 +83,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.sustitutiva"
+continuidad_id = "m190-declaracion-sustitutiva"
+continuidad_origin = "seeded"
 number = "122"
 section = ["declarante", "identificacion_declaracion"]
 data_type = "text"
@@ -89,6 +99,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.numero-identificativo-anterior"
+continuidad_id = "m190-numero-identificativo-anterior"
+continuidad_origin = "seeded"
 number = "123-135"
 section = ["declarante", "identificacion_declaracion"]
 data_type = "text"
@@ -103,6 +115,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.correo-electronico"
+continuidad_id = "m190-correo-electronico"
+continuidad_origin = "seeded"
 number = "176-225"
 section = ["declarante", "contacto"]
 data_type = "text"

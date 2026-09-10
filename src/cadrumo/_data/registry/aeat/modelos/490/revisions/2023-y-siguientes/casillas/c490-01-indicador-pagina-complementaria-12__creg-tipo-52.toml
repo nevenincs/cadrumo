@@ -352,6 +352,8 @@ source_refs = ["aeat-dr-490-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-navarra-23"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:86 (sha256 f55ecbfff8fb) box [23] (40 965 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [23]."
 number = "23"
 section = ["490_01"]
 data_type = "ratio"

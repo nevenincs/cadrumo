@@ -680,6 +680,8 @@ export_refs = ["m303-2024-late.dp30303.f015"]
 
 [[revisions.2024-desde-09-y-3t.casillas]]
 id = "64"
+continuidad_id = "dr303-64"
+continuidad_origin = "seeded"
 number = "64"
 section = ["iva", "resultado"]
 data_type = "money"
@@ -707,6 +709,8 @@ export_refs = ["m303-2024-late.dp30303.f017"]
 
 [[revisions.2024-desde-09-y-3t.casillas]]
 id = "66"
+continuidad_id = "dr303-66"
+continuidad_origin = "seeded"
 number = "66"
 section = ["iva", "resultado"]
 data_type = "money"
@@ -772,6 +776,8 @@ export_refs = ["m303-2024-late.dp30303.f026"]
 
 [[revisions.2024-desde-09-y-3t.casillas]]
 id = "71"
+continuidad_id = "dr303-71"
+continuidad_origin = "seeded"
 number = "71"
 section = ["iva", "resultado"]
 data_type = "money"
@@ -790,6 +796,8 @@ section = ["iva", "resultado"]
 data_type = "money"
 semantic_role = "dr303_108"
 continuidad_id = "dr303-108"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_303/files/04-303-ejercicio-2024-a-partir-de-periodos-09-y-3t-y-siguientes-actualizado-29-11-24-381-kb-xls.xlsx.extracted.md:445 (sha256 2095dd633413) prints box [108]; corpus/aeat_official/disenos_registro/modelo_303/files/05-303-ejercicio-2024-hasta-periodos-08-y-2t-actualizado-01-04-24-376-kb-xlsx.xlsx.extracted.md (sha256 8b1f74b58b92) prints no box [108] and retires none"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
@@ -803,6 +811,8 @@ section = ["iva", "resultado"]
 data_type = "money"
 semantic_role = "dr303_111"
 continuidad_id = "dr303-111"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_303/files/04-303-ejercicio-2024-a-partir-de-periodos-09-y-3t-y-siguientes-actualizado-29-11-24-381-kb-xls.xlsx.extracted.md:446 (sha256 2095dd633413) prints box [111]; corpus/aeat_official/disenos_registro/modelo_303/files/05-303-ejercicio-2024-hasta-periodos-08-y-2t-actualizado-01-04-24-376-kb-xlsx.xlsx.extracted.md (sha256 8b1f74b58b92) prints no box [111] and retires none"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]

@@ -196,6 +196,8 @@ source_refs = ["aeat-dr-303-2026"]
 
 [[revisions.2026-y-siguientes.casillas]]
 id = "iva.autoconsumo.promotor.base"
+continuidad_id = "iva-autoconsumo-promotor-base"
+continuidad_origin = "seeded"
 number = "iva.autoconsumo.promotor.base"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
@@ -208,6 +210,8 @@ source_refs = ["aeat-dr-303-2026"]
 
 [[revisions.2026-y-siguientes.casillas]]
 id = "iva.autoconsumo.promotor.cuota"
+continuidad_id = "iva-autoconsumo-promotor-cuota"
+continuidad_origin = "seeded"
 number = "iva.autoconsumo.promotor.cuota"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
@@ -390,6 +394,8 @@ source_refs = ["aeat-dr-303-2026"]
 
 [[revisions.2026-y-siguientes.casillas]]
 id = "iva.resultado"
+continuidad_id = "iva-resultado-autoliquidacion"
+continuidad_origin = "seeded"
 number = "69"
 section = ["iva", "resultado"]
 data_type = "money"

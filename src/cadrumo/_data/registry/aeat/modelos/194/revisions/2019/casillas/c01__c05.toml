@@ -1,5 +1,6 @@
 [[revisions."2019".casillas]]
 id = "01"
+continuidad_id = "capital-ajeno-resumen-perceptores-base-positiva"
 number = "01"
 section = ["resumen"]
 data_type = "integer"
@@ -13,6 +14,7 @@ source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
 
 [[revisions."2019".casillas]]
 id = "02"
+continuidad_id = "capital-ajeno-resumen-base-positiva"
 number = "02"
 section = ["resumen"]
 data_type = "money"
@@ -24,6 +26,7 @@ source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
 
 [[revisions."2019".casillas]]
 id = "03"
+continuidad_id = "capital-ajeno-resumen-retenciones"
 number = "03"
 section = ["resumen"]
 data_type = "money"
@@ -35,6 +38,7 @@ source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
 
 [[revisions."2019".casillas]]
 id = "04"
+continuidad_id = "capital-ajeno-resumen-perceptores-base-negativa"
 number = "04"
 section = ["resumen"]
 data_type = "integer"
@@ -48,6 +52,7 @@ source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
 
 [[revisions."2019".casillas]]
 id = "05"
+continuidad_id = "capital-ajeno-resumen-base-negativa"
 number = "05"
 section = ["resumen"]
 data_type = "money"

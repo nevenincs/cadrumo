@@ -1,5 +1,6 @@
 [[revisions."2005-2015".casillas]]
 id = "decl.ejercicio"
+continuidad_id = "filing-year"
 number = "ejercicio"
 section = ["declarante"]
 data_type = "year"
@@ -11,6 +12,7 @@ source_refs = ["enrolled-modelo-341-procedure"]
 
 [[revisions."2005-2015".casillas]]
 id = "decl.periodo"
+continuidad_id = "tipo-declaracion"
 number = "periodo"
 section = ["declarante"]
 data_type = "text"

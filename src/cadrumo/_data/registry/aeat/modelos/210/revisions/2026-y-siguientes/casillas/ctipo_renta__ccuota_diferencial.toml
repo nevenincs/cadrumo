@@ -28,6 +28,8 @@
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "tipo_renta"
+continuidad_id = "irnr-tipo-renta"
+continuidad_origin = "seeded"
 number = "tipo_renta"
 section = ["identificacion_renta"]
 data_type = "text"
@@ -40,6 +42,8 @@ export_refs = ["m210-2026.pagina01.f019"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "rendimientos_integros"
+continuidad_id = "irnr-rendimientos-integros"
+continuidad_origin = "seeded"
 number = "5"
 section = ["rendimientos"]
 data_type = "money"
@@ -53,6 +57,8 @@ constraints = { sign = "non_negative", legal_refs = ["trlirnr-rdleg-5-2004:art-2
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "valor_catastral"
+continuidad_id = "irnr-imputacion-inmobiliaria-valor-catastral"
+continuidad_origin = "seeded"
 number = "valor_catastral"
 section = ["renta_inmobiliaria_imputada"]
 data_type = "money"
@@ -65,6 +71,8 @@ constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-85"], sour
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "coeficiente_imputacion_inmobiliaria"
+continuidad_id = "irnr-imputacion-inmobiliaria-coeficiente"
+continuidad_origin = "seeded"
 number = "coeficiente_imputacion_inmobiliaria"
 section = ["renta_inmobiliaria_imputada"]
 data_type = "ratio"
@@ -77,6 +85,8 @@ constraints = { min_value = "0", max_value = "1", legal_refs = ["ley-35-2006:art
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "dias_imputacion"
+continuidad_id = "irnr-imputacion-inmobiliaria-dias"
+continuidad_origin = "seeded"
 number = "dias_imputacion"
 section = ["renta_inmobiliaria_imputada"]
 data_type = "integer"
@@ -89,6 +99,8 @@ constraints = { min_value = "0", max_value = "366", legal_refs = ["ley-35-2006:a
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "valor_adquisicion"
+continuidad_id = "irnr-imputacion-inmobiliaria-valor-adquisicion"
+continuidad_origin = "seeded"
 number = "valor_adquisicion"
 section = ["renta_inmobiliaria_imputada"]
 data_type = "money"
@@ -101,6 +113,8 @@ constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-85"], sour
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "valor_comprobado_administracion"
+continuidad_id = "irnr-imputacion-inmobiliaria-valor-comprobado-administracion"
+continuidad_origin = "seeded"
 number = "valor_comprobado_administracion"
 section = ["renta_inmobiliaria_imputada"]
 data_type = "money"
@@ -113,6 +127,8 @@ constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-85"], sour
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "gastos_deducibles"
+continuidad_id = "irnr-gastos-deducibles"
+continuidad_origin = "seeded"
 number = "7"
 section = ["rendimientos"]
 data_type = "money"
@@ -125,6 +141,8 @@ export_refs = ["m210-2026.pagina01.f085"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "retencion_practicada"
+continuidad_id = "irnr-retencion-practicada"
+continuidad_origin = "seeded"
 number = "29"
 section = ["liquidacion"]
 data_type = "money"
@@ -137,6 +155,8 @@ export_refs = ["m210-2026.pagina01.f115"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "base_imponible"
+continuidad_id = "irnr-base-imponible"
+continuidad_origin = "seeded"
 number = "8"
 section = ["liquidacion"]
 data_type = "money"
@@ -150,6 +170,8 @@ export_refs = ["m210-2026.pagina01.f086"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "tipo_gravamen"
+continuidad_id = "irnr-tipo-gravamen"
+continuidad_origin = "seeded"
 number = "21"
 section = ["liquidacion"]
 data_type = "ratio"
@@ -163,6 +185,8 @@ export_refs = ["m210-2026.pagina01.f107"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "cuota_integra"
+continuidad_id = "irnr-cuota-integra"
+continuidad_origin = "seeded"
 number = "22"
 section = ["liquidacion"]
 data_type = "money"
@@ -176,6 +200,8 @@ export_refs = ["m210-2026.pagina01.f108"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "cuota_diferencial"
+continuidad_id = "irnr-cuota-diferencial"
+continuidad_origin = "seeded"
 number = "31"
 section = ["liquidacion"]
 data_type = "money"

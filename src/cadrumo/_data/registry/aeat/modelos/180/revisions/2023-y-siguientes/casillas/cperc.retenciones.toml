@@ -1,5 +1,7 @@
 [[revisions.2023-y-siguientes.casillas]]
 id = "perc.retenciones"
+continuidad_id = "perc-retenciones"
+continuidad_origin = "seeded"
 number = "97-109"
 section = ["perceptor", "renta"]
 data_type = "money"

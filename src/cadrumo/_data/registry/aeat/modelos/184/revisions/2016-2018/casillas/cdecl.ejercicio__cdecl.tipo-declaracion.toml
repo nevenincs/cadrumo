@@ -1,6 +1,8 @@
 # Applicability-only declaration header, with no coordinate or export claim.
 [[revisions."2016-2018".casillas]]
 id = "decl.ejercicio"
+continuidad_id = "filing-year"
+continuidad_origin = "seeded"
 number = "ejercicio"
 section = ["declarante"]
 data_type = "year"
@@ -12,6 +14,8 @@ source_refs = ["boe-dr-184-2016-2018"]
 
 [[revisions."2016-2018".casillas]]
 id = "decl.tipo-declaracion"
+continuidad_id = "tipo-declaracion"
+continuidad_origin = "seeded"
 number = "tipo-declaracion"
 section = ["declarante"]
 data_type = "text"

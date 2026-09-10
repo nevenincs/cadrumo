@@ -15,6 +15,7 @@
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
 id = "p07.tipo-de-renta-1-01"
+continuidad_id = "p07-tipo-de-renta-1-01"
 number = "13-14"
 segmento = "M15107000"
 section = ["p07", "tipo_de_renta_1"]
@@ -29,6 +30,7 @@ export_refs = ["m151-2015.pagina07.f006"]
 # AEAT campo: Descripción de la ganancia patrimonial
 [[revisions."2015-2022".casillas]]
 id = "p07.descripcion-de-la-ganancia-patrimonial-01"
+continuidad_id = "m151-descripcion-de-la-ganancia-patrimonial"
 number = "15-114"
 segmento = "M15107000"
 section = ["p07", "descripcion_de_la_ganancia_patrimonial"]
@@ -43,6 +45,7 @@ export_refs = ["m151-2015.pagina07.f007"]
 # AEAT campo: Naturaleza [2]
 [[revisions."2015-2022".casillas]]
 id = "p07.naturaleza-2-01"
+continuidad_id = "p07-naturaleza-2-01"
 number = "115"
 segmento = "M15107000"
 section = ["p07", "naturaleza_2"]
@@ -57,6 +60,7 @@ export_refs = ["m151-2015.pagina07.f008"]
 # AEAT campo: Ganancia patrimonial [3]
 [[revisions."2015-2022".casillas]]
 id = "p07.ganancia-patrimonial-3-01"
+continuidad_id = "m151-ganancia-patrimonial-3"
 number = "116-132"
 segmento = "M15107000"
 section = ["p07", "ganancia_patrimonial_3"]
@@ -71,6 +75,7 @@ export_refs = ["m151-2015.pagina07.f009"]
 # AEAT campo: Retención o ingreso a cuenta [4]
 [[revisions."2015-2022".casillas]]
 id = "p07.retencion-o-ingreso-a-cuenta-4-01"
+continuidad_id = "m151-retencion-o-ingreso-a-cuenta-4"
 number = "133-149"
 segmento = "M15107000"
 section = ["p07", "retencion_o_ingreso_a_cuenta_4"]
@@ -85,6 +90,7 @@ export_refs = ["m151-2015.pagina07.f010"]
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
 id = "p07.tipo-de-renta-1-02"
+continuidad_id = "p07-tipo-de-renta-1-02"
 number = "150-151"
 segmento = "M15107000"
 section = ["p07", "tipo_de_renta_1"]
@@ -99,6 +105,7 @@ export_refs = ["m151-2015.pagina07.f011"]
 # AEAT campo: Descripción de la ganancia patrimonial
 [[revisions."2015-2022".casillas]]
 id = "p07.descripcion-de-la-ganancia-patrimonial-02"
+continuidad_id = "p07-descripcion-de-la-ganancia-patrimonial-02"
 number = "152-251"
 segmento = "M15107000"
 section = ["p07", "descripcion_de_la_ganancia_patrimonial"]
@@ -113,6 +120,7 @@ export_refs = ["m151-2015.pagina07.f012"]
 # AEAT campo: Naturaleza [2]
 [[revisions."2015-2022".casillas]]
 id = "p07.naturaleza-2-02"
+continuidad_id = "p07-naturaleza-2-02"
 number = "252"
 segmento = "M15107000"
 section = ["p07", "naturaleza_2"]
@@ -127,6 +135,7 @@ export_refs = ["m151-2015.pagina07.f013"]
 # AEAT campo: Ganancia patrimonial [3]
 [[revisions."2015-2022".casillas]]
 id = "p07.ganancia-patrimonial-3-02"
+continuidad_id = "p07-ganancia-patrimonial-3-02"
 number = "253-269"
 segmento = "M15107000"
 section = ["p07", "ganancia_patrimonial_3"]
@@ -141,6 +150,7 @@ export_refs = ["m151-2015.pagina07.f014"]
 # AEAT campo: Retención o ingreso a cuenta [4]
 [[revisions."2015-2022".casillas]]
 id = "p07.retencion-o-ingreso-a-cuenta-4-02"
+continuidad_id = "p07-retencion-o-ingreso-a-cuenta-4-02"
 number = "270-286"
 segmento = "M15107000"
 section = ["p07", "retencion_o_ingreso_a_cuenta_4"]
@@ -155,6 +165,7 @@ export_refs = ["m151-2015.pagina07.f015"]
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
 id = "p07.tipo-de-renta-1-03"
+continuidad_id = "p07-tipo-de-renta-1-03"
 number = "287-288"
 segmento = "M15107000"
 section = ["p07", "tipo_de_renta_1"]
@@ -169,6 +180,7 @@ export_refs = ["m151-2015.pagina07.f016"]
 # AEAT campo: Descripción de la ganancia patrimonial
 [[revisions."2015-2022".casillas]]
 id = "p07.descripcion-de-la-ganancia-patrimonial-03"
+continuidad_id = "p07-descripcion-de-la-ganancia-patrimonial-03"
 number = "289-388"
 segmento = "M15107000"
 section = ["p07", "descripcion_de_la_ganancia_patrimonial"]
@@ -183,6 +195,7 @@ export_refs = ["m151-2015.pagina07.f017"]
 # AEAT campo: Naturaleza [2]
 [[revisions."2015-2022".casillas]]
 id = "p07.naturaleza-2-03"
+continuidad_id = "p07-naturaleza-2-03"
 number = "389"
 segmento = "M15107000"
 section = ["p07", "naturaleza_2"]
@@ -197,6 +210,7 @@ export_refs = ["m151-2015.pagina07.f018"]
 # AEAT campo: Ganancia patrimonial [3]
 [[revisions."2015-2022".casillas]]
 id = "p07.ganancia-patrimonial-3-03"
+continuidad_id = "p07-ganancia-patrimonial-3-03"
 number = "390-406"
 segmento = "M15107000"
 section = ["p07", "ganancia_patrimonial_3"]
@@ -211,6 +225,7 @@ export_refs = ["m151-2015.pagina07.f019"]
 # AEAT campo: Retención o ingreso a cuenta [4]
 [[revisions."2015-2022".casillas]]
 id = "p07.retencion-o-ingreso-a-cuenta-4-03"
+continuidad_id = "p07-retencion-o-ingreso-a-cuenta-4-03"
 number = "407-423"
 segmento = "M15107000"
 section = ["p07", "retencion_o_ingreso_a_cuenta_4"]
@@ -225,6 +240,7 @@ export_refs = ["m151-2015.pagina07.f020"]
 # AEAT campo: RESTO. Ganancia patrimonial [3]
 [[revisions."2015-2022".casillas]]
 id = "p07.resto-ganancia-patrimonial-3"
+continuidad_id = "p07-resto-ganancia-patrimonial-3"
 number = "424-440"
 segmento = "M15107000"
 section = ["p07", "resto"]
@@ -238,6 +254,7 @@ export_refs = ["m151-2015.pagina07.f021"]
 # AEAT campo: RESTO. Retención o ingreso a cuenta [4]
 [[revisions."2015-2022".casillas]]
 id = "p07.resto-retencion-o-ingreso-a-cuenta-4"
+continuidad_id = "p07-resto-retencion-o-ingreso-a-cuenta-4"
 number = "441-457"
 segmento = "M15107000"
 section = ["p07", "resto"]
@@ -251,6 +268,7 @@ export_refs = ["m151-2015.pagina07.f022"]
 # AEAT campo: Total ganancias patrimoniales [5]
 [[revisions."2015-2022".casillas]]
 id = "p07.total-ganancias-patrimoniales-5"
+continuidad_id = "p07-total-ganancias-patrimoniales-5"
 number = "458-474"
 segmento = "M15107000"
 section = ["p07", "total_ganancias_patrimoniales_5"]
@@ -264,6 +282,7 @@ export_refs = ["m151-2015.pagina07.f023"]
 # AEAT campo: Total retencion o ingresos a cuenta [6]
 [[revisions."2015-2022".casillas]]
 id = "p07.total-retencion-o-ingresos-a-cuenta-6"
+continuidad_id = "p07-total-retencion-o-ingresos-a-cuenta-6"
 number = "475-491"
 segmento = "M15107000"
 section = ["p07", "total_retencion_o_ingresos_a_cuenta_6"]
@@ -277,6 +296,7 @@ export_refs = ["m151-2015.pagina07.f024"]
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
 id = "p07.tipo-de-renta-1-04"
+continuidad_id = "p07-tipo-de-renta-1-04"
 number = "492-493"
 segmento = "M15107000"
 section = ["p07", "tipo_de_renta_1"]
@@ -291,6 +311,7 @@ export_refs = ["m151-2015.pagina07.f025"]
 # AEAT campo: Descripción del elemento patrimonial
 [[revisions."2015-2022".casillas]]
 id = "p07.descripcion-del-elemento-patrimonial-01"
+continuidad_id = "p07-descripcion-del-elemento-patrimonial-01"
 number = "494-593"
 segmento = "M15107000"
 section = ["p07", "descripcion_del_elemento_patrimonial"]
@@ -305,6 +326,7 @@ export_refs = ["m151-2015.pagina07.f026"]
 # AEAT campo: Fecha de transmisión
 [[revisions."2015-2022".casillas]]
 id = "p07.fecha-de-transmision-01"
+continuidad_id = "p07-fecha-de-transmision-01"
 number = "594-601"
 segmento = "M15107000"
 section = ["p07", "fecha_de_transmision"]
@@ -319,6 +341,7 @@ export_refs = ["m151-2015.pagina07.f027"]
 # AEAT campo: Fecha de adquisición
 [[revisions."2015-2022".casillas]]
 id = "p07.fecha-de-adquisicion-01"
+continuidad_id = "p07-fecha-de-adquisicion-01"
 number = "602-609"
 segmento = "M15107000"
 section = ["p07", "fecha_de_adquisicion"]
@@ -333,6 +356,7 @@ export_refs = ["m151-2015.pagina07.f028"]
 # AEAT campo: Valor de transmisión [2]
 [[revisions."2015-2022".casillas]]
 id = "p07.valor-de-transmision-2-01"
+continuidad_id = "p07-valor-de-transmision-2-01"
 number = "610-626"
 segmento = "M15107000"
 section = ["p07", "valor_de_transmision_2"]
@@ -347,6 +371,7 @@ export_refs = ["m151-2015.pagina07.f029"]
 # AEAT campo: Valor de adquisición [3]
 [[revisions."2015-2022".casillas]]
 id = "p07.valor-de-adquisicion-3-01"
+continuidad_id = "p07-valor-de-adquisicion-3-01"
 number = "627-643"
 segmento = "M15107000"
 section = ["p07", "valor_de_adquisicion_3"]
@@ -361,6 +386,7 @@ export_refs = ["m151-2015.pagina07.f030"]
 # AEAT campo: Diferencia [4]
 [[revisions."2015-2022".casillas]]
 id = "p07.diferencia-4-01"
+continuidad_id = "p07-diferencia-4-01"
 number = "644-660"
 segmento = "M15107000"
 section = ["p07", "diferencia_4"]
@@ -375,6 +401,7 @@ export_refs = ["m151-2015.pagina07.f031"]
 # AEAT campo: Ganancia patrimonial [5]
 [[revisions."2015-2022".casillas]]
 id = "p07.ganancia-patrimonial-5-01"
+continuidad_id = "p07-ganancia-patrimonial-5-01"
 number = "661-677"
 segmento = "M15107000"
 section = ["p07", "ganancia_patrimonial_5"]
@@ -389,6 +416,7 @@ export_refs = ["m151-2015.pagina07.f032"]
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
 id = "p07.tipo-de-renta-1-05"
+continuidad_id = "p07-tipo-de-renta-1-05"
 number = "678-679"
 segmento = "M15107000"
 section = ["p07", "tipo_de_renta_1"]
@@ -403,6 +431,7 @@ export_refs = ["m151-2015.pagina07.f033"]
 # AEAT campo: Descripción del elemento patrimonial
 [[revisions."2015-2022".casillas]]
 id = "p07.descripcion-del-elemento-patrimonial-02"
+continuidad_id = "p07-descripcion-del-elemento-patrimonial-02"
 number = "680-779"
 segmento = "M15107000"
 section = ["p07", "descripcion_del_elemento_patrimonial"]
@@ -417,6 +446,7 @@ export_refs = ["m151-2015.pagina07.f034"]
 # AEAT campo: Fecha de transmisión
 [[revisions."2015-2022".casillas]]
 id = "p07.fecha-de-transmision-02"
+continuidad_id = "p07-fecha-de-transmision-02"
 number = "780-787"
 segmento = "M15107000"
 section = ["p07", "fecha_de_transmision"]
@@ -431,6 +461,7 @@ export_refs = ["m151-2015.pagina07.f035"]
 # AEAT campo: Fecha de adquisición
 [[revisions."2015-2022".casillas]]
 id = "p07.fecha-de-adquisicion-02"
+continuidad_id = "p07-fecha-de-adquisicion-02"
 number = "788-795"
 segmento = "M15107000"
 section = ["p07", "fecha_de_adquisicion"]
@@ -445,6 +476,7 @@ export_refs = ["m151-2015.pagina07.f036"]
 # AEAT campo: Valor de transmisión [2]
 [[revisions."2015-2022".casillas]]
 id = "p07.valor-de-transmision-2-02"
+continuidad_id = "p07-valor-de-transmision-2-02"
 number = "796-812"
 segmento = "M15107000"
 section = ["p07", "valor_de_transmision_2"]
@@ -459,6 +491,7 @@ export_refs = ["m151-2015.pagina07.f037"]
 # AEAT campo: Valor de adquisición [3]
 [[revisions."2015-2022".casillas]]
 id = "p07.valor-de-adquisicion-3-02"
+continuidad_id = "p07-valor-de-adquisicion-3-02"
 number = "813-829"
 segmento = "M15107000"
 section = ["p07", "valor_de_adquisicion_3"]
@@ -473,6 +506,7 @@ export_refs = ["m151-2015.pagina07.f038"]
 # AEAT campo: Diferencia [4]
 [[revisions."2015-2022".casillas]]
 id = "p07.diferencia-4-02"
+continuidad_id = "p07-diferencia-4-02"
 number = "830-846"
 segmento = "M15107000"
 section = ["p07", "diferencia_4"]
@@ -487,6 +521,7 @@ export_refs = ["m151-2015.pagina07.f039"]
 # AEAT campo: Ganancia patrimonial [5]
 [[revisions."2015-2022".casillas]]
 id = "p07.ganancia-patrimonial-5-02"
+continuidad_id = "p07-ganancia-patrimonial-5-02"
 number = "847-863"
 segmento = "M15107000"
 section = ["p07", "ganancia_patrimonial_5"]
@@ -501,6 +536,7 @@ export_refs = ["m151-2015.pagina07.f040"]
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
 id = "p07.tipo-de-renta-1-06"
+continuidad_id = "p07-tipo-de-renta-1-06"
 number = "864-865"
 segmento = "M15107000"
 section = ["p07", "tipo_de_renta_1"]
@@ -515,6 +551,7 @@ export_refs = ["m151-2015.pagina07.f041"]
 # AEAT campo: Descripción del elemento patrimonial
 [[revisions."2015-2022".casillas]]
 id = "p07.descripcion-del-elemento-patrimonial-03"
+continuidad_id = "p07-descripcion-del-elemento-patrimonial-03"
 number = "866-965"
 segmento = "M15107000"
 section = ["p07", "descripcion_del_elemento_patrimonial"]
@@ -529,6 +566,7 @@ export_refs = ["m151-2015.pagina07.f042"]
 # AEAT campo: Fecha de transmisión
 [[revisions."2015-2022".casillas]]
 id = "p07.fecha-de-transmision-03"
+continuidad_id = "p07-fecha-de-transmision-03"
 number = "966-973"
 segmento = "M15107000"
 section = ["p07", "fecha_de_transmision"]
@@ -543,6 +581,7 @@ export_refs = ["m151-2015.pagina07.f043"]
 # AEAT campo: Fecha de adquisición
 [[revisions."2015-2022".casillas]]
 id = "p07.fecha-de-adquisicion-03"
+continuidad_id = "p07-fecha-de-adquisicion-03"
 number = "974-981"
 segmento = "M15107000"
 section = ["p07", "fecha_de_adquisicion"]
@@ -557,6 +596,7 @@ export_refs = ["m151-2015.pagina07.f044"]
 # AEAT campo: Valor de transmisión [2]
 [[revisions."2015-2022".casillas]]
 id = "p07.valor-de-transmision-2-03"
+continuidad_id = "p07-valor-de-transmision-2-03"
 number = "982-998"
 segmento = "M15107000"
 section = ["p07", "valor_de_transmision_2"]
@@ -571,6 +611,7 @@ export_refs = ["m151-2015.pagina07.f045"]
 # AEAT campo: Valor de adquisición [3]
 [[revisions."2015-2022".casillas]]
 id = "p07.valor-de-adquisicion-3-03"
+continuidad_id = "p07-valor-de-adquisicion-3-03"
 number = "999-1015"
 segmento = "M15107000"
 section = ["p07", "valor_de_adquisicion_3"]
@@ -585,6 +626,7 @@ export_refs = ["m151-2015.pagina07.f046"]
 # AEAT campo: Diferencia [4]
 [[revisions."2015-2022".casillas]]
 id = "p07.diferencia-4-03"
+continuidad_id = "p07-diferencia-4-03"
 number = "1016-1032"
 segmento = "M15107000"
 section = ["p07", "diferencia_4"]
@@ -599,6 +641,7 @@ export_refs = ["m151-2015.pagina07.f047"]
 # AEAT campo: Ganancia patrimonial [5]
 [[revisions."2015-2022".casillas]]
 id = "p07.ganancia-patrimonial-5-03"
+continuidad_id = "p07-ganancia-patrimonial-5-03"
 number = "1033-1049"
 segmento = "M15107000"
 section = ["p07", "ganancia_patrimonial_5"]
@@ -613,6 +656,7 @@ export_refs = ["m151-2015.pagina07.f048"]
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
 id = "p07.tipo-de-renta-1-07"
+continuidad_id = "p07-tipo-de-renta-1-07"
 number = "1050-1051"
 segmento = "M15107000"
 section = ["p07", "tipo_de_renta_1"]
@@ -627,6 +671,7 @@ export_refs = ["m151-2015.pagina07.f049"]
 # AEAT campo: Descripción del elemento patrimonial
 [[revisions."2015-2022".casillas]]
 id = "p07.descripcion-del-elemento-patrimonial-04"
+continuidad_id = "p07-descripcion-del-elemento-patrimonial-04"
 number = "1052-1151"
 segmento = "M15107000"
 section = ["p07", "descripcion_del_elemento_patrimonial"]
@@ -641,6 +686,7 @@ export_refs = ["m151-2015.pagina07.f050"]
 # AEAT campo: Fecha de transmisión
 [[revisions."2015-2022".casillas]]
 id = "p07.fecha-de-transmision-04"
+continuidad_id = "p07-fecha-de-transmision-04"
 number = "1152-1159"
 segmento = "M15107000"
 section = ["p07", "fecha_de_transmision"]
@@ -655,6 +701,7 @@ export_refs = ["m151-2015.pagina07.f051"]
 # AEAT campo: Fecha de adquisición
 [[revisions."2015-2022".casillas]]
 id = "p07.fecha-de-adquisicion-04"
+continuidad_id = "p07-fecha-de-adquisicion-04"
 number = "1160-1167"
 segmento = "M15107000"
 section = ["p07", "fecha_de_adquisicion"]
@@ -669,6 +716,7 @@ export_refs = ["m151-2015.pagina07.f052"]
 # AEAT campo: Valor de transmisión [2]
 [[revisions."2015-2022".casillas]]
 id = "p07.valor-de-transmision-2-04"
+continuidad_id = "p07-valor-de-transmision-2-04"
 number = "1168-1184"
 segmento = "M15107000"
 section = ["p07", "valor_de_transmision_2"]
@@ -683,6 +731,7 @@ export_refs = ["m151-2015.pagina07.f053"]
 # AEAT campo: Valor de adquisición [3]
 [[revisions."2015-2022".casillas]]
 id = "p07.valor-de-adquisicion-3-04"
+continuidad_id = "p07-valor-de-adquisicion-3-04"
 number = "1185-1201"
 segmento = "M15107000"
 section = ["p07", "valor_de_adquisicion_3"]
@@ -697,6 +746,7 @@ export_refs = ["m151-2015.pagina07.f054"]
 # AEAT campo: Diferencia [4]
 [[revisions."2015-2022".casillas]]
 id = "p07.diferencia-4-04"
+continuidad_id = "p07-diferencia-4-04"
 number = "1202-1218"
 segmento = "M15107000"
 section = ["p07", "diferencia_4"]
@@ -711,6 +761,7 @@ export_refs = ["m151-2015.pagina07.f055"]
 # AEAT campo: Ganancia patrimonial [5]
 [[revisions."2015-2022".casillas]]
 id = "p07.ganancia-patrimonial-5-04"
+continuidad_id = "p07-ganancia-patrimonial-5-04"
 number = "1219-1235"
 segmento = "M15107000"
 section = ["p07", "ganancia_patrimonial_5"]
@@ -725,6 +776,7 @@ export_refs = ["m151-2015.pagina07.f056"]
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
 id = "p07.tipo-de-renta-1-08"
+continuidad_id = "p07-tipo-de-renta-1-08"
 number = "1236-1237"
 segmento = "M15107000"
 section = ["p07", "tipo_de_renta_1"]
@@ -739,6 +791,7 @@ export_refs = ["m151-2015.pagina07.f057"]
 # AEAT campo: Descripción del elemento patrimonial
 [[revisions."2015-2022".casillas]]
 id = "p07.descripcion-del-elemento-patrimonial-05"
+continuidad_id = "p07-descripcion-del-elemento-patrimonial-05"
 number = "1238-1337"
 segmento = "M15107000"
 section = ["p07", "descripcion_del_elemento_patrimonial"]
@@ -753,6 +806,7 @@ export_refs = ["m151-2015.pagina07.f058"]
 # AEAT campo: Fecha de transmisión
 [[revisions."2015-2022".casillas]]
 id = "p07.fecha-de-transmision-05"
+continuidad_id = "p07-fecha-de-transmision-05"
 number = "1338-1345"
 segmento = "M15107000"
 section = ["p07", "fecha_de_transmision"]
@@ -767,6 +821,7 @@ export_refs = ["m151-2015.pagina07.f059"]
 # AEAT campo: Fecha de adquisición
 [[revisions."2015-2022".casillas]]
 id = "p07.fecha-de-adquisicion-05"
+continuidad_id = "p07-fecha-de-adquisicion-05"
 number = "1346-1353"
 segmento = "M15107000"
 section = ["p07", "fecha_de_adquisicion"]
@@ -781,6 +836,7 @@ export_refs = ["m151-2015.pagina07.f060"]
 # AEAT campo: Valor de transmisión [2]
 [[revisions."2015-2022".casillas]]
 id = "p07.valor-de-transmision-2-05"
+continuidad_id = "p07-valor-de-transmision-2-05"
 number = "1354-1370"
 segmento = "M15107000"
 section = ["p07", "valor_de_transmision_2"]
@@ -795,6 +851,7 @@ export_refs = ["m151-2015.pagina07.f061"]
 # AEAT campo: Valor de adquisición [3]
 [[revisions."2015-2022".casillas]]
 id = "p07.valor-de-adquisicion-3-05"
+continuidad_id = "p07-valor-de-adquisicion-3-05"
 number = "1371-1387"
 segmento = "M15107000"
 section = ["p07", "valor_de_adquisicion_3"]
@@ -809,6 +866,7 @@ export_refs = ["m151-2015.pagina07.f062"]
 # AEAT campo: Diferencia [4]
 [[revisions."2015-2022".casillas]]
 id = "p07.diferencia-4-05"
+continuidad_id = "p07-diferencia-4-05"
 number = "1388-1404"
 segmento = "M15107000"
 section = ["p07", "diferencia_4"]
@@ -823,6 +881,7 @@ export_refs = ["m151-2015.pagina07.f063"]
 # AEAT campo: Ganancia patrimonial [5]
 [[revisions."2015-2022".casillas]]
 id = "p07.ganancia-patrimonial-5-05"
+continuidad_id = "p07-ganancia-patrimonial-5-05"
 number = "1405-1421"
 segmento = "M15107000"
 section = ["p07", "ganancia_patrimonial_5"]

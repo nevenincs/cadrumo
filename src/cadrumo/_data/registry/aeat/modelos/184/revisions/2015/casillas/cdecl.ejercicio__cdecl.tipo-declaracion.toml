@@ -3,6 +3,7 @@
 # the strict geometry parser.
 [[revisions."2015".casillas]]
 id = "decl.ejercicio"
+continuidad_id = "filing-year"
 number = "ejercicio"
 section = ["declarante"]
 data_type = "year"
@@ -14,6 +15,7 @@ source_refs = ["boe-dr-184-2015"]
 
 [[revisions."2015".casillas]]
 id = "decl.tipo-declaracion"
+continuidad_id = "tipo-declaracion"
 number = "tipo-declaracion"
 section = ["declarante"]
 data_type = "text"

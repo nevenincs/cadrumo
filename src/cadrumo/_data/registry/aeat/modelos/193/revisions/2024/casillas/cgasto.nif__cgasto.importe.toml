@@ -2,6 +2,7 @@
 
 [[revisions."2024".casillas]]
 id = "gasto.nif"
+continuidad_id = "gasto-contributor-nif"
 number = "18-26"
 segmento = "gastos"
 section = ["gastos", "contribuyente"]
@@ -15,6 +16,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "gasto.nombre"
+continuidad_id = "gasto-contributor-nombre"
 number = "36-75"
 segmento = "gastos"
 section = ["gastos", "contribuyente"]
@@ -28,6 +30,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "gasto.nif-representante"
+continuidad_id = "representante-legal-nif"
 number = "27-35"
 segmento = "gastos"
 section = ["gastos", "contribuyente"]
@@ -41,6 +44,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "gasto.importe"
+continuidad_id = "gasto-importe-anual"
 number = "195-207"
 segmento = "gastos"
 section = ["gastos", "contribuyente"]

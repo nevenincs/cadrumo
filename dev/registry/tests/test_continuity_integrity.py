@@ -3,9 +3,8 @@
 Two of this screen's conditions hold across the whole corpus and are gated as
 invariants elsewhere. A gate that only ever sees a clean corpus proves nothing
 on its own, so both are constructed here on copies of real revisions and shown
-to be caught. The singleton condition is constructed the same way, so its proof
-survives the corpus being repaired. Absent continuity occurs live and is pinned
-against the corpus itself.
+to be caught. The singleton and absent-continuity conditions are constructed the
+same way, so their proofs survive the corpus being repaired.
 """
 
 from __future__ import annotations
@@ -74,9 +73,29 @@ def test_absent_continuity_is_reported_as_its_own_kind(authority: ValidatedRegis
     """A multi-revision modelo carrying no chain surfaces as absent, not broken.
 
     The remedies differ: a broken chain is corrected, a missing one is authored,
-    and collapsing them would hide which is which.
+    and collapsing them would hide which is which. Constructed on a copy of a
+    real multi-revision modelo with every chain removed, so the proof does not
+    depend on some modelo still lacking continuity.
     """
-    findings = screen_authority(authority, ("714",))
+    definition = authority.modelo("303")
+    assert len(definition.revisions) > 1
+    assert "modelo_without_continuity" not in {item.kind for item in definition_findings(definition, modelo_id="303")}
+    stripped = definition.model_copy(
+        update={
+            "revisions": {
+                revision_id: revision.model_copy(
+                    update={
+                        "casillas": tuple(
+                            item.model_copy(update={"continuidad_id": None}) for item in revision.casillas
+                        ),
+                        "casilla_continuidad_evolutions": (),
+                    }
+                )
+                for revision_id, revision in definition.revisions.items()
+            }
+        }
+    )
+    findings = definition_findings(stripped, modelo_id="303")
     assert [item.kind for item in findings] == ["modelo_without_continuity"]
     # The detail carries the revision count, which is a live figure: asserting
     # it here would fail the day this modelo gains a revision, though nothing
@@ -116,11 +135,7 @@ def test_screen_detects_a_chain_spanning_two_identifier_grammars(
     assert chained, "the fixture revision must carry continuity chains"
     donor = chained[0]
     donor_grammar = classify_casilla_id(str(donor.id))
-    other = next(
-        item
-        for item in revision.casillas
-        if classify_casilla_id(str(item.id)) != donor_grammar and not getattr(item, "continuidad_id", None)
-    )
+    other = next(item for item in revision.casillas if classify_casilla_id(str(item.id)) != donor_grammar)
 
     mutated_casillas = tuple(
         item.model_copy(update={"continuidad_id": donor.continuidad_id}) if item.id == other.id else item

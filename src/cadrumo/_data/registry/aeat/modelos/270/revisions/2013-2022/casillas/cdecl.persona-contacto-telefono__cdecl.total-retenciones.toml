@@ -24,6 +24,7 @@
 # agree, and two operator-supplied facts are what the record actually carries.
 [[revisions."2013-2022".casillas]]
 id = "decl.persona-contacto-telefono"
+continuidad_id = "m270-persona-contacto-telefono"
 number = "59-67"
 section = ["declarante", "contacto"]
 data_type = "text"
@@ -36,6 +37,7 @@ source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 
 [[revisions."2013-2022".casillas]]
 id = "decl.persona-contacto-nombre"
+continuidad_id = "m270-persona-contacto-nombre"
 number = "68-107"
 section = ["declarante", "contacto"]
 data_type = "name"
@@ -51,6 +53,7 @@ source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 # operator's datum rather than a producer's.
 [[revisions."2013-2022".casillas]]
 id = "decl.numero-identificativo"
+continuidad_id = "m270-numero-identificativo"
 number = "108-120"
 section = ["declarante"]
 data_type = "text"
@@ -68,6 +71,7 @@ source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 # canonical "X", which this design does not admit here.
 [[revisions."2013-2022".casillas]]
 id = "decl.complementaria"
+continuidad_id = "m270-declaracion-complementaria"
 number = "121"
 section = ["declarante"]
 data_type = "text"
@@ -80,6 +84,7 @@ source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 
 [[revisions."2013-2022".casillas]]
 id = "decl.sustitutiva"
+continuidad_id = "m270-declaracion-sustitutiva"
 number = "122"
 section = ["declarante"]
 data_type = "text"
@@ -94,6 +99,7 @@ source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 # "en cualquier otro caso deberá rellenarse a CEROS".
 [[revisions."2013-2022".casillas]]
 id = "decl.numero-identificativo-anterior"
+continuidad_id = "m270-numero-identificativo-anterior"
 number = "123-135"
 section = ["declarante"]
 data_type = "text"
@@ -106,6 +112,7 @@ source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 
 [[revisions."2013-2022".casillas]]
 id = "decl.total-perceptores"
+continuidad_id = "total-perceptores-count"
 number = "136-144"
 section = ["declarante", "resumen"]
 data_type = "integer"
@@ -118,6 +125,7 @@ source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 
 [[revisions."2013-2022".casillas]]
 id = "decl.total-importe-premios"
+continuidad_id = "m270-total-importe-premios"
 number = "145-161"
 section = ["declarante", "resumen"]
 data_type = "money"
@@ -131,6 +139,7 @@ constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1"
 
 [[revisions."2013-2022".casillas]]
 id = "decl.total-base-retencion"
+continuidad_id = "base-retenciones-ingresos-a-cuenta"
 number = "162-178"
 section = ["declarante", "resumen"]
 data_type = "money"
@@ -144,6 +153,7 @@ constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1"
 
 [[revisions."2013-2022".casillas]]
 id = "decl.total-retenciones"
+continuidad_id = "retenciones-ingresos-a-cuenta"
 number = "179-195"
 section = ["declarante", "resumen"]
 data_type = "money"

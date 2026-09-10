@@ -285,6 +285,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "cuota-integra-estado-17"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:80 (sha256 9a4c8d8cd2e6) box [17] (34 899 17 Num Cuota íntegra atribuible a la Administración del Esta...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints [17] only as other concepts, at lines [80, 136]."
 number = "17"
 section = ["490_01"]
 data_type = "money"
@@ -307,6 +309,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "ajuste-cuota-integra-reg-estado-19"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:82 (sha256 9a4c8d8cd2e6) box [19] (36 933 17 N Ajuste cuota íntegra períodos regularización atribuible...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints [19] only as other concepts, at lines [82, 144]."
 number = "19"
 section = ["490_01"]
 data_type = "money"
@@ -318,6 +322,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-alava-20"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:83 (sha256 9a4c8d8cd2e6) box [20] (37 950 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:121 (sha256 d8115bd4f4d1) prints [20] as another concept (10 68 17 Num (a) Regu (art. 10.3 Ley). Regularización positiva (bas...)."
 number = "20"
 section = ["490_01"]
 data_type = "ratio"
@@ -329,6 +335,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-guipuzcoa-21"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:84 (sha256 9a4c8d8cd2e6) box [21] (38 955 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:125 (sha256 d8115bd4f4d1) prints [21] as another concept (14 136 17 N (b) Regu (art. 10.3 Ley). Regularización negativa (base...)."
 number = "21"
 section = ["490_01"]
 data_type = "ratio"
@@ -340,6 +348,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-vizcaya-22"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:85 (sha256 9a4c8d8cd2e6) box [22] (39 960 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:129 (sha256 d8115bd4f4d1) prints [22] as another concept (18 204 17 N ( c ) =(a)+(b) Regu (art. 10.3 Ley).Total Regularizació...)."
 number = "22"
 section = ["490_01"]
 data_type = "ratio"
@@ -351,6 +361,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-comun-24"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:87 (sha256 9a4c8d8cd2e6) box [24] (41 970 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:141 (sha256 d8115bd4f4d1) prints [24] as another concept (30 352 17 N (f) = (b) * (d) Regu (art. 10.3 Ley). Regularización ne...)."
 number = "24"
 section = ["490_01"]
 data_type = "ratio"
@@ -461,6 +473,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-base-declarada-27"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:126 (sha256 9a4c8d8cd2e6) box [27] (7 17 17 Num Base imponible declarada en período objeto de regulariz...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:151 (sha256 d8115bd4f4d1) prints [27] as another concept (40 509 17 N (b) Regu (art. 10.3 Ley). Regularización negativa (base...)."
 number = "27"
 section = ["490_02"]
 data_type = "money"
@@ -472,6 +486,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-base-declarada-48"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:127 (sha256 9a4c8d8cd2e6) box [48] (8 34 17 Num Base imponible declarada en período objeto de regulariz...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:166 (sha256 d8115bd4f4d1) prints [48] as another concept (55 708 17 Num (e) = (a) * (d) Regu (art. 10.3 Ley). Regularización ...)."
 number = "48"
 section = ["490_02"]
 data_type = "money"
@@ -483,6 +499,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-base-declarada-69"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:128 (sha256 9a4c8d8cd2e6) box [69] (9 51 17 Num Base imponible declarada en período objeto de regulariz...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:202 (sha256 d8115bd4f4d1) prints [69] as another concept (91 1251 17 N (g) = (e) + (f) Regu (art. 10.3 Ley). Total Regulariza...)."
 number = "69"
 section = ["490_02"]
 data_type = "money"
@@ -494,6 +512,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-base-declarada-90"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:129 (sha256 9a4c8d8cd2e6) box [90] (10 68 17 Num Base imponible declarada en período objeto de regulari...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:211 (sha256 d8115bd4f4d1) prints [90] as another concept (100 1391 17 N (b) Regu (art. 10.3 Ley). Regularización negativa (ba...)."
 number = "90"
 section = ["490_02"]
 data_type = "money"

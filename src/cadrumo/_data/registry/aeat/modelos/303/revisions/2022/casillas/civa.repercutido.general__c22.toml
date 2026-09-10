@@ -311,6 +311,7 @@ source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "iva.resultado"
+continuidad_id = "iva-resultado-autoliquidacion"
 number = "69"
 section = ["iva", "resultado"]
 data_type = "money"

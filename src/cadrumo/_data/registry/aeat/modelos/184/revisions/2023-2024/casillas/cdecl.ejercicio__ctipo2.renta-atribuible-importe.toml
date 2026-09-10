@@ -1,5 +1,7 @@
 [[revisions."2023-2024".casillas]]
 id = "decl.ejercicio"
+continuidad_id = "filing-year"
+continuidad_origin = "seeded"
 number = "ejercicio"
 section = ["declarante"]
 data_type = "year"
@@ -11,6 +13,8 @@ source_refs = ["aeat-dr-184-2023-2024"]
 export_refs = ["m184-2023.declarante.f003"]
 [[revisions."2023-2024".casillas]]
 id = "decl.tipo-declaracion"
+continuidad_id = "tipo-declaracion"
+continuidad_origin = "seeded"
 number = "tipo-declaracion"
 # The abstract declaration type has no box of its own on this design. AEAT
 # prints only the two flags that qualify it -- complementaria and sustitutiva,
@@ -27,6 +31,7 @@ source_refs = ["aeat-dr-184-2023-2024"]
 
 [[revisions."2023-2024".casillas]]
 id = "tipo2.clave"
+continuidad_id = "tipo-renta-atribuida-clave"
 number = "77"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -39,6 +44,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f009"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.subclave"
+continuidad_id = "tipo-renta-atribuida-subclave"
 number = "78-79"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -60,6 +66,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f010"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.renta-atribuible-importe"
+continuidad_id = "renta-atribuible-importe"
 # AEAT prints this row as "177-190 Alfanumerico RENTA ATRIBUIBLE / RENDIMIENTO
 # NETO ATRIBUIBLE...", a 14-position field, and its sibling amount at 151-164
 # spans its full declared width the same way. The previous "178-190" was one

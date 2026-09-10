@@ -17,6 +17,7 @@
 
 [[revisions."2021-2025".casillas]]
 id = "01"
+continuidad_id = "m353-resultado-total-entidades"
 number = "01"
 section = ["iva", "grupo_entidades", "liquidacion"]
 semantic_role = "m353_resultado_total_entidades"
@@ -32,6 +33,7 @@ export_refs = ["m353-2021.pagina01.f120"]
 
 [[revisions."2021-2025".casillas]]
 id = "02"
+continuidad_id = "m353-cuotas-a-compensar"
 number = "02"
 section = ["iva", "grupo_entidades", "compensacion"]
 semantic_role = "m353_cuotas_a_compensar"
@@ -44,6 +46,7 @@ export_refs = ["m353-2021.pagina01.f121"]
 
 [[revisions."2021-2025".casillas]]
 id = "08"
+continuidad_id = "08"
 number = "08"
 section = ["iva", "grupo_entidades", "compensacion"]
 semantic_role = "m353_cuotas_a_compensar"
@@ -56,6 +59,7 @@ export_refs = ["m353-2021.pagina01.f131"]
 
 [[revisions."2021-2025".casillas]]
 id = "09"
+continuidad_id = "09"
 number = "09"
 section = ["iva", "grupo_entidades", "compensacion"]
 semantic_role = "m353_cuotas_a_compensar"
@@ -69,6 +73,7 @@ export_refs = ["m353-2021.pagina01.f132"]
 
 [[revisions."2021-2025".casillas]]
 id = "03"
+continuidad_id = "m353-resultado"
 number = "03"
 section = ["iva", "grupo_entidades", "liquidacion"]
 semantic_role = "m353_resultado"
@@ -82,6 +87,7 @@ export_refs = ["m353-2021.pagina01.f122"]
 
 [[revisions."2021-2025".casillas]]
 id = "04"
+continuidad_id = "m353-a-deducir-autoliquidaciones-anteriores"
 number = "04"
 section = ["iva", "grupo_entidades", "liquidacion"]
 semantic_role = "m353_a_deducir_autoliquidaciones_anteriores"
@@ -96,6 +102,7 @@ export_refs = ["m353-2021.pagina01.f123"]
 
 [[revisions."2021-2025".casillas]]
 id = "05"
+continuidad_id = "05"
 number = "05"
 section = ["iva", "grupo_entidades", "liquidacion"]
 semantic_role = "m353_resultado"

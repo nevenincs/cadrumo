@@ -2,6 +2,8 @@
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-ajuste-total-estado-331"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:441 (sha256 9a4c8d8cd2e6) box [331] (134 1571 17 N Total ajuste en cuota íntegra período de regularizaci...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [331]."
 number = "331"
 section = ["490_03"]
 data_type = "money"
@@ -13,6 +15,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-ajuste-total-estado-352"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:442 (sha256 9a4c8d8cd2e6) box [352] (135 1588 17 N Total ajuste en cuota íntegra período de regularizaci...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [352]."
 number = "352"
 section = ["490_03"]
 data_type = "money"
@@ -24,6 +28,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-alava-per-290"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:443 (sha256 9a4c8d8cd2e6) box [290] (136 1605 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [290]."
 number = "290"
 section = ["490_03"]
 data_type = "ratio"
@@ -35,6 +41,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-alava-per-311"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:444 (sha256 9a4c8d8cd2e6) box [311] (137 1610 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [311]."
 number = "311"
 section = ["490_03"]
 data_type = "ratio"
@@ -46,6 +54,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-alava-per-332"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:445 (sha256 9a4c8d8cd2e6) box [332] (138 1615 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [332]."
 number = "332"
 section = ["490_03"]
 data_type = "ratio"
@@ -57,6 +67,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-alava-per-353"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:446 (sha256 9a4c8d8cd2e6) box [353] (139 1620 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [353]."
 number = "353"
 section = ["490_03"]
 data_type = "ratio"
@@ -68,6 +80,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-alava-con-reg-291"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:447 (sha256 9a4c8d8cd2e6) box [291] (140 1625 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [291]."
 number = "291"
 section = ["490_03"]
 data_type = "ratio"
@@ -79,6 +93,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-alava-con-reg-312"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:448 (sha256 9a4c8d8cd2e6) box [312] (141 1630 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [312]."
 number = "312"
 section = ["490_03"]
 data_type = "ratio"
@@ -90,6 +106,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-alava-con-reg-333"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:449 (sha256 9a4c8d8cd2e6) box [333] (142 1635 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [333]."
 number = "333"
 section = ["490_03"]
 data_type = "ratio"
@@ -101,6 +119,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-alava-con-reg-354"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:450 (sha256 9a4c8d8cd2e6) box [354] (143 1640 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [354]."
 number = "354"
 section = ["490_03"]
 data_type = "ratio"
@@ -112,6 +132,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-guipuzcoa-per-292"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:451 (sha256 9a4c8d8cd2e6) box [292] (144 1645 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [292]."
 number = "292"
 section = ["490_03"]
 data_type = "ratio"
@@ -123,6 +145,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-guipuzcoa-per-313"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:452 (sha256 9a4c8d8cd2e6) box [313] (145 1650 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [313]."
 number = "313"
 section = ["490_03"]
 data_type = "ratio"
@@ -134,6 +158,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-guipuzcoa-per-334"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:453 (sha256 9a4c8d8cd2e6) box [334] (146 1655 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [334]."
 number = "334"
 section = ["490_03"]
 data_type = "ratio"
@@ -145,6 +171,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-guipuzcoa-per-355"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:454 (sha256 9a4c8d8cd2e6) box [355] (147 1660 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [355]."
 number = "355"
 section = ["490_03"]
 data_type = "ratio"
@@ -156,6 +184,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-guipuzcoa-con-reg-293"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:455 (sha256 9a4c8d8cd2e6) box [293] (148 1665 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [293]."
 number = "293"
 section = ["490_03"]
 data_type = "ratio"
@@ -167,6 +197,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-guipuzcoa-con-reg-314"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:456 (sha256 9a4c8d8cd2e6) box [314] (149 1670 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [314]."
 number = "314"
 section = ["490_03"]
 data_type = "ratio"
@@ -178,6 +210,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-guipuzcoa-con-reg-335"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:457 (sha256 9a4c8d8cd2e6) box [335] (150 1675 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [335]."
 number = "335"
 section = ["490_03"]
 data_type = "ratio"
@@ -189,6 +223,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-guipuzcoa-con-reg-356"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:458 (sha256 9a4c8d8cd2e6) box [356] (151 1680 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [356]."
 number = "356"
 section = ["490_03"]
 data_type = "ratio"
@@ -200,6 +236,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-vizcaya-per-294"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:459 (sha256 9a4c8d8cd2e6) box [294] (152 1685 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [294]."
 number = "294"
 section = ["490_03"]
 data_type = "ratio"
@@ -211,6 +249,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-vizcaya-per-315"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:460 (sha256 9a4c8d8cd2e6) box [315] (153 1690 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [315]."
 number = "315"
 section = ["490_03"]
 data_type = "ratio"
@@ -222,6 +262,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-vizcaya-per-336"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:461 (sha256 9a4c8d8cd2e6) box [336] (154 1695 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [336]."
 number = "336"
 section = ["490_03"]
 data_type = "ratio"
@@ -233,6 +275,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-vizcaya-per-357"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:462 (sha256 9a4c8d8cd2e6) box [357] (155 1700 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [357]."
 number = "357"
 section = ["490_03"]
 data_type = "ratio"
@@ -244,6 +288,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-vizcaya-con-reg-295"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:463 (sha256 9a4c8d8cd2e6) box [295] (156 1705 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [295]."
 number = "295"
 section = ["490_03"]
 data_type = "ratio"
@@ -255,6 +301,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-vizcaya-con-reg-316"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:464 (sha256 9a4c8d8cd2e6) box [316] (157 1710 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [316]."
 number = "316"
 section = ["490_03"]
 data_type = "ratio"
@@ -266,6 +314,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-vizcaya-con-reg-337"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:465 (sha256 9a4c8d8cd2e6) box [337] (158 1715 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [337]."
 number = "337"
 section = ["490_03"]
 data_type = "ratio"
@@ -277,6 +327,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-vizcaya-con-reg-358"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:466 (sha256 9a4c8d8cd2e6) box [358] (159 1720 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [358]."
 number = "358"
 section = ["490_03"]
 data_type = "ratio"
@@ -288,6 +340,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-comun-per-298"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:475 (sha256 9a4c8d8cd2e6) box [298] (168 1765 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [298]."
 number = "298"
 section = ["490_03"]
 data_type = "ratio"
@@ -299,6 +353,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-comun-per-319"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:476 (sha256 9a4c8d8cd2e6) box [319] (169 1770 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [319]."
 number = "319"
 section = ["490_03"]
 data_type = "ratio"
@@ -310,6 +366,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-comun-per-340"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:477 (sha256 9a4c8d8cd2e6) box [340] (170 1775 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [340]."
 number = "340"
 section = ["490_03"]
 data_type = "ratio"
@@ -321,6 +379,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-comun-per-361"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:478 (sha256 9a4c8d8cd2e6) box [361] (171 1780 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [361]."
 number = "361"
 section = ["490_03"]
 data_type = "ratio"
@@ -332,6 +392,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-comun-con-reg-299"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:479 (sha256 9a4c8d8cd2e6) box [299] (172 1785 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [299]."
 number = "299"
 section = ["490_03"]
 data_type = "ratio"
@@ -343,6 +405,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-comun-con-reg-320"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:480 (sha256 9a4c8d8cd2e6) box [320] (173 1790 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [320]."
 number = "320"
 section = ["490_03"]
 data_type = "ratio"
@@ -354,6 +418,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-comun-con-reg-341"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:481 (sha256 9a4c8d8cd2e6) box [341] (174 1795 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [341]."
 number = "341"
 section = ["490_03"]
 data_type = "ratio"
@@ -365,6 +431,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-comun-con-reg-362"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:482 (sha256 9a4c8d8cd2e6) box [362] (175 1800 5 Num Información de la tributación por razón de territori...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [362]."
 number = "362"
 section = ["490_03"]
 data_type = "ratio"
@@ -387,6 +455,8 @@ source_refs = ["aeat-dr-490-2022-2t"]
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-total-cuota-estado-364"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:484 (sha256 9a4c8d8cd2e6) box [364] (177 1822 17 N Total Regularización atribuible a la Administración d...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [364]."
 number = "364"
 section = ["490_03"]
 data_type = "money"

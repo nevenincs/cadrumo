@@ -18,6 +18,7 @@
 
 [[revisions."2013-2022".casillas]]
 id = "perc.nif"
+continuidad_id = "payee-nif"
 number = "18-26"
 section = ["perceptor", "identificacion"]
 data_type = "nif"
@@ -30,6 +31,7 @@ source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 
 [[revisions."2013-2022".casillas]]
 id = "perc.nif-representante-legal"
+continuidad_id = "payee-representative-nif"
 number = "27-35"
 section = ["perceptor", "identificacion"]
 data_type = "nif"
@@ -42,6 +44,7 @@ source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 
 [[revisions."2013-2022".casillas]]
 id = "perc.nombre"
+continuidad_id = "payee-name"
 number = "36-75"
 section = ["perceptor", "identificacion"]
 data_type = "name"
@@ -54,6 +57,7 @@ source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 
 [[revisions."2013-2022".casillas]]
 id = "perc.nombre-representante"
+continuidad_id = "m270-representante-nombre"
 number = "76-115"
 section = ["perceptor", "identificacion"]
 data_type = "name"
@@ -71,6 +75,7 @@ source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 # sin mediación de establecimiento permanente.
 [[revisions."2013-2022".casillas]]
 id = "perc.tipo-perceptor"
+continuidad_id = "m270-tipo-perceptor"
 number = "116"
 section = ["perceptor", "identificacion"]
 data_type = "integer"
@@ -86,6 +91,7 @@ source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 # is clave 5.
 [[revisions."2013-2022".casillas]]
 id = "perc.clave-personalidad"
+continuidad_id = "m270-clave-personalidad"
 number = "117"
 section = ["perceptor", "identificacion"]
 data_type = "text"
@@ -98,6 +104,7 @@ source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 
 [[revisions."2013-2022".casillas]]
 id = "perc.provincia"
+continuidad_id = "payee-province"
 number = "118-119"
 section = ["perceptor", "identificacion"]
 data_type = "province_code"
@@ -110,6 +117,7 @@ source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 
 [[revisions."2013-2022".casillas]]
 id = "perc.fecha-sorteo"
+continuidad_id = "m270-fecha-sorteo"
 number = "120-127"
 section = ["perceptor", "premio"]
 data_type = "date"
@@ -122,6 +130,7 @@ source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 
 [[revisions."2013-2022".casillas]]
 id = "perc.fecha-pago"
+continuidad_id = "m270-fecha-pago-premio"
 number = "128-135"
 section = ["perceptor", "premio"]
 data_type = "date"
@@ -134,6 +143,7 @@ source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 
 [[revisions."2013-2022".casillas]]
 id = "perc.importe-premio"
+continuidad_id = "m270-importe-premio"
 number = "136-150"
 section = ["perceptor", "premio"]
 data_type = "money"
@@ -147,6 +157,7 @@ constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1"
 
 [[revisions."2013-2022".casillas]]
 id = "perc.base-retencion"
+continuidad_id = "perc-base-retencion"
 number = "151-165"
 section = ["perceptor", "premio"]
 data_type = "money"
@@ -160,6 +171,7 @@ constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1"
 
 [[revisions."2013-2022".casillas]]
 id = "perc.retencion"
+continuidad_id = "perc-retencion"
 number = "166-180"
 section = ["perceptor", "premio"]
 data_type = "money"
@@ -175,6 +187,7 @@ constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1"
 # presented for collection by someone who is not its ultimate beneficiary.
 [[revisions."2013-2022".casillas]]
 id = "perc.gestor-cobro"
+continuidad_id = "m270-gestor-cobro"
 number = "181"
 section = ["perceptor", "premio"]
 data_type = "text"
@@ -187,6 +200,7 @@ source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 
 [[revisions."2013-2022".casillas]]
 id = "perc.nif-pais-residencia"
+continuidad_id = "m270-nif-pais-residencia"
 number = "433-452"
 section = ["perceptor", "no_residente"]
 data_type = "text"
@@ -199,6 +213,7 @@ source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 
 [[revisions."2013-2022".casillas]]
 id = "perc.fecha-nacimiento"
+continuidad_id = "m270-fecha-nacimiento"
 number = "453-460"
 section = ["perceptor", "no_residente"]
 data_type = "date"
@@ -218,6 +233,7 @@ source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 # the two-character country code from Anexo II of Orden EHA/3496/2011.
 [[revisions."2013-2022".casillas]]
 id = "perc.lugar-nacimiento"
+continuidad_id = "m270-lugar-nacimiento"
 number = "461-497"
 section = ["perceptor", "no_residente"]
 data_type = "text"
@@ -230,6 +246,7 @@ source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 
 [[revisions."2013-2022".casillas]]
 id = "perc.pais-residencia"
+continuidad_id = "m270-pais-residencia"
 number = "498-499"
 section = ["perceptor", "no_residente"]
 data_type = "country_code"

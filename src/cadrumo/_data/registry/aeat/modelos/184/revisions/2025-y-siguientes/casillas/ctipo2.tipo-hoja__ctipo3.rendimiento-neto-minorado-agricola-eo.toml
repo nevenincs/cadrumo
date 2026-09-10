@@ -10,6 +10,8 @@
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.tipo-hoja"
+continuidad_id = "tipo-hoja"
+continuidad_origin = "seeded"
 number = "76"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -21,6 +23,8 @@ legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:ar
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.clave-pais"
+continuidad_id = "clave-pais-renta"
+continuidad_origin = "seeded"
 number = "80-81"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -33,6 +37,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f011"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.regimen-determinacion-rendimientos"
+continuidad_id = "regimen-determinacion-rendimientos"
+continuidad_origin = "seeded"
 number = "82"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -45,6 +51,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f012"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.tipo-actividad"
+continuidad_id = "tipo-actividad"
+continuidad_origin = "seeded"
 number = "83"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -57,6 +65,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f013"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.epigrafe-iae"
+continuidad_id = "epigrafe-iae"
+continuidad_origin = "seeded"
 number = "84-87"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -69,6 +79,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f014"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.cesionario-nif"
+continuidad_id = "cesionario-nif"
+continuidad_origin = "seeded"
 number = "88-96"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -81,6 +93,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f015"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.cesionario-denominacion"
+continuidad_id = "cesionario-denominacion"
+continuidad_origin = "seeded"
 number = "97-116"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -93,6 +107,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f016"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.fecha-adquisicion"
+continuidad_id = "fecha-adquisicion"
+continuidad_origin = "seeded"
 number = "117-124"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -105,6 +121,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f017", "m184-2025.entidad.f018", "m184-2025.entidad.f019"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.valor-liquidativo"
+continuidad_id = "valor-liquidativo-o-ajustes-aumentos"
+continuidad_origin = "seeded"
 number = "125-137"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -117,6 +135,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f020", "m184-2025.entidad.f021"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.valor-adquisicion"
+continuidad_id = "valor-adquisicion-o-ajustes-disminuciones"
+continuidad_origin = "seeded"
 number = "138-150"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -129,6 +149,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f022", "m184-2025.entidad.f023"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.ingresos-integros"
+continuidad_id = "ingresos-integros-atribuibles"
+continuidad_origin = "seeded"
 number = "151-164"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -141,6 +163,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.gastos"
+continuidad_id = "gastos-deducibles-atribuibles"
+continuidad_origin = "seeded"
 number = "165-176"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -153,6 +177,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f025", "m184-2025.entidad.f026"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.porcentaje-reduccion"
+continuidad_id = "porcentaje-reduccion-renta-atribuible"
+continuidad_origin = "seeded"
 number = "191-195"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -165,6 +191,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f028", "m184-2025.entidad.f029"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.renta-atribuible-con-reduccion"
+continuidad_id = "renta-atribuible-con-derecho-reduccion"
+continuidad_origin = "seeded"
 number = "196-207"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -177,6 +205,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f030"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.ganancias-perdidas"
+continuidad_id = "ganancias-perdidas-patrimoniales-atribuibles"
+continuidad_origin = "seeded"
 number = "208-220"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -189,6 +219,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f031", "m184-2025.entidad.f032"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.base-deduccion"
+continuidad_id = "base-deduccion-o-importe"
+continuidad_origin = "seeded"
 number = "221-232"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -201,6 +233,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f033", "m184-2025.entidad.f034"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.retenciones"
+continuidad_id = "retenciones-ingresos-a-cuenta-atribuibles"
+continuidad_origin = "seeded"
 number = "233-244"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -213,6 +247,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f035", "m184-2025.entidad.f036"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.situacion-inmueble"
+continuidad_id = "situacion-inmueble"
+continuidad_origin = "seeded"
 number = "245"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -225,6 +261,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f037"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.referencia-catastral"
+continuidad_id = "referencia-catastral"
+continuidad_origin = "seeded"
 number = "246-265"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -237,6 +275,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f038"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.criterio-cobros-pagos"
+continuidad_id = "criterio-cobros-y-pagos"
+continuidad_origin = "seeded"
 number = "396"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -249,6 +289,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f061"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.dias-arrendamiento"
+continuidad_id = "numero-dias-arrendamiento"
+continuidad_origin = "seeded"
 number = "498-500"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -261,6 +303,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f082"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.gastos-actividad.gastos-personal"
+continuidad_id = "gasto-actividad-gastos-personal"
+continuidad_origin = "seeded"
 number = "266-277"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_actividades_economicas"]
@@ -273,6 +317,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f039", "m184-2025.entidad.f040"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.gastos-actividad.consumos-explotacion"
+continuidad_id = "gasto-actividad-consumos-explotacion"
+continuidad_origin = "seeded"
 number = "278-289"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_actividades_economicas"]
@@ -285,6 +331,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f041", "m184-2025.entidad.f042"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.gastos-actividad.tributos-deducibles"
+continuidad_id = "gasto-actividad-tributos-deducibles"
+continuidad_origin = "seeded"
 number = "290-301"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_actividades_economicas"]
@@ -297,6 +345,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f043", "m184-2025.entidad.f044"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.gastos-actividad.arrendamientos-canones"
+continuidad_id = "gasto-actividad-arrendamientos-canones"
+continuidad_origin = "seeded"
 number = "302-313"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_actividades_economicas"]
@@ -309,6 +359,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f045", "m184-2025.entidad.f046"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.gastos-actividad.reparaciones-conservacion"
+continuidad_id = "gasto-actividad-reparaciones-conservacion"
+continuidad_origin = "seeded"
 number = "314-325"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_actividades_economicas"]
@@ -321,6 +373,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f047", "m184-2025.entidad.f048"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.gastos-actividad.servicios-profesionales"
+continuidad_id = "gasto-actividad-servicios-profesionales"
+continuidad_origin = "seeded"
 number = "326-337"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_actividades_economicas"]
@@ -333,6 +387,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f049", "m184-2025.entidad.f050"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.gastos-actividad.suministros"
+continuidad_id = "gasto-actividad-suministros"
+continuidad_origin = "seeded"
 number = "338-349"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_actividades_economicas"]
@@ -345,6 +401,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f051", "m184-2025.entidad.f052"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.gastos-actividad.gastos-financieros"
+continuidad_id = "gasto-actividad-gastos-financieros"
+continuidad_origin = "seeded"
 number = "350-361"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_actividades_economicas"]
@@ -357,6 +415,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f053", "m184-2025.entidad.f054"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.gastos-actividad.amortizaciones"
+continuidad_id = "gasto-actividad-amortizaciones"
+continuidad_origin = "seeded"
 number = "362-373"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_actividades_economicas"]
@@ -369,6 +429,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f055", "m184-2025.entidad.f056"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.gastos-actividad.provisiones"
+continuidad_id = "gasto-actividad-provisiones"
+continuidad_origin = "seeded"
 number = "374-385"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_actividades_economicas"]
@@ -381,6 +443,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f057", "m184-2025.entidad.f058"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.gastos-actividad.otros-gastos-deducibles"
+continuidad_id = "gasto-actividad-otros-gastos-deducibles"
+continuidad_origin = "seeded"
 number = "386-395"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_actividades_economicas"]
@@ -393,6 +457,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f059", "m184-2025.entidad.f060"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.gastos-inmobiliario.intereses-financiacion"
+continuidad_id = "gasto-inmobiliario-intereses-financiacion"
+continuidad_origin = "seeded"
 number = "397-407"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_capital_inmobiliario"]
@@ -405,6 +471,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f062", "m184-2025.entidad.f063"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.gastos-inmobiliario.conservacion-reparacion"
+continuidad_id = "gasto-inmobiliario-conservacion-reparacion"
+continuidad_origin = "seeded"
 number = "408-418"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_capital_inmobiliario"]
@@ -417,6 +485,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f064", "m184-2025.entidad.f065"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.gastos-inmobiliario.intereses-gastos-reparacion"
+continuidad_id = "gasto-inmobiliario-intereses-gastos-reparacion"
+continuidad_origin = "seeded"
 number = "419-429"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_capital_inmobiliario"]
@@ -429,6 +499,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f066", "m184-2025.entidad.f067"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.gastos-inmobiliario.tributos-recargos"
+continuidad_id = "gasto-inmobiliario-tributos-recargos"
+continuidad_origin = "seeded"
 number = "430-439"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_capital_inmobiliario"]
@@ -441,6 +513,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f068", "m184-2025.entidad.f069"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.gastos-inmobiliario.saldos-dudoso-cobro"
+continuidad_id = "gasto-inmobiliario-saldos-dudoso-cobro"
+continuidad_origin = "seeded"
 number = "440-450"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_capital_inmobiliario"]
@@ -453,6 +527,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f070", "m184-2025.entidad.f071"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.gastos-inmobiliario.cantidades-devengadas-terceros"
+continuidad_id = "gasto-inmobiliario-cantidades-devengadas-terceros"
+continuidad_origin = "seeded"
 number = "451-460"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_capital_inmobiliario"]
@@ -465,6 +541,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f072", "m184-2025.entidad.f073"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.gastos-inmobiliario.primas-seguros"
+continuidad_id = "gasto-inmobiliario-primas-seguros"
+continuidad_origin = "seeded"
 number = "461-470"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_capital_inmobiliario"]
@@ -477,6 +555,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f074", "m184-2025.entidad.f075"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.gastos-inmobiliario.amortizacion-inmueble"
+continuidad_id = "gasto-inmobiliario-amortizacion-inmueble"
+continuidad_origin = "seeded"
 number = "471-480"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_capital_inmobiliario"]
@@ -489,6 +569,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f076", "m184-2025.entidad.f077"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.gastos-inmobiliario.amortizacion-bienes-muebles"
+continuidad_id = "gasto-inmobiliario-amortizacion-bienes-muebles"
+continuidad_origin = "seeded"
 number = "481-488"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_capital_inmobiliario"]
@@ -501,6 +583,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f078", "m184-2025.entidad.f079"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo2.gastos-inmobiliario.otros-gastos-deducibles"
+continuidad_id = "gasto-inmobiliario-otros-gastos-deducibles"
+continuidad_origin = "seeded"
 number = "489-497"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_capital_inmobiliario"]
@@ -513,6 +597,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.entidad.f080", "m184-2025.entidad.f081"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo3.miembro-nif"
+continuidad_id = "miembro-nif"
+continuidad_origin = "seeded"
 number = "18-26"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -525,6 +611,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.socio.f005"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo3.representante-fiscal-nif"
+continuidad_id = "miembro-representante-fiscal-nif"
+continuidad_origin = "seeded"
 number = "27-35"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -537,6 +625,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.socio.f006"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo3.miembro-nombre"
+continuidad_id = "miembro-nombre-razon-social"
+continuidad_origin = "seeded"
 number = "36-75"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -549,6 +639,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.socio.f007"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo3.tipo-hoja"
+continuidad_id = "tipo3-tipo-hoja"
+continuidad_origin = "seeded"
 number = "76"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -560,6 +652,8 @@ legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:ar
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo3.codigo-provincia"
+continuidad_id = "miembro-codigo-provincia"
+continuidad_origin = "seeded"
 number = "77-78"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -572,6 +666,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.socio.f009"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo3.clave-pais"
+continuidad_id = "miembro-clave-pais"
+continuidad_origin = "seeded"
 number = "79-80"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -584,6 +680,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.socio.f010"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo3.clave-tipo-participe"
+continuidad_id = "clave-tipo-participe"
+continuidad_origin = "seeded"
 number = "81"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -596,6 +694,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.socio.f011"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo3.miembro-a-31-diciembre"
+continuidad_id = "miembro-a-31-diciembre"
+continuidad_origin = "seeded"
 number = "82"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -608,6 +708,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.socio.f012"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo3.dias-miembro"
+continuidad_id = "numero-dias-miembro"
+continuidad_origin = "seeded"
 number = "83-85"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -620,6 +722,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.socio.f013"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo3.porcentaje-participacion"
+continuidad_id = "porcentaje-participacion"
+continuidad_origin = "seeded"
 number = "86-92"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -632,6 +736,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.socio.f014", "m184-2025.socio.f015"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo3.clave"
+continuidad_id = "tipo3-clave"
+continuidad_origin = "seeded"
 number = "93"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -644,6 +750,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.socio.f016"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo3.subclave"
+continuidad_id = "tipo3-subclave"
+continuidad_origin = "seeded"
 number = "94-95"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -656,6 +764,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.socio.f017"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo3.importe"
+continuidad_id = "importe-atribuido-miembro"
+continuidad_origin = "seeded"
 number = "96-108"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -668,6 +778,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.socio.f018"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo3.reduccion"
+continuidad_id = "reduccion-atribuida-miembro"
+continuidad_origin = "seeded"
 number = "109-119"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -680,6 +792,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.socio.f019", "m184-2025.socio.f020"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo3.domicilio-fiscal"
+continuidad_id = "miembro-domicilio-fiscal"
+continuidad_origin = "seeded"
 number = "120-159"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -692,6 +806,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.socio.f021"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo3.provisiones-gastos-dificil-justificacion"
+continuidad_id = "provisiones-y-gastos-dificil-justificacion"
+continuidad_origin = "seeded"
 number = "160-171"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -704,6 +820,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.socio.f022"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo3.naturaleza-inmueble"
+continuidad_id = "naturaleza-inmueble"
+continuidad_origin = "seeded"
 number = "172"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -716,6 +834,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.socio.f023"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo3.situacion-inmueble"
+continuidad_id = "tipo3-situacion-inmueble"
+continuidad_origin = "seeded"
 number = "173"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -728,6 +848,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.socio.f024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo3.referencia-catastral"
+continuidad_id = "tipo3-referencia-catastral"
+continuidad_origin = "seeded"
 number = "174-193"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -740,6 +862,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.socio.f025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo3.clave-declarado"
+continuidad_id = "clave-declarado"
+continuidad_origin = "seeded"
 number = "194"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -752,6 +876,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.socio.f026"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo3.porcentaje-titularidad-inmueble"
+continuidad_id = "porcentaje-titularidad-inmueble"
+continuidad_origin = "seeded"
 number = "195-199"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -764,6 +890,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.socio.f027"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo3.dias-arrendamiento"
+continuidad_id = "tipo3-dias-arrendamiento"
+continuidad_origin = "seeded"
 number = "200-202"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -776,6 +904,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.socio.f028"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo3.rendimiento-neto-previo-eo"
+continuidad_id = "rendimiento-neto-previo-estimacion-objetiva"
+continuidad_origin = "seeded"
 number = "203-215"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -788,6 +918,8 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2025.socio.f029", "m184-2025.socio.f030"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "tipo3.rendimiento-neto-minorado-agricola-eo"
+continuidad_id = "rendimiento-neto-minorado-agricola-estimacion-objetiva"
+continuidad_origin = "seeded"
 number = "216-229"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]

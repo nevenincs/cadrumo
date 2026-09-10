@@ -2,6 +2,7 @@
 
 [[revisions."2008-2022".casillas]]
 id = "28"
+continuidad_id = "m322-liquidacion-iva-devengado-recargo-de-equivalencia-tipo"
 number = "28"
 section = ["iva", "regimen_general", "recargo"]
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_tipo"
@@ -14,6 +15,7 @@ export_refs = ["m322-2022.page-01.f043"]
 
 [[revisions."2008-2022".casillas]]
 id = "29"
+continuidad_id = "m322-liquidacion-iva-devengado-recargo-de-equivalencia-cuota"
 number = "29"
 section = ["iva", "regimen_general", "recargo"]
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_cuota"
@@ -26,6 +28,7 @@ export_refs = ["m322-2022.page-01.f044"]
 
 [[revisions."2008-2022".casillas]]
 id = "30"
+continuidad_id = "30"
 number = "30"
 section = ["iva", "regimen_general", "recargo"]
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_base_imponible"
@@ -38,6 +41,7 @@ export_refs = ["m322-2022.page-01.f045"]
 
 [[revisions."2008-2022".casillas]]
 id = "31"
+continuidad_id = "31"
 number = "31"
 section = ["iva", "regimen_general", "recargo"]
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_tipo"
@@ -50,6 +54,7 @@ export_refs = ["m322-2022.page-01.f046"]
 
 [[revisions."2008-2022".casillas]]
 id = "32"
+continuidad_id = "32"
 number = "32"
 section = ["iva", "regimen_general", "recargo"]
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_cuota"
@@ -62,6 +67,7 @@ export_refs = ["m322-2022.page-01.f047"]
 
 [[revisions."2008-2022".casillas]]
 id = "33"
+continuidad_id = "33"
 number = "33"
 section = ["iva", "regimen_general", "recargo"]
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_base_imponible"
@@ -74,6 +80,7 @@ export_refs = ["m322-2022.page-01.f048"]
 
 [[revisions."2008-2022".casillas]]
 id = "34"
+continuidad_id = "34"
 number = "34"
 section = ["iva", "regimen_general", "recargo"]
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_tipo"
@@ -86,6 +93,7 @@ export_refs = ["m322-2022.page-01.f049"]
 
 [[revisions."2008-2022".casillas]]
 id = "35"
+continuidad_id = "35"
 number = "35"
 section = ["iva", "regimen_general", "recargo"]
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_cuota"

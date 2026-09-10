@@ -253,6 +253,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "74"
+continuidad_id = "m322-informacion-adicional-exclusivamente-para-aquellos-sujetos-pasivos-que-sean-destinatarios-de-operaciones-afectadas"
+continuidad_origin = "seeded"
 number = "74"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
@@ -265,6 +267,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "75"
+continuidad_id = "75"
+continuidad_origin = "seeded"
 number = "75"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
@@ -343,6 +347,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "84"
+continuidad_id = "84"
+continuidad_origin = "seeded"
 number = "84"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
@@ -509,6 +515,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "112"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:221 (sha256 f014cec44d49) prints box [112]; corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md (sha256 a70f3a2ca7dd) prints no box [112] and retires none"
 number = "112"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
@@ -520,6 +528,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "120"
+continuidad_id = "m322-operaciones-no-sujetas-por-reglas-de-localizacion"
+continuidad_origin = "seeded"
 number = "120"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
@@ -532,6 +542,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "122"
+continuidad_id = "m322-operaciones-sujetas-con-inversion-del-sujeto-pasivo"
+continuidad_origin = "seeded"
 number = "122"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
@@ -544,6 +556,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "123"
+continuidad_id = "m322-operaciones-no-sujetas-por-reglas-de-localizacion-acogidas-a-los-regimenes-especiales-de-ventanilla-unica"
+continuidad_origin = "seeded"
 number = "123"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
@@ -556,6 +570,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "124"
+continuidad_id = "m322-operaciones-sujetas-y-acogidas-a-los-regimenes-especiales-de-ventanilla-unica"
+continuidad_origin = "seeded"
 number = "124"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"

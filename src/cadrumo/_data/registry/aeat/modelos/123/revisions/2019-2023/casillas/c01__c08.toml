@@ -13,6 +13,7 @@ export_refs = ["modelo-123-2019-2023-casilla-01"]
 
 [[revisions."2019-2023".casillas]]
 id = "02"
+continuidad_id = "base-retenciones-ingresos-a-cuenta"
 number = "02"
 section = ["retenciones_ingresos_cuenta"]
 data_type = "money"
@@ -26,6 +27,7 @@ export_refs = ["modelo-123-2019-2023-casilla-02"]
 
 [[revisions."2019-2023".casillas]]
 id = "03"
+continuidad_id = "retenciones-ingresos-a-cuenta"
 number = "03"
 section = ["retenciones_ingresos_cuenta"]
 data_type = "money"
@@ -39,6 +41,7 @@ export_refs = ["modelo-123-2019-2023-casilla-03"]
 
 [[revisions."2019-2023".casillas]]
 id = "04"
+continuidad_id = "ingresos-ejercicios-anteriores"
 number = "04"
 section = ["periodificacion"]
 data_type = "money"
@@ -51,6 +54,7 @@ export_refs = ["modelo-123-2019-2023-casilla-04"]
 
 [[revisions."2019-2023".casillas]]
 id = "05"
+continuidad_id = "regularizacion"
 number = "05"
 section = ["periodificacion"]
 data_type = "money"
@@ -63,6 +67,7 @@ export_refs = ["modelo-123-2019-2023-casilla-05"]
 
 [[revisions."2019-2023".casillas]]
 id = "06"
+continuidad_id = "suma-retenciones-regularizacion"
 number = "06"
 section = ["total_liquidacion"]
 data_type = "money"
@@ -76,6 +81,7 @@ export_refs = ["modelo-123-2019-2023-casilla-06"]
 
 [[revisions."2019-2023".casillas]]
 id = "07"
+continuidad_id = "resultado-anteriores-autoliquidaciones"
 number = "07"
 section = ["total_liquidacion"]
 data_type = "money"
@@ -88,6 +94,7 @@ export_refs = ["modelo-123-2019-2023-casilla-07"]
 
 [[revisions."2019-2023".casillas]]
 id = "08"
+continuidad_id = "cuota-a-ingresar"
 number = "08"
 section = ["total_liquidacion"]
 data_type = "money"

@@ -41,6 +41,7 @@ export_refs = ["m151-2015.pagina01.f011"]
 # AEAT campo: Contribuyente. Sexo
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-sexo"
+continuidad_id = "p01-contribuyente-sexo"
 number = "109"
 segmento = "M15101000"
 section = ["p01", "contribuyente"]
@@ -54,6 +55,7 @@ export_refs = ["m151-2015.pagina01.f012"]
 # AEAT campo: Contribuyente. Fecha de nacimiento
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-fecha-de-nacimiento"
+continuidad_id = "p01-contribuyente-fecha-de-nacimiento"
 number = "110-117"
 segmento = "M15101000"
 section = ["p01", "contribuyente"]
@@ -67,6 +69,7 @@ export_refs = ["m151-2015.pagina01.f013"]
 # AEAT campo: Contribuyente. Cambio de domicilio
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-cambio-de-domicilio"
+continuidad_id = "p01-contribuyente-cambio-de-domicilio"
 number = "118"
 segmento = "M15101000"
 section = ["p01", "contribuyente"]
@@ -80,6 +83,7 @@ export_refs = ["m151-2015.pagina01.f014"]
 # AEAT campo: Contribuyente. 44 - Tipo de vía.
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-44-tipo-de-via"
+continuidad_id = "p01-contribuyente-44-tipo-de-via"
 number = "119-123"
 segmento = "M15101000"
 section = ["p01", "contribuyente"]
@@ -93,6 +97,7 @@ export_refs = ["m151-2015.pagina01.f015"]
 # AEAT campo: Contribuyente. 45 - Nombre de la vía pública.
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-45-nombre-de-la-via-publica"
+continuidad_id = "p01-contribuyente-45-nombre-de-la-via-publica"
 number = "124-173"
 segmento = "M15101000"
 section = ["p01", "contribuyente"]
@@ -106,6 +111,7 @@ export_refs = ["m151-2015.pagina01.f016"]
 # AEAT campo: Contribuyente. 46 - Tipo de numeración.
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-46-tipo-de-numeracion"
+continuidad_id = "p01-contribuyente-46-tipo-de-numeracion"
 number = "174-176"
 segmento = "M15101000"
 section = ["p01", "contribuyente"]
@@ -119,6 +125,7 @@ export_refs = ["m151-2015.pagina01.f017"]
 # AEAT campo: Contribuyente. 47 - Número de casa.
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-47-numero-de-casa"
+continuidad_id = "p01-contribuyente-47-numero-de-casa"
 number = "177-181"
 segmento = "M15101000"
 section = ["p01", "contribuyente"]
@@ -132,6 +139,7 @@ export_refs = ["m151-2015.pagina01.f018"]
 # AEAT campo: Contribuyente. 48 - Calificador de número.
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-48-calificador-de-numero"
+continuidad_id = "p01-contribuyente-48-calificador-de-numero"
 number = "182-184"
 segmento = "M15101000"
 section = ["p01", "contribuyente"]
@@ -145,6 +153,7 @@ export_refs = ["m151-2015.pagina01.f019"]
 # AEAT campo: Contribuyente. 49 - Bloque.
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-49-bloque"
+continuidad_id = "p01-contribuyente-49-bloque"
 number = "185-187"
 segmento = "M15101000"
 section = ["p01", "contribuyente"]
@@ -158,6 +167,7 @@ export_refs = ["m151-2015.pagina01.f020"]
 # AEAT campo: Contribuyente. 50 - Portal.
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-50-portal"
+continuidad_id = "p01-contribuyente-50-portal"
 number = "188-190"
 segmento = "M15101000"
 section = ["p01", "contribuyente"]
@@ -171,6 +181,7 @@ export_refs = ["m151-2015.pagina01.f021"]
 # AEAT campo: Contribuyente. 51 - Escalera.
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-51-escalera"
+continuidad_id = "p01-contribuyente-51-escalera"
 number = "191-193"
 segmento = "M15101000"
 section = ["p01", "contribuyente"]
@@ -184,6 +195,7 @@ export_refs = ["m151-2015.pagina01.f022"]
 # AEAT campo: Contribuyente. 52 - Planta.
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-52-planta"
+continuidad_id = "p01-contribuyente-52-planta"
 number = "194-196"
 segmento = "M15101000"
 section = ["p01", "contribuyente"]
@@ -197,6 +209,7 @@ export_refs = ["m151-2015.pagina01.f023"]
 # AEAT campo: Contribuyente. 53 - Puerta.
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-53-puerta"
+continuidad_id = "p01-contribuyente-53-puerta"
 number = "197-199"
 segmento = "M15101000"
 section = ["p01", "contribuyente"]
@@ -210,6 +223,7 @@ export_refs = ["m151-2015.pagina01.f024"]
 # AEAT campo: Contribuyente. 54 - Datos complementarios de domicilio.
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-54-datos-ementarios-de-domicilio"
+continuidad_id = "p01-contribuyente-54-datos-ementarios-de-domicilio"
 number = "200-239"
 segmento = "M15101000"
 section = ["p01", "contribuyente"]
@@ -223,6 +237,7 @@ export_refs = ["m151-2015.pagina01.f025"]
 # AEAT campo: Contribuyente. 55 - Localidad/Población
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-55-localidad-poblacion"
+continuidad_id = "p01-contribuyente-55-localidad-poblacion"
 number = "240-269"
 segmento = "M15101000"
 section = ["p01", "contribuyente"]
@@ -275,6 +290,7 @@ export_refs = ["m151-2015.pagina01.f029"]
 # AEAT campo: Contribuyente. 59 - Teléfono fijo.
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-59-telefono-fijo"
+continuidad_id = "p01-contribuyente-59-telefono-fijo"
 number = "282-290"
 segmento = "M15101000"
 section = ["p01", "contribuyente"]
@@ -288,6 +304,7 @@ export_refs = ["m151-2015.pagina01.f030"]
 # AEAT campo: Contribuyente. 60 - Teléfono móvil.
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-60-telefono-movil"
+continuidad_id = "p01-contribuyente-60-telefono-movil"
 number = "291-299"
 segmento = "M15101000"
 section = ["p01", "contribuyente"]
@@ -314,6 +331,7 @@ export_refs = ["m151-2015.pagina01.f032"]
 # AEAT campo: Contribuyente Domicilio Extranjero. 62 - Domicilio
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-domicili-extranjero-62-domicilio"
+continuidad_id = "p01-contribuyente-domicili-extranjero-62-domicilio"
 number = "309-358"
 segmento = "M15101000"
 section = ["p01", "contribuyente_domicilio_extranjero"]
@@ -327,6 +345,7 @@ export_refs = ["m151-2015.pagina01.f033"]
 # AEAT campo: Contribuyente Domicilio Extranjero. 63 - Datos complementarios domicilio
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-domicili-mplementarios-domicilio"
+continuidad_id = "p01-contribuyente-domicili-mplementarios-domicilio"
 number = "359-398"
 segmento = "M15101000"
 section = ["p01", "contribuyente_domicilio_extranjero"]
@@ -340,6 +359,7 @@ export_refs = ["m151-2015.pagina01.f034"]
 # AEAT campo: Contribuyente Domicilio Extranjero. 64 - Población/Ciudad
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-domicili-ero-64-poblacion-ciudad"
+continuidad_id = "p01-contribuyente-domicili-ero-64-poblacion-ciudad"
 number = "399-428"
 segmento = "M15101000"
 section = ["p01", "contribuyente_domicilio_extranjero"]
@@ -353,6 +373,7 @@ export_refs = ["m151-2015.pagina01.f035"]
 # AEAT campo: Contribuyente Domicilio Extranjero. 65 - Email
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-domicilio-extranjero-65-email"
+continuidad_id = "p01-contribuyente-domicilio-extranjero-65-email"
 number = "429-528"
 segmento = "M15101000"
 section = ["p01", "contribuyente_domicilio_extranjero"]
@@ -366,6 +387,7 @@ export_refs = ["m151-2015.pagina01.f036"]
 # AEAT campo: Contribuyente Domicilio Extranjero. 66 - Código postal/ZIP
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-domicili-ro-66-codigo-postal-zip"
+continuidad_id = "p01-contribuyente-domicili-ro-66-codigo-postal-zip"
 number = "529-538"
 segmento = "M15101000"
 section = ["p01", "contribuyente_domicilio_extranjero"]
@@ -379,6 +401,7 @@ export_refs = ["m151-2015.pagina01.f037"]
 # AEAT campo: Contribuyente Domicilio Extranjero. 67 - Provincia/Región/Estado
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-domicili-provincia-region-estado"
+continuidad_id = "p01-contribuyente-domicili-provincia-region-estado"
 number = "539-568"
 segmento = "M15101000"
 section = ["p01", "contribuyente_domicilio_extranjero"]
@@ -392,6 +415,7 @@ export_refs = ["m151-2015.pagina01.f038"]
 # AEAT campo: Contribuyente Domicilio Extranjero. 68 - País
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-domicilio-extranjero-68-pais"
+continuidad_id = "p01-contribuyente-domicilio-extranjero-68-pais"
 number = "569-570"
 segmento = "M15101000"
 section = ["p01", "contribuyente_domicilio_extranjero"]
@@ -405,6 +429,7 @@ export_refs = ["m151-2015.pagina01.f039"]
 # AEAT campo: Contribuyente Domicilio Extranjero. 70 - Teléfono Fijo
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-domicili-anjero-70-telefono-fijo"
+continuidad_id = "p01-contribuyente-domicili-anjero-70-telefono-fijo"
 number = "571-585"
 segmento = "M15101000"
 section = ["p01", "contribuyente_domicilio_extranjero"]
@@ -418,6 +443,7 @@ export_refs = ["m151-2015.pagina01.f040"]
 # AEAT campo: Contribuyente Domicilio Extranjero. 71 - Teléfono Móvil
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-domicili-njero-71-telefono-movil"
+continuidad_id = "p01-contribuyente-domicili-njero-71-telefono-movil"
 number = "586-600"
 segmento = "M15101000"
 section = ["p01", "contribuyente_domicilio_extranjero"]
@@ -444,6 +470,7 @@ export_refs = ["m151-2015.pagina01.f042"]
 # AEAT campo: Contribuyente Datos Adicionales vivienda actual. Titularidad
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-datos-ad-enda-actual-titularidad"
+continuidad_id = "p01-contribuyente-datos-ad-enda-actual-titularidad"
 number = "616"
 segmento = "M15101000"
 section = ["p01", "contribuyente_datos_ales_vivienda_actual"]
@@ -457,6 +484,7 @@ export_refs = ["m151-2015.pagina01.f043"]
 # AEAT campo: Contribuyente Datos Adicionales vivienda actual. Porcentaje participación
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-datos-ad-orcentaje-participacion"
+continuidad_id = "p01-contribuyente-datos-ad-orcentaje-participacion"
 number = "617-621"
 segmento = "M15101000"
 section = ["p01", "contribuyente_datos_ales_vivienda_actual"]
@@ -470,6 +498,7 @@ export_refs = ["m151-2015.pagina01.f044"]
 # AEAT campo: Contribuyente Datos Adicionales vivienda actual. Situación
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-datos-ad-vienda-actual-situacion"
+continuidad_id = "p01-contribuyente-datos-ad-vienda-actual-situacion"
 number = "622"
 segmento = "M15101000"
 section = ["p01", "contribuyente_datos_ales_vivienda_actual"]
@@ -483,6 +512,7 @@ export_refs = ["m151-2015.pagina01.f045"]
 # AEAT campo: Contribuyente Datos Adicionales vivienda actual. Referencia catastral
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-datos-ad-al-referencia-catastral"
+continuidad_id = "p01-contribuyente-datos-ad-al-referencia-catastral"
 number = "623-642"
 segmento = "M15101000"
 section = ["p01", "contribuyente_datos_ales_vivienda_actual"]
@@ -496,6 +526,7 @@ export_refs = ["m151-2015.pagina01.f046"]
 # AEAT campo: Representante. NIF
 [[revisions."2015-2022".casillas]]
 id = "p01.representante-nif"
+continuidad_id = "p01-representante-nif"
 number = "643-651"
 segmento = "M15101000"
 section = ["p01", "representante"]
@@ -535,6 +566,7 @@ export_refs = ["m151-2015.pagina01.f049"]
 # AEAT campo: Representante. 44 - Tipo de vía.
 [[revisions."2015-2022".casillas]]
 id = "p01.representante-44-tipo-de-via"
+continuidad_id = "p01-representante-44-tipo-de-via"
 number = "732-736"
 segmento = "M15101000"
 section = ["p01", "representante"]
@@ -548,6 +580,7 @@ export_refs = ["m151-2015.pagina01.f050"]
 # AEAT campo: Representante. 45 - Nombre de la vía pública.
 [[revisions."2015-2022".casillas]]
 id = "p01.representante-45-nombre-de-la-via-publica"
+continuidad_id = "p01-representante-45-nombre-de-la-via-publica"
 number = "737-786"
 segmento = "M15101000"
 section = ["p01", "representante"]
@@ -561,6 +594,7 @@ export_refs = ["m151-2015.pagina01.f051"]
 # AEAT campo: Representante. 46 - Tipo de numeración.
 [[revisions."2015-2022".casillas]]
 id = "p01.representante-46-tipo-de-numeracion"
+continuidad_id = "p01-representante-46-tipo-de-numeracion"
 number = "787-789"
 segmento = "M15101000"
 section = ["p01", "representante"]
@@ -574,6 +608,7 @@ export_refs = ["m151-2015.pagina01.f052"]
 # AEAT campo: Representante. 47 - Número de casa.
 [[revisions."2015-2022".casillas]]
 id = "p01.representante-47-numero-de-casa"
+continuidad_id = "p01-representante-47-numero-de-casa"
 number = "790-794"
 segmento = "M15101000"
 section = ["p01", "representante"]
@@ -587,6 +622,7 @@ export_refs = ["m151-2015.pagina01.f053"]
 # AEAT campo: Representante. 48 - Calificador de número.
 [[revisions."2015-2022".casillas]]
 id = "p01.representante-48-calificador-de-numero"
+continuidad_id = "p01-representante-48-calificador-de-numero"
 number = "795-797"
 segmento = "M15101000"
 section = ["p01", "representante"]
@@ -600,6 +636,7 @@ export_refs = ["m151-2015.pagina01.f054"]
 # AEAT campo: Representante. 49 - Bloque.
 [[revisions."2015-2022".casillas]]
 id = "p01.representante-49-bloque"
+continuidad_id = "p01-representante-49-bloque"
 number = "798-800"
 segmento = "M15101000"
 section = ["p01", "representante"]
@@ -613,6 +650,7 @@ export_refs = ["m151-2015.pagina01.f055"]
 # AEAT campo: Representante. 50 - Portal.
 [[revisions."2015-2022".casillas]]
 id = "p01.representante-50-portal"
+continuidad_id = "p01-representante-50-portal"
 number = "801-803"
 segmento = "M15101000"
 section = ["p01", "representante"]
@@ -626,6 +664,7 @@ export_refs = ["m151-2015.pagina01.f056"]
 # AEAT campo: Representante. 51 - Escalera.
 [[revisions."2015-2022".casillas]]
 id = "p01.representante-51-escalera"
+continuidad_id = "p01-representante-51-escalera"
 number = "804-806"
 segmento = "M15101000"
 section = ["p01", "representante"]
@@ -639,6 +678,7 @@ export_refs = ["m151-2015.pagina01.f057"]
 # AEAT campo: Representante. 52 - Planta.
 [[revisions."2015-2022".casillas]]
 id = "p01.representante-52-planta"
+continuidad_id = "p01-representante-52-planta"
 number = "807-809"
 segmento = "M15101000"
 section = ["p01", "representante"]
@@ -652,6 +692,7 @@ export_refs = ["m151-2015.pagina01.f058"]
 # AEAT campo: Representante. 53 - Puerta.
 [[revisions."2015-2022".casillas]]
 id = "p01.representante-53-puerta"
+continuidad_id = "p01-representante-53-puerta"
 number = "810-812"
 segmento = "M15101000"
 section = ["p01", "representante"]
@@ -665,6 +706,7 @@ export_refs = ["m151-2015.pagina01.f059"]
 # AEAT campo: Representante. 54 - Datos complementarios de domicilio.
 [[revisions."2015-2022".casillas]]
 id = "p01.representante-54-datos-ementarios-de-domicilio"
+continuidad_id = "p01-representante-54-datos-ementarios-de-domicilio"
 number = "813-852"
 segmento = "M15101000"
 section = ["p01", "representante"]
@@ -730,6 +772,7 @@ export_refs = ["m151-2015.pagina01.f064"]
 # AEAT campo: Representante. 59 - Teléfono fijo.
 [[revisions."2015-2022".casillas]]
 id = "p01.representante-59-telefono-fijo"
+continuidad_id = "p01-representante-59-telefono-fijo"
 number = "895-903"
 segmento = "M15101000"
 section = ["p01", "representante"]
@@ -743,6 +786,7 @@ export_refs = ["m151-2015.pagina01.f065"]
 # AEAT campo: Representante. 60 - Teléfono móvil.
 [[revisions."2015-2022".casillas]]
 id = "p01.representante-60-telefono-movil"
+continuidad_id = "p01-representante-60-telefono-movil"
 number = "904-912"
 segmento = "M15101000"
 section = ["p01", "representante"]
@@ -769,6 +813,7 @@ export_refs = ["m151-2015.pagina01.f067"]
 # AEAT campo: Comunidad Autonoma de residencia durante el ejercicio indicado
 [[revisions."2015-2022".casillas]]
 id = "p01.comunidad-autonoma-de-e-el-ejercicio-indicado"
+continuidad_id = "p01-comunidad-autonoma-de-e-el-ejercicio-indicado"
 number = "922-923"
 segmento = "M15101000"
 section = ["p01", "comunidad_autonoma_l_ejercicio_indicado"]
@@ -782,6 +827,7 @@ export_refs = ["m151-2015.pagina01.f068"]
 # AEAT campo: Asignacion Tributaria a la Iglesia Católica
 [[revisions."2015-2022".casillas]]
 id = "p01.asignacion-tributaria-a-la-iglesia-catolica"
+continuidad_id = "p01-asignacion-tributaria-a-la-iglesia-catolica"
 number = "924"
 segmento = "M15101000"
 section = ["p01", "asignacion_tributar_la_iglesia_catolica"]
@@ -795,6 +841,7 @@ export_refs = ["m151-2015.pagina01.f069"]
 # AEAT campo: Asignacion de cantidades a fines sociales
 [[revisions."2015-2022".casillas]]
 id = "p01.asignacion-de-cantidades-a-fines-sociales"
+continuidad_id = "p01-asignacion-de-cantidades-a-fines-sociales"
 number = "925"
 segmento = "M15101000"
 section = ["p01", "asignacion_de_cantidades_a_fines_sociales"]
@@ -808,6 +855,7 @@ export_refs = ["m151-2015.pagina01.f070"]
 # AEAT campo: Declaracion Complementaria
 [[revisions."2015-2022".casillas]]
 id = "p01.declaracion-complementaria"
+continuidad_id = "p01-declaracion-complementaria"
 number = "926"
 segmento = "M15101000"
 section = ["p01", "declaracion_complementaria"]
@@ -821,6 +869,7 @@ export_refs = ["m151-2015.pagina01.f071"]
 # AEAT campo: Declaracion Complementaria 2
 [[revisions."2015-2022".casillas]]
 id = "p01.declaracion-complementaria-2"
+continuidad_id = "p01-declaracion-complementaria-2"
 number = "927"
 segmento = "M15101000"
 section = ["p01", "declaracion_complementaria_2"]
@@ -834,6 +883,7 @@ export_refs = ["m151-2015.pagina01.f072"]
 # AEAT campo: Número de Justificante
 [[revisions."2015-2022".casillas]]
 id = "p01.numero-de-justificante"
+continuidad_id = "p01-numero-de-justificante"
 number = "928-940"
 segmento = "M15101000"
 section = ["p01", "numero_de_justificante"]

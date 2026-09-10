@@ -3,6 +3,8 @@
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.persona-contacto-telefono"
+continuidad_id = "declarante-contacto-telefono"
+continuidad_origin = "seeded"
 number = "59-67"
 segmento = "declarante"
 section = ["declarante", "resumen"]
@@ -17,6 +19,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.persona-contacto-nombre"
+continuidad_id = "declarante-contacto-nombre"
+continuidad_origin = "seeded"
 number = "68-107"
 segmento = "declarante"
 section = ["declarante", "resumen"]
@@ -31,6 +35,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.num-identificativo"
+continuidad_id = "declaracion-numero-identificativo"
+continuidad_origin = "seeded"
 number = "108-120"
 segmento = "declarante"
 section = ["declarante", "resumen"]
@@ -45,6 +51,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.complementaria"
+continuidad_id = "declaracion-complementaria"
+continuidad_origin = "seeded"
 number = "121"
 segmento = "declarante"
 section = ["declarante", "resumen"]
@@ -59,6 +67,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.sustitutiva"
+continuidad_id = "declaracion-sustitutiva"
+continuidad_origin = "seeded"
 number = "122"
 segmento = "declarante"
 section = ["declarante", "resumen"]
@@ -73,6 +83,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.num-identificativo-anterior"
+continuidad_id = "declaracion-anterior-numero"
+continuidad_origin = "seeded"
 number = "123-135"
 segmento = "declarante"
 section = ["declarante", "resumen"]
@@ -87,6 +99,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.retenciones-ingresadas"
+continuidad_id = "retenciones-ingresadas-total"
+continuidad_origin = "seeded"
 number = "175-189"
 segmento = "declarante"
 section = ["declarante", "resumen"]
@@ -103,6 +117,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.gastos-total"
+continuidad_id = "gastos-total-declarante"
+continuidad_origin = "seeded"
 number = "220-234"
 segmento = "declarante"
 section = ["declarante", "resumen"]
@@ -118,6 +134,8 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.naturaleza-declarante"
+continuidad_id = "declarante-naturaleza"
+continuidad_origin = "seeded"
 number = "235"
 segmento = "declarante"
 section = ["declarante", "resumen"]

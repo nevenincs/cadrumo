@@ -30,6 +30,8 @@
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "base_imponible_directa_i"
+continuidad_id = "irnr-base-imponible-directa-i"
+continuidad_origin = "seeded"
 number = "4"
 section = ["determinacion_base_imponible"]
 data_type = "money"
@@ -46,6 +48,8 @@ export_refs = ["m210-2026.pagina01.f082"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "exencion_dividendos"
+continuidad_id = "irnr-exencion-dividendos"
+continuidad_origin = "seeded"
 number = "6"
 section = ["determinacion_base_imponible"]
 data_type = "money"
@@ -61,6 +65,8 @@ constraints = { sign = "non_negative", legal_refs = ["trlirnr-rdleg-5-2004:art-2
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "ganancia_valor_transmision"
+continuidad_id = "irnr-ganancia-valor-transmision"
+continuidad_origin = "seeded"
 number = "9"
 section = ["determinacion_base_imponible"]
 data_type = "money"
@@ -73,6 +79,8 @@ export_refs = ["m210-2026.pagina01.f092"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "ganancia_valor_adquisicion"
+continuidad_id = "irnr-ganancia-valor-adquisicion"
+continuidad_origin = "seeded"
 number = "10"
 section = ["determinacion_base_imponible"]
 data_type = "money"
@@ -85,6 +93,8 @@ export_refs = ["m210-2026.pagina01.f093"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "ganancia_diferencia"
+continuidad_id = "irnr-ganancia-diferencia"
+continuidad_origin = "seeded"
 number = "11"
 section = ["determinacion_base_imponible"]
 data_type = "money"
@@ -97,6 +107,8 @@ export_refs = ["m210-2026.pagina01.f094"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "ganancia_importe"
+continuidad_id = "irnr-ganancia-importe"
+continuidad_origin = "seeded"
 number = "12"
 section = ["determinacion_base_imponible"]
 data_type = "money"
@@ -109,6 +121,8 @@ export_refs = ["m210-2026.pagina01.f095"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "mejora_valor_transmision"
+continuidad_id = "irnr-mejora-valor-transmision"
+continuidad_origin = "seeded"
 number = "13"
 section = ["determinacion_base_imponible"]
 data_type = "money"
@@ -121,6 +135,8 @@ export_refs = ["m210-2026.pagina01.f096"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "mejora_valor_adquisicion"
+continuidad_id = "irnr-mejora-valor-adquisicion"
+continuidad_origin = "seeded"
 number = "14"
 section = ["determinacion_base_imponible"]
 data_type = "money"
@@ -133,6 +149,8 @@ export_refs = ["m210-2026.pagina01.f097"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "mejora_diferencia"
+continuidad_id = "irnr-mejora-diferencia"
+continuidad_origin = "seeded"
 number = "15"
 section = ["determinacion_base_imponible"]
 data_type = "money"
@@ -145,6 +163,8 @@ export_refs = ["m210-2026.pagina01.f098"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "mejora_ganancia"
+continuidad_id = "irnr-mejora-ganancia"
+continuidad_origin = "seeded"
 number = "16"
 section = ["determinacion_base_imponible"]
 data_type = "money"
@@ -157,6 +177,8 @@ export_refs = ["m210-2026.pagina01.f099"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "base_imponible_ganancias_h"
+continuidad_id = "irnr-base-imponible-ganancias-h"
+continuidad_origin = "seeded"
 number = "17"
 section = ["determinacion_base_imponible"]
 data_type = "money"
@@ -172,6 +194,8 @@ export_refs = ["m210-2026.pagina01.f100"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "base_imponible_directa_g"
+continuidad_id = "irnr-base-imponible-directa-g"
+continuidad_origin = "seeded"
 number = "18"
 section = ["determinacion_base_imponible"]
 data_type = "money"
@@ -188,6 +212,8 @@ export_refs = ["m210-2026.pagina01.f104"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "exenciones_ley_irnr_indicador"
+continuidad_id = "irnr-exenciones-ley-irnr-indicador"
+continuidad_origin = "seeded"
 number = "19"
 section = ["liquidacion"]
 data_type = "integer"
@@ -201,6 +227,8 @@ constraints = { min_value = "0", max_value = "1", legal_refs = ["trlirnr-rdleg-5
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "convenio_indicador"
+continuidad_id = "irnr-convenio-indicador"
+continuidad_origin = "seeded"
 number = "20"
 section = ["liquidacion"]
 data_type = "integer"
@@ -214,6 +242,8 @@ constraints = { min_value = "0", max_value = "1", legal_refs = ["trlirnr-rdleg-5
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "deduccion_donativos"
+continuidad_id = "irnr-deduccion-donativos"
+continuidad_origin = "seeded"
 number = "23"
 section = ["liquidacion"]
 data_type = "money"
@@ -227,6 +257,8 @@ constraints = { sign = "non_negative", legal_refs = ["trlirnr-rdleg-5-2004:art-2
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "cuota_ley_irnr"
+continuidad_id = "irnr-cuota-ley-irnr"
+continuidad_origin = "seeded"
 number = "24"
 section = ["liquidacion"]
 data_type = "money"
@@ -240,6 +272,8 @@ export_refs = ["m210-2026.pagina01.f110"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "porcentaje_convenio"
+continuidad_id = "irnr-porcentaje-convenio"
+continuidad_origin = "seeded"
 number = "25"
 section = ["liquidacion"]
 data_type = "ratio"
@@ -253,6 +287,8 @@ constraints = { min_value = "0", max_value = "1", legal_refs = ["trlirnr-rdleg-5
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "limite_convenio"
+continuidad_id = "irnr-limite-convenio"
+continuidad_origin = "seeded"
 number = "26"
 section = ["liquidacion"]
 data_type = "money"
@@ -266,6 +302,8 @@ constraints = { sign = "non_negative", legal_refs = ["trlirnr-rdleg-5-2004:art-2
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "reduccion_convenio"
+continuidad_id = "irnr-reduccion-convenio"
+continuidad_origin = "seeded"
 number = "27"
 section = ["liquidacion"]
 data_type = "money"
@@ -279,6 +317,8 @@ export_refs = ["m210-2026.pagina01.f113"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "cuota_integra_reducida"
+continuidad_id = "irnr-cuota-integra-reducida"
+continuidad_origin = "seeded"
 number = "28"
 section = ["liquidacion"]
 data_type = "money"
@@ -292,6 +332,8 @@ export_refs = ["m210-2026.pagina01.f114"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "ingreso_devolucion_anterior"
+continuidad_id = "irnr-ingreso-devolucion-anterior"
+continuidad_origin = "seeded"
 number = "30"
 section = ["liquidacion"]
 data_type = "money"

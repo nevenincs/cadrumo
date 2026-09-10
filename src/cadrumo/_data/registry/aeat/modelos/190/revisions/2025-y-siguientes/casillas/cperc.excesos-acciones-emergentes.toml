@@ -1,6 +1,8 @@
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.excesos-acciones-emergentes"
+continuidad_id = "payee-emerging-stock-excess-clave"
+continuidad_origin = "seeded"
 number = "388"
 section = ["perceptor", "percepcion"]
 data_type = "text"

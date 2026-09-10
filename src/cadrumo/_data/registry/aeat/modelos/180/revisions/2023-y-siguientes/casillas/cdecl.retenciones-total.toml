@@ -1,5 +1,7 @@
 [[revisions.2023-y-siguientes.casillas]]
 id = "decl.retenciones-total"
+continuidad_id = "retenciones-ingresos-a-cuenta"
+continuidad_origin = "seeded"
 number = "161-175"
 form_number = "03"
 section = ["declarante", "resumen"]

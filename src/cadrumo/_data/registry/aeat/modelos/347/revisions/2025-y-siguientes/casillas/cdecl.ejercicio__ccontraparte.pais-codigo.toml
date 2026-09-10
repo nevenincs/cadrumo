@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.ejercicio"
+continuidad_id = "filing-year"
+continuidad_origin = "seeded"
 number = "ejercicio"
 section = ["declarante"]
 data_type = "year"
@@ -11,6 +13,8 @@ source_refs = ["aeat-dr-347-2025"]
 export_refs = ["m347-2025.declarante.f003"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.tipo-declaracion"
+continuidad_id = "tipo-declaracion"
+continuidad_origin = "seeded"
 number = "tipo-declaracion"
 section = ["declarante"]
 data_type = "text"
@@ -31,6 +35,8 @@ source_refs = ["aeat-dr-347-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.nif"
+continuidad_id = "contraparte-nif"
+continuidad_origin = "seeded"
 number = "contraparte.nif"
 section = ["contraparte", "identificacion"]
 data_type = "nif"
@@ -42,6 +48,8 @@ source_refs = ["aeat-dr-347-2025"]
 export_refs = ["m347-2025.declarado.f005"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.nombre"
+continuidad_id = "contraparte-nombre"
+continuidad_origin = "seeded"
 number = "contraparte.nombre"
 section = ["contraparte", "identificacion"]
 data_type = "text"
@@ -53,6 +61,8 @@ source_refs = ["aeat-dr-347-2025"]
 export_refs = ["m347-2025.declarado.f007"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.clave-operacion"
+continuidad_id = "contraparte-clave-operacion"
+continuidad_origin = "seeded"
 number = "contraparte.clave-operacion"
 section = ["contraparte", "operacion"]
 data_type = "text"
@@ -64,6 +74,8 @@ source_refs = ["aeat-dr-347-2025"]
 export_refs = ["m347-2025.declarado.f011"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.importe-Q1"
+continuidad_id = "contraparte-importe-q1"
+continuidad_origin = "seeded"
 number = "contraparte.importe-Q1"
 section = ["contraparte", "importes"]
 data_type = "money"
@@ -77,6 +89,8 @@ source_refs = ["aeat-dr-347-2025"]
 export_refs = ["m347-2025.declarado.f019"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.importe-Q2"
+continuidad_id = "contraparte-importe-q2"
+continuidad_origin = "seeded"
 number = "contraparte.importe-Q2"
 section = ["contraparte", "importes"]
 data_type = "money"
@@ -90,6 +104,8 @@ source_refs = ["aeat-dr-347-2025"]
 export_refs = ["m347-2025.declarado.f021"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.importe-Q3"
+continuidad_id = "contraparte-importe-q3"
+continuidad_origin = "seeded"
 number = "contraparte.importe-Q3"
 section = ["contraparte", "importes"]
 data_type = "money"
@@ -103,6 +119,8 @@ source_refs = ["aeat-dr-347-2025"]
 export_refs = ["m347-2025.declarado.f023"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.importe-Q4"
+continuidad_id = "contraparte-importe-q4"
+continuidad_origin = "seeded"
 number = "contraparte.importe-Q4"
 section = ["contraparte", "importes"]
 data_type = "money"
@@ -116,6 +134,8 @@ source_refs = ["aeat-dr-347-2025"]
 export_refs = ["m347-2025.declarado.f025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.provincia-codigo"
+continuidad_id = "contraparte-provincia-codigo"
+continuidad_origin = "seeded"
 number = "contraparte.provincia-codigo"
 section = ["contraparte", "identificacion"]
 data_type = "text"
@@ -127,6 +147,8 @@ source_refs = ["aeat-dr-347-2025"]
 export_refs = ["m347-2025.declarado.f009a"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.pais-codigo"
+continuidad_id = "contraparte-pais-codigo"
+continuidad_origin = "seeded"
 number = "contraparte.pais-codigo"
 section = ["contraparte", "identificacion"]
 data_type = "country_code"

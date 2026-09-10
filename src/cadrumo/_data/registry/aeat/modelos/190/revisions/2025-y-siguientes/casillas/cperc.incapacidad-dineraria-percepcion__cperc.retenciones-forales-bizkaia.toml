@@ -6,6 +6,8 @@
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.incapacidad-dineraria-percepcion"
+continuidad_id = "payee-incapacidad-dineraria-percepcion"
+continuidad_origin = "seeded"
 number = "256-268"
 section = ["perceptor", "percepcion"]
 data_type = "money"
@@ -18,6 +20,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.incapacidad-dineraria-retenciones"
+continuidad_id = "payee-incapacidad-dineraria-retenciones"
+continuidad_origin = "seeded"
 number = "269-281"
 section = ["perceptor", "percepcion"]
 data_type = "money"
@@ -30,6 +34,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.incapacidad-especie-valoracion"
+continuidad_id = "payee-incapacidad-especie-valoracion"
+continuidad_origin = "seeded"
 number = "283-295"
 section = ["perceptor", "percepcion"]
 data_type = "money"
@@ -42,6 +48,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.incapacidad-especie-ingresos-a-cuenta"
+continuidad_id = "payee-incapacidad-especie-ingresos-a-cuenta"
+continuidad_origin = "seeded"
 number = "296-308"
 section = ["perceptor", "percepcion"]
 data_type = "money"
@@ -54,6 +62,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.incapacidad-especie-repercutidos"
+continuidad_id = "payee-incapacidad-especie-repercutidos"
+continuidad_origin = "seeded"
 number = "309-321"
 section = ["perceptor", "percepcion"]
 data_type = "money"
@@ -66,6 +76,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.complemento-ayuda-infancia"
+continuidad_id = "payee-complemento-ayuda-infancia"
+continuidad_origin = "seeded"
 number = "322"
 section = ["perceptor", "percepcion"]
 data_type = "text"
@@ -77,6 +89,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.retenciones-forales-estatal"
+continuidad_id = "payee-retenciones-forales-estatal"
+continuidad_origin = "seeded"
 number = "323-335"
 section = ["perceptor", "percepcion"]
 data_type = "money"
@@ -89,6 +103,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.retenciones-forales-navarra"
+continuidad_id = "payee-retenciones-forales-navarra"
+continuidad_origin = "seeded"
 number = "336-348"
 section = ["perceptor", "percepcion"]
 data_type = "money"
@@ -101,6 +117,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.retenciones-forales-araba"
+continuidad_id = "payee-retenciones-forales-araba"
+continuidad_origin = "seeded"
 number = "349-361"
 section = ["perceptor", "percepcion"]
 data_type = "money"
@@ -113,6 +131,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.retenciones-forales-gipuzkoa"
+continuidad_id = "payee-retenciones-forales-gipuzkoa"
+continuidad_origin = "seeded"
 number = "362-374"
 section = ["perceptor", "percepcion"]
 data_type = "money"
@@ -125,6 +145,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.retenciones-forales-bizkaia"
+continuidad_id = "payee-retenciones-forales-bizkaia"
+continuidad_origin = "seeded"
 number = "375-387"
 section = ["perceptor", "percepcion"]
 data_type = "money"

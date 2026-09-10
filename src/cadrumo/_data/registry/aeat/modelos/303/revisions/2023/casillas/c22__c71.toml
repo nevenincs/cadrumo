@@ -680,6 +680,8 @@ export_refs = ["m303-2023.dp30303.f015"]
 
 [[revisions.2023.casillas]]
 id = "64"
+continuidad_id = "dr303-64"
+continuidad_origin = "seeded"
 number = "64"
 section = ["iva", "resultado"]
 data_type = "money"
@@ -707,6 +709,8 @@ export_refs = ["m303-2023.dp30303.f017"]
 
 [[revisions.2023.casillas]]
 id = "66"
+continuidad_id = "dr303-66"
+continuidad_origin = "seeded"
 number = "66"
 section = ["iva", "resultado"]
 data_type = "money"
@@ -764,6 +768,8 @@ section = ["iva", "resultado"]
 data_type = "money"
 semantic_role = "dr303_109"
 continuidad_id = "dr303-109"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_303/files/03-303-ejercicio-2023-actualizado-14-12-23-376-kb-xlsx.xlsx.extracted.md:398 (sha256 72e463cb2998) prints box [109]; corpus/aeat_official/disenos_registro/modelo_303/files/02-303-ejercicio-2022-y-siguientes-actualizado-27-12-2021-332-kb-xlsx.xlsx.extracted.md (sha256 6648f6b31957) prints no box [109] and retires none"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
@@ -772,6 +778,8 @@ export_refs = ["m303-2023.dp30303.f026"]
 
 [[revisions.2023.casillas]]
 id = "71"
+continuidad_id = "dr303-71"
+continuidad_origin = "seeded"
 number = "71"
 section = ["iva", "resultado"]
 data_type = "money"

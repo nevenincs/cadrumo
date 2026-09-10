@@ -149,6 +149,8 @@ source_refs = ["aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
 id = "modulos-minoracion-inversion"
+continuidad_id = "irpf-pf-modulos-minoracion-inversion"
+continuidad_origin = "seeded"
 number = "modulos-minoracion-inversion"
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "money"
@@ -161,6 +163,8 @@ source_refs = ["aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
 id = "modulos-indice-pequena-dimension"
+continuidad_id = "irpf-pf-modulos-indice-pequena-dimension"
+continuidad_origin = "seeded"
 number = "modulos-indice-pequena-dimension"
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
@@ -173,6 +177,8 @@ source_refs = ["aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
 id = "modulos-indice-temporada"
+continuidad_id = "irpf-pf-modulos-indice-temporada"
+continuidad_origin = "seeded"
 number = "modulos-indice-temporada"
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
@@ -185,6 +191,8 @@ source_refs = ["aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
 id = "modulos-indice-inicio-actividad"
+continuidad_id = "irpf-pf-modulos-indice-inicio-actividad"
+continuidad_origin = "seeded"
 number = "modulos-indice-inicio-actividad"
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
@@ -197,6 +205,8 @@ source_refs = ["aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
 id = "modulos-pequena-dimension-ignorado-flag"
+continuidad_id = "irpf-pf-modulos-pequena-dimension-ignorado-flag"
+continuidad_origin = "seeded"
 number = "modulos-pequena-dimension-ignorado-flag"
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
@@ -210,6 +220,8 @@ source_refs = ["aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
 id = "modulos-temporada-inicio-actividad-conflicto-flag"
+continuidad_id = "irpf-pf-modulos-temporada-inicio-actividad-conflicto-flag"
+continuidad_origin = "seeded"
 number = "modulos-temporada-inicio-actividad-conflicto-flag"
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
@@ -223,6 +235,8 @@ source_refs = ["aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
 id = "modulos-rendimiento-neto-previo"
+continuidad_id = "irpf-pf-modulos-rendimiento-neto-previo"
+continuidad_origin = "seeded"
 number = "modulos-rendimiento-neto-previo"
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "money"
@@ -237,6 +251,8 @@ source_refs = ["aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
 id = "modulos-rendimiento-neto-minorado"
+continuidad_id = "irpf-pf-modulos-rendimiento-neto-minorado"
+continuidad_origin = "seeded"
 number = "modulos-rendimiento-neto-minorado"
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "money"
@@ -250,6 +266,8 @@ source_refs = ["aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
 id = "modulos-rendimiento-neto-modulos"
+continuidad_id = "irpf-pf-modulos-rendimiento-neto-modulos"
+continuidad_origin = "seeded"
 number = "modulos-rendimiento-neto-modulos"
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "money"
@@ -270,6 +288,8 @@ source_refs = ["aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
 id = "modulos-rendimiento-neto-actividad"
+continuidad_id = "irpf-pf-modulos-rendimiento-neto-actividad"
+continuidad_origin = "seeded"
 number = "modulos-rendimiento-neto-actividad"
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "money"

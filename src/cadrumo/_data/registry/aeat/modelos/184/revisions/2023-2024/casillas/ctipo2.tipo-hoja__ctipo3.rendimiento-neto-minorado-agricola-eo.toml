@@ -10,6 +10,7 @@
 
 [[revisions."2023-2024".casillas]]
 id = "tipo2.tipo-hoja"
+continuidad_id = "tipo-hoja"
 number = "76"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -21,6 +22,7 @@ legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:ar
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.clave-pais"
+continuidad_id = "clave-pais-renta"
 number = "80-81"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -33,6 +35,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f011"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.regimen-determinacion-rendimientos"
+continuidad_id = "regimen-determinacion-rendimientos"
 number = "82"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -45,6 +48,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f012"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.tipo-actividad"
+continuidad_id = "tipo-actividad"
 number = "83"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -57,6 +61,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f013"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.epigrafe-iae"
+continuidad_id = "epigrafe-iae"
 number = "84-87"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -69,6 +74,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f014"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.cesionario-nif"
+continuidad_id = "cesionario-nif"
 number = "88-96"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -81,6 +87,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f015"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.cesionario-denominacion"
+continuidad_id = "cesionario-denominacion"
 number = "97-116"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -93,6 +100,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f016"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.fecha-adquisicion"
+continuidad_id = "fecha-adquisicion"
 number = "117-124"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -105,6 +113,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f017", "m184-2023.entidad.f018", "m184-2023.entidad.f019"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.valor-liquidativo"
+continuidad_id = "valor-liquidativo-o-ajustes-aumentos"
 number = "125-137"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -117,6 +126,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f020", "m184-2023.entidad.f021"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.valor-adquisicion"
+continuidad_id = "valor-adquisicion-o-ajustes-disminuciones"
 number = "138-150"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -129,6 +139,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f022", "m184-2023.entidad.f023"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.ingresos-integros"
+continuidad_id = "ingresos-integros-atribuibles"
 number = "151-164"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -141,6 +152,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f024"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos"
+continuidad_id = "gastos-deducibles-atribuibles"
 number = "165-176"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -153,6 +165,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f025", "m184-2023.entidad.f026"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.porcentaje-reduccion"
+continuidad_id = "porcentaje-reduccion-renta-atribuible"
 number = "191-195"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -165,6 +178,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f028", "m184-2023.entidad.f029"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.renta-atribuible-con-reduccion"
+continuidad_id = "renta-atribuible-con-derecho-reduccion"
 number = "196-207"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -177,6 +191,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f030"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.ganancias-perdidas"
+continuidad_id = "ganancias-perdidas-patrimoniales-atribuibles"
 number = "208-220"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -189,6 +204,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f031", "m184-2023.entidad.f032"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.base-deduccion"
+continuidad_id = "base-deduccion-o-importe"
 number = "221-232"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -201,6 +217,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f033", "m184-2023.entidad.f034"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.retenciones"
+continuidad_id = "retenciones-ingresos-a-cuenta-atribuibles"
 number = "233-244"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -213,6 +230,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f035", "m184-2023.entidad.f036"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.situacion-inmueble"
+continuidad_id = "situacion-inmueble"
 number = "245"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -225,6 +243,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f037"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.referencia-catastral"
+continuidad_id = "referencia-catastral"
 number = "246-265"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -237,6 +256,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f038"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.criterio-cobros-pagos"
+continuidad_id = "criterio-cobros-y-pagos"
 number = "396"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -249,6 +269,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f061"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.dias-arrendamiento"
+continuidad_id = "numero-dias-arrendamiento"
 number = "498-500"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -261,6 +282,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f082"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-actividad.gastos-personal"
+continuidad_id = "gasto-actividad-gastos-personal"
 number = "266-277"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_actividades_economicas"]
@@ -273,6 +295,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f039", "m184-2023.entidad.f040"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-actividad.consumos-explotacion"
+continuidad_id = "gasto-actividad-consumos-explotacion"
 number = "278-289"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_actividades_economicas"]
@@ -285,6 +308,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f041", "m184-2023.entidad.f042"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-actividad.tributos-deducibles"
+continuidad_id = "gasto-actividad-tributos-deducibles"
 number = "290-301"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_actividades_economicas"]
@@ -297,6 +321,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f043", "m184-2023.entidad.f044"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-actividad.arrendamientos-canones"
+continuidad_id = "gasto-actividad-arrendamientos-canones"
 number = "302-313"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_actividades_economicas"]
@@ -309,6 +334,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f045", "m184-2023.entidad.f046"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-actividad.reparaciones-conservacion"
+continuidad_id = "gasto-actividad-reparaciones-conservacion"
 number = "314-325"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_actividades_economicas"]
@@ -321,6 +347,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f047", "m184-2023.entidad.f048"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-actividad.servicios-profesionales"
+continuidad_id = "gasto-actividad-servicios-profesionales"
 number = "326-337"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_actividades_economicas"]
@@ -333,6 +360,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f049", "m184-2023.entidad.f050"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-actividad.suministros"
+continuidad_id = "gasto-actividad-suministros"
 number = "338-349"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_actividades_economicas"]
@@ -345,6 +373,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f051", "m184-2023.entidad.f052"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-actividad.gastos-financieros"
+continuidad_id = "gasto-actividad-gastos-financieros"
 number = "350-361"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_actividades_economicas"]
@@ -357,6 +386,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f053", "m184-2023.entidad.f054"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-actividad.amortizaciones"
+continuidad_id = "gasto-actividad-amortizaciones"
 number = "362-373"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_actividades_economicas"]
@@ -369,6 +399,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f055", "m184-2023.entidad.f056"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-actividad.provisiones"
+continuidad_id = "gasto-actividad-provisiones"
 number = "374-385"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_actividades_economicas"]
@@ -381,6 +412,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f057", "m184-2023.entidad.f058"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-actividad.otros-gastos-deducibles"
+continuidad_id = "gasto-actividad-otros-gastos-deducibles"
 number = "386-395"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_actividades_economicas"]
@@ -393,6 +425,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f059", "m184-2023.entidad.f060"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-inmobiliario.intereses-financiacion"
+continuidad_id = "gasto-inmobiliario-intereses-financiacion"
 number = "397-407"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_capital_inmobiliario"]
@@ -405,6 +438,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f062", "m184-2023.entidad.f063"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-inmobiliario.conservacion-reparacion"
+continuidad_id = "gasto-inmobiliario-conservacion-reparacion"
 number = "408-418"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_capital_inmobiliario"]
@@ -417,6 +451,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f064", "m184-2023.entidad.f065"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-inmobiliario.intereses-gastos-reparacion"
+continuidad_id = "gasto-inmobiliario-intereses-gastos-reparacion"
 number = "419-429"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_capital_inmobiliario"]
@@ -429,6 +464,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f066", "m184-2023.entidad.f067"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-inmobiliario.tributos-recargos"
+continuidad_id = "gasto-inmobiliario-tributos-recargos"
 number = "430-439"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_capital_inmobiliario"]
@@ -441,6 +477,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f068", "m184-2023.entidad.f069"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-inmobiliario.saldos-dudoso-cobro"
+continuidad_id = "gasto-inmobiliario-saldos-dudoso-cobro"
 number = "440-450"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_capital_inmobiliario"]
@@ -453,6 +490,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f070", "m184-2023.entidad.f071"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-inmobiliario.cantidades-devengadas-terceros"
+continuidad_id = "gasto-inmobiliario-cantidades-devengadas-terceros"
 number = "451-460"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_capital_inmobiliario"]
@@ -465,6 +503,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f072", "m184-2023.entidad.f073"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-inmobiliario.primas-seguros"
+continuidad_id = "gasto-inmobiliario-primas-seguros"
 number = "461-470"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_capital_inmobiliario"]
@@ -477,6 +516,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f074", "m184-2023.entidad.f075"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-inmobiliario.amortizacion-inmueble"
+continuidad_id = "gasto-inmobiliario-amortizacion-inmueble"
 number = "471-480"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_capital_inmobiliario"]
@@ -489,6 +529,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f076", "m184-2023.entidad.f077"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-inmobiliario.amortizacion-bienes-muebles"
+continuidad_id = "gasto-inmobiliario-amortizacion-bienes-muebles"
 number = "481-488"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_capital_inmobiliario"]
@@ -501,6 +542,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f078", "m184-2023.entidad.f079"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-inmobiliario.otros-gastos-deducibles"
+continuidad_id = "gasto-inmobiliario-otros-gastos-deducibles"
 number = "489-497"
 segmento = "184-2-entidad"
 section = ["declarado", "renta", "gastos_capital_inmobiliario"]
@@ -513,6 +555,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.entidad.f080", "m184-2023.entidad.f081"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.miembro-nif"
+continuidad_id = "miembro-nif"
 number = "18-26"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -525,6 +568,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.socio.f005"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.representante-fiscal-nif"
+continuidad_id = "miembro-representante-fiscal-nif"
 number = "27-35"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -537,6 +581,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.socio.f006"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.miembro-nombre"
+continuidad_id = "miembro-nombre-razon-social"
 number = "36-75"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -549,6 +594,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.socio.f007"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.tipo-hoja"
+continuidad_id = "tipo3-tipo-hoja"
 number = "76"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -560,6 +606,7 @@ legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:ar
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.codigo-provincia"
+continuidad_id = "miembro-codigo-provincia"
 number = "77-78"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -572,6 +619,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.socio.f009"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.clave-pais"
+continuidad_id = "miembro-clave-pais"
 number = "79-80"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -584,6 +632,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.socio.f010"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.clave-tipo-participe"
+continuidad_id = "clave-tipo-participe"
 number = "81"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -596,6 +645,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.socio.f011"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.miembro-a-31-diciembre"
+continuidad_id = "miembro-a-31-diciembre"
 number = "82"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -608,6 +658,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.socio.f012"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.dias-miembro"
+continuidad_id = "numero-dias-miembro"
 number = "83-85"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -620,6 +671,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.socio.f013"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.porcentaje-participacion"
+continuidad_id = "porcentaje-participacion"
 number = "86-92"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -632,6 +684,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.socio.f014", "m184-2023.socio.f015"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.clave"
+continuidad_id = "tipo3-clave"
 number = "93"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -644,6 +697,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.socio.f016"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.subclave"
+continuidad_id = "tipo3-subclave"
 number = "94-95"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -656,6 +710,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.socio.f017"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.importe"
+continuidad_id = "importe-atribuido-miembro"
 number = "96-108"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -668,6 +723,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.socio.f018"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.reduccion"
+continuidad_id = "reduccion-atribuida-miembro"
 number = "109-119"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -680,6 +736,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.socio.f019", "m184-2023.socio.f020"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.domicilio-fiscal"
+continuidad_id = "miembro-domicilio-fiscal"
 number = "120-159"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -692,6 +749,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.socio.f021"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.provisiones-gastos-dificil-justificacion"
+continuidad_id = "provisiones-y-gastos-dificil-justificacion"
 number = "160-171"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -704,6 +762,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.socio.f022"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.naturaleza-inmueble"
+continuidad_id = "naturaleza-inmueble"
 number = "172"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -716,6 +775,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.socio.f023"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.situacion-inmueble"
+continuidad_id = "tipo3-situacion-inmueble"
 number = "173"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -728,6 +788,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.socio.f024"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.referencia-catastral"
+continuidad_id = "tipo3-referencia-catastral"
 number = "174-193"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -740,6 +801,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.socio.f025"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.clave-declarado"
+continuidad_id = "clave-declarado"
 number = "194"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -752,6 +814,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.socio.f026"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.porcentaje-titularidad-inmueble"
+continuidad_id = "porcentaje-titularidad-inmueble"
 number = "195-199"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -764,6 +827,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.socio.f027"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.dias-arrendamiento"
+continuidad_id = "tipo3-dias-arrendamiento"
 number = "200-202"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -776,6 +840,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.socio.f028"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.rendimiento-neto-previo-eo"
+continuidad_id = "rendimiento-neto-previo-estimacion-objetiva"
 number = "203-215"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]
@@ -788,6 +853,7 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 export_refs = ["m184-2023.socio.f029", "m184-2023.socio.f030"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.rendimiento-neto-minorado-agricola-eo"
+continuidad_id = "rendimiento-neto-minorado-agricola-estimacion-objetiva"
 number = "216-229"
 segmento = "184-2-socio"
 section = ["declarado", "miembro"]

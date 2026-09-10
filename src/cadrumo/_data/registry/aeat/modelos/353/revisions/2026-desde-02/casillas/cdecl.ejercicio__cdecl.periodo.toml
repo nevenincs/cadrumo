@@ -1,5 +1,7 @@
 [[revisions."2026-desde-02".casillas]]
 id = "decl.ejercicio"
+continuidad_id = "filing-year"
+continuidad_origin = "seeded"
 number = "ejercicio"
 section = ["declarante"]
 data_type = "year"
@@ -12,6 +14,8 @@ export_refs = ["m353-2026.pagina01.f010"]
 
 [[revisions."2026-desde-02".casillas]]
 id = "decl.periodo"
+continuidad_id = "filing-period"
+continuidad_origin = "seeded"
 number = "periodo"
 section = ["declarante"]
 data_type = "period_code"

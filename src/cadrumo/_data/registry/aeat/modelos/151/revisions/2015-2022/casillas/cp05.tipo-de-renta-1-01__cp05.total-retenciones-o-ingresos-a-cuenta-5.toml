@@ -15,6 +15,7 @@
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
 id = "p05.tipo-de-renta-1-01"
+continuidad_id = "p05-tipo-de-renta-1-01"
 number = "13-14"
 segmento = "M15105000"
 section = ["p05", "tipo_de_renta_1"]
@@ -81,6 +82,7 @@ export_refs = ["m151-2015.pagina05.f010"]
 # AEAT campo: Rentención o ingreso a cuenta [6]
 [[revisions."2015-2022".casillas]]
 id = "p05.rentencion-o-ingreso-a-cuenta-6"
+continuidad_id = "p05-rentencion-o-ingreso-a-cuenta-6"
 number = "83-99"
 segmento = "M15105000"
 section = ["p05", "rentencion_o_ingreso_a_cuenta_6"]
@@ -133,6 +135,7 @@ export_refs = ["m151-2015.pagina05.f014"]
 # AEAT campo: Total retenciones o ingresos a cuenta [9]
 [[revisions."2015-2022".casillas]]
 id = "p05.total-retenciones-o-ingresos-a-cuenta-9"
+continuidad_id = "p05-total-retenciones-o-ingresos-a-cuenta-9"
 number = "151-167"
 segmento = "M15105000"
 section = ["p05", "total_retenciones_o_ingresos_a_cuenta_9"]
@@ -147,6 +150,7 @@ export_refs = ["m151-2015.pagina05.f015"]
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
 id = "p05.tipo-de-renta-1-02"
+continuidad_id = "p05-tipo-de-renta-1-02"
 number = "168-169"
 segmento = "M15105000"
 section = ["p05", "tipo_de_renta_1"]
@@ -161,6 +165,7 @@ export_refs = ["m151-2015.pagina05.f016"]
 # AEAT campo: NIF de la sociedad o fondo de inversión
 [[revisions."2015-2022".casillas]]
 id = "p05.nif-de-la-sociedad-o-fondo-de-inversion-01"
+continuidad_id = "m151-nif-de-la-sociedad-o-fondo-de-inversion"
 number = "170-178"
 segmento = "M15105000"
 section = ["p05", "nif_de_la_sociedad_o_fondo_de_inversion"]
@@ -175,6 +180,7 @@ export_refs = ["m151-2015.pagina05.f017"]
 # AEAT campo: Ganancia Patrimonial[2]
 [[revisions."2015-2022".casillas]]
 id = "p05.ganancia-patrimonial-2-01"
+continuidad_id = "m151-ganancia-patrimonial-2"
 number = "179-195"
 segmento = "M15105000"
 section = ["p05", "ganancia_patrimonial_2"]
@@ -189,6 +195,7 @@ export_refs = ["m151-2015.pagina05.f018"]
 # AEAT campo: Rentención o ingreso a cuenta [3]
 [[revisions."2015-2022".casillas]]
 id = "p05.rentencion-o-ingreso-a-cuenta-3-01"
+continuidad_id = "m151-rentencion-o-ingreso-a-cuenta-3"
 number = "196-212"
 segmento = "M15105000"
 section = ["p05", "rentencion_o_ingreso_a_cuenta_3"]
@@ -203,6 +210,7 @@ export_refs = ["m151-2015.pagina05.f019"]
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
 id = "p05.tipo-de-renta-1-03"
+continuidad_id = "p05-tipo-de-renta-1-03"
 number = "213-214"
 segmento = "M15105000"
 section = ["p05", "tipo_de_renta_1"]
@@ -217,6 +225,7 @@ export_refs = ["m151-2015.pagina05.f020"]
 # AEAT campo: NIF de la sociedad o fondo de inversión
 [[revisions."2015-2022".casillas]]
 id = "p05.nif-de-la-sociedad-o-fondo-de-inversion-02"
+continuidad_id = "p05-nif-de-la-sociedad-o-fondo-de-inversion-02"
 number = "215-223"
 segmento = "M15105000"
 section = ["p05", "nif_de_la_sociedad_o_fondo_de_inversion"]
@@ -231,6 +240,7 @@ export_refs = ["m151-2015.pagina05.f021"]
 # AEAT campo: Ganancia Patrimonial[2]
 [[revisions."2015-2022".casillas]]
 id = "p05.ganancia-patrimonial-2-02"
+continuidad_id = "p05-ganancia-patrimonial-2-02"
 number = "224-240"
 segmento = "M15105000"
 section = ["p05", "ganancia_patrimonial_2"]
@@ -245,6 +255,7 @@ export_refs = ["m151-2015.pagina05.f022"]
 # AEAT campo: Rentención o ingreso a cuenta [3]
 [[revisions."2015-2022".casillas]]
 id = "p05.rentencion-o-ingreso-a-cuenta-3-02"
+continuidad_id = "p05-rentencion-o-ingreso-a-cuenta-3-02"
 number = "241-257"
 segmento = "M15105000"
 section = ["p05", "rentencion_o_ingreso_a_cuenta_3"]
@@ -259,6 +270,7 @@ export_refs = ["m151-2015.pagina05.f023"]
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
 id = "p05.tipo-de-renta-1-04"
+continuidad_id = "p05-tipo-de-renta-1-04"
 number = "258-259"
 segmento = "M15105000"
 section = ["p05", "tipo_de_renta_1"]
@@ -273,6 +285,7 @@ export_refs = ["m151-2015.pagina05.f024"]
 # AEAT campo: NIF de la sociedad o fondo de inversión
 [[revisions."2015-2022".casillas]]
 id = "p05.nif-de-la-sociedad-o-fondo-de-inversion-03"
+continuidad_id = "p05-nif-de-la-sociedad-o-fondo-de-inversion-03"
 number = "260-268"
 segmento = "M15105000"
 section = ["p05", "nif_de_la_sociedad_o_fondo_de_inversion"]
@@ -287,6 +300,7 @@ export_refs = ["m151-2015.pagina05.f025"]
 # AEAT campo: Ganancia Patrimonial[2]
 [[revisions."2015-2022".casillas]]
 id = "p05.ganancia-patrimonial-2-03"
+continuidad_id = "p05-ganancia-patrimonial-2-03"
 number = "269-285"
 segmento = "M15105000"
 section = ["p05", "ganancia_patrimonial_2"]
@@ -301,6 +315,7 @@ export_refs = ["m151-2015.pagina05.f026"]
 # AEAT campo: Rentención o ingreso a cuenta [3]
 [[revisions."2015-2022".casillas]]
 id = "p05.rentencion-o-ingreso-a-cuenta-3-03"
+continuidad_id = "p05-rentencion-o-ingreso-a-cuenta-3-03"
 number = "286-302"
 segmento = "M15105000"
 section = ["p05", "rentencion_o_ingreso_a_cuenta_3"]
@@ -315,6 +330,7 @@ export_refs = ["m151-2015.pagina05.f027"]
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
 id = "p05.tipo-de-renta-1-05"
+continuidad_id = "p05-tipo-de-renta-1-05"
 number = "303-304"
 segmento = "M15105000"
 section = ["p05", "tipo_de_renta_1"]
@@ -329,6 +345,7 @@ export_refs = ["m151-2015.pagina05.f028"]
 # AEAT campo: NIF de la sociedad o fondo de inversión
 [[revisions."2015-2022".casillas]]
 id = "p05.nif-de-la-sociedad-o-fondo-de-inversion-04"
+continuidad_id = "p05-nif-de-la-sociedad-o-fondo-de-inversion-04"
 number = "305-313"
 segmento = "M15105000"
 section = ["p05", "nif_de_la_sociedad_o_fondo_de_inversion"]
@@ -343,6 +360,7 @@ export_refs = ["m151-2015.pagina05.f029"]
 # AEAT campo: Ganancia Patrimonial[2]
 [[revisions."2015-2022".casillas]]
 id = "p05.ganancia-patrimonial-2-04"
+continuidad_id = "p05-ganancia-patrimonial-2-04"
 number = "314-330"
 segmento = "M15105000"
 section = ["p05", "ganancia_patrimonial_2"]
@@ -357,6 +375,7 @@ export_refs = ["m151-2015.pagina05.f030"]
 # AEAT campo: Rentención o ingreso a cuenta [3]
 [[revisions."2015-2022".casillas]]
 id = "p05.rentencion-o-ingreso-a-cuenta-3-04"
+continuidad_id = "p05-rentencion-o-ingreso-a-cuenta-3-04"
 number = "331-347"
 segmento = "M15105000"
 section = ["p05", "rentencion_o_ingreso_a_cuenta_3"]
@@ -371,6 +390,7 @@ export_refs = ["m151-2015.pagina05.f031"]
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
 id = "p05.tipo-de-renta-1-06"
+continuidad_id = "p05-tipo-de-renta-1-06"
 number = "348-349"
 segmento = "M15105000"
 section = ["p05", "tipo_de_renta_1"]
@@ -385,6 +405,7 @@ export_refs = ["m151-2015.pagina05.f032"]
 # AEAT campo: NIF de la sociedad o fondo de inversión
 [[revisions."2015-2022".casillas]]
 id = "p05.nif-de-la-sociedad-o-fondo-de-inversion-05"
+continuidad_id = "p05-nif-de-la-sociedad-o-fondo-de-inversion-05"
 number = "350-358"
 segmento = "M15105000"
 section = ["p05", "nif_de_la_sociedad_o_fondo_de_inversion"]
@@ -399,6 +420,7 @@ export_refs = ["m151-2015.pagina05.f033"]
 # AEAT campo: Ganancia Patrimonial[2]
 [[revisions."2015-2022".casillas]]
 id = "p05.ganancia-patrimonial-2-05"
+continuidad_id = "p05-ganancia-patrimonial-2-05"
 number = "359-375"
 segmento = "M15105000"
 section = ["p05", "ganancia_patrimonial_2"]
@@ -413,6 +435,7 @@ export_refs = ["m151-2015.pagina05.f034"]
 # AEAT campo: Rentención o ingreso a cuenta [3]
 [[revisions."2015-2022".casillas]]
 id = "p05.rentencion-o-ingreso-a-cuenta-3-05"
+continuidad_id = "p05-rentencion-o-ingreso-a-cuenta-3-05"
 number = "376-392"
 segmento = "M15105000"
 section = ["p05", "rentencion_o_ingreso_a_cuenta_3"]
@@ -427,6 +450,7 @@ export_refs = ["m151-2015.pagina05.f035"]
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
 id = "p05.tipo-de-renta-1-07"
+continuidad_id = "p05-tipo-de-renta-1-07"
 number = "393-394"
 segmento = "M15105000"
 section = ["p05", "tipo_de_renta_1"]
@@ -441,6 +465,7 @@ export_refs = ["m151-2015.pagina05.f036"]
 # AEAT campo: NIF de la sociedad o fondo de inversión
 [[revisions."2015-2022".casillas]]
 id = "p05.nif-de-la-sociedad-o-fondo-de-inversion-06"
+continuidad_id = "p05-nif-de-la-sociedad-o-fondo-de-inversion-06"
 number = "395-403"
 segmento = "M15105000"
 section = ["p05", "nif_de_la_sociedad_o_fondo_de_inversion"]
@@ -455,6 +480,7 @@ export_refs = ["m151-2015.pagina05.f037"]
 # AEAT campo: Ganancia Patrimonial[2]
 [[revisions."2015-2022".casillas]]
 id = "p05.ganancia-patrimonial-2-06"
+continuidad_id = "p05-ganancia-patrimonial-2-06"
 number = "404-420"
 segmento = "M15105000"
 section = ["p05", "ganancia_patrimonial_2"]
@@ -469,6 +495,7 @@ export_refs = ["m151-2015.pagina05.f038"]
 # AEAT campo: Rentención o ingreso a cuenta [3]
 [[revisions."2015-2022".casillas]]
 id = "p05.rentencion-o-ingreso-a-cuenta-3-06"
+continuidad_id = "p05-rentencion-o-ingreso-a-cuenta-3-06"
 number = "421-437"
 segmento = "M15105000"
 section = ["p05", "rentencion_o_ingreso_a_cuenta_3"]
@@ -483,6 +510,7 @@ export_refs = ["m151-2015.pagina05.f039"]
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
 id = "p05.tipo-de-renta-1-08"
+continuidad_id = "p05-tipo-de-renta-1-08"
 number = "438-439"
 segmento = "M15105000"
 section = ["p05", "tipo_de_renta_1"]
@@ -497,6 +525,7 @@ export_refs = ["m151-2015.pagina05.f040"]
 # AEAT campo: NIF de la sociedad o fondo de inversión
 [[revisions."2015-2022".casillas]]
 id = "p05.nif-de-la-sociedad-o-fondo-de-inversion-07"
+continuidad_id = "p05-nif-de-la-sociedad-o-fondo-de-inversion-07"
 number = "440-448"
 segmento = "M15105000"
 section = ["p05", "nif_de_la_sociedad_o_fondo_de_inversion"]
@@ -511,6 +540,7 @@ export_refs = ["m151-2015.pagina05.f041"]
 # AEAT campo: Ganancia Patrimonial[2]
 [[revisions."2015-2022".casillas]]
 id = "p05.ganancia-patrimonial-2-07"
+continuidad_id = "p05-ganancia-patrimonial-2-07"
 number = "449-465"
 segmento = "M15105000"
 section = ["p05", "ganancia_patrimonial_2"]
@@ -525,6 +555,7 @@ export_refs = ["m151-2015.pagina05.f042"]
 # AEAT campo: Rentención o ingreso a cuenta [3]
 [[revisions."2015-2022".casillas]]
 id = "p05.rentencion-o-ingreso-a-cuenta-3-07"
+continuidad_id = "p05-rentencion-o-ingreso-a-cuenta-3-07"
 number = "466-482"
 segmento = "M15105000"
 section = ["p05", "rentencion_o_ingreso_a_cuenta_3"]
@@ -553,6 +584,7 @@ export_refs = ["m151-2015.pagina05.f044"]
 # AEAT campo: NIF de la sociedad o fondo de inversión
 [[revisions."2015-2022".casillas]]
 id = "p05.nif-de-la-sociedad-o-fondo-de-inversion-08"
+continuidad_id = "p05-nif-de-la-sociedad-o-fondo-de-inversion-08"
 number = "485-493"
 segmento = "M15105000"
 section = ["p05", "nif_de_la_sociedad_o_fondo_de_inversion"]
@@ -567,6 +599,7 @@ export_refs = ["m151-2015.pagina05.f045"]
 # AEAT campo: Ganancia Patrimonial[2]
 [[revisions."2015-2022".casillas]]
 id = "p05.ganancia-patrimonial-2-08"
+continuidad_id = "p05-ganancia-patrimonial-2-08"
 number = "494-510"
 segmento = "M15105000"
 section = ["p05", "ganancia_patrimonial_2"]
@@ -595,6 +628,7 @@ export_refs = ["m151-2015.pagina05.f047"]
 # AEAT campo: RESTO. Ganancia Patrimonial[2]
 [[revisions."2015-2022".casillas]]
 id = "p05.resto-ganancia-patrimonial-2"
+continuidad_id = "p05-resto-ganancia-patrimonial-2"
 number = "528-544"
 segmento = "M15105000"
 section = ["p05", "resto"]
@@ -608,6 +642,7 @@ export_refs = ["m151-2015.pagina05.f048"]
 # AEAT campo: RESTO. Rentención o ingreso a cuenta [3]
 [[revisions."2015-2022".casillas]]
 id = "p05.resto-rentencion-o-ingreso-a-cuenta-3"
+continuidad_id = "p05-resto-rentencion-o-ingreso-a-cuenta-3"
 number = "545-561"
 segmento = "M15105000"
 section = ["p05", "resto"]
@@ -621,6 +656,7 @@ export_refs = ["m151-2015.pagina05.f049"]
 # AEAT campo: Total ganancias patrimoniales [4]
 [[revisions."2015-2022".casillas]]
 id = "p05.total-ganancias-patrimoniales-4"
+continuidad_id = "p05-total-ganancias-patrimoniales-4"
 number = "562-578"
 segmento = "M15105000"
 section = ["p05", "total_ganancias_patrimoniales_4"]

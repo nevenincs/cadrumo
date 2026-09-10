@@ -83,40 +83,25 @@ _MIN_DIRECTORIES = 40
 #: distinct lines, none gone), so no chain anywhere dropped its stamp. The
 #: +1,066 is newly authored export-schema and casilla content arriving
 #: un-reviewed, which is the arm the gate's own message calls legitimate.
+#: Lowered 2026-09-10 when lineage was seeded across successor editions: each
+#: fall is a repeated identifier whose every occurrence now carries a
+#: continuidad_id, seeded, grounded or starting a chain of its own.
 _UNGROUNDED_BASELINE: dict[str, int] = {
-    "038": 2,
     "100": 1518,
-    "123": 8,
-    "131": 10,
-    "151": 5,
-    "165": 17,
-    "180": 7,
-    "184": 86,
-    "185": 2,
-    "190": 70,
-    "193": 52,
-    "194": 5,
+    "123": 1,
+    "151": 4,
+    "165": 15,
+    "180": 3,
     "200": 3173,
-    "202": 13,
-    "210": 34,
-    "220": 2,
-    "232": 46,
-    "270": 29,
-    "303": 6,
+    "202": 11,
     "308": 2,
-    "309": 59,
-    "322": 220,
-    "341": 12,
-    "347": 40,
-    "353": 12,
+    "309": 12,
+    "322": 120,
     "369": 2,
     "390": 5,
-    "490": 477,
-    "576": 1,
-    "604": 42,
-    "714": 111,
-    "721": 7,
-    "763": 2,
+    "490": 475,
+    "604": 40,
+    "714": 93,
 }
 
 

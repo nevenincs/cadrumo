@@ -1,5 +1,7 @@
 [[revisions."2018-y-siguientes".casillas]]
 id = "decl.tipo-ejercicio"
+continuidad_id = "tipo-ejercicio-232"
+continuidad_origin = "seeded"
 number = "2.devengo.tipo"
 section = ["declarante", "devengo"]
 data_type = "integer"

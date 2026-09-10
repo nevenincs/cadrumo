@@ -680,6 +680,8 @@ export_refs = ["m303-2025.dp30303.f015"]
 
 [[revisions.2025.casillas]]
 id = "64"
+continuidad_id = "dr303-64"
+continuidad_origin = "seeded"
 number = "64"
 section = ["iva", "resultado"]
 data_type = "money"
@@ -707,6 +709,8 @@ export_refs = ["m303-2025.dp30303.f017"]
 
 [[revisions.2025.casillas]]
 id = "66"
+continuidad_id = "dr303-66"
+continuidad_origin = "seeded"
 number = "66"
 section = ["iva", "resultado"]
 data_type = "money"
@@ -772,6 +776,8 @@ export_refs = ["m303-2025.dp30303.f026"]
 
 [[revisions.2025.casillas]]
 id = "71"
+continuidad_id = "dr303-71"
+continuidad_origin = "seeded"
 number = "71"
 section = ["iva", "resultado"]
 data_type = "money"

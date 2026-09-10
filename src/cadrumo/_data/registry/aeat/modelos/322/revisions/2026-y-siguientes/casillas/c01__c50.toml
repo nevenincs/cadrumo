@@ -11,6 +11,8 @@
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "01"
+continuidad_id = "m322-liquidacion-iva-devengado-operaciones-intragrupo-base-imponible"
+continuidad_origin = "seeded"
 number = "01"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 data_type = "money"
@@ -23,6 +25,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "02"
+continuidad_id = "m322-liquidacion-iva-devengado-operaciones-intragrupo-tipo"
+continuidad_origin = "seeded"
 number = "02"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 data_type = "ratio"
@@ -35,6 +39,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "03"
+continuidad_id = "m322-liquidacion-iva-devengado-operaciones-intragrupo-cuota"
+continuidad_origin = "seeded"
 number = "03"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 data_type = "money"
@@ -47,6 +53,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "04"
+continuidad_id = "04"
+continuidad_origin = "seeded"
 number = "04"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 data_type = "money"
@@ -59,6 +67,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "05"
+continuidad_id = "05"
+continuidad_origin = "seeded"
 number = "05"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 data_type = "ratio"
@@ -71,6 +81,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "06"
+continuidad_id = "06"
+continuidad_origin = "seeded"
 number = "06"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 data_type = "money"
@@ -83,6 +95,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "07"
+continuidad_id = "07"
+continuidad_origin = "seeded"
 number = "07"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 data_type = "money"
@@ -95,6 +109,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "08"
+continuidad_id = "08"
+continuidad_origin = "seeded"
 number = "08"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 data_type = "ratio"
@@ -107,6 +123,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "09"
+continuidad_id = "09"
+continuidad_origin = "seeded"
 number = "09"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 data_type = "money"
@@ -119,6 +137,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "10"
+continuidad_id = "m322-liquidacion-iva-devengado-modificacion-bases-y-cuotas-de-operaciones-intragrupo"
+continuidad_origin = "seeded"
 number = "10"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 data_type = "money"
@@ -131,6 +151,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "11"
+continuidad_id = "11"
+continuidad_origin = "seeded"
 number = "11"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 data_type = "money"
@@ -143,6 +165,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "12"
+continuidad_id = "m322-liquidacion-iva-devengado-resto-de-operaciones-en-regimen-general"
+continuidad_origin = "seeded"
 number = "12"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
@@ -155,6 +179,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "13"
+continuidad_id = "m322-liquidacion-iva-devengado-resto-de-operaciones-en-regimen-general-tipo"
+continuidad_origin = "seeded"
 number = "13"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "ratio"
@@ -167,6 +193,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "14"
+continuidad_id = "m322-liquidacion-iva-devengado-resto-de-operaciones-en-regimen-general-cuota"
+continuidad_origin = "seeded"
 number = "14"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
@@ -179,6 +207,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "15"
+continuidad_id = "15"
+continuidad_origin = "seeded"
 number = "15"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
@@ -191,6 +221,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "16"
+continuidad_id = "16"
+continuidad_origin = "seeded"
 number = "16"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "ratio"
@@ -203,6 +235,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "17"
+continuidad_id = "17"
+continuidad_origin = "seeded"
 number = "17"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
@@ -215,6 +249,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "18"
+continuidad_id = "18"
+continuidad_origin = "seeded"
 number = "18"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
@@ -227,6 +263,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "19"
+continuidad_id = "19"
+continuidad_origin = "seeded"
 number = "19"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "ratio"
@@ -239,6 +277,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "20"
+continuidad_id = "20"
+continuidad_origin = "seeded"
 number = "20"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
@@ -317,6 +357,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "27"
+continuidad_id = "m322-liquidacion-iva-devengado-recargo-de-equivalencia-base-imponible"
+continuidad_origin = "seeded"
 number = "27"
 section = ["iva", "regimen_general", "recargo"]
 data_type = "money"
@@ -329,6 +371,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "28"
+continuidad_id = "m322-liquidacion-iva-devengado-recargo-de-equivalencia-tipo"
+continuidad_origin = "seeded"
 number = "28"
 section = ["iva", "regimen_general", "recargo"]
 data_type = "ratio"
@@ -341,6 +385,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "29"
+continuidad_id = "m322-liquidacion-iva-devengado-recargo-de-equivalencia-cuota"
+continuidad_origin = "seeded"
 number = "29"
 section = ["iva", "regimen_general", "recargo"]
 data_type = "money"
@@ -353,6 +399,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "30"
+continuidad_id = "30"
+continuidad_origin = "seeded"
 number = "30"
 section = ["iva", "regimen_general", "recargo"]
 data_type = "money"
@@ -365,6 +413,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "31"
+continuidad_id = "31"
+continuidad_origin = "seeded"
 number = "31"
 section = ["iva", "regimen_general", "recargo"]
 data_type = "ratio"
@@ -377,6 +427,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "32"
+continuidad_id = "32"
+continuidad_origin = "seeded"
 number = "32"
 section = ["iva", "regimen_general", "recargo"]
 data_type = "money"
@@ -389,6 +441,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "33"
+continuidad_id = "33"
+continuidad_origin = "seeded"
 number = "33"
 section = ["iva", "regimen_general", "recargo"]
 data_type = "money"
@@ -401,6 +455,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "34"
+continuidad_id = "34"
+continuidad_origin = "seeded"
 number = "34"
 section = ["iva", "regimen_general", "recargo"]
 data_type = "ratio"
@@ -413,6 +469,8 @@ source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "35"
+continuidad_id = "35"
+continuidad_origin = "seeded"
 number = "35"
 section = ["iva", "regimen_general", "recargo"]
 data_type = "money"

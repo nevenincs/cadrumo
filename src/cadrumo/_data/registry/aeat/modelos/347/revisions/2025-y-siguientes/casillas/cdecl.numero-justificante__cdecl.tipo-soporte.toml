@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.numero-justificante"
+continuidad_id = "numero-justificante"
+continuidad_origin = "seeded"
 number = "decl.numero-justificante"
 section = ["declarante", "declarante"]
 data_type = "text"
@@ -11,6 +13,8 @@ source_refs = ["aeat-dr-347-2025"]
 export_refs = ["m347-2025.declarante.f009"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.complementaria-sustitutiva"
+continuidad_id = "complementaria-sustitutiva"
+continuidad_origin = "seeded"
 number = "decl.complementaria-sustitutiva"
 section = ["declarante", "declarante"]
 data_type = "text"
@@ -22,6 +26,8 @@ source_refs = ["aeat-dr-347-2025"]
 export_refs = ["m347-2025.declarante.f010"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.total-personas-entidades"
+continuidad_id = "total-personas-entidades"
+continuidad_origin = "seeded"
 number = "decl.total-personas-entidades"
 section = ["declarante", "declarante"]
 data_type = "integer"
@@ -33,6 +39,8 @@ source_refs = ["aeat-dr-347-2025"]
 export_refs = ["m347-2025.declarante.f012"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.importe-total-anual"
+continuidad_id = "importe-total-anual-operaciones"
+continuidad_origin = "seeded"
 number = "decl.importe-total-anual"
 section = ["declarante", "declarante"]
 data_type = "money"
@@ -44,6 +52,8 @@ source_refs = ["aeat-dr-347-2025"]
 export_refs = ["m347-2025.declarante.f013"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.total-inmuebles"
+continuidad_id = "total-inmuebles"
+continuidad_origin = "seeded"
 number = "decl.total-inmuebles"
 section = ["declarante", "declarante"]
 data_type = "integer"
@@ -55,6 +65,8 @@ source_refs = ["aeat-dr-347-2025"]
 export_refs = ["m347-2025.declarante.f014"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.importe-total-arrendamiento-locales"
+continuidad_id = "importe-total-arrendamiento-locales"
+continuidad_origin = "seeded"
 number = "decl.importe-total-arrendamiento-locales"
 section = ["declarante", "declarante"]
 data_type = "money"
@@ -66,6 +78,8 @@ source_refs = ["aeat-dr-347-2025"]
 export_refs = ["m347-2025.declarante.f015"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.persona-relacion"
+continuidad_id = "persona-con-quien-relacionarse"
+continuidad_origin = "seeded"
 number = "decl.persona-relacion"
 section = ["declarante", "declarante"]
 data_type = "text"
@@ -77,6 +91,8 @@ source_refs = ["aeat-dr-347-2025"]
 export_refs = ["m347-2025.declarante.f008"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.persona-relacion-telefono"
+continuidad_id = "persona-con-quien-relacionarse-telefono"
+continuidad_origin = "seeded"
 number = "decl.persona-relacion-telefono"
 section = ["declarante", "declarante"]
 data_type = "text"
@@ -88,6 +104,8 @@ source_refs = ["aeat-dr-347-2025"]
 export_refs = ["m347-2025.declarante.f007"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.representante-legal-nif"
+continuidad_id = "declarante-representante-legal-nif"
+continuidad_origin = "seeded"
 number = "decl.representante-legal-nif"
 section = ["declarante", "declarante"]
 data_type = "nif"
@@ -99,6 +117,8 @@ source_refs = ["aeat-dr-347-2025"]
 export_refs = ["m347-2025.declarante.f017"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.tipo-soporte"
+continuidad_id = "tipo-soporte"
+continuidad_origin = "seeded"
 number = "decl.tipo-soporte"
 section = ["declarante", "declarante"]
 data_type = "text"

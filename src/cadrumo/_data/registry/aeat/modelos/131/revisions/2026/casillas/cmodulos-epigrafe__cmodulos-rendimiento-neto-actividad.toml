@@ -152,6 +152,8 @@ source_refs = ["aeat-modelo-131-instructions"]
 
 [[revisions."2026".casillas]]
 id = "modulos-minoracion-inversion"
+continuidad_id = "irpf-pf-modulos-minoracion-inversion"
+continuidad_origin = "seeded"
 number = "modulos-minoracion-inversion"
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "money"
@@ -164,6 +166,8 @@ source_refs = ["aeat-modelo-131-instructions"]
 
 [[revisions."2026".casillas]]
 id = "modulos-rendimiento-neto-previo"
+continuidad_id = "irpf-pf-modulos-rendimiento-neto-previo"
+continuidad_origin = "seeded"
 number = "modulos-rendimiento-neto-previo"
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "money"
@@ -178,6 +182,8 @@ source_refs = ["aeat-modelo-131-instructions"]
 
 [[revisions."2026".casillas]]
 id = "modulos-rendimiento-neto-minorado"
+continuidad_id = "irpf-pf-modulos-rendimiento-neto-minorado"
+continuidad_origin = "seeded"
 number = "modulos-rendimiento-neto-minorado"
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "money"
@@ -191,6 +197,8 @@ source_refs = ["aeat-modelo-131-instructions"]
 
 [[revisions."2026".casillas]]
 id = "modulos-rendimiento-neto-modulos"
+continuidad_id = "irpf-pf-modulos-rendimiento-neto-modulos"
+continuidad_origin = "seeded"
 number = "modulos-rendimiento-neto-modulos"
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "money"
@@ -204,6 +212,8 @@ source_refs = ["aeat-modelo-131-instructions"]
 
 [[revisions."2026".casillas]]
 id = "modulos-rendimiento-neto-actividad"
+continuidad_id = "irpf-pf-modulos-rendimiento-neto-actividad"
+continuidad_origin = "seeded"
 number = "modulos-rendimiento-neto-actividad"
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "money"

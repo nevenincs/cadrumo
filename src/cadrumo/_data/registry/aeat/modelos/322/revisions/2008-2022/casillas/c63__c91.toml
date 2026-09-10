@@ -90,6 +90,7 @@ export_refs = ["m322-2022.page-02.f012"]
 
 [[revisions."2008-2022".casillas]]
 id = "700"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-iva-deducible-en-operaciones-interiores"
 number = "700"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_operaciones_interiores"
@@ -102,6 +103,7 @@ export_refs = ["m322-2022.page-04.f028"]
 
 [[revisions."2008-2022".casillas]]
 id = "701"
+continuidad_id = "701"
 number = "701"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_operaciones_interiores"
@@ -114,6 +116,7 @@ export_refs = ["m322-2022.page-04.f029"]
 
 [[revisions."2008-2022".casillas]]
 id = "702"
+continuidad_id = "702"
 number = "702"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_operaciones_interiores"
@@ -126,6 +129,7 @@ export_refs = ["m322-2022.page-04.f030"]
 
 [[revisions."2008-2022".casillas]]
 id = "703"
+continuidad_id = "703"
 number = "703"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_operaciones_interiores"
@@ -138,6 +142,7 @@ export_refs = ["m322-2022.page-04.f031"]
 
 [[revisions."2008-2022".casillas]]
 id = "704"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-iva-deducible-en-importaciones-bienes-co"
 number = "704"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_importaciones_bienes_co"
@@ -150,6 +155,7 @@ export_refs = ["m322-2022.page-04.f032"]
 
 [[revisions."2008-2022".casillas]]
 id = "705"
+continuidad_id = "705"
 number = "705"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_importaciones_bienes_co"
@@ -162,6 +168,7 @@ export_refs = ["m322-2022.page-04.f033"]
 
 [[revisions."2008-2022".casillas]]
 id = "706"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-iva-deducible-en-importaciones-bienes-de"
 number = "706"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_importaciones_bienes_de"
@@ -174,6 +181,7 @@ export_refs = ["m322-2022.page-04.f034"]
 
 [[revisions."2008-2022".casillas]]
 id = "707"
+continuidad_id = "707"
 number = "707"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_importaciones_bienes_de"
@@ -186,6 +194,7 @@ export_refs = ["m322-2022.page-04.f035"]
 
 [[revisions."2008-2022".casillas]]
 id = "708"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-iva-deducible-en-adquisiciones-intracomu"
 number = "708"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_adquisiciones_intracomu"
@@ -198,6 +207,7 @@ export_refs = ["m322-2022.page-04.f036"]
 
 [[revisions."2008-2022".casillas]]
 id = "709"
+continuidad_id = "709"
 number = "709"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_adquisiciones_intracomu"
@@ -221,6 +231,7 @@ export_refs = ["m322-2022.page-02.f013"]
 
 [[revisions."2008-2022".casillas]]
 id = "710"
+continuidad_id = "710"
 number = "710"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_adquisiciones_intracomu"
@@ -233,6 +244,7 @@ export_refs = ["m322-2022.page-04.f038"]
 
 [[revisions."2008-2022".casillas]]
 id = "711"
+continuidad_id = "711"
 number = "711"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_iva_deducible_en_adquisiciones_intracomu"
@@ -245,6 +257,7 @@ export_refs = ["m322-2022.page-04.f039"]
 
 [[revisions."2008-2022".casillas]]
 id = "712"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-compensaciones-en-regimen-especial-de-la"
 number = "712"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_compensaciones_en_regimen_especial_de_la"
@@ -257,6 +270,7 @@ export_refs = ["m322-2022.page-04.f040"]
 
 [[revisions."2008-2022".casillas]]
 id = "713"
+continuidad_id = "713"
 number = "713"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_compensaciones_en_regimen_especial_de_la"
@@ -313,6 +327,7 @@ export_refs = ["m322-2022.page-04.f045"]
 
 [[revisions."2008-2022".casillas]]
 id = "718"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-iva-deducible-en-operaciones-interiores"
 number = "718"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_operaciones_interiores"
@@ -325,6 +340,7 @@ export_refs = ["m322-2022.page-04.f046"]
 
 [[revisions."2008-2022".casillas]]
 id = "719"
+continuidad_id = "719"
 number = "719"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_operaciones_interiores"
@@ -348,6 +364,7 @@ export_refs = ["m322-2022.page-02.f014"]
 
 [[revisions."2008-2022".casillas]]
 id = "720"
+continuidad_id = "720"
 number = "720"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_operaciones_interiores"
@@ -360,6 +377,7 @@ export_refs = ["m322-2022.page-04.f048"]
 
 [[revisions."2008-2022".casillas]]
 id = "721"
+continuidad_id = "721"
 number = "721"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_operaciones_interiores"
@@ -372,6 +390,7 @@ export_refs = ["m322-2022.page-04.f049"]
 
 [[revisions."2008-2022".casillas]]
 id = "722"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-iva-deducible-en-importaciones-bienes-co"
 number = "722"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_importaciones_bienes_co"
@@ -384,6 +403,7 @@ export_refs = ["m322-2022.page-04.f050"]
 
 [[revisions."2008-2022".casillas]]
 id = "723"
+continuidad_id = "723"
 number = "723"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_importaciones_bienes_co"
@@ -396,6 +416,7 @@ export_refs = ["m322-2022.page-04.f051"]
 
 [[revisions."2008-2022".casillas]]
 id = "724"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-iva-deducible-en-importaciones-bienes-de"
 number = "724"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_importaciones_bienes_de"
@@ -408,6 +429,7 @@ export_refs = ["m322-2022.page-04.f052"]
 
 [[revisions."2008-2022".casillas]]
 id = "725"
+continuidad_id = "725"
 number = "725"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_importaciones_bienes_de"
@@ -420,6 +442,7 @@ export_refs = ["m322-2022.page-04.f053"]
 
 [[revisions."2008-2022".casillas]]
 id = "726"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-iva-deducible-en-adquisiciones-intracomu"
 number = "726"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_adquisiciones_intracomu"
@@ -432,6 +455,7 @@ export_refs = ["m322-2022.page-04.f054"]
 
 [[revisions."2008-2022".casillas]]
 id = "727"
+continuidad_id = "727"
 number = "727"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_adquisiciones_intracomu"
@@ -444,6 +468,7 @@ export_refs = ["m322-2022.page-04.f055"]
 
 [[revisions."2008-2022".casillas]]
 id = "728"
+continuidad_id = "728"
 number = "728"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_adquisiciones_intracomu"
@@ -456,6 +481,7 @@ export_refs = ["m322-2022.page-04.f056"]
 
 [[revisions."2008-2022".casillas]]
 id = "729"
+continuidad_id = "729"
 number = "729"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_iva_deducible_en_adquisiciones_intracomu"
@@ -468,6 +494,7 @@ export_refs = ["m322-2022.page-04.f057"]
 
 [[revisions."2008-2022".casillas]]
 id = "730"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-compensaciones-en-regimen-especial-de-la"
 number = "730"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_compensaciones_en_regimen_especial_de_la"
@@ -480,6 +507,7 @@ export_refs = ["m322-2022.page-04.f058"]
 
 [[revisions."2008-2022".casillas]]
 id = "731"
+continuidad_id = "731"
 number = "731"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_compensaciones_en_regimen_especial_de_la"
@@ -553,6 +581,7 @@ export_refs = ["m322-2022.page-02.f015"]
 
 [[revisions."2008-2022".casillas]]
 id = "74"
+continuidad_id = "m322-informacion-adicional-exclusivamente-para-aquellos-sujetos-pasivos-que-sean-destinatarios-de-operaciones-afectadas"
 number = "74"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_informacion_adicional_exclusivamente_para_aquellos_sujetos_pasivos_que_sean_destinatarios_de_operaciones_afectadas"
@@ -565,6 +594,7 @@ export_refs = ["m322-2022.page-02.f016"]
 
 [[revisions."2008-2022".casillas]]
 id = "75"
+continuidad_id = "75"
 number = "75"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_informacion_adicional_exclusivamente_para_aquellos_sujetos_pasivos_que_sean_destinatarios_de_operaciones_afectadas"
@@ -643,6 +673,7 @@ export_refs = ["m322-2022.page-03.f023"]
 
 [[revisions."2008-2022".casillas]]
 id = "84"
+continuidad_id = "84"
 number = "84"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_operaciones_no_sujetas_por_reglas_de_localizacion"

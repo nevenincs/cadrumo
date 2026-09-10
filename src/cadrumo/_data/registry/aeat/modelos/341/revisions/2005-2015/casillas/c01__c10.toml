@@ -4,6 +4,7 @@
 
 [[revisions."2005-2015".casillas]]
 id = "01"
+continuidad_id = "reagp-importe-operaciones"
 number = "01"
 section = ["iva", "reagp", "compensacion", "operaciones"]
 data_type = "money"
@@ -16,6 +17,7 @@ source_refs = ["aeat-dr-341-2005-2015"]
 
 [[revisions."2005-2015".casillas]]
 id = "02"
+continuidad_id = "02"
 number = "02"
 section = ["iva", "reagp", "compensacion", "operaciones"]
 data_type = "money"
@@ -28,6 +30,7 @@ source_refs = ["aeat-dr-341-2005-2015"]
 
 [[revisions."2005-2015".casillas]]
 id = "03"
+continuidad_id = "03"
 number = "03"
 section = ["iva", "reagp", "compensacion", "operaciones"]
 data_type = "money"
@@ -40,6 +43,7 @@ source_refs = ["aeat-dr-341-2005-2015"]
 
 [[revisions."2005-2015".casillas]]
 id = "04"
+continuidad_id = "reagp-porcentaje-compensacion"
 number = "04"
 section = ["iva", "reagp", "compensacion", "porcentaje"]
 data_type = "ratio"
@@ -52,6 +56,7 @@ source_refs = ["aeat-dr-341-2005-2015"]
 
 [[revisions."2005-2015".casillas]]
 id = "05"
+continuidad_id = "05"
 number = "05"
 section = ["iva", "reagp", "compensacion", "porcentaje"]
 data_type = "ratio"
@@ -64,6 +69,7 @@ source_refs = ["aeat-dr-341-2005-2015"]
 
 [[revisions."2005-2015".casillas]]
 id = "06"
+continuidad_id = "06"
 number = "06"
 section = ["iva", "reagp", "compensacion", "porcentaje"]
 data_type = "ratio"
@@ -76,6 +82,7 @@ source_refs = ["aeat-dr-341-2005-2015"]
 
 [[revisions."2005-2015".casillas]]
 id = "07"
+continuidad_id = "reagp-importe-compensacion"
 number = "07"
 section = ["iva", "reagp", "compensacion", "importe"]
 data_type = "money"
@@ -88,6 +95,7 @@ source_refs = ["aeat-dr-341-2005-2015"]
 
 [[revisions."2005-2015".casillas]]
 id = "08"
+continuidad_id = "08"
 number = "08"
 section = ["iva", "reagp", "compensacion", "importe"]
 data_type = "money"
@@ -100,6 +108,7 @@ source_refs = ["aeat-dr-341-2005-2015"]
 
 [[revisions."2005-2015".casillas]]
 id = "09"
+continuidad_id = "09"
 number = "09"
 section = ["iva", "reagp", "compensacion", "importe"]
 data_type = "money"
@@ -112,6 +121,7 @@ source_refs = ["aeat-dr-341-2005-2015"]
 
 [[revisions."2005-2015".casillas]]
 id = "10"
+continuidad_id = "reagp-importe-compensacion-total"
 number = "10"
 section = ["iva", "reagp", "compensacion", "totales"]
 data_type = "money"

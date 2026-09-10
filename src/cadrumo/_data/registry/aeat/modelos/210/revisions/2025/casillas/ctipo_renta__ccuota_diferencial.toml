@@ -28,6 +28,7 @@
 
 [[revisions."2025".casillas]]
 id = "tipo_renta"
+continuidad_id = "irnr-tipo-renta"
 number = "tipo_renta"
 section = ["identificacion_renta"]
 data_type = "text"
@@ -40,6 +41,7 @@ export_refs = ["m210-2022.pagina01.f019"]
 
 [[revisions."2025".casillas]]
 id = "rendimientos_integros"
+continuidad_id = "irnr-rendimientos-integros"
 number = "5"
 section = ["rendimientos"]
 data_type = "money"
@@ -53,6 +55,7 @@ constraints = { sign = "non_negative", legal_refs = ["trlirnr-rdleg-5-2004:art-2
 
 [[revisions."2025".casillas]]
 id = "valor_catastral"
+continuidad_id = "irnr-imputacion-inmobiliaria-valor-catastral"
 number = "valor_catastral"
 section = ["renta_inmobiliaria_imputada"]
 data_type = "money"
@@ -65,6 +68,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-85"], sour
 
 [[revisions."2025".casillas]]
 id = "coeficiente_imputacion_inmobiliaria"
+continuidad_id = "irnr-imputacion-inmobiliaria-coeficiente"
 number = "coeficiente_imputacion_inmobiliaria"
 section = ["renta_inmobiliaria_imputada"]
 data_type = "ratio"
@@ -77,6 +81,7 @@ constraints = { min_value = "0", max_value = "1", legal_refs = ["ley-35-2006:art
 
 [[revisions."2025".casillas]]
 id = "dias_imputacion"
+continuidad_id = "irnr-imputacion-inmobiliaria-dias"
 number = "dias_imputacion"
 section = ["renta_inmobiliaria_imputada"]
 data_type = "integer"
@@ -89,6 +94,7 @@ constraints = { min_value = "0", max_value = "366", legal_refs = ["ley-35-2006:a
 
 [[revisions."2025".casillas]]
 id = "valor_adquisicion"
+continuidad_id = "irnr-imputacion-inmobiliaria-valor-adquisicion"
 number = "valor_adquisicion"
 section = ["renta_inmobiliaria_imputada"]
 data_type = "money"
@@ -101,6 +107,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-85"], sour
 
 [[revisions."2025".casillas]]
 id = "valor_comprobado_administracion"
+continuidad_id = "irnr-imputacion-inmobiliaria-valor-comprobado-administracion"
 number = "valor_comprobado_administracion"
 section = ["renta_inmobiliaria_imputada"]
 data_type = "money"
@@ -113,6 +120,7 @@ constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-85"], sour
 
 [[revisions."2025".casillas]]
 id = "gastos_deducibles"
+continuidad_id = "irnr-gastos-deducibles"
 number = "7"
 section = ["rendimientos"]
 data_type = "money"
@@ -125,6 +133,7 @@ export_refs = ["m210-2022.pagina01.f085"]
 
 [[revisions."2025".casillas]]
 id = "retencion_practicada"
+continuidad_id = "irnr-retencion-practicada"
 number = "29"
 section = ["liquidacion"]
 data_type = "money"
@@ -137,6 +146,7 @@ export_refs = ["m210-2022.pagina01.f115"]
 
 [[revisions."2025".casillas]]
 id = "base_imponible"
+continuidad_id = "irnr-base-imponible"
 number = "8"
 section = ["liquidacion"]
 data_type = "money"
@@ -150,6 +160,7 @@ export_refs = ["m210-2022.pagina01.f086"]
 
 [[revisions."2025".casillas]]
 id = "tipo_gravamen"
+continuidad_id = "irnr-tipo-gravamen"
 number = "21"
 section = ["liquidacion"]
 data_type = "ratio"
@@ -163,6 +174,7 @@ export_refs = ["m210-2022.pagina01.f107"]
 
 [[revisions."2025".casillas]]
 id = "cuota_integra"
+continuidad_id = "irnr-cuota-integra"
 number = "22"
 section = ["liquidacion"]
 data_type = "money"
@@ -176,6 +188,7 @@ export_refs = ["m210-2022.pagina01.f108"]
 
 [[revisions."2025".casillas]]
 id = "cuota_diferencial"
+continuidad_id = "irnr-cuota-diferencial"
 number = "31"
 section = ["liquidacion"]
 data_type = "money"

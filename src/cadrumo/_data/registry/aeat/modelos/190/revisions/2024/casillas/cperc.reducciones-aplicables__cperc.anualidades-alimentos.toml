@@ -6,6 +6,7 @@
 
 [[revisions."2024".casillas]]
 id = "perc.reducciones-aplicables"
+continuidad_id = "payee-reducciones-aplicables"
 number = "171-183"
 section = ["perceptor", "percepcion"]
 data_type = "money"
@@ -18,6 +19,7 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2024".casillas]]
 id = "perc.gastos-deducibles"
+continuidad_id = "payee-gastos-deducibles"
 number = "184-196"
 section = ["perceptor", "percepcion"]
 data_type = "money"
@@ -30,6 +32,7 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2024".casillas]]
 id = "perc.pension-compensatoria"
+continuidad_id = "payee-pension-compensatoria"
 number = "197-209"
 section = ["perceptor", "percepcion"]
 data_type = "money"
@@ -42,6 +45,7 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2024".casillas]]
 id = "perc.anualidades-alimentos"
+continuidad_id = "payee-anualidades-alimentos"
 number = "210-222"
 section = ["perceptor", "percepcion"]
 data_type = "money"

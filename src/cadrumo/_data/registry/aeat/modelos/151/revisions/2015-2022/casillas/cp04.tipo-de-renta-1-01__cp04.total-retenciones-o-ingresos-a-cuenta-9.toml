@@ -15,6 +15,7 @@
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
 id = "p04.tipo-de-renta-1-01"
+continuidad_id = "p04-tipo-de-renta-1-01"
 number = "13-14"
 segmento = "M15104000"
 section = ["p04", "tipo_de_renta_1"]
@@ -29,6 +30,7 @@ export_refs = ["m151-2015.pagina04.f006"]
 # AEAT campo: Naturaleza [2]
 [[revisions."2015-2022".casillas]]
 id = "p04.naturaleza-2-01"
+continuidad_id = "p04-naturaleza-2-01"
 number = "15"
 segmento = "M15104000"
 section = ["p04", "naturaleza_2"]
@@ -43,6 +45,7 @@ export_refs = ["m151-2015.pagina04.f007"]
 # AEAT campo: Valoración [3]
 [[revisions."2015-2022".casillas]]
 id = "p04.valoracion-3-01"
+continuidad_id = "p04-valoracion-3-01"
 number = "16-32"
 segmento = "M15104000"
 section = ["p04", "valoracion_3"]
@@ -57,6 +60,7 @@ export_refs = ["m151-2015.pagina04.f008"]
 # AEAT campo: Ingresos a cuenta [4]
 [[revisions."2015-2022".casillas]]
 id = "p04.ingresos-a-cuenta-4-01"
+continuidad_id = "p04-ingresos-a-cuenta-4-01"
 number = "33-49"
 segmento = "M15104000"
 section = ["p04", "ingresos_a_cuenta_4"]
@@ -71,6 +75,7 @@ export_refs = ["m151-2015.pagina04.f009"]
 # AEAT campo: Ingresos a cuenta repercutidos [5]
 [[revisions."2015-2022".casillas]]
 id = "p04.ingresos-a-cuenta-repercutidos-5-01"
+continuidad_id = "p04-ingresos-a-cuenta-repercutidos-5-01"
 number = "50-66"
 segmento = "M15104000"
 section = ["p04", "ingresos_a_cuenta_repercutidos_5"]
@@ -85,6 +90,7 @@ export_refs = ["m151-2015.pagina04.f010"]
 # AEAT campo: Rendimiento integro [6]
 [[revisions."2015-2022".casillas]]
 id = "p04.rendimiento-integro-6-01"
+continuidad_id = "m151-rendimiento-integro-6"
 number = "67-83"
 segmento = "M15104000"
 section = ["p04", "rendimiento_integro_6"]
@@ -99,6 +105,7 @@ export_refs = ["m151-2015.pagina04.f011"]
 # AEAT campo: Rentención o ingreso a cuenta [7]
 [[revisions."2015-2022".casillas]]
 id = "p04.rentencion-o-ingreso-a-cuenta-7-01"
+continuidad_id = "p04-rentencion-o-ingreso-a-cuenta-7-01"
 number = "84-100"
 segmento = "M15104000"
 section = ["p04", "rentencion_o_ingreso_a_cuenta_7"]
@@ -113,6 +120,7 @@ export_refs = ["m151-2015.pagina04.f012"]
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
 id = "p04.tipo-de-renta-1-02"
+continuidad_id = "p04-tipo-de-renta-1-02"
 number = "101-102"
 segmento = "M15104000"
 section = ["p04", "tipo_de_renta_1"]
@@ -127,6 +135,7 @@ export_refs = ["m151-2015.pagina04.f013"]
 # AEAT campo: Naturaleza [2]
 [[revisions."2015-2022".casillas]]
 id = "p04.naturaleza-2-02"
+continuidad_id = "p04-naturaleza-2-02"
 number = "103"
 segmento = "M15104000"
 section = ["p04", "naturaleza_2"]
@@ -141,6 +150,7 @@ export_refs = ["m151-2015.pagina04.f014"]
 # AEAT campo: Valoración [3]
 [[revisions."2015-2022".casillas]]
 id = "p04.valoracion-3-02"
+continuidad_id = "p04-valoracion-3-02"
 number = "104-120"
 segmento = "M15104000"
 section = ["p04", "valoracion_3"]
@@ -155,6 +165,7 @@ export_refs = ["m151-2015.pagina04.f015"]
 # AEAT campo: Ingresos a cuenta [4]
 [[revisions."2015-2022".casillas]]
 id = "p04.ingresos-a-cuenta-4-02"
+continuidad_id = "p04-ingresos-a-cuenta-4-02"
 number = "121-137"
 segmento = "M15104000"
 section = ["p04", "ingresos_a_cuenta_4"]
@@ -169,6 +180,7 @@ export_refs = ["m151-2015.pagina04.f016"]
 # AEAT campo: Ingresos a cuenta repercutidos [5]
 [[revisions."2015-2022".casillas]]
 id = "p04.ingresos-a-cuenta-repercutidos-5-02"
+continuidad_id = "p04-ingresos-a-cuenta-repercutidos-5-02"
 number = "138-154"
 segmento = "M15104000"
 section = ["p04", "ingresos_a_cuenta_repercutidos_5"]
@@ -183,6 +195,7 @@ export_refs = ["m151-2015.pagina04.f017"]
 # AEAT campo: Rendimiento integro [6]
 [[revisions."2015-2022".casillas]]
 id = "p04.rendimiento-integro-6-02"
+continuidad_id = "p04-rendimiento-integro-6-02"
 number = "155-171"
 segmento = "M15104000"
 section = ["p04", "rendimiento_integro_6"]
@@ -197,6 +210,7 @@ export_refs = ["m151-2015.pagina04.f018"]
 # AEAT campo: Rentención o ingreso a cuenta [7]
 [[revisions."2015-2022".casillas]]
 id = "p04.rentencion-o-ingreso-a-cuenta-7-02"
+continuidad_id = "p04-rentencion-o-ingreso-a-cuenta-7-02"
 number = "172-188"
 segmento = "M15104000"
 section = ["p04", "rentencion_o_ingreso_a_cuenta_7"]
@@ -211,6 +225,7 @@ export_refs = ["m151-2015.pagina04.f019"]
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
 id = "p04.tipo-de-renta-1-03"
+continuidad_id = "p04-tipo-de-renta-1-03"
 number = "189-190"
 segmento = "M15104000"
 section = ["p04", "tipo_de_renta_1"]
@@ -225,6 +240,7 @@ export_refs = ["m151-2015.pagina04.f020"]
 # AEAT campo: Naturaleza [2]
 [[revisions."2015-2022".casillas]]
 id = "p04.naturaleza-2-03"
+continuidad_id = "p04-naturaleza-2-03"
 number = "191"
 segmento = "M15104000"
 section = ["p04", "naturaleza_2"]
@@ -239,6 +255,7 @@ export_refs = ["m151-2015.pagina04.f021"]
 # AEAT campo: Valoración [3]
 [[revisions."2015-2022".casillas]]
 id = "p04.valoracion-3-03"
+continuidad_id = "p04-valoracion-3-03"
 number = "192-208"
 segmento = "M15104000"
 section = ["p04", "valoracion_3"]
@@ -253,6 +270,7 @@ export_refs = ["m151-2015.pagina04.f022"]
 # AEAT campo: Ingresos a cuenta [4]
 [[revisions."2015-2022".casillas]]
 id = "p04.ingresos-a-cuenta-4-03"
+continuidad_id = "p04-ingresos-a-cuenta-4-03"
 number = "209-225"
 segmento = "M15104000"
 section = ["p04", "ingresos_a_cuenta_4"]
@@ -267,6 +285,7 @@ export_refs = ["m151-2015.pagina04.f023"]
 # AEAT campo: Ingresos a cuenta repercutidos [5]
 [[revisions."2015-2022".casillas]]
 id = "p04.ingresos-a-cuenta-repercutidos-5-03"
+continuidad_id = "p04-ingresos-a-cuenta-repercutidos-5-03"
 number = "226-242"
 segmento = "M15104000"
 section = ["p04", "ingresos_a_cuenta_repercutidos_5"]
@@ -281,6 +300,7 @@ export_refs = ["m151-2015.pagina04.f024"]
 # AEAT campo: Rendimiento integro [6]
 [[revisions."2015-2022".casillas]]
 id = "p04.rendimiento-integro-6-03"
+continuidad_id = "p04-rendimiento-integro-6-03"
 number = "243-259"
 segmento = "M15104000"
 section = ["p04", "rendimiento_integro_6"]
@@ -295,6 +315,7 @@ export_refs = ["m151-2015.pagina04.f025"]
 # AEAT campo: Rentención o ingreso a cuenta [7]
 [[revisions."2015-2022".casillas]]
 id = "p04.rentencion-o-ingreso-a-cuenta-7-03"
+continuidad_id = "p04-rentencion-o-ingreso-a-cuenta-7-03"
 number = "260-276"
 segmento = "M15104000"
 section = ["p04", "rentencion_o_ingreso_a_cuenta_7"]
@@ -309,6 +330,7 @@ export_refs = ["m151-2015.pagina04.f026"]
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
 id = "p04.tipo-de-renta-1-04"
+continuidad_id = "p04-tipo-de-renta-1-04"
 number = "277-278"
 segmento = "M15104000"
 section = ["p04", "tipo_de_renta_1"]
@@ -323,6 +345,7 @@ export_refs = ["m151-2015.pagina04.f027"]
 # AEAT campo: Naturaleza [2]
 [[revisions."2015-2022".casillas]]
 id = "p04.naturaleza-2-04"
+continuidad_id = "p04-naturaleza-2-04"
 number = "279"
 segmento = "M15104000"
 section = ["p04", "naturaleza_2"]
@@ -337,6 +360,7 @@ export_refs = ["m151-2015.pagina04.f028"]
 # AEAT campo: Valoración [3]
 [[revisions."2015-2022".casillas]]
 id = "p04.valoracion-3-04"
+continuidad_id = "p04-valoracion-3-04"
 number = "280-296"
 segmento = "M15104000"
 section = ["p04", "valoracion_3"]
@@ -351,6 +375,7 @@ export_refs = ["m151-2015.pagina04.f029"]
 # AEAT campo: Ingresos a cuenta [4]
 [[revisions."2015-2022".casillas]]
 id = "p04.ingresos-a-cuenta-4-04"
+continuidad_id = "p04-ingresos-a-cuenta-4-04"
 number = "297-313"
 segmento = "M15104000"
 section = ["p04", "ingresos_a_cuenta_4"]
@@ -365,6 +390,7 @@ export_refs = ["m151-2015.pagina04.f030"]
 # AEAT campo: Ingresos a cuenta repercutidos [5]
 [[revisions."2015-2022".casillas]]
 id = "p04.ingresos-a-cuenta-repercutidos-5-04"
+continuidad_id = "p04-ingresos-a-cuenta-repercutidos-5-04"
 number = "314-330"
 segmento = "M15104000"
 section = ["p04", "ingresos_a_cuenta_repercutidos_5"]
@@ -379,6 +405,7 @@ export_refs = ["m151-2015.pagina04.f031"]
 # AEAT campo: Rendimiento integro [6]
 [[revisions."2015-2022".casillas]]
 id = "p04.rendimiento-integro-6-04"
+continuidad_id = "p04-rendimiento-integro-6-04"
 number = "331-347"
 segmento = "M15104000"
 section = ["p04", "rendimiento_integro_6"]
@@ -393,6 +420,7 @@ export_refs = ["m151-2015.pagina04.f032"]
 # AEAT campo: Rentención o ingreso a cuenta [7]
 [[revisions."2015-2022".casillas]]
 id = "p04.rentencion-o-ingreso-a-cuenta-7-04"
+continuidad_id = "p04-rentencion-o-ingreso-a-cuenta-7-04"
 number = "348-364"
 segmento = "M15104000"
 section = ["p04", "rentencion_o_ingreso_a_cuenta_7"]
@@ -407,6 +435,7 @@ export_refs = ["m151-2015.pagina04.f033"]
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
 id = "p04.tipo-de-renta-1-05"
+continuidad_id = "p04-tipo-de-renta-1-05"
 number = "365-366"
 segmento = "M15104000"
 section = ["p04", "tipo_de_renta_1"]
@@ -421,6 +450,7 @@ export_refs = ["m151-2015.pagina04.f034"]
 # AEAT campo: Naturaleza [2]
 [[revisions."2015-2022".casillas]]
 id = "p04.naturaleza-2-05"
+continuidad_id = "p04-naturaleza-2-05"
 number = "367"
 segmento = "M15104000"
 section = ["p04", "naturaleza_2"]
@@ -435,6 +465,7 @@ export_refs = ["m151-2015.pagina04.f035"]
 # AEAT campo: Valoración [3]
 [[revisions."2015-2022".casillas]]
 id = "p04.valoracion-3-05"
+continuidad_id = "p04-valoracion-3-05"
 number = "368-384"
 segmento = "M15104000"
 section = ["p04", "valoracion_3"]
@@ -449,6 +480,7 @@ export_refs = ["m151-2015.pagina04.f036"]
 # AEAT campo: Ingresos a cuenta [4]
 [[revisions."2015-2022".casillas]]
 id = "p04.ingresos-a-cuenta-4-05"
+continuidad_id = "p04-ingresos-a-cuenta-4-05"
 number = "385-401"
 segmento = "M15104000"
 section = ["p04", "ingresos_a_cuenta_4"]
@@ -463,6 +495,7 @@ export_refs = ["m151-2015.pagina04.f037"]
 # AEAT campo: Ingresos a cuenta repercutidos [5]
 [[revisions."2015-2022".casillas]]
 id = "p04.ingresos-a-cuenta-repercutidos-5-05"
+continuidad_id = "p04-ingresos-a-cuenta-repercutidos-5-05"
 number = "402-418"
 segmento = "M15104000"
 section = ["p04", "ingresos_a_cuenta_repercutidos_5"]
@@ -477,6 +510,7 @@ export_refs = ["m151-2015.pagina04.f038"]
 # AEAT campo: Rendimiento integro [6]
 [[revisions."2015-2022".casillas]]
 id = "p04.rendimiento-integro-6-05"
+continuidad_id = "p04-rendimiento-integro-6-05"
 number = "419-435"
 segmento = "M15104000"
 section = ["p04", "rendimiento_integro_6"]
@@ -491,6 +525,7 @@ export_refs = ["m151-2015.pagina04.f039"]
 # AEAT campo: Rentención o ingreso a cuenta [7]
 [[revisions."2015-2022".casillas]]
 id = "p04.rentencion-o-ingreso-a-cuenta-7-05"
+continuidad_id = "p04-rentencion-o-ingreso-a-cuenta-7-05"
 number = "436-452"
 segmento = "M15104000"
 section = ["p04", "rentencion_o_ingreso_a_cuenta_7"]
@@ -505,6 +540,7 @@ export_refs = ["m151-2015.pagina04.f040"]
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
 id = "p04.tipo-de-renta-1-06"
+continuidad_id = "p04-tipo-de-renta-1-06"
 number = "453-454"
 segmento = "M15104000"
 section = ["p04", "tipo_de_renta_1"]
@@ -519,6 +555,7 @@ export_refs = ["m151-2015.pagina04.f041"]
 # AEAT campo: Naturaleza [2]
 [[revisions."2015-2022".casillas]]
 id = "p04.naturaleza-2-06"
+continuidad_id = "p04-naturaleza-2-06"
 number = "455"
 segmento = "M15104000"
 section = ["p04", "naturaleza_2"]
@@ -533,6 +570,7 @@ export_refs = ["m151-2015.pagina04.f042"]
 # AEAT campo: Valoración [3]
 [[revisions."2015-2022".casillas]]
 id = "p04.valoracion-3-06"
+continuidad_id = "p04-valoracion-3-06"
 number = "456-472"
 segmento = "M15104000"
 section = ["p04", "valoracion_3"]
@@ -547,6 +585,7 @@ export_refs = ["m151-2015.pagina04.f043"]
 # AEAT campo: Ingresos a cuenta [4]
 [[revisions."2015-2022".casillas]]
 id = "p04.ingresos-a-cuenta-4-06"
+continuidad_id = "p04-ingresos-a-cuenta-4-06"
 number = "473-489"
 segmento = "M15104000"
 section = ["p04", "ingresos_a_cuenta_4"]
@@ -561,6 +600,7 @@ export_refs = ["m151-2015.pagina04.f044"]
 # AEAT campo: Ingresos a cuenta repercutidos [5]
 [[revisions."2015-2022".casillas]]
 id = "p04.ingresos-a-cuenta-repercutidos-5-06"
+continuidad_id = "p04-ingresos-a-cuenta-repercutidos-5-06"
 number = "490-506"
 segmento = "M15104000"
 section = ["p04", "ingresos_a_cuenta_repercutidos_5"]
@@ -575,6 +615,7 @@ export_refs = ["m151-2015.pagina04.f045"]
 # AEAT campo: Rendimiento integro [6]
 [[revisions."2015-2022".casillas]]
 id = "p04.rendimiento-integro-6-06"
+continuidad_id = "p04-rendimiento-integro-6-06"
 number = "507-523"
 segmento = "M15104000"
 section = ["p04", "rendimiento_integro_6"]
@@ -589,6 +630,7 @@ export_refs = ["m151-2015.pagina04.f046"]
 # AEAT campo: Rentención o ingreso a cuenta [7]
 [[revisions."2015-2022".casillas]]
 id = "p04.rentencion-o-ingreso-a-cuenta-7-06"
+continuidad_id = "p04-rentencion-o-ingreso-a-cuenta-7-06"
 number = "524-540"
 segmento = "M15104000"
 section = ["p04", "rentencion_o_ingreso_a_cuenta_7"]
@@ -603,6 +645,7 @@ export_refs = ["m151-2015.pagina04.f047"]
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
 id = "p04.tipo-de-renta-1-07"
+continuidad_id = "p04-tipo-de-renta-1-07"
 number = "541-542"
 segmento = "M15104000"
 section = ["p04", "tipo_de_renta_1"]
@@ -617,6 +660,7 @@ export_refs = ["m151-2015.pagina04.f048"]
 # AEAT campo: Naturaleza [2]
 [[revisions."2015-2022".casillas]]
 id = "p04.naturaleza-2-07"
+continuidad_id = "p04-naturaleza-2-07"
 number = "543"
 segmento = "M15104000"
 section = ["p04", "naturaleza_2"]
@@ -631,6 +675,7 @@ export_refs = ["m151-2015.pagina04.f049"]
 # AEAT campo: Valoración [3]
 [[revisions."2015-2022".casillas]]
 id = "p04.valoracion-3-07"
+continuidad_id = "p04-valoracion-3-07"
 number = "544-560"
 segmento = "M15104000"
 section = ["p04", "valoracion_3"]
@@ -645,6 +690,7 @@ export_refs = ["m151-2015.pagina04.f050"]
 # AEAT campo: Ingresos a cuenta [4]
 [[revisions."2015-2022".casillas]]
 id = "p04.ingresos-a-cuenta-4-07"
+continuidad_id = "p04-ingresos-a-cuenta-4-07"
 number = "561-577"
 segmento = "M15104000"
 section = ["p04", "ingresos_a_cuenta_4"]
@@ -659,6 +705,7 @@ export_refs = ["m151-2015.pagina04.f051"]
 # AEAT campo: Ingresos a cuenta repercutidos [5]
 [[revisions."2015-2022".casillas]]
 id = "p04.ingresos-a-cuenta-repercutidos-5-07"
+continuidad_id = "p04-ingresos-a-cuenta-repercutidos-5-07"
 number = "578-594"
 segmento = "M15104000"
 section = ["p04", "ingresos_a_cuenta_repercutidos_5"]
@@ -673,6 +720,7 @@ export_refs = ["m151-2015.pagina04.f052"]
 # AEAT campo: Rendimiento integro [6]
 [[revisions."2015-2022".casillas]]
 id = "p04.rendimiento-integro-6-07"
+continuidad_id = "p04-rendimiento-integro-6-07"
 number = "595-611"
 segmento = "M15104000"
 section = ["p04", "rendimiento_integro_6"]
@@ -687,6 +735,7 @@ export_refs = ["m151-2015.pagina04.f053"]
 # AEAT campo: Rentención o ingreso a cuenta [7]
 [[revisions."2015-2022".casillas]]
 id = "p04.rentencion-o-ingreso-a-cuenta-7-07"
+continuidad_id = "p04-rentencion-o-ingreso-a-cuenta-7-07"
 number = "612-628"
 segmento = "M15104000"
 section = ["p04", "rentencion_o_ingreso_a_cuenta_7"]
@@ -701,6 +750,7 @@ export_refs = ["m151-2015.pagina04.f054"]
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
 id = "p04.tipo-de-renta-1-08"
+continuidad_id = "p04-tipo-de-renta-1-08"
 number = "629-630"
 segmento = "M15104000"
 section = ["p04", "tipo_de_renta_1"]
@@ -715,6 +765,7 @@ export_refs = ["m151-2015.pagina04.f055"]
 # AEAT campo: Naturaleza [2]
 [[revisions."2015-2022".casillas]]
 id = "p04.naturaleza-2-08"
+continuidad_id = "p04-naturaleza-2-08"
 number = "631"
 segmento = "M15104000"
 section = ["p04", "naturaleza_2"]
@@ -729,6 +780,7 @@ export_refs = ["m151-2015.pagina04.f056"]
 # AEAT campo: Valoración [3]
 [[revisions."2015-2022".casillas]]
 id = "p04.valoracion-3-08"
+continuidad_id = "p04-valoracion-3-08"
 number = "632-648"
 segmento = "M15104000"
 section = ["p04", "valoracion_3"]
@@ -743,6 +795,7 @@ export_refs = ["m151-2015.pagina04.f057"]
 # AEAT campo: Ingresos a cuenta [4]
 [[revisions."2015-2022".casillas]]
 id = "p04.ingresos-a-cuenta-4-08"
+continuidad_id = "p04-ingresos-a-cuenta-4-08"
 number = "649-665"
 segmento = "M15104000"
 section = ["p04", "ingresos_a_cuenta_4"]
@@ -757,6 +810,7 @@ export_refs = ["m151-2015.pagina04.f058"]
 # AEAT campo: Ingresos a cuenta repercutidos [5]
 [[revisions."2015-2022".casillas]]
 id = "p04.ingresos-a-cuenta-repercutidos-5-08"
+continuidad_id = "p04-ingresos-a-cuenta-repercutidos-5-08"
 number = "666-682"
 segmento = "M15104000"
 section = ["p04", "ingresos_a_cuenta_repercutidos_5"]
@@ -771,6 +825,7 @@ export_refs = ["m151-2015.pagina04.f059"]
 # AEAT campo: Rendimiento integro [6]
 [[revisions."2015-2022".casillas]]
 id = "p04.rendimiento-integro-6-08"
+continuidad_id = "p04-rendimiento-integro-6-08"
 number = "683-699"
 segmento = "M15104000"
 section = ["p04", "rendimiento_integro_6"]
@@ -785,6 +840,7 @@ export_refs = ["m151-2015.pagina04.f060"]
 # AEAT campo: Rentención o ingreso a cuenta [7]
 [[revisions."2015-2022".casillas]]
 id = "p04.rentencion-o-ingreso-a-cuenta-7-08"
+continuidad_id = "p04-rentencion-o-ingreso-a-cuenta-7-08"
 number = "700-716"
 segmento = "M15104000"
 section = ["p04", "rentencion_o_ingreso_a_cuenta_7"]
@@ -799,6 +855,7 @@ export_refs = ["m151-2015.pagina04.f061"]
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
 id = "p04.tipo-de-renta-1-09"
+continuidad_id = "p04-tipo-de-renta-1-09"
 number = "717-718"
 segmento = "M15104000"
 section = ["p04", "tipo_de_renta_1"]
@@ -813,6 +870,7 @@ export_refs = ["m151-2015.pagina04.f062"]
 # AEAT campo: Naturaleza [2]
 [[revisions."2015-2022".casillas]]
 id = "p04.naturaleza-2-09"
+continuidad_id = "p04-naturaleza-2-09"
 number = "719"
 segmento = "M15104000"
 section = ["p04", "naturaleza_2"]
@@ -827,6 +885,7 @@ export_refs = ["m151-2015.pagina04.f063"]
 # AEAT campo: Valoración [3]
 [[revisions."2015-2022".casillas]]
 id = "p04.valoracion-3-09"
+continuidad_id = "p04-valoracion-3-09"
 number = "720-736"
 segmento = "M15104000"
 section = ["p04", "valoracion_3"]
@@ -841,6 +900,7 @@ export_refs = ["m151-2015.pagina04.f064"]
 # AEAT campo: Ingresos a cuenta [4]
 [[revisions."2015-2022".casillas]]
 id = "p04.ingresos-a-cuenta-4-09"
+continuidad_id = "p04-ingresos-a-cuenta-4-09"
 number = "737-753"
 segmento = "M15104000"
 section = ["p04", "ingresos_a_cuenta_4"]
@@ -855,6 +915,7 @@ export_refs = ["m151-2015.pagina04.f065"]
 # AEAT campo: Ingresos a cuenta repercutidos [5]
 [[revisions."2015-2022".casillas]]
 id = "p04.ingresos-a-cuenta-repercutidos-5-09"
+continuidad_id = "p04-ingresos-a-cuenta-repercutidos-5-09"
 number = "754-770"
 segmento = "M15104000"
 section = ["p04", "ingresos_a_cuenta_repercutidos_5"]
@@ -869,6 +930,7 @@ export_refs = ["m151-2015.pagina04.f066"]
 # AEAT campo: Rendimiento integro [6]
 [[revisions."2015-2022".casillas]]
 id = "p04.rendimiento-integro-6-09"
+continuidad_id = "p04-rendimiento-integro-6-09"
 number = "771-787"
 segmento = "M15104000"
 section = ["p04", "rendimiento_integro_6"]
@@ -883,6 +945,7 @@ export_refs = ["m151-2015.pagina04.f067"]
 # AEAT campo: Rentención o ingreso a cuenta [7]
 [[revisions."2015-2022".casillas]]
 id = "p04.rentencion-o-ingreso-a-cuenta-7-09"
+continuidad_id = "p04-rentencion-o-ingreso-a-cuenta-7-09"
 number = "788-804"
 segmento = "M15104000"
 section = ["p04", "rentencion_o_ingreso_a_cuenta_7"]
@@ -897,6 +960,7 @@ export_refs = ["m151-2015.pagina04.f068"]
 # AEAT campo: RESTO. Rendimientos íntegro [6]
 [[revisions."2015-2022".casillas]]
 id = "p04.resto-rendimientos-integro-6"
+continuidad_id = "p04-resto-rendimientos-integro-6"
 number = "805-821"
 segmento = "M15104000"
 section = ["p04", "resto"]
@@ -910,6 +974,7 @@ export_refs = ["m151-2015.pagina04.f069"]
 # AEAT campo: RESTO. Rentención o ingreso a cuenta [7]
 [[revisions."2015-2022".casillas]]
 id = "p04.resto-rentencion-o-ingreso-a-cuenta-7"
+continuidad_id = "p04-resto-rentencion-o-ingreso-a-cuenta-7"
 number = "822-838"
 segmento = "M15104000"
 section = ["p04", "resto"]
@@ -924,6 +989,7 @@ export_refs = ["m151-2015.pagina04.f070"]
 # AEAT campo: Total rendimientos íntegros [8]
 [[revisions."2015-2022".casillas]]
 id = "p04.total-rendimientos-integros-8"
+continuidad_id = "p04-total-rendimientos-integros-8"
 number = "839-855"
 segmento = "M15104000"
 section = ["p04", "total_rendimientos_integros_8"]
@@ -937,6 +1003,7 @@ export_refs = ["m151-2015.pagina04.f071"]
 # AEAT campo: Total retenciones o ingresos a cuenta [9]
 [[revisions."2015-2022".casillas]]
 id = "p04.total-retenciones-o-ingresos-a-cuenta-9"
+continuidad_id = "m151-total-retenciones-o-ingresos-a-cuenta-9"
 number = "856-872"
 segmento = "M15104000"
 section = ["p04", "total_retenciones_o_ingresos_a_cuenta_9"]

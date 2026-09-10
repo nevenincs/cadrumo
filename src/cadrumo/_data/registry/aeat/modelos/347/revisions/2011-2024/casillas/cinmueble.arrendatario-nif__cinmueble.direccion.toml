@@ -1,5 +1,6 @@
 [[revisions."2011-2024".casillas]]
 id = "inmueble.arrendatario-nif"
+continuidad_id = "arrendatario-nif"
 number = "inmueble.arrendatario-nif"
 section = ["inmueble", "identificacion"]
 data_type = "nif"
@@ -11,6 +12,7 @@ source_refs = ["aeat-dr-347-2011"]
 export_refs = ["m347-2011.inmueble.f005"]
 [[revisions."2011-2024".casillas]]
 id = "inmueble.representante-legal-nif"
+continuidad_id = "arrendatario-representante-legal-nif"
 number = "inmueble.representante-legal-nif"
 section = ["inmueble", "identificacion"]
 data_type = "nif"
@@ -22,6 +24,7 @@ source_refs = ["aeat-dr-347-2011"]
 export_refs = ["m347-2011.inmueble.f006"]
 [[revisions."2011-2024".casillas]]
 id = "inmueble.arrendatario-nombre"
+continuidad_id = "arrendatario-nombre"
 number = "inmueble.arrendatario-nombre"
 section = ["inmueble", "identificacion"]
 data_type = "text"
@@ -33,6 +36,7 @@ source_refs = ["aeat-dr-347-2011"]
 export_refs = ["m347-2011.inmueble.f007"]
 [[revisions."2011-2024".casillas]]
 id = "inmueble.importe-operacion"
+continuidad_id = "importe-operacion-arrendamiento"
 number = "inmueble.importe-operacion"
 section = ["inmueble", "importes"]
 data_type = "money"
@@ -44,6 +48,7 @@ source_refs = ["aeat-dr-347-2011"]
 export_refs = ["m347-2011.inmueble.f010", "m347-2011.inmueble.f011"]
 [[revisions."2011-2024".casillas]]
 id = "inmueble.situacion"
+continuidad_id = "situacion-inmueble"
 number = "inmueble.situacion"
 section = ["inmueble", "inmueble"]
 data_type = "integer"
@@ -55,6 +60,7 @@ source_refs = ["aeat-dr-347-2011"]
 export_refs = ["m347-2011.inmueble.f012"]
 [[revisions."2011-2024".casillas]]
 id = "inmueble.referencia-catastral"
+continuidad_id = "referencia-catastral"
 number = "inmueble.referencia-catastral"
 section = ["inmueble", "inmueble"]
 data_type = "text"
@@ -66,6 +72,7 @@ source_refs = ["aeat-dr-347-2011"]
 export_refs = ["m347-2011.inmueble.f013"]
 [[revisions."2011-2024".casillas]]
 id = "inmueble.direccion"
+continuidad_id = "direccion-inmueble"
 number = "inmueble.direccion"
 section = ["inmueble", "inmueble"]
 data_type = "text"

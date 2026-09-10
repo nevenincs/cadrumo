@@ -11,6 +11,9 @@
 # AEAT campo: Tipo de Renta [01]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.tipo-de-renta-01"
+continuidad_id = "p02-tipo-de-renta-1-01"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 13-14 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 13-14."
 number = "13-14"
 segmento = "M15102000"
 section = ["p02", "tipo_de_renta"]
@@ -24,6 +27,9 @@ export_refs = ["m151-2023.pagina02.f006"]
 # AEAT campo: Naturaleza [02]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.naturaleza-02"
+continuidad_id = "m151-naturaleza-2"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md:298 (sha256 997dc9cf5230) box [15] (78 1023 17 Num Total rendimientos íntegros/Renta inmobiliaria imput...) continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 15-15."
 number = "15-15"
 segmento = "M15102000"
 section = ["p02", "naturaleza"]
@@ -37,6 +43,9 @@ export_refs = ["m151-2023.pagina02.f007"]
 # AEAT campo: Valoración [03]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.valoracion-03"
+continuidad_id = "m151-valoracion-3"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 16-32 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 16-32."
 number = "16-32"
 segmento = "M15102000"
 section = ["p02", "valoracion"]
@@ -50,6 +59,9 @@ export_refs = ["m151-2023.pagina02.f008"]
 # AEAT campo: Ingresos a cuenta [04]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.ingresos-a-cuenta-04"
+continuidad_id = "m151-ingresos-a-cuenta-4"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 33-49 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 33-49."
 number = "33-49"
 segmento = "M15102000"
 section = ["p02", "ingresos_a_cuenta"]
@@ -63,6 +75,9 @@ export_refs = ["m151-2023.pagina02.f009"]
 # AEAT campo: Ingresos a cuenta repercutidos [05]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.ingresos-a-cuenta-repercutidos-05"
+continuidad_id = "m151-ingresos-a-cuenta-repercutidos-5"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 50-66 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 50-66."
 number = "50-66"
 segmento = "M15102000"
 section = ["p02", "ingresos_a_cuenta_repercutidos"]
@@ -76,6 +91,9 @@ export_refs = ["m151-2023.pagina02.f010"]
 # AEAT campo: Rendimiento integro/Renta inmobiliaria imputada [06]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.rendimiento-integro-renta-inmobiliaria-imputada-06"
+continuidad_id = "m151-rendimiento-integro-renta-inmobiliaria-imputada-6"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 67-83 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 67-83."
 number = "67-83"
 segmento = "M15102000"
 section = ["p02", "rendimiento_integro_renta_inmobiliaria_imputada"]
@@ -89,6 +107,9 @@ export_refs = ["m151-2023.pagina02.f011"]
 # AEAT campo: Rentención o ingreso a cuenta [07]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.rentencion-o-ingreso-a-cuenta-07"
+continuidad_id = "m151-rentencion-o-ingreso-a-cuenta-7"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 84-100 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 84-100."
 number = "84-100"
 segmento = "M15102000"
 section = ["p02", "rentencion_o_ingreso_a_cuenta"]
@@ -102,6 +123,9 @@ export_refs = ["m151-2023.pagina02.f012"]
 # AEAT campo: Pagador. NIF [50]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.pagador-nif-50"
+continuidad_id = "m151-pagador-nif"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 101-109 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 101-109."
 number = "101-109"
 segmento = "M15102000"
 section = ["p02", "pagador_nif"]
@@ -115,6 +139,9 @@ export_refs = ["m151-2023.pagina02.f013"]
 # AEAT campo: Pagador. F/J [51]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.pagador-f-j-51"
+continuidad_id = "m151-pagador-f-j"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 110 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 110-110."
 number = "110-110"
 segmento = "M15102000"
 section = ["p02", "pagador_f_j"]
@@ -141,6 +168,9 @@ export_refs = ["m151-2023.pagina02.f015"]
 # AEAT campo: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido y gravado en el extranjero [08]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.datos-adicionales-rendimiento-trabajo-rendimiento-integro-08"
+continuidad_id = "p02-datos-adicionales-rend-vado-en-el-extranjero-8-01"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 191-207 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 191-207."
 number = "191-207"
 segmento = "M15102000"
 section = ["p02", "datos_adicionales_rendimiento_trabajo_rendimiento_integro_obtenido_y_gravado_en_el_extranjero"]
@@ -154,6 +184,9 @@ export_refs = ["m151-2023.pagina02.f016"]
 # AEAT campo: Datos Adicionales Rendimiento Trabajo. Impuesto satisfecho en el extranjero [09]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.datos-adicionales-rendimiento-trabajo-impuesto-satisfecho-09"
+continuidad_id = "p02-datos-adicionales-rend-echo-en-el-extranjero-9-01"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 208-224 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 208-224."
 number = "208-224"
 segmento = "M15102000"
 section = ["p02", "datos_adicionales_rendimiento_trabajo_impuesto_satisfecho_en_el_extranjero"]
@@ -167,6 +200,9 @@ export_refs = ["m151-2023.pagina02.f017"]
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Propiedad (%) [10]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inm-10"
+continuidad_id = "p02-datos-adicionales-de-l-inmuebles-propiedad-10-01"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 225-229 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 225-229."
 number = "225-229"
 segmento = "M15102000"
 section = ["p02", "datos_adicionales_de_las_rentas_derivadas_de_bienes_e_inmuebles_propiedad"]
@@ -180,6 +216,9 @@ export_refs = ["m151-2023.pagina02.f018"]
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Usufructo (%) [11]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inm-11"
+continuidad_id = "p02-datos-adicionales-de-l-inmuebles-usufructo-11-01"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 230-234 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 230-234."
 number = "230-234"
 segmento = "M15102000"
 section = ["p02", "datos_adicionales_de_las_rentas_derivadas_de_bienes_e_inmuebles_usufructo"]
@@ -193,6 +232,9 @@ export_refs = ["m151-2023.pagina02.f019"]
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Origen [12]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inm-12"
+continuidad_id = "p02-datos-adicionales-de-l-s-e-inmuebles-origen-12-01"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 235 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 235-235."
 number = "235-235"
 segmento = "M15102000"
 section = ["p02", "datos_adicionales_de_las_rentas_derivadas_de_bienes_e_inmuebles_origen"]
@@ -206,6 +248,9 @@ export_refs = ["m151-2023.pagina02.f020"]
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Situación [13]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inm-13"
+continuidad_id = "p02-datos-adicionales-de-l-inmuebles-situacion-13-01"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 236 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 236-236."
 number = "236-236"
 segmento = "M15102000"
 section = ["p02", "datos_adicionales_de_las_rentas_derivadas_de_bienes_e_inmuebles_situacion"]
@@ -219,6 +264,9 @@ export_refs = ["m151-2023.pagina02.f021"]
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Referencia catastral [14]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inm-14"
+continuidad_id = "p02-datos-adicionales-de-l-referencia-catastral-14-01"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 237-256 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 237-256."
 number = "237-256"
 segmento = "M15102000"
 section = ["p02", "datos_adicionales_de_las_rentas_derivadas_de_bienes_e_inmuebles_referencia_catastral"]
@@ -232,6 +280,9 @@ export_refs = ["m151-2023.pagina02.f022"]
 # AEAT campo: Tipo de Renta [01]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.tipo-de-renta-01-02"
+continuidad_id = "p02-tipo-de-renta-1-02"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 257-258 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 257-258."
 number = "257-258"
 segmento = "M15102000"
 section = ["p02", "tipo_de_renta"]
@@ -245,6 +296,9 @@ export_refs = ["m151-2023.pagina02.f023"]
 # AEAT campo: Naturaleza [02]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.naturaleza-02-02"
+continuidad_id = "p02-naturaleza-2-02"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 259 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 259-259."
 number = "259-259"
 segmento = "M15102000"
 section = ["p02", "naturaleza"]
@@ -258,6 +312,9 @@ export_refs = ["m151-2023.pagina02.f024"]
 # AEAT campo: Valoración [03]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.valoracion-03-02"
+continuidad_id = "p02-valoracion-3-02"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 260-276 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 260-276."
 number = "260-276"
 segmento = "M15102000"
 section = ["p02", "valoracion"]
@@ -271,6 +328,9 @@ export_refs = ["m151-2023.pagina02.f025"]
 # AEAT campo: Ingresos a cuenta [04]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.ingresos-a-cuenta-04-02"
+continuidad_id = "p02-ingresos-a-cuenta-4-02"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 277-293 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 277-293."
 number = "277-293"
 segmento = "M15102000"
 section = ["p02", "ingresos_a_cuenta"]
@@ -284,6 +344,9 @@ export_refs = ["m151-2023.pagina02.f026"]
 # AEAT campo: Ingresos a cuenta repercutidos [05]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.ingresos-a-cuenta-repercutidos-05-02"
+continuidad_id = "p02-ingresos-a-cuenta-repercutidos-5-02"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 294-310 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 294-310."
 number = "294-310"
 segmento = "M15102000"
 section = ["p02", "ingresos_a_cuenta_repercutidos"]
@@ -297,6 +360,9 @@ export_refs = ["m151-2023.pagina02.f027"]
 # AEAT campo: Rendimiento integro/Renta inmobiliaria imputada [06]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.rendimiento-integro-renta-inmobiliaria-imputada-06-02"
+continuidad_id = "p02-rendimiento-integro-re-inmobiliaria-imputada-6-02"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 311-327 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 311-327."
 number = "311-327"
 segmento = "M15102000"
 section = ["p02", "rendimiento_integro_renta_inmobiliaria_imputada"]
@@ -310,6 +376,9 @@ export_refs = ["m151-2023.pagina02.f028"]
 # AEAT campo: Rentención o ingreso a cuenta [07]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.rentencion-o-ingreso-a-cuenta-07-02"
+continuidad_id = "p02-rentencion-o-ingreso-a-cuenta-7-02"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 328-344 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 328-344."
 number = "328-344"
 segmento = "M15102000"
 section = ["p02", "rentencion_o_ingreso_a_cuenta"]
@@ -323,6 +392,9 @@ export_refs = ["m151-2023.pagina02.f029"]
 # AEAT campo: Pagador. NIF [50]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.pagador-nif-50-02"
+continuidad_id = "p02-pagador-nif-02"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 345-353 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 345-353."
 number = "345-353"
 segmento = "M15102000"
 section = ["p02", "pagador_nif"]
@@ -336,6 +408,9 @@ export_refs = ["m151-2023.pagina02.f030"]
 # AEAT campo: Pagador. F/J [51]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.pagador-f-j-51-02"
+continuidad_id = "p02-pagador-f-j-02"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 354 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 354-354."
 number = "354-354"
 segmento = "M15102000"
 section = ["p02", "pagador_f_j"]
@@ -362,6 +437,9 @@ export_refs = ["m151-2023.pagina02.f032"]
 # AEAT campo: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido y gravado en el extranjero [08]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.datos-adicionales-rendimiento-trabajo-rendimiento-inte-08-02"
+continuidad_id = "m151-datos-adicionales-rendimiento-trabajo-rendimiento-integro-obtenido-y-gravado-en-el-extranjero-8"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 435-451 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 435-451."
 number = "435-451"
 segmento = "M15102000"
 section = ["p02", "datos_adicionales_rendimiento_trabajo_rendimiento_integro_obtenido_y_gravado_en_el_extranjero"]
@@ -375,6 +453,9 @@ export_refs = ["m151-2023.pagina02.f033"]
 # AEAT campo: Datos Adicionales Rendimiento Trabajo. Impuesto satisfecho en el extranjero [09]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.datos-adicionales-rendimiento-trabajo-impuesto-satisfe-09-02"
+continuidad_id = "m151-datos-adicionales-rendimiento-trabajo-impuesto-satisfecho-en-el-extranjero-9"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 452-468 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 452-468."
 number = "452-468"
 segmento = "M15102000"
 section = ["p02", "datos_adicionales_rendimiento_trabajo_impuesto_satisfecho_en_el_extranjero"]
@@ -388,6 +469,9 @@ export_refs = ["m151-2023.pagina02.f034"]
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Propiedad (%) [10]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-10-02"
+continuidad_id = "m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-propiedad-10"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 469-473 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 469-473."
 number = "469-473"
 segmento = "M15102000"
 section = ["p02", "datos_adicionales_de_las_rentas_derivadas_de_bienes_e_inmuebles_propiedad"]
@@ -401,6 +485,9 @@ export_refs = ["m151-2023.pagina02.f035"]
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Usufructo (%) [11]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-11-02"
+continuidad_id = "m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-usufructo-11"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 474-478 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 474-478."
 number = "474-478"
 segmento = "M15102000"
 section = ["p02", "datos_adicionales_de_las_rentas_derivadas_de_bienes_e_inmuebles_usufructo"]
@@ -414,6 +501,9 @@ export_refs = ["m151-2023.pagina02.f036"]
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Origen [12]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-12-02"
+continuidad_id = "m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-origen-12"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 479 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 479-479."
 number = "479-479"
 segmento = "M15102000"
 section = ["p02", "datos_adicionales_de_las_rentas_derivadas_de_bienes_e_inmuebles_origen"]
@@ -427,6 +517,9 @@ export_refs = ["m151-2023.pagina02.f037"]
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Situación [13]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-13-02"
+continuidad_id = "m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-situacion-13"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 480 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 480-480."
 number = "480-480"
 segmento = "M15102000"
 section = ["p02", "datos_adicionales_de_las_rentas_derivadas_de_bienes_e_inmuebles_situacion"]
@@ -440,6 +533,9 @@ export_refs = ["m151-2023.pagina02.f038"]
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Referencia catastral [14]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-14-02"
+continuidad_id = "m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-referencia-catastral-14"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 481-500 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 481-500."
 number = "481-500"
 segmento = "M15102000"
 section = ["p02", "datos_adicionales_de_las_rentas_derivadas_de_bienes_e_inmuebles_referencia_catastral"]
@@ -453,6 +549,9 @@ export_refs = ["m151-2023.pagina02.f039"]
 # AEAT campo: Tipo de Renta [01]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.tipo-de-renta-01-03"
+continuidad_id = "p02-tipo-de-renta-1-03"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 501-502 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 501-502."
 number = "501-502"
 segmento = "M15102000"
 section = ["p02", "tipo_de_renta"]
@@ -466,6 +565,9 @@ export_refs = ["m151-2023.pagina02.f040"]
 # AEAT campo: Naturaleza [02]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.naturaleza-02-03"
+continuidad_id = "p02-naturaleza-2-03"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 503 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 503-503."
 number = "503-503"
 segmento = "M15102000"
 section = ["p02", "naturaleza"]
@@ -479,6 +581,9 @@ export_refs = ["m151-2023.pagina02.f041"]
 # AEAT campo: Valoración [03]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.valoracion-03-03"
+continuidad_id = "p02-valoracion-3-03"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 504-520 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 504-520."
 number = "504-520"
 segmento = "M15102000"
 section = ["p02", "valoracion"]
@@ -492,6 +597,9 @@ export_refs = ["m151-2023.pagina02.f042"]
 # AEAT campo: Ingresos a cuenta [04]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.ingresos-a-cuenta-04-03"
+continuidad_id = "p02-ingresos-a-cuenta-4-03"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 521-537 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 521-537."
 number = "521-537"
 segmento = "M15102000"
 section = ["p02", "ingresos_a_cuenta"]
@@ -505,6 +613,9 @@ export_refs = ["m151-2023.pagina02.f043"]
 # AEAT campo: Ingresos a cuenta repercutidos [05]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.ingresos-a-cuenta-repercutidos-05-03"
+continuidad_id = "p02-ingresos-a-cuenta-repercutidos-5-03"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 538-554 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 538-554."
 number = "538-554"
 segmento = "M15102000"
 section = ["p02", "ingresos_a_cuenta_repercutidos"]
@@ -518,6 +629,9 @@ export_refs = ["m151-2023.pagina02.f044"]
 # AEAT campo: Rendimiento integro/Renta inmobiliaria imputada [06]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.rendimiento-integro-renta-inmobiliaria-imputada-06-03"
+continuidad_id = "p02-rendimiento-integro-re-inmobiliaria-imputada-6-03"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 555-571 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 555-571."
 number = "555-571"
 segmento = "M15102000"
 section = ["p02", "rendimiento_integro_renta_inmobiliaria_imputada"]
@@ -531,6 +645,9 @@ export_refs = ["m151-2023.pagina02.f045"]
 # AEAT campo: Rentención o ingreso a cuenta [07]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.rentencion-o-ingreso-a-cuenta-07-03"
+continuidad_id = "p02-rentencion-o-ingreso-a-cuenta-7-03"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 572-588 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 572-588."
 number = "572-588"
 segmento = "M15102000"
 section = ["p02", "rentencion_o_ingreso_a_cuenta"]
@@ -544,6 +661,9 @@ export_refs = ["m151-2023.pagina02.f046"]
 # AEAT campo: Pagador. NIF [50]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.pagador-nif-50-03"
+continuidad_id = "p02-pagador-nif-03"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 589-597 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 589-597."
 number = "589-597"
 segmento = "M15102000"
 section = ["p02", "pagador_nif"]
@@ -557,6 +677,9 @@ export_refs = ["m151-2023.pagina02.f047"]
 # AEAT campo: Pagador. F/J [51]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.pagador-f-j-51-03"
+continuidad_id = "p02-pagador-f-j-03"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 598 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 598-598."
 number = "598-598"
 segmento = "M15102000"
 section = ["p02", "pagador_f_j"]
@@ -583,6 +706,9 @@ export_refs = ["m151-2023.pagina02.f049"]
 # AEAT campo: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido y gravado en el extranjero [08]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.datos-adicionales-rendimiento-trabajo-rendimiento-inte-08-03"
+continuidad_id = "p02-datos-adicionales-rend-vado-en-el-extranjero-8-03"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 679-695 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 679-695."
 number = "679-695"
 segmento = "M15102000"
 section = ["p02", "datos_adicionales_rendimiento_trabajo_rendimiento_integro_obtenido_y_gravado_en_el_extranjero"]
@@ -596,6 +722,9 @@ export_refs = ["m151-2023.pagina02.f050"]
 # AEAT campo: Datos Adicionales Rendimiento Trabajo. Impuesto satisfecho en el extranjero [09]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.datos-adicionales-rendimiento-trabajo-impuesto-satisfe-09-03"
+continuidad_id = "p02-datos-adicionales-rend-echo-en-el-extranjero-9-03"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 696-712 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 696-712."
 number = "696-712"
 segmento = "M15102000"
 section = ["p02", "datos_adicionales_rendimiento_trabajo_impuesto_satisfecho_en_el_extranjero"]
@@ -609,6 +738,9 @@ export_refs = ["m151-2023.pagina02.f051"]
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Propiedad (%) [10]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-10-03"
+continuidad_id = "p02-datos-adicionales-de-l-inmuebles-propiedad-10-03"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 713-717 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 713-717."
 number = "713-717"
 segmento = "M15102000"
 section = ["p02", "datos_adicionales_de_las_rentas_derivadas_de_bienes_e_inmuebles_propiedad"]
@@ -622,6 +754,9 @@ export_refs = ["m151-2023.pagina02.f052"]
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Usufructo (%) [11]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-11-03"
+continuidad_id = "p02-datos-adicionales-de-l-inmuebles-usufructo-11-03"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 718-722 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 718-722."
 number = "718-722"
 segmento = "M15102000"
 section = ["p02", "datos_adicionales_de_las_rentas_derivadas_de_bienes_e_inmuebles_usufructo"]
@@ -635,6 +770,9 @@ export_refs = ["m151-2023.pagina02.f053"]
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Origen [12]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-12-03"
+continuidad_id = "p02-datos-adicionales-de-l-s-e-inmuebles-origen-12-03"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 723 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 723-723."
 number = "723-723"
 segmento = "M15102000"
 section = ["p02", "datos_adicionales_de_las_rentas_derivadas_de_bienes_e_inmuebles_origen"]
@@ -648,6 +786,9 @@ export_refs = ["m151-2023.pagina02.f054"]
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Situación [13]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-13-03"
+continuidad_id = "p02-datos-adicionales-de-l-inmuebles-situacion-13-03"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 724 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 724-724."
 number = "724-724"
 segmento = "M15102000"
 section = ["p02", "datos_adicionales_de_las_rentas_derivadas_de_bienes_e_inmuebles_situacion"]
@@ -661,6 +802,9 @@ export_refs = ["m151-2023.pagina02.f055"]
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Referencia catastral [14]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-14-03"
+continuidad_id = "p02-datos-adicionales-de-l-referencia-catastral-14-03"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 725-744 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 725-744."
 number = "725-744"
 segmento = "M15102000"
 section = ["p02", "datos_adicionales_de_las_rentas_derivadas_de_bienes_e_inmuebles_referencia_catastral"]
@@ -674,6 +818,9 @@ export_refs = ["m151-2023.pagina02.f056"]
 # AEAT campo: Tipo de Renta [01]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.tipo-de-renta-01-04"
+continuidad_id = "p02-tipo-de-renta-1-04"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 745-746 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 745-746."
 number = "745-746"
 segmento = "M15102000"
 section = ["p02", "tipo_de_renta"]
@@ -687,6 +834,9 @@ export_refs = ["m151-2023.pagina02.f057"]
 # AEAT campo: Naturaleza [02]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.naturaleza-02-04"
+continuidad_id = "p02-naturaleza-2-04"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 747 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 747-747."
 number = "747-747"
 segmento = "M15102000"
 section = ["p02", "naturaleza"]
@@ -700,6 +850,9 @@ export_refs = ["m151-2023.pagina02.f058"]
 # AEAT campo: Valoración [03]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.valoracion-03-04"
+continuidad_id = "p02-valoracion-3-04"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 748-764 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 748-764."
 number = "748-764"
 segmento = "M15102000"
 section = ["p02", "valoracion"]
@@ -713,6 +866,9 @@ export_refs = ["m151-2023.pagina02.f059"]
 # AEAT campo: Ingresos a cuenta [04]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.ingresos-a-cuenta-04-04"
+continuidad_id = "p02-ingresos-a-cuenta-4-04"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 765-781 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 765-781."
 number = "765-781"
 segmento = "M15102000"
 section = ["p02", "ingresos_a_cuenta"]
@@ -726,6 +882,9 @@ export_refs = ["m151-2023.pagina02.f060"]
 # AEAT campo: Ingresos a cuenta repercutidos [05]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.ingresos-a-cuenta-repercutidos-05-04"
+continuidad_id = "p02-ingresos-a-cuenta-repercutidos-5-04"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 782-798 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 782-798."
 number = "782-798"
 segmento = "M15102000"
 section = ["p02", "ingresos_a_cuenta_repercutidos"]
@@ -739,6 +898,9 @@ export_refs = ["m151-2023.pagina02.f061"]
 # AEAT campo: Rendimiento integro/Renta inmobiliaria imputada [06]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.rendimiento-integro-renta-inmobiliaria-imputada-06-04"
+continuidad_id = "p02-rendimiento-integro-re-inmobiliaria-imputada-6-04"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 799-815 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 799-815."
 number = "799-815"
 segmento = "M15102000"
 section = ["p02", "rendimiento_integro_renta_inmobiliaria_imputada"]
@@ -752,6 +914,9 @@ export_refs = ["m151-2023.pagina02.f062"]
 # AEAT campo: Rentención o ingreso a cuenta [07]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.rentencion-o-ingreso-a-cuenta-07-04"
+continuidad_id = "p02-rentencion-o-ingreso-a-cuenta-7-04"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 816-832 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 816-832."
 number = "816-832"
 segmento = "M15102000"
 section = ["p02", "rentencion_o_ingreso_a_cuenta"]
@@ -765,6 +930,9 @@ export_refs = ["m151-2023.pagina02.f063"]
 # AEAT campo: Pagador. NIF [50]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.pagador-nif-50-04"
+continuidad_id = "p02-pagador-nif-04"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 833-841 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 833-841."
 number = "833-841"
 segmento = "M15102000"
 section = ["p02", "pagador_nif"]
@@ -778,6 +946,9 @@ export_refs = ["m151-2023.pagina02.f064"]
 # AEAT campo: Pagador. F/J [51]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.pagador-f-j-51-04"
+continuidad_id = "p02-pagador-f-j-04"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 842 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 842-842."
 number = "842-842"
 segmento = "M15102000"
 section = ["p02", "pagador_f_j"]
@@ -804,6 +975,9 @@ export_refs = ["m151-2023.pagina02.f066"]
 # AEAT campo: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido y gravado en el extranjero [08]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.datos-adicionales-rendimiento-trabajo-rendimiento-inte-08-04"
+continuidad_id = "p02-datos-adicionales-rend-vado-en-el-extranjero-8-04"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 923-939 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 923-939."
 number = "923-939"
 segmento = "M15102000"
 section = ["p02", "datos_adicionales_rendimiento_trabajo_rendimiento_integro_obtenido_y_gravado_en_el_extranjero"]
@@ -817,6 +991,9 @@ export_refs = ["m151-2023.pagina02.f067"]
 # AEAT campo: Datos Adicionales Rendimiento Trabajo. Impuesto satisfecho en el extranjero [09]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.datos-adicionales-rendimiento-trabajo-impuesto-satisfe-09-04"
+continuidad_id = "p02-datos-adicionales-rend-echo-en-el-extranjero-9-04"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 940-956 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 940-956."
 number = "940-956"
 segmento = "M15102000"
 section = ["p02", "datos_adicionales_rendimiento_trabajo_impuesto_satisfecho_en_el_extranjero"]
@@ -830,6 +1007,9 @@ export_refs = ["m151-2023.pagina02.f068"]
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Propiedad (%) [10]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-10-04"
+continuidad_id = "p02-datos-adicionales-de-l-inmuebles-propiedad-10-04"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 957-961 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 957-961."
 number = "957-961"
 segmento = "M15102000"
 section = ["p02", "datos_adicionales_de_las_rentas_derivadas_de_bienes_e_inmuebles_propiedad"]
@@ -843,6 +1023,9 @@ export_refs = ["m151-2023.pagina02.f069"]
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Usufructo (%) [11]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-11-04"
+continuidad_id = "p02-datos-adicionales-de-l-inmuebles-usufructo-11-04"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 962-966 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 962-966."
 number = "962-966"
 segmento = "M15102000"
 section = ["p02", "datos_adicionales_de_las_rentas_derivadas_de_bienes_e_inmuebles_usufructo"]
@@ -856,6 +1039,9 @@ export_refs = ["m151-2023.pagina02.f070"]
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Origen [12]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-12-04"
+continuidad_id = "p02-datos-adicionales-de-l-s-e-inmuebles-origen-12-04"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 967 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 967-967."
 number = "967-967"
 segmento = "M15102000"
 section = ["p02", "datos_adicionales_de_las_rentas_derivadas_de_bienes_e_inmuebles_origen"]
@@ -869,6 +1055,9 @@ export_refs = ["m151-2023.pagina02.f071"]
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Situación [13]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-13-04"
+continuidad_id = "p02-datos-adicionales-de-l-inmuebles-situacion-13-04"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 968 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 968-968."
 number = "968-968"
 segmento = "M15102000"
 section = ["p02", "datos_adicionales_de_las_rentas_derivadas_de_bienes_e_inmuebles_situacion"]
@@ -882,6 +1071,9 @@ export_refs = ["m151-2023.pagina02.f072"]
 # AEAT campo: Datos Adicionales de las rentas derivadas de bienes e inmuebles. Referencia catastral [14]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p02.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-14-04"
+continuidad_id = "p02-datos-adicionales-de-l-referencia-catastral-14-04"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15102000 campo at byte position 969-988 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15102000 campo at byte position 969-988."
 number = "969-988"
 segmento = "M15102000"
 section = ["p02", "datos_adicionales_de_las_rentas_derivadas_de_bienes_e_inmuebles_referencia_catastral"]

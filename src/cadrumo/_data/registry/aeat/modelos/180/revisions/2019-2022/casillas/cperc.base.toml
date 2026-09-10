@@ -1,5 +1,6 @@
 [[revisions.2019-2022.casillas]]
 id = "perc.base"
+continuidad_id = "perc-base"
 number = "79-92"
 section = ["perceptor", "renta"]
 data_type = "money"

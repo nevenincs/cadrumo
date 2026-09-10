@@ -1,5 +1,6 @@
 [[revisions."2021-2025".casillas]]
 id = "decl.ejercicio"
+continuidad_id = "filing-year"
 number = "ejercicio"
 section = ["declarante"]
 data_type = "year"
@@ -12,6 +13,7 @@ export_refs = ["m353-2021.pagina01.f010"]
 
 [[revisions."2021-2025".casillas]]
 id = "decl.periodo"
+continuidad_id = "filing-period"
 number = "periodo"
 section = ["declarante"]
 data_type = "period_code"

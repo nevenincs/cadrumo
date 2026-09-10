@@ -2,6 +2,8 @@
 
 [[revisions."2023".casillas]]
 id = "28"
+continuidad_id = "m322-liquidacion-iva-devengado-recargo-de-equivalencia-tipo"
+continuidad_origin = "seeded"
 number = "28"
 section = ["iva", "regimen_general", "recargo"]
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_tipo"
@@ -14,6 +16,8 @@ export_refs = ["m322-2023.page-01.f058"]
 
 [[revisions."2023".casillas]]
 id = "29"
+continuidad_id = "m322-liquidacion-iva-devengado-recargo-de-equivalencia-cuota"
+continuidad_origin = "seeded"
 number = "29"
 section = ["iva", "regimen_general", "recargo"]
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_cuota"
@@ -26,6 +30,8 @@ export_refs = ["m322-2023.page-01.f059"]
 
 [[revisions."2023".casillas]]
 id = "30"
+continuidad_id = "30"
+continuidad_origin = "seeded"
 number = "30"
 section = ["iva", "regimen_general", "recargo"]
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_base_imponible"
@@ -38,6 +44,8 @@ export_refs = ["m322-2023.page-01.f060"]
 
 [[revisions."2023".casillas]]
 id = "31"
+continuidad_id = "31"
+continuidad_origin = "seeded"
 number = "31"
 section = ["iva", "regimen_general", "recargo"]
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_tipo"
@@ -50,6 +58,8 @@ export_refs = ["m322-2023.page-01.f061"]
 
 [[revisions."2023".casillas]]
 id = "32"
+continuidad_id = "32"
+continuidad_origin = "seeded"
 number = "32"
 section = ["iva", "regimen_general", "recargo"]
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_cuota"
@@ -62,6 +72,8 @@ export_refs = ["m322-2023.page-01.f062"]
 
 [[revisions."2023".casillas]]
 id = "33"
+continuidad_id = "33"
+continuidad_origin = "seeded"
 number = "33"
 section = ["iva", "regimen_general", "recargo"]
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_base_imponible"
@@ -74,6 +86,8 @@ export_refs = ["m322-2023.page-01.f063"]
 
 [[revisions."2023".casillas]]
 id = "34"
+continuidad_id = "34"
+continuidad_origin = "seeded"
 number = "34"
 section = ["iva", "regimen_general", "recargo"]
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_tipo"
@@ -86,6 +100,8 @@ export_refs = ["m322-2023.page-01.f064"]
 
 [[revisions."2023".casillas]]
 id = "35"
+continuidad_id = "35"
+continuidad_origin = "seeded"
 number = "35"
 section = ["iva", "regimen_general", "recargo"]
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_cuota"

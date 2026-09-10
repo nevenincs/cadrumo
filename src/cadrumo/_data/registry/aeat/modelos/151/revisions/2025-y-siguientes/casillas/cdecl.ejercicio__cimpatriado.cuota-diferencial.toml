@@ -103,6 +103,8 @@ export_refs = ["m151-2023.pagina10.f056"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "impatriado.cuota-diferencial"
+continuidad_id = "impatriado-cuota-diferencial"
+continuidad_origin = "seeded"
 number = "impatriado.cuota-diferencial"
 section = ["liquidacion", "resultado"]
 data_type = "money"

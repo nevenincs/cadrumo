@@ -6,7 +6,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:9afad90f417ce00942fb05b147f10ee1e17ca9b03f1e49af59c92477aa8d4e89'
+body_hash: 'sha256:f2d021ebee16d4d5c84f97496e99bdcdd6015d9de248b71d9792a6d7463f9895'
 related:
   - '[[2026-09-09-registry-edition-authoring-W01-P01-S01]]'
   - '[[2026-09-09-registry-edition-authoring-W01-P01-S02]]'
@@ -23,6 +23,7 @@ related:
   - '[[2026-09-09-registry-edition-authoring-W02-P03-S09]]'
   - '[[2026-09-09-registry-edition-authoring-W02-P03-S43]]'
   - '[[2026-09-09-registry-edition-authoring-W02-P03-S45]]'
+  - '[[2026-09-09-registry-edition-authoring-W02-P03-S48]]'
   - '[[2026-09-09-registry-edition-authoring-adr]]'
   - '[[2026-09-09-registry-edition-authoring-code-shape-and-blast-radius-reference]]'
   - '[[2026-09-09-registry-edition-authoring-edition-restatement-measurement-research]]'
@@ -57,6 +58,7 @@ Auto-generated index of all documents tagged with `#registry-edition-authoring`.
 - `2026-09-09-registry-edition-authoring-W01-P02-S07` - [L | opus-medium] Adjudicate the modelo that renumbers boxes under stable identifiers, producing evolution records where the chain is real and an explicit refusal where it is not. This may not be mechanisable. Proof: every renumbered box is chained with evidence or refused by name.
 - `2026-09-09-registry-edition-authoring-W01-P02-S40` - [M | opus-medium] Make the continuity gate READ the lineage origin marker and treat seeded and grounded chains differently. Writing the marker without a consumer leaves it decorative, and a seeded chain is inference written down rather than a statement — the gate must not accept one as evidence of the other. Proof: a seeded chain and a grounded chain with identical content produce different gate outcomes.
 - `2026-09-09-registry-edition-authoring-W02-P03-S09` - [M | opus-medium] Add the predecessor key to the edition schema. An edition is delta-authored only when it declares one; the loader never infers it from absent rows. Proof: an edition without the key loads as a full-copy edition unchanged.
+- `2026-09-09-registry-edition-authoring-W02-P03-S48` - [S | opus-medium] Give the predecessor key an explicit value meaning no predecessor exists, distinct from the key being absent. One modelo has three editions sharing a single validity date whose own declarations each assert they have no earlier sibling; without an explicit value it would be forced into a false sequence, and with the key merely absent it would be indistinguishable from a forgotten declaration. Proof: that modelo loads with all three editions declared parallel, and the forest rule accepts it without inventing an order.
 
 ### plan
 
