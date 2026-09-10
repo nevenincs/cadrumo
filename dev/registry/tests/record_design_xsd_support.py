@@ -1,4 +1,4 @@
-"""Shared support for compiling AEAT record-design XSDs as validation oracles.
+"""Development-only support for compiling AEAT record-design XSDs as validation oracles.
 
 AEAT ships four of the six bundled Modelo 100 schemas with an invalid regular
 expression: a backslash before U+00B7 MIDDLE DOT, the character in the Catalan
@@ -55,8 +55,8 @@ from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, cast
 
-from .....core.directory_scan import scan_directory
-from .....core.resources.bundled_data import bundled_path
+from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.resources.bundled_data import bundled_path
 
 if TYPE_CHECKING:
     from lxml.etree import XMLSchema

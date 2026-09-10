@@ -35,14 +35,17 @@ from collections import defaultdict
 
 import pytest
 
-from .....core.record_design_epoch import RECORD_DESIGN_EPOCH_PATTERN
-from .....tests.registry_tree import bundled_registry_tree
-from .._validate_record_design_epochs import (
+from cadrumo.core.record_design_epoch import RECORD_DESIGN_EPOCH_PATTERN
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from cadrumo.domain.modelos.calculation_revision_m303_evidence import (
+    M303RegimenSimplificadoCalculationResult,
+)
+from cadrumo.tests.registry_tree import bundled_registry_tree
+from dev.registry.compiler._validate_record_design_epochs import (
     validate_record_design_epoch_uniqueness,
     validate_record_design_epoch_window,
 )
-from ..errors import RegistryValidationError
-from ..schema_references import SourceReference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -213,8 +216,6 @@ def test_the_filed_artefact_refuses_an_epoch_the_registry_would_refuse() -> None
     Asserted through the shared pattern rather than a restated one: a second copy is
     exactly the drift this closes.
     """
-    from ....modelos.calculation_revision_m303_evidence import M303RegimenSimplificadoCalculationResult
-
     field = M303RegimenSimplificadoCalculationResult.model_fields["record_design_epoch"]
     patterns = [getattr(item, "pattern", None) for item in field.metadata]
     assert RECORD_DESIGN_EPOCH_PATTERN in patterns, (

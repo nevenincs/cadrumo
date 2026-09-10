@@ -23,9 +23,9 @@ from pathlib import Path
 
 import pytest
 
-from .....core.resources.bundled_data import bundled_path
-from .....core.tabular import coerce_cell_text
-from ..record_design import extract_record_design
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.tabular import coerce_cell_text
+from dev.registry.compiler.record_design import extract_record_design
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
