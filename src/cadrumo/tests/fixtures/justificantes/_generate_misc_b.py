@@ -597,7 +597,7 @@ class _Modelo840Fixture:
     """Sanitized M840 declaracion fixture.
 
     Labels are taken verbatim from the AEAT-published printed form PDF at
-    src/cadrumo/_data/corpus/aeat_official/forms/modelo_840/files/
+    src/cadrumo/_data/corpus/aeat_official/formularios_publicados/modelo_840/files/
       01-840-modelo-declaracion-iae-alta-variacion-baja-pdf.pdf
     pdfplumber yields "14Ejercicio:" and "15Declaracion de:" as the casilla-label
     prefixes. Values are placed on the same line so the named_label parser captures

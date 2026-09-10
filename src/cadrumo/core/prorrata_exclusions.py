@@ -27,7 +27,7 @@ The six exclusions split by HOW the ledger can recognise them:
   habitual and the art. 20.Uno.18 financial-operation scope).
 
 :data:`ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS` and
-:data:`ART_104_TRES_AUTO_DERIVED_EXCLUSIONS` partition the closed set so the
+``ART_104_TRES_AUTO_DERIVED_EXCLUSIONS`` partition the closed set so the
 transaction boundary can reject an auto-derived value as an operator tag (it
 would double-count or misroute a value the category/register/structure already
 excludes) and the rollup can reason about which side each exclusion comes from.

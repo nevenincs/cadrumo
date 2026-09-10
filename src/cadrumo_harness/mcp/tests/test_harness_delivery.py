@@ -28,9 +28,11 @@ from cadrumo.adapters.persistence.storage.custody.capsule import (
     load_committed_profile_password_material,
 )
 from cadrumo.adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
-from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.adapters.persistence.storage.master_key.active_session import (
+    bind_active_bucket_session,
+    close_active_bucket_session,
+)
 from cadrumo.adapters.persistence.storage.master_key.bucket_session import BucketSession
-from cadrumo.application.user_profile.login_session_port import profile_bind_bucket_session
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.tests.profile_persistence import composed_profile_persistence_ports
 
@@ -81,7 +83,7 @@ def _authenticated_current_profile(*, profile_id: str, passphrase: str, storage_
         absolute_deadline=instant + timedelta(hours=4),
         storage_root=storage_root,
     )
-    profile_bind_bucket_session(session)
+    bind_active_bucket_session(session)
     try:
         yield
     finally:

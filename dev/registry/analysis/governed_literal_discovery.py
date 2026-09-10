@@ -69,10 +69,7 @@ class GovernedLiteralCandidate:
 
     def render(self) -> str:
         """Return one stable, greppable report row."""
-        return (
-            f"{self.path}:{self.line}::{self.enclosing_symbol} "
-            f"[{self.kind} {self.semantic_role}] {self.excerpt}"
-        )
+        return f"{self.path}:{self.line}::{self.enclosing_symbol} [{self.kind} {self.semantic_role}] {self.excerpt}"
 
 
 def _candidate_modules(source_root: Path) -> Iterator[Path]:
@@ -234,8 +231,12 @@ def _collect(tree: ast.Module, path: str) -> tuple[GovernedLiteralCandidate, ...
             ):
                 found.add(
                     GovernedLiteralCandidate(
-                        path, node.lineno, scopes.get(id(node), _MODULE_SCOPE), role,
-                        CandidateKind.DECIMAL, f"Decimal({_excerpt(argument.value)})",
+                        path,
+                        node.lineno,
+                        scopes.get(id(node), _MODULE_SCOPE),
+                        role,
+                        CandidateKind.DECIMAL,
+                        f"Decimal({_excerpt(argument.value)})",
                     )
                 )
         elif (

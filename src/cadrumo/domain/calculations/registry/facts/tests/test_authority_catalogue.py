@@ -16,7 +16,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def _write_scalar_fact(path: Path) -> None:
     path.write_text(
-        '''[fact]
+        """[fact]
 fact_id = "test.threshold"
 family = "scalar"
 
@@ -37,7 +37,7 @@ required_text = ["threshold"]
 kind = "scalar"
 value = "10"
 unit = "EUR"
-''',
+""",
         encoding="utf-8",
     )
 

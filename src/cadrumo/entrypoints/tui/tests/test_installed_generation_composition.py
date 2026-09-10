@@ -85,6 +85,7 @@ class _GenerationReadDoor:
     def read_workbench_generation_inputs(self) -> WorkbenchGenerationInputsV1:
         return self.read()
 
+
 _BUCKET = "11111111-1111-4111-8111-111111111111"
 _NOW = datetime(2026, 9, 3, 10, tzinfo=UTC)
 
@@ -450,5 +451,3 @@ def test_a_generation_that_loses_a_source_stops_offering_its_destination() -> No
     route = refreshed.resolve("workbench.aeat_sync")
     assert route.admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE
     assert route.factory is None
-
-

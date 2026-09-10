@@ -16,9 +16,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 def _production_python_files() -> tuple[Path, ...]:
     source_root = _ROOT / "src/cadrumo"
     return tuple(
-        path
-        for path in source_root.rglob("*.py")
-        if "tests" not in path.parts and path.name != "external_constants.py"
+        path for path in source_root.rglob("*.py") if "tests" not in path.parts and path.name != "external_constants.py"
     )
 
 
@@ -30,10 +28,11 @@ def test_external_constants_retirement_census_matches_live_source() -> None:
     assert "classification" not in ledger
     assert len(declarations) == ledger["declaration_count"] == 37
     assert len(classifications) == ledger["declaration_count"]
-    assert sum(
-        len(item["consumers"]) + len(item.get("transitive_consumers", ()))
-        for item in declarations
-    ) == ledger["consumer_count"] == 53
+    assert (
+        sum(len(item["consumers"]) + len(item.get("transitive_consumers", ())) for item in declarations)
+        == ledger["consumer_count"]
+        == 53
+    )
 
     declaration_symbols = [item["symbol"] for item in declarations]
     assert {item["symbol"] for item in classifications} == set(declaration_symbols)
@@ -42,9 +41,7 @@ def test_external_constants_retirement_census_matches_live_source() -> None:
     source = _ROOT / ledger["source_path"]
     tree = ast.parse(source.read_text(encoding="utf-8"))
     top_level_constants = [
-        node.target.id
-        for node in tree.body
-        if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name)
+        node.target.id for node in tree.body if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name)
     ]
     statutory_start = top_level_constants.index("M347_THRESHOLD_EUR")
     assert top_level_constants[statutory_start:] == declaration_symbols
@@ -101,10 +98,7 @@ def test_every_direct_production_import_is_in_the_retirement_census() -> None:
                 if imported.name in actual:
                     actual[imported.name].add(relative_path)
 
-    expected = {
-        symbol: {consumer["path"] for consumer in item["consumers"]}
-        for symbol, item in declarations.items()
-    }
+    expected = {symbol: {consumer["path"] for consumer in item["consumers"]} for symbol, item in declarations.items()}
     assert actual == expected
 
 
@@ -156,10 +150,7 @@ def test_retained_facades_and_technical_configuration_boundary_match_source() ->
     tree = ast.parse(source.read_text(encoding="utf-8"))
 
     top_level_constants = [
-        node.target.id
-        for node in tree.body
-        if isinstance(node, ast.AnnAssign)
-        and isinstance(node.target, ast.Name)
+        node.target.id for node in tree.body if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name)
     ]
     constants = top_level_constants[: top_level_constants.index("M347_THRESHOLD_EUR")]
     types = [node.name for node in tree.body if isinstance(node, ast.ClassDef)]
@@ -169,9 +160,14 @@ def test_retained_facades_and_technical_configuration_boundary_match_source() ->
     assert (_ROOT / boundary["technical_configuration_data"]).is_file()
 
     statutory = {item["symbol"] for item in ledger["declarations"]}
-    admitted_imports = statutory | set(boundary["technical_constants"]) | set(boundary["technical_types"]) | {
-        "load_external_constants",
-    }
+    admitted_imports = (
+        statutory
+        | set(boundary["technical_constants"])
+        | set(boundary["technical_types"])
+        | {
+            "load_external_constants",
+        }
+    )
     for path in _production_python_files():
         text = path.read_text(encoding="utf-8")
         if "external_constants import" not in text:

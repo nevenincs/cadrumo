@@ -2,8 +2,9 @@ modelo:
   schema:
     '309':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 309. Impost sobre el Valor Afegit. Declaració-liquidació
+          no periòdica.
+        title: IVA. Declaració-liquidació no periòdica
       revision:
         2004-2015:
           casilla:

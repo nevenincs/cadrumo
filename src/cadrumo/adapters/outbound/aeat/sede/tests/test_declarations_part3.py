@@ -70,8 +70,9 @@ class TestFiledObservationRelations:
         # Quarterly / monthly aggregations — verify inclusion (every
         # period observation contributed; aggregate exceeds the largest
         # single-period observation) and key presence. The exact arithmetic
-        # is verified against AEAT's open simulator via the replay-parity
-        # layer; assertions here pin the resolver's wiring contract only.
+        # is NOT externally verified against AEAT: these assertions pin the
+        # resolver's wiring contract only, and no bundled oracle reconciles
+        # these relation ids against an AEAT-computed figure today.
         quarterly_aggregations = {
             "renta-2025-rel-111-retenciones-trimestrales": Decimal("40"),  # max single quarter
             "renta-2025-rel-123-retenciones-trimestrales": Decimal("24"),

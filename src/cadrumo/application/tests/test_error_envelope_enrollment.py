@@ -1,7 +1,7 @@
 """Real-behavior enrollment test for application-layer regression error classes.
 
 Asserts that every application-layer regression error class is enrolled in
-:data:`cadrumo.core.errors.ERROR_REGISTRY` and produces a valid
+:data:`~core.errors.error_codes.ALL_DECLARED_ERROR_CODES` and produces a valid
 :class:`cadrumo.core.errors.ErrorEnvelope` through
 :func:`cadrumo.core.errors.build_error_envelope`.
 

@@ -183,8 +183,6 @@ aggregation:
       source_kinds_mismatch: Los tipos de fuente no coinciden con la taxonomia aceptada.
   source_mesh:
     errors:
-      ambiguous_source_disposition: 'Error interno: el tipo de fuente de vinculación
-        {source_kind} está en más de un estado de la malla de fuentes, o en ninguno.'
       annual_summary_handoff_duplicate: Más de un resolutor proporcionó el traspaso
         inmutable del resumen anual del modelo 303 (primero {first_resolver}; segundo
         {second_resolver}).
@@ -465,9 +463,6 @@ categories:
     viajes_transporte:
       label: Transporte en viajes
       notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1, otros servicios exteriores).
-component:
-  log:
-    empty: Sin entradas de registro todavía.
 core:
   profile:
     errors:
@@ -788,8 +783,6 @@ review:
   operator:
     errors:
       item_not_found: No se encontró el elemento solicitado en la cola de revisión.
-      reserved_kind: El tipo de revisión está reservado y no es un elemento de revisión
-        emitido.
       unknown_kind: 'Tipo de elemento de revisión desconocido. Valores --kind admitidos:
         %{accepted_kinds}.'
   transaction:
@@ -1293,6 +1286,7 @@ tui:
       filed: Presentación registrada localmente
       renamed: Declaración renombrada
       superseded: Presentación sustituida localmente
+      verification_refused: Verificación rechazada
       verified: Verificación completada
     overview:
       areas: Áreas de declaraciones

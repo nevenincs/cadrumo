@@ -10,12 +10,10 @@ read from validated calculation registry data supplied by
 from __future__ import annotations
 
 from datetime import date
-from pathlib import Path
 from typing import TYPE_CHECKING, Final, Protocol, runtime_checkable
 
 from ...core.logging import get_logger
 from ...core.modelo import Modelo
-from ...core.resources.bundled_data import bundled_path
 from ...core.time.clock import now, today_madrid
 
 # Type-only registry references. Runtime callers below import the
@@ -125,16 +123,12 @@ class DeadlineEngine:
         self,
         *,
         due_soon_days: int = _DEFAULT_DUE_SOON_DAYS,
-        registry_root: Path | None = None,
-        source_root: Path | None = None,
     ) -> None:
         """Construct an engine.
 
         Args:
             due_soon_days: Days before ``closes_on`` that flag
                 ``DUE_SOON``. Must be ``>= 0``.
-            registry_root: Root containing reviewed registry TOML files.
-            source_root: Repository root for source-integrity checks.
 
         Raises:
             DeadlineValidationError: If ``due_soon_days`` is negative.
@@ -143,27 +137,9 @@ class DeadlineEngine:
         if due_soon_days < 0:
             raise DeadlineValidationError(f"due_soon_days must be >= 0, got {due_soon_days}")
         self.due_soon_days = due_soon_days
-        if registry_root is None and source_root is None:
-            from ..calculations.registry.authority import bundled_authority
+        from ..calculations.registry.authority import bundled_authority
 
-            self._registry = bundled_authority()
-            self._source_root = bundled_path()
-            return
-        self._source_root = source_root if source_root is not None else bundled_path()
-        root = registry_root if registry_root is not None else bundled_path("registry", "aeat")
-        from ..calculations.registry.authority import ValidatedRegistryAuthority
-        from ..calculations.registry.errors import RegistryError
-
-        try:
-            self._registry = ValidatedRegistryAuthority.load(root, source_root=self._source_root)
-        except RegistryError as exc:
-            raise ScheduleComputationError(
-                translated_message=_SCHEDULE_COMPUTATION_MESSAGE_KEY,
-                context={
-                    "registry_stage": "load",
-                    "registry_error_type": type(exc).__name__,
-                },
-            ) from exc
+        self._registry = bundled_authority()
 
     def compute(
         self,

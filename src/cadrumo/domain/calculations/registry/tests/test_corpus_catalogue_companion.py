@@ -13,7 +13,9 @@ root; no repository file is modified and no behaviour is mocked.
 
 from __future__ import annotations
 
+import hashlib
 import shutil
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -23,6 +25,7 @@ from ..corpus_catalogue import (
     verify_source_catalogue,
     verify_source_file,
 )
+from ..corpus_provenance import NormativeCorpusProvenance, classify_normative_corpus_provenance
 from ..errors import RegistryValidationError
 from ..schema_references import SourceReference
 from ._registry_schema_support import _committed_registry_tree
@@ -97,3 +100,35 @@ def test_absent_non_companion_corpus_file_still_hard_fails(tmp_path: Path) -> No
 
     with pytest.raises(RegistryValidationError, match="missing corpus file"):
         verify_source_catalogue(tmp_path, {source.id: source})
+
+
+def test_changed_provenance_shaped_normative_source_still_fails_hash_validation(tmp_path: Path) -> None:
+    """A provenance-shaped normative file cannot bypass its recorded source hash."""
+    corpus_path = "corpus/normatives/html/provenance-probe.html"
+    target = tmp_path / corpus_path
+    target.parent.mkdir(parents=True)
+    original = b"<!-- Official BOE consolidated source excerpt -->\n<p>original</p>\n"
+    target.write_bytes(original)
+    source = SourceReference.model_validate(
+        {
+            "id": "provenance-probe",
+            "evidence_tier": "official_source_guidance",
+            "authority": "boe",
+            "kind": "form_spec",
+            "corpus_path": corpus_path,
+            "sha256": hashlib.sha256(original).hexdigest(),
+            "bytes": len(original),
+            "retrieved_at": date(2026, 9, 10),
+            "source_url": "https://www.boe.es/",
+            "review_status": "pending_review",
+        }
+    )
+    verify_source_file(tmp_path, source)
+    assert (
+        classify_normative_corpus_provenance(tmp_path, corpus_path)
+        is NormativeCorpusProvenance.BOE_ATTESTED
+    )
+    target.write_bytes(b"<!-- Official BOE consolidated source excerpt -->\n<p>changed!</p>\n")
+
+    with pytest.raises(RegistryValidationError, match="sha256 mismatch"):
+        verify_source_file(tmp_path, source)

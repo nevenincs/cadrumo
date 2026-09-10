@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#reachability-burndown'
 date: '2026-09-04'
-modified: '2026-09-09'
+modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:163e4e531daaf11f7724396f220296c69181c3ee0e2740351efbb1be87b893c0'
+body_hash: 'sha256:074c5c04320c1ba81172113ef606df8d4c131a55eaf867556b5c73ae8771868e'
 related:
   - '[[2026-09-04-reachability-burndown-W01-P01-S01]]'
   - '[[2026-09-04-reachability-burndown-W01-P01-S02]]'
@@ -218,15 +218,110 @@ related:
   - '[[2026-09-04-reachability-burndown-W05-P12-S281]]'
   - '[[2026-09-04-reachability-burndown-W05-P12-S282]]'
   - '[[2026-09-04-reachability-burndown-W05-P12-S283]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S284]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S285]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S286]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S287]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S288]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S289]]'
   - '[[2026-09-04-reachability-burndown-W05-P12-S28]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S290]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S291]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S292]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S293]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S294]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S295]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S296]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S297]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S298]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S299]]'
   - '[[2026-09-04-reachability-burndown-W05-P12-S29]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S300]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S301]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S302]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S303]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S304]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S305]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S306]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S307]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S308]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S309]]'
   - '[[2026-09-04-reachability-burndown-W05-P12-S30]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S310]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S311]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S312]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S313]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S314]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S315]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S316]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S317]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S318]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S319]]'
   - '[[2026-09-04-reachability-burndown-W05-P12-S31]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S320]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S321]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S322]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S323]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S324]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S325]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S326]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S327]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S328]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S329]]'
   - '[[2026-09-04-reachability-burndown-W05-P12-S32]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S330]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S331]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S332]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S333]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S334]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S335]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S336]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S337]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S338]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S339]]'
   - '[[2026-09-04-reachability-burndown-W05-P12-S33]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S340]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S341]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S342]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S343]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S344]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S345]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S346]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S347]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S348]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S349]]'
   - '[[2026-09-04-reachability-burndown-W05-P12-S34]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S350]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S351]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S352]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S353]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S354]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S355]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S356]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S357]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S358]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S359]]'
   - '[[2026-09-04-reachability-burndown-W05-P12-S35]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S360]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S361]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S362]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S363]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S364]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S365]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S366]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S367]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S368]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S369]]'
   - '[[2026-09-04-reachability-burndown-W05-P12-S36]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S370]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S371]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S372]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S373]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S374]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S375]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S376]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S377]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S378]]'
   - '[[2026-09-04-reachability-burndown-W05-P12-S37]]'
   - '[[2026-09-04-reachability-burndown-W05-P12-S38]]'
   - '[[2026-09-04-reachability-burndown-W05-P12-S39]]'
@@ -342,6 +437,7 @@ related:
   - '[[2026-09-08-reachability-burndown-s230-llm-review-request-withdrawal-audit]]'
   - '[[2026-09-08-reachability-burndown-s231-review-kind-reservation-metastate-withdrawal-audit]]'
   - '[[2026-09-08-reachability-burndown-s232-borrador-100-namespace-alias-withdrawal-audit]]'
+  - '[[2026-09-09-reachability-burndown-zero-closure-review-audit]]'
 ---
 
 # `reachability-burndown` feature index
@@ -405,6 +501,7 @@ Auto-generated index of all documents tagged with `#reachability-burndown`.
 - `2026-09-08-reachability-burndown-s230-llm-review-request-withdrawal-audit` - 2026-09-08-reachability-burndown-s230-llm-review-request-withdrawal-audit
 - `2026-09-08-reachability-burndown-s231-review-kind-reservation-metastate-withdrawal-audit` - 2026-09-08-reachability-burndown-s231-review-kind-reservation-metastate-withdrawal-audit
 - `2026-09-08-reachability-burndown-s232-borrador-100-namespace-alias-withdrawal-audit` - `reachability-burndown` audit: `S232 Borrador 100 namespace alias withdrawal review`
+- `2026-09-09-reachability-burndown-zero-closure-review-audit` - `reachability-burndown` audit: `exact zero closure review`
 
 ### exec
 
@@ -690,6 +787,101 @@ Auto-generated index of all documents tagged with `#reachability-burndown`.
 - `2026-09-04-reachability-burndown-W05-P12-S281` - Delete the temporal-selection source scanner, path-keyed sanctioned-site metastate, and Python-source string tests; retain and run the direct temporal behavior suite, update cadence, and remeasure exact reachability.
 - `2026-09-04-reachability-burndown-W05-P12-S282` - Delete the unreachable portable-profile bundle import facade and its sole-called repository/rebuild helpers, then burn the exposed test-only custody restore slice through application, port, adapter, persistence, and restore-only tests while retaining live export-policy behavior; update cadence and remeasure exact reachability.
 - `2026-09-04-reachability-burndown-W05-P12-S283` - Delete the zero-caller speculative censo unadopted-evidence projector, its fixed field/namespace census, parser adapter, exports, and development-staging prose while retaining the live reviewed-censal divergence owner; run focused integration gates, update cadence, and remeasure exact reachability.
+- `2026-09-04-reachability-burndown-W05-P12-S284` - Delete the zero-caller wizard persist-answers facade and its unreachable error/locale vocabulary while retaining the live command writer, shared mode type, projections, and patch owner; rename misleading serialization coverage, run focused gates, update cadence, and remeasure exact reachability.
+- `2026-09-04-reachability-burndown-W05-P12-S285` - Delete the zero-caller workflow draft/submission adapters and private bridge, then burn the exposed test-only default-engine factory, missing-adapter errors/locales, hardened-error census rows, and factory tests while retaining the live deadline adapter; run focused gates, update cadence, and remeasure exact reachability.
+- `2026-09-04-reachability-burndown-W05-P12-S286` - Delete the unread workflow operation-instant context, getter, scope, export, and CAS wrapper while retaining the actual retry loop; run focused gates, classify unrelated envelope-schema reds, update cadence, and remeasure exact reachability.
+- `2026-09-04-reachability-burndown-W05-P12-S287` - Delete the test-only visible and exact workflow-resume convenience resolvers, migrate retained coverage to the live unified resume owner, run focused gates, classify the shared envelope-schema red, update cadence, and remeasure exact reachability.
+- `2026-09-04-reachability-burndown-W05-P12-S288` - Delete the test-only workflow declaration-pointer state cluster—persisted field, model, validators, key builder, updater, exports, serialization fixture residue, and dedicated tests—while retaining live filing repositories and encrypted workflow-state behavior; run focused gates, update cadence, and remeasure exact reachability.
+- `2026-09-04-reachability-burndown-W05-P12-S289` - Delete the production modelo authorization/enrollment regime and its source-parsing gates; retain direct cross-year calculation, persistence, and registry behavior tests without copied implementation text or development-status manifests.
+- `2026-09-04-reachability-burndown-W05-P12-S290` - Delete the test-only direct calculation-revision verification shortcut and its private bypass guards; retain the live verification pipeline and make tests target their owning behavior.
+- `2026-09-04-reachability-burndown-W05-P12-S291` - Delete the unconsumed output-classification policy vocabulary and its test-only table census; retain live CLI redaction behavior and persisted-policy resolution gates.
+- `2026-09-04-reachability-burndown-W05-P12-S292` - Delete the test-only amendment-regime membership probe and its modelo roster assertion; retain boundary-driven amendment behavior tests over the live resolver.
+- `2026-09-04-reachability-burndown-W05-P12-S293` - Withdraw the unshipped offline XLSX/JSON calc-sheets transport atomically after its test-only facade exposed test-only serializers; move Guide and Evidencia tables to the live Google owner and retain direct plan/apply behavior tests.
+- `2026-09-04-reachability-burndown-W05-P12-S294` - Delete the test-only detailed storage-inventory projection, public DTOs, and taxonomy census tests; retain the live four-area inventory through a minimal private aggregation row and preserve tree/reclaim behavior.
+- `2026-09-04-reachability-burndown-W05-P12-S295` - Delete the hand-maintained identifier-namespace adjudication gate and the two unreachable profile snapshot DTOs it classified; retain the canonical UserProfileSnapshot domain owner and real profile service behavior.
+- `2026-09-04-reachability-burndown-W05-P12-S296` - Delete the source-wide text-writer newline AST gate, its hard-coded corpus floors, production-path exemptions, self-mutating allowlist tests, and stale lint override; retain newline correctness at owning writers and formatters.
+- `2026-09-04-reachability-burndown-W05-P12-S297` - Delete the dev-wide governance-corpus isolation census and its eleven path-keyed exemptions; retain the strict no-allowlist src isolation gate and shared detector.
+- `2026-09-04-reachability-burndown-W05-P12-S298` - Delete the bare-modelo-string AST census, its production-path allowlist, declaration-module skip, copied source fixtures, and metastate checks; retain Modelo typing at live command and domain boundaries.
+- `2026-09-04-reachability-burndown-W05-P12-S299` - Delete the static test-rooted symbol-use graph, its dynamic-dispatch exemption ledger, copied reachability engine, and self-tests; retain executed coverage and the canonical production reachability audit as the owning signals.
+- `2026-09-04-reachability-burndown-W05-P12-S300` - Delete the classification-comparison AST enrollment census, its production function/path exemptions, copied source fixtures, and exported detector vocabulary; retain the canonical runtime predicate and storage-boundary behavior.
+- `2026-09-04-reachability-burndown-W05-P12-S301` - Delete the decimal parsing and coercion AST enrollment census, its private call-shape engine, production path/function adjudication ledger, copied source fixtures, and residual-backlog prose; retain direct decimal behavior at canonical grammar and live input boundaries.
+- `2026-09-04-reachability-burndown-W05-P12-S302` - Delete the text-fold detector's copied production implementation fixture while retaining its no-allowlist live-tree assertion and the canonical fold behavior owner.
+- `2026-09-04-reachability-burndown-W05-P12-S303` - Delete the paid-down type-ignore enrollment roster, subtraction logic, historical paydown prose, and stale-entry test; enforce the zero-state rationale rule directly without a baseline.
+- `2026-09-04-reachability-burndown-W05-P12-S304` - Delete the parameter-Any rationale-comment enrollment gate, its empty coordinate backlog, magic-marker policy, synthetic annotation corpus, and stale companion references; retain configured type checkers and typed-boundary behavior.
+- `2026-09-04-reachability-burndown-W05-P12-S305` - Delete the cast-rationale comment census, its AST matcher and alias restrictions, shared test-inventory exports, copied source fixtures, and detector-only tests; retain configured type checking and useful local explanations.
+- `2026-09-04-reachability-burndown-W05-P12-S306` - Delete the type-ignore rationale-comment census, its multi-marker vocabulary, line-window scanner, corpus floor, and synthetic string probes; retain configured type-checker diagnostics and useful local explanations.
+- `2026-09-04-reachability-burndown-W05-P12-S307` - Delete the date/boolean parsing AST enrollment engine, its whole-layer exclusions, seeded binding assumptions, production path/line exemptions, detector-authored token vocabulary, and embedded-code probes; retain canonical parser behavior.
+- `2026-09-04-reachability-burndown-W05-P12-S308` - Delete the UTC-validator detector's embedded executable source probes while retaining its no-allowlist live-tree ownership assertion and canonical UTC behavior.
+- `2026-09-04-reachability-burndown-W05-P12-S309` - Delete the positional-translation AST census and its hard-coded exception-class and factory-name exclusions; retain deferred translation behavior at the CadrumoError and renderer boundaries.
+- `2026-09-04-reachability-burndown-W05-P12-S310` - Delete the session-vocabulary custody regex census, its two owning-module rosters, qualifier vocabulary, symbol exemptions, and rename history; retain receipt and authority-session custody behavior.
+- `2026-09-04-reachability-burndown-W05-P12-S311` - Delete the canonical-record encoding AST owner census, its production path/function allowlist, trailing-name heuristics, formatting exemptions, and embedded encoder implementations; retain direct canonical-byte behavior.
+- `2026-09-04-reachability-burndown-W05-P12-S312` - Remove import-gate development metastate and retain strict live import resolution
+- `2026-09-04-reachability-burndown-W05-P12-S313` - Delete copied retry constants from the extracted custody-record CAS owner
+- `2026-09-04-reachability-burndown-W05-P12-S314` - Delete the persisted-version literal enrollment census and embedded constructor strings
+- `2026-09-04-reachability-burndown-W05-P12-S315` - Delete the live-filename magic-banner lint and embedded test modules
+- `2026-09-04-reachability-burndown-W05-P12-S316` - Delete the acceptance-wall node-id catalogue, nested CI runner, and source-mutating proof
+- `2026-09-04-reachability-burndown-W05-P12-S317` - Delete the three-module per-modelo token baseline and embedded matcher corpus
+- `2026-09-04-reachability-burndown-W05-P12-S318` - Remove embedded implementations and hardcoded owner strings from the CSV singularity gate
+- `2026-09-04-reachability-burndown-W05-P12-S319` - Delete displaced projection version and digest-adapter declarations from the facade
+- `2026-09-04-reachability-burndown-W05-P12-S320` - Delete the retired decimal-module and alias tombstone gate with embedded bindings
+- `2026-09-04-reachability-burndown-W05-P12-S321` - Remove FX singularity path exemptions and embedded policy implementations
+- `2026-09-04-reachability-burndown-W05-P12-S322` - Remove invoice-kind singularity owner strings and embedded mapping implementations
+- `2026-09-04-reachability-burndown-W05-P12-S323` - Delete the masking-signature silhouette census and embedded rival modules
+- `2026-09-04-reachability-burndown-W05-P12-S324` - Delete the prompt-library re-export analyzer and embedded synthetic package
+- `2026-09-04-reachability-burndown-W05-P12-S325` - Reduce override-seam enforcement to actual process-global dependency slots
+- `2026-09-04-reachability-burndown-W05-P12-S326` - Delete the IVA-category AST singularity registry and its embedded rival classifiers
+- `2026-09-04-reachability-burndown-W05-P12-S327` - Delete the filename-keyed IVA observation source census and stale omission exemption
+- `2026-09-04-reachability-burndown-W05-P12-S328` - Delete the repository-wide hardcoded-literal census and its path exemptions
+- `2026-09-04-reachability-burndown-W05-P12-S329` - Delete the enum-adoption literal census and canonical-file exclusion roster
+- `2026-09-04-reachability-burndown-W05-P12-S330` - Delete the Modelo 232 literal-set duplicate detector and raw type-hint assertions
+- `2026-09-04-reachability-burndown-W05-P12-S331` - Delete the LLM loopback protocol-vocabulary singularity scanner and embedded servers
+- `2026-09-04-reachability-burndown-W05-P12-S332` - Remove hardcoded harness-source parsing and self-source import checks from TUI theme coverage
+- `2026-09-04-reachability-burndown-W05-P12-S333` - Remove synthetic Python packages and source-text policy checks from TUI visual inventory tests
+- `2026-09-04-reachability-burndown-W05-P12-S334` - Replace the mixed-format container literal census with direct canonical Dockerfile checks
+- `2026-09-04-reachability-burndown-W05-P12-S335` - Replace the synthetic runtime-floor detector framework with one live configuration agreement check
+- `2026-09-04-reachability-burndown-W05-P12-S336` - Delete the embedded Python child implementation from recovery-enrollment tests
+- `2026-09-04-reachability-burndown-W05-P12-S337` - Remove the duplicate source-policy engine from the CI command-spec authority test
+- `2026-09-04-reachability-burndown-W05-P12-S338` - Retire the permanently red relative-self-import style gate and duplicate detector tests
+- `2026-09-04-reachability-burndown-W05-P12-S339` - Delete the secure-storage namespace adoption census and embedded repository implementations
+- `2026-09-04-reachability-burndown-W05-P12-S340` - Remove the namespace-registry source census and its pinned repository vocabulary while retaining direct registry behavior tests.
+- `2026-09-04-reachability-burndown-W05-P12-S341` - Remove the storage-degradation source census while retaining direct canonical exception behavior checks.
+- `2026-09-04-reachability-burndown-W05-P12-S342` - Delete the sensitive-persistence source-policy engine and its hand-maintained surface, call-site, and exception inventories.
+- `2026-09-04-reachability-burndown-W05-P12-S343` - Consolidate storage-taxonomy alias behavior at its core owner and delete duplicate adapter and source-literal inventories.
+- `2026-09-04-reachability-burndown-W05-P12-S344` - Delete the skip-policy parser and invoice-kind singularity detector, retaining runner-visible outcomes and owner behavior tests.
+- `2026-09-04-reachability-burndown-W05-P12-S345` - Replace the test-inventory ownership policy engine and embedded Python fixtures with direct public helper behavior tests.
+- `2026-09-04-reachability-burndown-W05-P12-S346` - Delete the residual canonical-helper singularity and enrollment source detectors while retaining owner behavior suites.
+- `2026-09-04-reachability-burndown-W05-P12-S347` - Replace the CLI command-spec string dependency table with direct validator imports and remove its embedded import probe.
+- `2026-09-04-reachability-burndown-W05-P12-S348` - Delete the unassembled Renta Web Open browser adapter and its test-only safety and policy surface while retaining offline replay.
+- `2026-09-04-reachability-burndown-W05-P12-S349` - Delete the test-only CLI manager frontend helper and its source-policy and retired-symbol inventory test.
+- `2026-09-04-reachability-burndown-W05-P12-S350` - Delete the unwired wizard registered-values and legal-zone projections and their module-status inventory tests.
+- `2026-09-04-reachability-burndown-W05-P12-S351` - Remove the unreachable legacy Textual flow frontend and its test/dev-only fixtures, including the embedded Python subprocess program, while retaining canonical application-flow and CLI behavior coverage.
+- `2026-09-04-reachability-burndown-W05-P12-S352` - Delete the unrouted profile status projection and Textual screen with their dev-only fixtures, private-helper tests, visual megasuite, and public-module inventory.
+- `2026-09-04-reachability-burndown-W05-P12-S353` - Delete the unrouted five-stage profile journey and its closed dev fixture registry/test loop while retaining the live profile overview and application presentation owners.
+- `2026-09-04-reachability-burndown-W05-P12-S354` - Delete the unreachable profile sync-review seam and its test-only censal and filed-history projections while retaining those behaviors at their application owners.
+- `2026-09-04-reachability-burndown-W05-P12-S355` - Delete the displaced Modelo TUI action/edit/review/select generation and its synthetic helpers, fixture registries, and registry-completeness detector while retaining the routed installed workspace and application owners.
+- `2026-09-04-reachability-burndown-W05-P12-S356` - Remove eleven unused operation-journal validator aliases while retaining the invoked consolidated snapshot validators and journal behavior.
+- `2026-09-04-reachability-burndown-W05-P12-S357` - Remove unused operation-schema compatibility constants and a stale wizard locale-key export, replacing private-set inspection with validator behavior.
+- `2026-09-04-reachability-burndown-W05-P12-S358` - Delete the test-only flow back-page navigation verb left after removal of its sole frontend.
+- `2026-09-04-reachability-burndown-W05-P12-S359` - Delete the unused fichero-BOE encoding-choice constant rather than retaining an unimplemented wire-vocabulary claim.
+- `2026-09-04-reachability-burndown-W05-P12-S360` - Remove twelve unused command-spec validation and recovery aliases left by the direct-import consolidation.
+- `2026-09-04-reachability-burndown-W05-P12-S361` - Remove ten unused Modelo 193 withholding-field aliases left by the extracted field-finalization module.
+- `2026-09-04-reachability-burndown-W05-P12-S362` - Delete five unapplied or superseded legal constants and correct maternity documentation to name the dated registry as its sole authority.
+- `2026-09-04-reachability-burndown-W05-P12-S363` - Delete the unconsumed flow frontend-capability and intent enums and their self-referential taxonomy tests.
+- `2026-09-04-reachability-burndown-W05-P12-S364` - Collapse the wizard core registry to its live setup-flow slot, deleting the unused protocol, write-only wizard-flows slot/accessor, and source-code-string subprocess test.
+- `2026-09-04-reachability-burndown-W05-P12-S365` - Delete the unconsumed rich-progress terminal policy helper and its stale module contract.
+- `2026-09-04-reachability-burndown-W05-P12-S366` - Remove the unwired donativo export resolver and private builder together with their builder-only test and the hand-maintained row-field completeness detector.
+- `2026-09-04-reachability-burndown-W05-P12-S367` - Delete the unused fixed-width record-payload convenience renderer and its wrapper-only line-ending protocol state.
+- `2026-09-04-reachability-burndown-W05-P12-S368` - Remove the unwired Modelo 193 expense-binding export resolver and its private accumulator while retaining live observation and selector validation.
+- `2026-09-04-reachability-burndown-W05-P12-S369` - Delete both unwired Modelo 296 export resolvers, their private row-builder vocabulary, and the builder-only test module.
+- `2026-09-04-reachability-burndown-W05-P12-S370` - Delete the unconsumed filing-draft repository Protocol and adapter documentation that falsely described it as a live port.
+- `2026-09-04-reachability-burndown-W05-P12-S371` - Delete the unused Modelo record-catalogue query Protocol and its query-only type imports.
+- `2026-09-04-reachability-burndown-W05-P12-S372` - Delete the unused submission draft-loader Protocol and package prose that defended it as an exported but unconsumed adapter contract.
+- `2026-09-04-reachability-burndown-W05-P12-S373` - Collapse manual handling to live bundled-manifest verification, deleting the unwired HTTP fetch subsystem, exact URL-roster tests, and newly test-only atomic stream writer.
+- `2026-09-04-reachability-burndown-W05-P12-S374` - Delete the unconsumed AttachmentCatalogue aggregate and its catalogue-only coercion and collection vocabulary.
+- `2026-09-04-reachability-burndown-W05-P12-S375` - Delete the unused Google Sheets export-service composition wrapper and its wrapper-only imports.
+- `2026-09-04-reachability-burndown-W05-P12-S376` - Resolve the remaining exact unreachable symbols in application and core ownership without compatibility surfaces.
+- `2026-09-04-reachability-burndown-W05-P12-S377` - Resolve the remaining exact unreachable symbols in registry and domain ownership without duplicate authority.
+- `2026-09-04-reachability-burndown-W05-P12-S378` - Resolve the remaining exact unreachable symbols in entrypoint and LLM ownership while preserving live command behavior.
 
 ### plan
 

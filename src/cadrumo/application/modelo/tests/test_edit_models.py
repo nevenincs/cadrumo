@@ -309,6 +309,7 @@ def test_admission_result_round_trips_through_json() -> None:
     )
     assert ModeloEditRefusedV1.model_validate_json(refused.model_dump_json()) == refused
 
+
 def test_preflight_evaluated_findings_reference_the_shared_address_union() -> None:
     """A finding may cite a scalar or row address, or omit one for global scope."""
     finding = ModeloEditFindingV1(

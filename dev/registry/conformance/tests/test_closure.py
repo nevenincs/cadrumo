@@ -10,7 +10,7 @@ import pytest
 from pydantic import ValidationError
 from typer.testing import CliRunner
 
-from cadrumo.application.registry.closure import (
+from dev.registry.conformance.closure_models import (
     RegistryClosureEvidence,
     RegistryClosureFilingChannelRefusal,
     RegistryClosureLimb,

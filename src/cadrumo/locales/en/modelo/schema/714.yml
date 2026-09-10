@@ -3,7 +3,7 @@ modelo:
     '714':
       field:
         official_name: Wealth Tax. Return
-        title: Form 714
+        title: Modelo 714
       revision:
         '2021':
           casilla:

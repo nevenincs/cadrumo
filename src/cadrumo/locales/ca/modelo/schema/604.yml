@@ -2,8 +2,8 @@ modelo:
   schema:
     '604':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 604. Impost sobre les Transaccions Financeres. Autoliquidació.
+        title: Impost sobre les Transaccions Financeres - autoliquidació
       revision:
         2021-2023:
           casilla:

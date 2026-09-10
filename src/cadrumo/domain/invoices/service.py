@@ -2,7 +2,7 @@
 
 Exposes pure-function service operations over an
 :class:`~cadrumo.domain.invoices.InvoiceCatalogue`: lookup
-(:func:`find_unmatched`), in-memory linking
+(:func:`suggest_reconciliations`), in-memory linking
 (:func:`link_transaction`), reconciliation suggestions
 (:func:`suggest_reconciliations`), and bidirectional consistency checks
 (:func:`verify_link_consistency`). Operations that span both the invoice

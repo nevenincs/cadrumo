@@ -34,7 +34,7 @@
             "orden-eha-3786-2008:art-7"
           ],
           "manual_casilla_count": 84,
-          "official_name": "Modelo 303. Impuesto sobre el Valor Añadido. Autoliquidación.",
+          "official_name": "Modelo 303. Value Added Tax. Self-assessment.",
           "operation": "modelo.describe",
           "period": null,
           "periods": [
@@ -71,7 +71,7 @@
             "boe-modelo-303-2008-form"
           ],
           "tax_domain": "iva",
-          "title": "IVA. Autoliquidación (trimestral)",
+          "title": "VAT. Self-assessment (quarterly)",
           "valid_from": "2026-01-01",
           "valid_to": null
         },

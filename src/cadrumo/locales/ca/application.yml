@@ -167,17 +167,9 @@ application:
           que el perfil actiu inclogui %{requirements}.
         provider_close_failed: No s'ha pogut tancar de manera segura la sessió del
           navegador AEAT; repeteix l'autenticació abans de llegir dades AEAT.
-        sede_rejected: La sessió AEAT no és acceptada per la Seu; executa `aeat config
-          auth test` abans de llegir dades AEAT.
-        session_expired: La sessió AEAT ha caducat; executa `aeat config auth test`
-          abans de llegir dades AEAT.
         session_identity_profile_mismatch: La identitat de la sessió AEAT no coincideix
           amb la identitat fiscal del perfil actiu; esborra les sessions d'autenticació
           i autentica el perfil que coincideixi abans de les lectures AEAT en directe.
-        state_missing: Falta l'estat de la sessió AEAT; executa `aeat config auth
-          test` abans de llegir dades AEAT.
-        verify_failed: No s'ha pogut verificar la sessió AEAT; executa `aeat config
-          auth test` abans de llegir dades AEAT.
   calculations:
     binding_prefill:
       errors:
@@ -488,8 +480,6 @@ application:
         unknown: '%{reason}'
     runtime:
       errors:
-        active_profile_load_failed: 'No s ha pogut carregar el perfil actiu de presentació:
-          %{reason}.'
         ambiguous_casilla_schema: 'Error intern: l''esquema de casella en temps d''execució
           és ambigu (valors de casilla.id duplicats o referències de fórmula penjants).'
         blank_modelo_selection: La selecció de models sol.licitada no pot contenir
@@ -543,8 +533,6 @@ application:
       submit_blocked: 'El flux {flow_id} no es pot enviar: queden {blocking_count}
         troballes bloquejants i {required_remaining} preguntes obligatòries sense
         respondre.'
-      unknown_repeating_group: El flux {flow_id} no declara cap grup repetible anomenat
-        {group_id}.
       validator_id_blank: Un validador de flux s'ha de registrar amb un identificador
         no buit.
       validator_id_duplicate: Ja hi ha un validador de flux registrat amb l'identificador
@@ -1319,6 +1307,13 @@ application:
         extreta per a {manual_key}.
       no_revision_for_diff_year: 'Cap revisió del registre de {modelo} cobreix l''exercici
         {filing_year}. Revisions declarades: {available_revisions}.'
+    manuals:
+      coverage:
+        available: Disponible localment
+        recheck_aeat_publication: Torneu a comprovar l'arxiu oficial de manuals de
+          l'AEAT i adquiriu el PDF anual quan es publiqui.
+        unacquired: Manual oficial publicat; pendent d'adquisició local
+        unpublished: Encara no publicat per l'AEAT
   storage:
     calc_sheets:
       engine:
@@ -1437,14 +1432,8 @@ application:
       repository_classification_mismatch: L'espai de noms d'objecte segur %{namespace}
         està registrat amb sensibilitat %{expected}, però la classificació del registre
         emmagatzemat és %{classification}.
-      repository_profile_bucket_mismatch: El perfil %{profile_id} no pertany al bucket
-        %{bucket_id}; un bucket de perfil conté exactament una identitat de perfil.
-      repository_profile_snapshot_missing: No s'ha trobat la instantània de perfil
-        al bucket actiu.
       repository_profile_snapshot_version_unsupported: La versió de l'esquema de la
         instantània de perfil no és compatible amb aquesta aplicació.
-      unsupported_bundle_schema_version: La versió de l'esquema del paquet no és compatible
-        amb aquesta versió de l'aplicació.
     notices:
       censo_divergences_open: '{count} dada/es del perfil o del certificat encara
         difereixen del Certificat de Situació Censal i resten sense resoldre: {axes}.'

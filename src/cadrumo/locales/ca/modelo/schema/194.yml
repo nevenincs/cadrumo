@@ -2,8 +2,13 @@ modelo:
   schema:
     '194':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 194. Impost sobre la Renda de les Persones Físiques,
+          Impost sobre Societats i Impost sobre la Renda de no Residents (establiments
+          permanents). Retencions i ingressos a compte sobre rendiments del capital
+          mobiliari i rendes derivades de la transmissió, amortització, reemborsament,
+          canvi o conversió de qualsevol classe d'actius representatius de la captació
+          i utilització de capitals aliens. Resum anual.
+        title: Retencions de capital mobiliari i transmissió d'actius - resum anual
       revision:
         '2019':
           casilla:

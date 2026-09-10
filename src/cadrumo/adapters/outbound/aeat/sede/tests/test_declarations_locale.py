@@ -88,7 +88,6 @@ class TestParseListboxTranslation:
         keys = [
             "adapters.sede.errors.session_expired_nav_failed",
             "adapters.sede.errors.form_render_timeout",
-            "adapters.sede.errors.cotejo_nav_failed",
             "adapters.sede.errors.ejercicio_unavailable",
             "adapters.sede.errors.listbox_missing",
             "adapters.sede.errors.justificante_column_missing",

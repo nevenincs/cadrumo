@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#registry-generator'
 date: '2026-09-09'
-modified: '2026-09-09'
+modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:b2d874dd92daae32629062a7359a80edbd747d3fce0335f95ea97f2cf3267564'
+body_hash: 'sha256:6b857e026c47fd048b340fce71f29b1552cb09538636d308a3541daa118389dd'
 related:
   - "[[2026-09-09-registry-generator-corpus-provenance-research]]"
   - "[[2026-09-09-registry-generator-divergence-evidence-research]]"
@@ -222,6 +222,41 @@ vocabulary named in Considerations.
 D2 refusal; the two targets are separate work. 390 carries 1,236 of the 2,017 D2 refusals and is
 the modelo whose fail-closed codec refusal blocks routine negative adjustments today.
 
+**D11 — The acquisition script's authority set becomes total, and reproducibility becomes an
+invariant.** `dev/corpus/sync_aeat_record_design_corpus.py` declares **80** required artefacts
+against a corpus of **248**: 168 manifested artefacts are named by no declaration, so nothing
+states where they came from or how to obtain them again, and `check()` cannot notice because it
+asserts only that every declared URL is present, never that every present artefact is declared.
+Seven of the 168 are hosted on `boe.es` and are inexpressible under the script's `_STATIC` base,
+so they need a second declaration locus beside `historical_exclusions.json`, carrying per-artefact
+provenance and the disposition recording why a BOE document sits in an AEAT-indexed tree — all
+seven already carry a registry-side `corpus_path` declaration, and *kind* decides the home
+(`record_design` for the six *Orden* PDFs, `form_spec` for the M186 anexo image, which the
+record-design reader cannot address). The remaining 161 are expressible and are declared by
+extension. Only once the authority set is total does `check()` gain the converse invariant — every
+manifest artefact resolves to exactly one declared authority — proven by a planted undeclared
+artefact on a temporary corpus tree. That ordering is required rather than preferred: an invariant
+landing against 168 undeclared artefacts would be red on the day it lands, which the Constraints
+forbid, and neither a count baseline nor an allowlist is available to bridge it.
+
+This ruling also makes the root aggregate regenerable offline. It is stale today — recording 247
+artefacts against 248 held, and M270 as 1 against 2 — and the offline check exits 1 on exactly
+those two lines on `main` right now. `_write_manifests` already computes the correct value, but
+only `--pull` reaches it, so the sole repair path for a purely local number runs across the
+network. A regeneration mode that recomputes the aggregate from the per-modelo manifests without
+fetching removes the hand-patched number and closes the current red.
+
+*Surfaced, not decided:* the nine artefacts whose `source_page` is not one of the declared index
+pages — M145 and M280 record the static file URL itself, the seven off-host artefacts record their
+own document URL — record something other than the field's stated meaning. Whether that field is
+widened or the rows are corrected is not settled here.
+
+*Ordering.* D11 is independent of D1–D3 and shares D8's limb. D8 wires the live detector that
+notices a republished official source; D11 makes the offline authority set total, so that what the
+detector compares against is a corpus every element of which can be traced to a declaration. D11's
+declaration work must precede its invariant; the aggregate repair is independent of both and can
+land first.
+
 ## Rationale
 
 The rulings follow from one observation: the pipeline's contract is asymmetric. It refuses
@@ -404,3 +439,22 @@ times with different text. Their governing mandate has more than one plausible r
 artefact records none having been chosen. This is the sign defect's mechanism one layer up, it is
 measured by an enrolled screen, and unlike everything above it is NOT blocked by the publication gap,
 because resolving note scope changes what the pipeline can prove rather than what it emits.
+
+**Amendment, 2026-09-10: D11 added, and three of its draft premises corrected.** D11 was drafted
+against a reading of the acquisition script that measurement did not support, and the record notes
+the corrections rather than quietly adopting the fixed version. The draft held that the seven
+off-host artefacts were the whole inexpressible class; the measured class is **168 of 248**
+undeclared, of which seven are additionally off-host. The draft held that one of the seven — the
+M186 anexo PNG — was registered by nothing; all seven carry a registry-side `corpus_path`
+declaration, and the M186 entry's `form_spec` kind is a documented deliberate choice, not an
+omission. The draft held that `--pull` rebuilds each manifest from the declaration join and is
+therefore a data-loss operation; `_pull` loads the existing manifests and appends to them, so it
+is additive and would repair rather than destroy. The ruling survives all three corrections and is
+widened by the first, because the defect it names is the absence of the reproducibility invariant
+rather than any particular loss event. Grounding for every figure is the 2026-09-10 addendum to
+`2026-09-09-registry-generator-corpus-provenance-research`.
+
+**A packaging question is deliberately excluded.** A false runtime claim in `pyproject.toml` and
+an unreachable identity-stamp fast path were surfaced alongside D11 and are not ruled here. They
+are distribution decisions, not registry-generator ones, and folding them in would fork one
+decision across two records. They need their own home.

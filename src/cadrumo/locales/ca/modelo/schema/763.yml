@@ -2,8 +2,9 @@ modelo:
   schema:
     '763':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 763. Impost sobre activitats de joc en els supòsits
+          d'activitats anuals o pluriennals. Autoliquidació.
+        title: Impost sobre activitats de joc - autoliquidació (anuals/pluriennals)
       revision:
         2012-2t-3t:
           casilla:

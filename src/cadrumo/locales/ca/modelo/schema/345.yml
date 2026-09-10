@@ -2,8 +2,10 @@ modelo:
   schema:
     '345':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 345. Declaració informativa. Plans, fons de pensions
+          i sistemes alternatius. Declaració anual de partícips, aportacions i contribucions.
+        title: Declaració informativa anual de plans i fons de pensions, partícips,
+          aportacions i contribucions
       revision:
         '2025':
           casilla:

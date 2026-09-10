@@ -286,7 +286,7 @@ def manifest_only_fields(model: type[BaseModel]) -> frozenset[str]:
 def schema_family_fields(model: type[BaseModel]) -> frozenset[str]:
     """Return the names of ``model``'s fields marked :data:`SCHEMA_FAMILY`.
 
-    The declared enrolment. :func:`collection_shaped_fields` computes the set
+    The declared enrolment. ``collection_shaped_fields`` computes the set
     this one is meant to equal; the gate that compares them is what stops a new
     collection shipping outside coverage.
     """

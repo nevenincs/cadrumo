@@ -2,8 +2,12 @@ modelo:
   schema:
     '187':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 187. A kollektív befektetési formák jegyzett tőkéjét
+          vagy vagyonát megtestesítő részvények és befektetési jegyek adatszolgáltatási
+          bevallása, valamint az elért jövedelmekre és vagyoni nyereségekre vonatkozó
+          IRPF-, IS- és IRNR-adóelőleg-levonások és -befizetések éves összesítője.
+        title: Kollektív befektetési formák részvényei és befektetési jegyei - éves
+          összesítő
       revision:
         2022-y-siguientes:
           casilla:

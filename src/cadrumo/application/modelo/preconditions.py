@@ -356,15 +356,14 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.verify",
         "modelo.work.verify.registry_snapshot.available",
         "modelo.work.verify.registry_snapshot.unavailable",
-        action_id="operator.registry.verify",
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
     ),
     # No action, and TERMINAL rather than OPERATOR_DECISION: a revision that
     # declares less than filing authority is not something the operator can
     # decide their way out of. Re-running verify produces the identical refusal,
-    # so pointing at ``operator.registry.verify`` here -- as the sibling above
-    # legitimately does for an UNRESOLVED snapshot -- would hand out a next step
-    # that cannot resolve the finding. The revision has to be split and attested
-    # first, and that is not operator work.
+    # The bundled registry is shipped product data, not operator-configurable
+    # state. A missing snapshot is likewise terminal: the release must be
+    # repaired and re-issued; the operator has no local recovery action.
     _profile(
         "modelo.work.verify",
         "modelo.work.verify.registry_snapshot.filing_authority",

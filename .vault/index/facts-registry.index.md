@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#facts-registry'
 date: '2026-09-09'
-modified: '2026-09-09'
+modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:7616a8db43e57ea7caa965f1edd84b7707b94b050fcbd40f5590b3109787ca7a'
+body_hash: 'sha256:8fa5b8d1db2e54db12ce6250b76362f779422705a829918a4819fc728589893e'
 related:
   - '[[2026-09-09-facts-registry-W01-P01-S01]]'
   - '[[2026-09-09-facts-registry-W01-P01-S02]]'
@@ -55,6 +55,8 @@ related:
   - '[[2026-09-09-facts-registry-W03-P12-S26]]'
   - '[[2026-09-09-facts-registry-W03-P12-S27]]'
   - '[[2026-09-09-facts-registry-W03-P12-S51]]'
+  - '[[2026-09-09-facts-registry-W03-P13-S52]]'
+  - '[[2026-09-09-facts-registry-W03-P13-S53]]'
   - '[[2026-09-09-facts-registry-authority-plumbing-research]]'
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
   - '[[2026-09-09-facts-registry-discovery-blast-radius-research]]'
@@ -122,6 +124,8 @@ Auto-generated index of all documents tagged with `#facts-registry`.
 - `2026-09-09-facts-registry-W03-P12-S26` - Rewire IVA lookups while preserving domain facades
 - `2026-09-09-facts-registry-W03-P12-S27` - Rewire invoice slot percentage interpretation
 - `2026-09-09-facts-registry-W03-P12-S51` - Rewire extraction recargo aggregation and inventory defaults
+- `2026-09-09-facts-registry-W03-P13-S52` - Rewire treaty and authorization consumers
+- `2026-09-09-facts-registry-W03-P13-S53` - Rewire deadline notification amendment and foreign-asset facts
 
 ### plan
 

@@ -201,7 +201,6 @@ BOOTSTRAP_EXEMPTIONS: tuple[BootstrapExemption, ...] = (
         subtree=(
             "connectivity",
             "integrity objects",
-            "integrity registry",
             "logs",
             "profile",
             "quarantine",
@@ -280,38 +279,6 @@ BOOTSTRAP_EXEMPTIONS: tuple[BootstrapExemption, ...] = (
         verb_path="config auth apoderado scopes list",
         criterion=ExemptionCriterion.BUNDLED_CATALOGUE,
         note="Lists the bundled apoderado-scope vocabulary. Resolves no bucket.",
-    ),
-    BootstrapExemption(
-        verb_path="app registry",
-        criterion=ExemptionCriterion.BUNDLED_CATALOGUE,
-        note=(
-            "Projects the compiled registry snapshot and the bundled corpus, never a "
-            "taxpayer's records. The prefix is exempt as a unit because the whole family is "
-            "declared read-only in the operator-surface contract."
-        ),
-        subtree=(
-            "citations list",
-            "citations verify",
-            "citations view",
-            "diff-revisions",
-            "inspect",
-            "manuals list",
-            "manuals rules",
-            "manuals verify",
-            "manuals view",
-            # Replays the BUNDLED Renta WEB Open captures through the parity
-            # oracle. Offline by construction -- the driver's only planned
-            # operation is a local parse and the remote-state guard authorises
-            # that plan before any comparison -- and its declared posture is
-            # identical to `verify`, `verify-filed-state` and `inspect` above:
-            # registry capability alone, no side effects, no write route, not
-            # destructive, no live write, profile authentication not applicable.
-            "replay-parity",
-            "verify",
-            "verify-filed-state",
-            "view-edition",
-        ),
-        asserts_family_read_only=True,
     ),
     BootstrapExemption(
         verb_path="app modelo list",

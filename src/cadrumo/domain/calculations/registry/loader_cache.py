@@ -27,7 +27,6 @@ from __future__ import annotations
 
 import os
 import re
-import tempfile
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -549,45 +548,14 @@ def _toml_content_digest(path: Path) -> str:
     return blake2b_hex(data)
 
 
-def _running_under_pytest() -> bool:
-    """Whether the current process is a pytest run (including collection and xdist workers)."""
-    import sys
-
-    return (
-        "pytest" in sys.modules
-        or "PYTEST_CURRENT_TEST" in os.environ
-        or "PYTEST_XDIST_WORKER" in os.environ
-        or "PYTEST_VERSION" in os.environ
-    )
-
-
 def registry_disk_cache_enabled(*, is_bundled: bool = False) -> bool:
     """Whether the cross-process ``/tmp`` registry pickle is read/written.
 
-    Production (no pytest markers present at all) always keeps the disk
-    cache: it loads the registry once at startup with no concurrent edits.
-
-    Under pytest, including collection before ``PYTEST_CURRENT_TEST`` is
-    set, the cache is enabled ONLY for ``is_bundled=True`` -- the
-    package-bundled, read-only registry tree (:func:`is_bundled_registry_root`).
-    That tree is never mutated during a test run, so every pytest-xdist
-    worker and every subprocess-spawning test may safely share ONE compiled
-    pickle keyed by a content fingerprint of that tree, collapsing what would
-    otherwise be an independent multi-second cold compile per worker/subprocess
-    into a single shared compile the rest read.
-
-    A mutable or synthetic root (e.g. a test's ``tmp_path`` registry, or any
-    path that is not the resolved bundled root) always keeps the cache
-    disabled under pytest -- this is the #44 isolation fix: such a root CAN be
-    edited mid-run by the very test that built it, and the pickle is keyed by
-    file mtime, so sharing it across workers could serve a stale or
-    transiently-inconsistent compiled registry (the M303-2009 flake #44
-    diagnosed). Only the always-immutable bundled tree is exempt from that
-    race.
+    Only the package-bundled, immutable registry tree is safe to cache across
+    processes. Mutable and synthetic roots remain uncached in every runtime;
+    correctness must not depend on identifying the process that opened them.
     """
-    if _running_under_pytest():
-        return is_bundled
-    return True
+    return is_bundled
 
 
 def registry_disk_cache_dir() -> Path:
@@ -604,40 +572,26 @@ def registry_disk_cache_dir() -> Path:
        exercising the real filesystem and read/write path. It rides the env
        var (not a monkeypatch) so it also propagates to a subprocess a test
        spawns via ``env=``.
-    2. Production (not under pytest) derives
-       ``<cadrumo_local_storage_root>/cache/registry`` -- one per-user location
-       under the single storage root, never the shared OS temp directory that
-       any two host users could collide in.
-    3. Under pytest with no explicit override, the cross-worker bundled-root
-       share stays in the host-shared OS temp directory: xdist workers each
-       get a per-pid ``cadrumo_local_storage_root``, so deriving from it would
-       give every worker a private cache and defeat the single-compile sharing
-       the disk pickle exists to deliver. The bundled tree is immutable during
-       a run, so one host-shared compiled pickle is safe to share. This
-       divergence from the member's declared subpath is a positive, test-pinned
-       exception rather than an undeclared special case -- see
-       :attr:`~core.StorageLocation.test_pinned_exception` on
-       ``StorageCategory.REGISTRY_DISK_CACHE``.
+    2. Otherwise derive ``<cadrumo_local_storage_root>/cache/registry``. The
+       caller controls isolation through the ordinary storage-root or explicit
+       cache-directory configuration; package code never identifies its host.
     """
     settings = load_settings()
     return _resolve_registry_disk_cache_dir(
         override=settings.cadrumo_registry_disk_cache_dir,
-        under_pytest=_running_under_pytest(),
         storage_root=settings.cadrumo_local_storage_root,
     )
 
 
-def _resolve_registry_disk_cache_dir(*, override: Path | None, under_pytest: bool, storage_root: Path) -> Path:
+def _resolve_registry_disk_cache_dir(*, override: Path | None, storage_root: Path) -> Path:
     """Pure resolution of the registry disk-cache directory.
 
-    Split from :func:`registry_disk_cache_dir` so the three branches (explicit
-    override, pytest host-shared temp, production storage-root derivation) are
+    Split from :func:`registry_disk_cache_dir` so both branches (explicit
+    override and storage-root derivation) are
     exercised with real inputs rather than by manipulating the ambient process.
     """
     if override is not None:
         return override
-    if under_pytest:
-        return Path(tempfile.gettempdir())
     return storage_root / _REGISTRY_DISK_CACHE_RELATIVE_PATH
 
 

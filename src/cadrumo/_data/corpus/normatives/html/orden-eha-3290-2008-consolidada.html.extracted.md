@@ -1,0 +1,1136 @@
+# Artículo 1. Aprobación del modelo 216.
+
+Se aprueba el modelo 216 «Impuesto sobre la Renta de no Residentes. Rentas obtenidas sin mediación de establecimiento permanente. Retenciones e ingresos a cuenta. Declaración-documento de ingreso». Dicho modelo, que figura como anexo I de la presente Orden, consta de dos ejemplares: Ejemplar para el declarante y ejemplar para la entidad colaboradora-AEAT.
+El número de justificante que habrá de figurar en dicho modelo será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 216.
+
+# Artículo 2. Obligados a presentar el modelo 216.
+
+1. Este modelo deberá ser utilizado por los sujetos obligados a retener o a efectuar ingreso a cuenta sobre las rentas obtenidas sin mediación de establecimiento permanente por contribuyentes del Impuesto sobre la Renta de no Residentes, a los que se refiere el artículo 11 del Reglamento del Impuesto sobre la Renta de no Residentes aprobado por Real Decreto 1776/2004, de 30 de julio, para realizar el ingreso en el Tesoro de las cantidades retenidas o de los ingresos a cuenta efectuados, salvo los sujetos obligados a retener o ingresar a cuenta en las transmisiones o reembolsos de acciones o participaciones representativas del capital o patrimonio de las instituciones de inversión colectiva, que lo harán en una declaración específica.
+2. El modelo 216 también se utilizará por los citados obligados en los casos en los que, de acuerdo con lo dispuesto en el apartado 4 del artículo 31 del texto refundido de la Ley del Impuesto sobre la Renta de no Residentes, aprobado por el Real Decreto Legislativo 5/2004, de 5 de marzo, no proceda practicar retención o ingreso a cuenta.
+3. No se tendrán en cuenta, a efectos de lo dispuesto en el número anterior, las siguientes rentas:
+1.º Las rentas a que se refiere el artículo 14.1.a) del texto refundido de la Ley del Impuesto sobre la Renta de no Residentes, excepto los rendimientos del trabajo en especie mencionados en el apartado 3 del artículo 42 de la Ley 35/2006, de 28 de noviembre, del Impuesto sobre la Renta de las Personas Físicas y de modificación parcial de las leyes de los Impuestos sobre Sociedades, sobre la Renta de no Residentes y sobre el Patrimonio.
+2.º Las rentas derivadas de valores emitidos en España por personas físicas o entidades no residentes sin mediación de establecimiento permanente, cualquiera que sea el lugar de residencia de las instituciones financieras que actúen como agentes de pago o medien en la emisión o transmisión de los valores.
+3.º Los rendimientos de las cuentas de no residentes que se satisfagan a contribuyentes de este Impuesto, salvo que el pago se realice a un establecimiento permanente situado en territorio español, por el Banco de España o por las entidades registradas a que se refiere la normativa de transacciones económicas con el exterior.
+4.º Los intereses de la Deuda del Estado y de las Comunidades Autónomas en Anotaciones, sujetos a un procedimiento especial de pago de los mismos o de devolución de retenciones.
+5.º Las rentas exceptuadas de la obligación de retener y de ingresar a cuenta enumeradas en el apartado 3 del artículo 10 del Reglamento del Impuesto sobre la Renta de no Residentes.
+6.º Las rentas a que se refiere el artículo 118.1.c) del texto refundido de la Ley del Impuesto sobre Sociedades, aprobado por Real Decreto Legislativo 4/2004, de 5 de marzo.
+Se modifica el apartado 3.1º por el art. 2.1 de la Orden HAC/56/2024, de 25 de enero. Ref. BOE-A-2024-1772
+
+# Artículo 3. Lugar de presentación e ingreso del modelo 216 en impreso.
+
+1. Si de la declaración resulta cantidad a ingresar, la presentación e ingreso se realizará en cualquier entidad colaboradora en la gestión recaudatoria (Bancos, Cajas de Ahorros o Cooperativas de Crédito) sita en territorio español, para lo cual deberá llevar adheridas las correspondientes etiquetas identificativas facilitadas por la Agencia Estatal de Administración Tributaria.
+2. Tratándose de declaraciones negativas, éstas deberán presentarse, directamente o mediante envío por correo certificado, en la Delegación Central de Grandes Contribuyentes, en las Unidades de Gestión de Grandes Empresas o en la Delegación o Administración de la Agencia Estatal de Administración Tributaria correspondiente al domicilio fiscal del obligado tributario, según proceda, acompañando a la declaración fotocopia de la tarjeta o documento acreditativo del número de identificación fiscal si la misma no lleva adheridas las correspondientes etiquetas identificativas. No obstante lo anterior, no será preciso adjuntar fotocopia del documento acreditativo del número de identificación fiscal (NIF) cuando se trate de declaraciones correspondientes a personas físicas que se presenten personalmente en las oficinas de la Agencia Estatal de Administración Tributaria.
+
+# Artículo 4. Plazo de presentación del modelo 216.
+
+De acuerdo con lo dispuesto en el artículo 15.1 del Reglamento del Impuesto sobre la Renta de no Residentes, la presentación del modelo 216, así como, en su caso, el ingreso de su importe en el Tesoro Público, se efectuará en los veinte primeros días naturales de los meses de abril, julio, octubre y enero, en relación con las cantidades retenidas y los ingresos a cuenta que proceda realizar correspondientes al primero, segundo, tercero y cuarto trimestre del año natural, respectivamente.
+No obstante, la declaración e ingreso a que se refiere el párrafo anterior se efectuará en los veinte primeros días naturales de cada mes, en relación con las cantidades retenidas y los ingresos a cuenta efectuados que correspondan por el mes inmediato anterior, cuando se trate de retenedores u obligados que tengan la consideración de grandes empresas por concurrir alguna de las circunstancias a que se refieren los números 1.º y 2.º del apartado 3 del artículo 71 del Reglamento del Impuesto sobre el Valor Añadido, aprobado por el Real Decreto 1624/1992, de 29 de diciembre. Por excepción, la declaración e ingreso correspondiente al mes de julio se efectuará durante el mes de agosto y los veinte primeros días naturales del mes de septiembre inmediato posterior.
+Los vencimientos de plazo que coincidan con un sábado o día inhábil se entenderán trasladados al primer día hábil inmediato siguiente.
+Todo ello, sin perjuicio de lo dispuesto en el apartado 3 del artículo 5 de la presente Orden.
+
+# Artículo 5. Condiciones generales y procedimiento para la presentación telemática del modelo 216.
+
+1. Sin perjuicio de lo dispuesto en el artículo 3 anterior, los obligados tributarios podrán efectuar la presentación y, en su caso, el ingreso resultante de la declaración-liquidación ajustada al modelo 216 por vía telemática de acuerdo con lo dispuesto en la Orden de 21 de diciembre de 2000, por la que se establecen las condiciones generales y el procedimiento para la presentación telemática de las declaraciones correspondientes a los modelos 117, 123, 124, 126, 128, 216, 131, 310, 311, 193, 198, 296 y 345.
+También resultarán aplicables a la presentación por vía telemática del modelo 216 las medidas establecidas para la eliminación de determinadas restricciones a la utilización de esta vía en el artículo 2 de la Orden EHA/3398/2006, de 26 de octubre, por la que se dictan medidas para el impulso y homogeneización de determinados aspectos en relación a la presentación de declaraciones tributarias por vía telemática, se modifican determinadas normas de presentación de los modelos de declaración 182, 184, 188 y 296, y se modifica el modelo de declaración 187, «Declaración informativa de acciones y participaciones representativas del capital o del patrimonio de las instituciones de inversión colectiva y resumen anual de retenciones e ingresos a cuenta en relación con las rentas o ganancias patrimoniales obtenidas como consecuencia de las transmisiones o reembolsos de esas acciones y participaciones».
+2. La utilización por los retenedores u obligados a ingresar a cuenta de la domiciliación bancaria en la entidad de crédito que actúe como colaboradora en la gestión recaudatoria (Bancos, Cajas de Ahorro o Cooperativas de Crédito) como medio de pago de la deuda tributaria resultante del modelo 216 presentado por vía telemática se ajustará a lo dispuesto en el artículo 1 de la Orden EHA/3398/2006, anteriormente citada.
+3. La transmisión telemática de declaraciones, con resultado a ingresar, deberá realizarse en la misma fecha en que tenga lugar el ingreso resultante de las mismas.
+No obstante lo anterior, cuando existan dificultades técnicas que impidan efectuar la transmisión telemática de la declaración en la misma fecha del ingreso, podrá realizarse dicha transmisión telemática hasta el segundo día hábil siguiente al del ingreso.
+4. La presentación del modelo 216 por vía telemática podrá ser efectuada bien por el propio declarante o bien por un tercero que actúe en su representación, de acuerdo con lo establecido en el Real Decreto 1065/2007, de 27 de julio, por el que se aprueba el Reglamento General de las actuaciones y los procedimientos de gestión e inspección tributaria y de desarrollo de las normas comunes de los procedimientos de aplicación de los tributos (artículos 79 a 81) y en la Orden HAC/1398/2003, de 27 de mayo, por la que se establecen los supuestos y condiciones en que podrá hacerse efectiva la colaboración social en la gestión de los tributos, y se extiende ésta expresamente a la presentación telemática de determinados modelos de declaración y otros documentos tributarios.
+
+# Artículo 6. Aprobación del modelo 296.
+
+1. Se aprueba el modelo 296 «Impuesto sobre la Renta de no Residentes. No residentes sin establecimiento permanente. Declaración anual de retenciones e ingresos a cuenta», que figura como anexo II de la presente Orden.
+2. El modelo 296 consta de:
+a) Hoja resumen, que comprende dos ejemplares, uno para la Administración y otro para el interesado.
+b) Hoja de relación nominativa de perceptores, cada una de las cuales consta asimismo, de dos ejemplares, uno para la Administración y otro para el interesado.
+c) Hoja de declaración complementaria por modificación o anulación de datos, que consta de dos ejemplares, uno para la Administración y otro para el interesado.
+d) Sobre de retorno.
+El número identificativo que habrá de figurar en el modelo 296 para su presentación telemática o en impreso será un número secuencial cuyos tres primeros dígitos se correspondan con el código 296. No obstante, las declaraciones complementarias presentadas por vía telemática que modifiquen el contenido de datos declarados en otra declaración del mismo ejercicio, presentada anteriormente, se realizarán desde el servicio de consulta y modificación de declaraciones informativas en la Oficina Virtual de la Agencia Tributaria (www.agenciatributaria.es). En este caso, la declaración complementaria quedará identificada por el código electrónico de su presentación, no siendo necesario indicar ningún número identificativo.
+3. Serán igualmente válidas las declaraciones que, ajustándose a los contenidos del modelo aprobado en la presente Orden, se realicen con el módulo de impresión en papel blanco que, en su caso y a estos efectos, elabore la Agencia Estatal de Administración Tributaria.
+Para estas declaraciones deberá utilizarse el sobre de retorno «Programa de ayuda», aprobado en la Orden EHA/702/2006, de 9 de marzo, por la que se aprueban los modelos de declaración del Impuesto sobre la Renta de las Personas Físicas y del Impuesto sobre el Patrimonio, ejercicio 2005, se establecen el procedimiento de remisión del borrador de declaración del Impuesto sobre la Renta de las Personas Físicas y las condiciones para su confirmación o suscripción, se determinan el lugar, forma y plazos de presentación de los mismos, así como las condiciones generales y el procedimiento para su presentación por medios telemáticos o telefónicos.
+Los datos impresos en estas declaraciones prevalecerán sobre las alteraciones o correcciones manuales que pudieran producirse sobre los mismos, por lo que éstas no producirán efectos ante la Administración tributaria.
+
+# Artículo 7. Sujetos obligados a la presentación de la declaración anual 296.
+
+1. Están obligados a presentar la declaración anual 296 los sujetos obligados a retener o a efectuar ingreso a cuenta a que se refiere el artículo 11 del Reglamento del Impuesto sobre la Renta de no Residentes, salvo los sujetos obligados a retener o ingresar a cuenta en las transmisiones o reembolsos de acciones o participaciones representativas del capital o patrimonio de las instituciones de inversión colectiva, que efectuarán una declaración anual específica.
+2. Conforme establece el apartado 2 del artículo 15 del Reglamento del Impuesto sobre la Renta de no Residentes, están también obligados a presentar la declaración anual las entidades domiciliadas, residentes o representadas en España, que paguen por cuenta ajena rentas sujetas a retención o ingreso a cuenta o que sean depositarias o gestionen el cobro de las rentas de valores.
+
+# Artículo 8. Contenido del modelo 296.
+
+Conforme establece el apartado 2 del artículo 15 del Reglamento del Impuesto, el modelo 296 contiene una relación nominativa de perceptores que, con carácter general, serán los contribuyentes por el Impuesto sobre la Renta de no Residentes que obtienen rentas en territorio español sin mediación de establecimiento permanente, sujetas a retención.
+Tratándose de declarantes que sean obligados a retener o ingresar a cuenta, dicha relación contendrá los datos de los perceptores de rentas sujetas al Impuesto, satisfechas o abonadas por ellos, respecto de las que han efectuado retenciones o ingresos a cuenta o respecto de aquellas sobre las que no procede practicar retención o ingreso a cuenta, pero sí existe obligación de presentar declaración negativa de retenciones. No se incluirá en el modelo 296 a los perceptores de rentas excluidas de la obligación de presentar declaración negativa de retenciones, relacionadas en el apartado 3 artículo 2 de la presente orden.
+Tratándose de declarantes que sean entidades domiciliadas, residentes o representadas en España que paguen por cuenta ajena rentas sujetas a retención o ingreso a cuenta o que sean depositarias o gestionen el cobro de las rentas de valores, que formen parte de la cadena de pago de dichas rentas, harán constar los datos del anterior pagador y, como perceptor, al siguiente mediador en la cadena. Si la cadena finalizase en España, el último mediador informará, como perceptor, de los datos del contribuyente que obtiene la renta.
+En el caso de que en el pago de esos rendimientos se haya utilizado el procedimiento especial de ajuste de retenciones previsto en la Orden de 13 de abril de 2000 por la que se establece el procedimiento para hacer efectiva la práctica de retención al tipo que corresponda en cada caso, o la exclusión de retención, sobre los intereses y dividendos obtenidos sin mediación de establecimiento permanente por contribuyentes del Impuesto sobre la Renta de no Residentes derivados de la emisión de valores negociables, a excepción de los intereses derivados de determinados valores de la Deuda Pública, la entidad depositaria interviniente en dicho procedimiento, al suministrar información en su modelo 296, hará constar en el campo "Perceptor" los datos del contribuyente que obtiene la renta.
+Los anexos al registro de tipo 2, "Valores negociables. Relación de pago a contribuyentes" y "Valores negociables. Relación de certificados de pago" se utilizarán por mediadores en España que realicen los pagos de rentas de valores a intermediarios en el extranjero cuando soliciten la devolución de retenciones para los contribuyentes mediante el modelo de autoliquidación 210. Estos anexos se suministrarán con posterioridad a la presentación de los modelos 210, en el plazo previsto en el artículo 11.
+Cuando la solicitud de devolución de retenciones se realice por contribuyentes o sus representantes, los mediadores en España que realicen los pagos de rentas de valores a intermediarios en el extranjero podrán incluir en los anexos los registros de estos contribuyentes cuyos modelos 210 se hayan presentado.
+Se modifica por el art. 2.2 de la Orden HAC/56/2024, de 25 de enero. Ref. BOE-A-2024-1772
+
+# Artículo 9. Formas de presentación del modelo 296.
+
+La declaración anual de retenciones e ingresos a cuenta efectuadas en relación con las rentas sujetas al Impuesto sobre la Renta de no Residentes obtenidas por contribuyentes de dicho impuesto sin establecimiento permanente, modelo 296, se presentará con arreglo a los criterios que a continuación se especifican:
+1.º Las declaraciones que correspondan a obligados tributarios adscritos a la Delegación Central de Grandes Contribuyentes o a alguna de las Unidades de Gestión de Grandes Empresas de la Agencia Estatal de Administración Tributaria y que no contengan más de 29.999 registros de perceptores y aquellas declaraciones anuales, ajustadas al modelo 296, que contengan información relativa a los préstamos de valores regulados en la disposición adicional decimoctava de la Ley 62/2003, de 30 de diciembre, de medidas fiscales, administrativas y del orden social, deberán presentarse por vía telemática a través de Internet, con arreglo a lo establecido en el artículo 15 de la presente Orden, o bien por teleproceso, con arreglo al procedimiento a que se refiere el artículo 16 de la presente Orden.
+2.º Las declaraciones que correspondan a obligados tributarios no incluidos en el número 1.º anterior y que no contengan más de 29.999 registros de perceptores, deberán presentarse, a elección del obligado tributario, a través de alguno de los siguientes medios:
+a) En impreso, siempre que la declaración no contenga más de 15 registros de perceptores. En tal caso, la declaración podrá presentarse tanto en el formulario ajustado al modelo 296 aprobado en el artículo 6 de la presente Orden, como en un impreso generado mediante la utilización, exclusivamente, del módulo de impresión desarrollado por la Agencia Estatal de Administración Tributaria.
+b) Por vía telemática a través de Internet, con arreglo a lo establecido en el artículo 15 de la presente Orden.
+c) Por vía telemática por teleproceso, con arreglo al procedimiento a que se refiere el artículo 16 de la presente Orden.
+3.º Las declaraciones que contengan más de 29.999 registros de perceptores, cualquiera que sea la persona o entidad obligada a su presentación, deberán presentarse en soporte directamente legible por ordenador, o por vía telemática por teleproceso, con arreglo a lo establecido en los artículos 13 y 16 de la presente Orden.
+Los soportes directamente legibles por ordenador, que habrán de ser exclusivamente individuales, deberán cumplir las siguientes características:
+a) Tipo: CD-R (Compact Disc Recordable) de 12 cm.
+b) Capacidad: Hasta 700 MB.
+c) Formato ISO/IEC DIS 9660:1999, con extensión o sin extensión Joliet.
+d) No multisesión.
+
+# Artículo 10. Aprobación de los diseños físicos y lógicos a los que debe ajustarse el soporte directamente legible por ordenador del modelo 296.
+
+Se aprueban los diseños físicos a los que deberán ajustarse los soportes directamente legibles por ordenador, así como los diseños lógicos a los que deberán ajustarse los ficheros que contengan la información a suministrar en el modelo 296 tanto en supuesto de presentación del mismo mediante soporte directamente legible por ordenador como por vía telemática. Ambos diseños, físicos y lógicos, figuran en el anexo III de la presente Orden.
+En todo caso, la información contenida en el soporte directamente legible por ordenador deberá haber sido validada con carácter previo a su presentación. Dicha validación se realizará utilizando el programa de validación elaborado por la Agencia Estatal de Administración Tributaria, salvo que, por razones técnicas objetivas, no resulte posible, en cuyo caso la validación deberá realizarse en cualquier Delegación de la mencionada Agencia o también en cualquiera de las Administraciones dependientes de la misma. En el supuesto de obligados tributarios adscritos a la Delegación Central de Grandes Contribuyentes o a alguna de las Unidades de Gestión de Grandes Empresas de la Agencia Estatal de Administración Tributaria, cuando por razones técnicas objetivas no resulte posible utilizar el programa de validación elaborado por la Agencia Estatal de Administración Tributaria, la mencionada validación podrá también realizarse en la correspondiente Delegación Central o Unidad de Gestión.
+
+# Artículo 11. Plazo de presentación del modelo 296.
+
+El plazo de presentación de la declaración anual de retenciones e ingresos a cuenta, modelo 296, incluyendo, en su caso, el "Anexo de desglose de retenciones e ingresos a cuenta ingresados en el Estado, en las Diputaciones Forales del País Vasco y en la Comunidad Foral de Navarra", será el comprendido entre el 1 de enero y el 31 de enero del año siguiente al que corresponde la declaración anual.
+No obstante, los anexos al registro de tipo 2, registro de perceptor, de los diseños de registro del modelo 296, denominados "Valores negociables. Relación de pago a contribuyentes" y "Valores negociables. Relación de certificados de pago", se presentarán durante el mes natural siguiente a la fecha de presentación del modelo 210.
+Se modifica por el art. 2.3 de la Orden HAC/56/2024, de 25 de enero. Ref. BOE-A-2024-1772
+
+# Artículo 12. Lugar y procedimiento de presentación del modelo 296 en impreso.
+
+1. La presentación de la declaración anual de retenciones e ingresos a cuenta, modelo 296, tanto en el impreso aprobado en el anexo II de la presente Orden como en el generado a través del módulo de impresión elaborado por la Agencia Estatal de Administración Tributaria, se realizará en la Delegación o Administración de la Agencia Estatal de Administración Tributaria correspondiente al domicilio fiscal del obligado tributario.
+Dicha presentación se efectuará, directamente o por correo certificado, utilizando el sobre de retorno que corresponda, en el cual se habrá introducido previamente la siguiente documentación:
+a) El «ejemplar para la Administración» de la hoja-resumen del modelo 296, debidamente cumplimentada, en la que deberá constar adherida en el espacio reservado al efecto la etiqueta identificativa suministrada por la Agencia Estatal de Administración Tributaria. En el supuesto de no disponerse de dicha etiqueta, se cumplimentarán la totalidad de los datos de identificación solicitados y se acompañará fotocopia de la tarjeta acreditativa del número de identificación fiscal.
+No obstante lo anterior, no será preciso adjuntar fotocopia del documento acreditativo del número de identificación fiscal (NIF) cuando se trate de declaraciones correspondientes a personas físicas que se presenten personalmente en las oficinas de la Agencia Estatal de Administración Tributaria.
+b) Los «ejemplares para la Administración» de las hojas interiores conteniendo la relación nominativa de perceptores.
+c) En su caso, los «ejemplares para la Administración» de las hojas de declaración complementaria por modificación o anulación de datos.
+2. No obstante lo anterior, la presentación del modelo 296 en impreso también podrá realizarse a través de cualquiera de las entidades colaboradoras sitas en territorio español, conjuntamente con la declaración-documento de ingreso de retenciones e ingresos a cuenta, modelo 216, correspondiente al último período del año, siempre que la misma resulte a ingresar y dicho ingreso se efectúe en la referida entidad.
+Efectuado el ingreso del modelo 216 del último período, se introducirá en el sobre anual la documentación a que se refiere el apartado 1 anterior. Una vez cerrado dicho sobre, se depositará en la misma entidad colaboradora, que lo hará llegar al órgano administrativo correspondiente.
+
+# Artículo 13. Lugar y procedimiento de presentación del modelo 296 en soporte directamente legible por ordenador.
+
+1. El soporte directamente legible por ordenador deberá presentarse en la Delegación o Administración de la Agencia Estatal de Administración Tributaria en cuyo ámbito territorial esté situado el domicilio fiscal del retenedor u obligado a ingresar a cuenta, o bien en la Delegación Central de Grandes Contribuyentes o en la Unidad de Gestión de Grandes Empresas de la Agencia Estatal de Administración Tributaria, según proceda en función de la adscripción del obligado tributario a una u otra Delegación o Unidad.
+A tal efecto, el obligado tributario deberá presentar además los siguientes documentos:
+Los dos ejemplares, para la Administración y para el interesado, de la hoja-resumen del modelo 296, en cada uno de las cuales deberá adherirse, en el espacio correspondiente, la etiqueta identificativa que suministre la Agencia Estatal de Administración Tributaria. En el supuesto de no disponerse de dichas etiquetas, se cumplimentarán la totalidad de los datos de identificación solicitados y se acompañará fotocopia de la tarjeta acreditativa del número de identificación fiscal.
+No obstante lo anterior, no será preciso adjuntar fotocopia del documento acreditativo del número de identificación fiscal (NIF) cuando se trate de declaraciones correspondientes a personas físicas que se presenten personalmente en las oficinas de la Agencia Estatal de Administración Tributaria.
+Asimismo, dichos ejemplares deberán estar debidamente firmados indicando en los espacios correspondientes la identidad del firmante así como los restantes datos que en la citada hoja-resumen se solicitan.
+Una vez sellados por la oficina receptora, el declarante retirará el «ejemplar para el interesado» de la hoja-resumen del modelo 296 presentado, que servirá como justificante de la entrega.
+2. Todas las recepciones de soportes legibles por ordenador serán provisionales, a resultas de su proceso y comprobación. Cuando no se ajusten al diseño y demás especificaciones establecidas en la presente Orden, o cuando no resulte posible el acceso a la información contenida en los mismos, se requerirá al declarante para que en el plazo de diez días hábiles subsane los defectos de que adolezca el soporte informático presentado, transcurridos los cuales y de persistir anomalías que impidan a la Administración tributaria el acceso a los datos exigibles, se tendrá por no válida la declaración informativa a todos los efectos, circunstancia ésta que se pondrá en conocimiento del obligado tributario de forma motivada.
+3. Por razones de seguridad, los soportes legibles directamente por ordenador, no se devolverán, salvo que se solicite expresamente, en cuyo caso se procederá al borrado y entrega de los mismos u otros similares.
+
+# Artículo 14. Identificación de los soportes directamente legibles por ordenador del modelo 296.
+
+El soporte directamente legible por ordenador deberá tener una etiqueta adherida en el exterior en la que se harán constar los datos que se especifican a continuación y, necesariamente, por el mismo orden:
+a) Delegación, Administración o Unidad de Gestión de Grandes Empresas de la Agencia Estatal de Administración Tributaria en la que se efectúe la presentación individual.
+b) Ejercicio.
+c) Modelo de presentación: 296.
+d) Número identificativo de la hoja-resumen que se acompaña.
+e) Número de identificación fiscal (NIF) del declarante.
+f) Apellidos y nombre, o razón social, del declarante.
+g) Apellidos y nombre de la persona con quien relacionarse.
+h) Teléfono y extensión de dicha persona.
+i) Número total de registros.
+Para hacer constar los referidos datos, bastará consignar cada uno de ellos precedido de la letra que le corresponda según la relación anterior.
+En el supuesto de que el archivo conste de más de un soporte directamente legible por ordenador, todos llevarán su etiqueta numerada secuencialmente: 1/n, 2/n, etc., siendo «n» el número total de soportes. En la etiqueta del segundo y sucesivos volúmenes sólo será necesario consignar los datos indicados en las letras a), b), c), d), e) y f) anteriores.
+
+# Artículo 15. Presentación telemática por Internet del modelo 296.
+
+1. La presentación telemática a través de internet del modelo 296 se efectuará con arreglo a las condiciones generales y al procedimiento establecidos, respectivamente, en los apartados cuarto y quinto de la Orden de 21 de diciembre de 2000, por la que se establece el procedimiento para la presentación telemática por Internet de las declaraciones correspondientes a los modelos 117, 123, 124, 126, 128, 216, 131, 310, 311, 193, 198, 296 y 345.
+También resultarán aplicables a la presentación por vía telemática del modelo 296 las medidas establecidas para la eliminación de determinadas restricciones a la utilización de esta vía en el artículo 2 de la Orden EHA/3398/2006, de 26 de octubre, por la que se dictan medidas para el impulso y homogeneización de determinados aspectos en relación a la presentación de declaraciones tributarias por vía telemática, se modifican determinadas normas de presentación de los modelos de declaración 182, 184, 188 y 296, y se modifica el modelo de declaración 187, «Declaración informativa de acciones y participaciones representativas del capital o del patrimonio de las instituciones de inversión colectiva y resumen anual de retenciones e ingresos a cuenta en relación con las rentas o ganancias patrimoniales obtenidas como consecuencia de las transmisiones o reembolsos de esas acciones y participaciones».
+2. En aquellos supuestos en que por razones de carácter técnico no fuera posible efectuar la presentación telemática por Internet, en el plazo a que se refiere el artículo 11 de la presente Orden, dicha presentación podrá efectuarse durante los tres días naturales siguientes al de finalización del mencionado plazo.
+3. En los términos establecidos en el artículo 9 de la presente Orden, la presentación del modelo 296 por vía telemática podrá ser efectuada bien por el propio declarante o bien por un tercero que actúe en su representación, de acuerdo con lo establecido en el Real Decreto 1065/2007, de 27 de julio, por el que se aprueba el Reglamento General de las actuaciones y los procedimientos de gestión e inspección tributaria y de desarrollo de las normas comunes de los procedimientos de aplicación de los tributos (artículos 79 a 81) y en la Orden HAC/1398/2003, de 27 de mayo, por la que se establecen los supuestos y condiciones en que podrá hacerse efectiva la colaboración social en la gestión de los tributos, y se extiende ésta expresamente a la presentación telemática de determinados modelos de declaración y otros documentos tributarios.
+
+# Artículo 16. Presentación telemática por teleproceso del modelo 296.
+
+1. La presentación telemática por teleproceso del modelo 296 se ajustará a lo dispuesto en la Orden de 21 de diciembre de 2000, por la que se establece el procedimiento para la presentación telemática por teleproceso de las declaraciones correspondientes a los modelos 187, 188, 190, 193, 194, 196, 198, 296, 345 y 347.
+También resultarán aplicables a la presentación por vía telemática del modelo 296 las medidas establecidas para la eliminación de determinadas restricciones a la utilización de esta vía en el artículo 2 de la Orden EHA/3398/2006, de 26 de octubre, por la que se dictan medidas para el impulso y homogeneización de determinados aspectos en relación a la presentación de declaraciones tributarias por vía telemática, se modifican determinadas normas de presentación de los modelos de declaración 182, 184, 188 y 296, y se modifica el modelo de declaración 187, «Declaración informativa de acciones y participaciones representativas del capital o del patrimonio de las instituciones de inversión colectiva y resumen anual de retenciones e ingresos a cuenta en relación con las rentas o ganancias patrimoniales obtenidas como consecuencia de las transmisiones o reembolsos de esas acciones y participaciones».
+2. En aquellos supuestos en que por razones de carácter técnico no fuera posible efectuar la presentación telemática por teleproceso de la declaración resumen anual de retenciones e ingresos a cuenta, modelo 296, en el plazo a que se refiere el artículo 11 de la presente Orden, dicha presentación podrá efectuarse durante los tres días naturales siguientes al de finalización del mencionado plazo.
+
+# Artículo 17. Documentación.
+
+1. Los obligados a la presentación de la declaración anual conservarán a disposición de la Administración Tributaria, durante el plazo de prescripción a que se refiere el artículo 70 de la Ley 58/2003, de 17 de diciembre, General Tributaria, la documentación que justifique las retenciones practicadas.
+2. A estos efectos, cuando no se practique la retención por aplicación de las exenciones de la normativa interna española, por razón de la residencia del contribuyente, se justificará con un certificado de residencia, expedido por las autoridades fiscales del país de residencia.
+Cuando no se practique la retención por aplicación de las exenciones de un Convenio para evitar la doble imposición suscrito por España o se practique con los límites de imposición fijados en el mismo, se justificará con un certificado de residencia fiscal expedido por la autoridad fiscal correspondiente, en el que deberá constar expresamente que el contribuyente es residente en el sentido definido en el Convenio. No obstante, cuando se practique la retención aplicando un límite de imposición fijado en un Convenio desarrollado mediante una Orden en la que se establezca la utilización de un formulario específico, se justificará con el mismo en lugar del certificado.
+Los certificados de residencia a que se refieren los párrafos anteriores, tendrán un plazo de validez de un año a partir de la fecha de su expedición.
+Cuando no se practique retención por haberse efectuado el pago del impuesto, se acreditará mediante la declaración del impuesto correspondiente a dicha renta presentada por el contribuyente o su representante.
+3. Lo previsto en los apartados anteriores se entenderá sin perjuicio de lo dispuesto en los artículos 18 y 19.
+
+# Artículo 18. Documentación en el caso de entidades autorizadas para la gestión colectiva de derechos de la propiedad intelectual.
+
+Las entidades residentes en España autorizadas para ejercer la gestión colectiva de derechos de la propiedad intelectual, en relación con los pagos de derechos gestionados que liquidan a otras entidades de gestión colectiva de derechos de naturaleza similar residentes en otros países, con las que hayan suscrito contratos de representación, recíproca o unilateral, podrán justificar la retención practicada aplicando el límite de imposición, o la exención, fijado en el Convenio para evitar la doble imposición suscrito con el país de residencia de la entidad extranjera, respecto de los rendimientos comprendidos en esas liquidaciones, mediante los siguientes documentos:
+a) Certificado emitido por la entidad de gestión colectiva extranjera, referido a cada liquidación, que contenga la relación de perceptores residentes, en el sentido del Convenio, del mismo país del que es residente la entidad extranjera, el importe íntegro de los derechos correspondientes a cada uno de ellos y la suma de esos importes.
+b) Certificado de residencia fiscal de la entidad extranjera expedido por las autoridades fiscales de su país. Este certificado tendrá una validez de un año a partir de su fecha de expedición.
+Lo previsto en los párrafos anteriores de este artículo se entenderá sin perjuicio de lo dispuesto en las Ordenes de desarrollo de los Convenios para evitar la doble imposición que estén vigentes en el momento del devengo, en las que se establezca, en el procedimiento de reducción, la utilización de un formulario específico o la aportación de un certificado de residencia fiscal.
+La entidad de gestión colectiva de derechos de la propiedad intelectual residente en España estará obligada a conservar esta documentación, a disposición de la Administración tributaria, durante el plazo de prescripción a que se refiere el artículo 70 de la Ley 58/2003, de 17 de diciembre, General Tributaria.
+A los exclusivos efectos de la cumplimentación de la declaración anual de retenciones, modelo 296, por la entidad de gestión colectiva de derechos residente en España y, por lo que se refiere al colectivo integrado en la relación antes citada, en lugar de hacer constar el detalle por cada uno de los incluidos en la relación, se agruparán en un único apartado o registro de perceptor, consignando como tal a la entidad de gestión colectiva extranjera.
+El procedimiento especial de acreditación regulado en este artículo, se entenderá sin perjuicio de la facultad de la Administración tributaria de exigir, en su caso, a cualquier beneficiario que perciba rendimientos comprendidos en estos pagos efectuados por entidades de gestión colectiva, la justificación de su derecho a la aplicación del Convenio mediante un certificado de residencia fiscal, expedido por las autoridades fiscales del país de residencia, donde conste que es residente en el sentido del Convenio.
+
+# Artículo 19. Documentación en el caso de comercialización transfronteriza de acciones o participaciones de instituciones de inversión colectiva españolas.
+
+En los casos de contratos de comercialización transfronteriza de acciones o participaciones de instituciones de inversión colectiva españolas, mediante cuentas globales a nombre de las entidades comercializadoras, a que se refiere la disposición adicional única del Reglamento del Impuesto sobre la Renta de no Residentes, se establece el siguiente procedimiento de acreditación de la residencia a efectos de la práctica de retenciones o ingresos a cuenta sobre los beneficios distribuidos por las instituciones de inversión colectiva españolas a contribuyentes del Impuesto sobre la Renta de no Residentes sin establecimiento permanente:
+a) Cuando la entidad comercializadora extranjera sea residente en un país con el que España haya suscrito un Convenio para evitar la doble imposición con cláusula de intercambio de información en el que se fije un límite de imposición inferior al previsto en el artículo 25 del texto refundido de la Ley del Impuesto sobre la Renta de no Residentes, deberá emitir y entregar a la sociedad gestora o a la sociedad de inversión un certificado, por cada institución de inversión colectiva o, en su caso, por cada compartimento o clase de participaciones o serie de acciones de la misma, con ocasión de la percepción de beneficios distribuidos por la institución de inversión colectiva, que contenga:
+1. Lugar y fecha en que se emite el certificado.
+2. Denominación de la entidad comercializadora y dirección completa en su país de residencia. Asimismo, deberá incluirse el número de identificación fiscal atribuido por la Administración tributaria española a la entidad comercializadora residente en un país con el que España haya suscrito un Convenio para evitar la doble imposición con cláusula de intercambio de información, excepto en el supuesto de que, conforme a lo dispuesto en la letra c) del apartado 3 de la disposición adicional única del Reglamento del Impuesto sobre la Renta de no residentes, no esté obligada a presentar las relaciones individualizadas a que se refiere dicho precepto.
+3. Identificación y cargo de la persona que suscriba el certificado, que deberá tener poder suficiente para ello.
+4. Denominación de la institución de inversión colectiva, número de identificación fiscal atribuido por la Administración tributaria española y domicilio fiscal.
+5. En su caso, denominación del compartimento y de la clase de las participaciones o de la serie de las acciones.
+6. Código ISIN de las participaciones o acciones de la institución de inversión colectiva o, en su caso, del compartimento o de la clase o serie de las mismas.
+7. En su caso, denominación de la entidad gestora, número de identificación fiscal atribuido por la Administración tributaria española y domicilio fiscal.
+8. Fecha de distribución de los beneficios.
+9. El número de perceptores residentes, en el sentido del Convenio, del mismo país que la comercializadora y el importe total de los beneficios percibidos.
+10. El número del resto de perceptores y el importe total de los beneficios percibidos.
+Las sociedades gestoras o las sociedades de inversión residentes en España podrán justificar la retención o el ingreso a cuenta practicado aplicando el límite de imposición fijado en el Convenio sobre los beneficios distribuidos que correspondan, exclusivamente, a los perceptores residentes, en el sentido del Convenio, en el mismo país que la comercializadora y la retención o ingreso a cuenta aplicando el tipo de gravamen del artículo 25 del texto refundido de la Ley del Impuesto sobre la Renta de no Residentes sobre los beneficios distribuidos al resto de perceptores, mediante el certificado antes mencionado. Además, la entidad comercializadora extranjera deberá remitir a las sociedades gestoras o a las sociedades de inversión un certificado de residencia fiscal de la misma expedido por las autoridades fiscales de su país que tendrá una validez de tres años a partir de su fecha de expedición.
+b) Cuando la entidad comercializadora extranjera sea residente en un país o territorio diferente a los incluidos en la letra a) anterior, deberá emitir y entregar a la sociedad gestora o a la sociedad de inversión un certificado, por cada institución de inversión colectiva o, en su caso, por cada compartimento o clase de participaciones o serie de acciones de la misma, con ocasión de la percepción de beneficios distribuidos por la institución de inversión colectiva, que contenga:
+1. Lugar y fecha en que se emite el certificado.
+2. Denominación de la entidad comercializadora, Número de Identificación Fiscal atribuido por la Administración tributaria española y dirección completa en su país de residencia.
+3. Identificación y cargo de la persona que suscriba el certificado, que deberá tener poder suficiente para ello.
+4. Denominación de la institución de inversión colectiva, Número de Identificación Fiscal atribuido por la Administración tributaria española y domicilio fiscal.
+5. En su caso, denominación del compartimento y de la clase de las participaciones o serie de las acciones.
+6. Código ISIN de las participaciones o acciones de la institución de inversión colectiva o, en su caso, del compartimento o de la clase o serie de las mismas.
+7. En su caso, denominación de la entidad gestora, Número de Identificación Fiscal atribuido por la Administración tributaria española y domicilio fiscal.
+8. Fecha de distribución de los beneficios.
+9. El número de perceptores y el importe total de los beneficios percibidos.
+Las sociedades gestoras o las sociedades de inversión, residentes en España, podrán justificar la retención o el ingreso a cuenta practicado aplicando el tipo de gravamen del artículo 25 del texto refundido de la Ley del Impuesto sobre la Renta de no Residentes sobre los beneficios distribuidos, mediante el certificado antes mencionado. Además, la entidad comercializadora extranjera deberá remitir a las sociedades gestoras o a las sociedades de inversión un certificado de residencia fiscal de la misma expedido por las autoridades fiscales de su país que tendrá una validez de tres años a partir de su fecha de expedición.
+c) La entidad comercializadora extranjera podrá emitir y entregar a la sociedad gestora o a la sociedad de inversión los certificados a los que se refieren las letras a) y b) anteriores relativos a un mismo mes natural en los 10 días primeros del mes natural siguiente. En estos casos, la entidad comercializadora extranjera podrá emitir un único certificado, haciendo constar su carácter mensual, que recoja los datos a que se refieren dichas letras, correspondientes al mes natural, ordenados por la fecha de distribución de beneficios.
+La forma de remisión recogida en el párrafo anterior se entenderá sin perjuicio de la obligación de la entidad comercializadora de comunicar a la sociedad gestora o a la sociedad de inversión, con ocasión de la percepción de beneficios distribuidos por la institución de inversión colectiva, la información necesaria para la correcta práctica de la retención o ingreso a cuenta.
+d) La entidad gestora residente en España o, en su caso, la sociedad de inversión estará obligada a conservar la documentación prevista en este número a disposición de la Administración tributaria, durante el plazo de prescripción a que se refiere el artículo 70 de la Ley 58/2003, de 17 de diciembre, General Tributaria.
+e) La entidad gestora o la sociedad de inversión, a los efectos de la cumplimentación de la declaración resumen anual de retenciones, modelo 296, agrupará, por cada percepción de beneficios, la información referida al colectivo de perceptores integrados en el certificado emitido por la comercializadora, en su caso, en dos apartados o registros de perceptor, uno comprensivo de los contribuyentes que han soportado un tipo de retención inferior al tipo de gravamen del artículo 25 del texto refundido de la Ley del Impuesto sobre la Renta de no Residentes y otro referido al resto de contribuyentes. La entidad gestora o la sociedad de inversión consignará en ambos casos como perceptor a la entidad comercializadora extranjera. El resto de información del modelo relativa a los perceptores se entenderá referida a la comercializadora extranjera.
+f) El procedimiento especial de acreditación regulado en este artículo se entenderá sin perjuicio de la facultad de la Administración tributaria de exigir, en su caso, a cualquier contribuyente la justificación de su derecho a la aplicación del Convenio.
+g) No obstante lo previsto en las letras anteriores de este artículo, con independencia del país o territorio de residencia de la entidad comercializadora, y aunque no coincida con el de residencia del perceptor, el obligado a retener o a ingresar a cuenta podrá aplicar lo dispuesto en el número 2 del artículo 17 para justificar la práctica de retenciones o ingresos a cuenta a un tipo de imposición fijado en un Convenio para evitar la doble imposición que sea aplicable, inferior al tipo de gravamen interno. En este caso, deberán cumplirse los siguientes requisitos:
+1. El obligado a retener o a ingresar a cuenta deberá disponer de los correspondientes certificados de residencia fiscal de los perceptores y conservarlos, en los términos de los números 1 y 2 del artículo 17.
+2. En los certificados a que se refieren las letras a) y b) de este artículo, se desagregará la información relativa a estos perceptores, indicando:
+1.º Tipo de persona: física (F) o entidad (J).
+2.º Apellidos y nombre, o denominación.
+3.º Número de identificación fiscal español, si el contribuyente dispone de él.
+4.º Número de identificación fiscal asignado al contribuyente en el territorio o país de residencia, si dispone de él.
+5.º País o territorio de residencia, ajustado a las claves de países y territorios recogidas en el Anexo 11 de la Orden HAC/3626/2003, de 23 de diciembre, por la que se aprueban los modelos de declaración 210, 215, 212, 211 y 213 del Impuesto sobre la Renta de no Residentes, que deben utilizarse para declarar las rentas obtenidas sin mediación de establecimiento permanente, la retención practicada en la adquisición de bienes inmuebles a no residentes sin establecimiento permanente y el gravamen especial sobre bienes inmuebles de entidades no residentes, así como el modelo de declaración 214, declaración simplificada de no residentes de los Impuestos sobre el Patrimonio y sobre la Renta de no Residentes; se establecen las condiciones generales y el procedimiento para la presentación telemática por internet de dichas declaraciones y otras normas referentes a la tributación de no residentes.
+6.º Importe de los beneficios percibidos.
+3. A los efectos de la cumplimentación de la declaración resumen anual de retenciones, modelo 296, la entidad gestora o la sociedad de inversión no agrupará la información referida a estos perceptores, sino que figurarán en campos o registros individuales a nombre de los perceptores.
+Se modifica la letra a) por el art. 3.1 de la Orden HAP/2201/2014, de 21 de noviembre. Ref. BOE-A-2014-12248
+Esta modificación será de aplicación, por primera vez, para la presentación de las declaraciones informativas cuyo plazo se inicie a partir del día 1 de enero de 2015, en relación con la información correspondiente al año 2014, según establece la disposición final 3 de la citada Orden.
+
+# Artículo 20. Reglas aplicables al suministro informativo en el modelo 296, en el supuesto de que existan varios perceptores titulares del mismo elemento patrimonial bien o derecho de que provengan las rentas objeto del modelo.
+
+Exclusivamente a los efectos del suministro informativo del modelo 296, en aquellos supuestos en que existan varios titulares del mismo elemento patrimonial, bien o derecho de que provengan las rentas objeto del modelo, los obligados tributarios deberán realizar el citado suministro informativo individualizando los datos económicos correspondientes a cada uno de los cotitulares del mismo elemento patrimonial, bien o derecho. Esta individualización se realizará de acuerdo con la proporción de participación de cada uno de los cotitulares del mismo elemento patrimonial, bien o derecho que conste de manera fehaciente al obligado tributario. En defecto de constancia fehaciente, la proporción de participación se deberá atribuir a cada uno de los cotitulares, a los citados efectos informativos, por partes iguales.
+
+# Disposición adicional única. Información relativa a cuentas de no residentes.
+
+No obstante la excepción a la obligación de presentar la declaración anual, modelo 296, establecida en el artículo 8 de la presente Orden, el Banco de España o las entidades registradas a que se refiere la normativa de transacciones económicas con el exterior, vendrán obligadas a proporcionar a la Administración Tributaria la información relativa a cuentas de no residentes que se determine.
+
+# Disposición derogatoria única. Derogación normativa.
+
+1. A la entrada en vigor de esta Orden quedará derogada la Orden de 9 de diciembre de 1999 por la que se aprueban, en pesetas y en euros, el modelo 216 de declaración-documento de ingreso de retenciones e ingresos a cuenta efectuados respecto de determinadas rentas sujetas al Impuesto sobre la Renta de no Residentes obtenidas por contribuyentes de dicho impuesto sin establecimiento permanente y el resumen anual, modelo 296, de retenciones e ingresos a cuenta efectuados en relación con dichas rentas, así como ciertas disposiciones referentes a las cuentas de no residentes.
+2. Con motivo de su incorporación a esta Orden quedará derogado el artículo 9 de la Orden EHA/3398/2006, de 26 de octubre, por la que se dictan medidas para el impulso y homogeneización de determinados aspectos en relación a la presentación de declaraciones tributarias por vía telemática, se modifican determinadas normas de presentación de los modelos de declaración 182, 184, 188 y 296, y se modifica el modelo de declaración 187, «Declaración informativa de acciones y participaciones representativas del capital o del patrimonio de las instituciones de inversión colectiva y resumen anual de retenciones e ingresos a cuenta en relación con las rentas o ganancias patrimoniales obtenidas como consecuencia de las transmisiones o reembolsos de esas acciones y participaciones».
+
+# Disposición final única. Entrada en vigor.
+
+La presente Orden entrará en vigor el día siguiente al de su publicación en el «Boletín Oficial del Estado».
+Los modelos y los diseños físicos y lógicos aprobados por la presente Orden, serán objeto de utilización por primera vez por los obligados tributarios de acuerdo con las siguientes reglas:
+1. El modelo 216 que figura en el anexo I de la presente Orden será utilizable, por primera vez, para realizar el ingreso de las retenciones e ingresos a cuenta practicados durante el mes de enero del año 2009, tratándose de los obligados tributarios a que se refiere el segundo párrafo del artículo 4 de esta misma Orden, y para realizar el ingreso de las retenciones e ingresos a cuenta practicados durante el primer trimestre del año 2009, para el resto de obligados tributarios.
+2. El modelo 296 que figura en el anexo II de esta Orden, así como el soporte directamente legible por ordenador que figura en el anexo III, serán de utilización, por primera vez, para realizar la declaración anual de las retenciones e ingresos a cuenta correspondientes al año 2008.
+Madrid, 6 de noviembre de 2008.–El Vicepresidente Segundo del Gobierno y Ministro de Economía y Hacienda, Pedro Solbes Mira.
+
+# ANEXO I
+
+Declaración-documento de ingreso-Modelo 216
+Se sustituye el modelo 216 por el que figura en el anexo II, según establece el art. 2.4 de la Orden HAC/56/2024, de 25 de enero. Ref. BOE-A-2024-1772
+Este nuevo modelo se aplicará, por primera vez, a las autoliquidaciones que se presenten respecto de los devengos correspondientes a 2024, según establece la disposición final única de la citada Orden.
+
+# ANEXO II
+
+ANEXO II
+
+# ANEXO III
+
+Diseños físicos y lógicos para la presentación del modelo 296 en soporte directamente legible por ordenador
+A) Características de los soportes magnéticos
+Los soportes directamente legibles por ordenador para la presentación del resumen anual de retenciones e ingresos a cuenta del Impuesto sobre la Renta de no Residentes sin establecimiento permanente (Modelo 296), habrán de cumplir las siguientes características:
+– Tipo: CD-R (Compact Dic Recordable) de 12 cm.
+– Capacidad: hasta 700 MB.
+– Formato ISO/IEC DIS 9660:1999, con extensión o sin extensión Joliet.
+– No multisesión.
+Si las características del equipo de que dispone el declarante no le permite ajustarse a las especificaciones técnicas exigidas, y está obligado a presentar el resumen anual de retenciones e ingresos a cuenta del Impuesto sobre la Renta de no Residentes sin establecimiento permanente, en soporte directamente legible por ordenador, deberá dirigirse por escrito a la Subdirección General de Aplicaciones del Departamento de Informática Tributaria de la Agencia Estatal de Administración Tributaria (A.E.A.T.), calle Santa María Magdalena, 16, 28016 Madrid, exponiendo sus propias características técnicas y el número de registros que presentaría, con objeto de encontrar, si lo hay, un sistema compatible con las características técnicas de la A.E.A.T.
+B) Diseños lógicos
+Descripción de los registros
+Para cada declarante se incluirán dos tipos diferentes de registro, que se distinguen por la primera posición, con arreglo a los siguientes criterios:
+Tipo 1: Registro del declarante: Datos identificativos y resumen de la declaración. Diseño de tipo de registro 1 de los recogidos más adelante en estos mismos apartados y Anexo de la presente Orden.
+Tipo 2: Registro de perceptor. Diseño de tipo de registro 2 de los recogidos más adelante en estos mismos apartados y Anexo de la presente Orden.
+El orden de presentación será el del tipo de registro, existiendo un único registro del tipo 1 y tantos registros del tipo 2 como perceptores tenga la declaración.
+Todos los campos alfanuméricos y alfabéticos se presentarán alineados a la izquierda y rellenos de blancos por la derecha, en mayúsculas sin caracteres especiales, y sin vocales acentuadas.
+Para los caracteres específicos del idioma se utilizará la codificación ISO-8859-1. De esta forma la letra «Ñ» tendrá el valor ASCII 209 (Hex. D1) y la «Ç» (cedilla mayúscula) el valor ASCII 199 (Hex. C7).
+Todos los campos numéricos se presentarán alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.
+Todos los campos tendrán contenido, a no ser que se especifique lo contrario en la descripción del campo. Si no lo tuvieran, los campos numéricos se rellenarán a ceros y tanto los alfanuméricos como los alfabéticos a blancos.
+Modelo 296
+A. Tipo de registro 1: registro de declarante
+(Posiciones, naturaleza y descripción de los campos)
+Posiciones
+Naturaleza
+Descripción de los campos
+1
+Numérico
+Tipo de registro.
+Constante número '1'.
+2-4
+Numérico
+Modelo declaración.
+Constante '296'.
+5-8
+Numérico
+Ejercicio.
+Las cuatro cifras del ejercicio fiscal al que corresponde la declaración.
+9-17
+Alfanumérico
+N.I.F. del declarante.
+Se consignará el N.I.F. del declarante.
+Este campo deberá estar ajustado a la derecha, siendo la última posición el carácter de control y rellenando con ceros las posiciones de la izquierda, de acuerdo con las reglas previstas en el Real Decreto 1065/2007, de 27 de julio, por el que se aprueba el Reglamento General de las actuaciones y los procedimientos de gestión e inspección tributaria y de desarrollo de las normas comunes de los procedimientos de aplicación de los tributos, (B.O.E del 5 de septiembre).
+18-57
+Alfanumérico
+Apellidos y nombre o razón social del declarante.
+Si es una persona física se consignará el primer apellido, un espacio, el segundo apellido, un espacio y el nombre completo necesariamente en este orden.
+Para personas jurídicas y entidades en régimen de atribución de Rentas, se consignará la razón social completa, sin anagrama.
+En ningún caso podrá figurar en este campo un nombre comercial.
+58
+Alfabético
+Tipo de soporte.
+Se cumplimentará una de las siguientes claves:
+'C': Si la información se presenta en CD-R.
+'T': Transmisión telemática
+59-107
+Alfanumérico
+Persona con quién relacionarse
+Datos de la persona con quién relacionarse. Este campo se subdivide en dos:
+59-67 Teléfono: Campo numérico de 9 posiciones.
+68-107 Apellidos y nombre: Se consignará el primer apellido, un espacio, el segundo apellido, un espacio y el nombre completo, necesariamente en este orden.
+108-120
+Numérico
+Número identificativo de la declaración.
+Se consignará el número identificativo correspondiente a la declaración. Campo de contenido numérico de 13 posiciones.
+El número identificativo que habrá de figurar en el modelo 296, será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 296.
+121-122
+Alfabético
+Declaración complementaria o sustitutiva.
+En el caso excepcional de segunda o posterior presentación de declaraciones, deberá cumplimentarse obligatoriamente uno de los siguientes campos:
+121 Declaración complementaria.: Se consignará una «C» si la presentación de esta declaración tiene por objeto incluir percepciones que, debiendo haber figurado en otra declaración del mismo ejercicio presentada anteriormente, hubieran sido completamente omitidas en la misma.
+La presentación de una declaración complementaria que tenga por objeto la modificación del contenido de datos declarados en otra declaración del mismo ejercicio presentada anteriormente se realizará desde el servicio de consulta y modificación de declaraciones informativas en la Oficina Virtual de la Agencia Tributaria (www.agenciatributaria.es )
+122 Declaración sustitutiva: Se consignará una «S» si la presentación tiene como objeto anular y sustituir completamente a otra declaración anterior, del mismo ejercicio. Una declaración sustitutiva sólo puede anular a una única declaración anterior.
+123-135
+Numérico
+Número identificativo de la declaración anterior.
+En el caso de que se haya consignado una «C» en el campo «Declaración complementaria» o se haya consignado «S» en el campo «Declaración sustitutiva», se consignará el número identificativo correspondiente a la declaración a la que sustituye o complementa.
+Campo de contenido numérico de 13 posiciones.
+En cualquier otro caso deberá rellenarse a CEROS.
+136-144
+Numérico
+Número total de perceptores.
+Campo numérico de 9 posiciones.
+Se consignará el número total de perceptores relacionados en los registros de detalle de tipo 2 por la entidad declarante. Si un mismo perceptor figura en varios registros, se computará tantas veces como figure relacionado. (Número de registros de tipo 2).
+145-159
+Alfanumérico
+Base retenciones e ingresos a cuenta.
+Se consignará la suma algebraica total de las cantidades reflejadas en los campos «BASE RETENCIONES E INGRESOS A CUENTA» correspondientes a los registros de perceptor.
+Este campo se subdivide en:
+145 Signo: Alfabético.
+Se cumplimentará cuando el resultado anteriormente mencionada sea menor de 0 (cero). En este caso se consignará una «N», en cualquier otro caso el contenido de este campo será un espacio.
+146-159 Importe Campo numérico de 14 posiciones.
+Se consignará sin signo y sin coma decimal, el importe mencionado anteriormente.
+Los importes deben consignarse en EUROS.
+Este campo se subdivide en dos:
+146-157 Parte entera del importe de las bases de retenciones.
+158-159 Parte decimal del importe de las bases de retenciones. Si no tiene, consignar ceros.
+160-174
+Numérico
+Retenciones e ingresos a cuenta.
+Campo numérico de 15 posiciones.
+Se consignará sin signo y sin coma decimal la suma total de las cantidades reflejadas en el campo «RETENCIONES E INGRESOS A CUENTA» correspondiente a los registros de perceptor.
+Los importes deben consignarse en EUROS.
+Este campo se subdivide en dos:
+160-172 Parte entera del importe de las retenciones.
+173-174 Parte decimal del importe de las retenciones. Si no tiene, consignar ceros.
+175-189
+Numérico
+Retenciones e ingresos a cuenta ingresados.
+Campo numérico de 15 posiciones.
+Se consignará sin signo y sin coma decimal la suma total de las cantidades reflejadas en el campo «RETENCIONES E INGRESOS A CUENTA» correspondiente a los registros de perceptor, que correspondan a perceptores (registros) en los que se haya consignado en el campo «CLAVE» los valores «3» a «25», así como también aquellos en los que se haya consignado en el campo «CLAVE» los valores «1» ó «2» y, simultáneamente en el campo «PAGO» el valor «1».
+Los importes deben consignarse en EUROS.
+Este campo se subdivide en dos:
+175-187 Entero Numérico Parte entera del importe de las retenciones.
+188-189 Decimal Numérico Parte decimal del importe de las retenciones. Si no tiene, consignar ceros.
+190-390
+–
+Blancos
+391-399
+Alfanumérico
+N.I.F. del representante legal.
+Si el declarante es menor de 14 años se consignará en este campo el NIF de su representante legal (padre, madre, tutor). Este campo deberá estar ajustado a la derecha, siendo la última posición el carácter de control y rellenando con ceros las posiciones a la izquierda.
+En cualquier otro caso el contenido de este campo se rellenará a espacios.
+400-487
+–
+Blancos
+391-399
+Alfanumérico
+N.I.F. del representante legal.
+Si el declarante es menor de 14 años se consignará en este campo el NIF de su representante legal (padre, madre, tutor). Este campo deberá estar ajustado a la derecha, siendo la última posición el carácter de control y rellenando con ceros las posiciones a la izquierda.
+En cualquier otro caso el contenido de este campo se rellenará a espacios.
+400-487
+–
+Blancos
+488-500
+Alfanumérico
+Sello electrónico
+Campo reservado para el sello electrónico en presentaciones individuales, que será cumplimentado exclusivamente por los programas de la A.E.A.T. En cualquier otro caso se rellenará a blancos.
+* Todos los importes serán positivos.
+* Los campos numéricos que no tengan contenido se rellenarán a ceros.
+* Los campos alfanuméricos/alfabéticos que no tengan contenido se rellenarán a blancos.
+* Todos los campos numéricos ajustados a la derecha y rellenos de ceros por la izquierda.
+* Todos los campos alfanuméricos/alfabéticos ajustados a la izquierda y rellenos de blancos por la derecha, en mayúsculas, sin caracteres especiales y sin vocales acentuadas, excepto que se especifique lo contrario en la descripción del campo
+Modelo 296
+B. tipo de registro 2: registro de perceptor.
+(Posiciones, naturaleza y descripción de los campos)
+Posiciones
+Naturaleza
+Descripción de los campos
+1
+Numérico
+Tipo de registro.
+Constante '2'
+2-4
+Numérico
+Modelo declaración.
+Constante '296'.
+5-8
+Numérico
+Ejercicio.
+Consignar lo contenido en estas mismas posiciones del registro de tipo 1.
+9-17
+Alfanumérico
+N.I.F. del declarante.
+Consignar lo contenido en estas mismas posiciones del registro de tipo 1.
+18-26
+Alfanumérico
+NIF DEL PERCEPTOR
+Si el perceptor dispone de NIF asignado en España, de acuerdo con las reglas previstas en el Real Decreto 1065/2007, de 27 de julio, por el que se aprueba el Reglamento General de las actuaciones y los procedimientos de gestión e inspección tributaria y de desarrollo de las normas comunes de los procedimientos de aplicación de los tributos (BOE del 5 de septiembre), se consignará el número de identificación fiscal.
+Este campo deberá estar ajustado a la derecha, siendo la última posición el carácter de control y rellenando con ceros las posiciones a la izquierda.
+No obstante, será obligatorio consignar el NIF cuando el perceptor sea un contribuyente del Impuesto sobre la Renta de las Personas Físicas (IRPF) del régimen especial del artículo 93 de la Ley del IRPF (clave 07 de posición 102-103 de registro tipo 2) o cuando en el campo PERCEPTOR MEDIADOR (posición 134 de registro de tipo 2) tenga el valor 1 "mediador residente, domiciliado o representado en España".
+27-35
+Alfanumérico
+N.I.F. del representante legal.
+Si el perceptor es menor de 14 años y su representante dispone de NIF asignado en España de acuerdo con las reglas previstas en el Reglamento general de las actuaciones y los procedimientos de gestión e inspección tributaria y de desarrollo de las normas comunes de los procedimientos de aplicación de los tributos, aprobado por el Real Decreto 1065/2007, de 27 de junio (B.O.E. del 5 de septiembre), se consignará en este campo el número de identificación fiscal de su representante legal (padre, madre o tutor).
+En cualquier otro caso el contenido de este campo se rellenará a espacios.
+36
+Alfabético
+F/J.
+Se hará constar una «F» si el perceptor es una persona física y una «J» si se trata de una persona jurídica o una entidad.
+37-76
+Alfanumérico
+APELLIDOS Y NOMBRE, RAZÓN SOCIAL O DENOMINACIÓN DEL PERCEPTOR.
+En general, el perceptor será el contribuyente por el IRNR.
+No obstante, si se ha cumplimentado el campo CLAVE DE MERCADO, posición 412, por tratarse de rendimientos derivados de valores negociables en mercados secundarios oficiales (dividendos, intereses) cuyo pago desde el emisor hasta llegar al contribuyente transita por una cadena de intermediarios, en este campo se identificará al mediador inmediatamente posterior. Es decir, en el caso de estas cadenas de pago, como perceptor figurará un mediador, salvo que la cadena finalice en España y el declarante sea el último mediador, en cuyo caso identificará al contribuyente.
+Asimismo, en el caso de que en el pago de esos rendimientos se haya utilizado el procedimiento especial de ajuste de retenciones previsto en la Orden de 13 de abril de 2000, la entidad depositaria interviniente en dicho procedimiento, en su declaración modelo 296, hará constar en el campo “Perceptor” los datos del contribuyente que obtiene la renta, no cumplimentará el campo “Perceptor mediador”, posición 134 del registro de tipo 2 y se cumplimentará con la marca X el campo “Procedimiento especial de retenciones” posición 411 del registro tipo 2.
+a) Para personas físicas se consignará el primer apellido, un espacio, el segundo apellido, un espacio y el nombre completo, necesariamente en este mismo orden.
+Si el perceptor es menor de edad, se consignarán en este campo los apellidos y nombre del menor de edad.
+b) Tratándose de personas jurídicas y entidades en régimen de atribución de rentas, se consignará la razón social o denominación completa de la entidad, sin anagramas.
+77-84
+Alfanumérico
+IDENTIFICADOR DE REGISTRO O NÚMERO DE ORDEN
+Identifica de forma única el registro declarado. Este campo se puede cumplimentar de acuerdo con el criterio elegido por el declarante (clave externa autogenerada, código alfanumérico, número de secuencia correlativo, etc.).
+85-90
+Alfanumérico
+CÓDIGO BIC DEL PERCEPTOR MEDIADOR
+Sólo para claves de percepción "1" o "2" (posiciones 100- 101 del tipo de registro 2).
+Si el campo PERCEPTOR MEDIADOR (posición 134) tiene valor 2 "El perceptor declarado es un mediador situado en el extranjero" y la entidad que figura como perceptor-mediador es una entidad bancaria, se consignarán 6 caracteres del código BIC (Bank Identifier Code), los cuatro caracteres correspondientes a la entidad y los dos correspondientes al país.
+91-98
+Numérico
+FECHA DE DEVENGO
+Se consignará la fecha en que se ha devengado la renta.
+Se subdivide en:
+91-92 DIA. Numérico. Dos posiciones.
+93-94 MES. Numérico. Dos posiciones.
+95-98 AÑO. Numérico. Cuatro posiciones.
+En particular, en el caso de dividendos o intereses derivados de valores negociables se cumplimentará, respectivamente, con la fecha de pago establecida en el acuerdo de distribución de dividendos o la fecha de vencimiento de los intereses.
+99
+Alfabético
+Naturaleza.
+Se consignará la clave que corresponda en función de la naturaleza, dineraria o en especie, de la renta, según la relación alfabética siguiente:
+D. Renta dineraria.
+E. Renta en especie.
+100-101
+Numérico
+Clave.
+Se consignará la clave numérica que corresponda en función del tipo de renta, según la relación de Claves siguientes:
+1. Dividendos y otras rentas derivadas de la participación en fondos propios de entidades.
+2. Intereses y otras rentas derivadas de la cesión a terceros de capitales propios.
+3. Cánones derivados de patentes, marcas de fábrica o de comercio, dibujos o modelos, planos, fórmulas o procedimientos secretos.
+4. Cánones derivados de derechos sobre obras literarias y artísticas.
+5. Cánones derivados de derechos sobre obras científicas.
+6. Cánones derivados de derechos sobre películas cinematográficas y obras sonoras o visuales grabadas.
+7. Cánones derivados de informaciones relativas a experiencias industriales, comerciales o científicas (know-how).
+8. Cánones derivados de derechos sobre programas informáticos.
+9. Cánones derivados de derechos personales susceptibles de cesión, tales como los derechos de imagen.
+10. Cánones derivados de equipos industriales, comerciales o científicos.
+11. Otros cánones no relacionados anteriormente.
+12. Rendimientos de capital mobiliario de operaciones de capitalización y de contratos de seguros de vida o invalidez.
+13. Otros rendimientos de capital mobiliario no citados anteriormente.
+14. Rendimientos de bienes inmuebles.
+15. Rentas de actividades empresariales.
+16. Rentas derivadas de prestaciones de asistencia técnica.
+17. Rentas de actividades artísticas.
+18. Rentas de actividades deportivas.
+19. Rentas de actividades profesionales.
+20. Rentas del trabajo.
+21. Pensiones y haberes pasivos.
+22. Retribuciones de administradores y miembros de consejos de Administración.
+23. Rendimientos derivados de operaciones de reaseguros.
+24. Entidades de navegación marítima o aérea.
+25. Otras rentas.
+102-103
+Numérico
+SUBCLAVE
+Se consignará la que corresponda en función de las circunstancias tenidas en cuenta para el cálculo de la retención o ingreso a cuenta, según la relación siguiente:
+01. Retención practicada a los tipos generales o escalas de tributación del artículo 25 de la Ley del Impuesto sobre la Renta de no Residentes.
+02. Retención practicada aplicando límites de imposición de Convenios.
+03. Exención interna (principalmente: Artículo 14 de la Ley del Impuesto sobre la Renta de no Residentes) excepto los supuestos a que se refieren las subclaves 12 y 15.
+04. Exención por aplicación de un Convenio.
+05. Sin retención por previo pago del impuesto por el contribuyente o su representante.
+06. El perceptor declarado es una entidad extranjera de gestión colectiva de derechos de la propiedad intelectual, habiéndose practicado retención aplicando el límite de imposición, o la exención, de un Convenio, conforme a lo previsto en el artículo 18 de la Orden que aprueba el modelo 296.
+07. El perceptor es un contribuyente del Impuesto sobre la Renta de las Personas Físicas del régimen fiscal especial aplicable a los trabajadores, profesionales, emprendedores e inversores desplazados a territorio español, a que se refiere el artículo 93 de la Ley del Impuesto sobre la Renta de las Personas Físicas excepto los supuestos a que se refieren las subclaves 13 y 14.
+08. El perceptor declarado es una entidad residente en el extranjero comercializadora de acciones o participaciones de instituciones de inversión colectiva españolas, habiéndose practicado retención aplicando un límite de imposición fijado en el Convenio inferior al previsto en el artículo 25 de la Ley del Impuesto sobre la Renta de no Residentes, conforme al procedimiento especial previsto en el artículo 19 de la Orden que aprueba el modelo 296.
+09. El perceptor declarado es una entidad residente en el extranjero comercializadora de acciones o participaciones de instituciones de inversión colectiva españolas, habiéndose practicado retención aplicando el tipo de gravamen previsto en el artículo 25 de la Ley del Impuesto sobre la Renta de no Residentes, conforme al procedimiento especial previsto en el artículo 19 de la Orden que aprueba el modelo 296.
+10. Ingreso a cuenta a que se refiere el artículo 36.2 del texto refundido de la Ley IRNR, realizado por una entidad en régimen de atribución de rentas en relación con la renta atribuida a un miembro no residente.
+11. El perceptor declarado es un contribuyente que ha acreditado haber hecho uso del procedimiento previsto en el artículo 32 del texto refundido de la Ley del Impuesto sobre la Renta de no Residentes (modelo 247).
+12. Dietas y asignaciones para gastos de viaje exceptuados de gravamen (artículo 9 del Reglamento del Impuesto sobre la Renta de las Personas Físicas).
+13. El perceptor es un contribuyente del Impuesto sobre la Renta de las Personas Físicas del régimen fiscal especial aplicable a los trabajadores, profesionales, emprendedores e inversores desplazados a territorio español a que se refiere el artículo 93 de la Ley del Impuesto sobre la Renta de las Personas Físicas. Dietas y asignaciones para gastos de viaje exceptuados de gravamen (artículo 9 del Reglamento del Impuesto sobre la Renta de las Personas Físicas).
+14. El perceptor es un contribuyente del Impuesto sobre la Renta de las Personas Físicas del régimen fiscal especial aplicable a los trabajadores, profesionales, emprendedores e inversores desplazados a territorio español a que se refiere el artículo 93 de la Ley del Impuesto sobre la Renta de las Personas Físicas. Rendimientos del trabajo en especie exentos mencionados en el artículo 42.3 de la Ley del Impuesto sobre la Renta de las Personas Físicas.
+15. Rendimientos del trabajo en especie exentos mencionados en el artículo 42.3 de la Ley del Impuesto sobre la Renta de las Personas Físicas.
+En los supuestos a que se refieren las subclaves 06, 07, 08, 09, 10, 11, 13 y 14 de la relación anterior, se consignarán siempre estas subclaves específicas sin tener en consideración el resto de subclaves.
+104-116
+Alfanumérico
+Base retenciones e ingresos a cuenta.
+Campo numérico de 13 posiciones.
+La base para el cálculo de la obligación de retener e ingresar a cuenta será la prevista en el artículo 13 del Reglamento del Impuesto. Esta base coincide con la base imponible del impuesto determinada conforme establece el artículo 24 de la Ley, pero sin tener en consideración los gastos deducibles contemplados en los artículos 24.2 y 44 de la Ley.
+No obstante, en el caso de operaciones de préstamo de valores, es decir, cuando en el campo «TIPO DE CÓDIGO» (posición 149, del registro de tipo 2) se haya consignado «P», el contenido de este campo será igual a la suma de la cuantía consignadas en el campo «REMUNERACIÓN AL PRESTAMISTA» (posiciones 191-202, del registro de tipo 2) y de la cuantía de las compensaciones sobre las que exista obligación de retener consignadas en el campo «COMPENSACIONES» (posiciones 203-214, del registro de tipo 2).
+104 Signo: Si el importe descrito anteriormente es negativo, se consignará una «N», En cualquier otro caso se rellenará a blancos
+105-116 Importe: Campo numérico de 12 posiciones. Se consignará sin signo y sin coma decimal, el importe descrito anteriormente.
+Los importes deben consignarse en EUROS.
+Este campo se subdivide en dos:
+105-114 Entero Numérico Parte entera del importe de las retenciones.
+115-116 Decimal Numérico Parte decimal del importe de las retenciones. Si no tiene, consignar ceros.
+117-120
+Numérico
+% Retención
+Se consignará el porcentaje de retención o de ingreso a cuenta aplicado en cada caso. El % de retención aplicable será el tipo de gravamen establecido en el artículo 25 de la Ley del Impuesto, en función del tipo de renta o, si resulta aplicable un Convenio para evitar la doble imposición, el límite de imposición previsto en el Convenio. Cuando no se haya practicado retención o ingreso a cuenta o se trate de rentas exentas, tanto por normativa interna como por Convenio, se indicará un 0%. Tratándose de pensiones, a las que resulta aplicable la escala de gravamen del artículo 25.1.b), se indicará el tipo medio resultante de aplicar dicha escala a la cuantía anual de la pensión.
+Este campo se subdivide en otros dos:
+117-118 Entero Numérico Parte entera:
+Se consignará la parte entera del porcentaje (si no tiene, consignar CEROS).
+119-120 Decimal Numérico Parte decimal:
+Se consignará la parte decimal del porcentaje (si no tiene, consignar CEROS).
+121-133
+Numérico
+Retenciones e ingresos a cuenta.
+Campo numérico de 13 posiciones.
+Se consignará el resultado de aplicar la cuantía consignada en el campo «BASE RETENCIONES E INGRESOS A CUENTA» el porcentaje de retención o ingreso a cuenta consignado en el campo «% RETENCIÓN».
+Si el campo «BASE RETENCIONES E INGRESOS A CUENTA» es negativo, este campo se cumplimentará a ceros.
+Los importes deben consignarse en EUROS.
+Este campo se subdivide en otros dos:
+121-131 Entero Numérico Parte entera:
+Se consignará la parte entera de las retenciones (si no tiene, consignar CEROS).
+132-133 Decimal Numérico Parte decimal:
+Se consignará la parte decimal de las retenciones (si no tiene, consignar CEROS).
+134
+Numérico
+PERCEPTOR MEDIADOR
+Sólo para claves de percepción "1" o "2" (posiciones 100- 101 del tipo de registro 2).
+Se consignará en este campo uno de los valores indicados, en aquellos supuestos en que la naturaleza del perceptor declarado sea la de una entidad que pague por cuenta ajena rentas sujetas a retención o que sea depositaria o gestione el cobro de las rentas de valores que originan el rendimiento o la renta correspondiente. En los demás supuestos que no sean el contemplado anteriormente, es decir, cuando el perceptor declarado sea el contribuyente por el Impuesto sobre la Renta de no Residentes que haya soportado efectivamente las retenciones o ingresos a cuenta objeto de este modelo, no se cumplimentará.
+Los valores que puede adoptar son:
+1.El perceptor declarado es un mediador residente, domiciliado o representado en España.
+2.El perceptor declarado es un mediador situado en el extranjero.
+135
+Numérico
+CÓDIGO
+Sólo para claves de percepción “1” o “2” (posiciones 100-101 del tipo de registro 2).
+Se consignará en este campo cualquiera de los números que a continuación se relacionan con el objetivo de identificar el contenido del campo “CÓDIGO EMISOR”:
+1. El código emisor corresponde a un NIF.
+2. El código emisor corresponde a un código ISIN.
+3. El código emisor corresponde a valores extranjeros que no tienen asignado ISIN, cuyo emisor no dispone de NIF.
+El número que debe consignarse será siempre el 2 cuando en el campo “CLAVE DE MERCADO” (posición 412 del tipo de registro 2) conste una A “Mercado secundario oficial de valores español”, B “Mercado secundario oficial de valores extranjero de la UE” o C “Otros mercados no oficiales”.
+136-147
+Alfanumérico
+CÓDIGO EMISOR
+Sólo para claves de percepción “1” o “2” (posiciones 100-101 del tipo de registro 2).
+Se cumplimentará este campo para identificar al emisor.
+En general, se consignará el Código ISIN, configurado de acuerdo con la Norma Técnica 1/2010, de 28 de julio, de la Comisión Nacional del Mercado de Valores. Será obligatorio consignar el ISIN cuando en el campo “CLAVE DE MERCADO” (posición 412 del tipo de registro 2) conste una A “Mercado secundario oficial de valores español”, B “Mercado secundario oficial de valores extranjero de la UE” o C “Otros mercados oficiales extranjeros”.
+Si los valores no tienen asignado este Código:
+– Cuando se haya indicado un 1 en el campo “CÓDIGO” (posición 135), se identificará al emisor mediante el Número de Identificación Fiscal, otorgado por la Agencia Estatal de Administración Tributaria.
+– Si se ha consignado un 3 en el campo “CÓDIGO” (posición 135), se reflejará la clave “ZXX”, siendo “XX” el código del país emisor, de acuerdo con las claves de países que figuran en el anexo II de la Orden EHA/3496/2011, de 15 de diciembre (BOE de 26 de diciembre). Asimismo, en los supuestos de títulos emitidos por organismos supranacionales (Banco Mundial, etc.) que no tengan asignado ISIN se consignará ZNN, siendo NN las claves alfabéticas que figuran al final del citado anexo II.
+148
+Numérico
+DECLARANTE: PAGO
+Sólo para claves de percepción "1" o "2" (posiciones 100- 101 del tipo de registro 2)
+Se consignará cualquiera de los números que a continuación se relacionan para indicar si el pago que ha realizado el declarante ha sido por uno de los siguientes conceptos:
+1.Como emisor y/o retenedor.
+2.Como mediador, excepto en el supuesto 3.
+3.Como mediador cuando el pagador anterior está situado en el extranjero.
+En el caso de pago de valores de emisores extranjeros, esta clave será 1 (como emisor y/o retenedor).
+149
+Alfabético
+Tipo código.
+Sólo cuando en el campo «CLAVE» (posiciones 100-101 del tipo de registro 2) se hayan consignado los valores «1» ó «2».
+Se cumplimentará en este campo cualquiera de las letras que a continuación se relacionan, para identificar la descripción del contenido del campo «CÓDIGO CUENTA VALORES»:
+«C» Identificación con el Código Cuenta Valores (C.C.V.).
+«O» Otra identificación.
+«P»: Préstamo de valores de los regulados en la disposición adicional decimoctava de la Ley 62/2003, de 30 de diciembre, de medidas fiscales, administrativas y del orden social («Boletín Oficial del Estado» de 31 de diciembre)».
+150-169
+Alfanumérico
+Codigo cuenta valores.
+Sólo cuando en el campo «CLAVE» (posiciones 100-101 del tipo de registro 2) se hayan consignado los valores «1» ó «2».
+Se consignará este dato en aquellos supuestos en que una Entidad financiera tenga encomendada la gestión del cobro, la administración y el depósito de los valores de los cuales proceden los correspondientes rendimientos del capital mobiliario o rentas objeto de este modelo. Por lo tanto, si el declarante no es una Entidad financiera gestora del cobro, administradora o depositaria de los valores de los cuales proceden tales rendimientos del capital mobiliario o rentas no deberá cumplimentarse, en ningún caso, este campo. Su estructura se descompone de la siguiente manera:
+Código de Entidad: Cuatro dígitos.
+Código de Sucursal: Cuatro dígitos.
+Dígitos de Control: Dos dígitos.
+Número de Cuenta: Diez dígitos.
+Cuando en el campo «TIPO DE CÓDIGO» (posición 149, del registro de tipo 2) se haya consignado «P» se hará constar en este campo el número de operación del préstamo en los supuestos de préstamos de valores.
+170
+Alfabético
+PENDIENTE.
+Solo para claves de percepción “1” o “2” (posiciones 100-101 del tipo de registro 2).
+Se consignará una “X” en este campo en aquellos supuestos de percepciones devengadas en el ejercicio, cuyos pagos no se han efectuado en el mismo por el declarante al no presentarse los titulares a su cobro. Siempre que consigne la “X” en este campo, el resto de campos del mismo perceptor (registro) se cumplimentará de la forma siguiente:
+Concepto: Concepto.
+N.I.F. PERCEPTOR: 999 999 999
+N.I.F. REPRESENTANTE LEGAL: 999 999 999
+F/J: sin contenido
+APELLIDOS Y NOMBRE, RAZÓN SOCIAL O DENOMINACIÓN DEL PERCEPTOR: VALORES PENDIENTES DE ABONO
+IDENTIFICADOR DE REGISTRO O NÚMERO DE ORDEN: el que corresponda
+CÓDIGO BIC DEL PERCEPTOR MEDIADOR: sin contenido
+FECHA DEVENGO: la que corresponda
+NATURALEZA: la que corresponda
+CLAVE: la que corresponda
+SUBCLAVE: la que corresponda
+BASE RETENCIONES E INGRESOS A CUENTA: la que corresponda
+% RETENCIÓN: el que corresponda
+RETENCIONES E INGRESOS A CUENTA: los que correspondan
+PERCEPTOR MEDIADOR: sin contenido
+CÓDIGO: el que corresponda
+CÓDIGO EMISOR: el que corresponda
+DECLARANTE PAGO: el que corresponda
+TIPO CÓDIGO:: el que corresponda
+CÓDIGO CUENTA VALORES: el que corresponda
+EJERCICIO DEVENGO: sin contenido
+FECHA INICIO PRESTAMO: el que corresponda
+FECHA VENCIMIENTO PRESTAMO: el que corresponda.
+REMUNERACIÓN AL PRESTAMISTA: el que corresponda
+COMPENSACIONES: el que corresponda.
+GARANTÍAS: el que corresponda
+DIRECCIÓN DEL PERCEPTOR: sin contenido
+INGRESOS A CUENTA REPERCUTIDOS: los que correspondan
+NIF DEL PAGADOR ANTERIOR: el que corresponda
+PROCEDIMIENTO ESPECIAL DE RETENCIONES: el que corresponda
+CLAVE DE MERCADO: el que corresponda
+CÓDIGO LEI DEL PERCEPTOR: sin contenido
+NIF EN EL PAÍS DE RESIDENCIA FISCAL: sin contenido
+FECHA DE NACIMIENTO: sin contenido
+LUGAR DE NACIMIENTO: sin contenido
+PAÍS O TERRITORIO DE RESIDENCIA FISCAL DEL PERCEPTOR: sin contenido
+La presentación de la información de los datos relativos al perceptor se realizará en la declaración correspondiente al ejercicio en que los rendimientos o rentas pendientes de pago sean abonados a aquel. En este supuesto deberá consignarse, en la declaración correspondiente al ejercicio de pago de los rendimientos o rentas, en el campo “ejercicio devengo”, las cuatro cifras del ejercicio en que se devengaron los correspondientes rendimientos o rentas, aunque no se pagaron por no presentarse los titulares al cobro de los mismos.
+171-174
+Numérico
+Ejercicio de devengo.
+Sólo cuando en el campo «CLAVE» (posiciones 100-101 del tipo de registro 2) se hayan consignado los valores «1» ó «2».
+Se consignarán las cuatro cifras del ejercicio de devengo de aquellos rendimientos o rentas pagados en el ejercicio correspondiente a la presente declaración por haberse presentado los titulares a su cobro, cuyo devengo corresponda a ejercicios anteriores. En ningún otro caso que no sea el descrito anteriormente se cumplimentará este campo.
+175-182
+Numérico
+Fecha de inicio del préstamo
+Exclusivamente, en el supuesto de préstamo de valores, es decir, cuando en el campo «TIPO DE CÓDIGO» (posición 149, del registro de tipo 2) se haya consignado «P» se hará constar en este campo la fecha de inicio del préstamo, indicando los cuatro dígitos del año, los dos del mes (de 01 a 12) y los dos del día (de 01 a 31), con el formato AAAAMMDD.
+En el resto de los casos este campo no tendrá contenido.
+183-190
+Numérico
+Fecha de vencimiento del préstamo
+Exclusivamente, en el supuesto de préstamo de valores, es decir, cuando en el campo «TIPO DE CÓDIGO» (posición 149, del registro de tipo 2) se haya consignado «P» se hará constar en este campo la fecha de vencimiento del préstamo, indicando los cuatro dígitos del año, los dos del mes (de 01 a 12) y los dos del día (de 01 a 31), con el formato AAAAMMDD.
+En el resto de los casos este campo no tendrá contenido
+191-202
+Numérico
+Remuneración al prestamista
+Campo numérico de 12 posiciones.
+Exclusivamente, en el supuesto de préstamo de valores, es decir, cuando en el campo «TIPO DE CÓDIGO» (posición 149, del registro de tipo 2) se haya consignado «P» se hará constar en este campo el importe de las remuneraciones al prestamista que correspondan. Los importes deben configurarse en EUROS, sin signo y sin coma decimal.
+En el resto de los casos este campo no tendrá contenido
+Este campo se subdivide en otros dos:
+191-200 Entero Numérico Parte entera:
+Se consignará la parte entera de la remuneración (si no tiene, consignar CEROS).
+201-202 Decimal Numérico Parte decimal:
+Se consignará la parte decimal de la remuneración (si no tiene, consignar CEROS).
+203-214
+Numérico
+Compensaciones
+Campo numérico de 12 posiciones.
+Exclusivamente, en el supuesto de préstamo de valores, es decir, cuando en el campo «TIPO DE CÓDIGO» (posición 149, del registro de tipo 2) se haya consignado «P» se hará constar en este campo el importe de las compensaciones que correspondan, independiente de si existe o no obligación de retener e ingresar a cuenta. Los importes deben configurarse en EUROS, sin signo y sin coma decimal.
+Este campo se subdivide en otros dos:
+203-212 Entero Numérico Parte entera:
+Se consignará la parte entera de las compensaciones (si no tiene, consignar CEROS).
+213-214 Decimal Numérico Parte decimal:
+Se consignará la parte decimal de las compensaciones (si no tiene, consignar CEROS).
+215-226
+Numérico
+Garantías
+Campo numérico de 12 posiciones.
+Exclusivamente, en el supuesto de préstamo de valores, es decir, cuando en el campo «TIPO DE CÓDIGO» (posición 149, del registro de tipo 2) se haya consignado «P» se hará constar en este campo el importe de las garantías que correspondan. Los importes deben configurarse en euros, sin signo y sin coma decimal.
+En el resto de los casos este campo no tendrá contenido Este campo se subdivide en otros dos:
+215-224 Entero Numérico Parte entera:
+Se consignará la parte entera de las garantías (si no tiene, consignar CEROS).
+225-226 Decimal Numérico Parte decimal:
+Se consignará la parte decimal de las garantías (si no tiene, consignar CEROS).
+227-388
+Alfanumérico
+DIRECCIÓN DEL PERCEPTOR
+Se consignará el domicilio del perceptor en su país o territorio de residencia.
+Este campo es opcional cuando se haya cumplimentado el campo PERCEPTOR MEDIADOR (posición 134 de tipo de registro 2).
+Este campo se subdivide en:
+227-276 DOMICILIO/ADDRESS: Se consignará en este campo la dirección correspondiente al domicilio: tipo de vía (calle, plaza, avenida, carretera...), nombre de la vía pública, número de casa, o, en su caso, punto kilométrico, etc.
+277-316 COMPLEMENTO DEL DOMICILIO: en su caso, se harán constar en este campo los datos adicionales que resulten necesarios para la completa identificación del domicilio.
+317-346 POBLACIÓN/CIUDAD: se consignará el nombre de la población o ciudad en la que se encuentra situado el domicilio.
+347-376 PROVINCIA/REGIÓN/ESTADO: cuando sea necesario para una correcta identificación de la dirección del domicilio, se consignará en este campo el nombre de la Provincia, Región, Estado, Departamento o cualquier otra subdivisión política o administrativa, donde se encuentre situado el domicilio.
+377-386 CÓDIGO POSTAL (ZIP): se consignará el código postal correspondiente al domicilio. Campo de 10 posiciones, alfanumérico.
+387-388 CÓDIGO PAÍS: se cumplimentará el código del país o territorio correspondiente al domicilio, de acuerdo con las claves de países o territorios que figuran en el anexo II de la Orden EHA/3496/2011, de 15 de diciembre (BOE de 26 de diciembre). Campo alfabético de 2 posiciones.
+389-401
+Numérico
+Ingresos a cuenta repercutidos.
+Campo numérico de 13 posiciones.
+Cuando en el campo “NATURALEZA” (posición 99 del registro de tipo 2) se haya consignado el valor E (Renta en especie) y tenga contenido el campo “RETENCIONES E INGRESOS A CUENTA” (posición 121-133 del registro de tipo 2), se consignará en este campo el importe de los ingresos a cuenta efectuados que, en su caso, el pagador de las retribuciones en especie hubiera repercutido al perceptor.
+Los importes deben consignarse en EUROS.
+Este campo se subdivide en dos:
+389-399 Entero. Parte entera del importe de las retenciones e ingresos a cuenta (si no tiene contenido se consignará a ceros).
+400-401 Decimal. Parte decimal del importe de las retenciones e ingresos a cuenta (si no tiene contenido se consignará a ceros).
+402-410
+Alfanumérico
+NIF DEL PAGADOR ANTERIOR
+Sólo para claves de percepción "1" o "2" (posiciones 100- 101 del tipo de registro 2).
+Será obligatorio indicar el NIF del pagador inmediatamente anterior en la cadena de pagos si el campo "DECLARANTE: PAGO", posición 148, tiene valor 2 "como mediador, excepto en el supuesto 3".
+411
+Alfabético
+PROCEDIMIENTO ESPECIAL DE RETENCIONES
+Sólo para claves de percepción "1" o "2" (posiciones 100- 101 del tipo de registro 2).
+Sólo se cumplimenta, con una X, si en relación con este contribuyente, se ha ajustado la retención utilizando el procedimiento especial de ajuste de retenciones de la OM de 13 de abril de 2000. En cualquier otro caso, no se cumplimenta.
+412
+Alfabético
+CLAVE DE MERCADO
+Sólo para claves de percepción “1” o “2” (posiciones 100-101 del tipo de registro 2).
+Se cumplimentará este campo con alguno de los siguientes valores:
+A. Mercado secundario oficial de valores español.
+B. Mercado secundario oficial de valores extranjero de la UE.
+C. Otros mercados oficiales extranjeros.
+D. Otros mercados no oficiales.
+E. No negociados en mercados.
+413-432
+Alfanumérico
+CÓDIGO LEI DEL PERCEPTOR
+Sólo para claves de percepción "1" o "2" (posiciones 100- 101 del tipo de registro 2).
+Se consignará el Código LEI, Identificador de Entidad Jurídica (Legal Entity Identifier) del perceptor declarado, que se utiliza para identificar a las entidades que son parte en las transacciones financieras y para cumplir con los requisitos de información en los mercados financieros.
+Será obligatorio si el campo PERCEPTOR MEDIADOR (posición 134) tiene valor 2 "El perceptor declarado es un mediador situado en el extranjero".
+433-452
+Alfanumérico
+NIF EN EL PAÍS DE RESIDENCIA FISCAL
+Si el perceptor dispone de un número de identificación fiscal asignado en su país o territorio de residencia se consignarán los dígitos numéricos y alfabéticos que le identifiquen en su país o territorio de residencia.
+453-460
+Numérico
+Fecha de nacimiento.
+Cuando en la «clave de personalidad», posición 36 del tipo de registro 2, se haga constar una F, se indicará la fecha de nacimiento del perceptor. Se consignarán los dos dígitos del día (01 a 31), los dos del mes (de 01 a 12) y los cuatro del año con el formato DDMMAAAA.
+453-454 Dia Numérico Dos posiciones.
+455-456 Mes Numérico Dos posiciones.
+457-460 Año Numérico Cuatro posiciones.
+461-497
+Alfanumérico
+LUGAR DE NACIMIENTO
+Cuando en la «Clave de personalidad», posición 36 del tipo de registro 2, se haga constar una F, se indicará el lugar de nacimiento del perceptor.
+Este campo se subdivide en dos:
+461-495 CIUDAD: Se consignará el municipio y, en su caso, la provincia o región o departamento correspondiente al lugar de nacimiento.
+496-497 CÓDIGO PAÍS: Campo alfabético de 2 posiciones. Se consignará el código del país o territorio correspondiente al lugar de nacimiento del perceptor, de acuerdo con las claves de países y territorios que figuran en el anexo II de la Orden EHA/3496/2011, de 15 de diciembre (BOE de 26 de diciembre).
+498-499
+Alfabético
+PAÍS O TERRITORIO DE RESIDENCIA FISCAL DEL PERCEPTOR: Se consignará el código del país o territorio de fiscal del perceptor, de acuerdo con las claves de países que figuran en el anexo II de la Orden EHA/3496/2011, de 15 de diciembre (BOE de 26 de diciembre). Campo alfabético de 2 posiciones.
+500
+–
+Blanco.
+* Todos los importes serán positivos.
+* Los campos numéricos que no tengan contenido se rellenarán a ceros.
+* Los campos alfanuméricos/alfabéticos que no tengan contenido se rellenarán a blancos.
+* Todos los campos numéricos ajustados a la derecha y rellenos de ceros por la izquierda.
+* Todos los campos alfanuméricos/alfabéticos ajustados a la izquierda y rellenos de blancos por la derecha, en mayúsculas, sin caracteres especiales y sin vocales acentuadas, excepto que se especifique lo contrario en la descripción del campo.
+
+# Anexo de desglose de retenciones e ingresos a cuenta ingresados en el Estado, en las Diputaciones Forales del País Vasco y en la Comunidad Foral de Navarra
+
+MODELO 296
+Tipo de registro 2: Anexo de desglose de retenciones e ingresos a cuenta ingresados en el Estado, en las Diputaciones Forales del País Vasco y en la Comunidad Foral de Navarra.
+Cuando el tipo de renta relacionada en el campo “Clave” (posición 100-101 del registro de tipo 2. Registro de perceptor) tenga los valores 1 (dividendos y otras rentas de participación en fondos propios de entidades, sólo si campo “pago”, posición 148 del registro de tipo 2. Registro de perceptor, toma el valor 1), 2 (intereses y otras rentas derivadas de la cesión a terceros de capitales propios, sólo si campo “pago”, posición 148 del registro de tipo 2. Registro de perceptor, toma el valor 1), 3 a 11 (cánones), 12 (rendimientos de capital mobiliario de operaciones de capitalización y de contratos de seguros de vida o invalidez), 13 ( otros rendimientos de capital mobiliario no citados anteriormente), 22 (retribuciones de administradores y miembros de Consejos de Administración) o, si el pagador fuera persona jurídica o establecimiento permanente, cuando una renta se pudiera entender obtenida simultáneamente en ambos territorios; por corresponderse con las rentas a que se refiere el apartado Cuatro del artículo 22 y el apartado Dos del artículo 23 del Concierto Económico con el País Vasco o el segundo párrafo del apartado 2 del artículo 30 del Convenio Económico con la Comunidad Foral de Navarra; se cumplimentará el “Anexo de desglose de retenciones e ingresos a cuenta ingresados en el Estado, en las Diputaciones Forales del País Vasco y en la Comunidad Foral de Navarra” (Tipo de Hoja “F”) si el ingreso de las retenciones o ingresos a cuenta se reparte entre el Estado y las Haciendas Forales en proporción al volumen de operaciones.
+El campo «IDENTIFICADOR DE REGISTRO O NÚMERO DE ORDEN» (posiciones 77-84 del tipo de registro 2) tendrá el mismo contenido en el registro de perceptor (registro de tipo 2) y en el "Anexo de desglose de retenciones e ingresos a cuenta ingresados en el Estado, en las Diputaciones Forales del País Vasco y en la Comunidad Foral de Navarra" (Tipo de Hoja "F") correspondiente a ese perceptor.
+Posiciones
+Naturaleza
+Descripción de los campos
+1
+Numérico
+TIPO DE REGISTRO.
+Constante "2"
+02-abr
+Numérico
+MODELO DECLARACIÓN.
+Constante '296'
+05-ago
+Numérico
+EJERCICIO.
+Consignar lo contenido en estas mismas posiciones del registro de tipo 1
+sep-17
+Alfanumérico
+NIF DEL DECLARANTE.
+Consignar lo contenido en estas mismas posiciones del registro de tipo 1
+18-26
+Alfanumérico
+NIF DEL PERCEPTOR
+Su contenido será el que se haya consignado en el campo NIF DEL PERCEPTOR, posiciones 18-26, del registro de tipo 2 del registro de perceptor para el IDENTIFICADOR DE REGISTRO O NÚMERO DE ORDEN, posiciones 77-84 de este Anexo, correspondiente a este registro.
+27-35
+Alfanumérico
+NIF DEL REPRESENTANTE LEGAL
+Su contenido será el que se haya consignado en el campo NIF DEL REPRESENTANTE LEGAL, posiciones 27-35, del registro de tipo 2 del registro de perceptor para el IDENTIFICADOR DE REGISTRO O NÚMERO DE ORDEN, posiciones 77-84 de este Anexo, correspondiente a este registro.
+36
+Alfabético
+F/J
+Su contenido será el que se haya consignado en el campo F/J, posición 36, del registro de tipo 2 del registro de perceptor para el IDENTIFICADOR DE REGISTRO O NÚMERO DE ORDEN, posiciones 77-84 de este Anexo, correspondiente a este registro.
+37-76
+Alfanumérico
+APELLIDOS Y NOMBRE, RAZÓN SOCIAL O DENOMINACIÓN DEL PERCEPTOR.
+Su contenido será el que se haya consignado en el campo APELLIDOS Y NOMBRE, RAZÓN SOCIAL O DENOMINACIÓN DEL PERCEPTOR, posiciones 37-76, del registro de tipo 2 del registro de perceptor para el IDENTIFICADOR DE REGISTRO O NÚMERO DE ORDEN, posiciones 77-84 de este Anexo, correspondiente a este registro.
+77-84
+Alfanumérico
+IDENTIFICADOR DE REGISTRO O NÚMERO DE ORDEN
+Identifica el registro de perceptor. Se consignará el mismo contenido del campo IDENTIFICADOR DE REGISTRO O NÚMERO DE ORDEN, posiciones 77-84 del tipo de registro 2 (registro de perceptor) que se corresponda con el registro de perceptor detallado en este Anexo.
+85-149
+Numérico
+RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS DIPUTACIONES FORALES DEL PAÍS VASCO Y EN LA COMUNIDAD FORAL DE NAVARRA.
+En el caso de las rentas a que se refieren el artículo 30.2 segundo párrafo del Convenio Económico entre el Estado y la Comunidad Foral de Navarra, y los artículos 22.Cuatro y 23.Dos del Concierto Económico con la Comunidad Autónoma del País Vasco, si el ingreso de las retenciones e ingresos a cuenta se reparte entre el Estado y las Haciendas Forales en proporción al volumen de operaciones, la entidad pagadora, además de consignar las cuantías de retenciones totales practicadas e ingresos totales a cuenta efectuados sobre los citados rendimientos en el campo “Retenciones e ingresos a cuenta” (posiciones 121-133 del registro de tipo 2. Registro de perceptor), cumplimentará los siguientes subcampos, para identificar de forma diferenciada las retenciones e ingresos a cuenta ingresados a cada una de las Administraciones competentes:
+(85-97) HACIENDA ESTATAL. Campo numérico de 13 posiciones. Se consignará, sin signo y sin coma decimal, el importe de las retenciones e ingresos a cuenta, correspondientes a los rendimientos a que se refieren el artículo 30.2 segundo párrafo del Convenio Económico entre el Estado y la Comunidad Foral de Navarra, y los artículos 22.Cuatro y 23.Dos del Concierto Económico con la Comunidad Autónoma del País Vasco, efectivamente ingresados en la Hacienda Pública Estatal.
+Los importes deben consignarse en euros. Este campo se subdivide en dos:
+85-95 Parte entera del importe de las retenciones practicadas e ingresos a cuenta efectuados; si no tiene contenido, se consignará a ceros.
+96-97 Parte decimal del importe de las retenciones practicadas e ingresos a cuenta efectuados; si no tiene contenido, se consignará a ceros.
+(98-110) COMUNIDAD FORAL DE NAVARRA. Campo numérico de 13 posiciones. Se consignará, sin signo y sin coma decimal, el importe de las retenciones e ingresos a cuenta, correspondientes a los rendimientos a que se refiere el artículo 30.2 segundo párrafo del Convenio Económico entre el Estado y la Comunidad Foral de Navarra, efectivamente ingresados en la Comunidad Foral de Navarra. En otro caso, este campo se consignará relleno a ceros.
+Los importes deben consignarse en euros. Este campo se subdivide en dos:
+98-108 Parte entera del importe de las retenciones practicadas e ingresos a cuenta efectuados; si no tiene contenido se consignará a ceros.
+109-110 Parte decimal del importe de las retenciones practicadas e ingresos a cuenta efectuados; si no tiene contenido se consignará a ceros.
+(111-123) DIPUTACIÓN FORAL DE ARABA/ÁLAVA. Campo numérico de 13 posiciones. Se consignará, sin signo y sin coma decimal, el importe de las retenciones e ingresos a cuenta, correspondientes a los rendimientos a que se refieren los artículos 22.Cuatro y 23.Dos del Concierto Económico con la Comunidad Autónoma del País Vasco, efectivamente ingresados en la Diputación Foral de Araba/Álava. En otro caso, este campo se consignará relleno a ceros.
+Los importes deben consignarse en euros. Este campo se subdivide en dos:
+111-121 Parte entera del importe de las retenciones practicadas e ingresos a cuenta efectuados; si no tiene contenido se consignará a ceros.
+122-123 Parte decimal del importe de las retenciones practicadas e ingresos a cuenta efectuados; si no tiene contenido se consignará a ceros.
+(124-136) DIPUTACIÓN FORAL DE GIPUZKOA. Campo numérico de 13 posiciones. Se consignará, sin signo y sin coma decimal, el importe de las retenciones e ingresos a cuenta, correspondientes a los rendimientos a que se refiere los artículos los artículos 22.Cuatro y 23.Dos del Concierto Económico con la Comunidad Autónoma del País Vasco, efectivamente ingresados en la Diputación Foral de Gipuzkoa. En otro caso, este campo se consignará relleno a ceros.
+Los importes deben consignarse en euros. Este campo se subdivide en dos:
+124-134 Parte entera del importe de las retenciones practicadas e ingresos a cuenta efectuados; si no tiene contenido se consignará a ceros.
+135-136 Parte decimal del importe de las retenciones practicadas e ingresos a cuenta efectuados; si no tiene contenido se consignará a ceros.
+(137-149) DIPUTACIÓN FORAL DE BIZKAIA. Campo numérico de 13 posiciones. Se consignará, sin signo y sin coma decimal, el importe de las retenciones e ingresos a cuenta, correspondientes a los rendimientos a que se refieren los artículos 22.Cuatro y 23.Dos del Concierto Económico con la Comunidad Autónoma del País Vasco, efectivamente ingresados en la Diputación Foral de Bizkaia. En otro caso, este campo se consignará relleno a ceros.
+Los importes deben consignarse en euros. Este campo se subdivide en dos:
+137-147 Parte entera del importe de las retenciones practicadas e ingresos a cuenta efectuados; si no tiene contenido se consignará a ceros.
+148-149 Parte decimal del importe de las retenciones practicadas e ingresos a cuenta efectuados; si no tiene contenido se consignará a ceros.
+150-499
+-----
+BLANCOS
+500
+Alfabético
+TIPO DE HOJA
+Constante “F”.
+
+# Anexo «Valores negociables. Relación de pago a contribuyentes»
+
+Tipo de Hoja «A»
+Sólo para claves de percepción «1» ó «2» (posiciones 100-101 del tipo de registro 2) y siempre que en el campo «PERCEPTOR MEDIADOR» (posición 134 del tipo de registro 2) conste el valor «2: El perceptor declarado es un mediador situado en el extranjero»)
+Posiciones
+Naturaleza
+Descripción de los campos
+1
+Numérico.
+Tipo de registro.
+Constante «2».
+2-4
+Numérico.
+Modelo de declaración.
+Constante 296.
+5-8
+Numérico.
+Ejercicio.
+Consignar lo contenido en estas mismas posiciones del registro de tipo 1.
+9-17
+Alfanumérico.
+NIF del declarante.
+Consignar lo contenido en estas mismas posiciones del registro de tipo 1.
+18-26
+Alfanumérico.
+NIF del perceptor.
+Su contenido será el que se haya consignado en el campo NIF DEL PERCEPTOR, posiciones 18-26, del registro de tipo 2 del registro de perceptor para el IDENTIFICADOR DE REGISTRO O NÚMERO DE ORDEN, posiciones 77-84 de este Anexo, correspondiente a este registro.
+27-35
+Alfanumérico.
+NIF del representante legal.
+Su contenido será el que se haya consignado en el campo NIF DEL REPRESENTANTE LEGAL, posiciones 27-35, del registro de tipo 2 del registro de perceptor para el IDENTIFICADOR DE REGISTRO O NÚMERO DE ORDEN, posiciones 77-84 de este Anexo, correspondiente a este registro.
+36
+Alfabético.
+F/J.
+Su contenido será el que se haya consignado en el campo F/J, posición 36, del registro de tipo 2 del registro de perceptor para el IDENTIFICADOR DE REGISTRO O NÚMERO DE ORDEN, posiciones 77-84 de este Anexo, correspondiente a este registro.
+37-76
+Alfanumérico.
+Apellidos y nombre, razón social o denominación del perceptor.
+Campo obligatorio. Su contenido será el que se haya consignado en el campo APELLIDOS Y NOMBRE, RAZÓN SOCIAL O DENOMINACIÓN DEL PERCEPTOR, posiciones 37-76, del registro de tipo 2 del registro de perceptor para el IDENTIFICADOR DE REGISTRO O NÚMERO DE ORDEN, posiciones 77-84 de este Anexo, correspondiente a este registro.
+77-84
+Alfanumérico.
+Identificador de registro o número de orden.
+Campo obligatorio.
+Se consignará el mismo contenido del campo IDENTIFICADOR DE REGISTRO O NÚMERO DE ORDEN, posiciones 77-84 del tipo de registro 2, que se corresponda con el pago en el que están comprendidos los contribuyentes detallados en este ANEXO. De este modo, por ejemplo, todos los contribuyentes integrados en el pago de un dividendo (mismo ISIN, misma fecha de devengo y mismo perceptor) tendrán el mismo IDENTIFICADOR DE REGISTRO O NÚMERO DE ORDEN.
+85-96
+Alfanumérico.
+Código ISIN.
+Campo obligatorio.
+Su contenido será el que se haya consignado para ese IDENTIFICADOR DE REGISTRO O NÚMERO DE ORDEN en el campo CÓDIGO EMISOR, posiciones 136-147, del registro de tipo 2 del Registro de perceptor.
+97-104
+Numérico.
+Fecha de devengo.
+Campo obligatorio.
+Su contenido será el que se haya consignado para ese IDENTIFICADOR DE REGISTRO O NÚMERO DE ORDEN en el campo FECHA DE DEVENGO, posiciones 91-98, del registro de tipo 2 del Registro de perceptor.
+105
+Alfabético.
+Clave de personalidad del contribuyente.
+Valores:
+F: persona física.
+J: persona jurídica o entidad.
+106-114
+Alfanumérico.
+NIF del contribuyente.
+Si el contribuyente dispone de NIF asignado en España conocido por el declarante, se consignará en este campo.
+115-134
+Alfanumérico.
+Código LEI del contribuyente.
+Si el contribuyente es una persona jurídica o entidad, se consignará su Código LEI, Identificador de Entidad Jurídica (Legal Entity Identifier).
+Campo obligatorio si el campo CLAVE DE PERSONALIDAD DEL CONTRIBUYENTE, posición 105, de registro de tipo 2 del Anexo de Relación de Pago a Contribuyentes, tiene valor J.
+135-174
+Alfanumérico.
+Apellidos y nombre/razón social o denominación del contribuyente.
+a) Para personas físicas se consignará el primer apellido, un espacio, el segundo apellido, un espacio y el nombre completo, necesariamente en este mismo orden.
+Si el contribuyente es menor de edad, se consignarán en este campo los apellidos y nombre del menor de edad.
+b) Tratándose de personas jurídicas y entidades en régimen de atribución de rentas, se consignará la razón social o denominación completa de la entidad, sin anagramas.
+175-187
+Numérico.
+Importe del pago al contribuyente.
+Campo numérico de 13 posiciones.
+Se consignará el importe de pago efectivo realizado a favor del contribuyente, neto de la retención.
+175 SIGNO: Si el importe descrito anteriormente es negativo, se consignará una «N». En cualquier otro caso se rellenará a blancos.
+176-187 IMPORTE: Campo numérico de 12 posiciones. Se consignará sin signo y sin coma decimal, el importe descrito anteriormente.
+Este campo se subdivide en dos:
+176-185 Parte entera del importe del pago al contribuyente. Si no tiene contenido se consignará a ceros.
+186-187 Parte decimal del importe del pago al contribuyente. Si no tiene contenido se consignará a ceros.
+188-191
+Numérico.
+Porcentaje de retención.
+Se cumplimenta con el porcentaje de retención aplicado por el obligado a retener.
+Este campo se subdivide en dos:
+188-189: ENTERO. Numérico. Parte entera.
+Se consignará la parte entera del porcentaje (si no tiene, consignar CEROS).
+190-191: DECIMAL. Numérico. Parte decimal.
+Se consignará la parte decimal del porcentaje (si no tiene, consignar CEROS).
+192-204
+Numérico.
+Retenciones.
+Se cumplimenta con el importe de la retención correspondiente al contribuyente.
+Si el campo «IMPORTE DEL PAGO AL CONTRIBUYENTE» es negativo, este campo se cumplimentará a ceros.
+Este campo se subdivide en dos:
+192-202: Parte entera del importe de las retenciones, si no tiene contenido se consignará a ceros.
+203-204: Parte decimal del importe de las retenciones, si no tiene contenido se consignará a ceros.
+205-416
+Alfanumérico.
+Dirección del contribuyente.
+Se consignará el domicilio del contribuyente en su país o territorio de residencia.
+Este campo se subdivide en:
+205-254 DOMICILIO/ADDRESS: Se consignará en este campo la dirección correspondiente al domicilio: tipo de vía (calle, plaza, avenida, carretera...), nombre de la vía pública, número de casa, o, en su caso, punto kilométrico, etc.
+255-344 COMPLEMENTO DEL DOMICILIO: en su caso, se harán constar en este campo los datos adicionales que resulten necesarios para la completa identificación del domicilio.
+345-374 POBLACIÓN/CIUDAD: se consignará el nombre de la población o ciudad en la que se encuentra situado el domicilio.
+375-404 PROVINCIA/REGIÓN/ESTADO: cuando sea necesario para una correcta identificación de la dirección del domicilio, se consignará en este campo el nombre de la Provincia, Región, Estado, Departamento o cualquier otra subdivisión política o administrativa, donde se encuentre situado el domicilio.
+405-414 CÓDIGO POSTAL (ZIP): se consignará el código postal correspondiente al domicilio. (campo de 10 posiciones, alfanumérico).
+415-416 CÓDIGO PAÍS: se cumplimentará el código del país o territorio correspondiente al domicilio, de acuerdo con las claves de países o territorios que figuran en el anexo II de la Orden EHA/3496/2011, de 15 de diciembre (BOE de 26 de diciembre). Campo alfabético de 2 posiciones.
+417-429
+Numérico.
+Número de justificante del modelo 210.
+Campo numérico de 13 posiciones.
+Campo obligatorio.
+Se consignará el número de justificante de la autoliquidación modelo 210 con solicitud de devolución correspondiente al contribuyente, para esa fecha de devengo y ese código ISIN.
+Si la autoliquidación modelo 210 se realizó con «agrupación anual» comprensiva de varias rentas con distintas fechas de devengo, el número de justificante será el mismo en los registros de las distintas fechas de devengo.
+430-432
+–
+Blancos.
+433-452
+Alfanumérico.
+NIF en el país de residencia fiscal del contribuyente.
+Si el contribuyente tiene asignado un número de identificación fiscal en su país o territorio de residencia, se consignará en este campo.
+453-460
+Numérico.
+Fecha de nacimiento del contribuyente.
+Cuando en la «CLAVE DE PERSONALIDAD DEL CONTRIBUYENTE», posición 105 del tipo de registro 2, del anexo «Valores negociables. Relación de pago a contribuyentes», se haga constar una F, se indicará la fecha de nacimiento del contribuyente. Se consignarán los dos dígitos del día (01 a 31), los dos del mes (de 01 a 12) y los cuatro del año con el formato DDMMAAAA.
+453-454 DIA Numérico Dos posiciones.
+455-456 MES Numérico Dos posiciones.
+457-460 AÑO Numérico Cuatro posiciones.
+461-497
+Alfanumérico.
+Lugar de nacimiento del contribuyente.
+Cuando en la «CLAVE DE PERSONALIDAD DEL CONTRIBUYENTE», posición 105, del tipo de registro 2, del anexo «Valores negociables. Relación de pago a contribuyentes», se haga constar una F, se indicará el lugar de nacimiento del contribuyente.
+Este campo se subdivide en dos:
+461-495 CIUDAD: 35 posiciones.
+Se consignará el municipio y, en su caso, la provincia o región o departamento correspondiente al lugar de nacimiento.
+496-497 CÓDIGO PAÍS: Campo alfabético de 2 posiciones. Se consignará el código del país o territorio correspondiente al lugar de nacimiento del contribuyente, de acuerdo con las claves de países y territorios que figuran en el anexo II de la Orden EHA/3496/2011, de 15 de diciembre (BOE de 26 de diciembre).
+498-499
+Alfabético.
+País o territorio de residencia fiscal del contribuyente.
+Se consignará el código del país o territorio de residencia fiscal del contribuyente, de acuerdo con las claves de países que figuran en el Anexo II de la Orden EHA/3496/2011, de 15 de diciembre (BOE de 26 de diciembre).
+500
+Alfabético.
+Tipo de hoja.
+Constante «A».
+
+# Anexo «Valores negociables. Relación de certificados de pago»
+
+(Tipo de Hoja «B»)
+Sólo para claves de percepción «1» ó «2» (posiciones 100-101 del tipo de registro 2) y siempre que en el campo «PERCEPTOR MEDIADOR» (posición 134 del tipo de registro 2) conste el valor «2: El perceptor declarado es un mediador situado en el extranjero»)
+Posiciones
+Naturaleza
+Descripción de los campos
+1
+Numérico.
+Tipo de registro.
+Constante «2».
+2-4
+Numérico.
+Modelo de declaración.
+Constante 296.
+5-8
+Numérico.
+Ejercicio.
+Consignar lo contenido en estas mismas posiciones del registro de tipo 1.
+9-17
+Alfanumérico.
+NIF del declarante.
+Consignar lo contenido en estas mismas posiciones del registro de tipo 1.
+18-26
+Alfanumérico.
+NIF del perceptor.
+Su contenido será el que se haya consignado en el campo NIF DEL PERCEPTOR, posiciones 18-26, del registro de tipo 2 del registro de perceptor para el IDENTIFICADOR DE REGISTRO O NÚMERO DE ORDEN, posiciones 77-84 de este Anexo, correspondiente a este registro.
+27-35
+Alfanumérico.
+NIF del representante legal.
+Su contenido será el que se haya consignado en el campo NIF DEL REPRESENTANTE LEGAL, posiciones 27-35, del registro de tipo 2 del registro de perceptor para el IDENTIFICADOR DE REGISTRO O NÚMERO DE ORDEN, posiciones 77-84 de este Anexo, correspondiente a este registro.
+36
+Alfabético.
+F/J.
+Su contenido será el que se haya consignado en el campo F/J, posición 36, del registro de tipo 2 del registro de perceptor para el IDENTIFICADOR DE REGISTRO O NÚMERO DE ORDEN, posiciones 77-84 de este Anexo, correspondiente a este registro.
+37-76
+Alfanumérico.
+Apellidos y nombre, razón social o denominación del perceptor.
+Campo obligatorio. Su contenido será el que se haya consignado en el campo APELLIDOS Y NOMBRE, RAZÓN SOCIAL O DENOMINACIÓN DEL PERCEPTOR, posiciones 37-76, del registro de tipo 2 del registro de perceptor para el IDENTIFICADOR DE REGISTRO O NÚMERO DE ORDEN, posiciones 77-84 de este Anexo, correspondiente a este registro.
+77-84
+Alfanumérico.
+Identificador de registro o número de orden.
+Campo obligatorio.
+Se consignará el mismo contenido del campo IDENTIFICADOR DE REGISTRO O NÚMERO DE ORDEN, posiciones 77-84 del tipo de registro 2, que se corresponda con el pago en el que están comprendidos los contribuyentes de cuyo certificado se informa en este ANEXO.
+De este modo, por ejemplo, todos los contribuyentes integrados en el pago de un dividendo (mismo ISIN, misma fecha de devengo y mismo perceptor) tendrán el mismo IDENTIFICADOR DE REGISTRO O NÚMERO DE ORDEN.
+85-124
+Alfanumérico.
+Apellidos y nombre/razón social o denominación del contribuyente.
+Campo obligatorio.
+Se consignará el mismo contenido del campo APELLIDOS Y NOMBRE/RAZÓN SOCIAL O DENOMINACIÓN DEL CONTRIBUYENTE, posiciones 135-174, del Anexo «Valores negociables. Relación de pago a contribuyentes» (Tipo de Hoja «A»).
+125-136
+Alfanumérico.
+Código ISIN del certificado.
+Campo obligatorio.
+Su contenido será el que se haya consignado para ese IDENTIFICADOR DE REGISTRO O NÚMERO DE ORDEN en el campo CÓDIGO EMISOR, posiciones 136-147, del registro de tipo 2 del Registro de perceptor.
+137-156
+Alfanumérico.
+Código cuenta valores del certificado.
+Se consignará la identificación de la cuenta de valores o de custodia correspondiente a los valores objeto del certificado.
+Su contenido será el que se haya consignado para ese IDENTIFICADOR DE REGISTRO O NÚMERO DE ORDEN en el campo CÓDIGO CUENTA DE VALORES, posiciones 150-169, del registro de tipo 2 del Registro de perceptor.
+157-176
+Alfanumérico.
+Código LEI del titular registral.
+Si el TITULAR REGISTRAL DE LA CUENTA DE VALORES, posiciones 177-216, del registro de tipo 2 del anexo «Valores negociables. Relación de certificados de pago» (Tipo de Hoja «B») es una persona jurídica o entidad, se consignará su Código LEI, Identificador de Entidad Jurídica (Legal Entity Identifier).
+177-216
+Alfanumérico.
+Titular registral de la cuenta de valores.
+Se indicará al titular registral de la cuenta de valores o de custodia identificada en el campo CÓDIGO CUENTA VALORES DEL CERTIFICADO, posiciones 137-156, del registro de tipo 2 del anexo «Valores negociables. Relación de certificados de pago» (Tipo de Hoja «B») que suministra al declarante la información sobre el contribuyente.
+217-233
+Numérico.
+Número de títulos en la cuenta de valores.
+Número total de títulos correspondientes a ese ISIN y a esa fecha de pago en la cuenta de valores o de custodia.
+Se subdivide en dos campos:
+217-227 Parte entera del número de títulos. Si no tiene contenido, se configurará a ceros.
+228-233 Parte decimal del número de títulos. Si no tiene contenido, se configurará a ceros.
+234-250
+Numérico.
+Número de títulos del contribuyente.
+Número de títulos correspondientes al contribuyente en la cuenta de valores o de custodia identificada en el campo CÓDIGO CUENTA VALORES DEL CERTIFICADO, posiciones 137-156, del registro de tipo 2 del anexo «Valores negociables. Relación de certificados de pago» (Tipo de Hoja «B») relativos a ese CÓDIGO ISIN DEL CERTIFICADO, posiciones 125-136, del registro de tipo 2 del anexo «Valores negociables. Relación de certificados de pago» (Tipo de Hoja «B»), con derecho a percibir la renta.
+Se subdivide en dos campos:
+234-244 Parte entera del número de títulos. Si no tiene contenido, se configurará a ceros.
+245-250 Parte decimal del número de títulos. Si no tiene contenido, se configurará a ceros.
+251-258
+Numérico.
+Fecha de pago.
+Se consignará la fecha de pago de la renta correspondiente a ese ISIN y esa cuenta de valores. Campo numérico de 8 posiciones.
+Campo obligatorio.
+Se subdivide en:
+251-252 DIA. Numérico. Dos posiciones.
+253-254 MES. Numérico. Dos posiciones.
+255-258 AÑO. Numérico. Cuatro posiciones.
+259-271
+Numérico.
+Importe bruto de la renta del certificado.
+Se consignará el importe bruto de la renta correspondiente al contribuyente al que se refiere el certificado de pago. Campo numérico de 13 posiciones. Este campo se subdivide en dos:
+259-269 ENTERO. Numérico. Parte entera: Se consignará la parte entera del importe bruto (si no tiene, consignar ceros).
+270-271 DECIMAL. Numérico. Parte decimal. Se consignará la parte decimal del importe bruto (si no tiene, consignar ceros).
+272-284
+Numérico.
+Retención del certificado.
+Se consignará el importe de la retención correspondiente al contribuyente al que se refiere el certificado de pago. Campo numérico de 13 posiciones. Este campo se subdivide en dos:
+272-282 ENTERO. Numérico. Parte entera: Se consignará la parte entera de la retención (si no tiene, consignar ceros).
+283-284 DECIMAL. Numérico. Parte decimal. Se consignará la parte decimal de la retención (si no tiene, consignar ceros).
+285-288
+Numérico.
+Porcentaje de retención del certificado.
+Se consignará el porcentaje de retención correspondiente al contribuyente al que se refiere el certificado de pago. Campo numérico de 4 posiciones.
+Este campo se subdivide en dos:
+285-286 ENTERO. Numérico. Parte entera: Se consignará la parte entera del porcentaje (si no tiene, consignar ceros).
+287-288 DECIMAL. Numérico. Parte decimal. Se consignará la parte decimal del porcentaje (si no tiene, consignar ceros).
+289-301
+Numérico.
+Número de justificante del modelo 210.
+Campo numérico de 13 posiciones.
+Campo obligatorio.
+Se consignará el número de justificante de la autoliquidación modelo 210 con solicitud de devolución correspondiente al contribuyente, para esa fecha de devengo y ese código ISIN.
+Si la autoliquidación modelo 210 se realizó con «agrupación anual» comprensiva de varias rentas con distintas fechas de devengo, el número de justificante será el mismo en los registros de las distintas fechas de devengo.
+Su contenido será el mismo que el que se haya consignado en el campo NÚMERO DE JUSTIFICANTE DEL MODELO 210, posiciones 417-429, del Anexo «Valores negociables. Relación de pago a contribuyentes» (Tipo de Hoja «A»).
+302-309
+Numérico.
+Fecha de presentación del modelo 210.
+Campo numérico de 8 posiciones.
+Campo obligatorio.
+Se subdivide en:
+302-303 DIA. Numérico. Dos posiciones.
+304-305 MES. Numérico. Dos posiciones.
+306-309 AÑO. Numérico. Cuatro posiciones.
+310
+Alfabético.
+CLAVE DE PERSONALIDAD DEL TITULAR REGISTRAL.
+Valores:
+F: persona física.
+J: persona jurídica o entidad.
+311-499
+-------------
+Blancos.
+500
+Alfabético.
+Tipo
+de hoja.
+Constante «B».
+Se modifica el registro de tipo 2 y y su anexo denominado «Valores negociables. Relación de certificados de pago» por el art. 2 de la Orden HAC/623/2026, de 12 de junio. Ref. BOE-A-2026-13573
+Esta modificación será aplicable, por primera vez, a la declaración informativa correspondiente al ejercicio 2026, que se presentará en el ejercicio 2027.
+Redactado conforme a la corrección de errores publicada en BOE núm. 162, de 4 de julio de 2026. Ref. BOE-A-2026-14499
+Se modifica el registro de tipo 2 y se sustituyen los anexos por los contenidos en el anexo III de la Orden HAC/646/2024, de 25 de junio, según establece su art. 2. Ref. BOE-A-2024-13049
+Esta modificación será aplicable, por primera vez, a la declaración informativa correspondiente al ejercicio 2024, que se presentará en el ejercicio 2025, según establece la disposición final única de la citada Orden.
+Se modifica el registro de tipo 2 y se añaden dos anexos denominados «Valores negociables. Relación de pago a contribuyentes» y «Valores negociables. Relación de certificados de pago» por el art. 2.5 a 7 de la Orden HAC/56/2024, de 25 de enero. Ref. BOE-A-2024-1772
+Se crea un nuevo campo, posiciones 77-84, y el anexo de desglose de retenciones e ingresos a cuenta ingresados en el Estado, en las Diputaciones Forales del País Vasco y en la Comunidad Foral de Navarra, dentro del registro de tipo 2, por el art. 9 de la Orden HFP/1284/2023, de 28 de noviembre. Ref. BOE-A-2023-24412
+Esta modificación será aplicable, por primera vez, a las declaraciones informativas correspondientes al ejercicio 2023, que se presentarán en el ejercicio 2024, según establece la disposición final única de la citada Orden.
+Redactado conforme a la corrección de errores publicada en BOE núm. 309, de 27 de diciembre de 2023. Ref. BOE-A-2023-26332
+Se modifica el campo «subclave», posiciones 102-103, se añade un nuevo campo «ingresos a cuenta repercutidos», que ocupa las posiciones 389-401, y el campo «blancos» pasa a ocupar las posiciones 402-432, dentro del registro de tipo 2, por el art. 5 de la Orden HFP/1351/2021, de 1 de diciembre. Ref. BOE-A-2021-20004
+Esta modificación será aplicable, por primera vez, para las declaraciones correspondientes a 2021 que se presentarán en 2022, según establece la disposición final única de la citada Orden.
+Se introduce un nuevo tipo de subclave «11» y se modifican las instrucciones de cumplimentación del campo «Subclave», posiciones 102 y 103 del registro de tipo 2, por el art. 2 de la Orden HFP/1271/2017, de 21 de diciembre. Ref. BOE-A-2017-15365
+Téngase en cuenta que la nueva subclave del modelo 296 se utilizará por primera vez en la declaración informativa correspondiente al ejercicio 2017, según establece la disposición final única de la citada Orden.
+Se introduce un nuevo tipo de subclave «10» y se modifican las instrucciones de cumplimentación del campo «Subclave», posiciones 102 y 103 del registro de tipo 2, por el art. 3.2 de la Orden HAP/2201/2014, de 21 de noviembre. Ref. BOE-A-2014-12248
+Esta modificación será de aplicación, por primera vez, para la presentación de las declaraciones informativas cuyo plazo se inicie a partir del día 1 de enero de 2015, en relación con la información correspondiente al año 2014, según establece la disposición final 3 de la citada Orden.
+Este documento es de carácter informativo y no tiene valor jurídico.
+Ayúdenos a mejorar: puede dirigir sus comentarios y sugerencias a nuestro Servicio de atención al ciudadano

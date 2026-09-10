@@ -1,8 +1,8 @@
 """End-to-end CLI tests for the ``aeat config check`` preflight health rows.
 
 Verifies that the workstation doctor surfaces the per-auth-provider certificate /
-Cl@ve Móvil health, the secure-storage / bundled-corpus / configuration
-preflight, and the registry referential-integrity row through the typed
+Cl@ve Móvil health, the secure-storage / bundled-corpus / configuration and
+portal-catalogue preflight through the typed
 ``preflight`` channel. An unhealthy observation carries application facts plus
 either a schema-resolved action or an explicit no-recovery outcome — never a
 CLI-authored ``detail``/``remediation`` sentence. It remains report-only and
@@ -30,7 +30,7 @@ __all__ = ["config_check_backend", "config_check_isolated_backend"]
 
 def _config_check_payload() -> dict[str, Any]:
     result = invoke_cached_cli(["--format", "json", "config", "check"])
-    # A red preflight row (e.g. the registry referential-integrity row) must not
+    # A red preflight row (for example, a storage or portal-catalogue fault) must not
     # crash the doctor: the exit is governed by the capability/dependency
     # contract (0 when clean, 2 on a capability gap), never a bare crash (1).
     assert result.exit_code in (0, 2), result.output
@@ -50,7 +50,6 @@ def test_config_check_emits_typed_preflight_rows() -> None:
         "corpus:normatives",
         "corpus:manuals",
         "env:configuration",
-        "registry:referential-integrity",
     } <= set(by_id)
     for row in rows:
         assert set(row) == {

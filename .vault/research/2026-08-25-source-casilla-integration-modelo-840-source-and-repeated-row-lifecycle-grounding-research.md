@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-09-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:e8e3a22eaa08ad7f5319d09de7305fdcb5cdfae9a1275d105578e7bd5a47b803'
+body_hash: 'sha256:520797a60bd9cf9c208e9f18f64eac427e8d06b64c7913c1c00c735e1dce79ac'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
   - '[[2026-08-25-source-casilla-integration-modelo-840-source-and-repeated-row-owner-deferral-adr]]'
@@ -97,7 +97,7 @@ semantics to registry destinations, and prove the encrypted source lifecycle.
 - `src/cadrumo/_data/registry/aeat/legal/iae.toml:122`
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_840/manifest.json:1`
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_840/files/01-840-orden-hac-2572-2003-99-kb-pdf.pdf.extracted.md:266`
-- `src/cadrumo/_data/corpus/aeat_official/forms/modelo_840/files/01-840-modelo-declaracion-iae-alta-variacion-baja-pdf.pdf.extracted.md:247`
+- `src/cadrumo/_data/corpus/aeat_official/formularios_publicados/modelo_840/files/01-840-modelo-declaracion-iae-alta-variacion-baja-pdf.pdf.extracted.md:247`
 - `src/cadrumo/_data/registry/aeat/modelos/840/revisions/2003-y-siguientes/revision.toml:1`
 - `src/cadrumo/_data/registry/aeat/modelos/840/revisions/2003-y-siguientes/extraction_profiles/0001-extraction-profiles.toml:1`
 - `src/cadrumo/domain/calculations/registry/tests/test_modelo_840_registry.py:46`

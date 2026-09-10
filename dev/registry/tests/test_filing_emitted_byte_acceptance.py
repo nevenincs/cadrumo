@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.registry.closure import RegistryClosureLimb
+from dev.registry.conformance.closure_models import RegistryClosureLimb
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.resources.bundled_data import bundled_path

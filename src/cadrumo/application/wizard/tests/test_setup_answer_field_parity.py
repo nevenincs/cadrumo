@@ -47,7 +47,8 @@ read the model default and could not see a taxpayer who had recorded the
 fact by any other route. The table reads it; the retired wizard did not.
 
 ``irpf_activity_kind`` is derived from a taxpayer's declared ledger
-``tipo_actividad`` rows (see :func:`domain.transactions.irpf_activity_kind_for`),
+``tipo_actividad`` rows (see
+:func:`domain.transactions.tipo_actividad_partitions.resolve_tipo_actividad_selector`),
 never from an interactive answer, so no wizard question exists for it either.
 
 ``colegio_concertado`` is the Modelo 111 header declaration. It is deliberately

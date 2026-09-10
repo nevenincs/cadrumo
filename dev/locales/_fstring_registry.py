@@ -152,6 +152,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     stays import-error-safe. If a domain import fails, ``get_registered_keys``
     will propagate the error with full context rather than a silent empty set.
     """
+    from cadrumo.application.live.errors import LiveIvaAcquisitionFailureMode
     from cadrumo.application.operations.frontend_contracts import (
         OperationCancellationRefusalCode,
         OperationResponseControlRefusalCode,
@@ -223,6 +224,14 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             values=tuple(status.value for status in LedgerReviewStatus),
         ),
         FStringKeyRegistration(
+            # Bounded enumeration: the live IVA wallet renders one operator
+            # label per acquisition failure mode, deriving the key from the
+            # enum's own value in entrypoints/cli/_app_live.py.
+            description="cli.app.live.iva_wallet.acquisition.outcome.* (LiveIvaAcquisitionFailureMode)",
+            key_factory=lambda v: f"cli.app.live.iva_wallet.acquisition.outcome.{v}",
+            values=tuple(mode.value for mode in LiveIvaAcquisitionFailureMode),
+        ),
+        FStringKeyRegistration(
             description="errors.prefix.* (ErrorCategory)",
             key_factory=lambda v: f"errors.prefix.{v}",
             values=tuple(c.value.lower() for c in ErrorCategory),
@@ -268,7 +277,7 @@ def _modelo_workspace_registrations() -> tuple[FStringKeyRegistration, ...]:
             # already carry their own why. segment, so the factory adds none.
             description="flows.modelo_workspace_filing.why.* (capability refusal reasons)",
             key_factory=lambda v: f"flows.modelo_workspace_filing.{v}",
-            values=("why.draft_structural", "why.export_pending_port"),
+            values=("why.draft_structural",),
         ),
         FStringKeyRegistration(
             # _COLUMN_KEYS in entrypoints/tui/modelo/view/inputs.py

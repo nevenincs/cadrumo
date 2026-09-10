@@ -2,8 +2,9 @@ modelo:
   schema:
     '840':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 840. A gazdasági tevékenységek adójának bevallása (bejelentkezés,
+          adatmódosítás, kijelentkezés).
+        title: Gazdasági tevékenységek adója (nyilvántartásba-vételi bevallás)
       revision:
         2003-y-siguientes:
           casilla:

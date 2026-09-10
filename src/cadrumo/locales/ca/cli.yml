@@ -1684,7 +1684,6 @@ cli:
           d'evidències de presentació abans del càlcul.
   common:
     errors:
-      draft_id_not_found: ID d'esborrany %{draft_id} no trobat
       filing_requires_declared_tax_id: 'El perfil actiu no declara una identitat fiscal,
         de manera que no es pot exportar una declaració amb ell. Indica: %{requirements}.'
       invalid_iso_date: 'Format de data invàlid per a %{label}: %{raw}. Es requereix
@@ -3198,7 +3197,6 @@ cli:
         paragraph_operational_workflow: 'Flux operatiu: configureu el perfil -> importeu
           transaccions -> treballeu el model -> reviseu -> exporteu.'
         registry_inspect: Inspeccionar el registre de models fiscals.
-        registry_verify: Verificar la integritat del registre de models.
         review_queue: Mostrar la cua de revisió pending.
         review_view: Veure el detall d'un element de la cua de revisió.
         section_ledger: Llibre de transaccions
@@ -3257,13 +3255,13 @@ cli:
         diagnostics_logs: Mostra la ruta del registre i les últimes línies.
         diagnostics_overview_verbose: Mostra l'estat general amb més detall.
         diagnostics_repair_json: Retorna en JSON l'informe complet de salut local.
-        diagnostics_version: Mostra l'empremta del paquet i del registre.
+        diagnostics_version: Mostra la identitat del paquet instal·lat.
         family_app: Obre les ordres fiscals vinculades al perfil.
         family_config: Obre perfils, sessió, custòdia, emmagatzematge i reparació.
         footer: 'Detalls: --help. Elimina dades sensibles; després informa a github.com/nevenincs/cadrumo/issues.'
         heading: CADRUMO - flux local amb l'Agència Estatal d'Administració Tributària
           (AEAT)
-        paragraph_app_root: L'arrel app gestiona resum, llibre, models, revisió, registre
+        paragraph_app_root: L'arrel app gestiona resum, llibre, models, revisió
           i lectures autenticades de l'AEAT.
         paragraph_config_root: L'arrel config gestiona perfils, dades locals xifrades,
           claus de recuperació, sessions, autenticació amb l'AEAT i reparació.
@@ -3276,8 +3274,7 @@ cli:
           El perfil actiu és el context seleccionat. Una sessió permet reprendre l'accés
           a les dades xifrades.
         paragraph_review_terms: La cua de revisió conté troballes que requereixen
-          actuació. El registre conté regles i fonts fiscals validades i versionades;
-          no desa dades fiscals ni presenta declaracions.
+          actuació.
         paragraph_tax_terms: El llibre conté moviments importats. Un model és un formulari
           oficial de l'AEAT, diferent de la seva unitat de treball o exportació local.
         recovery_login: Inicia o renova una sessió absent, tancada o caducada.
@@ -3505,8 +3502,9 @@ cli:
     manuals:
       app_help: Inspeccionar els Manuals pràctics AEAT (Renda, IVA, Societats)
       kind_help: Filtrar per tipus de regla del manual
-      list_help: Llistar els manuals disponibles localment
-      manual_help: Identificador del manual (renta, iva)
+      list_help: Llistar la cobertura anual declarada i les parts de manual disponibles
+        localment
+      manual_help: Identificador del manual (renta, iva, sociedades)
       part_help: Volum del manual (single, part1, part2-deducciones-autonomicas, part3)
       rules_help: Llistar les regles codificades en un manual
       section_help: Identificador opcional de secció a mostrar
@@ -3514,8 +3512,6 @@ cli:
         desconeguda %{target}
       verify_dangling_section_ref: la secció %{section_id} referència una secció desconeguda
         %{target}
-      verify_failed: 'la verificació ha fallat per a %{manual_id}/%{year}/%{part}:
-        %{messages}'
       verify_help: Verificar la integritat del manual contra el seu contracte
       verify_missing_manifest: '%{manifest_path} no existeix; executa ''aeat manual
         fetch'' per materialitzar-lo'
@@ -3542,17 +3538,6 @@ cli:
       modelo_count: models
       modelos: models
       observation_paths: rutes d'observació
-      replay_blocked_payload_count: captures bloquejades
-      replay_compared_field_count: caselles comparades
-      replay_cross_reference_id: referència creuada de la reproducció
-      replay_guard_policy_id: política de guarda de la reproducció
-      replay_matched_payload_count: captures coincidents
-      replay_mismatched_payload_count: captures discrepants
-      replay_oracle_id: oracle de la reproducció
-      replay_payload_count: captures reproduïdes
-      replay_registry_validated: registre validat en la reproducció
-      replay_unverifiable_payload_count: captures no verificables
-      replay_verdict: veredicte de paritat de la reproducció
       revision: revisió
       revision_count: revisions
       row_count: files
@@ -3565,13 +3550,10 @@ cli:
       workbook_parity_ref_count: refs de paritat del llibre
     observation_help: Manifest xifrat d'observació de declaració presentada que cal
       verificar
-    replay_parity_help: Reproduir sense connexió les captures de Renda WEB Open incloses
-      davant l'oracle de paritat
     source_observation_help: Manifest xifrat d'observació font requerit per vinculacions
       de declaracions prèvies o relacions
     verify_filed_state_help: Comparar el càlcul local del registre amb l'estat presentat
       capturat de l'AEAT
-    verify_help: Verificar la integritat del registre local
     verify_source_root_help: Ruta al directori d'origen per verificar
     view_edition_help: Mostra una edició d'un model com l'edició completa que compila
       el registre, en TOML, indicant si cada fila de casella la declara la mateixa
@@ -3658,7 +3640,6 @@ cli:
       section_ledger: '  app ledger - importació bancària i revisió de moviments'
       section_modelo: '  app model - catàleg de models i unitats de treball'
       section_overview: '  app overview - estat de l''espai i calendari fiscal'
-      section_registry: '  app registry - dades locals del registre AEAT'
       section_review: '  app review - elements que necessiten atenció'
       sections_heading: Seccions principals
       session_login_command: 'Inicia o renova una sessió de perfil: `aeat config login
@@ -3672,10 +3653,3 @@ cli:
     quiet_help: Mostra només els errors.
     verbose_help: Habilita la sortida detallada.
     version_help: Mostra el número de versió i surt.
-  topic:
-    app_help: Mostrar ajuda conceptual sobre règims, models i processos AEAT
-    errors:
-      not_found: 'Tema no trobat: %{slug}. Executeu ''aeat app registry citations''
-        per llistar els temes registrats.'
-    opts:
-      slug: Identificador del tema (kebab-case, ex. iva-regime)

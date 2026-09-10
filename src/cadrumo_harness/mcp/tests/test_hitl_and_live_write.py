@@ -17,8 +17,8 @@ def _decision(command_key: str) -> ConfirmationPolicy:
 
 def test_read_only_tools_auto_approve() -> None:
     assert _decision("overview.status") is ConfirmationPolicy.AUTO_APPROVE
-    assert _decision("registry.inspect") is ConfirmationPolicy.AUTO_APPROVE
-    assert _decision("registry.inspect") is ConfirmationPolicy.AUTO_APPROVE
+    assert _decision("ledger.categories") is ConfirmationPolicy.AUTO_APPROVE
+    assert _decision("ledger.categories") is ConfirmationPolicy.AUTO_APPROVE
 
 
 def test_non_destructive_local_mutation_auto_approves() -> None:
@@ -74,6 +74,6 @@ def test_grounding_still_auto_approves_real_exposed_commands() -> None:
     # exposed command whose classification is auto-approve. Real read and
     # non-destructive-mutation descriptors still auto-approve, so the refusal is
     # scoped to unclassified keys, not the whole auto-approve tier.
-    for command_key in ("registry.inspect", "overview.status", "ledger.add"):
+    for command_key in ("ledger.categories", "overview.status", "ledger.add"):
         assert command_key in {descriptor.command_key for descriptor in build_tool_descriptors()}
         assert confirmation_for_tool(command_key=command_key) is ConfirmationPolicy.AUTO_APPROVE

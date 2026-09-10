@@ -2,8 +2,9 @@ modelo:
   schema:
     '840':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 840. Tax on Economic Activities return (registration,
+          amendment, deregistration).
+        title: Tax on Economic Activities (census declaration)
       revision:
         2003-y-siguientes:
           casilla:

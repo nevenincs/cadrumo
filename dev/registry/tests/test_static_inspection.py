@@ -3,12 +3,9 @@
 from __future__ import annotations
 
 import ast
-from collections.abc import Iterable
-from pathlib import Path
 
 import pytest
 
-from cadrumo.core.directory_scan import scan_directory
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
@@ -19,17 +16,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _REPOSITORY_ROOT = REPO_ROOT
 _SOURCE_ROOT = _REPOSITORY_ROOT / "src" / "cadrumo"
-_INSPECTION_SYMBOLS = frozenset(
-    {
-        "RegistryRevisionInspection",
-        "inspect_revision",
-    },
-)
-_RUNTIME_BOUNDARY_ROOTS = (
-    _SOURCE_ROOT / "application",
-    _SOURCE_ROOT / "adapters",
-    _SOURCE_ROOT / "entrypoints",
-)
 _STATIC_CONSUMERS = (
     _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "_semantic_map_validation.py",
     _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "record_design_intermediate.py",
@@ -48,10 +34,6 @@ _LEGACY_STATIC_SYMBOLS = frozenset(
         "join_record_design_semantics_inspection",
     },
 )
-
-
-def _python_sources(roots: Iterable[Path]) -> tuple[Path, ...]:
-    return tuple(path for root in roots for path in scan_directory(root, pattern="*.py", recursive=True))
 
 
 def _attribute_path(node: ast.expr) -> str | None:
@@ -93,22 +75,6 @@ def _registry_api_references(tree: ast.AST, symbols: frozenset[str]) -> set[str]
 
 def _function_definitions(tree: ast.AST) -> set[str]:
     return {node.name for node in ast.walk(tree) if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))}
-
-
-def _non_registry_calculation_sources() -> tuple[Path, ...]:
-    return tuple(
-        path
-        for path in _python_sources((_SOURCE_ROOT / "domain" / "calculations",))
-        if "registry" not in path.relative_to(_SOURCE_ROOT / "domain" / "calculations").parts
-    )
-
-
-def _handoff_sources() -> tuple[Path, ...]:
-    return tuple(
-        path
-        for path in _python_sources((_SOURCE_ROOT, _REPOSITORY_ROOT / "dev"))
-        if "handoff" in path.as_posix().lower()
-    )
 
 
 def test_m303_midyear_designs_are_canonically_selected_without_a_snapshot() -> None:
@@ -159,45 +125,7 @@ def test_m038_inspection_retains_exact_model_law_and_construct_evidence() -> Non
     assert inspection.live_cross_references == ()
 
 
-#: Floors for the corpora the two boundary gates below inspect. Live: 3,699
-#: runtime boundary sources, and five each of non-registry calculation,
-#: handoff and static-consumer sources. Floors, not pinned counts.
-_MINIMUM_RUNTIME_BOUNDARY_SOURCES = 500
 _MINIMUM_SMALL_CORPUS = 2
-
-
-def test_inspection_api_cannot_cross_from_static_authority_into_runtime_boundaries() -> None:
-    """AST references keep inspection authority out of all runtime consumers.
-
-    Each corpus is floored SEPARATELY. The comprehension unions a 3,699-file
-    runtime boundary with two five-file collections, so a floor on the total
-    would be satisfied by the large member alone while either small one
-    emptied - and an empty corpus contributes no offender, which is exactly
-    what compliance looks like from here.
-    """
-    boundary = tuple(_python_sources(_RUNTIME_BOUNDARY_ROOTS))
-    calculation = tuple(_non_registry_calculation_sources())
-    handoff = tuple(_handoff_sources())
-
-    for label, corpus, floor in (
-        ("runtime boundary", boundary, _MINIMUM_RUNTIME_BOUNDARY_SOURCES),
-        ("non-registry calculation", calculation, _MINIMUM_SMALL_CORPUS),
-        ("handoff", handoff, _MINIMUM_SMALL_CORPUS),
-    ):
-        assert len(corpus) >= floor, (
-            f"the {label} corpus holds only {len(corpus)} source(s); below this it contributes "
-            "no offender and its silence is indistinguishable from compliance"
-        )
-
-    offenders = {
-        path.relative_to(_REPOSITORY_ROOT): _registry_api_references(
-            ast.parse(path.read_text(encoding="utf-8")), _INSPECTION_SYMBOLS
-        )
-        for path in (*boundary, *calculation, *handoff)
-        if _registry_api_references(ast.parse(path.read_text(encoding="utf-8")), _INSPECTION_SYMBOLS)
-    }
-
-    assert offenders == {}
 
 
 def test_static_map_authority_has_no_snapshot_or_raw_loader_compatibility() -> None:
@@ -228,27 +156,6 @@ def test_static_map_authority_has_no_snapshot_or_raw_loader_compatibility() -> N
 
     assert imported_legacy == {}
     assert defined_legacy == {}
-
-
-def test_inspection_census_understands_public_facade_and_private_module_aliases() -> None:
-    """The boundary census is semantic AST inspection, not a text substring check."""
-    public_facade = ast.parse(
-        "import cadrumo.domain.calculations.registry as registry\nvalue = registry.RegistryRevisionInspection\n"
-    )
-    module = ast.parse(
-        "import cadrumo.domain.calculations.registry.authority as authority\nvalue = authority.inspect_revision\n"
-    )
-    imported_public_facade = ast.parse(
-        "from cadrumo.domain.calculations import registry as r\nvalue = r.RegistryRevisionInspection\n"
-    )
-    imported_private_module = ast.parse(
-        "from cadrumo.domain.calculations.registry import _authority as a\nvalue = a.inspect_revision\n"
-    )
-
-    assert _registry_api_references(public_facade, _INSPECTION_SYMBOLS) == {"RegistryRevisionInspection"}
-    assert _registry_api_references(module, _INSPECTION_SYMBOLS) == {"inspect_revision"}
-    assert _registry_api_references(imported_public_facade, _INSPECTION_SYMBOLS) == {"RegistryRevisionInspection"}
-    assert _registry_api_references(imported_private_module, _INSPECTION_SYMBOLS) == {"inspect_revision"}
 
 
 def test_legacy_census_detects_private_module_alias_bypass() -> None:

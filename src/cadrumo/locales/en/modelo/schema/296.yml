@@ -2,8 +2,10 @@ modelo:
   schema:
     '296':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 296. Non-Resident Income Tax. Non-residents without
+          a permanent establishment. Annual return of withholdings and payments on
+          account.
+        title: IRNR annual summary of withholdings and payments on account
       revision:
         2024-y-siguientes:
           casilla:

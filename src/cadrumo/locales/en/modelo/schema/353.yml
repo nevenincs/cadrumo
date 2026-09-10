@@ -2,8 +2,9 @@ modelo:
   schema:
     '353':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 353. Value Added Tax. Group of entities. Aggregate form.
+          Monthly self-assessment.
+        title: VAT. Group of entities. Aggregate form. Monthly self-assessment
       revision:
         2021-2025:
           casilla:

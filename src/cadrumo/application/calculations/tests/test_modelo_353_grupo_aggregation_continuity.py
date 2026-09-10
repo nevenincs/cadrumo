@@ -323,7 +323,7 @@ def test_modelo_353_grupo_aggregation_enrolls_two_renta_years(tmp_path: Path) ->
 
     Drives the REAL 353 aggregate for mes 12 of both renta years (each summing
     the two members' real 322s), records each year through the
-    :class:`cross-year observation`, and cross-checks the recorded distinct-year set
+    ``cross-year observation``, and cross-checks the recorded distinct-year set
     against the cross-year claim claim. The cross-member sum identity is
     re-asserted per year. Spanning N and N+1 meets the ≥2-distinct-renta-years
     gate; a single-year or stub run would raise.

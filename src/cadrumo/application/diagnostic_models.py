@@ -59,32 +59,6 @@ carries, so those fields take this literal over the members above.
 """
 
 
-class RegistryVersionSummary(BaseModel):
-    """Stable registry summary suitable for version and repair surfaces.
-
-    Built from
-    :class:`~domain.calculations.registry.ValidatedRegistryAuthority` when
-    registry detail is requested, then embedded in both :class:`CliVersionReport`
-    and :class:`ConfigRepairReport`.
-
-    Every count is an inventory tally -- a ``len()`` over a loaded collection --
-    so it is non-negative by construction and declares that bound. The
-    unavailable-registry branch reports zeroes rather than omitting the summary,
-    which is why the counts default to ``0``.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    available: bool
-    registry_root: str
-    modelo_count: int = Field(default=0, ge=0)
-    revision_count: int = Field(default=0, ge=0)
-    casilla_count: int = Field(default=0, ge=0)
-    formula_count: int = Field(default=0, ge=0)
-    revision_ids: tuple[str, ...] = ()
-    error: str | None = None
-
-
 class CliVersionReport(BaseModel):
     """Version payload rendered by root CLI version surfaces."""
 
@@ -92,7 +66,6 @@ class CliVersionReport(BaseModel):
 
     package_name: str
     package_version: str
-    registry: RegistryVersionSummary
 
 
 class DiagnosticAudience(StrEnum):
@@ -240,7 +213,6 @@ class ConfigRepairReport(BaseModel):
     package_version: str
     python_version: str
     log_file: str
-    registry: RegistryVersionSummary
     setup: WizardStatusReport | None
     secure_objects: SecureObjectIntegrityReport
     checks: tuple[DiagnosticCheck, ...]
@@ -261,12 +233,3 @@ def ensure_models_rebuilt() -> None:
     SecureObjectIntegrityReport.model_rebuild(_types_namespace=locals())
     ConfigRepairReport.model_rebuild(_types_namespace={**globals(), **locals()})
     _models_rebuilt = True
-
-
-class RegistryIntegrityReport(BaseModel):
-    """Result of the opt-in full registry-validation probe."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    registry: RegistryVersionSummary
-    check: DiagnosticCheck

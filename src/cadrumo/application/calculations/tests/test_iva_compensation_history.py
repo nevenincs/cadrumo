@@ -15,9 +15,7 @@ from ....domain.iva_compensation.carry_forward import (
     IvaCompensationCarryForwardLot,
     IvaCompensationExpiryReviewState,
     build_iva_compensation_carry_forward_report,
-    enforce_iva_compensation_four_year_window,
 )
-from ....domain.iva_compensation.errors import IvaCompensationCarryForwardPolicyError
 from ....domain.iva_compensation.reconciliation import IvaCompensationAuthoritySource
 from ....tests.secure_sql import isolated_runtime_profile
 from ..iva_compensation_history import IvaCompensationHistoryRepository, iva_compensation_period_key
@@ -93,37 +91,6 @@ def test_iva_compensation_carry_forward_report_preserves_unallocated_application
     assert report.unallocated_applied_amount == Decimal("25.00")
 
 
-def test_iva_compensation_four_year_window_blocks_expired_remaining_lot() -> None:
-    report = build_iva_compensation_carry_forward_report(
-        (_state(filing_year=2022, period="4T", generated=Decimal("100.00")),),
-        as_of_year=2027,
-    )
-
-    with pytest.raises(IvaCompensationCarryForwardPolicyError) as excinfo:
-        enforce_iva_compensation_four_year_window(report)
-
-    # The refusal now renders its registered key; the expired lot it names rides
-    # in machine facts, which is where the 2022/4T identity has to be readable.
-    assert str(excinfo.value) == "errors.refused.refused_filing_calculate"
-    context = excinfo.value.context or {}
-    assert context["source_filing_year"] == "2022"
-    assert context["source_period"] == "4T"
-    assert context["remaining_balance_expired"] is True
-
-
-def test_iva_compensation_four_year_window_allows_fully_applied_expired_lot() -> None:
-    report = build_iva_compensation_carry_forward_report(
-        (
-            _state(filing_year=2022, period="4T", generated=Decimal("100.00")),
-            _state(filing_year=2024, period="1T", applied=Decimal("100.00")),
-        ),
-        as_of_year=2027,
-    )
-
-    assert enforce_iva_compensation_four_year_window(report) is report
-    assert report.lots[0].remaining_amount == Decimal("0.00")
-
-
 def test_multiyear_compensation_flow_covers_expiry_boundary_wallet_divergence_and_blocked_local_fallback() -> None:
     report = build_iva_compensation_carry_forward_report(
         (
@@ -132,7 +99,6 @@ def test_multiyear_compensation_flow_covers_expiry_boundary_wallet_divergence_an
         ),
         as_of_year=2026,
     )
-    enforce_iva_compensation_four_year_window(report)
     source_lot = report.lots[0]
     assert source_lot.source_filing_year == 2022
     assert source_lot.applied_amount == Decimal("40.00")

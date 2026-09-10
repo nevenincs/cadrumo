@@ -2,7 +2,7 @@
 
 This dev-side projection joins the temporal and filing-export authorities. It
 does not reinterpret registry or export evidence: those facts are composed in
-``cadrumo.application.registry`` and this module only makes their common
+``dev.registry.conformance.closure_models`` and this module only makes their common
 release predicate explicit, deterministic, and blocking.
 
 The temporal report is the canonical revision denominator. A missing filing
@@ -19,7 +19,7 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, Field, computed_field, model_validator
 
-from cadrumo.application.registry.closure import (
+from .closure_models import (
     RegistryClosureFilingChannelRefusal,
     RegistryClosureLimb,
     RegistryClosureLimbName,

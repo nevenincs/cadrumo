@@ -134,9 +134,7 @@ def test_fact_and_variant_identity_are_global_across_providers() -> None:
     left = _fact("same-fact", _variant("same-variant", date(2025, 1, 1)))
     right = _fact("same-fact", _variant("same-variant", date(2026, 1, 1)))
 
-    findings = facts_catalogue_findings(
-        (first, second), {"first": (left,), "second": (right,)}, ("facts/a", "facts/b")
-    )
+    findings = facts_catalogue_findings((first, second), {"first": (left,), "second": (right,)}, ("facts/a", "facts/b"))
 
     assert {finding.kind for finding in findings} == {
         FactQualityKind.DUPLICATE_FACT_ID,
@@ -191,15 +189,8 @@ def test_every_declared_source_requires_a_citation() -> None:
 def test_gate_imports_no_modelo_denominator() -> None:
     source = (Path(__file__).parents[1] / "analysis/facts_catalogue_quality.py").read_text(encoding="utf-8")
     tree = ast.parse(source)
-    imports = {
-        node.module or ""
-        for node in ast.walk(tree)
-        if isinstance(node, ast.ImportFrom)
-    } | {
-        alias.name
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Import)
-        for alias in node.names
+    imports = {node.module or "" for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)} | {
+        alias.name for node in ast.walk(tree) if isinstance(node, ast.Import) for alias in node.names
     }
 
     assert not {name for name in imports if "modelo" in name.lower()}

@@ -2,8 +2,8 @@ modelo:
   schema:
     '309':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 309. Hozzáadottérték-adó. Nem rendszeres bevallás-elszámolás.
+        title: IVA. Nem rendszeres bevallás-elszámolás
       revision:
         2004-2015:
           casilla:

@@ -2,8 +2,9 @@ modelo:
   schema:
     '721':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 721. Adatszolgáltatási bevallás a külföldön található
+          virtuális fizetőeszközökről.
+        title: Külföldön található virtuális fizetőeszközök (éves adatszolgáltatás)
       revision:
         '2023':
           casilla:

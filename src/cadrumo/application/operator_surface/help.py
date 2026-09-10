@@ -127,8 +127,8 @@ def _root_help() -> HelpDocument:
             tr(
                 "cli.operator_surface.help.root.paragraph_app_root",
                 default=(
-                    "The app root manages profile overview, ledger, modelo, review, registry, "
-                    "and authenticated AEAT reads."
+                    "The app root manages profile overview, ledger, modelo, review, and "
+                    "authenticated AEAT reads."
                 ),
             ),
             tr(
@@ -206,10 +206,6 @@ def _root_help() -> HelpDocument:
                     HelpEntry(
                         command="aeat app review queue",
                         description=tr("cli.operator_surface.help.root.workflow_review_queue"),
-                    ),
-                    HelpEntry(
-                        command="aeat app registry inspect",
-                        description=tr("cli.operator_surface.help.root.workflow_registry"),
                     ),
                 ),
             ),
@@ -628,14 +624,6 @@ def _app_help() -> HelpDocument:
                     HelpEntry(
                         command="aeat app review view ID",
                         description=tr("cli.operator_surface.help.app.review_view"),
-                    ),
-                    HelpEntry(
-                        command="aeat app registry inspect",
-                        description=tr("cli.operator_surface.help.app.registry_inspect"),
-                    ),
-                    HelpEntry(
-                        command="aeat app registry verify",
-                        description=tr("cli.operator_surface.help.app.registry_verify"),
                     ),
                 ),
             ),

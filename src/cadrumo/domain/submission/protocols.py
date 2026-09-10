@@ -15,9 +15,11 @@ richer surfaces of its sibling subpackages.
 - :class:`SubmissionRepositoryProtocol` — the read-side persistence port.
 
 Every declaration here is a ``runtime_checkable`` ``Protocol``. The record
-types these ports carry — :class:`ModeloDraftStatus` and
-:class:`ModeloFinding` — live beside the other submission records in
-:mod:`cadrumo.domain.submission.models`.
+types these ports carry — :class:`ModeloDraftStatus` among them — live
+beside the other submission records in
+:mod:`cadrumo.domain.submission.models`. Finding entries are typed
+structurally through :class:`ModeloFindingLike`; the implementation is
+:class:`cadrumo.domain.filing.schema.ModeloValidationFinding`.
 """
 
 from __future__ import annotations
@@ -62,9 +64,9 @@ class DeadlineWindowChecker(Protocol):
 class ModeloFindingLike(Protocol):
     """Narrow structural port over one ``draft.findings`` entry.
 
-    Both real implementations declare ``severity`` as a REQUIRED field with
-    no default: :class:`cadrumo.domain.submission.models.ModeloFinding`, and
-    :class:`domain.filing.ModeloValidationFinding`. Typing
+    The implementation declares ``severity`` as a REQUIRED field with no
+    default: :class:`cadrumo.domain.filing.schema.ModeloValidationFinding`.
+    Typing
     :attr:`ModeloDraftLike.findings` through this Protocol (rather than
     ``tuple[object, ...]``) lets the preflight gate read ``.severity``
     directly instead of through a ``getattr(..., None)`` guess -- a field

@@ -102,7 +102,6 @@ from .workspace_models import (
 from .workspace_producers import (
     MODELO_WORKSPACE_BOUNDED_REVIEW_PRODUCER_CONTRACT_V1,
     MODELO_WORKSPACE_CALCULATION_PRODUCER_CONTRACT_V1,
-    MODELO_WORKSPACE_CLOSURE_PRODUCER_CONTRACT_V1,
     MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1,
     MODELO_WORKSPACE_LOCALE_CATALOGUE_PRODUCER_CONTRACT_V1,
     MODELO_WORKSPACE_READINESS_PRODUCER_CONTRACT_V1,
@@ -394,11 +393,11 @@ def capture_modelo_workspace_locale_summary(
 
 
 # Canonical capability and refusal facade: the
-# capability-to-producer mapping is fixed by which of the eight contributors
+# capability-to-producer mapping is fixed by which of the contributors
 # static inspection structurally never reads ("Static inspection captures
 # exactly registry, work, locale_catalogue, and field_manifest; it does not
-# read bounded_review, calculation, readiness, or closure"), not by matching
-# enum spellings. Every one of those four excluded contributors is UNMEASURED
+# read bounded_review, calculation, or readiness"), not by matching
+# enum spellings. Every one of those three excluded contributors is UNMEASURED
 # for this admission per the ADR's own rule -- "absence of a producer... is
 # unmeasured, never available" -- which the ADR amendment clarifies covers an
 # admission-structural exclusion, not only a graded producer that ran and
@@ -434,11 +433,6 @@ _STATIC_INSPECTION_CAPABILITY_DISPOSITIONS: tuple[
         MODELO_WORKSPACE_READINESS_PRODUCER_CONTRACT_V1,
         ModeloWorkspaceCapabilityDisposition.UNMEASURED,
     ),
-    (
-        ModeloWorkspaceCapabilityName.FILING_EXPORT_READINESS,
-        MODELO_WORKSPACE_CLOSURE_PRODUCER_CONTRACT_V1,
-        ModeloWorkspaceCapabilityDisposition.UNMEASURED,
-    ),
 )
 
 
@@ -450,7 +444,7 @@ def static_inspection_modelo_workspace_capabilities(
     Every row cites the capability's own canonical producer contributor per
     the canonical capability mapping; see the module-level comment above this function.
     ``schema_inspection`` is ``AVAILABLE`` -- field_manifest is a real
-    STATIC_INSPECTION contributor. The other four are ``UNMEASURED``:
+    STATIC_INSPECTION contributor. The other three are ``UNMEASURED``:
     their producers are contributors this admission structurally never reads.
     GRADED_SNAPSHOT's dispositions are a distinct, not-yet-answered question
     and MUST NOT be derived from this table.

@@ -2,8 +2,13 @@ modelo:
   schema:
     '194':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 194. Personal Income Tax, Corporate Income Tax and Non-Resident
+          Income Tax (permanent establishments). Withholdings and payments on account
+          on income from movable capital and income arising from the transfer, amortisation,
+          redemption, exchange or conversion of any type of asset representing the
+          raising and use of third-party capital. Annual summary.
+        title: Withholdings on income from movable capital and asset transfers - annual
+          summary
       revision:
         '2019':
           casilla:

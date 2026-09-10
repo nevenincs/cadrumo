@@ -2,7 +2,7 @@ modelo:
   schema:
     '576':
       field:
-        official_name: Model 576. Impost Especial sobre Determinats Mitjans de Transport.
+        official_name: Modelo 576. Impost Especial sobre Determinats Mitjans de Transport.
           Autoliquidació.
         title: IEDMT - autoliquidació per matriculació de determinats mitjans de transport
       revision:

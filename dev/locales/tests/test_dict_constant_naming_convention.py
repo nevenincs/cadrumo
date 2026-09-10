@@ -312,16 +312,21 @@ def test_rule_fires_through_the_failed_verdict_factory_indirection() -> None:
 
 
 def test_repo_real_historical_site_is_scanner_visible_end_to_end() -> None:
-    """Sanity check against the ACTUAL repository: the residual live site round-trips.
+    """Sanity check against the ACTUAL repository: a live site round-trips.
 
-    ``entrypoints/tui/profile/status.py`` carries the
-    ``5a6fcd09e4`` shape's direct descendant (``_PROFILE_SETUP_STATE_KEYS``)
-    at HEAD. This is not a vacuous "nothing in the tree matches" pass: the
-    repo-wide keys this dict declares are genuinely discovered by
-    :func:`scan_source_tree`, proving the fix reaches the real file, not
-    only synthetic fixtures.
+    ``application/filing/draft_review.py`` carries ``_STALE_REASON_LOCALE_KEYS``,
+    an enum-keyed dict literal whose values are locale keys read back through
+    ``.get(...)`` -- the same shape as the ``5a6fcd09e4`` incident. This is not
+    a vacuous "nothing in the tree matches" pass: the keys this dict declares
+    are genuinely discovered by :func:`scan_source_tree`, proving the scanner
+    reaches a real file, not only synthetic fixtures.
+
+    The former subject was ``entrypoints/tui/profile/status.py``
+    (``_PROFILE_SETUP_STATE_KEYS``), retired with the rest of the TUI status
+    page; its keys no longer exist in the tree, so asserting them made this
+    test fail on its own premise rather than on the scanner's behaviour.
     """
     keys = scan_source_tree(_SRC_ROOT)
 
-    assert "flows.status.profiles.status.complete" in keys
-    assert "flows.status.profiles.status.incomplete" in keys
+    assert "application.filing.review.stale_reasons.draft_payload_changed" in keys
+    assert "application.filing.review.stale_reasons.draft_review_changed" in keys

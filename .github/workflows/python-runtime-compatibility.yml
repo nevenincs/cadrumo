@@ -33,8 +33,8 @@ on:
       - "packaging/**"
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: runtime-compatibility-${{ github.ref }}${{ github.ref == 'refs/heads/main' && format('-{0}', github.sha) || '' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
   contents: read
@@ -44,7 +44,7 @@ env:
 
 jobs:
   runtime-inventory:
-    name: Cadrumo / runtime inventory
+    name: "Check: Runtime inventory (Linux)"
     # Never execute a fork pull-request head on the self-hosted fleet.
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, Linux, X64]
@@ -93,7 +93,7 @@ jobs:
             -k future_directive
 
   build-python-cohort:
-    name: Cadrumo / build immutable compatibility cohort / Python 3.13
+    name: "Build: Compatibility cohort (Linux)"
     # This is the only cohort construction in this workflow.  Runtime rows
     # consume its sealed bytes; they never rebuild or restamp a per-runtime
     # replacement.
@@ -151,7 +151,7 @@ jobs:
           retention-days: 14
 
   compatibility-source:
-    name: Cadrumo / source / ${{ matrix.python-minor }} / ${{ matrix.phase }}
+    name: "Test: Source compatibility ${{ matrix.python-minor }} ${{ matrix.phase }} (Linux)"
     needs: runtime-inventory
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, Linux, X64]
@@ -220,7 +220,7 @@ jobs:
           retention-days: 14
 
   compatibility-binary:
-    name: Cadrumo / binary / ${{ matrix.python-minor }} / ${{ matrix.phase }}
+    name: "Test: Binary compatibility ${{ matrix.python-minor }} ${{ matrix.phase }} (Linux)"
     needs: [runtime-inventory, build-python-cohort]
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, Linux, X64]

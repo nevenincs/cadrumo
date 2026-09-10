@@ -82,8 +82,10 @@ modelo:
             help: null
             label: Kedvezményezettek teljes száma
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 180. Adatszolgáltatási bevallás. Adóelőleg-levonások
+          és -befizetések. Városi ingatlanok bérbeadásából származó jövedelmek. Éves
+          összesítő.
+        title: Városi ingatlanok bérbeadására vonatkozó adóelőleg-levonások éves összesítője
       revision:
         2019-2022:
           casilla:

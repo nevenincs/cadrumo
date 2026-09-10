@@ -9,7 +9,7 @@ taxpayer data.
 
 The M840 fixture reproduces the Apartado II label layout from the AEAT-published
 printed form at:
-  src/cadrumo/_data/corpus/aeat_official/forms/modelo_840/files/
+  src/cadrumo/_data/corpus/aeat_official/formularios_publicados/modelo_840/files/
     01-840-modelo-declaracion-iae-alta-variacion-baja-pdf.pdf
 pdfplumber extracts the label lines as "14Ejercicio: <value>" and
 "15Declaracion de: <value>" â€” the fixture uses the same casilla-number-prefixed

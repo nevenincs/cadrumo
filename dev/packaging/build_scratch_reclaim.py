@@ -47,22 +47,18 @@ clears the attribute and retries instead.
 
 from __future__ import annotations
 
-import argparse
 import os
 import shutil
 import stat
-import sys
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import Final, TextIO
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.link_safety import is_link_like
 from cadrumo.tests.collection_storage_root import process_is_live
-
-from .._paths import REPO_ROOT
 
 
 @dataclass(frozen=True)
@@ -445,46 +441,100 @@ def _scratch_bytes(candidate: Path) -> int:
     return sum(entry.stat().st_size for entry in scan_directory(candidate, recursive=True) if entry.is_file())
 
 
-def main(argv: list[str] | None = None) -> int:
-    """Report abandoned ``var/`` build scratch, and reclaim it under ``--apply``.
+def report_var_scratch(
+    stream: TextIO,
+    var_root: Path,
+    *,
+    apply: bool,
+    observed_only: bool = False,
+    measure: Callable[[Path], int] | None = None,
+    bloat_threshold: int = 0,
+    ignore_names: frozenset[str] = frozenset(),
+) -> int:
+    """Report abandoned ``var/`` build scratch and return the bytes reclaimed.
 
-    The operator switch for the inferred ground. Every automatic caller acts
-    only on an observed one, so an entry whose name carries no readable owner
-    -- the shape every snapshot minted before :func:`var_scratch_name` existed
-    has -- is reported here and removed only when asked.
+    The operator surface for this module is ``just clean``, which drives this
+    as one section of a wider report. The family registry, the liveness probe
+    and the age rule stay here, where the names they judge are minted.
+
+    ``measure`` and ``bloat_threshold`` exist so the caller can size what is
+    SPARED as well as what is reaped. Sparing is the common outcome under
+    ``var/`` -- an operator's probe trees live there on purpose -- and a spared
+    tree of many gigabytes is the single most useful line this section prints.
+    Sizing is the caller's function rather than this module's because the caller
+    already owns one that absorbs unreadable entries the same way everywhere.
+
+    Args:
+        stream: Where the section is written.
+        var_root: The ``var/`` tree to judge.
+        apply: Whether to remove the entries judged abandoned.
+        observed_only: Consider only scratch whose named owner is confirmed
+            gone, as the automatic callers do.
+        measure: Optional sizer for spared entries.
+        bloat_threshold: Bytes above which a spared entry is marked BLOAT.
+        ignore_names: Direct children of ``var_root`` another section owns.
+            Omitted here rather than listed twice: one directory carrying two
+            verdicts in one report is how an operator ends up acting on the
+            wrong one.
+
+    Returns:
+        Bytes reclaimed, or 0 when reporting only.
     """
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--var-root", type=Path, default=REPO_ROOT / "var")
-    parser.add_argument(
-        "--apply",
-        action="store_true",
-        help="remove the scratch entries judged abandoned; without it nothing is deleted",
-    )
-    parser.add_argument(
-        "--observed-only",
-        action="store_true",
-        help="consider only scratch whose named owner is confirmed gone, as the automatic callers do",
-    )
-    arguments = parser.parse_args(argv)
-    var_root = arguments.var_root.resolve()
-    reclaimable, spared = reclaimable_scratch(var_root, reclaim_by_age=not arguments.observed_only)
+    reclaimable, spared = reclaimable_scratch(var_root, reclaim_by_age=not observed_only)
 
-    print(f"build scratch under {var_root}", file=sys.stdout)
-    for candidate in spared:
-        print(f"  SPARE {candidate.name}", file=sys.stdout)
+    print(f"\nRelease-build scratch under {var_root}", file=stream)
+
+    # Every entry belonging to no registered family, which
+    # :func:`reclaimable_scratch` returns in neither list because it was never
+    # a candidate. Silence about those is wrong for a report: they are the bulk
+    # of what is on the disk here -- the probe and cohort trees an operator
+    # accumulated by hand -- and a section that prints "reclaimable 0.000 GB"
+    # over tens of gigabytes reads as "nothing here" rather than "nothing I am
+    # entitled to remove". They are listed, never touched, and never counted
+    # into the reclaimable total.
+    judged = {candidate.name for candidate in (*reclaimable, *spared)} | ignore_names
+    unclaimed = sorted(
+        (
+            (candidate, measure(candidate) if measure else 0)
+            for candidate in scan_directory(var_root)
+            if candidate.name not in judged
+        ),
+        key=lambda item: -item[1],
+    )
+    for candidate, size in unclaimed:
+        marker = "BLOAT" if bloat_threshold and size >= bloat_threshold else "     "
+        print(
+            f"  {marker} {size / 1_000_000_000:7.3f} GB  {candidate.name}  -- no registered scratch family", file=stream
+        )
+
+    sized = sorted(
+        ((candidate, measure(candidate) if measure else 0) for candidate in spared),
+        key=lambda item: -item[1],
+    )
+    for candidate, size in sized:
+        marker = "BLOAT" if bloat_threshold and size >= bloat_threshold else "SPARE"
+        print(f"  {marker} {size / 1_000_000_000:7.3f} GB  {candidate.name}", file=stream)
+
+    unclaimed_bytes = sum(size for _candidate, size in unclaimed)
+    if unclaimed:
+        print(
+            f"  unclaimed: {unclaimed_bytes / 1_000_000_000:.3f} GB across {len(unclaimed)} entries,"
+            " none of them removable by this sweep",
+            file=stream,
+        )
+
     total = 0
     for candidate in reclaimable:
         size = _scratch_bytes(candidate)
         total += size
-        print(f"  REAP  {candidate.name}  {size / 1_000_000_000:.3f} GB", file=sys.stdout)
-    verb = "reclaimed" if arguments.apply else "reclaimable"
-    print(f"  {verb}: {total / 1_000_000_000:.3f} GB   spared: {len(spared)}", file=sys.stdout)
-    if arguments.apply:
-        for candidate in reclaimable:
-            remove_scratch(candidate)
-    else:
-        print("  nothing was deleted; pass --apply to act on the REAP lines above", file=sys.stdout)
-    return 0
+        print(f"  REAP  {size / 1_000_000_000:7.3f} GB  {candidate.name}", file=stream)
+    verb = "reclaimed" if apply else "reclaimable"
+    print(f"  {verb}: {total / 1_000_000_000:.3f} GB   spared: {len(spared)}", file=stream)
+    if not apply:
+        return 0
+    for candidate in reclaimable:
+        remove_scratch(candidate)
+    return total
 
 
 __all__ = [
@@ -499,10 +549,7 @@ __all__ = [
     "reclaimable_scratch",
     "remove_scratch",
     "remove_tree",
+    "report_var_scratch",
     "sweep_var_scratch",
     "var_scratch_name",
 ]
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

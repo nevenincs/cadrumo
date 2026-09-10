@@ -48,7 +48,7 @@ def test_descriptors_adapt_to_sdk_tools_with_annotations() -> None:
         "result",
         "notices",
     }
-    assert inspect_properties["command"]["const"] == "registry.inspect"
+    assert inspect_properties["command"]["const"] == "ledger.categories"
 
     calculate = by_name["cadrumo_modelo_work_calculate"]
     assert calculate.output_schema

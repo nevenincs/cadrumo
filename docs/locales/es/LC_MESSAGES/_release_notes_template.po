@@ -110,8 +110,7 @@ msgstr ""
 #: ../../_release_notes_template.md:59
 msgid ""
 "`pip install cadrumo==X.Y.Z` pulls both exact-version data distributions"
-"     and `aeat app registry verify` runs clean"
+"     and `aeat config repair integrity registry` runs clean"
 msgstr ""
 "`pip install cadrumo==X.Y.Z` descarga ambas distribuciones de datos de "
-"versión exacta     y `aeat app registry verify` se ejecuta sin errores"
-
+"versión exacta     y `aeat config repair integrity registry` se ejecuta sin errores"

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
@@ -31,12 +31,10 @@ from cadrumo.domain.calculations.registry._verdict_cache import (
 from cadrumo.domain.calculations.registry.authority import (
     _SILENT_AUTHORITY_LIFECYCLE_OBSERVER,
     RegistryAuthorityLifecycleObserver,
-    RegistryRevisionInspection,
     _authority_load_barrier,
     _authority_load_states,
     _authority_state_lock,
     _guard_authority_process,
-    bundled_authority,
     collect_registry_identity_fingerprints,
 )
 from cadrumo.domain.calculations.registry.condition_mode import ConditionModeField
@@ -53,14 +51,7 @@ from cadrumo.domain.calculations.registry.export import (
     ResolvedExportEndpointPath,
     derive_export_layouts_from_bindings,
 )
-from cadrumo.domain.calculations.registry.external_grounding import (
-    ExternalGroundingModel,
-    ExternalOracleCorpus,
-    FilingYear,
-    ManualWorkedExamplePayload,
-    OraclePayload,
-    RentaWebOpenReplayPayload,
-)
+from cadrumo.domain.calculations.registry.facts.providers import reset_registered_fact_providers
 from cadrumo.domain.calculations.registry.identity import (
     _LOGGER,
     REGISTRY_IDENTITY_SCHEMA_VERSION,
@@ -69,7 +60,6 @@ from cadrumo.domain.calculations.registry.identity import (
     registry_identity_stamp_location,
 )
 from cadrumo.domain.calculations.registry.ids import CrossReferenceId, OracleId
-from cadrumo.domain.calculations.registry.live_parity import LiveParityOracle, _ParityModel
 from cadrumo.domain.calculations.registry.loader import (
     ModeloDefinition,
     RegistryLoadError,
@@ -99,6 +89,16 @@ from cadrumo.domain.calculations.registry.static_inspection import (
     ProjectionEndpointDeclaration,
     RevisionId,
 )
+from dev.registry.parity.external_grounding import (
+    ExternalGroundingModel,
+    ExternalOracleCorpus,
+    FilingYear,
+    ManualWorkedExamplePayload,
+    OraclePayload,
+    RentaWebOpenReplayPayload,
+)
+from dev.registry.parity.live_parity import LiveParityOracle, _ParityModel
+from dev.registry.parity.renta_web_open_replay_corpus import replay_corpus_directory
 
 
 class OracleEnvironment(StrEnum):
@@ -137,6 +137,7 @@ def reset_registry_caches(
         _invalidate_authority_generations()
         _load_registry_tree_cached.cache_clear()
         clear_fingerprint_cache()
+        reset_registered_fact_providers()
 
 
 def stamp_bundled_registry_release(
@@ -242,17 +243,26 @@ def resolved_export_fields(revision: ModeloRevision) -> tuple[ResolvedExportFiel
 
 
 def load_bundled_external_oracle_inventory() -> ExternalOracleInventory:
-    """Inventory every bundled external-oracle payload across both corpora.
+    """Inventory every external-oracle payload across both corpora.
+
+    The two corpora no longer share a root -- the manual worked examples are
+    packaged data, the Renta WEB Open replays are repository-only development
+    artefacts -- so each is located through its own entry in
+    :data:`_ORACLE_CORPUS_DIRECTORIES`.
 
     Returns:
         An :class:`ExternalOracleInventory` carrying the attributed evidence
         and every payload whose evidence could not be attributed.
+
+    Raises:
+        RegistryValidationError: When a corpus directory is absent. An empty
+            inventory and a clean one are indistinguishable downstream, so a
+            missing corpus fails loudly rather than reporting nothing to check.
     """
     evidence: list[ExternalOracleEvidence] = []
     unattributed: list[UnattributedOraclePayload] = []
-    for corpus, parts in _ORACLE_CORPUS_DIRECTORIES.items():
-        directory = Path(bundled_path(*parts))
-        for payload_path in scan_directory(directory, pattern="modelo-*.json"):
+    for corpus, locate_directory in _ORACLE_CORPUS_DIRECTORIES.items():
+        for payload_path in scan_directory(locate_directory(), pattern="modelo-*.json"):
             record = _read_oracle_payload(corpus, payload_path)
             if isinstance(record, UnattributedOraclePayload):
                 unattributed.append(record)
@@ -549,9 +559,37 @@ class ResolvedExportField:
     field: ExportFieldDefinition
 
 
-_ORACLE_CORPUS_DIRECTORIES: Final[Mapping[ExternalOracleCorpus, tuple[str, ...]]] = {
-    ExternalOracleCorpus.RENTA_WEB_OPEN_REPLAY: ("corpus", "parity_replays", "renta_web_open"),
-    ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE: ("corpus", "manual_oracles"),
+def _manual_worked_example_directory() -> Path:
+    """Return the packaged AEAT Manual practico worked-example corpus directory.
+
+    This corpus DOES still ship inside the wheel, so it is located through the
+    bundled-resource loader exactly as before.
+
+    Returns:
+        The packaged ``corpus/manual_oracles`` path.
+    """
+    return Path(bundled_path("corpus", "manual_oracles"))
+
+
+#: Where each oracle corpus lives, resolved on demand.
+#:
+#: The two corpora deliberately do NOT share a root, and the split is stated
+#: here rather than hidden behind one locator:
+#:
+#: * ``RENTA_WEB_OPEN_REPLAY`` is a repository-only development artefact under
+#:   ``dev/registry/parity/parity_replays/renta_web_open``. It does not ship,
+#:   and it is reached through the owning module's locator so exactly one place
+#:   decides where those captures are and refuses their absence.
+#: * ``AEAT_MANUAL_WORKED_EXAMPLE`` is packaged data under ``_data/corpus``
+#:   and is reached through the bundled-resource loader.
+#:
+#: The values are callables rather than paths because the repository locator
+#: raises when its directory is missing: resolving at import time would make an
+#: absent capture corpus an import failure of this whole module rather than a
+#: loud failure of the fold that needs it.
+_ORACLE_CORPUS_DIRECTORIES: Final[Mapping[ExternalOracleCorpus, Callable[[], Path]]] = {
+    ExternalOracleCorpus.RENTA_WEB_OPEN_REPLAY: replay_corpus_directory,
+    ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE: _manual_worked_example_directory,
 }
 
 
@@ -776,10 +814,11 @@ def _parse_oracle_payload(corpus: ExternalOracleCorpus, payload_path: Path) -> O
     Two refusals live here, both loud and neither tolerant of a shape nothing
     ships today. The model itself refuses a payload missing a field its corpus
     declares, carrying an undeclared key, or naming a ``source_kind`` outside
-    :class:`~cadrumo.core.ExternalOracleCorpus`. The cross-check then refuses a
-    payload whose declared corpus token contradicts the directory it was found
-    in � the case a directory-keyed read would silently reclassify, reporting a
-    provenance the figures do not have.
+    :class:`~dev.registry.parity.external_oracle_corpus.ExternalOracleCorpus`.
+    The cross-check then refuses a payload whose declared corpus token
+    contradicts the directory it was found in -- the case a directory-keyed
+    read would silently reclassify, reporting a provenance the figures do not
+    have.
 
     Args:
         corpus: The corpus the containing directory belongs to, per

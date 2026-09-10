@@ -35,9 +35,9 @@ same ejercicio. The enrollment assertion is that both años run through the
 real engine, producing non-zero casilla outputs, across two distinct renta
 años grounded in RD 439/2007 art. 110.
 
-Both años are recorded through the :class:`cross-year observation` and
+Both años are recorded through the ``cross-year observation`` and
 cross-checked against the cross-year claim via
-:func:`the cross-year behavior assertion`.
+``the cross-year behavior assertion``.
 """
 
 from __future__ import annotations
@@ -239,8 +239,8 @@ def test_modelo_131_modules_continuity_enrolls_two_renta_years(tmp_path: Path) -
 
     Drives the REAL M131 engine for Q1 of each renta year (real registry
     authority, real formula evaluation — no mocks), records each through the
-    :class:`cross-year observation` (calculation mode, evidenced by _produced casilla
-    count), and cross-checks via :func:`the cross-year behavior assertion`.
+    ``cross-year observation`` (calculation mode, evidenced by _produced casilla
+    count), and cross-checks via ``the cross-year behavior assertion``.
 
     Load-bearing assertions:
     - Q1/2024 produces a positive saldo (loss scenario, 2% rate from registry).

@@ -63,8 +63,8 @@ def test_in_process_client_initializes_lists_and_round_trips_a_read_only_call() 
     # direct call by name. The descriptor-set assertion keeps the exclusion from
     # passing vacuously were the verb to disappear from the surface entirely.
     assert tool_name_for_command("overview.status") in names
-    assert tool_name_for_command("registry.inspect") not in names
-    assert tool_name_for_command("registry.inspect") in {d.name for d in build_tool_descriptors()}
+    assert tool_name_for_command("ledger.categories") not in names
+    assert tool_name_for_command("ledger.categories") in {d.name for d in build_tool_descriptors()}
     # The shipped read-only floor tool avoids depending on a second executable.
     assert result.is_error is False
     assert result.content

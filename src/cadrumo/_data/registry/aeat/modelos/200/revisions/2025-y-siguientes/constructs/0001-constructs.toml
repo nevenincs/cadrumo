@@ -51,7 +51,7 @@ legal_refs = [
     "ley-27-2014:dt-33",
     "ley-27-2014:da-13",
 ]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024", "boe-modelo-200-2025-form"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025", "boe-modelo-200-2025-form"]
 casilla_ids = [
     "DP200014B:00592",
     "DP200014B:00599",

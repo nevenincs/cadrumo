@@ -1676,7 +1676,6 @@ cli:
           bevallási bizonyíték JSON-dokumentum szükséges.
   common:
     errors:
-      draft_id_not_found: A(z) %{draft_id} azonosítójú piszkozat nem található
       filing_requires_declared_tax_id: 'Az aktív profil nem ad meg adóazonosítót,
         ezért nem exportálható vele bevallás. Add meg: %{requirements}.'
       invalid_iso_date: 'Érvénytelen dátumformátum a(z) %{label} mezőhöz: %{raw}.
@@ -3189,7 +3188,6 @@ cli:
         overview_status: Az aktuális profil és munkállapot összefoglalása.
         paragraph_operational_workflow: Az app-parancsok az aktív profilon működnek.
         registry_inspect: Nyilvántartási metaadatok vizsgálata.
-        registry_verify: Helyi nyilvántartás integritásának ellenőrzése.
         review_queue: Üzemeltetői felülvizsgálatra váró elemek listázása.
         review_view: Egyetlen felülvizsgálati elem megtekintése.
         section_ledger: Főkönyv
@@ -3249,13 +3247,13 @@ cli:
         diagnostics_logs: A napló útvonalának és legutóbbi sorainak megjelenítése.
         diagnostics_overview_verbose: Az általános állapot részletes megjelenítése.
         diagnostics_repair_json: A teljes helyi állapotjelentés visszaadása JSON-ként.
-        diagnostics_version: A csomag és a nyilvántartás ujjlenyomatának megjelenítése.
+        diagnostics_version: A telepített csomagazonosító megjelenítése.
         family_app: A profilhoz kötött adózási parancsok megnyitása.
         family_config: Profil-, munkamenet-, tár- és javítási parancsok megnyitása.
         footer: 'Részletek: --help. Töröld az érzékeny adatokat, majd jelentsd: github.com/nevenincs/cadrumo/issues.'
         heading: CADRUMO - helyi munkafolyamat a spanyol adóhatósággal (AEAT)
         paragraph_app_root: Az app gyökér kezeli a profiláttekintést, főkönyvet, modelo-munkát,
-          felülvizsgálatot, nyilvántartást és hitelesített AEAT-lekérdezéseket.
+          felülvizsgálatot és hitelesített AEAT-lekérdezéseket.
         paragraph_config_root: A config gyökér kezeli a profilokat, a titkosított
           helyi adatokat, a helyreállítási kulcsokat, a munkameneteket, az AEAT-hitelesítést
           és a javítást.
@@ -3267,8 +3265,7 @@ cli:
           tárolja. Az aktív profil a kijelölt adózói környezet. A profilmunkamenet
           folytatható hozzáférést ad a titkosított adatokhoz.
         paragraph_review_terms: A felülvizsgálati sor kezelői beavatkozást igénylő
-          megállapításokat tartalmaz. A nyilvántartás ellenőrzött, verziózott adószabályokat
-          és forrásokat tartalmaz; nem tárol adózói adatot és nem küld be bevallást.
+          megállapításokat tartalmaz.
         paragraph_tax_terms: A főkönyv importált pénzmozgásokat tartalmaz. A modelo
           hivatalos AEAT-bevallási űrlap, amely nem azonos a helyi munkaegységgel
           vagy exporttal.
@@ -3491,8 +3488,9 @@ cli:
     manuals:
       app_help: Az AEAT Manuál práctico rekordok vizsgálata (Renta, IVA, Sociedades).
       kind_help: Szűrés kézikönyvi szabálytípus alapján.
-      list_help: A helyileg elérhető kézikönyv-részek listázása.
-      manual_help: Kézikönyv-azonosító (renta, iva).
+      list_help: A deklarált éves lefedettség és a helyben elérhető kézikönyvrészek
+        listázása
+      manual_help: Kézikönyv-azonosító (renta, iva, sociedades)
       part_help: Kézikönyv-kötet (single, part1, part2-deducciones-autonomicas, part3).
       rules_help: Egy kézikönyvben kodifikált szabályok listázása.
       section_help: Opcionális szakaszazonosító a megjelenítéshez.
@@ -3500,8 +3498,6 @@ cli:
         %{target}'
       verify_dangling_section_ref: '%{section_id} szakasz ismeretlen szakaszra hivatkozik:
         %{target}'
-      verify_failed: 'az ellenőrzés sikertelen ehhez: %{manual_id}/%{year}/%{part}:
-        %{messages}'
       verify_help: A kézikönyv integritásának ellenőrzése a szerződésével szemben.
       verify_missing_manifest: '%{manifest_path} hiányzik; futtasd a ''aeat manual
         fetch'' parancsot a létrehozásához'
@@ -3528,17 +3524,6 @@ cli:
       modelo_count: Nyomtatványok száma
       modelos: Nyomtatványok
       observation_paths: Megfigyelési útvonalak
-      replay_blocked_payload_count: Blokkolt felvételek száma
-      replay_compared_field_count: Összehasonlított rovatok száma
-      replay_cross_reference_id: Visszajátszási kereszthivatkozás
-      replay_guard_policy_id: Visszajátszási védelmi szabály
-      replay_matched_payload_count: Egyező felvételek száma
-      replay_mismatched_payload_count: Eltérő felvételek száma
-      replay_oracle_id: Visszajátszási orákulum
-      replay_payload_count: Visszajátszott felvételek száma
-      replay_registry_validated: Visszajátszáskor validált nyilvántartás
-      replay_unverifiable_payload_count: Nem ellenőrizhető felvételek száma
-      replay_verdict: Visszajátszási paritás eredménye
       revision: Revízió
       revision_count: Revíziók száma
       row_count: Sorok száma
@@ -3551,13 +3536,10 @@ cli:
       workbook_parity_ref_count: Munkafüzet paritás-hivatkozások száma
     observation_help: A titkosított benyújtott bevallás megfigyelési manifesztje az
       ellenőrzéshez.
-    replay_parity_help: A csomagolt AEAT Renta WEB Open felvételek offline visszajátszása
-      a paritásorákulumon keresztül.
     source_observation_help: A korábbi benyújtási kötések vagy kapcsolatok által megkövetelt
       titkosított forrásmegfigyelési manifeszt.
     verify_filed_state_help: A helyi nyilvántartási számítás kimenetének összehasonlítása
       a rögzített benyújtott AEAT-állapottal.
-    verify_help: A helyi nyilvántartás integritásának ellenőrzése.
     verify_source_root_help: Az ellenőrzendő forráskönyvtár elérési útja.
     view_edition_help: Egy modell egy revízióját a nyilvántartás által fordított teljes
       revízióként írja ki TOML formátumban, jelölve, hogy az egyes mezősorokat maga
@@ -3643,7 +3625,6 @@ cli:
       section_ledger: '  app ledger - banki importok és tranzakció-felülvizsgálat'
       section_modelo: '  app modelo - adónyomtatvány-katalógus és munkacsomagok'
       section_overview: '  app overview - munkaterület állapota és benyújtási naptár'
-      section_registry: '  app registry - helyi AEAT nyilvántartási adatok'
       section_review: '  app review - üzemeltetői figyelmet igénylő elemek'
       sections_heading: Fő szakaszok
       session_login_command: 'Profilmunka indítása vagy megújítása: `aeat config login
@@ -3657,10 +3638,3 @@ cli:
     quiet_help: Csak a hibák megjelenítése.
     verbose_help: Részletes kimenet engedélyezése.
     version_help: A verziószám megjelenítése és kilépés.
-  topic:
-    app_help: Fogalmi súgó megjelenítése rezsimekről, nyomtatványokról és AEAT-folyamatokról.
-    errors:
-      not_found: 'A téma nem található: %{slug}. Futtassa: `aeat app registry citations`
-        a regisztrált témák listázásához.'
-    opts:
-      slug: Témaazonosító (kötőjeles, pl. iva-regime)

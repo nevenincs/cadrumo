@@ -2,7 +2,7 @@
 
 Asserts that every application-facing error class in this module is:
   - a registered :class:`~cadrumo.core.errors.CadrumoError` subclass
-  - bound in :data:`~cadrumo.core.errors.ERROR_REGISTRY`
+  - bound in :data:`~core.errors.error_codes.ALL_DECLARED_ERROR_CODES`
   - round-trips through :func:`~cadrumo.core.errors.build_error_envelope`
     producing a non-empty ``error_code`` field
 

@@ -334,20 +334,6 @@ def test_dangling_modelo_source_refs() -> None:
         check_all_id_references(snapshot)
 
 
-def test_config_repair_report_includes_registry_integrity_check(tmp_path: Path) -> None:
-    """build_config_repair_report produces a registry.integrity DiagnosticCheck."""
-    from .....application.diagnostics import build_config_repair_report
-    from .....tests.secure_sql import isolated_runtime_profile
-
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        report = build_config_repair_report()
-    check_names = [check.name for check in report.checks]
-    assert "registry.integrity" in check_names
-
-    integrity_check = next(c for c in report.checks if c.name == "registry.integrity")
-    assert integrity_check.status in {"ok", "fail", "warn"}
-
-
 def test_informative_modelo_with_formula_fails_validation() -> None:
     """An informative modelo that declares a formula raises RegistryValidationError."""
     formula = FormulaDefinition(

@@ -588,12 +588,8 @@ errors:
     integrity_storage_classification: La clase de sensibilidad declarada de un registro
       es incompatible con su repositorio.
     integrity_storage_corpus_bundle: El paquete del corpus no pudo analizarse ni verificarse.
-    integrity_storage_corpus_bundle_verification: El paquete del corpus no superó
-      la verificación de sumas de comprobación frente a su manifiesto incorporado.
     integrity_storage_corpus_manifest: El manifiesto del corpus no se pudo leer o
       validar.
-    integrity_storage_corpus_manifest_drift: 'El corpus en disco difiere de lo que
-      describe su manifiesto: se han añadido, eliminado o modificado archivos.'
     integrity_storage_corpus_manifest_tamper: El resumen autoverificable del manifiesto
       del corpus no coincide con su contenido. El manifiesto puede estar dañado o
       manipulado.
@@ -671,12 +667,6 @@ errors:
     internal_workflow_unhandled: 'Error interno: una etapa del flujo de trabajo lanzó
       una excepción no controlada.'
   iva:
-    category_has_no_legal_basis: Esa categoría de IVA no tiene base legal en el catálogo
-      y no se puede citar.
-    citation_legal_reference_absent: La referencia legal de la cita no figura en el
-      catálogo legal del registro.
-    cite_requires_catalogue_or_date: Citar una categoría de IVA requiere un catálogo
-      explícito o una fecha de efecto.
     rate_member_state_unregistered: El registro de tipos de IVA no contiene tipos
       para el estado miembro solicitado.
     rate_registry_coverage_gap: El registro de tipos de IVA incluido no alcanza esa
@@ -1072,8 +1062,6 @@ errors:
       para forzarlo.'
     refused_review_filter_parse: No se pudo interpretar `--filter CLAVE=VALOR`. Comprueba
       la sintaxis del filtro indicado.
-    refused_review_kind_reserved: El valor de `--kind` indicado está reservado y no
-      se puede usar.
     refused_source_mesh_invariant: 'Rechazado: invariante de la malla de fuentes incumplida.'
     refused_storage_bucket_already_present: La importación colisiona con un bucket
       de almacenamiento que ya existe.
@@ -1118,8 +1106,6 @@ errors:
       para generar una revisión nueva.
     refused_workflow_resume: La ejecución del flujo de trabajo anterior no se puede
       reanudar.
-    registry_closure_capture_not_current: El cierre del registro cambió durante la
-      lectura; vuelva a capturarlo.
     submission_preflight_auth_describe_failed: El proveedor de autenticación no pudo
       describirse ({cause_type}).
     submission_preflight_auth_not_ready: El proveedor de autenticación {kind} no está
@@ -1159,8 +1145,6 @@ errors:
       schema_upgrade_path_missing: 'No hay ruta de actualización de esquema para el
         espacio de nombres {namespace}: falta un actualizador desde la versión {missing_from_version}
         hacia {expected}.'
-      schema_upgrader_already_registered: Ya hay un actualizador de esquema registrado
-        para el espacio de nombres {namespace} desde la versión {from_version}.
       schema_version_from_future: La versión de esquema almacenada {schema_version}
         del espacio de nombres {namespace} es más reciente de lo que admite esta aplicación
         (hasta {expected}); no se puede leer.

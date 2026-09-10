@@ -24,10 +24,10 @@ expression = { op = "subtract", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-10", "ley-27-2014:art-11", "ley-27-2014:art-15", "ley-27-2014:art-25", "ley-27-2014:art-26", "ley-27-2014:art-105"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".formulas.source_citations]]
-source_ref = "aeat-modelo-200-manual-2024"
+source_ref = "aeat-modelo-200-manual-2025"
 required_text = [
     "correcciones al resultado de la cuenta de perdidas y ganancias",
     "base imponible antes de la compensacion",
@@ -57,10 +57,10 @@ expression = { op = "max", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-25", "ley-27-2014:art-26", "ley-27-2014:art-105"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".formulas.source_citations]]
-source_ref = "aeat-modelo-200-manual-2024"
+source_ref = "aeat-modelo-200-manual-2025"
 required_text = [
     "compensacion de bases imponibles negativas",
     "reserva de capitalizacion",
@@ -78,10 +78,10 @@ expression = { op = "subtract", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-105", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-41"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".formulas.source_citations]]
-source_ref = "aeat-modelo-200-manual-2024"
+source_ref = "aeat-modelo-200-manual-2025"
 required_text = [
     "base imponible despues de la reserva de nivelacion",
     "casilla [01330] = [00552] + [01033] - [01034]",
@@ -183,10 +183,10 @@ expression = { op = "if_then_else", args = [
     ] },
 ] }
 legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-101", "ley-27-2014:dt-44", "ley-31-2022:art-39", "ley-49-2002:art-10"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".formulas.source_citations]]
-source_ref = "aeat-modelo-200-manual-2024"
+source_ref = "aeat-modelo-200-manual-2025"
 required_text = [
     "tipo de gravamen",
     "cuota integra (casilla 00562)",
@@ -301,10 +301,10 @@ expression = { op = "if_then_else", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-30", "ley-27-2014:art-29", "ley-27-2014:art-101", "ley-27-2014:dt-44", "ley-49-2002:art-10"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".formulas.source_citations]]
-source_ref = "aeat-modelo-200-manual-2024"
+source_ref = "aeat-modelo-200-manual-2025"
 required_text = [
     "cuota integra (casilla 00562)",
     "tipo de gravamen",
@@ -342,10 +342,10 @@ expression = { op = "max", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-30", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-39"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".formulas.source_citations]]
-source_ref = "aeat-modelo-200-manual-2024"
+source_ref = "aeat-modelo-200-manual-2025"
 required_text = [
     "Cuota íntegra ajustada positiva se obtiene",
     "[00582] = ([00562] + [01038]) -",
@@ -381,10 +381,10 @@ expression = { op = "max", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-30", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-36", "ley-27-2014:art-39"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".formulas.source_citations]]
-source_ref = "aeat-modelo-200-manual-2024"
+source_ref = "aeat-modelo-200-manual-2025"
 required_text = [
     "La cuota líquida se obtiene aplicando sobre la cuota íntegra ajustada positiva",
     "[00592] = [00582] - ([00583] + [00585]",
@@ -413,10 +413,10 @@ expression = { op = "multiply", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".formulas.source_citations]]
-source_ref = "aeat-modelo-200-manual-2024"
+source_ref = "aeat-modelo-200-manual-2025"
 required_text = [
     "cuota del ejercicio a ingresar o a devolver (casilla 00599)",
     "[00599] = ([00625]/100",
@@ -439,10 +439,10 @@ expression = { op = "subtract", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".formulas.source_citations]]
-source_ref = "aeat-modelo-200-manual-2024"
+source_ref = "aeat-modelo-200-manual-2025"
 required_text = [
     "cuota diferencial (casillas 00611 y 00612)",
     "[00611] = [00599] - ([00601] + [00603] + [00605])",
@@ -467,8 +467,8 @@ expression = { op = "min", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-26", "ley-27-2014:art-25"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".formulas.source_citations]]
-source_ref = "aeat-modelo-200-manual-2024"
+source_ref = "aeat-modelo-200-manual-2025"
 required_text = ["bases imponibles negativas"]

@@ -78,9 +78,7 @@ def _resolved_scalar_data() -> dict[str, object]:
         "payload": {"kind": "scalar", "value": Decimal("0.21"), "unit": "ratio"},
         "legal_refs": ("ley-37-1992-art-90",),
         "source_refs": ("aeat-iva-rates",),
-        "source_citations": (
-            SourceCitation(source_ref="aeat-iva-rates", required_text=("Tipo general",)),
-        ),
+        "source_citations": (SourceCitation(source_ref="aeat-iva-rates", required_text=("Tipo general",)),),
         "review_status": "pending_review",
         "ownership": "authored",
         "authority_digest": "a" * 64,
@@ -142,9 +140,7 @@ def test_authority_resolver_returns_a_provenance_bearing_result_for_exact_contex
                     "payload": {"kind": "scalar", "value": Decimal("0.21"), "unit": "ratio"},
                     "legal_refs": ("ley-37-1992-art-90",),
                     "source_refs": ("aeat-iva-rates",),
-                    "source_citations": (
-                        {"source_ref": "aeat-iva-rates", "required_text": ("Tipo general",)},
-                    ),
+                    "source_citations": ({"source_ref": "aeat-iva-rates", "required_text": ("Tipo general",)},),
                     "review_status": "pending_review",
                     "ownership": "authored",
                 },

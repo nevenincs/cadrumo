@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.registry.tree import _bundled_path
+from cadrumo.core.resources.bundled_data import bundled_path as _bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 

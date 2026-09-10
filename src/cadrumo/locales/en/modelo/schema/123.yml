@@ -2,8 +2,10 @@ modelo:
   schema:
     '123':
       field:
-        official_name: null
-        title: null
+        official_name: Withholdings and payments on account for Personal Income Tax,
+          Corporate Income Tax and Non-Resident Income Tax (permanent establishments).
+          Certain income from movable capital or certain income.
+        title: Withholdings on income from movable capital
       revision:
         2019-2023:
           casilla:

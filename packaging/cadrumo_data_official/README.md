@@ -20,10 +20,9 @@ spans both installed portions.
 
 At runtime `cadrumo` resolves a corpus binary from its own package tree first and
 then from these data distributions, so a full source checkout and an installed
-three-wheel cohort read the corpus identically. The binaries feed the always-on
-registry integrity hash chain and `aeat app registry` verification. An incomplete
-cohort fails integrity checks; Cadrumo does not support a degraded CLI install
-without both data distributions.
+three-wheel cohort read the corpus identically. They are required bundled
+calculation inputs; registry authoring and conformance verification run only in
+the development lane.
 
 ## Install
 

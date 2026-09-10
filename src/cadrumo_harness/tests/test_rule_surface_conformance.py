@@ -121,9 +121,11 @@ def _command_path_from_invocation(invocation: str) -> str | None:
 @functools.lru_cache(maxsize=1)
 def _live_root_command() -> Any:
     """Materialise the full live Click command tree (all lazy subtrees loaded)."""
-    from cadrumo.entrypoints.cli import full_command_tree
+    from typer.main import get_command
 
-    return full_command_tree()
+    from cadrumo.entrypoints.cli import app
+
+    return get_command(app)
 
 
 def _flags_of(command: Any) -> frozenset[str]:

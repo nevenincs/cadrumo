@@ -13,8 +13,8 @@ from pydantic import BaseModel, ConfigDict
 
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.domain.calculations.registry.loader import load_registry_tree
-from cadrumo.tests.aeat_nif_iva_oracle import AeatNifIvaCheckerOracle
-from cadrumo.tests.groi_oracle import GroiOracle
+from dev.registry.tests.aeat_nif_iva_oracle import AeatNifIvaCheckerOracle
+from dev.registry.tests.groi_oracle import GroiOracle
 from dev.registry.maintenance_support import (
     CrossReferenceApplicabilityDeclaracion,
     LiveParityCatalogue,

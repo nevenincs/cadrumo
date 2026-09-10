@@ -14,7 +14,7 @@ See Also:
         Registry validator that checks the authored legal/source references.
     :class:`~core.TaxDomain`
         Closed tax-family enum extended for the plastico and IEDMT registrations.
-    :data:`~core.access_gate.validated registry modelo set`
+    :class:`~core.modelo.Modelo`
         Canonical fleet membership reached after this final-tail promotion.
     :data:`~core.UNMODELED_OBLIGATIONS`
         Former residual obligation set that this tail reduces to empty.

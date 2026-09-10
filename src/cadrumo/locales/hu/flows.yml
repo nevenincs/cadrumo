@@ -17,8 +17,6 @@ flows:
     invalid_decimal: Add meg az összeget tizedesponttal (például 1234.56).
     invalid_integer: Adj meg egy egész számot.
     select_unknown: 'Válassz az elfogadott értékek közül: %{choices}.'
-    tui_abandoned: A(z) {flow_id} folyamatot {mode} módban bezárták a beküldés vagy
-      mentés előtt; semmi sem került rögzítésre.
     unsupported_console: Ez a konzol nem tud interaktív kérdéseket megjeleníteni.
       Indítsd a folyamatot valódi terminálból, vagy vezéreld szkriptelt válaszfájllal.
   login:
@@ -70,56 +68,8 @@ flows:
     required_field_unavailable: Kötelező profilmező
     section_title: '{title} - {present}/{total}'
     title: 'Profil: {profile}'
-  modelo_edit:
-    footer: F2 ellenőrzés · Esc kilépés · F3 megjelenés
-    review:
-      nothing_staged: Nincs ellenőrizendő módosítás.
-      unresolved_entries: Vannak feloldatlan értékek. Ellenőrzés előtt javítsa ki
-        őket.
-    review_ready: 'Az ellenőrzés kész. Módosított casilla mezők: {changed}.'
-    stale_conflict: Az adatok megváltoztak a szerkesztés megnyitása óta. Folytatás
-      előtt ellenőrizze.
-    title: Modelo szerkesztése
-    unresolved: 'Nem értelmezhető érték a(z) {casilla_id} casilla mezőben. Függőben:
-      {count}.'
-    unsaved_on_leave: Nem mentett módosítások vannak. Kilépés előtt ellenőrizze vagy
-      vesse el őket.
   modelo_review:
-    column:
-      action: Művelet
-      blocked_by: Blokkolja
-      casilla: Rovat
-      casilla_id: Rovatazonosító
-      code: Kód
-      concrete: Konkrét eredet
-      declared: Deklarált eredet
-      expectation_id: Elvárásazonosító
-      facts: Tények
-      grounding: Megalapozás
-      kind: Típus
-      label: Címke
-      message: Üzenet
-      official: Hivatalos megjelenítés
-      realised: Materializált érték
-      schema: Séma
-      severity: Súlyosság
     filter:
-      absent: Nincs jelen
-      all: Minden érték
-      binding_presence: Kötés megléte
-      binding_resolved: Kötés feloldása
-      binding_source: Konkrét kötési forrás
-      casilla_blocker: Mező blokkoló művelete
-      casilla_blocker_presence: Mezőblokkoló megléte
-      estado_casilla_oficial: Hivatalos mező állapota
-      filters: Szűrők
-      finding_kind: Megállapítás típusa
-      finding_severity: Megállapítás súlyossága
-      formula_presence: Képlet megléte
-      input_kind: Deklarált beviteli típus
-      no_matching_blockers: Egy blokkoló sem felel meg az aktív szűrőknek.
-      no_matching_casillas: Egy mező sem felel meg az aktív szűrőknek.
-      no_matching_findings: Egy megállapítás sem felel meg az aktív szűrőknek.
       option:
         binding_source:
           atribucion_member: Jövedelem-hozzárendelési tag
@@ -204,26 +154,6 @@ flows:
           formula_binding: Képletkötés
           formula_relation: Képletkapcsolat
           primary_binding: Elsődleges kötés
-      origin_anomaly: Eredetanomália
-      origin_anomaly_presence: Eredetanomália megléte
-      present: Jelen van
-      realised_kind: Megvalósult érték típusa
-      record_blocker: Rekord blokkoló művelete
-      relation_channel: Kapcsolati csatorna
-      relation_presence: Kapcsolat megléte
-      reset: Szűrők visszaállítása
-      resolved: Feloldott
-      unresolved: Feloldatlan
-    summary:
-      calculation_revision: Számítási verzió
-      denominator_source: Nevező forrása
-      lifecycle_state: Életciklus-állapot
-      progress: Előrehaladás
-      registry_revision: Nyilvántartás verziója
-      section: Összefoglaló
-      verification_outcome: Ellenőrzés eredménye
-      work_unit: Munkamegység
-    title: Modelo {modelo} · {filing_year} · {period}
   modelo_select:
     column:
       filing_year: Adóév
@@ -231,8 +161,6 @@ flows:
       name: Név
       period: Időszak
       state: Állapot
-    empty: Ehhez a profilhoz még nincs regisztrált munkaegység.
-    title: Modell munkaegység kiválasztása
   modelo_workspace_filing:
     column:
       capability: Képesség
@@ -247,7 +175,6 @@ flows:
     why:
       draft_structural: 'Tartósan nincs mérve: a piszkozat építése állapotmentes,
         így egyetlen előállító sem rögzít kiolvasható verdiktet.'
-      export_pending_port: Nincs mérve, amíg nincs az exporttörténetet olvasó közreműködő.
   modelo_workspace_inputs:
     column:
       address: Cím
@@ -395,25 +322,14 @@ flows:
     action_restart: Újrakezdés
     action_save_exit: Mentés és kilépés
     action_submit: Beküldés
-    column_answer: Válasz
-    column_question: Kérdés
-    column_registered: Rögzítve
-    column_status: Állapot
     edit_not_editable: A(z) {page_key} kérdés már nem szerkeszthető.
     edit_unknown: Nincs {number} sorszámú kérdés.
     edit_which: 'Melyik sorszámú kérdést szeretnéd szerkeszteni? '
     header: Áttekintés - {answered} megválaszolt kérdés.
-    header_tui: 'Áttekintés - {answered} megválaszolva, {remaining} kötelező még nyitva,
-      beküldésre kész: {eligible}'
-    header_tui_stage_label: Áttekintés
-    mode_create: létrehozási mód
-    mode_modify: módosítási mód
-    orphan_marker: (már nem kérdezzük)
     page_deferred: A %{page_key} kérdés elhalasztva - döntés szükséges a beküldés
       előtt.
     page_invalid: A %{page_key} kérdés válasza érvénytelen.
     page_stale: Nézd át a %{page_key} kérdést - egy korábbi válasz megváltozott.
-    question_unavailable: A kérdés már nem érhető el
     required_unanswered: A kötelező %{page_key} kérdés megválaszolatlan.
     reset_stale_confirm: A(z) {page_key} kérdést már nem tesszük fel. Törlöd a hozzá
       tárolt választ?
@@ -422,63 +338,8 @@ flows:
     row: '{number}. {page_key} - állapot: {status}'
     save_unavailable: A mentés és kilépés nem érhető el {mode} módban; fejezd be a
       folyamatot egy ülésben.
-    section_unavailable: Nem elérhető szakasz
   status:
-    auth:
-      absolute_deadline: A munkamenet abszolút határideje
-      certificate_source: Tanúsítvány forrása
-      idle_deadline: A munkamenet inaktivitási határideje
-      login_not_ready: nem ellenőrzött
-      login_ready: kész
-      provider: Szolgáltató
-      provider_none: nincs beállítva
-      provider_unknown: Ismeretlen szolgáltató
-      status: Hozzáférés
-      subject: Alany
-    binding_quit: Kilépés
-    masked_value: (rejtett)
-    profile:
-      column:
-        field: Mező
-        value: Érték
-      field_unavailable: Nem elérhető mező
-      none: Nincs aktív profil.
-      repeated_field: '{label} ({row}. elem)'
-      value_unavailable: Nem elérhető érték
     profiles:
-      column:
-        active: Aktív
-        label: Profil
-        status: Állapot
-      none: Nincsenek regisztrált profilok.
       status:
         complete: kész
         incomplete: hiányos
-        unknown: ismeretlen
-    section:
-      auth: Hitelesítés
-      notices: Figyelmeztetések
-      profile: Aktív profil
-      profiles: Profilok
-    title: Állapot
-  tui:
-    binding_back: Vissza
-    binding_reset: Törlés
-    binding_restart: Újrakezd
-    binding_return: Vissza a kérdésekhez
-    binding_review: Áttekintés
-    binding_save_exit: Ment és kilép
-    binding_submit: Beküldés
-    button_back: Vissza
-    button_next: Tovább
-    button_review: Áttekintés
-    choice_unavailable: Nem elérhető választási lehetőség
-    confirm_restart:
-      cancel: Mégse
-      confirm: Újraindítás
-      message: Ez törli az eddig megadott összes választ, és visszatér az első oldalra.
-        Ez nem vonható vissza.
-      title: Újraindítja a teljes folyamatot?
-    header: '{flow} - {position}. kérdés a(z) {total} közül, {section} szakasz'
-    header_single_section: '{flow} - {position}. kérdés / {total}'
-    section_unavailable: Nem elérhető szakasz

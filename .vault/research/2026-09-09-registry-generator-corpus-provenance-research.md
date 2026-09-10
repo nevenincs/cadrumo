@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#registry-generator'
 date: '2026-09-09'
-modified: '2026-09-09'
+modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:afd5868515f6ef615a979d278728e0a2b708513f859b85fbc228e03fc360b916'
+body_hash: 'sha256:7b67f285c9d7fd64943a9378d3b42a3c0ffce480e439e5e3bd450747e3246301'
 related: []
 ---
 
@@ -139,6 +139,73 @@ exposure, not a theoretical one.
 3. **Citation is not derivation.** The corpus already distinguishes the two in practice; the
    declarations do not distinguish them in form. A revision should be able to state which it has.
 4. The staleness gap is cheap to close and currently open.
+
+## Addendum, 2026-09-10: the acquisition script's authority set
+
+The body above cites `dev/corpus/sync_aeat_record_design_corpus.py` as the corpus acquisition
+path but never measures its coverage. This addendum does, because a later ruling needs the
+numbers. Every figure here was re-measured against the live tree on 2026-09-10 at
+`50850ffc12`; three findings circulated in draft before that measurement were wrong and are
+corrected explicitly below, per `aeat-agent-orchestration`.
+
+**The declared authority set reaches a third of the corpus.** `_REQUIRED` holds **80** entries.
+The manifests hold **248** artefacts across **58** modelos. A `_RequiredArtifact` renders its URL
+as `f"{_STATIC}/{relative_url}"`, so it can name only documents under the AEAT static-files host.
+Joining the two sets by URL and alias leaves **168 of 248 manifested artefacts named by no
+`_REQUIRED` entry** — concentrated but not localised, spanning 31 modelos, heaviest at M100 (29),
+M390 (18), M200 (17), M303 and M202 (14 each).
+
+**Seven of the 168 are off-host and therefore inexpressible, not merely undeclared.** Five M184
+*Orden* PDFs, one M270 *Orden* PDF, and one M186 anexo PNG are hosted on `boe.es`. No
+`relative_url` can express them under `_STATIC`, so this class cannot be admitted by adding rows;
+it needs a second declaration locus.
+
+**All seven are registered on the registry side.** *This corrects a draft finding that six were
+registered and the M186 PNG was registered by nothing.* Each of the seven carries a
+`corpus_path` source declaration under `src/cadrumo/_data/registry/aeat/legal/`: the M184 five in
+`atribucion-rentas.toml` as `authority = "boe"`, `kind = "record_design"`,
+`design_authority = "provenance_only"`; M270 in `modelo-270.toml` as `record_design` with a
+`record_design_epoch`; and the M186 PNG in `modelo-186.toml` as `kind = "form_spec"`, a
+deliberate choice the file itself justifies — the record-design reader addresses only
+`.pdf/.xls/.xlsx/.xlsm`, and declaring `record_design` over an image asserts a parseability it
+does not have and hard-fails the registry load. The asymmetry is one-directional: the registry
+knows about these artefacts and the acquisition script does not.
+
+**`--pull` does not drop them.** *This corrects a draft finding that `_write_manifests` rebuilds
+each manifest from the `_REQUIRED` join and that `--pull` is therefore a data-loss operation.*
+It does not. `_pull` calls `_load_manifests()`, iterates `_REQUIRED`, skips any entry already
+represented, and *appends* the rest; `_write_manifests` then recomputes `artefact_count` from the
+loaded-and-appended list. Nothing prunes an artefact absent from `_REQUIRED`. `--pull` is
+additive, and would in fact repair the stale aggregate recorded below.
+
+**The offline check is red today.** Per-modelo `artefact_count` is correct in all 58 manifests.
+The root aggregate is not: it records **247** artefacts where the corpus holds 248, and M270 as 1
+where it holds 2. Running the script with no arguments exits **1** on exactly those two lines.
+This is pre-existing on `main`, not introduced by any working-tree change, and it means the 247
+figure this document quotes elsewhere is the stale number rather than the held one.
+
+**No invariant requires an artefact to be reproducible.** `check()` asserts one direction only —
+that every `_REQUIRED` URL appears in some manifest. It rehashes stored bytes, compares
+aggregates, and reconciles the historical-exclusion and unattested-file censuses. It never asks
+the converse: that a manifested artefact resolve to a declared authority from which it could be
+re-obtained. That is why 168 artefacts sit in the corpus with no acquisition path and no gate
+notices.
+
+**Nine artefacts carry a `source_page` that is not an index page.** M145 and M280 record the
+static file URL itself; the seven off-host artefacts record their own BOE URL or a `buscar/act`
+permalink. `_PAGES` holds the declared index pages, and none of these nine values is among them,
+so the field's stated meaning — the index page on which the document was found — is not what it
+carries in these rows.
+
+### Addendum confidence
+
+VERIFIED by direct measurement of the live tree: all counts above, the off-host set and its seven
+registry declarations, the `_pull` append semantics read from source, the non-zero exit of the
+offline check, and the nine non-index `source_page` values.
+
+NOT ESTABLISHED: whether each of the 168 undeclared artefacts *should* be reachable from a
+declared authority, or whether some are legitimately terminal captures. The measurement shows the
+gap exists; it does not classify it.
 
 ## Confidence
 

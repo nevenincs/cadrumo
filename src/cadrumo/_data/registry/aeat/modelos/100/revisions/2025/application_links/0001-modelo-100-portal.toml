@@ -1,0 +1,13 @@
+# Modelo 100 is filed through Renta WEB, AEAT's assisted borrador/declaracion
+# surface, rather than through a standalone procedimiento page. Binding the
+# portal surface here is what makes `portals_for_modelo("100")` resolve; before
+# this declaration existed the modelo resolved NO portal at all, alone among
+# the filing modelos, because its only portal-surface link named an adapter
+# module that had been deleted.
+[[revisions."2025".application_links]]
+id = "modelo-100-portal"
+surface = "portal"
+consumer = "portal_renta_web_borrador"
+requires_snapshot = true
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-modelo-100-procedure"]

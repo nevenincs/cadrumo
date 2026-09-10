@@ -2,8 +2,9 @@ modelo:
   schema:
     '349':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 349. Adatszolgáltatási bevallás. A Közösségen belüli
+          ügyletek összesítő nyilatkozata.
+        title: A Közösségen belüli ügyletek összesítő nyilatkozata
       revision:
         2020-y-siguientes:
           casilla:

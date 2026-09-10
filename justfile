@@ -180,15 +180,62 @@ rag-service-start:
 rag-service-stop:
     uv run --no-sync vaultspec-rag server stop
 
-# Report what the temp directory is holding, and which sessions still own it. Deletes nothing.
-[group('maintenance')]
-dev-temp-report:
-    uv run --no-sync python -m dev.env.temp_reaper
+# One reclamation surface over three families that used to be three commands:
+# ignored worktree output, release-build scratch under `var/`, and the temp
+# directory's pytest/session/test-run storage. They were split by which module
+# happened to own the rules, which is not a split an operator can act on -- the
+# largest accrual moves between `var/` and `.logs/` depending on what has been
+# run, so a report covering one at a time never showed where the space went.
+#
+# ── Blast radius, for whoever or whatever is about to run `clean-apply` ──────
+#
+# NOT AT RISK, under any flag. Tracked files, staged changes, and untracked
+# files that are not gitignored are never enumerated, never sized and never
+# removed. So are `.env` and `env/`, every `vault*` tree, `.venv`, `secrets/`,
+# `cadrumo-storage/`, and anything named like key material (`*.key`, `*.kdf`,
+# `*.pem`, `*.db`). In-flight work is safe; that is the one guarantee here that
+# is structural rather than a judgement call.
+#
+# AT RISK, and the reason this is not a routine command. `clean-apply` deletes
+# irreversibly -- no trash, no undo -- and it REACHES OUTSIDE THIS WORKTREE:
+#   * the OS temp directory, including the scratchpads of OTHER Claude Code
+#     sessions on this machine. Those carry no owner on disk, so abandonment is
+#     INFERRED from 72h of silence on two activity signals, not observed. A
+#     colleague or agent whose session has been idle over a long weekend is
+#     indistinguishable from an abandoned one, and this command will take it.
+#   * `.logs/test-runs/`, which is failure evidence from earlier runs. Runs
+#     still inside the retention window are kept; interrupted ones whose owner
+#     is gone are not.
+#   * `var/`, where the sweep removes only names matching a REGISTERED scratch
+#     family. A name carrying its owner is removed when that process is
+#     OBSERVED gone; a name carrying no readable owner is removed on 24h of
+#     mtime silence, which is an inference the automatic callers never make and
+#     `clean-apply` does. Everything else under `var/` -- the probe and cohort
+#     trees kept by hand, tens of gigabytes of them -- is reported as unclaimed
+#     and left alone, so this section frees far less than it lists.
+#
+# So: run `just clean` first and READ IT. The reap set comes from ignore rules,
+# a name-based protection list, and each family's own liveness evidence, and a
+# protection list is exactly the kind of thing that is wrong once and then wrong
+# silently. The KEEP, BLOAT and SPARE lines are how that gets caught before a
+# removal rather than after one. `--only <family>` narrows to one section
+# (`worktree`, `var-scratch`, `temp`); `--verbose` un-truncates the long tails.
+#
+# BOTH RECIPES ALWAYS EXIT 0, including `clean-apply`. This is deliberate -- a
+# maintenance report has no verdict to fail a build on -- but it means the exit
+# status carries NO information about what happened. An automated caller cannot
+# use `$?` to tell a clean tree from a tree it just emptied; it has to read the
+# output. Do not wire either recipe into a gate, a hook, or a pre-commit step.
 
-# Reclaim the session scratchpads the report judged abandoned. Read the report first.
+# READ-ONLY. Report reclaimable disk across worktree output, var/ build scratch and temp storage, plus git-directory bloat. Deletes nothing, always exits 0.
 [group('maintenance')]
-dev-temp-reap:
-    uv run --no-sync python -m dev.env.temp_reaper --apply
+clean *ARGS:
+    uv run --no-sync python -m dev.env.clean {{ARGS}}
+
+# DESTRUCTIVE AND IRREVERSIBLE. Deletes what `just clean` marked REAP, including outside this worktree (OS temp, other agent sessions, test-run evidence). Run `just clean` and read it first. Always exits 0, so the exit status proves nothing.
+[group('maintenance')]
+clean-apply *ARGS:
+    uv run --no-sync python -m dev.env.clean --apply {{ARGS}}
 
 # ── Static checks (Verify, Read-only) ────────────────────────────────────────
 
@@ -238,13 +285,13 @@ check-docs-api:
 check-docs-synonyms:
     @uv run --no-sync python -m dev.docs.terminology.synonyms validate
 
-# Verify the production registry compiler and the bundled parity-oracle bindings.
-# The two commands are dependent: a failed production verification invalidates
+# Verify registry integrity and the bundled parity-oracle bindings.
+# The two commands are dependent: a failed integrity verification invalidates
 # any downstream parity claim, so this health gate stops before the audit.
-[doc('Verify the production registry and audit every bundled parity-oracle binding.')]
+[doc('Verify registry integrity and audit every bundled parity-oracle binding.')]
 [group('check')]
 check-registry:
-    @uv run --no-sync aeat app registry verify
+    @uv run --no-sync python -m dev.registry.conformance integrity
     @uv run --no-sync python -m dev.registry.parity.maintenance_cli audit-oracles
 
 # Refuse numeric product policy embedded beside modelo-routing branches.
@@ -351,6 +398,20 @@ fix-corpus-text:
 [group('check')]
 check-corpus-text:
     @uv run --no-sync python -m dev.corpus.extract_manual_corpus_text --check
+
+# Operator-run: regenerate committed normative HTML and record-design workbook
+# sidecars after their authoritative corpus sources change.
+[doc('Operator-run: regenerate committed corpus HTML and workbook sidecars after source changes.')]
+[group('fix')]
+fix-corpus-sidecars:
+    @uv run --no-sync python -m dev.corpus.extract_corpus_sidecars
+
+# Freshness gate: compare every enrolled HTML/workbook sidecar with the exact
+# current extractor output without writing.
+[doc('Freshness gate: fail when committed corpus HTML or workbook sidecars drift from source.')]
+[group('check')]
+check-corpus-sidecars:
+    @uv run --no-sync python -m dev.corpus.extract_corpus_sidecars --check
 
 # Build every distribution the release publishes, then refuse any file the index
 # would reject on size. Same two operations the publish workflow performs, in the
@@ -525,6 +586,11 @@ check-semantic:
 check-workflow:
     @uv run --no-sync python -m dev.actionlint
     @uv run --no-sync python -m dev.ci_contract
+
+[doc('Mutation-prove each merge-check contract fails and passes in isolation.')]
+[group('check')]
+prove-check-set:
+    @uv run --no-sync python dev/ci/prove_check_set_guards.py
 
 # Run all pre-commit hooks via prek. Silent on success; replays hook output on failure.
 [group('check')]
@@ -816,6 +882,7 @@ test-integration:
 [doc('Run the dev/ tooling gates that no other lane reaches (audit, deploy, env, identity, locales, sanitizer, registry, docs, agent-eval, ingest-harness, and TUI-harness subsystems).')]
 [group('test')]
 test-dev-tooling:
+    @just check-corpus-sidecars
     @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not resident_service and not external_tool" dev/audit/tests dev/corpus/tests dev/deploy/tests dev/docs/tests dev/env/tests dev/identity/tests dev/locales/tests dev/readme/tests dev/tests dev/test_runs/tests dev/sanitizer/tests dev/registry/tests dev/registry/newmodelo/tests dev/registry/aeip/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests dev/agent_eval/tests dev/ingest_harness/tests dev/containers/tests dev/smoke/tests dev/tui/tests dev/tui/harness/tests dev/registry/parity/tests
 
 # Run the registry conformance suite. It sits in its own lane rather than in

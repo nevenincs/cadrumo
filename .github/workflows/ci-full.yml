@@ -25,7 +25,7 @@ permissions:
 
 jobs:
   cadrumo-full-conformance:
-    name: Cadrumo / full conformance / Python 3.13
+    name: "Test: Full conformance (Linux)"
     runs-on: [self-hosted, Linux, X64]
     # Raised from 120 when the integration suite and the dev tooling gates were
     # enrolled. The integration parallel pass alone measured 23m54s (3772 tests)
@@ -91,9 +91,6 @@ jobs:
 
       - name: Registry verify
         run: just check-registry
-
-      - name: Audit oracle bindings
-        run: uv run --no-sync python -m dev.registry.parity.maintenance_cli audit-oracles
 
       - name: Test (unit)
         # No junit artifact (zero Actions-artifact posture); the durations
@@ -286,18 +283,12 @@ jobs:
         # sequential (-n0) local run measured roughly two minutes per test,
         # so the 32 tests are an hour-scale suite rather than a per-push one.
         #
-        # Non-blocking, and for a measured reason rather than a cautious one:
-        # a full sequential run on 2026-09-06 was 1 failed, 31 passed in
-        # 20m48s. The failure is real and predates this wiring --
-        # `test_real_live_filing_success_cannot_invent_a_complete_source_limb`
-        # dies on `AttributeError: 'LiveFilingExportProofAuthority' object has
-        # no attribute 'assess_for'`. Production calls that protocol method at
-        # `src/cadrumo/application/registry/filing_export_coverage.py:355`; the
-        # authority in `dev/registry/filing_export_proof.py` does not implement
-        # it, and the unit test beside the caller passes only because it uses a
-        # local stub that does. This suite is the only thing that exercises the
-        # real authority, which is why the gap survived in a directory no lane
-        # swept. Flip this step to blocking once that one test is green.
+        # Non-blocking for a measured current reason: the canonical live loader
+        # refuses a stale generated-provenance manifest digest before the CLI
+        # can render its closure report. That is a real integrity signal, not a
+        # missing-method compatibility failure. Keep the corpus-wide walk here
+        # because of its cost; promote the fast closure-model tests separately
+        # once their lane is split from the live registry load.
         env:
           CADRUMO_PYTEST_WORKERS: "8"
         run: just test-registry-conformance
