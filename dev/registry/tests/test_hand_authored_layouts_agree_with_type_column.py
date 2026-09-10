@@ -33,10 +33,14 @@ from ..analysis.hand_authored_type_column import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-#: Fields the official design types ``N`` that the schema refuses to sign. Modelo
-#: 714 ships these twelve per revision as ``integer``; the schema signs money
-#: only, and re-typing them as money would add implied decimals the design never
-#: stated. They stay unsigned until the schema can sign an integer amount.
+#: Fields the official design types ``N`` that the schema refuses to sign. In
+#: modelo 714 these are the twelve "% participación individual/familiar" cells of
+#: the exempt-shareholding sections, where the same design types every other
+#: percentage ``Num``. A shareholding percentage cannot be negative, so the
+#: unsigned declaration writes exactly the bytes a signed one would for every
+#: value that can exist, and refuses a negative rather than mis-writing it.
+#: Signing them would need a signed integer the schema does not have, for a
+#: value no filing can carry, so they are declared here rather than changed.
 _BLOCKED_PER_REVISION: dict[str, tuple[int, str]] = {
     f"714/{year}": (12, "data type 'integer' cannot be signed; only money can")
     for year in ("2021", "2022", "2023", "2024", "2025")
