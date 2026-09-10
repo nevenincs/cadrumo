@@ -5,7 +5,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:a9cc1c521052003ccfe8ff32dd29bd685e6f7953b246a3afd939a00320a0f6b2'
+body_hash: 'sha256:6afefd8e08441706a6b7455f61c904965d56f2ab3eee88492e789834a94e9a1a'
 related:
   - "[[2026-09-09-registry-edition-authoring-edition-restatement-measurement-research]]"
   - "[[2026-09-09-registry-edition-authoring-registry-mechanics-audit-research]]"
