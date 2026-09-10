@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-10'
 body_schema: body-v2
-body_hash: 'sha256:8604940f59effb76b374dce3141a0cfff045362c411ddeaddab0db4c0e4c4536'
+body_hash: 'sha256:703d164dc45422af3178c737c5db272c1510c5c8b4bab7ea14e90e843dbd5ced'
 ---
 
 # `facts-registry` plan
@@ -152,10 +152,10 @@ Rewire treaty and deadline consumers, retain apoderamientos as non-governed voca
 
 - [x] `W03.P13.S52` - Rewire treaty consumers while retaining apoderamientos as classified non-governed product vocabulary; `src/cadrumo/domain/calculations/registry/_formula_runtime_irnr.py and src/cadrumo/entrypoints/cli/config_payloads.py`.
 - [x] `W03.P13.S53` - Rewire deadline and notification consumers while retaining unclassified amendment and foreign-asset projections pending evidence; `src/cadrumo/domain/deadlines and src/cadrumo/core`.
-- [ ] `W03.P13.S68` - Replace unbounded legal-parameter projections with source-cited, fact-specific temporal variants and refuse ungrounded historical dates; `src/cadrumo/domain/calculations/registry/facts/legal_parameters.py and src/cadrumo/_data/registry/aeat/legal`.
+- [ ] `W03.P13.S68` - Capture bounded hash-pinned BOE redaction evidence and author source-cited, fact-specific temporal fragments under the governed facts authority; `src/cadrumo/_data/registry/aeat/facts and src/cadrumo/_data/registry/aeat/legal and src/cadrumo/domain/calculations/registry/facts/legal_parameters.py`.
 - [ ] `W03.P13.S64` - Migrate remaining legal-parameter consumers only after their facts carry source-grounded temporal applicability; `src/cadrumo/application/modelo/_objective_estimation_advisory.py, src/cadrumo/domain/transactions, and src/cadrumo/domain/calculations/registry/facts/legal_parameters.py`.
 - [ ] `W03.P13.S66` - Replace generic fact selectors with provider-owned validated applicability coordinates before consumer-boundary verification; `src/cadrumo/domain/calculations/registry/facts and src/cadrumo/domain/calculations/registry`.
-- [ ] `W03.P13.S69` - Prove legal-parameter temporal coverage, date-axis selection, provenance, and refusal outside source-grounded windows; `src/cadrumo/domain/calculations/registry/facts/tests and src/cadrumo/domain/calculations/registry`.
+- [ ] `W03.P13.S69` - Enforce and prove legal-parameter fact temporal coverage, date-axis selection, provenance, and refusal outside source-grounded windows; `src/cadrumo/domain/calculations/registry/facts/tests and src/cadrumo/domain/calculations/registry/facts/validation.py`.
 
 ### Phase `W03.P14` - Verify consumer boundary
 
