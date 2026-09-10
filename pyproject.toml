@@ -388,6 +388,10 @@ dev = [
   # Formatting-preserving syntax engine for the repository-owned, manifest-
   # bounded object-name rename transforms. Development tooling only.
   "libcst>=1.9.0",
+  # Reads the repository's own .gitignore rules so development tooling can
+  # enumerate the source tree in-process. Git is not a declared dependency, so
+  # no dev tool may shell out to it to learn which files exist.
+  "pathspec>=1.1,<2",
   # The capability-gated optional integrations (now in
   # [project.optional-dependencies]) are pulled into the dev/test/CI
   # environment here so the full test suite — which imports every adapter —
