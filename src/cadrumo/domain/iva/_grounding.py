@@ -1,4 +1,4 @@
-"""Every provision an IVA registry table cites is resolved against real law.
+"""Runtime IVA citation checks against signed authority evidence.
 
 The tables under ``registry/aeat/iva/`` carry regulatory values -- rates, recargo
 tiers, place-of-supply placements, territorial exclusions -- and each row names
@@ -7,16 +7,9 @@ between a value and a wrong filing, and until a table's loader resolves it the
 citation is validated by nothing: an identifier naming a provision nobody defined
 parses exactly like one naming a provision the BOE actually carries.
 
-Authority-enrolled IVA facts are verified by the registry facts validator. This
-module remains the legacy facade for direct table loaders and for IVA tables not
-yet enrolled as providers, and it delegates to the registry's own evidence
-validator rather than re-implementing a check beside each table. That delegation
-is the load-bearing part. :func:`~domain.calculations.registry.verify_legal_reference_grounding`
-resolves the cited catalogue entry's ``corpus_ref`` to the ANCHORED unit of the
-bundled consolidated text and checks the entry's ``required_text`` inside that
-unit; a check written locally against a whole consolidated law would pass on any
-phrase occurring anywhere in six hundred thousand characters, which is a
-different and much weaker property wearing the same name.
+The signed artifact projects the anchor-scoped legal text that publication
+validated.  Runtime consumes that projection only: authoring corpus readers and
+their repair or fallback paths stay in development tooling.
 
 WHY VERIFICATION HAPPENS AT LOAD RATHER THAN IN A TEST. A table whose grounding
 is asserted only by a test ships its rows to every caller that imports it and
@@ -35,24 +28,17 @@ typed rows, so a table cannot be covered by accident and cannot be skipped by
 one.
 
 See Also:
-    :func:`~domain.calculations.registry.verify_legal_reference_grounding`
-        The registry's evidence validator, and the anchor-scoped resolution
-        every citation here is checked through. The grounding-only variant: a
-        rate table's citations are checked for real corpus backing, which is a
-        different question from whether an operator has countersigned them for
-        filing, and a table that loads is not thereby a table that may be filed.
+    :meth:`~domain.calculations.registry.authority.ValidatedRegistryAuthority.legal_quotation_is_grounded`
+        The artifact authority query every runtime quotation uses.
     :class:`~domain.iva.IvaRateRecord`
         The rate row whose ``legal_refs`` were the first to be routed this way.
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Mapping, Sequence
-from pathlib import Path
+from collections.abc import Iterable, Mapping, Sequence
 from typing import TYPE_CHECKING
 
-from ...core.hashing import content_hash_hex, sha256_file
-from .compilation_catalogues import compiling_catalogues_in_scope
 from .errors import IvaCatalogueError
 
 if TYPE_CHECKING:
@@ -62,107 +48,24 @@ if TYPE_CHECKING:
     from ..calculations.registry.schema_references import LegalReference, SourceReference
 
 
-def registry_catalogues() -> tuple[Mapping[str, LegalReference], Mapping[str, SourceReference], Path]:
-    """Return catalogues from the signed runtime authority, or from the compilation in progress.
+def registry_catalogues() -> tuple[Mapping[str, LegalReference], Mapping[str, SourceReference]]:
+    """Return catalogue facts from the one signed runtime authority.
 
-    The artifact is the only runtime source of catalogue facts. Its source root
-    remains the package data root solely for resolving immutable cited corpus
-    evidence; IVA cannot substitute a mutable registry root.
-
-    Returns:
-        The legal catalogue keyed by reference id, the source catalogue keyed by
-        source id, and the bundled root every ``corpus_ref`` is relative to.
+    Source trees are compiler input, never a product-time verification source.
     """
-    # Local import keeps the public IVA facade outside the registry's binding
-    # import cycle.
-    compiling = compiling_catalogues_in_scope()
-    if compiling is not None:
-        return compiling
     from ..calculations.registry.authority import bundled_authority
 
     authority = bundled_authority()
-    return authority.catalogues.legal, authority.catalogues.sources, authority.source_root
-
-
-def legal_evidence_fingerprints(
-    reference_ids: Iterable[str],
-    *,
-    legal: Mapping[str, LegalReference],
-    source_root: Path,
-    file_hasher: Callable[[Path], str] = sha256_file,
-) -> tuple[tuple[str, ...], ...]:
-    """Fingerprint cited legal records and the corpus bytes their checks read.
-
-    A catalogue cache can safely reuse a green verification only while both the
-    legal declaration and its cited document plus extracted-corpus sidecar are
-    byte-identical.  Missing or escaping files are represented in the key so
-    their later creation or correction cannot retain a prior cache result; the
-    verifier remains responsible for producing the user-facing refusal.
-    """
-    fingerprints: list[tuple[str, ...]] = []
-    fingerprinted_evidence_paths: set[Path] = set()
-    for reference_id in sorted(set(reference_ids)):
-        reference = legal.get(reference_id)
-        if reference is None:
-            fingerprints.append(("legal", reference_id, "unknown"))
-            continue
-        fingerprints.append(
-            ("legal", reference_id, content_hash_hex(reference.model_dump(mode="json"))),
-        )
-        document = source_root / reference.corpus_ref.partition("#")[0]
-        for evidence_path in (document, document.with_name(document.name + ".extracted.json")):
-            resolved_evidence_path = _resolved_evidence_path(evidence_path)
-            if resolved_evidence_path in fingerprinted_evidence_paths:
-                continue
-            fingerprinted_evidence_paths.add(resolved_evidence_path)
-            fingerprints.extend(
-                _evidence_file_fingerprint(
-                    evidence_path,
-                    source_root=source_root,
-                    file_hasher=file_hasher,
-                ),
-            )
-    return tuple(fingerprints)
-
-
-def _resolved_evidence_path(path: Path) -> Path:
-    """Return a canonical deduplication key without masking later diagnostics."""
-    try:
-        return path.resolve()
-    except OSError:
-        return path.absolute()
-
-
-def _evidence_file_fingerprint(
-    path: Path,
-    *,
-    source_root: Path,
-    file_hasher: Callable[[Path], str],
-) -> tuple[tuple[str, ...], ...]:
-    """Describe one cited corpus file without pre-empting verifier diagnostics."""
-    try:
-        resolved_root = source_root.resolve()
-        resolved = path.resolve()
-    except OSError as exc:
-        return (("evidence", str(path), "unresolvable", str(exc)),)
-    if resolved_root not in resolved.parents and resolved != resolved_root:
-        return (("evidence", str(path), "escapes_source_root"),)
-    try:
-        stat = resolved.stat()
-        digest = file_hasher(resolved)
-    except OSError as exc:
-        return (("evidence", str(resolved), "unavailable", str(exc)),)
-    return (("evidence", str(resolved), str(stat.st_size), str(stat.st_mtime_ns), digest),)
+    return authority.catalogues.legal, authority.catalogues.sources
 
 
 def legal_ref_failures(
     row: str,
     reference_ids: Iterable[str],
     legal: Mapping[str, LegalReference],
-    source_root: Path,
     verified: set[str],
 ) -> list[str]:
-    """Resolve and verify one row's legal refs, memoising the ids that pass.
+    """Resolve signed legal evidence for one runtime row, memoising passed ids.
 
     Accumulating rather than raising, so one load reports every ungrounded row
     it found instead of the first. A caller that raises on the first failure
@@ -173,18 +76,16 @@ def legal_ref_failures(
         row: A label identifying the row, quoted verbatim into each failure.
         reference_ids: The provision identifiers the row cites.
         legal: The legal catalogue the identifiers must resolve in.
-        source_root: The root every ``corpus_ref`` resolves against.
         verified: Ids already verified in this load, extended in place. Shared
-            across rows because verification reads and normalises corpus text,
-            which is the expensive half of a load.
+            across rows because evidence resolution is deterministic per signed
+            authority artifact.
 
     Returns:
         One message per failure, empty when every citation verified.
     """
-    # Keep this import local: see :func:`registry_catalogues`.
-    from ..calculations.registry.errors import RegistryValidationError
-    from ..calculations.registry.legal import verify_legal_reference_grounding
+    from ..calculations.registry.authority import bundled_authority
 
+    authority = bundled_authority()
     failures: list[str] = []
     for ref_id in reference_ids:
         if ref_id in verified:
@@ -194,8 +95,8 @@ def legal_ref_failures(
             failures.append(f"{row}: unknown legal_ref {ref_id!r}")
             continue
         try:
-            verify_legal_reference_grounding(reference, source_root=source_root)
-        except RegistryValidationError as exc:
+            authority.legal_evidence_text(ref_id)
+        except Exception as exc:
             failures.append(f"{row}: invalid legal_ref {ref_id!r}: {exc}")
             continue
         verified.add(ref_id)
@@ -216,11 +117,11 @@ def verify_table_legal_refs(table: str, citations: Sequence[tuple[str, Sequence[
             carrying its declared ``required_text`` at its declared anchor. The
             message enumerates every failure rather than the first.
     """
-    legal, _sources, source_root = registry_catalogues()
+    legal, _sources = registry_catalogues()
     verified: set[str] = set()
     failures: list[str] = []
     for row, reference_ids in citations:
-        failures.extend(legal_ref_failures(row, reference_ids, legal, source_root, verified))
+        failures.extend(legal_ref_failures(row, reference_ids, legal, verified))
     if failures:
         raise IvaCatalogueError(
             f"{table}: legal grounding verification failed:\n" + "\n".join(f" - {failure}" for failure in failures),

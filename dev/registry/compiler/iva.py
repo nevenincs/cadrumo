@@ -31,7 +31,6 @@ from cadrumo.domain.calculations.registry.facts.schema import (
 )
 from cadrumo.domain.calculations.registry.schema_base import DateAxis, SourceCitation
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
-from cadrumo.domain.iva._grounding import legal_ref_failures, verify_table_legal_refs
 from cadrumo.domain.iva.compilation_catalogues import compiling_catalogues, compiling_catalogues_in_scope
 from cadrumo.domain.iva.errors import IvaCatalogueError, IvaRateOverlapError, IvaValidationError
 from cadrumo.domain.iva.rates import IVA_RATE_FACT_ID
@@ -40,6 +39,7 @@ from cadrumo.domain.iva.schema import EUMemberState, IvaRateKind, IvaRateRecord
 from dev.registry.compiler.loader import load_shared_catalogues
 
 from .corpus_catalogue import verify_source_file
+from .iva_grounding import legal_ref_failures, verify_table_legal_refs
 from .loader_cache import toml_file_fingerprint
 from .loader_fingerprints import RegistryPathFingerprints
 
@@ -127,9 +127,13 @@ def _assert_no_overlap(state: EUMemberState, rates: Iterable[IvaRateRecord]) -> 
 
 
 def _verify_rate_grounding(table: Mapping[EUMemberState, tuple[IvaRateRecord, ...]], *, registry_root: Path) -> None:
-    catalogues = load_shared_catalogues(registry_root)
-    legal, sources = catalogues.legal, catalogues.sources
-    source_root = registry_root.parents[1]
+    compiling = compiling_catalogues_in_scope()
+    if compiling is None:
+        catalogues = load_shared_catalogues(registry_root)
+        legal, sources = catalogues.legal, catalogues.sources
+        source_root = registry_root.parents[1]
+    else:
+        legal, sources, source_root = compiling
     verified_legal: set[str] = set()
     verified_sources: set[str] = set()
     failures: list[str] = []

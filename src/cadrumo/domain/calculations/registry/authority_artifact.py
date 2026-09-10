@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import re
+from base64 import b64decode, b64encode
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -24,6 +25,7 @@ from ....core.atomic_write import atomic_write_bytes
 from ....core.ed25519_signing import digest_signature_is_valid, sign_digest_hex
 from ....core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant, sha256_hex
 from .schema import ModeloDefinition, RegistryCatalogues
+from .corpus_provenance import NormativeCorpusProvenance
 
 __all__ = [
     "AUTHORITY_ARTIFACT_SCHEMA_VERSION",
@@ -34,6 +36,7 @@ __all__ = [
     "AuthorityArtifactUnavailableError",
     "AuthorityEvidenceProjection",
     "PublishedLegalEvidence",
+    "PublishedSourceEvidence",
     "read_authority_artifact",
     "write_authority_artifact",
 ]
@@ -69,6 +72,7 @@ class PublishedLegalEvidence:
     legal_reference_id: str
     anchored_text: str
     text_sha256: str
+    provenance: NormativeCorpusProvenance = NormativeCorpusProvenance.OUT_OF_SCOPE
 
     def __post_init__(self) -> None:
         """Reject incomplete or altered publisher-projected text."""
@@ -83,10 +87,35 @@ class PublishedLegalEvidence:
 
 
 @dataclass(frozen=True, slots=True)
+class PublishedSourceEvidence:
+    """Publisher-validated source bytes required by a shipped workflow.
+
+    Corpus paths remain descriptive catalogue metadata.  A runtime reader gets
+    bytes only through this signed projection, never by joining that path to a
+    package or checkout root.
+    """
+
+    source_reference_id: str
+    payload: bytes
+    payload_sha256: str
+
+    def __post_init__(self) -> None:
+        if not self.source_reference_id:
+            raise ValueError("published source evidence requires a source reference id")
+        if not self.payload:
+            raise ValueError("published source evidence requires payload bytes")
+        if _IDENTITY_DIGEST.fullmatch(self.payload_sha256) is None:
+            raise ValueError("published source evidence requires a lowercase SHA-256 payload digest")
+        if sha256_hex(self.payload) != self.payload_sha256:
+            raise ValueError("published source evidence payload digest does not match its bytes")
+
+
+@dataclass(frozen=True, slots=True)
 class AuthorityEvidenceProjection:
     """Immutable evidence needed by citation consumers after publication."""
 
     legal: tuple[PublishedLegalEvidence, ...] = ()
+    sources: tuple[PublishedSourceEvidence, ...] = ()
 
     def __post_init__(self) -> None:
         """Reject non-deterministic or ambiguous evidence collections."""
@@ -97,6 +126,11 @@ class AuthorityEvidenceProjection:
         ids = tuple(item.legal_reference_id for item in self.legal)
         if len(ids) != len(set(ids)):
             raise ValueError("authority evidence projection legal reference ids must be unique")
+        source_ids = tuple(item.source_reference_id for item in self.sources)
+        if not isinstance(self.sources, tuple) or not all(isinstance(item, PublishedSourceEvidence) for item in self.sources):
+            raise TypeError("authority evidence projection source entries must be PublishedSourceEvidence tuples")
+        if len(source_ids) != len(set(source_ids)):
+            raise ValueError("authority evidence projection source reference ids must be unique")
 
     def legal_text(self, legal_reference_id: str) -> str:
         """Return publisher-validated text for one legal citation or refuse."""
@@ -112,6 +146,22 @@ class AuthorityEvidenceProjection:
         from ....core.corpus_text import normalise_corpus_text
 
         return bool(quotation.strip()) and normalise_corpus_text(quotation) in self.legal_text(legal_reference_id)
+
+    def legal_provenance(self, legal_reference_id: str) -> NormativeCorpusProvenance:
+        for item in self.legal:
+            if item.legal_reference_id == legal_reference_id:
+                return item.provenance
+        raise AuthorityArtifactFormatError(
+            f"published authority artifact has no evidence projection for legal reference {legal_reference_id!r}"
+        )
+
+    def source_bytes(self, source_reference_id: str) -> bytes:
+        for item in self.sources:
+            if item.source_reference_id == source_reference_id:
+                return item.payload
+        raise AuthorityArtifactFormatError(
+            f"published authority artifact has no evidence projection for source reference {source_reference_id!r}"
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -212,9 +262,18 @@ def _artifact_document(artifact: AuthorityArtifact) -> dict[str, object]:
                     "legal_reference_id": item.legal_reference_id,
                     "anchored_text": item.anchored_text,
                     "text_sha256": item.text_sha256,
+                    "provenance": item.provenance.value,
                 }
                 for item in artifact.evidence.legal
-            ]
+            ],
+            "sources": [
+                {
+                    "source_reference_id": item.source_reference_id,
+                    "payload_base64": b64encode(item.payload).decode("ascii"),
+                    "payload_sha256": item.payload_sha256,
+                }
+                for item in artifact.evidence.sources
+            ],
         },
     }
 
@@ -236,14 +295,25 @@ def _artifact_from_document(payload: Mapping[str, object]) -> AuthorityArtifact:
                 legal_reference_id=_required_string(_mapping_item(item, "evidence.legal"), "legal_reference_id"),
                 anchored_text=_required_string(_mapping_item(item, "evidence.legal"), "anchored_text"),
                 text_sha256=_required_string(_mapping_item(item, "evidence.legal"), "text_sha256"),
+                provenance=NormativeCorpusProvenance(
+                    _required_string(_mapping_item(item, "evidence.legal"), "provenance")
+                ),
             )
             for item in _required_sequence(evidence_document, "legal")
+        )
+        source_evidence = tuple(
+            PublishedSourceEvidence(
+                source_reference_id=_required_string(_mapping_item(item, "evidence.sources"), "source_reference_id"),
+                payload=_decode_base64(_required_string(_mapping_item(item, "evidence.sources"), "payload_base64")),
+                payload_sha256=_required_string(_mapping_item(item, "evidence.sources"), "payload_sha256"),
+            )
+            for item in _required_sequence(evidence_document, "sources")
         )
         return AuthorityArtifact(
             modelos=modelos,
             catalogues=catalogues,
             identity_digest=identity_digest,
-            evidence=AuthorityEvidenceProjection(legal=legal_evidence),
+            evidence=AuthorityEvidenceProjection(legal=legal_evidence, sources=source_evidence),
         )
     except (ValidationError, TypeError, ValueError) as exc:
         raise AuthorityArtifactFormatError("published authority artifact has an invalid authority payload") from exc
@@ -317,3 +387,10 @@ def _required_sequence(document: Mapping[str, object], field_name: str) -> Seque
     if not isinstance(value, list):
         raise AuthorityArtifactFormatError(f"published authority artifact field {field_name!r} must be an array")
     return value
+
+
+def _decode_base64(value: str) -> bytes:
+    try:
+        return b64decode(value.encode("ascii"), validate=True)
+    except ValueError as exc:
+        raise AuthorityArtifactFormatError("published authority artifact contains invalid base64 source evidence") from exc

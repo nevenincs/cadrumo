@@ -17,6 +17,7 @@ from .errors import RegistryValidationError
 
 __all__ = [
     "NormativeCorpusProvenance",
+    "classify_normative_corpus_bytes",
     "classify_normative_corpus_provenance",
     "resolve_normative_corpus_path",
 ]
@@ -101,7 +102,16 @@ def classify_normative_corpus_provenance(source_root: Path, corpus_ref: str) -> 
     if path is None:
         return NormativeCorpusProvenance.OUT_OF_SCOPE
 
-    payload = path.read_bytes()
+    return classify_normative_corpus_bytes(path.read_bytes())
+
+
+def classify_normative_corpus_bytes(payload: bytes) -> NormativeCorpusProvenance:
+    """Classify already-published normative bytes without resolving a path.
+
+    The artifact publisher uses this exact classifier while it still owns the
+    source tree. Runtime receives the resulting signed classification and never
+    needs a corpus root merely to repeat the same conclusion.
+    """
     if _EXCERPT_HEADER in payload or _BOE_DOCUMENT_ID.search(payload):
         return NormativeCorpusProvenance.BOE_ATTESTED
     if _BOE_STRUCTURAL_MARKUP.search(payload):
