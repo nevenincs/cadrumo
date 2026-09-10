@@ -111,11 +111,26 @@ def test_the_known_drifting_citations_are_refused_by_name(
     for fragment in ("modelo 100", "edition 2020", "[2020-01-01..2020-12-31]", "casilla 0066", "ley-35-2006:art-23"):
         assert fragment in message
 
-    superseded = refusals[CasillaCitationKey("100", "2021", "0100", "ley-35-2006:art-23")]
-    assert superseded.alternatives == ("ley-35-2006:art-23-2021",)
-
     later_orden = refusals[CasillaCitationKey("190", "2024", "decl.complementaria", "orden-hac-1431-2025:art-2")]
     assert later_orden.alternatives == ()
+
+
+def test_a_planted_superseded_citation_names_the_governing_alternative(
+    corpus: tuple[ModeloDefinition, ...], legal: Mapping[str, LegalReference]
+) -> None:
+    """The corpus carries no superseded-with-alternative citation once every real one is re-cited.
+
+    ``ley-35-2006:art-23-2021`` governs 2021-2023; the base ``ley-35-2006:art-23`` row governs
+    only from 2024. Planting the superseded reference on a casilla that does not already cite
+    it demonstrates the refusal names its governing alternative, the same shape a real drifting
+    citation would take.
+    """
+    modelo = _modelo(corpus, "100")
+    planted = _plant(modelo, "2022", "0066", "ley-35-2006:art-23")
+    new = set(casilla_citation_period_refusals(planted, legal)) - set(casilla_citation_period_refusals(modelo, legal))
+    assert [refusal.key for refusal in new] == [CasillaCitationKey("100", "2022", "0066", "ley-35-2006:art-23")]
+    (refusal,) = new
+    assert refusal.alternatives == ("ley-35-2006:art-23-2021",)
 
 
 def test_dropping_one_real_exception_exposes_its_citation(
