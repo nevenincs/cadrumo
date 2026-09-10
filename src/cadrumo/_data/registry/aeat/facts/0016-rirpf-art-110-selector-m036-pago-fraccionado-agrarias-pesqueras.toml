@@ -1,9 +1,9 @@
 [fact]
-fact_id = "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrario-objetiva"
+fact_id = "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrarias-pesqueras"
 family = "entity_set"
 
 [[fact.variants]]
-variant_id = "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrario-objetiva:2026-03-26"
+variant_id = "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrarias-pesqueras:2026-03-26"
 date_axis = "filing_period"
 valid_from = 2026-03-26
 legal_refs = ["rd-439-2007:art-110", "orden-eha-1274-2007:art-1"]

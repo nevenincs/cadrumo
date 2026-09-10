@@ -26,13 +26,15 @@ _SELECTOR_IDS = frozenset(
     {
         "rd-439-2007-art-109:selector-m036-actividades-exencion-pago-fraccionado",
         "rd-439-2007-art-109:selector-m036-actividades-base-neta-de-subvenciones",
-        "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrario-objetiva",
+        "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrarias-pesqueras",
+        "modelo-131:selector-m036-volumen-ingresos-agrario",
     }
 )
 _M036_TABLE_SOURCE = "aeat-m036-activity-code-table-2026-03-26"
 _ARTICLE_109_SOURCE = "boe-rirpf-art-109-2007-04-01"
 _ARTICLE_110_SOURCE = "boe-rirpf-art-110-2018-12-23"
 _FIRST_GROUNDED_DATE = date(2026, 3, 26)
+_M131_FIRST_GROUNDED_DATE = date(2026, 4, 1)
 
 
 def _catalogue() -> GovernedFactCatalogue:
@@ -51,45 +53,63 @@ def _resolve(fact_id: str, effective_date: date) -> ResolvedEntitySetFact:
 
 
 @pytest.mark.parametrize(
-    ("fact_id", "entities", "article_source"),
+    ("fact_id", "entities", "source_refs"),
     (
         (
             "rd-439-2007-art-109:selector-m036-actividades-exencion-pago-fraccionado",
             frozenset({"A02", "A04", "A05", "B01", "B02", "B03"}),
-            _ARTICLE_109_SOURCE,
+            (_M036_TABLE_SOURCE, _ARTICLE_109_SOURCE),
         ),
         (
             "rd-439-2007-art-109:selector-m036-actividades-base-neta-de-subvenciones",
             frozenset({"A02", "B01", "B02", "B03"}),
-            _ARTICLE_109_SOURCE,
+            (_M036_TABLE_SOURCE, _ARTICLE_109_SOURCE),
         ),
         (
-            "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrario-objetiva",
+            "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrarias-pesqueras",
             frozenset({"A02", "B01", "B02", "B03", "B05"}),
-            _ARTICLE_110_SOURCE,
+            (_M036_TABLE_SOURCE, _ARTICLE_110_SOURCE),
+        ),
+        (
+            "modelo-131:selector-m036-volumen-ingresos-agrario",
+            frozenset({"A02", "B01", "B02", "B03"}),
+            (_M036_TABLE_SOURCE, "aeat-modelo-131-instructions-2026-04-01", _ARTICLE_110_SOURCE),
         ),
     ),
 )
 def test_payment_fraction_selectors_resolve_from_the_bounded_m036_mapping_and_exact_boe_redaction(
-    fact_id: str, entities: frozenset[str], article_source: str
+    fact_id: str, entities: frozenset[str], source_refs: tuple[str, ...]
 ) -> None:
-    resolved = _resolve(fact_id, _FIRST_GROUNDED_DATE)
+    effective_date = _M131_FIRST_GROUNDED_DATE if fact_id.startswith("modelo-131:") else _FIRST_GROUNDED_DATE
+    resolved = _resolve(fact_id, effective_date)
 
     assert resolved.payload.entities == entities
-    assert resolved.variant_id.endswith(_FIRST_GROUNDED_DATE.isoformat())
-    assert resolved.source_refs == (_M036_TABLE_SOURCE, article_source)
+    assert resolved.variant_id.endswith(effective_date.isoformat())
+    assert resolved.source_refs == source_refs
 
 
 def test_payment_fraction_selectors_are_not_projected_by_the_legal_parameter_adapter() -> None:
     adapter_ids = {fact.fact_id for fact in compile_legal_parameter_facts(bundled_path("registry", "aeat"))}
+    authored_ids = {fact.fact_id for fact in load_governed_facts(bundled_path("registry", "aeat", "facts"))}
 
     assert not _SELECTOR_IDS & adapter_ids
+    assert "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrario-objetiva" not in authored_ids
 
 
-@pytest.mark.parametrize("fact_id", sorted(_SELECTOR_IDS))
-def test_payment_fraction_selectors_refuse_before_the_first_citable_m036_mapping(fact_id: str) -> None:
+@pytest.mark.parametrize(
+    ("fact_id", "before_first_window"),
+    (
+        ("rd-439-2007-art-109:selector-m036-actividades-exencion-pago-fraccionado", date(2026, 3, 25)),
+        ("rd-439-2007-art-109:selector-m036-actividades-base-neta-de-subvenciones", date(2026, 3, 25)),
+        ("rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrarias-pesqueras", date(2026, 3, 25)),
+        ("modelo-131:selector-m036-volumen-ingresos-agrario", date(2026, 3, 31)),
+    ),
+)
+def test_payment_fraction_selectors_refuse_before_their_first_citable_window(
+    fact_id: str, before_first_window: date
+) -> None:
     with pytest.raises(RegistryValidationError, match="has no variant for the exact query context"):
-        _resolve(fact_id, date(2026, 3, 25))
+        _resolve(fact_id, before_first_window)
 
 
 def test_payment_fraction_selectors_cite_hash_pinned_boe_redactions_and_the_m036_table() -> None:
@@ -104,7 +124,8 @@ def test_payment_fraction_selectors_cite_hash_pinned_boe_redactions_and_the_m036
     assert shared.sources[_ARTICLE_110_SOURCE].bytes == 11554
     assert shared.sources[_ARTICLE_110_SOURCE].applies_from == date(2018, 12, 23)
     assert shared.sources[_M036_TABLE_SOURCE].applies_from == _FIRST_GROUNDED_DATE
-    assert all(variant.valid_from == _FIRST_GROUNDED_DATE for fact in catalogue.facts.values() for variant in fact.variants)
+    assert catalogue.facts["modelo-131:selector-m036-volumen-ingresos-agrario"].variants[0].valid_from == _M131_FIRST_GROUNDED_DATE
+    assert shared.sources["aeat-modelo-131-instructions-2026-04-01"].applies_from == _M131_FIRST_GROUNDED_DATE
     assert (
         governed_fact_catalogue_failures(
             catalogue,
