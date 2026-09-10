@@ -8,7 +8,7 @@ from pathlib import Path
 
 from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from ..errors import RegistryValidationError
-from ..loader import load_legal_parameters_only
+from dev.registry.compiler.loader import load_legal_parameters_only
 from ..loader_cache import toml_file_fingerprint
 from ..loader_fingerprints import RegistryPathFingerprints
 from ..schema_base import DateAxis
@@ -26,10 +26,6 @@ LEGAL_PARAMETER_PROVIDER_DIRECTORY = "legal"
 
 _SCALAR_PARAMETER_IDS = frozenset(
     {
-        "lirpf-dt-32:eo-exclusion-rendimientos-conjunto-eur",
-        "lirpf-dt-32:eo-exclusion-rendimientos-factura-eur",
-        "lirpf-art-31:eo-exclusion-rendimientos-agricolas-ganaderos-forestales-eur",
-        "lirpf-dt-32:eo-exclusion-compras-eur",
     }
 )
 LEGAL_PARAMETER_FACT_IDS = _SCALAR_PARAMETER_IDS

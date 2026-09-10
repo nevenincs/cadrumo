@@ -319,6 +319,144 @@ source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BO
 review_status = "agent_reviewed"
 corpus_tier = "provision_excerpt"
 
+# LIRPF article 31 supplies the post-2016 base thresholds.  DT 32 has an
+# express, annually extended 2016--2024 override; later attempted extensions
+# were each left without effect by Congress and are not a fact source.
+
+[sources."boe-lirpf-art-31-2016-01-01"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2006-20764-art-31-redaction-20160101.xml"
+sha256 = "cc9b5fb71e940b6e08124dac96f811a277b1ca8fda8ce543b56ebae3c1775a39"
+bytes = 14877
+retrieved_at = 2026-09-10
+published_at = 2014-11-28
+applies_from = 2016-01-01
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2006-20764/texto/bloque/a31"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-lirpf-dt-32-2016-01-01"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2006-20764-dt-32-redaction-20160101.xml"
+sha256 = "dd24974cfea2ff3c8d73d04d968edf320783a0ec480d420e623f48e6e3b3155c"
+bytes = 1307
+retrieved_at = 2026-09-10
+published_at = 2015-10-30
+applies_from = 2016-01-01
+applies_to = 2017-12-31
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2006-20764/texto/bloque/dttrigesimasegunda"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-lirpf-dt-32-2018-01-01"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2006-20764-dt-32-redaction-20171230.xml"
+sha256 = "f82e5bc5f48c4897e397b47efd6d2d57a7580f1d536ae403b7c53a0586456132"
+bytes = 1207
+retrieved_at = 2026-09-10
+published_at = 2017-12-30
+applies_from = 2018-01-01
+applies_to = 2018-12-31
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2006-20764/texto/bloque/dttrigesimasegunda"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-lirpf-dt-32-2019-01-01"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2006-20764-dt-32-redaction-20181230.xml"
+sha256 = "c23da6ed7036adeee4cff655444169910370b68fa0e2c64979f62a7cc4aafe4c"
+bytes = 1415
+retrieved_at = 2026-09-10
+published_at = 2018-12-29
+applies_from = 2019-01-01
+applies_to = 2019-12-31
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2006-20764/texto/bloque/dttrigesimasegunda"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-lirpf-dt-32-2020-01-01"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2006-20764-dt-32-redaction-20191229.xml"
+sha256 = "d65ff6443f69268daf7e339b4bfe76cc245766b005a8d28034e37cf813623551"
+bytes = 1621
+retrieved_at = 2026-09-10
+published_at = 2019-12-28
+applies_from = 2020-01-01
+applies_to = 2020-12-31
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2006-20764/texto/bloque/dttrigesimasegunda"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-lirpf-dt-32-2021-01-01"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2006-20764-dt-32-redaction-20210101.xml"
+sha256 = "7ca68863165add050a6c6776b6ed48699594844210957903f005a2edf6195f32"
+bytes = 1798
+retrieved_at = 2026-09-10
+published_at = 2020-12-31
+applies_from = 2021-01-01
+applies_to = 2021-12-31
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2006-20764/texto/bloque/dttrigesimasegunda"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-lirpf-dt-32-2022-01-01"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2006-20764-dt-32-redaction-20220101.xml"
+sha256 = "37098345f21dbe81661961f50e4f24c4e169b3e5b265082058470df36facfc53"
+bytes = 1993
+retrieved_at = 2026-09-10
+published_at = 2021-12-29
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2006-20764/texto/bloque/dttrigesimasegunda"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-lirpf-dt-32-2023-01-01"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2006-20764-dt-32-redaction-20230101.xml"
+sha256 = "605de545d6ee4454271e0aec3e8725552c01098eae84401a6e4b2090e45299cf"
+bytes = 2148
+retrieved_at = 2026-09-10
+published_at = 2022-12-24
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2006-20764/texto/bloque/dttrigesimasegunda"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-lirpf-dt-32-2024-01-01"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2006-20764-dt-32-redaction-20231229.xml"
+sha256 = "761140fbe32f5c34a9c92e00c5b1d9f361acb193d947b333a2fbe3d5489b28c0"
+bytes = 2356
+retrieved_at = 2026-09-10
+published_at = 2023-12-28
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2006-20764/texto/bloque/dttrigesimasegunda"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
 # Official AEAT guidance gives the exact Modelo 036 activity-code table.  It
 # is intentionally a bounded source: its verified 2026-03-26 update marker
 # supports this vocabulary from that date, but says nothing about older form
