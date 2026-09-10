@@ -14,16 +14,20 @@ from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
 from pathlib import PurePosixPath
+from types import MappingProxyType
 from typing import TYPE_CHECKING, cast
 from urllib.parse import urlparse
 
 __all__ = [
+    "ArtifactCatalogue",
     "ArtifactDiagnostic",
     "ArtifactDiagnosticKind",
     "ArtifactDisposition",
     "ArtifactIdentity",
     "ArtifactRole",
     "DerivedArtifact",
+    "SemanticAnnotation",
+    "compile_artifact_catalogue",
     "declared_dispositions",
     "einvoice_manifest_identities",
     "manual_manifest_identity",
@@ -132,15 +136,35 @@ class DerivedArtifact:
 
 
 @dataclass(frozen=True, slots=True)
+class SemanticAnnotation:
+    """A non-authoritative annotation whose subject remains explicit."""
+
+    path: PurePosixPath
+    target_path: PurePosixPath
+
+    def __post_init__(self) -> None:
+        """Keep annotations in the catalog without upgrading their authority."""
+        object.__setattr__(self, "path", _bundled_path(self.path, field_name="path"))
+        object.__setattr__(self, "target_path", _bundled_path(self.target_path, field_name="target_path"))
+
+
+@dataclass(frozen=True, slots=True)
 class ArtifactDisposition:
     """A non-payload declaration that names its target and the reason for it."""
 
-    target_path: PurePosixPath
+    declaration_path: PurePosixPath
+    target_path: PurePosixPath | None
     reason: str
 
     def __post_init__(self) -> None:
         """Require the declared non-payload classification to be actionable."""
-        object.__setattr__(self, "target_path", _bundled_path(self.target_path, field_name="target_path"))
+        object.__setattr__(
+            self,
+            "declaration_path",
+            _bundled_path(self.declaration_path, field_name="declaration_path"),
+        )
+        if self.target_path is not None:
+            object.__setattr__(self, "target_path", _bundled_path(self.target_path, field_name="target_path"))
         if not self.reason.strip():
             raise ValueError("reason must be non-empty")
 
@@ -152,6 +176,145 @@ class ArtifactDiagnostic:
     kind: ArtifactDiagnosticKind
     path: PurePosixPath | None
     message: str
+
+
+@dataclass(frozen=True, slots=True)
+class ArtifactCatalogue:
+    """Read-only catalog output and its non-collapsed diagnostic findings.
+
+    This is intentionally a compilation result, not a registry authority.  It
+    has no filesystem traversal: callers pass the bounded set of paths whose
+    classification they want checked.
+    """
+
+    identities: Mapping[PurePosixPath, ArtifactIdentity]
+    roles: Mapping[PurePosixPath, ArtifactRole]
+    diagnostics: tuple[ArtifactDiagnostic, ...]
+
+
+def compile_artifact_catalogue(
+    *,
+    known_paths: Sequence[str | PurePosixPath],
+    official_identities: Sequence[ArtifactIdentity] = (),
+    derived_artifacts: Sequence[DerivedArtifact] = (),
+    semantic_annotations: Sequence[SemanticAnnotation] = (),
+    dispositions: Sequence[ArtifactDisposition] = (),
+    fixture_paths: Sequence[str | PurePosixPath] = (),
+    registry_identities: Sequence[ArtifactIdentity] = (),
+) -> ArtifactCatalogue:
+    """Compile bounded artifact claims into roles and typed diagnostics.
+
+    ``known_paths`` is deliberately supplied by the caller rather than found
+    by walking a filesystem.  That keeps this module a deterministic compiler
+    and lets each consumer decide the corpus boundary it owns.  Registry
+    identities are compared only as byte-identity projections; this function
+    neither validates nor publishes registry authority.
+    """
+    known = {_bundled_path(path, field_name="known_path") for path in known_paths}
+    fixtures = {_bundled_path(path, field_name="fixture_path") for path in fixture_paths}
+    diagnostics: list[ArtifactDiagnostic] = []
+    identities: dict[PurePosixPath, ArtifactIdentity] = {}
+    role_claims: dict[PurePosixPath, set[ArtifactRole]] = {}
+
+    def diagnostic(kind: ArtifactDiagnosticKind, path: PurePosixPath | None, message: str) -> None:
+        diagnostics.append(ArtifactDiagnostic(kind=kind, path=path, message=message))
+
+    def claim_role(path: PurePosixPath, role: ArtifactRole) -> bool:
+        if path not in known:
+            diagnostic(
+                ArtifactDiagnosticKind.ORPHANED_TARGET,
+                path,
+                "catalog role claim lies outside the supplied corpus boundary",
+            )
+            return False
+        role_claims.setdefault(path, set()).add(role)
+        return True
+
+    for identity in official_identities:
+        if not claim_role(identity.path, ArtifactRole.OFFICIAL_ARTIFACT):
+            continue
+        existing = identities.get(identity.path)
+        if existing is not None and existing != identity:
+            diagnostic(
+                ArtifactDiagnosticKind.CONFLICTING_IDENTITY,
+                identity.path,
+                "multiple official identity declarations disagree for this bundled path",
+            )
+        else:
+            identities.setdefault(identity.path, identity)
+    for derivative in derived_artifacts:
+        in_boundary = claim_role(derivative.path, ArtifactRole.DERIVED_ARTIFACT)
+        source = identities.get(derivative.input_path)
+        if not in_boundary:
+            continue
+        if source is None:
+            diagnostic(
+                ArtifactDiagnosticKind.STALE_DERIVATIVE,
+                derivative.path,
+                "derived artifact names an input that has no official identity",
+            )
+        elif source.sha256 != derivative.input_sha256:
+            diagnostic(
+                ArtifactDiagnosticKind.STALE_DERIVATIVE,
+                derivative.path,
+                "derived artifact input digest differs from the current official identity",
+            )
+
+    for annotation in semantic_annotations:
+        in_boundary = claim_role(annotation.path, ArtifactRole.SEMANTIC_ANNOTATION)
+        if not in_boundary:
+            continue
+        if annotation.target_path not in known:
+            diagnostic(
+                ArtifactDiagnosticKind.ORPHANED_TARGET,
+                annotation.path,
+                "semantic annotation names a target outside the supplied corpus boundary",
+            )
+
+    for fixture in fixtures:
+        claim_role(fixture, ArtifactRole.FIXTURE)
+
+    for disposition in dispositions:
+        in_boundary = claim_role(disposition.declaration_path, ArtifactRole.DISPOSITION)
+        if in_boundary and disposition.target_path is not None and disposition.target_path not in known:
+            diagnostic(
+                ArtifactDiagnosticKind.ORPHANED_TARGET,
+                disposition.target_path,
+                "disposition names a target outside the supplied corpus boundary",
+            )
+
+    for registry_identity in registry_identities:
+        official_identity = identities.get(registry_identity.path)
+        if official_identity != registry_identity:
+            diagnostic(
+                ArtifactDiagnosticKind.BROKEN_REGISTRY_BINDING,
+                registry_identity.path,
+                "registry source identity does not exactly bind an official catalog identity",
+            )
+
+    roles: dict[PurePosixPath, ArtifactRole] = {}
+    for path, claims in role_claims.items():
+        if len(claims) != 1:
+            diagnostic(
+                ArtifactDiagnosticKind.CONFLICTING_IDENTITY,
+                path,
+                "a bundled path has more than one catalog role",
+            )
+            continue
+        roles[path] = next(iter(claims))
+
+    for path in sorted(known - set(role_claims), key=str):
+        diagnostic(
+            ArtifactDiagnosticKind.UNKNOWN_FILE,
+            path,
+            "bundled path has no catalog role",
+        )
+
+    return ArtifactCatalogue(
+        identities=MappingProxyType(dict(sorted(identities.items(), key=lambda item: str(item[0])))),
+        roles=MappingProxyType(dict(sorted(roles.items(), key=lambda item: str(item[0])))),
+        diagnostics=tuple(sorted(diagnostics, key=lambda item: (item.kind.value, str(item.path), item.message))),
+    )
 
 
 def _mapping_value(record: Mapping[str, object], key: str) -> object:
@@ -276,10 +439,11 @@ def declared_dispositions(
 ) -> tuple[ArtifactDisposition, ...]:
     """Normalize explicitly named non-payload targets from a declaration.
 
-    URL-only historical exclusions name no bundled target, so return no target
-    disposition; the compiler will classify their declaration file separately.
+    URL-only historical exclusions have no bundled target, but still classify
+    their declaration file as a disposition.
     """
-    parent = _bundled_path(declaration_path, field_name="declaration_path").parent
+    catalogued_declaration_path = _bundled_path(declaration_path, field_name="declaration_path")
+    parent = catalogued_declaration_path.parent
     if "reason" in declaration:
         reason = _string_value(declaration, "reason")
     else:
@@ -288,15 +452,22 @@ def declared_dispositions(
     if direct_target is not None:
         if not isinstance(direct_target, str):
             raise ValueError("disposition 'target_path' must be a string")
-        return (ArtifactDisposition(target_path=_bundled_path(direct_target, field_name="target_path"), reason=reason),)
+        return (
+            ArtifactDisposition(
+                declaration_path=catalogued_declaration_path,
+                target_path=_bundled_path(direct_target, field_name="target_path"),
+                reason=reason,
+            ),
+        )
 
     artefacts = declaration.get("artefacts")
     if artefacts is None:
-        return ()
+        return (ArtifactDisposition(declaration_path=catalogued_declaration_path, target_path=None, reason=reason),)
     if not isinstance(artefacts, list) or not all(isinstance(item, Mapping) for item in artefacts):
         raise ValueError("disposition 'artefacts' must be a list of objects")
     return tuple(
         ArtifactDisposition(
+            declaration_path=catalogued_declaration_path,
             target_path=parent / _bundled_path(_string_value(row, "stored_path"), field_name="stored_path"),
             reason=reason,
         )

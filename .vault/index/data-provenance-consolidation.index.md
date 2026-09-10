@@ -6,16 +6,18 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:a274ab8fa0e8c38658f41014bd4bf88ff91344a6fa8ec73854cce8762678e520'
+body_hash: 'sha256:284e6609a6a0b0a444cb3b968d168c84b331507c4f100570dcc97eacf7eee587'
 related:
   - '[[2026-09-10-data-provenance-consolidation-W01-P01-S01]]'
   - '[[2026-09-10-data-provenance-consolidation-W01-P01-S02]]'
+  - '[[2026-09-10-data-provenance-consolidation-W01-P01-S03]]'
   - '[[2026-09-10-data-provenance-consolidation-adr]]'
   - '[[2026-09-10-data-provenance-consolidation-lane-inventory-research]]'
   - '[[2026-09-10-data-provenance-consolidation-live-lane-map-reference]]'
   - '[[2026-09-10-data-provenance-consolidation-plan]]'
   - '[[2026-09-10-data-provenance-consolidation-w01-p01-s01-audit]]'
   - '[[2026-09-10-data-provenance-consolidation-w01-p01-s02-adapter-review-audit]]'
+  - '[[2026-09-10-data-provenance-consolidation-w01-p01-s03-compiler-review-audit]]'
 ---
 
 # `data-provenance-consolidation` feature index
@@ -32,11 +34,13 @@ Auto-generated index of all documents tagged with `#data-provenance-consolidatio
 
 - `2026-09-10-data-provenance-consolidation-w01-p01-s01-audit` - `data-provenance-consolidation` audit: `W01 P01 S01 catalog model`
 - `2026-09-10-data-provenance-consolidation-w01-p01-s02-adapter-review-audit` - `data-provenance-consolidation` audit: `w01 p01 s02 adapter review`
+- `2026-09-10-data-provenance-consolidation-w01-p01-s03-compiler-review-audit` - `data-provenance-consolidation` audit: `w01 p01 s03 compiler review`
 
 ### exec
 
 - `2026-09-10-data-provenance-consolidation-W01-P01-S01` - Define immutable artifact roles, identity, derivation, disposition, and diagnostic records keyed by bundled relative path
 - `2026-09-10-data-provenance-consolidation-W01-P01-S02` - Implement adapters for record-design, manual, e-invoice, registry, and declared disposition records
+- `2026-09-10-data-provenance-consolidation-W01-P01-S03` - Compile identity conflicts, absent targets, unknown files, stale derivatives, and broken bindings into diagnostics
 
 ### plan
 
