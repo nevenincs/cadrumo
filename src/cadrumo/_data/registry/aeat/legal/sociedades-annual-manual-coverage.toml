@@ -1,0 +1,36 @@
+[sociedades_annual_manual_coverage]
+
+[[sociedades_annual_manual_coverage.dispositions]]
+year = 2022
+status = "available"
+source_ref = "aeat-modelo-200-manual-2022"
+official_locator = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/Sociedades/Manual_sociedades_2022.pdf"
+observed_at = 2026-09-10
+
+[[sociedades_annual_manual_coverage.dispositions]]
+year = 2023
+status = "available"
+source_ref = "aeat-modelo-200-manual-2023"
+official_locator = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/Sociedades/Manual_Sociedades_2023.pdf"
+observed_at = 2026-09-10
+
+[[sociedades_annual_manual_coverage.dispositions]]
+year = 2024
+status = "available"
+source_ref = "aeat-modelo-200-manual-2024"
+official_locator = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/Sociedades/Manual_Sociedades_2024.pdf"
+observed_at = 2026-09-10
+
+[[sociedades_annual_manual_coverage.dispositions]]
+year = 2025
+status = "available"
+source_ref = "aeat-modelo-200-manual-2025"
+official_locator = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/Sociedades/Manual_Sociedades_2025.pdf"
+observed_at = 2026-09-10
+
+[[sociedades_annual_manual_coverage.dispositions]]
+year = 2026
+status = "unpublished"
+official_locator = "https://sede.agenciatributaria.gob.es/Sede/manuales-practicos.html"
+observed_at = 2026-09-10
+acquisition_condition_key = "application.registry.manuals.coverage.recheck_aeat_publication"

@@ -7,7 +7,7 @@ semantic_role = "is_correccion_regimenes_especiales_aumento"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-45"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200026e.f0098"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03082"
@@ -18,7 +18,7 @@ semantic_role = "is_ute_ajuste_art451_aumento"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-45"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200026e.f0099"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03083"
@@ -29,7 +29,7 @@ semantic_role = "is_ute_ajuste_art451_aumento"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-45"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200026e.f0100"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03084"
@@ -40,7 +40,7 @@ semantic_role = "is_ute_ajuste_art451_aumento"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-45"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200026e.f0097"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03085"
@@ -51,5 +51,5 @@ semantic_role = "is_ute_ajuste_art451_aumento"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-45"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200026e.f0101"]

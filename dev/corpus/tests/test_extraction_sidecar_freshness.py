@@ -14,6 +14,7 @@ from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.loader import load_shared_catalogues
+from cadrumo.domain.calculations.registry.schema import SociedadesAnnualManualCoverageStatus
 
 from ...docs.preprocess.normatives_html import HTML_EXTRACTOR_ID
 from ...docs.preprocess.schema import PreprocessOutput
@@ -22,8 +23,8 @@ from ...docs.preprocess.sidecar import (
     EXTRACTED_TEXT_SUFFIX,
     matches_origin_name,
 )
-from ..extract_manual_corpus_text import extract_raw_text
 from ..extract_corpus_sidecars import check_all as check_corpus_sidecars
+from ..extract_manual_corpus_text import extract_raw_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -86,7 +87,6 @@ _PUBLICATION_BOUND_MANUAL_GAPS: Final[frozenset[tuple[str, int]]] = frozenset(
         ("iva", 2026),
         ("renta-part1", 2026),
         ("renta-part2-deducciones-autonomicas", 2026),
-        ("sociedades", 2026),
     },
 )
 
@@ -99,10 +99,27 @@ _UNACQUIRED_MANUAL_GAPS: Final[frozenset[tuple[str, int]]] = frozenset(
     {
         ("renta-part2-deducciones-autonomicas", 2022),
         ("renta-part2-deducciones-autonomicas", 2023),
-        ("sociedades", 2022),
-        ("sociedades", 2023),
     },
 )
+
+
+def _sociedades_annual_manual_statuses() -> dict[int, SociedadesAnnualManualCoverageStatus]:
+    """Return Sociedades availability from the registry coverage contract.
+
+    The corpus gate must not carry an independent exception list for this
+    annual family.  The registry catalogue is the authoritative statement of
+    whether a supported year is locally available, still unacquired, or not
+    yet published; this physical-artifact gate verifies that the declared
+    outcome matches the shipped PDF and runtime text sidecar.
+    """
+    catalogues = load_shared_catalogues(bundled_path("registry", "aeat"))
+    coverage = catalogues.sociedades_annual_manual_coverage
+    assert coverage is not None, "the registry declares no Sociedades annual-manual coverage catalogue"
+    statuses = {disposition.year: disposition.status for disposition in coverage.dispositions}
+    assert tuple(statuses) == catalogues.supported_filing_years.years, (
+        "Sociedades annual-manual coverage must declare every supported filing year"
+    )
+    return statuses
 
 
 def _sha256_of(path: Path) -> str:
@@ -372,10 +389,16 @@ def test_supported_taxpayer_calendars_ship_pdf_corpus_text() -> None:
 
 
 def test_supported_tax_manual_matrix_ships_pdf_corpus_text() -> None:
-    """Every manual family covers the canonical horizon, or declares the hole."""
+    """Every manual family covers the canonical horizon, or declares the hole.
+
+    Sociedades dispositions come from the typed registry catalogue, while the
+    other manual families retain their independent publication/acquisition
+    debt declarations until each has an equivalent catalogue.
+    """
     supported_years = _canonical_supported_filing_years()
     declared_gaps = _PUBLICATION_BOUND_MANUAL_GAPS | _UNACQUIRED_MANUAL_GAPS
     known_families = {family for family, _template, _token in _MANUAL_FAMILIES}
+    sociedades_statuses = _sociedades_annual_manual_statuses()
 
     missing: list[str] = []
     stale: list[str] = []
@@ -388,9 +411,23 @@ def test_supported_tax_manual_matrix_ships_pdf_corpus_text() -> None:
                 pdf_path.name + _CORPUS_TEXT_SUFFIX,
             )
 
-            if (family, year) in declared_gaps:
+            sociedades_gap = (
+                family == "sociedades"
+                and sociedades_statuses[year]
+                in {
+                    SociedadesAnnualManualCoverageStatus.UNACQUIRED,
+                    SociedadesAnnualManualCoverageStatus.UNPUBLISHED,
+                }
+            )
+            if sociedades_gap or (family, year) in declared_gaps:
                 if pdf_path.exists() or sidecar_path.exists():
-                    stale.append(f"{family} {year}: volume has landed -- remove its declared gap entry")
+                    if family == "sociedades":
+                        stale.append(
+                            f"{family} {year}: local artefacts contradict its "
+                            f"{sociedades_statuses[year].value!r} coverage disposition",
+                        )
+                    else:
+                        stale.append(f"{family} {year}: volume has landed -- remove its declared gap entry")
                 continue
 
             if not pdf_path.is_file():

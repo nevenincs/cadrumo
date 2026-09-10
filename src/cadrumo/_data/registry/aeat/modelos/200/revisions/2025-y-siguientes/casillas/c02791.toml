@@ -7,5 +7,5 @@ semantic_role = "is_correccion_donativos_liberalidades_art15e_permanente_aumento
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-15"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200026c.f0110"]

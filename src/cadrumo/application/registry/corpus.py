@@ -24,6 +24,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from datetime import date
 from enum import StrEnum
 from pathlib import Path
 from typing import Annotated
@@ -217,6 +218,24 @@ class RegistryManualPartProjection(_RegistryCorpusModel):
     root: str = Field(min_length=1)
 
 
+class RegistryManualCoverageProjection(_RegistryCorpusModel):
+    """One declared annual-manual availability state.
+
+    Unlike ``RegistryManualPartProjection``, this row is not inferred from a
+    directory walk.  It represents the registry's explicit outcome for a
+    supported Sociedades filing year, including an acquisition debt or a
+    re-checkable official publication absence.
+    """
+
+    manual_id: str = Field(min_length=1)
+    year: int = Field(ge=2000, le=2100)
+    status: str = Field(min_length=1)
+    status_label: str = Field(min_length=1)
+    official_locator: RegistryExternalLink
+    observed_at: date
+    acquisition_condition: str | None = None
+
+
 class RegistryManualsListCommand(_RegistryCorpusModel):
     """Application command for listing registry manuals."""
 
@@ -262,6 +281,7 @@ class RegistryManualsListReport(_RegistryCorpusModel):
     year_filter: int | None = None
     part_count: NonNegativeInt
     parts: tuple[RegistryManualPartProjection, ...] = ()
+    coverage: tuple[RegistryManualCoverageProjection, ...] = ()
     topic_count: NonNegativeInt
     topics: tuple[RegistryTopicProjection, ...] = ()
 
@@ -508,6 +528,7 @@ def list_registry_manuals(
         command=resolved_command,
     )
     rows = tuple(_manual_part_projection(*entry) for entry in parts)
+    coverage = _sociedades_manual_coverage_projections(resolved_command, locale=locale)
     manual_filter, year_filter = _manual_list_filter_values(resolved_command)
     _LOGGER.info(
         "registry.manuals.list",
@@ -516,6 +537,7 @@ def list_registry_manuals(
             "registry_manual_filter": manual_filter,
             "registry_year_filter": year_filter,
             "registry_part_count": len(rows),
+            "registry_manual_coverage_count": len(coverage),
             "registry_topic_count": len(topics),
         },
     )
@@ -524,9 +546,52 @@ def list_registry_manuals(
         year_filter=resolved_command.year,
         part_count=len(rows),
         parts=rows,
+        coverage=coverage,
         topic_count=len(topics),
         topics=topics,
     )
+
+
+def _sociedades_manual_coverage_projections(
+    command: RegistryManualsListCommand,
+    *,
+    locale: str | None,
+) -> tuple[RegistryManualCoverageProjection, ...]:
+    """Project the declared Sociedades outcomes, never an on-disk inference."""
+    if command.manual not in (None, RegistryManualId.SOCIEDADES):
+        return ()
+    coverage_catalogue = bundled_authority().catalogues.sociedades_annual_manual_coverage
+    if coverage_catalogue is None:
+        return ()
+    resolved_locale = _registry_topic_locale(locale)
+    return tuple(
+        RegistryManualCoverageProjection(
+            manual_id=RegistryManualId.SOCIEDADES.value,
+            year=disposition.year,
+            status=disposition.status.value,
+            status_label=_sociedades_manual_coverage_status_label(disposition.status.value, locale=resolved_locale),
+            official_locator=disposition.official_locator,
+            observed_at=disposition.observed_at,
+            acquisition_condition=(
+                tr(disposition.acquisition_condition_key, locale=resolved_locale)
+                if disposition.acquisition_condition_key is not None
+                else None
+            ),
+        )
+        for disposition in coverage_catalogue.dispositions
+        if command.year is None or disposition.year == command.year
+    )
+
+
+def _sociedades_manual_coverage_status_label(status: str, *, locale: str) -> str:
+    """Render Cadrumo's status label while preserving the stable status token."""
+    if status == "available":
+        return tr("application.registry.manuals.coverage.available", locale=locale)
+    if status == "unacquired":
+        return tr("application.registry.manuals.coverage.unacquired", locale=locale)
+    if status == "unpublished":
+        return tr("application.registry.manuals.coverage.unpublished", locale=locale)
+    raise RegistryValidationError(f"unknown Sociedades annual manual coverage status {status!r}")
 
 
 def show_registry_manual(

@@ -137,6 +137,16 @@ def test_option_names_carry_flag_spellings(cli_tree: CliTree) -> None:
     assert any(name.startswith("--") for p in options for name in p.names)
 
 
+def test_sociedades_manual_list_projects_coverage_help_and_identifier(cli_tree: CliTree) -> None:
+    """The widget catalogue carries the live annual-coverage manual surface."""
+    node = resolve_command_path(cli_tree, "aeat app registry manuals list")
+
+    assert node.kind == "leaf"
+    assert node.help == "List declared annual coverage and locally available manual parts"
+    manual = next(param for param in node.params if "--manual" in param.names)
+    assert manual.help == "Manual identifier (renta, iva, sociedades)"
+
+
 def test_machine_secret_and_profile_authentication_metadata_matches_live_projection(
     cli_tree: CliTree,
 ) -> None:

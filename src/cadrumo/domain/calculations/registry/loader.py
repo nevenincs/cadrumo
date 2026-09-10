@@ -8,6 +8,7 @@ in :mod:`_loader_internals`.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import date
 from functools import lru_cache
 from pathlib import Path
 
@@ -42,7 +43,13 @@ from .loader_cache import (
 from .loader_fingerprints import (
     refresh_toml_fingerprint_after_load_error as _refresh_toml_fingerprint_after_load_error,
 )
-from .schema import ModeloDefinition, RegistryCatalogues, SupportedFilingYearsCatalogue
+from .schema import (
+    ModeloDefinition,
+    RegistryCatalogues,
+    SociedadesAnnualManualCoverageCatalogue,
+    SociedadesAnnualManualCoverageStatus,
+    SupportedFilingYearsCatalogue,
+)
 from .schema_references import LegalParameter, LegalReference, SourceReference
 
 
@@ -151,6 +158,7 @@ def load_shared_catalogues(root: Path) -> RegistryCatalogues:
     sources: dict[str, SourceReference] = {}
     parameters: dict[str, LegalParameter] = {}
     supported_filing_years: SupportedFilingYearsCatalogue | None = None
+    sociedades_annual_manual_coverage: SociedadesAnnualManualCoverageCatalogue | None = None
     for path in scan_directory(legal_dir, pattern="*.toml"):
         catalogue = load_catalogue_file(path)
         overlap_legal = set(legal).intersection(catalogue.legal)
@@ -167,18 +175,83 @@ def load_shared_catalogues(root: Path) -> RegistryCatalogues:
                     f"{path}: supported_filing_years is already declared by another shared catalogue file",
                 )
             supported_filing_years = catalogue.supported_filing_years
+        if catalogue.sociedades_annual_manual_coverage is not None:
+            if sociedades_annual_manual_coverage is not None:
+                raise RegistryLoadError(
+                    f"{path}: sociedades_annual_manual_coverage is already declared by another shared catalogue file",
+                )
+            sociedades_annual_manual_coverage = catalogue.sociedades_annual_manual_coverage
         legal.update(catalogue.legal)
         sources.update(catalogue.sources)
         parameters.update(catalogue.parameters)
     _validate_legal_parameter_refs(legal_dir, parameters=parameters, legal=legal)
     if supported_filing_years is None:
         raise RegistryLoadError(f"{legal_dir}: missing supported_filing_years catalogue declaration")
+    if sociedades_annual_manual_coverage is None:
+        raise RegistryLoadError(f"{legal_dir}: missing sociedades_annual_manual_coverage catalogue declaration")
+    _validate_sociedades_annual_manual_coverage(
+        catalogue=sociedades_annual_manual_coverage,
+        supported_filing_years=supported_filing_years,
+        sources=sources,
+    )
     return RegistryCatalogues(
         legal=legal,
         sources=sources,
         parameters=parameters,
         supported_filing_years=supported_filing_years,
+        sociedades_annual_manual_coverage=sociedades_annual_manual_coverage,
     )
+
+
+def _validate_sociedades_annual_manual_coverage(
+    *,
+    catalogue: SociedadesAnnualManualCoverageCatalogue | None,
+    supported_filing_years: SupportedFilingYearsCatalogue,
+    sources: Mapping[str, SourceReference],
+) -> None:
+    """Validate the annual manual ledger against the sole filing-year denominator."""
+    if catalogue is None:
+        raise RegistryLoadError("Sociedades annual manual coverage catalogue is required")
+    declared_years = tuple(disposition.year for disposition in catalogue.dispositions)
+    if declared_years != supported_filing_years.years:
+        raise RegistryLoadError(
+            "Sociedades annual manual coverage must declare exactly the supported filing years; "
+            f"coverage={declared_years!r}, supported={supported_filing_years.years!r}",
+        )
+    for disposition in catalogue.dispositions:
+        if disposition.status is not SociedadesAnnualManualCoverageStatus.AVAILABLE:
+            continue
+        if disposition.source_ref is None:
+            raise RegistryLoadError(
+                f"Sociedades annual manual coverage year {disposition.year} is available without source_ref",
+            )
+        source = sources.get(disposition.source_ref)
+        if source is None:
+            raise RegistryLoadError(
+                f"Sociedades annual manual coverage year {disposition.year} references unknown source "
+                f"{disposition.source_ref!r}",
+            )
+        if source.kind != "manual_pdf":
+            raise RegistryLoadError(
+                f"Sociedades annual manual coverage year {disposition.year} source {source.id!r} "
+                f"must be kind='manual_pdf', got {source.kind!r}",
+            )
+        if source.authority != "aeat":
+            raise RegistryLoadError(
+                f"Sociedades annual manual coverage year {disposition.year} source {source.id!r} "
+                f"must be published by AEAT, got {source.authority!r}",
+            )
+        expected_corpus_path = f"corpus/manuals/sociedades/{disposition.year}/source.pdf"
+        if source.corpus_path != expected_corpus_path:
+            raise RegistryLoadError(
+                f"Sociedades annual manual coverage year {disposition.year} source {source.id!r} "
+                f"must use corpus path {expected_corpus_path!r}, got {source.corpus_path!r}",
+            )
+        if source.applies_from != date(disposition.year, 1, 1) or source.applies_to != date(disposition.year, 12, 31):
+            raise RegistryLoadError(
+                f"Sociedades annual manual coverage year {disposition.year} source {source.id!r} "
+                "must have the exact annual applicability interval",
+            )
 
 
 def load_registry_tree(

@@ -186,6 +186,21 @@ def _manuals_list_lines(report: RegistryManualsListReport) -> list[str]:
     ]
     for part in report.parts:
         lines.append("\t".join(("part", part.manual_id, str(part.year), part.part, part.root)))
+    for coverage in report.coverage:
+        lines.append(
+            "\t".join(
+                (
+                    "coverage",
+                    coverage.manual_id,
+                    str(coverage.year),
+                    coverage.status,
+                    coverage.status_label,
+                    str(coverage.official_locator),
+                    coverage.observed_at.isoformat(),
+                    coverage.acquisition_condition or "",
+                ),
+            ),
+        )
     return lines
 
 

@@ -7,7 +7,7 @@ semantic_role = "is_deduccion_dt24a1_periodificacion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-24"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200016.f0133", "m200-2025.dp200027.f0059"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00756"
@@ -18,7 +18,7 @@ semantic_role = "is_deduccion_dt24a1_periodificacion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-24"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200016.f0134", "m200-2025.dp200028.f0022"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00757"
@@ -29,5 +29,5 @@ semantic_role = "is_deduccion_dt24a1_periodificacion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-24"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200016.f0135", "m200-2025.dp200028.f0030"]

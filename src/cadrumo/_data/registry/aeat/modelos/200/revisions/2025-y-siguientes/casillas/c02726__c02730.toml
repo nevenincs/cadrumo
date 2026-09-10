@@ -7,7 +7,7 @@ semantic_role = "is_correccion_limite_art11_12_perdidas_deterioro_disminucion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200026c.f0082"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02727"
@@ -18,7 +18,7 @@ semantic_role = "is_correccion_limite_art11_12_perdidas_deterioro_disminucion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200026c.f0083"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02728"
@@ -29,7 +29,7 @@ semantic_role = "is_correccion_limite_art11_12_perdidas_deterioro_disminucion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200026c.f0084"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02729"
@@ -40,7 +40,7 @@ semantic_role = "is_correccion_limite_art11_12_perdidas_deterioro_saldo_inicial"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200026c.f0081"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02730"
@@ -51,5 +51,5 @@ semantic_role = "is_correccion_limite_art11_12_perdidas_deterioro_saldo_final"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200026c.f0085"]

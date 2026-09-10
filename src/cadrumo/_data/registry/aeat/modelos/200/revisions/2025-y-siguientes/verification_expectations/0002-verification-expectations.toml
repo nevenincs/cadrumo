@@ -26,7 +26,7 @@ discrepancy_causes = [
     "correctness_divergence",
 ]
 legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-41", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 # This revision declares NO externally grounded casillas, deliberately.
 #
 # The predecessor revision grounds 00562, 00592 and 00611 on the AEAT Manual

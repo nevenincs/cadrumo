@@ -7,7 +7,7 @@ semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-106"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200026f.f0052"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03217"
@@ -18,7 +18,7 @@ semantic_role = "is_arrendamiento_financiero_ajuste_disminucion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-106"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200026f.f0053"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03218"
@@ -29,7 +29,7 @@ semantic_role = "is_arrendamiento_financiero_ajuste_disminucion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-106"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200026f.f0054"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03219"
@@ -40,7 +40,7 @@ semantic_role = "is_arrendamiento_financiero_ajuste_disminucion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-106"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200026f.f0051"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03220"
@@ -51,5 +51,5 @@ semantic_role = "is_arrendamiento_financiero_ajuste_disminucion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-106"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200026f.f0055"]

@@ -972,6 +972,13 @@ def _redact_structured_for_cli_output(
     key: object | None = None,
     reveal_identifiers: bool = False,
 ) -> object:
+    # An annual-manual coverage locator is a reviewed, bundled official source
+    # reference, not an operator-supplied navigation URL. The CLI contract
+    # intentionally publishes its full path so an operator can re-check the
+    # declared publication disposition. Keep this exception key-scoped: every
+    # other URL value remains host-only under the normal CLI redaction policy.
+    if key == "official_locator" and isinstance(value, str):
+        return value
     # Registry source-reference identifiers are public authority keys, not
     # taxpayer identifiers. Their validated kebab-case spelling can contain a
     # modelo/year/period segment that resembles a separated NIF; redacting that

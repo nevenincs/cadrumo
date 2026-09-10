@@ -195,6 +195,14 @@ def test_manuals_list_emits_json_payload() -> None:
     assert payload["operation"] == "registry.manuals.list"
     assert "part_count" in payload
     assert "parts" in payload
+    assert [(row["year"], row["status"]) for row in payload["coverage"]] == [
+        (2022, "available"),
+        (2023, "available"),
+        (2024, "available"),
+        (2025, "available"),
+        (2026, "unpublished"),
+    ]
+    assert payload["coverage"][-1]["official_locator"] == "https://sede.agenciatributaria.gob.es/Sede/manuales-practicos.html"
 
 
 def test_manuals_list_accepts_manual_filter() -> None:
@@ -203,6 +211,15 @@ def test_manuals_list_accepts_manual_filter() -> None:
     result = _invoke("manuals", "list", "--manual", "iva")
     assert result.exit_code == 0
     assert "manual_filter\tiva" in result.stdout
+    assert "coverage\t" not in result.stdout
+
+
+def test_manuals_list_renders_sociedades_coverage_transport_rows() -> None:
+    result = _invoke("manuals", "list", "--manual", "sociedades")
+
+    assert result.exit_code == 0
+    assert "coverage\tsociedades\t2022\tavailable\t" in result.stdout
+    assert "coverage\tsociedades\t2026\tunpublished\t" in result.stdout
 
 
 def test_manuals_list_accepts_year_filter() -> None:

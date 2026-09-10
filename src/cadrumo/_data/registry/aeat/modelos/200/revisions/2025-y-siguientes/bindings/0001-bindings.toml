@@ -4,10 +4,10 @@ source = "relation_prefill"
 selector = { source_modelo = "202", source_casilla_id = "34" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]
-source_ref = "aeat-modelo-200-manual-2024"
+source_ref = "aeat-modelo-200-manual-2025"
 required_text = [
     "modelo 202 de pago fraccionado",
     "pagos fraccionados",
@@ -24,10 +24,10 @@ source = "relation_prefill"
 selector = { source_modelo = "202", source_casilla_id = "03" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]
-source_ref = "aeat-modelo-200-manual-2024"
+source_ref = "aeat-modelo-200-manual-2025"
 required_text = [
     "modelo 202 de pago fraccionado",
     "pagos fraccionados",
@@ -48,10 +48,10 @@ selector = { profile_model = "taxpayer", field = "legal_entity_form" }
 aggregation = { op = "copy" }
 typed_enum = "LegalEntityForm"
 legal_refs = ["ley-27-2014:art-29"]
-source_refs = ["aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]
-source_ref = "aeat-modelo-200-manual-2024"
+source_ref = "aeat-modelo-200-manual-2025"
 required_text = ["tipo de gravamen"]
 
 # Calculation-only Decimal binding: carries the newly-created-entity
@@ -67,10 +67,10 @@ source = "profile"
 selector = { profile_model = "taxpayer", field = "new_entity_first_two_profit_periods" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-27-2014:art-29"]
-source_refs = ["aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]
-source_ref = "aeat-modelo-200-manual-2024"
+source_ref = "aeat-modelo-200-manual-2025"
 required_text = ["tipo de gravamen"]
 
 # Calculation-only Decimal binding: carries the importe neto de la
@@ -90,10 +90,10 @@ source = "profile"
 selector = { profile_model = "taxpayer", field = "incn_prior_12_months" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-27-2014:art-29"]
-source_refs = ["aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]
-source_ref = "aeat-modelo-200-manual-2024"
+source_ref = "aeat-modelo-200-manual-2025"
 required_text = ["tipo de gravamen"]
 
 # Calculation-only Decimal binding: the porcentaje de tributación al
@@ -113,10 +113,10 @@ source = "profile"
 selector = { profile_model = "taxpayer", field = "tributacion_estado_porcentaje" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30"]
-source_refs = ["aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]
-source_ref = "aeat-modelo-200-manual-2024"
+source_ref = "aeat-modelo-200-manual-2025"
 required_text = ["Casilla [00625] Administración del Estado"]
 
 # Calculation-only Decimal binding: carries the accumulated reserva
@@ -132,10 +132,10 @@ source = "profile"
 selector = { profile_model = "taxpayer", field = "sal_reserva_especial_dotada" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-44-2015:art-14", "ley-44-2015:art-13"]
-source_refs = ["aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]
-source_ref = "aeat-modelo-200-manual-2024"
+source_ref = "aeat-modelo-200-manual-2025"
 required_text = ["base imponible"]
 
 # Calculation-only Decimal binding: carries the capital social of the
@@ -148,10 +148,10 @@ source = "profile"
 selector = { profile_model = "taxpayer", field = "sal_capital_social" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-44-2015:art-14", "ley-44-2015:art-13"]
-source_refs = ["aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]
-source_ref = "aeat-modelo-200-manual-2024"
+source_ref = "aeat-modelo-200-manual-2025"
 required_text = ["base imponible"]
 
 # Cross-year BIN STOCK carry (LIS art. 26 unlimited carry-forward): the prior
@@ -171,10 +171,10 @@ source = "relation_prefill"
 selector = { source_modelo = "200", source_casilla_id = "00671" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-27-2014:art-26", "ley-27-2014:art-25"]
-source_refs = ["aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]
-source_ref = "aeat-modelo-200-manual-2024"
+source_ref = "aeat-modelo-200-manual-2025"
 required_text = ["bases imponibles negativas"]
 
 # Art. 13 dotaciones por deterioro de créditos — cross-year STOCK carry.
@@ -199,10 +199,10 @@ source = "relation_prefill"
 selector = { source_modelo = "200", source_casilla_id = "01498" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-27-2014:art-13"]
-source_refs = ["aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]
-source_ref = "aeat-modelo-200-manual-2024"
+source_ref = "aeat-modelo-200-manual-2025"
 required_text = ["deterioro"]
 
 [[revisions."2025-y-siguientes".bindings]]
@@ -211,8 +211,8 @@ source = "relation_prefill"
 selector = { source_modelo = "200", source_casilla_id = "01499" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-27-2014:art-13"]
-source_refs = ["aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]
-source_ref = "aeat-modelo-200-manual-2024"
+source_ref = "aeat-modelo-200-manual-2025"
 required_text = ["deterioro"]
