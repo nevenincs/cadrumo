@@ -10,7 +10,7 @@ related:
   - '[[2026-09-10-data-provenance-consolidation-live-lane-map-reference]]'
 modified: '2026-09-10'
 body_schema: body-v2
-body_hash: 'sha256:74ea31b371642676b99da51daad9ffb1a72ca351bae474af29192d87681abd46'
+body_hash: 'sha256:450b1c397fddaca6a84f99b8469569aa75ebb5c5ef6fa49cbb0207262e07a6be'
 ---
 
 # `data-provenance-consolidation` plan
@@ -32,7 +32,7 @@ Deliver the typed compiler and isolated defect vocabulary required before any co
 Define identity, role, adapters, and diagnostics at one shared compiler boundary.
 
 - [x] `W01.P01.S01` - Define immutable artifact roles, identity, derivation, disposition, and diagnostic records keyed by bundled relative path; `src/cadrumo/domain/calculations/registry/artifact_catalogue.py`.
-- [ ] `W01.P01.S02` - Implement adapters for record-design, manual, e-invoice, registry, and declared disposition records; `src/cadrumo/domain/calculations/registry/artifact_catalogue.py`.
+- [x] `W01.P01.S02` - Implement adapters for record-design, manual, e-invoice, registry, and declared disposition records; `src/cadrumo/domain/calculations/registry/artifact_catalogue.py`.
 - [ ] `W01.P01.S03` - Compile identity conflicts, absent targets, unknown files, stale derivatives, and broken bindings into diagnostics; `src/cadrumo/domain/calculations/registry/artifact_catalogue.py`.
 
 ### Phase `W01.P02` - Temporary-tree detector teeth
