@@ -77,6 +77,7 @@ __all__ = [
     "SemanticMapAnchor",
     "SemanticMapEntry",
     "SemanticMapFragment",
+    "SemanticMapPart",
     "SemanticMapRecord",
     "VariableEnvelopeSemantic",
     "load_semantic_map",
@@ -260,6 +261,32 @@ class VariableEnvelopeSemantic(_StrictModel):
         return self
 
 
+class SemanticMapPart(_StrictModel):
+    """A sub-slot that one design cell's own text declares inside itself.
+
+    Modelo 347 prints one four-byte cell at offset 77 whose text divides it:
+    "77-78 CODIGO PROVINCIA: Campo numerico de dos posiciones ..." and
+    "79-80 CODIGO PAIS Campo alfabetico de 2 posiciones ...". The two halves
+    carry different concepts and different AEAT types, so each is its own
+    export field. A part is never inferred: the author copies the part's text
+    from the cell verbatim, and validation holds it to the cell, so the split
+    rests on what AEAT printed and nothing else.
+    """
+
+    offset: int = Field(gt=0)
+    """The part's absolute one-based offset, inside its cell."""
+    length: int = Field(gt=0)
+    aeat_type: str = Field(min_length=1)
+    """The type the part's own text states, e.g. "Numerico" for "Campo numerico"."""
+    statement: str = Field(min_length=1)
+    """The part's text, copied verbatim from the cell's content."""
+
+    @property
+    def printed_range(self) -> str:
+        """The range the design prints for this part, e.g. ``"79-80"``."""
+        return f"{self.offset}-{self.offset + self.length - 1}"
+
+
 class SemanticMapEntry(_StrictModel):
     """Reviewed registry meaning for one exact parser anchor.
 
@@ -281,6 +308,8 @@ class SemanticMapEntry(_StrictModel):
     computed_key: ExportComputedKey | None = None
     legal_refs: LegalRefs
     source_refs: SourceRefs
+    part: SemanticMapPart | None = None
+    """The sub-slot of its anchor's cell this entry fills, when the cell's text divides it."""
 
     @field_validator("projection_ref", mode="before")
     @classmethod
