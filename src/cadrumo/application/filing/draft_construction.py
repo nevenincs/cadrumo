@@ -90,11 +90,7 @@ def _refuse_unsupported_filing_year(period: _Period) -> None:
             that declaration, because a refusal an operator cannot act on is an
             outage rather than a guard.
     """
-    from ...core.resources.bundled_data import bundled_path
-    from ...domain.calculations.registry.loader import load_registry_tree
-
-    _modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    declaration = catalogues.supported_filing_years
+    declaration = bundled_authority().catalogues.supported_filing_years
     if declaration is None:
         return
     supported = tuple(declaration.years)

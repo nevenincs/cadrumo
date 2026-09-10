@@ -50,8 +50,7 @@ from ...core.casilla_id import CasillaId
 from ...core.identity import SubjectTaxId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
-from ...core.resources.bundled_data import bundled_path
-from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
+from ...domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 from ...domain.calculations.registry.errors import (
     RegistryFailureCondition,
     RegistrySnapshotError,
@@ -414,25 +413,22 @@ def filing_profile_from_taxpayer(
 
 
 def build_runtime_schema_provider(
-    registry_root: Path | None = None,
     *,
-    source_root: Path | None = None,
     filing_year: int | None = None,
     period: object | None = None,
     modelos: Sequence[str] | None = None,
 ) -> RegistrySchemaAccessor:
-    """Build a :class:`RegistrySchemaAccessor` from validated registry TOML.
+    """Build a :class:`RegistrySchemaAccessor` from bundled validated snapshots.
 
     When ``filing_year`` and ``period`` are supplied, both are required and
     ``period`` must be a typed :class:`~core.Period`; raw registry tokens
     are rejected before snapshot lookup. Without an explicit period, the
     provider selects the current open revision for each modelo.
 
+    The provider has no registry or source-root override: filing flows consume
+    the immutable authority bundled with the installed package.
+
     Args:
-        registry_root: Optional registry root. Defaults to the bundled AEAT
-            registry.
-        source_root: Optional source-material root used by
-            :class:`~domain.calculations.registry.ValidatedRegistryAuthority`.
         filing_year: Optional filing year; must be paired with ``period``.
         period: Optional typed :class:`~core.Period`; must match
             ``filing_year``.
@@ -448,17 +444,12 @@ def build_runtime_schema_provider(
             invalid, or no snapshot exists for the requested filing context.
     """
     validated_period = _validate_period_arguments(filing_year=filing_year, period=period)
-    root = (registry_root or bundled_path("registry", "aeat")).resolve()
-    resolved_source_root = (source_root or bundled_path()).resolve()
     selected_ids = _normalize_modelo_selection(modelos)
     selected_tuple = None if selected_ids is None else tuple(sorted(selected_ids))
     return _build_runtime_schema_provider_cached(
-        root,
-        resolved_source_root,
         filing_year,
         validated_period,
         selected_tuple,
-        registry_tree_fingerprint(root),
     )
 
 
@@ -520,19 +511,16 @@ def _runtime_snapshots_for_modelos(
 
 @lru_cache(maxsize=32)
 def _build_runtime_schema_provider_cached(
-    root: Path,
-    resolved_source_root: Path,
     filing_year: int | None,
     period: Period | None,
     selected_tuple: tuple[str, ...] | None,
-    _fingerprint: tuple[tuple[str, int, int], ...],
 ) -> RegistrySchemaAccessor:
-    authority = ValidatedRegistryAuthority.load(root, source_root=resolved_source_root)
+    authority = bundled_authority()
     loaded_modelos = authority.modelos
     if not loaded_modelos:
         raise ModeloBuilderError(
             translated_message="application.filing.runtime.errors.registry_empty",
-            context={"registry_root_name": root.name},
+            context={"registry_root_name": "bundled"},
         )
     loaded_modelos = _select_runtime_modelos(loaded_modelos, selected_tuple=selected_tuple)
     snapshots = _runtime_snapshots_for_modelos(
@@ -551,7 +539,7 @@ def _build_runtime_schema_provider_cached(
         collections={modelo_id: collection_from_snapshot(snapshot) for modelo_id, snapshot in snapshots.items()},
         subviews={modelo_id: _subview_from_snapshot(snapshot) for modelo_id, snapshot in snapshots.items()},
         snapshots=snapshots,
-        source_root=resolved_source_root,
+        source_root=authority.source_root,
         sources=dict(authority.catalogues.sources),
     )
 
@@ -580,42 +568,6 @@ def _registry_snapshot_unavailable_error(
             "registry_error_type": type(exc).__name__,
         },
     )
-
-
-_FINGERPRINT_CACHE: dict[Path, tuple[float, tuple[tuple[str, int, int, str], ...]]] = {}
-
-
-def registry_tree_fingerprint(
-    root: Path,
-) -> tuple[tuple[str, int, int, str], ...]:
-    """Return the TTL-cached registry tree fingerprint for runtime schema loading.
-
-    Delegates the walk to the canonical
-    :func:`~cadrumo.domain.calculations.registry.collect_registry_tree_fingerprints`,
-    rather than a second hand-rolled tree walk: that collector adds a content
-    digest for mutable (non-bundled) trees specifically because
-    ``(size, mtime_ns)`` alone cannot distinguish two successive writes of
-    the same byte length within one coarse filesystem mtime tick, and
-    exempts the digest for the package-bundled tree (read-only, never
-    rewritten in-process) so the common case pays only per-file call
-    overhead, not hashing. It is used as a cache key for
-    :func:`build_runtime_schema_provider`; the collector's own, longer-lived
-    cache for the bundled root is a separate, per-path layer this TTL sits in
-    front of.
-    """
-    import time
-
-    now = time.monotonic()
-    if root in _FINGERPRINT_CACHE:
-        cached_time, cached_val = _FINGERPRINT_CACHE[root]
-        if now - cached_time < 1.0:
-            return cached_val
-
-    from ...domain.calculations.registry.loader import collect_registry_tree_fingerprints
-
-    val = collect_registry_tree_fingerprints(root)
-    _FINGERPRINT_CACHE[root] = (now, val)
-    return val
 
 
 def _normalize_modelo_selection(modelos: Sequence[str] | None) -> set[str] | None:
@@ -859,6 +811,5 @@ __all__ = [
     "build_runtime_schema_provider",
     "collection_from_snapshot",
     "filing_profile_from_taxpayer",
-    "registry_tree_fingerprint",
     "registry_value_type",
 ]

@@ -37,9 +37,6 @@ if TYPE_CHECKING:
 
 def load_iva_catalogue(
     path: Path,
-    *,
-    registry_root: Path | None = None,
-    source_root: Path | None = None,
 ) -> IvaCatalogue:
     """Load one IVA catalogue TOML file.
 
@@ -51,15 +48,8 @@ def load_iva_catalogue(
         stat = resolved.stat()
     except OSError as exc:
         raise IvaCatalogueError(f"{resolved}: cannot stat IVA catalogue: {exc}") from exc
-    resolved_source_root = bundled_path() if source_root is None else source_root.resolve()
-    resolved_registry_root = (
-        resolved_source_root / "registry" / "aeat" if registry_root is None else registry_root.resolve()
-    )
     parsed = _load_iva_catalogue_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
-    legal, _sources, loaded_source_root = registry_catalogues(
-        registry_root=resolved_registry_root,
-        source_root=resolved_source_root,
-    )
+    legal, _sources, loaded_source_root = registry_catalogues()
     evidence_fingerprints = legal_evidence_fingerprints(
         (citation.legal_reference for regulation in parsed for citation in regulation.citations),
         legal=legal,
@@ -69,7 +59,6 @@ def load_iva_catalogue(
         str(resolved),
         stat.st_size,
         stat.st_mtime_ns,
-        str(resolved_registry_root),
         str(loaded_source_root),
         evidence_fingerprints,
     )
@@ -108,17 +97,13 @@ def _load_verified_iva_catalogue_cached(
     path: str,
     byte_count: int,
     modified_ns: int,
-    registry_root: str,
     source_root: str,
     evidence_fingerprints: tuple[tuple[str, ...], ...],
 ) -> IvaCatalogue:
     """Return a parsed catalogue only after its cited evidence cache key is green."""
     del evidence_fingerprints
     catalogue = _load_iva_catalogue_cached(path, byte_count, modified_ns)
-    legal, _sources, loaded_source_root = registry_catalogues(
-        registry_root=Path(registry_root),
-        source_root=Path(source_root),
-    )
+    legal, _sources, loaded_source_root = registry_catalogues()
     _require_verified_catalogue(catalogue, target=Path(path), legal=legal, source_root=loaded_source_root)
     return catalogue
 

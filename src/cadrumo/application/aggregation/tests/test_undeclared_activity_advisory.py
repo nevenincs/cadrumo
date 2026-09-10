@@ -47,15 +47,15 @@ from .renta_income_aggregation_support import _raw_transaction
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET = "9f86d081-884c-4d65-9a2f-eaa0c55ad015"  # was 'test'
-_Q1 = Period.from_year_and_code(2025, "1T")
-_IN_WINDOW = date(2025, 2, 14)
+_Q1 = Period.from_year_and_code(2026, "2T")
+_IN_WINDOW = date(2026, 5, 14)
 _CASILLA_05 = "05"
 
 
 @cache
 def _m131_revision() -> ModeloRevision:
     """The real Modelo 131 revision, so the grounding assertions read real refs."""
-    return bundled_authority().modelo(Modelo.M131.value).revisions["2025"]
+    return bundled_authority().modelo(Modelo.M131.value).revisions["2026"]
 
 
 def _income_row(
@@ -85,7 +85,7 @@ def _income_row(
             "iva_rate": None,
             "iva_amount": None,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(2025, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(2026, 7, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
             "tipo_actividad": tipo_actividad,
             "concepto_ingreso": None,
@@ -117,7 +117,7 @@ def _non_agrarian_code() -> TipoActividad:
     widens or narrows the agrarian set cannot leave this test asserting against a
     code that has quietly changed sides.
     """
-    agrarian = _m131_agrarian_activity_codes()
+    agrarian = _m131_agrarian_activity_codes(effective_date=_Q1.end_date)
     return next(code for code in TipoActividad if code not in agrarian)
 
 

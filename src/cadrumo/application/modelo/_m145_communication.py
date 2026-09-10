@@ -30,9 +30,8 @@ from pydantic import BaseModel, Field
 
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.resources.bundled_data import bundled_path
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.temporal import select_revision
 
 M145_COMMUNICATION_MODELO = Modelo.M145.value
@@ -97,8 +96,7 @@ def build_m145_communication_service_contract(*, filing_year: int = 2026) -> M14
     the revision is read structurally (:func:`select_revision`) rather than
     through a filing-grade snapshot.
     """
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(candidate for candidate in modelos if candidate.id == M145_COMMUNICATION_MODELO)
+    modelo = next(candidate for candidate in bundled_authority().modelos if candidate.id == M145_COMMUNICATION_MODELO)
     revision = select_revision(
         modelo,
         filing_year=filing_year,

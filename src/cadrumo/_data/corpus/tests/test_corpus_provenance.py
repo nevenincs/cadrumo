@@ -1,13 +1,11 @@
-"""Gate tests for corpus PROVENANCE.md documents.
+"""Documentation-quality tests for corpus PROVENANCE.md audit attribution.
 
-Each AEAT corpus subdirectory that carries documents derived from
-external authority (AEAT Sede, BOE) MUST declare a PROVENANCE.md
-file at its root. The gate asserts:
+For each corpus subdirectory that carries a ``PROVENANCE.md`` file, the
+gate asserts that its readable audit documentation:
 
-1. The PROVENANCE.md file exists.
-2. It enumerates every committed file under the corresponding
+1. enumerates every committed file under the corresponding
    ``files/`` subdirectory.
-3. It declares the canonical Source, AEAT-page-last-updated, and
+2. declares source attribution, AEAT-page-last-updated, and
    corpus-capture-date sections.
 
 Authored to protect the committed corpus provenance
@@ -16,25 +14,18 @@ the metadata file goes undetected without this gate).
 
 WHY THE SWEEPS ARE PLURAL. This module previously defined
 ``_corpus_subdirectories_with_files`` and then never called it: every
-assertion named ``instructions/modelo_131`` literally. The contract in the
-docstring above says "each AEAT corpus subdirectory", and the corpus ships
-well over a hundred of them across nine categories, so the enforced surface
-was one directory and the other ~110 were documented-but-unchecked. A
+assertion named ``instructions/modelo_131`` literally. The corpus ships audit
+documents across several categories, so the enforced surface was one directory
+and the other documents were unchecked. A
 PROVENANCE.md that silently stopped listing half its payload, anywhere except
 that one directory, was invisible.
 
 The discovery helper is now the population every sweep below iterates, and it
 walks every category rather than one. What the sweeps require is calibrated to
-what a corpus-local gate can honestly know: for a directory that carries a
-PROVENANCE.md, the document must be complete and well-formed. Whether a
-directory that carries NO provenance document is nevertheless provenanced --
-by a sibling ``manifest.json`` or by a hash-pinned registry ``SourceReference``,
-both of which record strictly more than this prose does -- is a question this
-package cannot answer without reaching into the registry, so it is owned by the
-registry-side companion gate
-(``domain.calculations.registry.tests.test_corpus_provenance_coverage``) rather
-than guessed at here. Splitting it that way keeps this module free of false
-findings while leaving no side of the contract unowned.
+what a corpus-local documentation gate can honestly know: a document that is
+present must be complete and readable. Its prose neither admits a payload as an
+official artifact nor proves hash-pinned source identity; catalog compilation
+and registry-binding validation own those immutable identity claims.
 """
 
 from __future__ import annotations
@@ -44,7 +35,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core.directory_scan import DirectoryEntryKind, iter_directory, scan_directory
+from ....core.directory_scan import DirectoryEntryKind, scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -53,26 +44,9 @@ bundled_path = importlib.import_module("cadrumo.core.resources").bundled_path
 _AEAT_ROOT = bundled_path("corpus", "aeat_official")
 _CORPUS_ROOT = _AEAT_ROOT / "instructions"
 
-#: The provenance document every externally-sourced corpus subdirectory
-#: declares. Named once so the sweeps and the discovery helper cannot drift.
+#: The audit-document filename, named once so the sweeps and discovery helper
+#: cannot drift.
 _PROVENANCE = "PROVENANCE.md"
-
-#: Anti-vacuity floor over the discovered population. Deliberately far below
-#: the live count (~110): this exists to catch the walk COLLAPSING, not to pin
-#: a corpus inventory, which would redden on every legitimate capture.
-_MINIMUM_SUBDIRECTORIES = 40
-
-
-def _corpus_subdirectories_with_files(root: Path = _CORPUS_ROOT) -> list[Path]:
-    """Return every corpus subdirectory that has a populated ``files/`` child."""
-
-    if not root.is_dir():
-        return []
-    return [
-        subdir
-        for subdir in scan_directory(root)
-        if subdir.is_dir() and (subdir / "files").is_dir() and any(iter_directory(subdir / "files"))
-    ]
 
 
 def _provenance_documents(aeat_root: Path = _AEAT_ROOT) -> list[Path]:
@@ -92,9 +66,7 @@ def _provenance_documents(aeat_root: Path = _AEAT_ROOT) -> list[Path]:
         return []
     return [
         candidate.parent
-        for candidate in scan_directory(
-            aeat_root, pattern=_PROVENANCE, recursive=True, select=DirectoryEntryKind.FILES
-        )
+        for candidate in scan_directory(aeat_root, pattern=_PROVENANCE, recursive=True, select=DirectoryEntryKind.FILES)
     ]
 
 
@@ -142,35 +114,9 @@ def _missing_sections(subdir: Path) -> list[str]:
     return missing
 
 
-
 # ---------------------------------------------------------------------------
-# Discovery: the population every sweep below iterates.
+# Discovery: the audit-document population every sweep below iterates.
 # ---------------------------------------------------------------------------
-
-
-def test_corpus_subdirectory_discovery_reaches_the_whole_corpus() -> None:
-    """Anti-vacuity for the walk the sweeps inherit.
-
-    Each sweep below iterates this population, so a walk that collapsed --
-    a renamed category, a changed ``files/`` convention -- would make every
-    one of them report a clean corpus without having opened a document. The
-    per-category floor is what makes the total mean anything: the count is
-    dominated by ``disenos_registro`` (~60) and ``instructions`` (~48), so a
-    total alone cannot see a smaller category leave.
-    """
-    assert _AEAT_ROOT.is_dir(), _AEAT_ROOT
-    subdirs = _corpus_subdirectories_with_files(_AEAT_ROOT / "disenos_registro") + _corpus_subdirectories_with_files()
-    assert len(subdirs) >= _MINIMUM_SUBDIRECTORIES, (
-        f"only {len(subdirs)} populated corpus subdirector(ies) discovered, against a floor of "
-        f"{_MINIMUM_SUBDIRECTORIES}; the walk has narrowed and every sweep below inherits it"
-    )
-
-    reached = {subdir.relative_to(_AEAT_ROOT).parts[0] for subdir in subdirs}
-    absent = sorted({"instructions", "disenos_registro"} - reached)
-    assert not absent, (
-        f"these corpus categories were not reached by the discovery walk: {absent}; "
-        "a category nobody enumerates is a category no sweep below can check"
-    )
 
 
 def test_the_provenance_walk_reaches_more_than_one_category_and_more_than_one_shape() -> None:
@@ -300,22 +246,6 @@ def test_a_complete_provenance_document_is_accepted(tmp_path: Path) -> None:
 
     assert not _undocumented_files(subdir)
     assert not _missing_sections(subdir)
-
-
-def test_the_discovery_helper_skips_an_empty_files_directory(tmp_path: Path) -> None:
-    """A directory with an empty ``files/`` owes no provenance and must not be discovered.
-
-    Guards the ``any(iter_directory(...))`` clause: without it the sweeps would
-    demand a provenance document for a placeholder directory, and the resulting
-    noise is what gets gates disabled.
-    """
-    (tmp_path / "modelo_998" / "files").mkdir(parents=True)
-    (tmp_path / "modelo_997" / "files").mkdir(parents=True)
-    (tmp_path / "modelo_997" / "files" / "real.html").write_text("x", encoding="utf-8")
-
-    discovered = {subdir.name for subdir in _corpus_subdirectories_with_files(tmp_path)}
-
-    assert discovered == {"modelo_997"}
 
 
 # ---------------------------------------------------------------------------

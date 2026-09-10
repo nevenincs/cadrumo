@@ -35,10 +35,9 @@ from ....core.hashing import sha256_hex
 from ....core.identity import IdentityError, validate_spanish_tax_id
 from ....core.logging import get_logger
 from ....core.period import Period, PeriodError, is_administrative_period_token
-from ....core.resources.bundled_data import bundled_path
 from ....core.text_fold import fold_diacritics
 from ....core.time.clock import now
-from ....domain.calculations.registry.authority import ValidatedRegistryAuthority
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.casilla_membership import casillas_by_id
 from ....domain.calculations.registry.errors import RegistrySnapshotError
 from ....domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
@@ -123,8 +122,6 @@ def parse_declaracion(
     period_override: str | None = None,
     extraction_profile_id: str | None = None,
     registry_snapshot: RegistrySnapshot | None = None,
-    registry_root: Path | None = None,
-    source_root: Path | None = None,
 ) -> InboundDeclaracionObservation:
     """Parse an AEAT declaración PDF into a :class:`InboundDeclaracionObservation`.
 
@@ -146,10 +143,6 @@ def parse_declaracion(
         registry_snapshot: Pre-built validated :class:`RegistrySnapshot`. When
             omitted, the parser loads the committed registry and builds
             one from the detected modelo, tax year, and period.
-        registry_root: Optional registry TOML root used when
-            ``registry_snapshot`` is omitted.
-        source_root: Optional source root used for source integrity
-            checks while building a snapshot.
 
     Returns:
         A strict :class:`InboundDeclaracionObservation` populated with the extracted
@@ -174,8 +167,6 @@ def parse_declaracion(
         period_override=period_override,
         extraction_profile_id=extraction_profile_id,
         registry_snapshot=registry_snapshot,
-        registry_root=registry_root,
-        source_root=source_root,
     )
 
 
@@ -189,8 +180,6 @@ def parse_declaracion_bytes(
     period_override: str | None = None,
     extraction_profile_id: str | None = None,
     registry_snapshot: RegistrySnapshot | None = None,
-    registry_root: Path | None = None,
-    source_root: Path | None = None,
 ) -> InboundDeclaracionObservation:
     """Parse declaración PDF bytes without writing them to a plaintext temp file.
 
@@ -212,10 +201,6 @@ def parse_declaracion_bytes(
         registry_snapshot: Pre-built validated :class:`RegistrySnapshot`. When
             omitted, the parser loads the committed registry and builds
             one from the detected modelo, tax year, and period.
-        registry_root: Optional registry TOML root used when
-            ``registry_snapshot`` is omitted.
-        source_root: Optional source root used for source integrity
-            checks while building a snapshot.
 
     Returns:
         A :class:`InboundDeclaracionObservation` populated with the extracted casillas,
@@ -240,8 +225,6 @@ def parse_declaracion_bytes(
         period_override=period_override,
         extraction_profile_id=extraction_profile_id,
         registry_snapshot=registry_snapshot,
-        registry_root=registry_root,
-        source_root=source_root,
     )
 
 
@@ -257,8 +240,6 @@ def _parse_declaracion_pages(
     period_override: str | None,
     extraction_profile_id: str | None,
     registry_snapshot: RegistrySnapshot | None,
-    registry_root: Path | None,
-    source_root: Path | None,
     pdf_bytes: bytes | None = None,
 ) -> InboundDeclaracionObservation:
     """Assemble the shared registry-grounded parse result.
@@ -282,8 +263,6 @@ def _parse_declaracion_pages(
     snapshot = registry_snapshot or _load_registry_snapshot(
         template=template,
         period=period,
-        registry_root=registry_root,
-        source_root=source_root,
     )
     _validate_snapshot_matches_template(snapshot, template)
     profile = _select_extraction_profile(snapshot, extraction_profile_id=extraction_profile_id)
@@ -522,11 +501,8 @@ def _load_registry_snapshot(
     *,
     template: TemplateRevision,
     period: str,
-    registry_root: Path | None,
-    source_root: Path | None,
 ) -> RegistrySnapshot:
-    root = registry_root or bundled_path("registry", "aeat")
-    authority = ValidatedRegistryAuthority.load(root, source_root=source_root or bundled_path())
+    authority = bundled_authority()
     try:
         return authority.snapshot(
             template.modelo,

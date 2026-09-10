@@ -23,7 +23,10 @@ from typing import Final
 import pytest
 
 from ..corpus.fetch_boe_normative import (
+    ArticleRedaction,
     NormativeAcquisitionError,
+    article_redaction_document,
+    article_redaction_markup,
     article_redactions,
     assert_serves_the_article_in_force,
 )
@@ -149,6 +152,38 @@ def test_a_payload_with_no_version_element_is_refused() -> None:
 
     with pytest.raises(NormativeAcquisitionError, match=r"no <version> element"):
         assert_serves_the_article_in_force(stripped, document_id=_LIVA, block="a90")
+
+
+def test_a_historical_capture_preserves_one_uniquely_identified_redaction_only() -> None:
+    """A source artifact carries the BOE identity/date, not undifferentiated history."""
+    payload = _payload(_ARTICLE)
+    target = next(redaction for redaction in article_redactions(payload) if redaction.vigencia == "20120715")
+
+    captured = article_redaction_document(payload, target)
+
+    assert captured.startswith(f'<version id_norma="{target.amending_norm}"')
+    assert f'fecha_vigencia="{target.vigencia}"' in captured
+    assert "21 por ciento" in captured
+    assert "15 por 100" not in captured
+    assert captured.endswith("</version>\n") or captured.endswith("</version>")
+
+
+def test_a_historical_capture_refuses_an_unidentifiable_redaction() -> None:
+    payload = _payload(_ARTICLE)
+
+    with pytest.raises(NormativeAcquisitionError, match="cannot be captured unambiguously"):
+        article_redaction_document(
+            payload,
+            ArticleRedaction(amending_norm="BOE-A-2099-99999", vigencia="20990101"),
+        )
+
+
+def test_a_historical_capture_and_plain_markup_have_different_evidence_roles() -> None:
+    """The source artifact must keep the version wrapper the citation text omits."""
+    payload = _payload(_ARTICLE)
+    target = next(redaction for redaction in article_redactions(payload) if redaction.vigencia == "20120715")
+
+    assert article_redaction_markup(payload, target) not in {"", article_redaction_document(payload, target)}
 
 
 def test_a_tie_on_the_latest_vigencia_is_refused_not_guessed() -> None:

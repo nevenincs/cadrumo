@@ -50,9 +50,9 @@ from ...core.casilla_id import CasillaId
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
-from ...core.resources.bundled_data import bundled_path
 from ...core.time.clock import now
 from ...core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import (
     CasillaObservation,
     RegistryModeloObservation,
@@ -68,7 +68,6 @@ from ...domain.calculations.registry.ids import (
     RevisionId,
 )
 from ...domain.calculations.registry.iva_wallet_relation_targets import MODELO_303_IVA_COMPENSATION_BINDING_ID
-from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.relations import RegistryFoldRequirement
 from ...domain.calculations.registry.runtime_graph import expression_casilla_refs
 from ...domain.calculations.registry.schema import FormulaDefinition, RegistrySnapshot
@@ -457,8 +456,7 @@ def _observation_from_iva_compensation_history(
     state: IvaCompensationPeriodState,
 ) -> RegistryModeloObservation:
     """Project secure IVA compensation history into the registry resolver contract."""
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(candidate for candidate in modelos if candidate.id == Modelo.M303.value)
+    modelo = next(candidate for candidate in bundled_authority().modelos if candidate.id == Modelo.M303.value)
     revision = select_revision(
         modelo,
         filing_year=state.filing_year,

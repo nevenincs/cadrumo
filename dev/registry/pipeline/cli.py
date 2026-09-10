@@ -32,6 +32,7 @@ from ._tree_publication import (
     publish_validated_generated_export_tree,
 )
 from ._tree_validation import GeneratedExportTreeValidationContext, validate_generated_export_tree
+from .authority_publication import publish_authority_candidate
 from .candidate_staging import (
     GeneratedExportBootstrapTarget,
     generated_export_bootstrap_target,
@@ -40,11 +41,11 @@ from .candidate_staging import (
 )
 from .export_fragment_provenance import SHA256_PATTERN, ExportFragmentTarget
 from .render_check import (
-    record_drift_dispositions,
     GeneratedExportBootstrapTransport,
     RenderComparison,
     RevisionRenderInputs,
     compare_export_tree_roots,
+    record_drift_dispositions,
     revision_render_inputs,
 )
 from .source_defects import source_defects_for
@@ -56,6 +57,26 @@ app = typer.Typer(
 )
 
 _SOURCE_MODELO_RE = re.compile(r'^\s*source_modelo\s*=\s*"(?P<modelo>[^"]+)"', re.MULTILINE)
+
+
+def publish_authority_candidate_workflow(
+    *,
+    registry_root: Path,
+    source_root: Path,
+    artifact_path: Path,
+    signing_private_key_hex: str,
+):
+    """Run the dev pipeline's complete authority publication workflow.
+
+    The workflow is programmatic so callers inject a release-held signing key
+    instead of exposing it in a product or developer CLI argument.
+    """
+    return publish_authority_candidate(
+        registry_root=registry_root,
+        source_root=source_root,
+        artifact_path=artifact_path,
+        signing_private_key_hex=signing_private_key_hex,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -462,4 +483,4 @@ def republish_command(
     typer.echo(f"republished modelo={modelo} revision={revision} source={source_ref}")
 
 
-__all__ = ["app"]
+__all__ = ["app", "publish_authority_candidate_workflow"]

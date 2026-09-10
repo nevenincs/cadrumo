@@ -58,14 +58,13 @@ from ...core.prorrata_register import (
     ProrrataRegisterRegime,
     regime_apportions_deduction,
 )
-from ...core.resources.bundled_data import bundled_path
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.ids import (
     BindingId,
     LegalRefId,
     SourceRefId,
 )
 from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
-from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
@@ -803,8 +802,7 @@ def _revision_for_context(
     revision = registry_snapshot.revision if registry_snapshot is not None else None
     if revision is not None:
         return revision
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(candidate for candidate in modelos if candidate.id == context.modelo)
+    modelo = next(candidate for candidate in bundled_authority().modelos if candidate.id == context.modelo)
     return select_revision(
         modelo,
         filing_year=context.filing_year,

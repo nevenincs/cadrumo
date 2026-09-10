@@ -25,6 +25,7 @@ from ...core.logging import get_logger
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...core.time.clock import now
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import (
     IvaCompensationAnnualPartitionRequirement,
     RegistryModeloObservation,
@@ -75,11 +76,7 @@ def _observed_value(values: Mapping[CasillaId, Decimal], casilla_id: CasillaId) 
 
 
 def _validate_303_observation_casilla_ids(observation: RegistryModeloObservation) -> None:
-    from ...core.resources.bundled_data import bundled_path
-    from ...domain.calculations.registry.loader import load_registry_tree
-
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(candidate for candidate in modelos if candidate.id == observation.modelo)
+    modelo = next(candidate for candidate in bundled_authority().modelos if candidate.id == observation.modelo)
     revision = select_revision(
         modelo,
         filing_year=observation.filing_year,
@@ -245,11 +242,7 @@ def _select_partition_revision(
     revision = registry_snapshot.revision if registry_snapshot is not None else None
     if revision is not None:
         return revision
-    from ...core.resources.bundled_data import bundled_path
-    from ...domain.calculations.registry.loader import load_registry_tree
-
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(candidate for candidate in modelos if candidate.id == context.modelo)
+    modelo = next(candidate for candidate in bundled_authority().modelos if candidate.id == context.modelo)
     return select_revision(
         modelo,
         filing_year=context.filing_year,

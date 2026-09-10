@@ -61,8 +61,8 @@ def test_read_parameter_returns_2023_temporary_da56_rate() -> None:
     )
 
 
-def test_read_parameter_uses_default_registry_root_when_none_provided() -> None:
-    """When `registry_root` is None, the function falls back to <PROJECT_ROOT>/registry/aeat."""
+def test_read_parameter_reads_the_bundled_authority() -> None:
+    """A public parameter read resolves an actual bundled, law-selected value."""
     value = read_parameter(
         "100",
         "2025",

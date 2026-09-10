@@ -31,8 +31,8 @@ from .renta_income_aggregation_support import _raw_transaction
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET = "9f86d081-884c-4d65-9a2f-eaa0c55ad015"  # was 'test'
-_Q1 = Period.from_year_and_code(2025, "1T")
-_IN_WINDOW = date(2025, 2, 14)
+_Q1 = Period.from_year_and_code(2026, "2T")
+_IN_WINDOW = date(2026, 5, 14)
 
 
 def _agrarian_row(
@@ -62,7 +62,7 @@ def _agrarian_row(
             "iva_rate": None,
             "iva_amount": None,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(2025, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(2026, 7, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
             "tipo_actividad": tipo_actividad,
             "concepto_ingreso": concepto_ingreso,

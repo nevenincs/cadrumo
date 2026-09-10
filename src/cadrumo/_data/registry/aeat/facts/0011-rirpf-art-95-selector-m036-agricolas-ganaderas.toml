@@ -1,0 +1,21 @@
+[fact]
+fact_id = "rirpf-art-95:selector-m036-actividades-agricolas-ganaderas"
+family = "entity_set"
+
+[[fact.variants]]
+variant_id = "rirpf-art-95:selector-m036-actividades-agricolas-ganaderas:2026-03-26"
+date_axis = "filing_period"
+valid_from = 2026-03-26
+legal_refs = ["rd-439-2007:art-95", "orden-eha-1274-2007:art-1"]
+source_refs = ["aeat-m036-activity-code-table-2026-03-26", "boe-rirpf-art-95-2023-01-26"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-m036-activity-code-table-2026-03-26"
+required_text = ["A02", "Ganadería independiente", "B01", "Actividad agrícola", "B02", "Actividad ganadera dependiente"]
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-art-95-2023-01-26"
+required_text = ["Se entenderán incluidas entre las actividades agrícolas y ganaderas:", "La ganadería independiente."]
+[fact.variants.payload]
+kind = "entity_set"
+entities = ["A02", "B01", "B02"]

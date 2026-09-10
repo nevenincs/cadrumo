@@ -3247,7 +3247,7 @@ cli:
         diagnostics_logs: A napló útvonalának és legutóbbi sorainak megjelenítése.
         diagnostics_overview_verbose: Az általános állapot részletes megjelenítése.
         diagnostics_repair_json: A teljes helyi állapotjelentés visszaadása JSON-ként.
-        diagnostics_version: A csomag és a nyilvántartás ujjlenyomatának megjelenítése.
+        diagnostics_version: A telepített csomagazonosító megjelenítése.
         family_app: A profilhoz kötött adózási parancsok megnyitása.
         family_config: Profil-, munkamenet-, tár- és javítási parancsok megnyitása.
         footer: 'Részletek: --help. Töröld az érzékeny adatokat, majd jelentsd: github.com/nevenincs/cadrumo/issues.'

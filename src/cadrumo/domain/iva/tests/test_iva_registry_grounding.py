@@ -45,9 +45,9 @@ from pathlib import Path
 from shutil import copytree
 
 import pytest
+from dev.registry.compiler.loader import load_shared_catalogues
 
 from ....core.resources.bundled_data import bundled_path
-from ...calculations.registry.loader import load_shared_catalogues
 from ...calculations.registry.schema_references import LegalReference
 from .._grounding import registry_catalogues, verify_table_legal_refs
 from ..errors import IvaCatalogueError

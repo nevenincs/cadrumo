@@ -50,11 +50,9 @@ from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...core.resources.bundled_data import bundled_path
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.casilla_membership import undeclared_casilla_ids
-from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.iva_compensation.carry_forward import (
@@ -610,8 +608,7 @@ def _iva_compensation_decimal_refusal(
 
 
 def _validate_observed_casilla_ids(observation: FiledDeclaracionObservationProtocol) -> None:
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(candidate for candidate in modelos if candidate.id == observation.modelo)
+    modelo = next(candidate for candidate in bundled_authority().modelos if candidate.id == observation.modelo)
     revision = select_revision(
         modelo,
         filing_year=observation.ejercicio,

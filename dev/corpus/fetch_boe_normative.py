@@ -497,6 +497,35 @@ def article_redaction_markup(payload: str, redaction: ArticleRedaction) -> str:
     return payload[start : following[0]] if following else payload[start:]
 
 
+def article_redaction_document(payload: str, redaction: ArticleRedaction) -> str:
+    """Return one complete, uniquely identified BOE article redaction.
+
+    Unlike :func:`article_redaction_markup`, this preserves BOE's ``<version>``
+    wrapper.  A bundled historical evidence file must retain both the amending
+    instrument and its BOE ``fecha_vigencia``; writing only the prose would
+    make a correct quotation impossible to associate with its legal interval.
+    This remains a lookup, not a selection: callers must name the exact
+    ``(amending_norm, vigencia)`` pair they have independently established.
+    """
+    opens = [
+        match
+        for match in _ARTICLE_VERSION.finditer(payload)
+        if match.group("document_id") == redaction.amending_norm and match.group("vigencia") == redaction.vigencia
+    ]
+    if len(opens) != 1:
+        raise NormativeAcquisitionError(
+            f"payload carries {len(opens)} <version> elements for {redaction.amending_norm} "
+            f"at fecha_vigencia {redaction.vigencia!r}, so the redaction cannot be captured unambiguously"
+        )
+    start = opens[0].start()
+    closing = payload.find("</version>", opens[0].end())
+    if closing < 0:
+        raise NormativeAcquisitionError(
+            f"redaction {redaction.amending_norm} at fecha_vigencia {redaction.vigencia!r} has no closing </version>"
+        )
+    return payload[start : closing + len("</version>")]
+
+
 def assert_serves_the_article_in_force(payload: str, *, document_id: str, block: str) -> ArticleRedaction:
     """Refuse the payload unless it is this article, and return the redaction in force.
 
@@ -627,6 +656,53 @@ def fetch_article(
         )
 
     return _write_verified(_CORPUS / destination_name, data)
+
+
+def fetch_article_redaction(
+    *,
+    document_id: str,
+    block: str,
+    redaction: ArticleRedaction,
+    destination_name: str,
+    required_text: tuple[str, ...] = (),
+    client: httpx.Client | None = None,
+) -> Path:
+    """Fetch and capture one exact historical BOE article redaction.
+
+    The article endpoint intentionally returns every historical wording in one
+    response.  This function refuses to treat that mixed history as evidence:
+    it validates the response as a real current article payload, then extracts
+    exactly one caller-identified redaction, preserving BOE's version wrapper
+    and requiring citations in that slice rather than elsewhere in the
+    response.  It is suitable for a fact's effective window only after the
+    caller has established the next redaction or an in-force endpoint boundary.
+    """
+    owned = client is None
+    http = client or httpx.Client(
+        follow_redirects=True,
+        timeout=90,
+        headers={"User-Agent": "cadrumo-corpus-hydration/1.0", **_ARTICLE_HEADERS},
+    )
+    try:
+        article_url = _ARTICLE_URL.format(document_id=document_id, block=block)
+        response = http.get(article_url, headers=_ARTICLE_HEADERS)
+        response.raise_for_status()
+        assert_served_by_the_requested_endpoint(final_url=str(response.url), requested_url=article_url)
+        data = response.content
+    finally:
+        if owned:
+            http.close()
+
+    payload = data.decode("utf-8", errors="replace")
+    assert_serves_the_article_in_force(payload, document_id=document_id, block=block)
+    captured = article_redaction_document(payload, redaction)
+    missing = [phrase for phrase in required_text if phrase not in captured]
+    if missing:
+        raise NormativeAcquisitionError(
+            f"fetched {document_id} block {block} redaction {redaction.amending_norm}/{redaction.vigencia} "
+            f"but these required phrases are absent from that exact redaction: {missing}"
+        )
+    return _write_verified(_CORPUS / destination_name, captured.encode("utf-8"))
 
 
 def assert_serves_the_published_document(payload: str, *, document_id: str) -> None:

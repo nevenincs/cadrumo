@@ -2,14 +2,22 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 import pytest
 
+from cadrumo.domain.calculations.registry.artifact_catalogue import (
+    ArtifactDiagnosticKind,
+    ArtifactRole,
+    DerivedArtifact,
+)
+
+from .. import sync_aeat_record_design_corpus as record_design_sync
 from ..sync_aeat_record_design_corpus import (
     _CORPUS,
-    _EXTRACTION_SIDECAR_ARTEFACTS,
+    _EXTRACTION_SIDECAR_DERIVATIONS,
     _HISTORICAL_EXCLUSIONS_PATH,
     _PAGES,
     _REQUIRED,
@@ -18,9 +26,8 @@ from ..sync_aeat_record_design_corpus import (
     _Artifact,
     _authority_failures,
     _load_manifests,
-    _load_off_host_sources,
     _Manifest,
-    _OffHostSources,
+    _record_design_catalogue,
     _root_aggregate,
     check,
     unattested_corpus_files,
@@ -272,9 +279,10 @@ def test_the_shipped_root_census_agrees_with_the_shipped_manifests() -> None:
         assert root[field] == expected, f"root manifest {field} disagrees with the per-modelo manifests"
 
 
-def _corpus_fixture(tmp_path: Path) -> tuple[dict[str, _Manifest], _OffHostSources]:
+def _corpus_fixture(tmp_path: Path) -> dict[str, _Manifest]:
     """A two-artefact corpus where each artefact resolves to one authority."""
     (tmp_path / "modelo_999" / "files").mkdir(parents=True)
+    (tmp_path / "modelo_999" / "files" / "01-design.pdf").write_bytes(b"%PDF-1.4")
     (tmp_path / "modelo_999" / "files" / "02-orden.pdf").write_bytes(b"%PDF-1.4")
     manifests: dict[str, _Manifest] = {
         "999": {
@@ -289,119 +297,156 @@ def _corpus_fixture(tmp_path: Path) -> tuple[dict[str, _Manifest], _OffHostSourc
             ],
         }
     }
-    off_host: _OffHostSources = {
-        "schema_version": 1,
-        "authority": "boe",
-        "disposition": "official-authority-published-by-boe-not-indexed-by-aeat",
-        "reason": "fixture",
-        "artefacts": [
-            {
-                "modelo": "999",
-                "title": "Orden",
-                "url": "https://www.boe.es/boe/dias/2020/01/01/pdfs/X.pdf",
-                "stored_path": "modelo_999/files/02-orden.pdf",
-                "kind": "record_design",
-                "registry_declaration": "aeat/legal/modelo-999.toml",
-            }
-        ],
-    }
-    return manifests, off_host
+    return manifests
 
 
-def test_an_artefact_with_no_declared_authority_is_refused(tmp_path: Path) -> None:
-    """The planted defect: corpus content nothing states the origin of.
+def _configure_isolated_sync_check(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    manifests: dict[str, _Manifest],
+) -> None:
+    """Route ``check`` through a complete temporary corpus without live data."""
+    for artifact in manifests["999"]["artefacts"]:
+        artifact["sha256"] = hashlib.sha256(
+            (tmp_path / "modelo_999" / artifact["stored_path"]).read_bytes()
+        ).hexdigest()
+    aggregate = _root_aggregate(manifests)
+    (tmp_path / "manifest.json").write_text(json.dumps(aggregate), encoding="utf-8")
+    monkeypatch.setattr(record_design_sync, "_CORPUS", tmp_path)
+    monkeypatch.setattr(record_design_sync, "_REQUIRED", ())
+    monkeypatch.setattr(record_design_sync, "_UNATTESTED_CORPUS_FILES", ())
+    monkeypatch.setattr(record_design_sync, "_EXTRACTION_SIDECAR_DERIVATIONS", ())
+    monkeypatch.setattr(record_design_sync, "_load_manifests", lambda: manifests)
+    monkeypatch.setattr(
+        record_design_sync,
+        "_load_historical_exclusions",
+        lambda: {
+            "schema_version": 1,
+            "support_years": [2023, 2024, 2025, 2026],
+            "disposition": "outside-supported-window-or-superseded",
+            "source_pages": [record_design_sync._PAGES[key] for key in record_design_sync._HISTORICAL_PAGE_KEYS],
+            "urls": [],
+        },
+    )
 
-    This is the state the corpus was actually in - 168 of 248 artefacts named by
-    no declaration - and every other check passed throughout, because they all
-    walk from the declarations outward or from the bytes to their own digest.
-    """
-    manifests, off_host = _corpus_fixture(tmp_path)
-    required = {f"{_STATIC}/DR_900/archivos/dr999.pdf"}
-    census: tuple[str, ...] = ()
 
-    assert _authority_failures(manifests, required, off_host, tmp_path, census) == []
+def test_catalog_backed_sync_rejects_an_unclassified_payload(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A payload outside every manifest fails the synchronizer's census check."""
+    manifests = _corpus_fixture(tmp_path)
+    unclassified = tmp_path / "modelo_999" / "files" / "03-unclassified.pdf"
+    unclassified.write_bytes(b"%PDF-1.4")
+    _configure_isolated_sync_check(monkeypatch, tmp_path, manifests)
 
-    # The defect: an artefact arrives carrying a URL no declaration names.
+    with pytest.raises(SystemExit, match="corpus files carrying no manifest entry have changed") as failure:
+        record_design_sync.check()
+
+    assert "modelo_999/files/03-unclassified.pdf" in str(failure.value)
+
+
+def test_catalog_backed_sync_rejects_conflicting_acquisition_identity(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Two manifest origins cannot silently select a preferred acquisition identity."""
+    manifests = _corpus_fixture(tmp_path)
     manifests["999"]["artefacts"].append(
-        _artefact("files/03-undeclared.pdf", f"{_STATIC}/DR_900/archivos/stowaway.pdf")
+        _artefact("files/02-orden.pdf", "https://www.boe.es/boe/dias/2020/01/02/pdfs/X.pdf")
     )
-    failures = _authority_failures(manifests, required, off_host, tmp_path, census)
+    _configure_isolated_sync_check(monkeypatch, tmp_path, manifests)
 
-    assert len(failures) == 1
-    assert "resolves to no declared authority" in failures[0]
-    assert "modelo_999/files/03-undeclared.pdf" in failures[0]
+    with pytest.raises(SystemExit, match="artifact catalog conflicting_identity") as failure:
+        record_design_sync.check()
 
-
-def test_an_artefact_claimed_by_two_declarations_is_refused(tmp_path: Path) -> None:
-    """Two authorities is a defect, not redundancy: the acquisition path forks."""
-    manifests, off_host = _corpus_fixture(tmp_path)
-    # The off-host entry and a required row both claim the BOE artefact.
-    required = {f"{_STATIC}/DR_900/archivos/dr999.pdf", "https://www.boe.es/boe/dias/2020/01/01/pdfs/X.pdf"}
-
-    failures = _authority_failures(manifests, required, off_host, tmp_path, ())
-
-    assert any("resolves to 2 authorities" in failure for failure in failures)
+    assert "modelo_999/files/02-orden.pdf" in str(failure.value)
 
 
-def test_an_off_host_entry_naming_an_aeat_url_or_an_absent_file_is_refused(tmp_path: Path) -> None:
-    """The off-host locus exists for what the required set CANNOT express.
-
-    An AEAT-hosted URL is expressible as a required row, so admitting one here
-    would make the same artefact declarable in two places, and the reproducibility
-    invariant would be satisfied by whichever the author happened to pick.
-    """
-    manifests, off_host = _corpus_fixture(tmp_path)
-    off_host["artefacts"][0]["url"] = f"{_STATIC}/DR_900/archivos/dr999.pdf"
-    off_host["artefacts"][0]["stored_path"] = "modelo_999/files/99-absent.pdf"
-    required = {f"{_STATIC}/DR_900/archivos/dr999.pdf"}
-
-    failures = _authority_failures(manifests, required, off_host, tmp_path, ())
-
-    assert any("belongs in the required set" in failure for failure in failures)
-    assert any("names an absent artefact" in failure for failure in failures)
+def _forbid_http_client(*_args: object, **_kwargs: object) -> object:
+    """Fail if an offline sync check attempts to create a network client."""
+    raise AssertionError("the offline record-design check must not use the network")
 
 
-def test_the_extraction_sidecar_census_is_an_equality_not_a_suffix_rule(tmp_path: Path) -> None:
-    """A third sidecar fails, and so does retiring one while it is still listed."""
-    manifests, off_host = _corpus_fixture(tmp_path)
-    required = {f"{_STATIC}/DR_900/archivos/dr999.pdf"}
-    # The .txt carries the .xls URL it was extracted from, so a required row
-    # matches it; the census is what says the match is spurious.
+def test_catalog_backed_sync_check_succeeds_without_constructing_a_network_client(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The catalog-backed local corpus path remains a wholly offline gate."""
+    manifests = _corpus_fixture(tmp_path)
+    _configure_isolated_sync_check(monkeypatch, tmp_path, manifests)
+    monkeypatch.setattr(record_design_sync.httpx, "Client", _forbid_http_client)
+
+    record_design_sync.check()
+
+
+def test_catalog_backed_sync_rejects_a_nonreproducible_stored_suffix_offline(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Identity admission cannot hide a filename the acquisition writer cannot recreate."""
+    manifests = _corpus_fixture(tmp_path)
+    original = tmp_path / "modelo_999" / "files" / "02-orden.pdf"
+    replacement = original.with_suffix(".xlsx")
+    original.rename(replacement)
+    manifests["999"]["artefacts"][1]["stored_path"] = replacement.relative_to(tmp_path / "modelo_999").as_posix()
+    _configure_isolated_sync_check(monkeypatch, tmp_path, manifests)
+    monkeypatch.setattr(record_design_sync.httpx, "Client", _forbid_http_client)
+
+    with pytest.raises(SystemExit, match="artefact is not reproducible from its declared URL") as failure:
+        record_design_sync.check()
+
+    failure_text = str(failure.value)
+    assert "modelo_999/files/02-orden.xlsx" in failure_text
+    assert "does not bind an official catalog identity" not in failure_text
+
+
+def test_named_sheet_text_is_catalogued_as_a_fresh_derivative(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A named text extraction has one derived role and the exact workbook digest."""
+    manifests = _corpus_fixture(tmp_path)
     manifests["999"]["artefacts"].append(_artefact("files/01-design.txt", f"{_STATIC}/DR_900/archivos/dr999.pdf"))
-    sidecar = "modelo_999/files/01-design.txt"
+    (tmp_path / "modelo_999" / "files" / "01-design.txt").write_text("# Sheet: Fixture", encoding="utf-8")
+    derivative = DerivedArtifact(
+        path=PurePosixPath("modelo_999/files/01-design.txt"),
+        input_path=PurePosixPath("modelo_999/files/01-design.pdf"),
+        input_sha256="0" * 64,
+        producer="record-design-sheet-text-extractor",
+    )
+    monkeypatch.setattr(record_design_sync, "_EXTRACTION_SIDECAR_DERIVATIONS", (derivative,))
 
-    assert _authority_failures(manifests, required, off_host, tmp_path, (sidecar,)) == []
+    catalogue, failures = _record_design_catalogue(manifests, tmp_path)
 
-    # Present but not censused. The URL match alone would excuse it, so the
-    # reproducibility check is what catches it: the URL serves the .pdf.
-    unlisted = _authority_failures(manifests, required, off_host, tmp_path, ())
-    assert any("not reproducible from its declared URL" in failure for failure in unlisted)
+    assert failures == []
+    assert catalogue is not None
+    assert catalogue.roles[derivative.path] is ArtifactRole.DERIVED_ARTIFACT
+    assert _authority_failures(manifests, catalogue) == []
 
-    # Censused but no longer present.
-    manifests["999"]["artefacts"].pop()
-    retired = _authority_failures(manifests, required, off_host, tmp_path, (sidecar,))
-    assert any("no longer present" in failure for failure in retired)
+    stale = DerivedArtifact(
+        path=derivative.path,
+        input_path=derivative.input_path,
+        input_sha256="1" * 64,
+        producer=derivative.producer,
+    )
+    monkeypatch.setattr(record_design_sync, "_EXTRACTION_SIDECAR_DERIVATIONS", (stale,))
 
+    catalogue, failures = _record_design_catalogue(manifests, tmp_path)
 
-def test_the_shipped_extraction_sidecar_census_is_the_two_known_rows() -> None:
-    """Named debt, not a suffix exemption that would swallow a genuine text artefact."""
-    assert _EXTRACTION_SIDECAR_ARTEFACTS == (
-        "modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.txt",
-        "modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.txt",
+    assert failures == []
+    assert catalogue is not None
+    assert any(
+        diagnostic.kind is ArtifactDiagnosticKind.STALE_DERIVATIVE and diagnostic.path == stale.path
+        for diagnostic in catalogue.diagnostics
     )
 
 
-def test_every_off_host_artefact_is_registered_on_the_registry_side() -> None:
-    """The declaration names where the artefact is registered, and that file exists.
-
-    A corpus declaration that pointed at nothing would restore the very asymmetry
-    it closes: the registry knowing about an artefact the acquisition path does not.
-    """
-    registry_root = Path(__file__).resolve().parents[3] / "src/cadrumo/_data/registry"
-
-    for entry in _load_off_host_sources()["artefacts"]:
-        declaration = registry_root / entry["registry_declaration"]
-        assert declaration.is_file(), f"{entry['stored_path']} names a missing declaration"
-        assert entry["stored_path"].rsplit("/", 1)[-1] in declaration.read_text(encoding="utf-8"), (
-            f"{entry['registry_declaration']} does not reference {entry['stored_path']}"
-        )
+def test_the_shipped_sheet_text_derivations_are_named_and_hash_pinned() -> None:
+    """Named records prevent a suffix exemption and bind each source workbook."""
+    assert tuple(
+        (derivative.path.as_posix(), derivative.input_path.as_posix()) for derivative in _EXTRACTION_SIDECAR_DERIVATIONS
+    ) == (
+        (
+            "modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.txt",
+            "modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.xls",
+        ),
+        (
+            "modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.txt",
+            "modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.xls",
+        ),
+    )
+    assert all(
+        derivative.producer == "record-design-sheet-text-extractor" for derivative in _EXTRACTION_SIDECAR_DERIVATIONS
+    )

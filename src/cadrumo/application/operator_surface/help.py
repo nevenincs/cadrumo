@@ -127,8 +127,8 @@ def _root_help() -> HelpDocument:
             tr(
                 "cli.operator_surface.help.root.paragraph_app_root",
                 default=(
-                    "The app root manages profile overview, ledger, modelo, review, registry, "
-                    "and authenticated AEAT reads."
+                    "The app root manages profile overview, ledger, modelo, review, and "
+                    "authenticated AEAT reads."
                 ),
             ),
             tr(

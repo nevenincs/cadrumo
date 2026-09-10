@@ -114,7 +114,6 @@ from cadrumo.core.operator_action_enums import ActionEvidenceProvenance, NoRecov
 from cadrumo.core.resources.bundled_data import bundled_path as _bundled_path
 from cadrumo.core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES as _REVIEWED_REVISION_REVIEW_STATUSES
 from cadrumo.core.revision_review import RevisionReviewStatus as _RevisionReviewStatus
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority as _ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError as _RegistryValidationError
 from cadrumo.domain.calculations.registry.export import (
     derive_export_layouts_from_bindings as _derive_export_layouts_from_bindings,
@@ -127,7 +126,12 @@ from cadrumo.domain.calculations.registry.ids import ModeloId as _ModeloId
 from cadrumo.domain.calculations.registry.ids import RelationId as _RelationId
 from cadrumo.domain.calculations.registry.ids import RevisionId as _RevisionId
 from cadrumo.domain.calculations.registry.ids import SourceRefId as _SourceRefId
-from cadrumo.domain.calculations.registry.loader import load_registry_tree as _load_registry_tree
+from cadrumo.domain.calculations.registry.identity import resolve_registry_identity as _resolve_registry_identity
+from dev.registry.compiler.authority import compile_validated_authority as _compile_validated_authority
+from dev.registry.compiler.loader import (
+    collect_registry_tree_fingerprints as _collect_registry_tree_fingerprints,
+    load_registry_tree as _load_registry_tree,
+)
 from cadrumo.domain.calculations.registry.schema import CasillaProducerKind as _CasillaProducerKind
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition as _ModeloDefinition
 from cadrumo.domain.calculations.registry.schema import ModeloRevision as _ModeloRevision
@@ -1215,7 +1219,14 @@ def audit_bundled_registry_conformance(*, validate: bool = True) -> RegistryConf
             registry_validated=False,
         )
 
-    authority = _ValidatedRegistryAuthority.load(registry_root, source_root=_bundled_path())
+    authority = _compile_validated_authority(
+        registry_root,
+        _bundled_path(),
+        identity=_resolve_registry_identity(
+            registry_root,
+            collect_fingerprints=_collect_registry_tree_fingerprints,
+        ),
+    )
     return build_registry_conformance_profile(
         authority.modelos,
         external_grounding=_build_external_grounding_audit(

@@ -40,10 +40,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 #: whatever module owns each annotated type -- and several of those are package
 #: roots that import heavy siblings eagerly.
 _RESOLUTION_LOADERS: dict[str, str] = {
-    "app/registry/manuals/list": "annotation resolves through application.registry -> application.filing root",
-    "app/registry/manuals/rules": "annotation resolves through application.registry -> application.filing root",
-    "app/registry/manuals/verify": "annotation resolves through application.registry -> application.filing root",
-    "app/registry/manuals/view": "annotation resolves through application.registry -> application.filing root",
     "app/ledger/export": "annotation resolves through ledger.actions_common -> domain.modelos protocols",
     "app/ledger/import": "annotation resolves through ledger.actions_common -> domain.modelos protocols",
     "app/live/verify/latest": "annotation pulls the persistence families it may use only at execution",

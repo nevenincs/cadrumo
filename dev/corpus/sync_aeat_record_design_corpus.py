@@ -24,12 +24,20 @@ if not __package__:
     __package__ = "dev.corpus"
 
 from cadrumo.core.directory_scan import iter_directory, scan_directory  # noqa: E402
+from cadrumo.domain.calculations.registry.artifact_catalogue import (  # noqa: E402
+    ArtifactCatalogue,
+    ArtifactDiagnostic,
+    ArtifactDiagnosticKind,
+    ArtifactRole,
+    DerivedArtifact,
+    compile_artifact_catalogue,
+    record_design_manifest_identities,
+)
 
 from ..packaging.hashing import sha256_path  # noqa: E402
 
 _CORPUS = _ROOT / "src/cadrumo/_data/corpus/aeat_official/disenos_registro"
 _HISTORICAL_EXCLUSIONS_PATH = _CORPUS / "historical_exclusions.json"
-_OFF_HOST_SOURCES_PATH = _CORPUS / "off_host_sources.json"
 _RETRIEVED_AT = "2026-08-26"
 _STATIC = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro"
 _INDEX = "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro"
@@ -83,24 +91,29 @@ _DERIVED_SUFFIXES: Final[tuple[str, ...]] = (
 #: load-bearing evidence for an AEAT authority check.
 _UNATTESTED_CORPUS_FILES: Final[tuple[str, ...]] = ("modelo_200/files/01-200-ejercicio-2025-10-9-mb-xls.xlsx",)
 
-#: Manifest artefacts that are sheet-text extractions of a sibling payload,
-#: enrolled as artefacts and carrying the sibling's source URL.
+#: Sheet-text extractions of sibling payloads which remain in their historical
+#: manifests.  They are explicitly catalogued as derivatives, rather than
+#: acquisition artefacts: each listed URL serves the sibling ``.xls`` and can
+#: never reproduce the rendered text bytes.
 #:
-#: They cannot resolve to an acquisition authority, and no row could give them
-#: one: the URL each declares serves the ``.xls`` beside it, so fetching it can
-#: never reproduce the ``.txt``. Both begin ``# Sheet:`` followed by ``rNcM:``
-#: cell coordinates, which is extractor output, not a download.
-#:
-#: They are named here rather than excused by a rule, because a suffix-based
-#: exemption would also swallow a genuine text artefact. :func:`check` compares
-#: the observed set against this one for EQUALITY, so a third such row fails and
-#: so does correcting one of these without removing it from here. The correction
-#: - recognise them as derivatives and retire the manifest rows, or re-enrol them
-#: with the extraction recorded as their provenance - is a corpus data change and
-#: is not made by declaring them.
-_EXTRACTION_SIDECAR_ARTEFACTS: Final[tuple[str, ...]] = (
-    "modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.txt",
-    "modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.txt",
+#: These are named records rather than a suffix exemption, so an unrecorded
+#: text file remains unclassified.  The source digests make the existing
+#: relationship fail closed when a workbook changes without re-extraction.
+_EXTRACTION_SIDECAR_DERIVATIONS: Final[tuple[DerivedArtifact, ...]] = (
+    DerivedArtifact(
+        path=PurePosixPath("modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.txt"),
+        input_path=PurePosixPath(
+            "modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.xls"
+        ),
+        input_sha256="85ffe058c1728a50d11d3c6fcfe03f77e172e0458b53920a620aa434d66d07b4",
+        producer="record-design-sheet-text-extractor",
+    ),
+    DerivedArtifact(
+        path=PurePosixPath("modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.txt"),
+        input_path=PurePosixPath("modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.xls"),
+        input_sha256="21ec4feed2950c57c689a772166952b3c2245e7101bce7836c2baedc1f4f8dbd",
+        producer="record-design-sheet-text-extractor",
+    ),
 )
 
 
@@ -172,23 +185,6 @@ class _HistoricalExclusions(TypedDict):
     disposition: str
     source_pages: list[str]
     urls: list[str]
-
-
-class _OffHostArtefact(TypedDict):
-    modelo: str
-    title: str
-    url: str
-    stored_path: str
-    kind: str
-    registry_declaration: str
-
-
-class _OffHostSources(TypedDict):
-    schema_version: int
-    authority: str
-    disposition: str
-    reason: str
-    artefacts: list[_OffHostArtefact]
 
 
 class _IndexLinkParser(HTMLParser):
@@ -1422,6 +1418,69 @@ def _load_manifests() -> dict[str, _Manifest]:
     return manifests
 
 
+def _payload_paths(corpus_root: Path) -> tuple[PurePosixPath, ...]:
+    """Return the bounded payload candidates owned by this synchronizer.
+
+    Project declarations and extractor outputs are intentionally outside this
+    acquisition boundary: the catalog compiler assigns payload roles here,
+    while their disposition and derivation contracts remain with their owners
+    until the later migration steps.  This function discovers candidates only;
+    it does not decide whether they have an acceptable acquisition identity.
+    """
+    paths: list[PurePosixPath] = []
+    for model_dir in scan_directory(corpus_root, pattern="modelo_*"):
+        for candidate in sorted(model_dir.rglob("*")):
+            if (
+                not candidate.is_file()
+                or candidate.name in _DECLARATION_NAMES
+                or candidate.name.endswith(_DERIVED_SUFFIXES)
+            ):
+                continue
+            paths.append(PurePosixPath(candidate.relative_to(corpus_root).as_posix()))
+    return tuple(paths)
+
+
+def _catalogue_diagnostic_message(diagnostic: ArtifactDiagnostic) -> str:
+    """Render a typed catalog finding at this CLI's existing failure boundary."""
+    path = "<unknown>" if diagnostic.path is None else diagnostic.path.as_posix()
+    return f"artifact catalog {diagnostic.kind.value}: {path}: {diagnostic.message}"
+
+
+def _record_design_catalogue(
+    manifests: dict[str, _Manifest],
+    corpus_root: Path,
+) -> tuple[ArtifactCatalogue | None, list[str]]:
+    """Compile manifest acquisition identity for this synchronizer's payloads.
+
+    The compiler owns the canonical path join and payload classification.  The
+    synchronizer deliberately retains byte rehashing and retrieval checks;
+    catalog compilation is an identity/role projection, not a replacement for
+    either.  Production ``check`` always fails closed on an incomplete
+    identity row.
+    """
+    derived_paths = {derivative.path for derivative in _EXTRACTION_SIDECAR_DERIVATIONS}
+    identities = []
+    failures: list[str] = []
+    for modelo, manifest in sorted(manifests.items()):
+        manifest_path = PurePosixPath(f"modelo_{modelo}/{_MANIFEST_NAME}")
+        try:
+            identities.extend(
+                identity
+                for identity in record_design_manifest_identities(manifest, manifest_path=manifest_path)
+                if identity.path not in derived_paths
+            )
+        except (TypeError, ValueError) as error:
+            failures.append(f"manifest acquisition identity is malformed: M{modelo}: {error}")
+    if failures:
+        return None, failures
+    catalogue = compile_artifact_catalogue(
+        known_paths=_payload_paths(corpus_root),
+        official_identities=identities,
+        derived_artifacts=_EXTRACTION_SIDECAR_DERIVATIONS,
+    )
+    return catalogue, []
+
+
 def unattested_corpus_files(corpus_root: Path) -> tuple[str, ...]:
     """Corpus files under ``corpus_root`` that no manifest declares.
 
@@ -1480,18 +1539,6 @@ def _load_historical_exclusions() -> _HistoricalExclusions:
         "_HistoricalExclusions",
         json.loads(_HISTORICAL_EXCLUSIONS_PATH.read_text(encoding=_UTF_8)),
     )
-
-
-def _load_off_host_sources() -> _OffHostSources:
-    """Read the declared artefacts published somewhere other than the AEAT host.
-
-    A ``_RequiredArtifact`` renders its URL under :data:`_STATIC`, so it cannot
-    name a document AEAT does not serve. The governing Orden for several modelos
-    is published by the BOE and is bundled from there; without this file those
-    artefacts sit in the corpus with no stated origin, which is the state the
-    reproducibility invariant in :func:`check` exists to refuse.
-    """
-    return cast("_OffHostSources", json.loads(_OFF_HOST_SOURCES_PATH.read_text(encoding=_UTF_8)))
 
 
 def _artifact_urls(artifact: _Artifact) -> set[str]:
@@ -1696,79 +1743,59 @@ def _pull() -> None:
 
 def _authority_failures(
     manifests: dict[str, _Manifest],
-    required_urls: set[str],
-    off_host: _OffHostSources,
-    corpus_root: Path,
-    sidecar_census: tuple[str, ...],
+    catalogue: ArtifactCatalogue | None = None,
 ) -> list[str]:
-    """Report every manifest artefact that resolves to other than one declared authority.
+    """Report manifest artefacts that lack one official catalog identity.
 
-    The rest of :func:`check` walks one direction: each declaration is present,
-    each present artefact rehashes. Neither asks where an artefact CAME from, so
-    an artefact could sit in the corpus with no stated origin and no way to
-    obtain it again, and every count would still reconcile. It did: the required
-    set named 80 of 248 artefacts and nothing noticed the other 168.
-
-    An artefact resolves through exactly one of three declarations - a required
-    row, an off-host entry, or the named extraction-sidecar census. Two claiming
-    it is as much a defect as none: the acquisition path would then depend on
-    which declaration a caller consulted.
+    The catalog owns the complete immutable acquisition identity, including
+    documents acquired from a non-AEAT publisher.  The synchronizer retains
+    byte rehashing; catalogued derivatives retain their exact input identity.
     """
     failures: list[str] = []
-    if off_host.get("schema_version") != 1:
-        failures.append("off-host source schema_version is stale")
-
-    off_host_by_path = {entry["stored_path"]: entry for entry in off_host["artefacts"]}
-    declared_paths = set(off_host_by_path)
-    sidecar_paths = set(sidecar_census)
-
-    observed_sidecars: list[str] = []
+    catalogue_is_local = catalogue is None
+    if catalogue_is_local:
+        derived_paths = {derivative.path for derivative in _EXTRACTION_SIDECAR_DERIVATIONS}
+        identities = []
+        for modelo, manifest in sorted(manifests.items()):
+            try:
+                identities.extend(
+                    identity
+                    for identity in record_design_manifest_identities(
+                        manifest,
+                        manifest_path=PurePosixPath(f"modelo_{modelo}/{_MANIFEST_NAME}"),
+                    )
+                    if identity.path not in derived_paths
+                )
+            except (TypeError, ValueError) as error:
+                failures.append(f"manifest acquisition identity is malformed: M{modelo}: {error}")
+        catalogue = compile_artifact_catalogue(
+            known_paths=tuple(identity.path for identity in identities)
+            + tuple(derivative.path for derivative in _EXTRACTION_SIDECAR_DERIVATIONS),
+            official_identities=identities,
+            derived_artifacts=_EXTRACTION_SIDECAR_DERIVATIONS,
+        )
+    if catalogue_is_local:
+        failures.extend(_catalogue_diagnostic_message(diagnostic) for diagnostic in catalogue.diagnostics)
     for modelo, manifest in sorted(manifests.items()):
         for artifact in manifest["artefacts"]:
             path = f"modelo_{modelo}/{artifact['stored_path']}"
-            authorities: list[str] = []
-            if path in sidecar_paths:
-                # The census wins outright, and only here. A sidecar carries the
-                # URL of the payload it was extracted from, so it matches a
-                # required row it was never acquired by; treating that match as a
-                # second authority would report an ambiguity that is really the
-                # spurious match the census was written to name.
-                authorities.append("extraction-sidecar")
-                observed_sidecars.append(path)
-            else:
-                if _artifact_urls(artifact) & required_urls:
-                    authorities.append("required")
-                if path in declared_paths:
-                    authorities.append("off-host")
-                # Resolving to a declaration is not yet reproducibility. `_pull`
-                # names the stored file from the response URL's extension, so a
-                # row whose stored extension differs from its URL's could not
-                # have been produced by the acquisition path, whatever it
-                # declares: fetching that URL yields the other file. This is the
-                # check that separates an artefact from a derivative wearing its
-                # source's URL, which the authority join alone cannot see.
-                stored_suffix = PurePosixPath(artifact["stored_path"]).suffix.lower()
-                url_suffix = PurePosixPath(urlparse(artifact["url"]).path).suffix.lower()
-                if authorities and stored_suffix != url_suffix:
-                    failures.append(
-                        f"artefact is not reproducible from its declared URL: M{modelo} {path} "
-                        f"stored {stored_suffix or '<none>'} but {artifact['url']} serves {url_suffix or '<none>'}"
-                    )
-            if not authorities:
-                failures.append(f"artefact resolves to no declared authority: M{modelo} {path} <- {artifact['url']}")
-            elif len(authorities) > 1:
-                failures.append(f"artefact resolves to {len(authorities)} authorities: M{modelo} {path} {authorities}")
-
-    for path, entry in sorted(off_host_by_path.items()):
-        if entry["url"].startswith(_STATIC):
-            failures.append(f"off-host entry names an AEAT-hosted URL and belongs in the required set: {path}")
-        if not (corpus_root / path).is_file():
-            failures.append(f"off-host entry names an absent artefact: {path}")
-
-    if tuple(sorted(observed_sidecars)) != sidecar_census:
-        appeared = sorted(set(observed_sidecars) - sidecar_paths)
-        retired = sorted(sidecar_paths - set(observed_sidecars))
-        failures.append(f"extraction-sidecar census has changed: newly present {appeared}, no longer present {retired}")
+            catalog_role = catalogue.roles.get(PurePosixPath(path))
+            if catalog_role is ArtifactRole.DERIVED_ARTIFACT:
+                continue
+            catalog_identity = catalogue.identities.get(PurePosixPath(path))
+            if catalog_identity is None or catalog_role is not ArtifactRole.OFFICIAL_ARTIFACT:
+                failures.append(f"artefact does not bind an official catalog identity: M{modelo} {path}")
+                continue
+            # A catalog identity proves provenance, but not reproducibility by
+            # the acquisition writer: `_pull` names files from the response URL
+            # extension. A divergent stored suffix therefore remains a failure.
+            stored_suffix = PurePosixPath(artifact["stored_path"]).suffix.lower()
+            url_suffix = PurePosixPath(urlparse(artifact["url"]).path).suffix.lower()
+            if stored_suffix != url_suffix:
+                failures.append(
+                    f"artefact is not reproducible from its declared URL: M{modelo} {path} "
+                    f"stored {stored_suffix or '<none>'} but {artifact['url']} serves {url_suffix or '<none>'}"
+                )
     return failures
 
 
@@ -1777,6 +1804,14 @@ def check() -> None:
     manifests = _load_manifests()
     historical_exclusions = _load_historical_exclusions()
     failures = []
+    catalogue, catalogue_failures = _record_design_catalogue(manifests, _CORPUS)
+    failures.extend(catalogue_failures)
+    if catalogue is not None:
+        failures.extend(
+            _catalogue_diagnostic_message(diagnostic)
+            for diagnostic in catalogue.diagnostics
+            if diagnostic.kind is not ArtifactDiagnosticKind.UNKNOWN_FILE
+        )
     for required in _REQUIRED:
         manifest = manifests.get(required.modelo)
         if manifest is None or not any(required.url in _artifact_urls(artifact) for artifact in manifest["artefacts"]):
@@ -1845,7 +1880,15 @@ def check() -> None:
     conflicting_exclusions = sorted(set(exclusion_urls) & represented_urls)
     if conflicting_exclusions:
         failures.append(f"historical exclusions are already represented: {conflicting_exclusions[:5]!r}")
-    observed_unattested = unattested_corpus_files(_CORPUS)
+    observed_unattested = (
+        tuple(
+            diagnostic.path.as_posix()
+            for diagnostic in catalogue.diagnostics
+            if diagnostic.kind is ArtifactDiagnosticKind.UNKNOWN_FILE and diagnostic.path is not None
+        )
+        if catalogue is not None
+        else unattested_corpus_files(_CORPUS)
+    )
     if observed_unattested != _UNATTESTED_CORPUS_FILES:
         appeared = sorted(set(observed_unattested) - set(_UNATTESTED_CORPUS_FILES))
         attested = sorted(set(_UNATTESTED_CORPUS_FILES) - set(observed_unattested))
@@ -1860,10 +1903,7 @@ def check() -> None:
     failures.extend(
         _authority_failures(
             manifests,
-            required_urls,
-            _load_off_host_sources(),
-            _CORPUS,
-            _EXTRACTION_SIDECAR_ARTEFACTS,
+            catalogue,
         )
     )
     if failures:

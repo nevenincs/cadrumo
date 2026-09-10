@@ -17,16 +17,10 @@ from .command_specs import COMMAND_GRAPH as _COMMAND_GRAPH
 
 
 def emit_version_report_and_exit(*, detail: bool) -> None:
-    """Render the ``--version`` surface and exit, skipping the registry load.
-
-    Fast-path: bare ``aeat --version`` skips the registry load — registry
-    validation must not run on the version surface. The ``--detail`` variant
-    re-invokes with the registry summary populated. The diagnostics import is
-    deferred here so it never loads on a non-version surface.
-    """
+    """Render the ``--version`` surface and exit without loading the registry."""
     from ...application.diagnostics import build_cli_version_report, render_cli_version_text
 
-    report = build_cli_version_report(with_registry=detail)
+    report = build_cli_version_report()
     if detail:
         typer.echo(render_cli_version_text(report))
     else:

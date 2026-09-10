@@ -16,11 +16,10 @@ from typing import TYPE_CHECKING
 from ...core.decimal.constants import ZERO
 from ...core.errors.hierarchy import CoreValidationError, TerminalPreconditionErrorMixin
 from ...core.modelo import Modelo
-from ...core.resources.bundled_data import bundled_path
 from ...core.result_disposition import ResultDisposition, result_disposition_is_refund
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
-from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.runtime_graph import expression_casilla_refs
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.temporal import select_revision
@@ -330,8 +329,7 @@ def _normalize_carry_observation(
         available_was_calculated=available_was_calculated,
     )
 
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(candidate for candidate in modelos if candidate.id == Modelo.M303.value)
+    modelo = next(candidate for candidate in bundled_authority().modelos if candidate.id == Modelo.M303.value)
     revision = select_revision(
         modelo,
         filing_year=observation.filing_year,

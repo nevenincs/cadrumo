@@ -261,14 +261,11 @@ def test_profile_readiness_reports_the_lock_rather_than_no_profile_configured(tm
     assert verdict.action.action_id == "operator.profile.login"
 
 
-def test_config_repair_report_contains_registry_and_setup_checks(config_repair_report: ConfigRepairReport) -> None:
+def test_config_repair_report_contains_setup_checks(config_repair_report: ConfigRepairReport) -> None:
     report = config_repair_report
     assert report.package_name == "cadrumo"
-    assert report.registry.available is True
-    assert report.registry.modelo_count > 0
     assert {check.name for check in report.checks} >= {
         "environment.python",
-        "registry.load",
         "secure_state.load",
         "profile.readiness",
         "auth.readiness",
@@ -283,7 +280,6 @@ def test_render_config_repair_text_is_operator_readable(config_repair_report: Co
     from ...core.i18n import tr
 
     assert f"{tr('cli.diagnostics.repair.overall_label')}\t" in rendered
-    assert "registry.load" in rendered
     assert f"{tr('cli.diagnostics.repair.logs_label')}\t" in rendered
 
 
@@ -733,15 +729,14 @@ def test_importing_diagnostics_does_not_pull_the_browser_or_registry_subtree() -
 def test_build_cli_version_report_fast_path_needs_no_model_rebuild() -> None:
     """The ``--version`` model is fully defined without the deferred rebuild.
 
-    ``build_cli_version_report(with_registry=False)`` is the fast-path
-    call. It returns a ``CliVersionReport``, which must carry no field
+    ``build_cli_version_report()`` returns a ``CliVersionReport`` with no field
     typed by a lazily imported name — otherwise the version path would
     have to pay the heavy ``ensure_models_rebuilt`` import cost.
     """
 
     from ..diagnostics import build_cli_version_report, render_cli_version_text
 
-    report = build_cli_version_report(with_registry=False)
+    report = build_cli_version_report()
     assert report.package_name == "cadrumo"
     assert report.package_version
     # Renders without raising — the model is fully defined.
@@ -1033,35 +1028,3 @@ def test_missing_active_bucket_session_classifier_terminates_on_a_cyclic_chain()
     second.__context__ = first
 
     assert _is_missing_active_bucket_session(first) is False
-
-
-_REGISTRY_SUMMARY_COUNT_FIELDS = ("modelo_count", "revision_count", "casilla_count", "formula_count")
-
-
-def test_registry_version_summary_rejects_a_negative_count() -> None:
-    """Every summary tally is a ``len()`` over loaded registry data.
-
-    ``build_registry_version_summary`` fills these from ``len(modelos)``,
-    ``len(revisions)`` and sums of ``len(revision.casillas)`` /
-    ``len(revision.formulas)``, so a negative is incoherent. The bound lives on
-    the canonical summary rather than on the CLI repair payload, so the version
-    surface and any other consumer inherit the same refusal.
-    """
-    for field_name in _REGISTRY_SUMMARY_COUNT_FIELDS:
-        with pytest.raises(ValidationError, match=field_name):
-            RegistryVersionSummary(available=True, registry_root="/x", **{field_name: -1})  # ty: ignore[invalid-argument-type]  # reason: the negative count IS the refusal under test
-
-
-def test_registry_version_summary_defaults_to_zero_counts_when_unavailable() -> None:
-    """The unavailable branch reports zeroes, and ``ge=0`` must permit them.
-
-    ``build_registry_version_summary`` returns this shape when the authority
-    fails to load, so a bound rejecting zero would turn a reported failure into
-    an unhandled one.
-    """
-    summary = RegistryVersionSummary(available=False, registry_root="/x", error="RegistryLoadError: boom")
-
-    assert summary.modelo_count == 0
-    assert summary.revision_count == 0
-    assert summary.casilla_count == 0
-    assert summary.formula_count == 0

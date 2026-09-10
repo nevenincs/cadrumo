@@ -528,25 +528,30 @@ _TARGET_CASILLA_M131_AGRARIO: CasillaId = validated_casilla_id(
 )
 
 _M131_AGRARIO_ACTIVITY_SELECTOR: Final[str] = (
-    "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrario-objetiva"
+    "modelo-131:selector-m036-volumen-ingresos-agrario"
 )
 
 
-def _m131_agrarian_activity_codes() -> frozenset[TipoActividad]:
+def _m131_agrarian_activity_codes(*, effective_date: date) -> frozenset[TipoActividad]:
     """Return the Modelo 036 codes whose income feeds Modelo 131 casilla 05.
 
-    Delegates to the one reader for ``m036-tipo-actividad-code-set`` parameters
-    rather than splitting the string here. Several unrelated selectors share that
-    unit -- the four art. 95 partitions and this art. 110.1.c) set -- and a second
-    parser is a second place the unit check and the unknown-token refusal drift.
+    Delegates to the one reader for governed ``m036-tipo-actividad-code-set``
+    facts rather than splitting the string here. Several unrelated selectors share
+    that payload -- the four art. 95 partitions, the broad art. 110 set, and this
+    Modelo 131-specific set -- and a second parser is a second place the token
+    validation can drift.
 
     The set is NOT the art. 95 agrícola/ganadera one: that carries no forestal code,
     so borrowing it would drop a forestal filer's entire quarterly volume.
 
+    Args:
+        effective_date: Filing-period coordinate for the form-specific fact.
+
     Raises:
-        TransactionValidationError: If the selector parameter is absent or malformed.
+        TransactionValidationError: If the selector fact is absent, unsupported at
+            the period, or malformed.
     """
-    return tipo_actividad_code_set(_M131_AGRARIO_ACTIVITY_SELECTOR)
+    return tipo_actividad_code_set(_M131_AGRARIO_ACTIVITY_SELECTOR, effective_date=effective_date)
 
 
 def aggregate_renta_m131_agrario_income_ledger_from_repositories(
@@ -588,8 +593,8 @@ def aggregate_renta_m131_agrario_income_ledger(
     Two filters separate this from the Modelo 130 path, and both are legal rather
     than incidental:
 
-    * **Activity.** Only rows whose declared :class:`~core.TipoActividad` is in the
-      registry's art. 110.1.c) selector contribute. A row with no declared activity
+    * **Activity.** Only rows whose declared :class:`~core.TipoActividad` are in
+      the registry's Modelo 131 casilla-05 selector contribute. A row with no declared activity
       contributes NOTHING here — the opposite of the concept default below, and
       deliberately so. Silence about activity cannot mean "agrarian": routing an
       undeclared row into casilla 05 would put a non-agrarian filer's income into an
@@ -626,7 +631,7 @@ def aggregate_renta_m131_agrario_income_ledger(
             context={"period": str(period)},
         )
     resolved_invoices = invoices if invoices is not None else InvoiceCatalogue()
-    agrarian_codes = _m131_agrarian_activity_codes()
+    agrarian_codes = _m131_agrarian_activity_codes(effective_date=period.end_date)
 
     projected = _project_income_onto_casilla(
         transactions,

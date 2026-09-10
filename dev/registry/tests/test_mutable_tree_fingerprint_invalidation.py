@@ -1,4 +1,4 @@
-"""A mutable authoring tree's compiled output may never predate a live edit.
+"""Development-only regression coverage for mutable registry authoring trees.
 
 The registry-tree fingerprint cache holds the COMPLETE tree fingerprint -- one
 ``(path, size, mtime_ns, content_digest)`` row per directory and per TOML file --
@@ -15,8 +15,8 @@ cache. They are deliberately independent of wall-clock timing -- the pre-edit
 entry is planted with a live stamp, so it is maximally fresh by construction and
 no sleep, TTL window or machine speed can make the proof vacuous.
 
-The package-bundled tree keeps its declared window and is pinned separately by
-:mod:`~domain.calculations.registry.tests.testloader_cache_isolation`.
+The package-bundled tree remains immutable at runtime. This suite deliberately
+materialises and edits source trees, so it belongs under ``dev/registry``.
 """
 
 from __future__ import annotations
@@ -29,25 +29,31 @@ from pathlib import Path
 
 import pytest
 
-from .....core.config import override_settings
-from .....core.resources.bundled_data import bundled_path
-from .._loader_internals import (
+from cadrumo.core.config import override_settings
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry._loader_internals import (
     _collect_registry_directory_fingerprints,
     _collect_registry_tree_fingerprints,
     _collect_registry_tree_fingerprints_uncached,
 )
-from .._verdict_cache import (
+from cadrumo.domain.calculations.registry._verdict_cache import (
     certify_registry_validation,
     compute_verdict_key,
     registry_validation_is_certified,
     verdict_cache_path,
 )
-from ..identity import RegistryIdentity, RegistryIdentityOrigin, compute_walked_tree_digest
-from ..loader import _load_registry_tree_cached, load_registry_tree
-from ..loader_cache import is_bundled_registry_root
-from ..loader_fingerprints import _registry_fingerprint_cache, clear_fingerprint_cache
-from ..schema import ModeloDefinition
-from ._loader_cache_support import REGISTRY_DISK_CACHE_DIR_ENV_VAR
+from cadrumo.domain.calculations.registry.identity import (
+    RegistryIdentity,
+    RegistryIdentityOrigin,
+    compute_walked_tree_digest,
+)
+from cadrumo.domain.calculations.registry.loader import _load_registry_tree_cached, load_registry_tree
+from cadrumo.domain.calculations.registry.loader_cache import is_bundled_registry_root
+from cadrumo.domain.calculations.registry.loader_fingerprints import (
+    _registry_fingerprint_cache,
+    clear_fingerprint_cache,
+)
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -65,6 +71,7 @@ _CASILLA_NUMBER_SENTINEL = "@@CASILLA_NUMBER@@"
 _SUBPROCESS_TIMEOUT_SECONDS = 300
 _CHILD_REGISTRY_ROOT_ENV_VAR = "CADRUMO_TEST_MUTABLE_TREE_ROOT"
 _CHILD_EDITED_TEXT_ENV_VAR = "CADRUMO_TEST_MUTABLE_TREE_EDITED_TEXT"
+REGISTRY_DISK_CACHE_DIR_ENV_VAR = "CADRUMO_REGISTRY_DISK_CACHE_DIR"
 
 # The child's coordinates ride the environment rather than argv so the spawned
 # command line stays a fixed literal.
@@ -125,7 +132,9 @@ def _modelo_text(number: str) -> str:
 _SUPPORTED_FILING_YEARS_TEXT = (
     "[supported_filing_years]\nyears = [2025]\n\n"
     "[sociedades_annual_manual_coverage]\n"
-    "dispositions = [{ year = 2025, status = \"unpublished\", official_locator = \"https://example.com/manuals\", observed_at = 2026-09-10, acquisition_condition_key = \"application.registry.manuals.coverage.recheck_aeat_publication\" }]\n"
+    "dispositions = [{ year = 2025, status = \"unpublished\", "
+    "official_locator = \"https://example.com/manuals\", observed_at = 2026-09-10, "
+    "acquisition_condition_key = \"application.registry.manuals.coverage.recheck_aeat_publication\" }]\n"
 )
 
 
@@ -278,7 +287,7 @@ def test_a_mutable_tree_edit_is_seen_in_the_production_disk_cache_regime(tmp_pat
     for marker in ("PYTEST_CURRENT_TEST", "PYTEST_XDIST_WORKER", "PYTEST_VERSION"):
         env.pop(marker, None)
 
-    completed = subprocess.run(
+    completed = subprocess.run(  # noqa: S603 -- fixed literal interpreter and program
         [sys.executable, "-c", _CHILD_PROGRAM],
         check=True,
         capture_output=True,

@@ -2217,6 +2217,22 @@ applies_from = 2019-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/impuestos-tasas/impuesto-sobre-renta-personas-fisicas/modelo-131-irpf______sionales-estimacion-objetiva-fraccionado_/instrucciones.html"
 review_status = "pending_review"
 
+# The same bytes as the long-lived M131 guidance record above, but pinned to
+# the page's own 2026-04-01 update date.  A form-specific selector must not use
+# the unbounded record to imply that its present layout and scope held in 2019.
+[sources."aeat-modelo-131-instructions-2026-04-01"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_131/files/modelo-131-instrucciones.html"
+sha256 = "ff50d8e986968d3c2dd01f7146caa2084406cd083f4041b007b439c4493b9eac"
+bytes = 43854
+retrieved_at = 2026-05-05
+published_at = 2026-04-01
+applies_from = 2026-04-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/impuestos-tasas/impuesto-sobre-renta-personas-fisicas/modelo-131-irpf______sionales-estimacion-objetiva-fraccionado_/instrucciones.html"
+review_status = "agent_reviewed"
+
 [sources."aeat-modelo-131-formulario-presentacion"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"

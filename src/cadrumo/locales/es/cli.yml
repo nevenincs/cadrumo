@@ -3288,7 +3288,7 @@ cli:
         diagnostics_logs: Muestra la ruta del log y sus últimas líneas.
         diagnostics_overview_verbose: Muestra el estado general con más detalle.
         diagnostics_repair_json: Devuelve en JSON el informe completo de salud local.
-        diagnostics_version: Muestra la huella del paquete y del registro.
+        diagnostics_version: Muestra la identidad del paquete instalado.
         family_app: Abre los comandos fiscales vinculados al perfil.
         family_config: Abre perfiles, sesión, custodia, almacenamiento y reparación.
         footer: Añade --help para más detalle. Elimina datos sensibles del log y después

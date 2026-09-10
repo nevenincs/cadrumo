@@ -3255,7 +3255,7 @@ cli:
         diagnostics_logs: Mostra la ruta del registre i les últimes línies.
         diagnostics_overview_verbose: Mostra l'estat general amb més detall.
         diagnostics_repair_json: Retorna en JSON l'informe complet de salut local.
-        diagnostics_version: Mostra l'empremta del paquet i del registre.
+        diagnostics_version: Mostra la identitat del paquet instal·lat.
         family_app: Obre les ordres fiscals vinculades al perfil.
         family_config: Obre perfils, sessió, custòdia, emmagatzematge i reparació.
         footer: 'Detalls: --help. Elimina dades sensibles; després informa a github.com/nevenincs/cadrumo/issues.'

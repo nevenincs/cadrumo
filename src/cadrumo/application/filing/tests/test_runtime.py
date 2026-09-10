@@ -12,7 +12,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import date
-from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
@@ -148,18 +147,6 @@ def test_missing_requested_modelo_error_is_localized() -> None:
 
     assert exc_info.value.translated_message == "application.filing.runtime.errors.registry_missing_requested_modelos"
     assert exc_info.value.context == {"modelos": "999"}
-
-
-def test_empty_registry_error_uses_non_sensitive_context(tmp_path: Path) -> None:
-    registry_root = tmp_path / "registry-root"
-    (registry_root / "legal").mkdir(parents=True)
-    (registry_root / "modelos").mkdir()
-
-    with pytest.raises(ModeloBuilderError) as exc_info:
-        build_runtime_schema_provider(registry_root, source_root=registry_root)
-
-    assert exc_info.value.translated_message == "application.filing.runtime.errors.registry_empty"
-    assert exc_info.value.context == {"registry_root_name": "registry-root"}
 
 
 def test_filing_year_period_pair_error_is_localized() -> None:
@@ -513,46 +500,3 @@ def test_runtime_projection_rejects_ambiguous_casilla_refs_for_every_bundled_sch
 
     assert projected == expected, f"bundled runtime projection coverage lost contexts: {expected!r} -> {projected!r}"
     assert not offences, "ambiguous runtime casilla schema projection:\n  " + "\n  ".join(offences)
-
-
-def test_registry_tree_fingerprint_ttl_cache(tmp_path: Path) -> None:
-    """_registry_tree_fingerprint must cache results with a 1-second TTL and support clearing."""
-    import os
-    import time
-
-    from ....domain.calculations.registry.loader_fingerprints import clear_fingerprint_cache
-    from ..runtime import _FINGERPRINT_CACHE, registry_tree_fingerprint
-
-    def clear_test_fingerprint_caches() -> None:
-        _FINGERPRINT_CACHE.clear()
-        clear_fingerprint_cache()
-
-    clear_test_fingerprint_caches()
-    try:
-        reg_root = tmp_path / "registry"
-        (reg_root / "legal").mkdir(parents=True)
-        (reg_root / "modelos").mkdir()
-
-        toml_file = reg_root / "legal" / "test.toml"
-        toml_file.write_text("a = 1")
-
-        fp1 = registry_tree_fingerprint(reg_root)
-
-        toml_file.write_text("a = 2")
-        os.utime(toml_file, (1812542400, 1812542400))  # 2027-06-09 12:00:00
-
-        fp2 = registry_tree_fingerprint(reg_root)
-        assert fp2 == fp1
-
-        clear_test_fingerprint_caches()
-        fp3 = registry_tree_fingerprint(reg_root)
-        assert fp3 != fp1
-
-        toml_file.write_text("a = 3")
-        os.utime(toml_file, (1812542405, 1812542405))
-        time.sleep(1.05)
-
-        fp4 = registry_tree_fingerprint(reg_root)
-        assert fp4 != fp3
-    finally:
-        clear_test_fingerprint_caches()

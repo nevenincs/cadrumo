@@ -14,7 +14,6 @@ from ._modelo_readiness_command_specs import MODELO_READINESS_COMMAND_SPECS
 from ._modelo_spreadsheet_command_specs import MODELO_SPREADSHEET_COMMAND_SPECS
 from ._modelo_work_command_specs import MODELO_WORK_COMMAND_SPECS
 from ._overview_command_specs import OVERVIEW_COMMAND_SPECS
-from ._registry_command_specs import REGISTRY_COMMAND_SPECS
 from ._review_command_specs import REVIEW_COMMAND_SPECS
 from ._root_command_specs import ROOT_COMMAND_SPECS
 from .command_spec import CommandSpec, CommandSpecGraph
@@ -36,7 +35,6 @@ COMMAND_SPECS: tuple[CommandSpec, ...] = (
     *MODELO_WORK_COMMAND_SPECS,
     *OVERVIEW_COMMAND_SPECS,
     *QUICKFILE_COMMAND_SPECS,
-    *REGISTRY_COMMAND_SPECS,
     *REVIEW_COMMAND_SPECS,
 )
 

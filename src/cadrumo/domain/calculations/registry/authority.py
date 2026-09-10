@@ -1,9 +1,9 @@
 """Validated access point for registry-backed modelo definitions.
 
 :class:`ValidatedRegistryAuthority` is the production boundary for all registry
-access. It loads TOML sources via the compiler in ``_loader``, compiles them
-into :class:`ModeloDefinition` and :class:`ModeloRevision` objects, and
-produces :class:`RegistrySnapshot` instances on demand for each filing context.
+access. It reconstructs the signed, validated authority artifact into typed
+:class:`ModeloDefinition` and :class:`ModeloRevision` objects, and produces
+:class:`RegistrySnapshot` instances on demand for each filing context.
 """
 
 from __future__ import annotations
@@ -16,36 +16,20 @@ from datetime import date
 from pathlib import Path
 from secrets import token_bytes
 from threading import Condition, RLock
-from typing import Protocol, override
+from typing import Final, Protocol, override
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.hashing import content_hash_hex
 from ....core.identity import ContentDigest
 from ....core.resources.bundled_data import bundled_path as _bundled_path
 from ._snapshot_internals import _build_validated_snapshot
-from ._source_evidence_fingerprint import collect_source_evidence_fingerprints
-from ._supplementary_orden import collect_supplementary_orden_fingerprints, compile_supplementary_ordenes
-from ._validate import RegistryValidator
-from ._validate_evidence import flush_corpus_text_cache
-from ._verdict_cache import (
-    certify_registry_validation,
-    compute_verdict_key,
-    registry_validation_is_certified,
+from .authority_artifact import (
+    AuthorityArtifact,
+    read_authority_artifact,
 )
-from .convenio import collect_convenio_fingerprints, load_convenio_authority, validate_convenio_legal_refs
 from .corpus_provenance import NormativeCorpusProvenance, classify_normative_corpus_provenance
 from .errors import RegistrySnapshotError, RegistryValidationError
-from .facts.providers import (
-    collect_registered_fact_provider_fingerprints,
-    compile_registered_fact_providers,
-    validate_fact_provider_directory_ownership,
-)
 from .facts.resolution import GovernedFactQuery, ResolvedGovernedFact, resolve_governed_fact
-from .identity import (
-    FingerprintTuples,
-    RegistryIdentity,
-    resolve_registry_identity,
-)
 from .ids import LegalRefId, ModeloId, RevisionId, SourceRefId
 from .schema import (
     ModeloDefinition,
@@ -59,79 +43,55 @@ from .schema_verification import LiveCrossReferenceDecision, WorkbookParityRefer
 from .static_inspection import RegistryRevisionInspection
 from .temporal import select_revision
 
-
-def collect_registry_identity_fingerprints(resolved_root: Path) -> FingerprintTuples:
-    """Collect every fingerprint group that constitutes registry-tree identity.
-
-    The tree itself, the convenio treaty tree, and the supplementary annual
-    Orden set -- the three groups the authority compiles from. Kept as one named
-    collector rather than an inline concatenation so the release stamper and the
-    runtime walk provably fingerprint the SAME groups: a stamp computed over a
-    narrower set than the runtime walks would certify a tree nobody checked.
-
-    Returns:
-        The concatenated fingerprint tuples for ``resolved_root``.
-    """
-    from .loader import collect_registry_tree_fingerprints
-
-    return (
-        collect_registry_tree_fingerprints(resolved_root)
-        + collect_convenio_fingerprints(resolved_root)
-        + collect_supplementary_orden_fingerprints(resolved_root)
-        + collect_registered_fact_provider_fingerprints(resolved_root)
-    )
-
-
 _SnapshotKey = tuple[str, int, str, date | None, str | None, RegistryAuthorityGrade]
 _DeadlineWindow = tuple[str, ModeloRevision, DeadlineWindowDefinition]
-_SourceEvidenceFingerprints = tuple[tuple[str, int, int], ...]
 
 
 type RegistryAuthorityProjection = RegistryRevisionInspection | RegistrySnapshot
 
 
+_authority_process_pid = os.getpid()
+_authority_process_nonce = token_bytes(32)
+_authority_process_domains: set[ContentDigest] = set()
+_authority_state_lock = RLock()
+_authority_load_states: dict[object, object] = {}
+_authority_generation = 0
+_authority_reset_epoch = 0
+
+
 class RegistryAuthorityLifecycleObserver(Protocol):
-    """Observe authority construction, publication, and cache-reset transitions."""
-
-    def authority_construction_started(self, *, root: Path, source_root: Path) -> None:
-        """Observe a cold construction after the owner identity is selected."""
-        ...
-
-    def authority_published(self, *, root: Path, source_root: Path, generation: int) -> None:
-        """Observe publication of one current authority incarnation."""
-        ...
+    """Development observer retained for compiler-cache reset tooling."""
 
     def registry_cache_reset_requested(self) -> None:
-        """Observe a reset request before it waits for active authority readers."""
+        """Observe a compiler-cache reset request."""
         ...
 
     def registry_cache_reset_acquired(self) -> None:
-        """Observe a reset after it exclusively owns the authority lifecycle."""
+        """Observe exclusive ownership of compiler-cache reset."""
         ...
 
 
 class _SilentRegistryAuthorityLifecycleObserver:
-    """Production default for callers that do not consume lifecycle telemetry."""
-
-    __slots__ = ()
-
-    def authority_construction_started(self, *, root: Path, source_root: Path) -> None:
-        del root, source_root
-
-    def authority_published(self, *, root: Path, source_root: Path, generation: int) -> None:
-        del root, source_root, generation
-
     def registry_cache_reset_requested(self) -> None:
-        return
+        pass
 
     def registry_cache_reset_acquired(self) -> None:
-        return
+        pass
 
 
 _SILENT_AUTHORITY_LIFECYCLE_OBSERVER = _SilentRegistryAuthorityLifecycleObserver()
-_authority_process_pid = os.getpid()
-_authority_process_nonce = token_bytes(32)
-_authority_process_domains: set[ContentDigest] = set()
+
+
+class _DevelopmentCacheResetBarrier:
+    """A dev-only synchronization seam; product runtime has no source cache."""
+
+    @contextmanager
+    def reset(self) -> Generator[None]:
+        with _authority_state_lock:
+            yield
+
+
+_authority_load_barrier = _DevelopmentCacheResetBarrier()
 
 
 @dataclass(frozen=True, slots=True)
@@ -236,7 +196,7 @@ def fingerprint_key[T: tuple[tuple[object, ...], ...]](fingerprints: T) -> _Fing
 
 _PhysicalDirectoryIdentity = tuple[int, int]
 _AuthorityRootKey = tuple[_PhysicalDirectoryIdentity, _PhysicalDirectoryIdentity]
-_AuthorityLoadKey = tuple[RegistryIdentity, _FingerprintKey[_SourceEvidenceFingerprints]]
+_AuthorityLoadKey = tuple[object, _FingerprintKey[tuple[tuple[str, int, int], ...]]]
 
 
 @dataclass(frozen=True, slots=True)
@@ -427,7 +387,7 @@ class ValidatedRegistryAuthority:
     modelos: tuple[ModeloDefinition, ...]
     catalogues: RegistryCatalogues
     _modelos_by_id: dict[str, ModeloDefinition]
-    _validator: RegistryValidator
+    _validator: object
     _registry_validated: bool
     _validated_modelos: set[str]
     _snapshots: dict[_SnapshotKey, RegistrySnapshot]
@@ -439,23 +399,8 @@ class ValidatedRegistryAuthority:
     _capture_comparison_domain: ContentDigest | None = field(default=None, init=False, repr=False)
     _capture_process_pid: int = field(default=0, init=False, repr=False)
     _capture_process_incarnation: bytes = field(default=b"", init=False, repr=False)
+    _published_artifact: bool = field(default=False, init=False, repr=False)
     _state_lock: AbstractContextManager[object] = field(default_factory=RLock, init=False, repr=False)
-
-    @classmethod
-    def load(
-        cls,
-        root: Path,
-        *,
-        source_root: Path,
-        lifecycle_observer: RegistryAuthorityLifecycleObserver = _SILENT_AUTHORITY_LIFECYCLE_OBSERVER,
-    ) -> ValidatedRegistryAuthority:
-        """Load registry TOML and construct a reusable :class:`ValidatedRegistryAuthority` instance."""
-        _guard_authority_process()
-        identity = canonical_authority_root_pair(root, source_root)
-        return _load_authority(
-            identity,
-            lifecycle_observer=lifecycle_observer,
-        )
 
     def _bind_capture_incarnation(
         self,
@@ -473,6 +418,22 @@ class ValidatedRegistryAuthority:
         self._capture_reset_epoch = reset_epoch
         self._capture_process_pid = _authority_process_pid
         self._capture_process_incarnation = _authority_process_nonce
+
+    def _bind_published_artifact_incarnation(self) -> None:
+        """Bind a fresh artifact graph to this process without a mutable root slot."""
+        _guard_authority_process()
+        domain = content_hash_hex(
+            {
+                "schema": "published-authority-artifact-coordinate/v1",
+                "artifact_identity_digest": self._identity_digest,
+                "process_incarnation": _authority_process_nonce.hex(),
+            }
+        )
+        _authority_process_domains.add(domain)
+        self._capture_comparison_domain = domain
+        self._capture_process_pid = _authority_process_pid
+        self._capture_process_incarnation = _authority_process_nonce
+        self._published_artifact = True
 
     def modelo(self, modelo_id: str) -> ModeloDefinition:
         """Return a modelo definition by id.
@@ -524,9 +485,9 @@ class ValidatedRegistryAuthority:
             modelo = self.modelo(modelo_id)
             if not self._registry_validated and modelo_id not in self._validated_modelos:
                 try:
-                    self._validator.validate_modelo(modelo)
+                    self._validator.validate_modelo(modelo)  # type: ignore[attr-defined]  # development compiler supplies this validator
                 finally:
-                    flush_corpus_text_cache()
+                    pass
                 self._validated_modelos.add(modelo_id)
             return modelo
 
@@ -567,9 +528,9 @@ class ValidatedRegistryAuthority:
                 # Corpus-text extraction batches its disk-cache write behind a
                 # dirty flag; one flush per validation run replaces the per-miss
                 # full-file rewrite that was accidentally quadratic.
-                self._validator.validate_registry(self.modelos)
+                self._validator.validate_registry(self.modelos)  # type: ignore[attr-defined]  # development compiler supplies this validator
             finally:
-                flush_corpus_text_cache()
+                pass
             self._mark_registry_validated()
 
     def _mark_registry_validated(self) -> None:
@@ -770,8 +731,33 @@ class ValidatedRegistryAuthority:
         """
         self._require_creator_process()
         state = self._capture_state
-        if state is None:
+        if state is None and not self._published_artifact:
             raise RegistrySnapshotError("registry authority has no published capture incarnation")
+        if state is None:
+            with self._state_lock:
+                self._require_current_capture_incarnation()
+                projection = (
+                    self.inspect_revision(
+                        modelo_id,
+                        filing_year=filing_year,
+                        period=period,
+                        on=on,
+                    )
+                    if grade is None
+                    else self._cached_snapshot(
+                        modelo_id,
+                        filing_year=filing_year,
+                        period=period,
+                        on=on,
+                        revision_id=None,
+                        grade=grade,
+                    )
+                )
+                return RegistryAuthorityCapture(
+                    projection=projection.model_copy(deep=True),
+                    comparison_domain=self._current_coordinate().comparison_domain,
+                    generation=0,
+                )
         with _authority_load_barrier.read(), state.lock, self._state_lock:
             self._require_current_capture_incarnation()
             projection = (
@@ -803,8 +789,12 @@ class ValidatedRegistryAuthority:
         """Return the typed current coordinate for same-domain capture validation."""
         self._require_creator_process()
         state = self._capture_state
-        if state is None:
+        if state is None and not self._published_artifact:
             raise RegistrySnapshotError("registry authority has no published capture incarnation")
+        if state is None:
+            with self._state_lock:
+                self._require_current_capture_incarnation()
+                return self._current_coordinate()
         with _authority_load_barrier.read(), state.lock:
             self._require_current_capture_incarnation()
             return self._current_coordinate()
@@ -824,6 +814,8 @@ class ValidatedRegistryAuthority:
         state = self._capture_state
         root_key = self._capture_root_key
         with _authority_state_lock:
+            if self._published_artifact:
+                return
             if self._capture_reset_epoch != _authority_reset_epoch:
                 raise RegistrySnapshotError(
                     "registry authority capture was invalidated by cache reset; load a current authority"
@@ -928,154 +920,68 @@ def _deadline_window_qualifier_sort_key(window: DeadlineWindowDefinition) -> tup
     return resultado, tipo_renta
 
 
+_BUNDLED_AUTHORITY_ARTIFACT_PARTS = ("registry", "authority", "authority.json")
+_BUNDLED_AUTHORITY_VERIFICATION_PUBLIC_KEY_HEX: Final = (
+    "f7a668c2335217fedb3a7bb2c8144f9ff5ab161155c78de00bd3e72122697db7"
+)
+"""Release trust anchor, compiled separately from replaceable publication assets."""
+
+
+class _PublishedArtifactValidator:
+    """Defensive sentinel: product authorities are already publication-validated."""
+
+    def validate_modelo(self, _modelo: ModeloDefinition) -> None:
+        raise RegistrySnapshotError("a published authority must not enter source validation")
+
+    def validate_registry(self, _modelos: tuple[ModeloDefinition, ...]) -> None:
+        raise RegistrySnapshotError("a published authority must not enter source validation")
+
+
 def bundled_authority() -> ValidatedRegistryAuthority:
-    """Return an authority loaded from the package-bundled AEAT registry.
+    """Return a fresh authority reconstructed from the signed bundled artifact.
 
-    Callers that always load the same default registry path use this
-    instead of writing the bundled-path boilerplate inline.  The result
-    is backed by the canonical authority owner's current-identity slot, so
-    repeated calls within one process share the same published authority.
-
-    Returns:
-        A :class:`ValidatedRegistryAuthority` loaded from the bundled registry tree.
+    Publication validates authoring inputs before producing this artifact.  A
+    product process never recompiles those inputs: missing, corrupt, or
+    untrusted publication is refused here before a calculation or filing can
+    begin.  Each call reconstructs a distinct graph, so a consumer cannot
+    mutate the authority subsequently observed by another consumer.
     """
-    root = _bundled_path("registry", "aeat")
-    return ValidatedRegistryAuthority.load(root, source_root=_bundled_path())
+    artifact_path = _bundled_authority_artifact_path()
+    artifact = read_authority_artifact(
+        artifact_path,
+        verification_public_key_hex=_BUNDLED_AUTHORITY_VERIFICATION_PUBLIC_KEY_HEX,
+    )
+    return _authority_from_published_artifact(artifact, artifact_path=artifact_path)
 
 
-def _load_authority(
-    root_identity: _AuthorityRootPairIdentity,
+def _bundled_authority_artifact_path() -> Path:
+    """Resolve the one package resource that constitutes runtime authority."""
+    return _bundled_path(*_BUNDLED_AUTHORITY_ARTIFACT_PARTS)
+
+
+def _authority_from_published_artifact(
+    artifact: AuthorityArtifact,
     *,
-    lifecycle_observer: RegistryAuthorityLifecycleObserver,
+    artifact_path: Path,
 ) -> ValidatedRegistryAuthority:
-    """Load one root through its sole current-identity authority slot.
+    """Build an already-validated runtime authority without authoring inputs.
 
-    Identity collection, result/failure reuse, construction, and publication
-    share one root-scoped lock.  The reset barrier lets unrelated roots proceed
-    in parallel but drains this complete protocol before any cache clear.
+    The signed artifact is the validation receipt. The marked-valid state
+    ensures no source evidence, compiler, repair, or conformance path is
+    reached by a product authority.
     """
-    _guard_authority_process()
-    root = root_identity.root
-    source_root = root_identity.source_root
-    root_key = root_identity.key
-    with _authority_load_barrier.read():
-        state = _authority_load_state(root_key)
-        with state.lock:
-            identity = resolve_registry_identity(
-                root,
-                collect_fingerprints=collect_registry_identity_fingerprints,
-            )
-            source_evidence_key = fingerprint_key(collect_source_evidence_fingerprints(source_root))
-            key = (identity, source_evidence_key)
-            if state.current_key == key:
-                if state.current_failure is not None:
-                    raise state.current_failure
-                if state.current_authority is not None:
-                    return state.current_authority
-                raise RuntimeError("registry authority transition has no published outcome")
-
-            _begin_authority_transition(state, key)
-            try:
-                lifecycle_observer.authority_construction_started(root=root, source_root=source_root)
-                authority = _load_validated_authority(root, source_root, identity, source_evidence_key)
-            except Exception as exc:
-                _publish_authority_failure(state, exc)
-                raise
-            _publish_authority(state, authority, root_identity)
-            lifecycle_observer.authority_published(
-                root=root,
-                source_root=source_root,
-                generation=state.generation,
-            )
-            return authority
-
-
-def _load_validated_authority(
-    root: Path,
-    source_root: Path,
-    identity: RegistryIdentity,
-    source_evidence_key: _FingerprintKey[_SourceEvidenceFingerprints],
-) -> ValidatedRegistryAuthority:
-    _source_evidence_fingerprint = source_evidence_key.fingerprints
-    authority = construct_authority(root, source_root, _source_evidence_fingerprint, identity=identity)
-    # A persisted green verdict keyed by the observed identity lets an
-    # immutable tree skip the multi-second re-validation. The build and
-    # continuous integration are the validation gate; the runtime asserts
-    # identity only. A mismatch or a foreign verdict re-validates in full and
-    # rewrites the verdict.
-    verdict_key = compute_verdict_key(
-        identity_digest=identity.digest,
-        source_evidence_fingerprints=_source_evidence_fingerprint,
-    )
-    if registry_validation_is_certified(
-        root,
-        verdict_key=verdict_key,
-        identity=identity,
-    ):
-        authority.mark_registry_validated()
-    else:
-        authority.validate_registry()
-        certify_registry_validation(root, verdict_key=verdict_key)
-    return authority
-
-
-def construct_authority(
-    root: Path,
-    source_root: Path,
-    source_evidence_fingerprint: tuple[tuple[str, int, int], ...],
-    *,
-    identity: RegistryIdentity,
-) -> ValidatedRegistryAuthority:
-    """Compile registry material before either filing or inspection admission."""
-    from .loader import load_registry_tree
-
-    modelos, catalogues = load_registry_tree(root, identity=identity)
-    validate_fact_provider_directory_ownership(root)
-    facts = compile_registered_fact_providers(root, modelos=modelos)
-    # Compile the cross-cutting Convenio doble imposición treaty tree and fold it
-    # onto the shared catalogues so every snapshot projects the same authority.
-    # Grounding gate: every treaty override must cite a treaty article defined in
-    # the shared legal/ catalogue (which resolves to bundled BOE corpus text).
-    convenio = load_convenio_authority(root / "treaties")
-    validate_convenio_legal_refs(convenio, frozenset(catalogues.legal))
-    supported_filing_years = catalogues.supported_filing_years
-    if supported_filing_years is None:
-        raise RegistryValidationError("registry has no supported_filing_years catalogue")
-    supplementary_ordenes = compile_supplementary_ordenes(
-        root,
-        source_root=source_root,
-        modelos=modelos,
-        sources=catalogues.sources,
-        supported_filing_years=supported_filing_years.years,
-    )
-    duplicate_legal_refs = set(catalogues.legal).intersection(supplementary_ordenes.legal)
-    if duplicate_legal_refs:
-        raise RegistryValidationError(
-            f"annual Orden compiler collided with hand-authored legal refs: {sorted(duplicate_legal_refs)!r}",
-        )
-    catalogues = catalogues.model_copy(
-        update={
-            "legal": {**catalogues.legal, **supplementary_ordenes.legal},
-            "facts": facts,
-            "convenio": convenio,
-            "supplementary_ordenes": supplementary_ordenes.authorities,
-        },
-    )
-
+    runtime_root = artifact_path.parent
     authority = ValidatedRegistryAuthority(
-        root=root,
-        source_root=source_root,
-        modelos=modelos,
-        catalogues=catalogues,
-        _modelos_by_id={modelo.id: modelo for modelo in modelos},
-        _validator=RegistryValidator(
-            catalogues,
-            source_root=source_root,
-            source_evidence_fingerprint=source_evidence_fingerprint,
-        ),
-        _registry_validated=False,
-        _validated_modelos=set(),
+        root=runtime_root,
+        source_root=_bundled_path(),
+        modelos=artifact.modelos,
+        catalogues=artifact.catalogues,
+        _modelos_by_id={modelo.id: modelo for modelo in artifact.modelos},
+        _validator=_PublishedArtifactValidator(),
+        _registry_validated=True,
+        _validated_modelos={modelo.id for modelo in artifact.modelos},
         _snapshots={},
-        _identity_digest=identity.digest,
+        _identity_digest=artifact.identity_digest,
     )
+    authority._bind_published_artifact_incarnation()
     return authority

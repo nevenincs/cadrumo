@@ -13,11 +13,10 @@ from ..core.foreign_asset_obligation import (
     obligation_groups_established_by_legal_refs,
 )
 from ..core.modelo import Modelo
-from ..core.resources.bundled_data import bundled_path
 from ..core.revision_review import RevisionReviewStatus
+from ..domain.calculations.registry.authority import bundled_authority
 from ..domain.calculations.registry.errors import RegistryValidationError
 from ..domain.calculations.registry.formula_runtime_ops import resolve_parameter
-from ..domain.calculations.registry.loader import load_registry_tree
 from ..domain.calculations.registry.schema import ModeloRevision
 from ..domain.calculations.registry.schema_formula import ParameterDefinition
 from ..domain.calculations.registry.temporal import select_revision
@@ -77,15 +76,12 @@ def foreign_asset_declaration_thresholds(
     obligation unanswerable rather than merely unfilable. The filing path
     builds its own filing-grade snapshot when it files.
 
-    Reads directly through ``load_registry_tree`` + ``select_revision``
-    rather than :class:`~domain.calculations.registry.ValidatedRegistryAuthority`:
-    obtaining that authority object at all means its ``.load()``'s
-    unconditional, tree-wide ``validate_registry()`` call, which refuses
-    whenever ANY modelo anywhere lacks an export layout -- entirely unrelated
-    to whether this modelo's own obligation can be answered.
+    Reads definitions from the immutable bundled authority, then selects the
+    non-filing revision needed for this obligation question. The authority is
+    responsible for publication; this consumer never resolves a raw registry
+    tree or chooses a source root.
     """
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    definition = next(candidate for candidate in modelos if candidate.id == modelo)
+    definition = next(candidate for candidate in bundled_authority().modelos if candidate.id == modelo)
     selected = select_revision(
         definition,
         filing_year=filing_year,

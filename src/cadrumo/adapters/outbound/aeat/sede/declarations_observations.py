@@ -163,9 +163,7 @@ def _registry_snapshot_for_declaration(declaration: Declaracion) -> RegistrySnap
 
 
 def _registry_authority() -> ValidatedRegistryAuthority:
-    from .....domain.calculations.registry.authority import ValidatedRegistryAuthority
-
-    return ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
+    return bundled_authority()
 
 
 def _read_guard_policy_from_snapshot(snapshot: RegistrySnapshot) -> RemoteStateGuardPolicy:
