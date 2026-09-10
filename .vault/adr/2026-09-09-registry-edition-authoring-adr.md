@@ -5,7 +5,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:212de3f6489836a75ba5db2e72cd3b9af359a2b322172829a56a91b632c1f6ad'
+body_hash: 'sha256:52a889678d7b410b4084a583c27a91d4fa29d2dffe38b35db8b3363d07d8cf94'
 related:
   - "[[2026-09-09-registry-edition-authoring-edition-restatement-measurement-research]]"
   - "[[2026-09-09-registry-edition-authoring-registry-mechanics-audit-research]]"
@@ -195,7 +195,10 @@ binding exists in the revision, which is what makes the whole cross-sheet popula
 rather than a mixed set needing triage. The 96 are not one repair either. In 33 the correct-sheet casilla is
 already declared and the field can be rebound to it; in the other 63 the correct-sheet casilla has
 never been declared, so there is nothing to rebind to until someone authors it. A binding defect and
-a declaration gap were hiding inside one count. The same shape the span rule
+a declaration gap were hiding inside one count. For the 63 the second causes the first: the right-sheet box was
+never declared in any spelling, so the only declared instance of that number sat on another sheet,
+and a number-keyed map bound to it because nothing else answered. Rebinding cannot fix those; the
+missing casilla has to exist first. The same shape the span rule
 guards against is already committed here on the wire, so the qualification is a correction to
 existing data and not only a rule for new work.
 
