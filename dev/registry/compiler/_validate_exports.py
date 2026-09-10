@@ -45,7 +45,6 @@ from cadrumo.domain.calculations.registry.binding_selector_utils import (
     BindingFixedExportSelector,
     binding_export_selector,
 )
-from cadrumo.domain.calculations.registry.corpus_catalogue import verify_source_file
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_field_casilla import derive_casilla_export_refs
 from cadrumo.domain.calculations.registry.ids import BindingId
@@ -67,6 +66,7 @@ from ._validate_helpers import missing_refs as _missing_refs
 from ._validate_projection_endpoints import (
     validate_projection_endpoint_declarations as _validate_projection_endpoint_declarations,
 )
+from .corpus_catalogue import verify_source_file
 
 
 def validate_export_layout_section(

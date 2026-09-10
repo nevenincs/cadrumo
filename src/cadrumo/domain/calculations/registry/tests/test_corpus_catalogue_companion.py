@@ -22,7 +22,7 @@ import pytest
 
 from .....core.resources.bundled_data import bundled_path
 from ..artifact_catalogue import ArtifactRole, registry_source_identity
-from ..corpus_catalogue import (
+from dev.registry.compiler.corpus_catalogue import (
     compile_record_design_manifest_catalogue,
     verify_catalogue_identity_bindings,
     verify_source_catalogue,

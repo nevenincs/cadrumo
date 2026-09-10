@@ -14,7 +14,7 @@ from .....core.result_disposition import ResultDisposition
 from .....tests.registry_snapshot import build_snapshot
 from .._validate import RegistryValidator
 from ..errors import NoRevisionForPeriodError
-from ..legal import verify_legal_catalogue
+from dev.registry.compiler.legal_grounding import verify_legal_catalogue
 from ..loader import load_catalogue_file, load_modelo_directory
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..temporal import select_revision

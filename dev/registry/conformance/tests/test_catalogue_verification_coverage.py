@@ -30,9 +30,9 @@ from dev.registry.conformance.coverage import (
 from cadrumo.tests.registry_snapshot import build_snapshot
 from cadrumo.domain.calculations.registry._snapshot_internals import check_snapshot_filing_review_tier
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
-from cadrumo.domain.calculations.registry.corpus_catalogue import verify_source_file
+from ...compiler.corpus_catalogue import verify_source_file
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError, RegistryValidationError
-from cadrumo.domain.calculations.registry.legal import verify_legal_catalogue_grounding
+from ...compiler.legal_grounding import verify_legal_catalogue_grounding
 from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
 from cadrumo.domain.calculations.registry.schema import filing_period_from_scope
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier

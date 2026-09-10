@@ -37,7 +37,7 @@ from cadrumo.domain.calculations.registry.authority import (
     _guard_authority_process,
 )
 from cadrumo.domain.calculations.registry.condition_mode import ConditionModeField
-from cadrumo.domain.calculations.registry.corpus_catalogue import (
+from .compiler.corpus_catalogue import (
     GeneratedArtifactSource,
     RegistrySourceKind,
     RegistryValidationError,

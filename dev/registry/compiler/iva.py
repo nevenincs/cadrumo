@@ -19,7 +19,6 @@ from cadrumo.core.revision_review import RevisionReviewStatus
 from cadrumo.core.toml import read_toml
 from cadrumo.core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from cadrumo.core.type_guards import is_object_list
-from cadrumo.domain.calculations.registry.corpus_catalogue import verify_source_file
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.schema import (
     FactOwnership,
@@ -30,17 +29,19 @@ from cadrumo.domain.calculations.registry.facts.schema import (
     MappingFactEntry,
     MappingFactPayload,
 )
-from .loader_cache import toml_file_fingerprint
-from .loader_fingerprints import RegistryPathFingerprints
 from cadrumo.domain.calculations.registry.schema_base import DateAxis, SourceCitation
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
-from cadrumo.domain.iva.compilation_catalogues import compiling_catalogues, compiling_catalogues_in_scope
 from cadrumo.domain.iva._grounding import legal_ref_failures, verify_table_legal_refs
+from cadrumo.domain.iva.compilation_catalogues import compiling_catalogues, compiling_catalogues_in_scope
 from cadrumo.domain.iva.errors import IvaCatalogueError, IvaRateOverlapError, IvaValidationError
 from cadrumo.domain.iva.rates import IVA_RATE_FACT_ID
 from cadrumo.domain.iva.recargo_equivalencia import IVA_RECARGO_FACT_ID, RecargoRateRecord
 from cadrumo.domain.iva.schema import EUMemberState, IvaRateKind, IvaRateRecord
 from dev.registry.compiler.loader import load_shared_catalogues
+
+from .corpus_catalogue import verify_source_file
+from .loader_cache import toml_file_fingerprint
+from .loader_fingerprints import RegistryPathFingerprints
 
 _RATE_REGISTRY_MEMBER_STATES = frozenset(state for state in EUMemberState if state is not EUMemberState.XI)
 

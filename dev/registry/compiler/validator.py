@@ -26,13 +26,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from cadrumo.domain.calculations.registry.corpus_catalogue import (
-    compile_record_design_manifest_catalogue,
-    verify_catalogue_identity_bindings,
-    verify_source_catalogue,
-)
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.legal import verify_legal_catalogue_grounding
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_base import REGISTRY_SOURCE_GROUNDING_TIERS
 
@@ -55,7 +49,13 @@ from ._validate_revision_rules import (
     validate_revision_windows,
 )
 from ._validate_revision_sections import validate_revision_definition
+from .corpus_catalogue import (
+    compile_record_design_manifest_catalogue,
+    verify_catalogue_identity_bindings,
+    verify_source_catalogue,
+)
 from .fact_validation import governed_fact_catalogue_failures, migrated_legal_parameter_fact_failures
+from .legal_grounding import verify_legal_catalogue_grounding
 from .registry_scope import validate_registry_scope
 from .source_evidence_fingerprint import (
     SourceEvidenceFingerprint,

@@ -16,7 +16,6 @@ from typing import get_args, get_origin
 from pydantic import BaseModel
 
 from cadrumo.core.toml import freeze_toml, read_toml
-from cadrumo.domain.calculations.registry._toml_helpers import as_toml_table as _as_toml_table
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.calculations.registry.modelo_localization import as_toml_array
@@ -25,6 +24,8 @@ from cadrumo.domain.calculations.registry.schema import (
     REVISION_MANIFEST_ONLY_FIELDS,
     ModeloRevision,
 )
+
+from ._toml_helpers import as_toml_table as _as_toml_table
 
 _REVISION_EXPORT_LAYOUTS = "export_layouts"
 _REVISION_CONSTRUCTS = "constructs"

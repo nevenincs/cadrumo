@@ -11,8 +11,8 @@ from .....core.resources.bundled_data import bundled_path
 from .....domain.deadlines.festivos import shift_deadline
 from .....domain.deadlines.errors import DeadlineValidationError
 from ..authority import bundled_authority
-from ..corpus_catalogue import verify_source_catalogue
-from ..legal import verify_legal_catalogue
+from dev.registry.compiler.corpus_catalogue import verify_source_catalogue
+from dev.registry.compiler.legal_grounding import verify_legal_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

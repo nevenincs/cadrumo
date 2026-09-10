@@ -26,7 +26,6 @@ from cadrumo.core.directory_scan import (
 from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.core.filing_projection_ref import compile_filing_projection_ref
 from cadrumo.core.toml import freeze_toml, read_toml
-from cadrumo.domain.calculations.registry._toml_helpers import as_toml_table as _as_toml_table
 from cadrumo.domain.calculations.registry.errors import (
     RegistryFailureClassification,
     RegistryFailureCondition,
@@ -74,6 +73,7 @@ from ._loader_revision_fragments import (
 from ._loader_revision_fragments import (
     reject_local_catalogues as _reject_local_catalogues,
 )
+from ._toml_helpers import as_toml_table as _as_toml_table
 from .loader_cache import (
     BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS,
     is_bundled_registry_root,

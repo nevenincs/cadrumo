@@ -202,6 +202,29 @@ def test_staged_candidate_publishes_and_the_trusted_reader_consumes_it(
     assert consumed.modelos[0].id == "999"
 
 
+def test_published_legal_evidence_answers_citation_queries_after_its_source_is_gone(
+    tmp_path: Path, isolated_provider_registration: None
+) -> None:
+    """A signed artifact carries the validated anchor needed by a runtime citation."""
+    candidate_root = tmp_path / "candidate"
+    _stage_valid_candidate(candidate_root)
+    keys = generate_ed25519_keypair_hex()
+    artifact_path = tmp_path / "published" / "authority.json"
+
+    publish_authority_candidate_workflow(
+        registry_root=candidate_root / "registry" / "aeat",
+        source_root=candidate_root,
+        artifact_path=artifact_path,
+        signing_private_key_hex=keys.private_key_hex,
+    )
+    legal_source = candidate_root / "corpus" / "test" / "test-ley-001.html.extracted.json"
+    legal_source.unlink()
+
+    consumed = read_authority_artifact(artifact_path, verification_public_key_hex=keys.public_key_hex)
+
+    assert consumed.evidence.quotation_is_grounded("test-ley-001:art-1", "test provision text")
+
+
 def test_defective_candidate_refuses_before_replacing_the_previous_artifact(tmp_path: Path) -> None:
     """A real compiler refusal leaves the prior published artifact byte-for-byte intact."""
     keys = generate_ed25519_keypair_hex()

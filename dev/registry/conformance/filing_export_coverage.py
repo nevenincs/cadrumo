@@ -31,7 +31,7 @@ from cadrumo.core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES
 from cadrumo.core.time.clock import now
 from cadrumo.core.time.utc import UtcInstant
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.corpus_catalogue import verify_source_file
+from ..compiler.corpus_catalogue import verify_source_file
 from cadrumo.domain.calculations.registry.errors import (
     RegistrySnapshotError,
     RegistryValidationError,

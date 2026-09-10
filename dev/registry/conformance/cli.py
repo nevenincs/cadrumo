@@ -71,7 +71,7 @@ import typer
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.legal import verify_legal_catalogue
+from ..compiler.legal_grounding import verify_legal_catalogue
 
 from ._stamp import StampableReviewStatus, StampError, bundled_registry_root, stamp_revision
 from .authorities import canonical_live_registry_closure_authorities
