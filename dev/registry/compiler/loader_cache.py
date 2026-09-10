@@ -43,6 +43,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_location
 from cadrumo.core.toml import freeze_toml, read_toml
+from cadrumo.domain.calculations.registry._cache_policy import BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS
 from cadrumo.domain.calculations.registry._toml_helpers import as_toml_table as _as_toml_table
 from cadrumo.domain.calculations.registry.errors import RegistryFailureClassification, RegistryFailureCondition, RegistryLoadError
 from cadrumo.domain.calculations.registry.ids import RevisionId
@@ -70,8 +71,6 @@ _REGISTRY_DISK_CACHE_RELATIVE_PATH = storage_location(StorageCategory.REGISTRY_D
 # edit is picked up well within one operator interaction. A genuinely
 # read-only installed (non-editable) wheel benefits identically: nothing
 # ever rewrites it, so the periodic re-walk merely repeats the same answer.
-BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS = 10.0
-
 ModeloSourceLayout = Literal["single_file", "directory"]
 ModeloRevisionSourceLayout = Literal["revision_file", "fragment_directory"]
 

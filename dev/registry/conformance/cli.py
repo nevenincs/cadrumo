@@ -65,7 +65,7 @@ from __future__ import annotations
 import json
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 import typer
 
@@ -74,12 +74,6 @@ from cadrumo.domain.calculations.registry.legal import verify_legal_catalogue
 from dev.registry.compiler.authority import compile_validated_authority
 
 from ._stamp import StampableReviewStatus, StampError, bundled_registry_root, stamp_revision
-from .closure import (
-    RegistryClosureReport,
-    check_registry_closure_release,
-    load_registry_closure_report,
-    render_registry_closure_report,
-)
 from .manager import (
     ConformanceReport,
     build_coverage_report,
@@ -88,6 +82,9 @@ from .manager import (
     render_report,
     vacuity_warning,
 )
+
+if TYPE_CHECKING:
+    from .closure import RegistryClosureReport
 
 app = typer.Typer(
     name="conformance",
@@ -230,6 +227,8 @@ def closure(
     mode treats absent proof as a pass: the filing limb remains an owned
     refusal, and ``--check`` blocks the release claim.
     """
+    from .closure import load_registry_closure_report
+
     if offline:
         report = load_registry_closure_report()
     else:
@@ -255,6 +254,8 @@ def emit_registry_closure_command(
     as_json: bool,
 ) -> None:
     """Emit one already-composed report through the closure command contract."""
+    from .closure import check_registry_closure_release, render_registry_closure_report
+
     result = check_registry_closure_release(report)
     if as_json:
         typer.echo(report.model_dump_json(indent=2))

@@ -23,7 +23,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from ....core.directory_scan import DirectoryEntryKind, scan_directory
-from .loader_cache import BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS
+from ._cache_policy import BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS
 
 SourceEvidenceFingerprint = tuple[tuple[str, int, int], ...]
 

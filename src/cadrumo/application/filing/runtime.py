@@ -16,6 +16,8 @@ Key entry points:
   domain :class:`~domain.deadlines.TaxpayerProfile` into the runtime
   profile shape without deriving legal filing obligations.
 * :func:`build_runtime_schema_provider` — requires registry-backed snapshots.
+* :func:`schema_provider_from_authority` — projects an explicitly supplied
+  validated authority through the same provider surface.
 
 The schema provider consumes a
 :class:`~domain.calculations.registry.RegistrySnapshot` built from a
@@ -444,13 +446,57 @@ def build_runtime_schema_provider(
             invalid, or no snapshot exists for the requested filing context.
     """
     validated_period = _validate_period_arguments(filing_year=filing_year, period=period)
-    selected_ids = _normalize_modelo_selection(modelos)
-    selected_tuple = None if selected_ids is None else tuple(sorted(selected_ids))
     return _build_runtime_schema_provider_cached(
         filing_year,
         validated_period,
-        selected_tuple,
+        _selected_modelo_tuple(modelos),
     )
+
+
+def schema_provider_from_authority(
+    authority: ValidatedRegistryAuthority,
+    *,
+    filing_year: int | None = None,
+    period: object | None = None,
+    modelos: Sequence[str] | None = None,
+) -> RegistrySchemaAccessor:
+    """Build a :class:`RegistrySchemaAccessor` from an explicit validated authority.
+
+    Applies the same period validation, modelo selection and snapshot
+    projection as :func:`build_runtime_schema_provider`, which delegates here
+    with the bundled authority. Callers that hold a separately compiled
+    authority (for example a development build of the registry source tree)
+    use this entry point to project it through the identical filing surface.
+
+    Args:
+        authority: Validated registry authority to project.
+        filing_year: Optional filing year; must be paired with ``period``.
+        period: Optional typed :class:`~core.Period`; must match
+            ``filing_year``.
+        modelos: Optional modelo id selection. Blank ids are rejected.
+
+    Returns:
+        A :class:`RegistrySchemaAccessor` implementing the filing
+        :class:`~domain.filing.CasillaSchemaProvider` surface.
+
+    Raises:
+        :class:`~domain.filing.ModeloBuilderError`: When the registry is
+            empty, a requested modelo is missing, the period arguments are
+            invalid, or no snapshot exists for the requested filing context.
+    """
+    validated_period = _validate_period_arguments(filing_year=filing_year, period=period)
+    return _schema_provider_for_authority(
+        authority,
+        filing_year=filing_year,
+        period=validated_period,
+        selected_tuple=_selected_modelo_tuple(modelos),
+        registry_root_name=authority.root.name,
+    )
+
+
+def _selected_modelo_tuple(modelos: Sequence[str] | None) -> tuple[str, ...] | None:
+    selected_ids = _normalize_modelo_selection(modelos)
+    return None if selected_ids is None else tuple(sorted(selected_ids))
 
 
 def _select_runtime_modelos(
@@ -515,12 +561,28 @@ def _build_runtime_schema_provider_cached(
     period: Period | None,
     selected_tuple: tuple[str, ...] | None,
 ) -> RegistrySchemaAccessor:
-    authority = bundled_authority()
+    return _schema_provider_for_authority(
+        bundled_authority(),
+        filing_year=filing_year,
+        period=period,
+        selected_tuple=selected_tuple,
+        registry_root_name="bundled",
+    )
+
+
+def _schema_provider_for_authority(
+    authority: ValidatedRegistryAuthority,
+    *,
+    filing_year: int | None,
+    period: Period | None,
+    selected_tuple: tuple[str, ...] | None,
+    registry_root_name: str,
+) -> RegistrySchemaAccessor:
     loaded_modelos = authority.modelos
     if not loaded_modelos:
         raise ModeloBuilderError(
             translated_message="application.filing.runtime.errors.registry_empty",
-            context={"registry_root_name": "bundled"},
+            context={"registry_root_name": registry_root_name},
         )
     loaded_modelos = _select_runtime_modelos(loaded_modelos, selected_tuple=selected_tuple)
     snapshots = _runtime_snapshots_for_modelos(

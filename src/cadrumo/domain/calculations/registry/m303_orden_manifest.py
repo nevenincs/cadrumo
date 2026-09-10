@@ -9,7 +9,9 @@ from typing import TYPE_CHECKING
 
 from ....core.directory_scan import scan_directory
 from ....core.external_constants import UTF_8_ENCODING
+from ....core.hashing import blake2b_hex
 from ....core.modelo import Modelo
+from ....core.resources.bundled_data import bundled_path
 from ._m303_orden_constants import EXTRACTOR_VERSION
 from ._m303_orden_legal import compile_annual_orden_legal_references
 from ._m303_orden_projection_compiler import compile_m303_annual_orden_projection
@@ -17,7 +19,6 @@ from ._m303_orden_raw_models import M303AnnualOrdenSourceCensus
 from ._m303_orden_source import extract_m303_annual_orden_source
 from .errors import RegistryLoadError, RegistryValidationError
 from .ids import LegalRefId, SourceRefId
-from .loader_cache import toml_file_fingerprint
 from .m303_orden_census_artefact import (
     M303_ORDEN_CENSUS_ARTEFACT_FILENAME,
     load_m303_annual_orden_censuses,
@@ -363,7 +364,18 @@ def collect_m303_annual_orden_fingerprints(root: Path) -> tuple[tuple[str, int, 
     key.
     """
     directory = root.resolve() / "m303_orden_anual"
-    return tuple(toml_file_fingerprint(path.resolve()) for path in scan_directory(directory))
+    return tuple(_annual_orden_file_fingerprint(path.resolve()) for path in scan_directory(directory))
+
+
+def _annual_orden_file_fingerprint(path: Path) -> tuple[str, int, int, str]:
+    """Fingerprint one generated Orden input without depending on the dev compiler cache."""
+    try:
+        stat = path.stat()
+        bundled_registry = bundled_path("registry", "aeat").resolve()
+        digest = "" if path.is_relative_to(bundled_registry) else blake2b_hex(path.read_bytes())
+    except OSError as exc:
+        raise RegistryLoadError(f"annual Orden generated input cannot be fingerprinted: {path}") from exc
+    return str(path), stat.st_size, stat.st_mtime_ns, digest
 
 
 def _single_annual_orden_source_for_year(

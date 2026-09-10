@@ -40,7 +40,7 @@ _PLACEHOLDER_PATTERNS: Final[dict[str, str]] = {
     "sha256": r"[0-9a-f]{64}",
     # Registry-verdict cache filename: a 16-lowercase-hex truncation of a
     # sha256 digest over the resolved registry root
-    # (domain/calculations/registry/_verdict_cache.py:_ROOT_HASH_LEN).
+    # (dev/registry/compiler/verdict_cache.py:_ROOT_HASH_LEN).
     "sha256[:16]": r"[0-9a-f]{16}",
     # Observability per-run trace directory: 16 lowercase hex characters,
     # the shape core.observability.context._mint_run_id mints.
