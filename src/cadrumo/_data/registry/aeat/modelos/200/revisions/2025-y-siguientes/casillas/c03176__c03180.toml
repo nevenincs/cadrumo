@@ -7,7 +7,7 @@ semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-100"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200026f.f0012"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03177"
@@ -18,7 +18,7 @@ semantic_role = "is_tfi_ajuste_disminucion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-100"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200026f.f0013"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03178"
@@ -29,7 +29,7 @@ semantic_role = "is_tfi_ajuste_disminucion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-100"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200026f.f0014"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03179"
@@ -40,7 +40,7 @@ semantic_role = "is_tfi_ajuste_disminucion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-100"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200026f.f0011"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03180"
@@ -51,5 +51,5 @@ semantic_role = "is_tfi_ajuste_disminucion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-100"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200026f.f0015"]

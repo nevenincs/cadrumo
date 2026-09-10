@@ -7,7 +7,7 @@ semantic_role = "is_correccion_operaciones_art19_otras_permanente_aumento"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-19"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200026d.f0111"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01678"
@@ -18,7 +18,7 @@ semantic_role = "is_correccion_operaciones_art19_otras_temporaria_ejercicio_aume
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-19"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200026d.f0112"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01679"
@@ -29,7 +29,7 @@ semantic_role = "is_correccion_operaciones_art19_otras_importe"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-19"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200026d.f0113"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01680"
@@ -40,5 +40,5 @@ semantic_role = "is_correccion_operaciones_art19_otras_saldo_final"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-19"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200026d.f0114"]

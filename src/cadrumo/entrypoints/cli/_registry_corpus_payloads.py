@@ -27,6 +27,7 @@ from ...application.registry.corpus import (
     RegistryCitationArticleProjection,
     RegistryCitationReferenceProjection,
     RegistryCorpusIssueProjection,
+    RegistryManualCoverageProjection,
     RegistryTopicProjection,
 )
 from ...core.json_contract import OutputSchema
@@ -104,6 +105,7 @@ class ManualListResult(OutputSchema):
     part_count: int
     topic_count: int
     parts: list[dict[str, object]] = []
+    coverage: list[RegistryManualCoverageProjection] = []
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class-variable assignment triggers mypy
     # [assignment]; suppression is the only escape without a mypy plugin upgrade.

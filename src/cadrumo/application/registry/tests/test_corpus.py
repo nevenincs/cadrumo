@@ -286,21 +286,51 @@ def test_operator_manual_ids_mirror_the_domain_manual_ids() -> None:
 
 
 def test_manuals_list_report_discovers_real_corpus_parts_and_topics() -> None:
-    report = list_registry_manuals(RegistryManualsListCommand(manual=None, year=None))
+    report = list_registry_manuals(RegistryManualsListCommand(manual=None, year=None), locale="en")
 
     assert report.operation == "registry.manuals.list"
     assert report.part_count == len(report.parts)
     assert report.topic_count == len(resources().topics.singleton.topics)
     assert report.part_count >= 1
     assert {part.manual_id for part in report.parts} >= {"iva", "renta", "sociedades"}
+    assert [(item.year, item.status, item.status_label) for item in report.coverage] == [
+        (2022, "available", "Available locally"),
+        (2023, "available", "Available locally"),
+        (2024, "available", "Available locally"),
+        (2025, "available", "Available locally"),
+        (2026, "unpublished", "Not yet published by AEAT"),
+    ]
+    assert report.coverage[-1].acquisition_condition == (
+        "Re-check the official AEAT manuals archive and acquire the annual PDF when published."
+    )
 
 
 def test_manuals_list_report_filters_by_year() -> None:
-    report = list_registry_manuals(RegistryManualsListCommand(year=2025))
+    report = list_registry_manuals(RegistryManualsListCommand(year=2025), locale="en")
 
     assert report.year_filter == 2025
     assert report.part_count == len(report.parts)
     assert all(part.year == 2025 for part in report.parts)
+    assert [(item.year, item.status, item.status_label) for item in report.coverage] == [
+        (2025, "available", "Available locally"),
+    ]
+
+
+def test_manuals_list_report_projects_only_sociedades_annual_coverage() -> None:
+    report = list_registry_manuals(RegistryManualsListCommand(manual=RegistryManualId.RENTA))
+
+    assert report.coverage == ()
+
+
+def test_manuals_list_report_localizes_the_unpublished_acquisition_condition() -> None:
+    report = list_registry_manuals(
+        RegistryManualsListCommand(manual=RegistryManualId.SOCIEDADES, year=2026),
+        locale="es",
+    )
+
+    assert report.coverage[0].acquisition_condition == (
+        "Vuelva a comprobar el archivo oficial de manuales de la AEAT y adquiera el PDF anual cuando se publique."
+    )
 
 
 def test_manuals_list_report_rows_verify_against_canonical_corpus() -> None:

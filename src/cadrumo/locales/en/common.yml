@@ -170,8 +170,6 @@ aggregation:
       source_kinds_mismatch: Source kinds must match the accepted four-kind taxonomy.
   source_mesh:
     errors:
-      ambiguous_source_disposition: 'Internal error: binding source kind {source_kind}
-        is in more than one source-mesh disposition state, or in none.'
       annual_summary_handoff_duplicate: More than one resolver supplied the immutable
         Modelo 303 annual-summary handoff (first {first_resolver}; second {second_resolver}).
       binding_source_mismatch: source_kind and binding_source refer to different binding-source
@@ -444,9 +442,6 @@ categories:
     viajes_transporte:
       label: Travel transport
       notes: Fully deductible expense (Ley 35/2006 art. 28.1, other external services).
-component:
-  log:
-    empty: No log entries yet.
 core:
   profile:
     errors:
@@ -757,7 +752,6 @@ review:
   operator:
     errors:
       item_not_found: Review item not found.
-      reserved_kind: Review kind is reserved and is not an emitted review item.
       unknown_kind: 'Unknown review kind. Accepted --kind values: %{accepted_kinds}.'
   transaction:
     summary: Transaction pending classification
@@ -1251,6 +1245,7 @@ tui:
       filed: Filing recorded locally
       renamed: Declaration renamed
       superseded: Filing superseded locally
+      verification_refused: Verification refused
       verified: Verification completed
     overview:
       areas: Declaration areas

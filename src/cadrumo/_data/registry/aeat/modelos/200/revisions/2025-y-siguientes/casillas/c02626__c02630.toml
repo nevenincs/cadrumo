@@ -7,7 +7,7 @@ semantic_role = "is_correccion_libertad_amortizacion_otros_art12_permanente_dism
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-12"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200026b.f0126"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02627"
@@ -18,7 +18,7 @@ semantic_role = "is_correccion_libertad_amortizacion_otros_art12_temporaria_ejer
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-12"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200026b.f0127"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02628"
@@ -29,7 +29,7 @@ semantic_role = "is_correccion_libertad_amortizacion_otros_art12_temporaria_ante
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-12"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200026b.f0128"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02629"
@@ -40,7 +40,7 @@ semantic_role = "is_correccion_libertad_amortizacion_otros_art12_saldo_inicial"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-12"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200026b.f0125"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02630"
@@ -51,5 +51,5 @@ semantic_role = "is_correccion_libertad_amortizacion_otros_art12_saldo_final_net
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-12"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200026b.f0129"]

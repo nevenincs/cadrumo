@@ -99,6 +99,28 @@ def _load_modelo_200():
     return _committed_modelo("200")
 
 
+def test_modelo_200_revision_fragments_never_cite_another_years_annual_manual() -> None:
+    """Every M200 fragment keeps annual guidance inside its own ejercicio.
+
+    The split revision tree carries source references on every declaration
+    family, not only on ``revision.toml``.  A year-crossing manual reference
+    therefore cannot be detected by inspecting the revision manifest alone:
+    it could still reach a live casilla, formula, application link, or
+    authenticated-read decision.  Scan every authored fragment so an annual
+    manual never gets silently promoted across the annual boundary.
+    """
+    for revision_id, allowed_manual, forbidden_manual in (
+        ("2024", "aeat-modelo-200-manual-2024", "aeat-modelo-200-manual-2025"),
+        ("2025-y-siguientes", "aeat-modelo-200-manual-2025", "aeat-modelo-200-manual-2024"),
+    ):
+        revision_root = bundled_path("registry", "aeat", "modelos", "200", "revisions", revision_id)
+        fragments = tuple(revision_root.rglob("*.toml"))
+        assert fragments, f"expected authored Modelo 200 revision fragments for {revision_id}"
+        text = "\n".join(fragment.read_text(encoding="utf-8") for fragment in fragments)
+        assert allowed_manual in text, f"{revision_id} must retain its own annual manual evidence"
+        assert forbidden_manual not in text, f"{revision_id} must not cite {forbidden_manual}"
+
+
 def test_modelo_200_validates_with_deadline_and_schedule_catalogue_refs() -> None:
     modelo, catalogues = _load_modelo_200()
 

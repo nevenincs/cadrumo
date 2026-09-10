@@ -7,5 +7,5 @@ semantic_role = "is_identificacion_regimen_flag"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-634-2015:dt-5"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 export_refs = ["m200-2025.dp200001.f0083", "m200-2025.dp200024.f0018"]
