@@ -44,7 +44,11 @@ from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_location
 from cadrumo.core.toml import freeze_toml, read_toml
 from cadrumo.domain.calculations.registry._toml_helpers import as_toml_table as _as_toml_table
-from cadrumo.domain.calculations.registry.errors import RegistryFailureClassification, RegistryFailureCondition, RegistryLoadError
+from cadrumo.domain.calculations.registry.errors import (
+    RegistryFailureClassification,
+    RegistryFailureCondition,
+    RegistryLoadError,
+)
 from cadrumo.domain.calculations.registry.ids import RevisionId
 
 """Environment variable backing :attr:`~core.config.Settings.cadrumo_registry_disk_cache_dir`."""

@@ -54,6 +54,7 @@ from pydantic import BaseModel
 from cadrumo import __version__
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
+
 from .loader_cache import is_bundled_registry_root
 
 FingerprintTuples = tuple[tuple[str, int, int, str], ...]

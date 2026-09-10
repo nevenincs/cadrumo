@@ -3,17 +3,53 @@
 from __future__ import annotations
 
 from collections.abc import Collection, Mapping
-from datetime import date
+from datetime import date, timedelta
+from itertools import pairwise
 from pathlib import Path
 
 from .....core.corpus_text import normalise_corpus_text
 from .._validate_evidence import EvidenceValidator
 from ..errors import RegistryValidationError
 from ..legal import verify_legal_reference_grounding
+from ..schema_base import DateAxis
 from ..schema_references import LegalReference, SourceReference
 from .schema import GovernedFact, GovernedFactCatalogue, GovernedFactVariant
 
-__all__ = ["governed_fact_catalogue_failures"]
+__all__ = ["governed_fact_catalogue_failures", "migrated_legal_parameter_fact_failures"]
+
+
+# These facts replaced the former global legal-parameter provider.  Keep the
+# campaign boundary as identities rather than copying its legally operative
+# values into Python: the fragments remain the one value authority.
+_MIGRATED_LEGAL_PARAMETER_FACT_IDS = frozenset(
+    {
+        "lirpf-art-101:retencion-administrador-general",
+        "lirpf-art-101:retencion-administrador-reducida",
+        "lirpf-art-101:retencion-administrador-incn-umbral-eur",
+        "rirpf-art-95:retencion-actividades-profesionales-general",
+        "rirpf-art-95:retencion-actividades-profesionales-inicio",
+        "rirpf-art-95:retencion-actividades-agricolas-ganaderas-general",
+        "rirpf-art-95:retencion-actividades-ganaderas-engorde-porcino-avicultura",
+        "rirpf-art-95:retencion-actividades-forestales",
+        "rirpf-art-95:retencion-actividades-estimacion-objetiva",
+        "rirpf-art-95:selector-m036-actividades-profesionales",
+        "rirpf-art-95:selector-m036-actividades-agricolas-ganaderas",
+        "rirpf-art-95:selector-m036-actividades-forestales",
+        "rirpf-art-95:selector-m036-actividades-ganaderas-engorde-porcino-avicultura",
+        "rd-439-2007-art-109:selector-m036-actividades-exencion-pago-fraccionado",
+        "rd-439-2007-art-109:selector-m036-actividades-base-neta-de-subvenciones",
+        "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrarias-pesqueras",
+        "modelo-131:selector-m036-volumen-ingresos-agrario",
+        "liva-art-161:recargo-rate-general",
+        "liva-art-161:recargo-rate-reducido",
+        "liva-art-161:recargo-rate-super-reducido",
+        "liva-art-161:recargo-rate-tabaco",
+        "lirpf-dt-32:eo-exclusion-rendimientos-conjunto-eur",
+        "lirpf-dt-32:eo-exclusion-rendimientos-factura-eur",
+        "lirpf-art-31:eo-exclusion-rendimientos-agricolas-ganaderos-forestales-eur",
+        "lirpf-dt-32:eo-exclusion-compras-eur",
+    }
+)
 
 
 def governed_fact_catalogue_failures(
@@ -91,6 +127,64 @@ def governed_fact_catalogue_failures(
                                 f"{citation.source_ref!r} missing text {required_text!r}"
                             )
     return tuple(failures)
+
+
+def migrated_legal_parameter_fact_failures(
+    catalogue: GovernedFactCatalogue,
+    *,
+    source_refs: Mapping[str, SourceReference],
+) -> tuple[str, ...]:
+    """Return closure failures for the bounded retired-parameter migration.
+
+    The test-facing gate deliberately checks identities, filing-period
+    coordinates, and source-backed windows only.  It must never become another
+    declaration of rates, thresholds, or activity classifications.
+    """
+    failures: list[str] = []
+    for fact_id in sorted(_MIGRATED_LEGAL_PARAMETER_FACT_IDS):
+        fact = catalogue.facts.get(fact_id)
+        if fact is None:
+            failures.append(f"migrated legal-parameter fact {fact_id!r} is not authored")
+            continue
+        failures.extend(_temporal_coverage_failures(fact))
+        for variant in fact.variants:
+            context = f"migrated legal-parameter fact {fact_id!r} variant {variant.variant_id!r}"
+            if variant.date_axis is not DateAxis.FILING_PERIOD:
+                failures.append(f"{context} must use the filing_period date axis")
+            if not variant.source_refs or not variant.source_citations:
+                failures.append(f"{context} must retain source provenance")
+                continue
+            if not any(
+                _source_window_covers_variant(source_refs.get(source_ref), variant)
+                for source_ref in variant.source_refs
+            ):
+                failures.append(f"{context} has no cited source covering its temporal applicability window")
+    return tuple(failures)
+
+
+def _temporal_coverage_failures(fact: GovernedFact) -> tuple[str, ...]:
+    """Require continuous coverage after the first source-grounded variant."""
+    variants = tuple(sorted(fact.variants, key=lambda variant: variant.valid_from))
+    failures: list[str] = []
+    for current, successor in pairwise(variants):
+        if current.valid_to is None or current.valid_to + timedelta(days=1) != successor.valid_from:
+            failures.append(
+                f"migrated legal-parameter fact {fact.fact_id!r} has a gap in its source-grounded temporal coverage",
+            )
+    if variants[-1].valid_to is not None:
+        failures.append(
+            f"migrated legal-parameter fact {fact.fact_id!r} must retain an open current applicability window",
+        )
+    return tuple(failures)
+
+
+def _source_window_covers_variant(
+    source: SourceReference | None,
+    variant: GovernedFactVariant,
+) -> bool:
+    if source is None or source.applies_from > variant.valid_from:
+        return False
+    return source.applies_to is None or (variant.valid_to is not None and source.applies_to >= variant.valid_to)
 
 
 def _fact_precedence_failures(fact: GovernedFact) -> tuple[str, ...]:

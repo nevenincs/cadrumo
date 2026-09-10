@@ -30,15 +30,15 @@ from dev.registry.maintenance_support import check_m303_annual_orden_census_arte
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry import m303_orden_manifest
-from cadrumo.domain.calculations.registry._m303_orden_raw_models import M303AnnualOrdenSourceCensus
+from dev.registry.compiler._m303_orden_raw_models import M303AnnualOrdenSourceCensus
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.ids import SourceRefId
-from cadrumo.domain.calculations.registry.m303_orden_census_artefact import (
+from dev.registry.compiler.m303_orden_census_artefact import (
     M303_ORDEN_CENSUS_ARTEFACT_FILENAME,
     load_m303_annual_orden_censuses,
     m303_orden_census_artefact_path,
 )
-from cadrumo.domain.calculations.registry.m303_orden_manifest import (
+from dev.registry.compiler.m303_orden_manifest import (
     _generate_manifest_with_censuses,
     collect_m303_annual_orden_fingerprints,
     load_m303_annual_orden_authority,

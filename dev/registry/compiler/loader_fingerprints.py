@@ -7,7 +7,11 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Protocol
 
-from cadrumo.domain.calculations.registry.errors import RegistryFailureClassification, RegistryFailureCondition, RegistryLoadError
+from cadrumo.domain.calculations.registry.errors import (
+    RegistryFailureClassification,
+    RegistryFailureCondition,
+    RegistryLoadError,
+)
 
 from .loader_cache import toml_file_fingerprint
 

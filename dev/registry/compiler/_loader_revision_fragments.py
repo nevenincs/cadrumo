@@ -20,7 +20,11 @@ from cadrumo.domain.calculations.registry._toml_helpers import as_toml_table as 
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.calculations.registry.modelo_localization import as_toml_array
-from cadrumo.domain.calculations.registry.schema import REVISION_GOVERNANCE_FIELDS, REVISION_MANIFEST_ONLY_FIELDS, ModeloRevision
+from cadrumo.domain.calculations.registry.schema import (
+    REVISION_GOVERNANCE_FIELDS,
+    REVISION_MANIFEST_ONLY_FIELDS,
+    ModeloRevision,
+)
 
 _REVISION_EXPORT_LAYOUTS = "export_layouts"
 _REVISION_CONSTRUCTS = "constructs"

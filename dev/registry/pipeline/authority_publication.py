@@ -12,7 +12,7 @@ from pathlib import Path
 
 from cadrumo.core.hashing import content_hash_hex, hash_file
 from cadrumo.core.locks import exclusive_file_lock
-from cadrumo.domain.calculations.registry._source_evidence_fingerprint import (
+from dev.registry.compiler.source_evidence_fingerprint import (
     SourceEvidenceFingerprint,
     collect_source_evidence_fingerprints,
 )

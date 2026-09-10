@@ -14,7 +14,7 @@ from pathlib import Path
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.loader import load_registry_tree
-from cadrumo.domain.calculations.registry.m303_orden_census_artefact import m303_orden_census_artefact_path
+from dev.registry.compiler.m303_orden_census_artefact import m303_orden_census_artefact_path
 from dev.registry.maintenance_support import (
     check_m303_annual_orden_census_artefact,
     check_m303_annual_orden_manifest,
