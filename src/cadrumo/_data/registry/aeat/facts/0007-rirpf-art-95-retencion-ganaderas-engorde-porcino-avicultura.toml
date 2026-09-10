@@ -1,0 +1,93 @@
+[fact]
+fact_id = "rirpf-art-95:retencion-actividades-ganaderas-engorde-porcino-avicultura"
+family = "scalar"
+
+[[fact.variants]]
+variant_id = "rirpf-art-95:retencion-actividades-ganaderas-engorde-porcino-avicultura:2007-04-01"
+date_axis = "filing_period"
+valid_from = 2007-04-01
+valid_to = 2014-12-31
+legal_refs = ["rd-439-2007:art-95"]
+source_refs = ["boe-rirpf-art-95-2007-04-01"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-art-95-2007-04-01"
+required_text = ["engorde de porcino y avicultura: 1 por ciento"]
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "0.01"
+unit = "fraction"
+
+[[fact.variants]]
+variant_id = "rirpf-art-95:retencion-actividades-ganaderas-engorde-porcino-avicultura:2015-01-01"
+date_axis = "filing_period"
+valid_from = 2015-01-01
+valid_to = 2015-07-11
+legal_refs = ["rd-439-2007:art-95"]
+source_refs = ["boe-rirpf-art-95-2015-01-01"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-art-95-2015-01-01"
+required_text = ["engorde de porcino y avicultura: 1 por ciento"]
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "0.01"
+unit = "fraction"
+
+[[fact.variants]]
+variant_id = "rirpf-art-95:retencion-actividades-ganaderas-engorde-porcino-avicultura:2015-07-12"
+date_axis = "filing_period"
+valid_from = 2015-07-12
+valid_to = 2018-12-22
+legal_refs = ["rd-439-2007:art-95"]
+source_refs = ["boe-rirpf-art-95-2015-07-12"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-art-95-2015-07-12"
+required_text = ["engorde de porcino y avicultura: 1 por ciento"]
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "0.01"
+unit = "fraction"
+
+[[fact.variants]]
+variant_id = "rirpf-art-95:retencion-actividades-ganaderas-engorde-porcino-avicultura:2018-12-23"
+date_axis = "filing_period"
+valid_from = 2018-12-23
+valid_to = 2023-01-25
+legal_refs = ["rd-439-2007:art-95"]
+source_refs = ["boe-rirpf-art-95-2018-12-23"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-art-95-2018-12-23"
+required_text = ["engorde de porcino y avicultura: 1 por ciento"]
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "0.01"
+unit = "fraction"
+
+[[fact.variants]]
+variant_id = "rirpf-art-95:retencion-actividades-ganaderas-engorde-porcino-avicultura:2023-01-26"
+date_axis = "filing_period"
+valid_from = 2023-01-26
+legal_refs = ["rd-439-2007:art-95"]
+source_refs = ["boe-rirpf-art-95-2023-01-26"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-art-95-2023-01-26"
+required_text = ["engorde de porcino y avicultura: 1 por ciento"]
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "0.01"
+unit = "fraction"
+

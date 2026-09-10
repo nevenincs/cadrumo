@@ -49,10 +49,10 @@ def _grounding_failures(catalogue: GovernedFactCatalogue) -> tuple[str, ...]:
     )
 
 
-def test_provider_projects_exactly_the_21_remaining_adapter_parameter_ids() -> None:
+def test_provider_projects_exactly_the_15_remaining_adapter_parameter_ids() -> None:
     facts = compile_legal_parameter_facts(bundled_path("registry", "aeat"))
 
-    assert len(LEGAL_PARAMETER_FACT_IDS) == 21
+    assert len(LEGAL_PARAMETER_FACT_IDS) == 15
     assert {fact.fact_id for fact in facts} == LEGAL_PARAMETER_FACT_IDS
 
 
@@ -64,7 +64,7 @@ def test_legal_parameter_provider_owns_the_existing_legal_catalogue() -> None:
 
 
 def test_scalar_projection_preserves_value_unit_review_and_legal_provenance() -> None:
-    parameter_id = "rirpf-art-95:retencion-actividades-profesionales-general"
+    parameter_id = "liva-art-161:recargo-rate-general"
     legacy = load_legal_parameters_only(bundled_path("registry", "aeat"))[parameter_id]
     resolved = resolve_governed_fact(
         _catalogue(),
@@ -136,4 +136,4 @@ def test_fact_families_define_the_canonical_query_contract() -> None:
     facts = _catalogue().facts
 
     assert facts["rirpf-art-95:selector-m036-actividades-profesionales"].family.value == "entity_set"
-    assert facts["rirpf-art-95:retencion-actividades-profesionales-general"].family.value == "scalar"
+    assert facts["liva-art-161:recargo-rate-general"].family.value == "scalar"

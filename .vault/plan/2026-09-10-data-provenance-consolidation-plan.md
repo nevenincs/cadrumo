@@ -10,7 +10,7 @@ related:
   - '[[2026-09-10-data-provenance-consolidation-live-lane-map-reference]]'
 modified: '2026-09-10'
 body_schema: body-v2
-body_hash: 'sha256:9fa399e64be8f240592f0dde65b1f30c868a15beb8a538a091f371e8c5b42fa8'
+body_hash: 'sha256:ce5a409cdf742766b64422592d3e10fd62b4dc9132a3641a716192ebc00b637e'
 ---
 
 # `data-provenance-consolidation` plan
@@ -68,7 +68,7 @@ Route sync acquisition checks through the catalog while preserving byte and retr
 Centralize generic derivative validation while retaining producer-specific semantics.
 
 - [x] `W02.P05.S13` - Extract shared generic sidecar hash, schema, locality, and digest validation into the sidecar owner; `dev/docs/preprocess/sidecar.py`.
-- [ ] `W02.P05.S14` - Migrate documentation-preprocessor freshness tests to the shared generic validator; `dev/docs/preprocess/tests/test_corpus_sidecar_freshness.py`.
+- [x] `W02.P05.S14` - Migrate documentation-preprocessor freshness tests to the shared generic validator; `dev/docs/preprocess/tests/test_corpus_sidecar_freshness.py`.
 - [ ] `W02.P05.S15` - Migrate corpus-sidecar freshness checks to shared validation and catalog derivation; `dev/corpus/tests/test_extraction_sidecar_freshness.py`.
 
 ## Wave `W03` - Retire proven duplicate lanes

@@ -145,6 +145,84 @@ source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BO
 review_status = "agent_reviewed"
 corpus_tier = "provision_excerpt"
 
+# Exact BOE open-data redactions of RIRPF art. 95.  Each record names one
+# immutable <version> element and its inclusive legal window: those boundaries
+# are the endpoint's fecha_vigencia values, not intervals inferred from rates.
+
+[sources."boe-rirpf-art-95-2007-04-01"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2007-6820-a95-redaction-20070401.xml"
+sha256 = "fcf5930dff8609e29fd3d5888342a03b49bb7fedc8e2f71cb3ad0f87f7b52204"
+bytes = 14968
+retrieved_at = 2026-09-10
+published_at = 2007-03-31
+applies_from = 2007-04-01
+applies_to = 2014-12-31
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2007-6820/texto/bloque/a95"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-rirpf-art-95-2015-01-01"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2007-6820-a95-redaction-20150101.xml"
+sha256 = "c706fc6018be3971fe3a76840cbe0231eb317c00b17413d3269687b0520c143e"
+bytes = 15585
+retrieved_at = 2026-09-10
+published_at = 2014-12-06
+applies_from = 2015-01-01
+applies_to = 2015-07-11
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2007-6820/texto/bloque/a95"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-rirpf-art-95-2015-07-12"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2007-6820-a95-redaction-20150712.xml"
+sha256 = "4c978b49de98ececb29e8282eb3476e732dae4aaf08ba61920a7be7906c3dd1c"
+bytes = 15592
+retrieved_at = 2026-09-10
+published_at = 2015-07-11
+applies_from = 2015-07-12
+applies_to = 2018-12-22
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2007-6820/texto/bloque/a95"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-rirpf-art-95-2018-12-23"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2007-6820-a95-redaction-20181223.xml"
+sha256 = "7c1a0dd072120d694e840f51937324483640f9ca1c538669a13a073b96f4db83"
+bytes = 15780
+retrieved_at = 2026-09-10
+published_at = 2018-12-22
+applies_from = 2018-12-23
+applies_to = 2023-01-25
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2007-6820/texto/bloque/a95"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-rirpf-art-95-2023-01-26"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2007-6820-a95-redaction-20230126.xml"
+sha256 = "9f2d83ef7b9b2617b77bd28b1db76701d7c73de0e70e3ea41a53e597856c4acb"
+bytes = 17434
+retrieved_at = 2026-09-10
+published_at = 2023-01-25
+applies_from = 2023-01-26
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2007-6820/texto/bloque/a95"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
 [sources."boe-lis-art-40-statutory-facts"]
 evidence_tier = "legal_authority"
 authority = "boe"
