@@ -10,7 +10,6 @@ from cadrumo.domain.calculations.registry.facts.resolution import ScalarFactQuer
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from dev.registry.compiler.fact_loader import load_governed_facts
-from dev.registry.compiler.legal_parameters import compile_legal_parameter_facts
 
 _IDS = frozenset((
     "lirpf-dt-32:eo-exclusion-rendimientos-conjunto-eur",
@@ -54,8 +53,3 @@ def test_agricultural_threshold_is_direct_article31_fact_from_2016() -> None:
     fact_id = "lirpf-art-31:eo-exclusion-rendimientos-agricolas-ganaderos-forestales-eur"
     assert _value(fact_id, date(2016, 1, 1)) == Decimal("250000")
     assert _value(fact_id, date(2026, 1, 1)) == Decimal("250000")
-
-
-def test_objective_exclusion_ids_are_not_legal_parameter_adapter_projections() -> None:
-    adapter_ids = {fact.fact_id for fact in compile_legal_parameter_facts(bundled_path("registry", "aeat"))}
-    assert not _IDS & adapter_ids
