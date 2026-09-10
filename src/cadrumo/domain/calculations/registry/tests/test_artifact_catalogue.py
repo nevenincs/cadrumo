@@ -8,11 +8,15 @@ unrelated file into implicit compiler input.
 
 from __future__ import annotations
 
+import hashlib
+import json
 from datetime import date, datetime
 from pathlib import Path, PurePosixPath
 
 import pytest
 
+from .....core.resources.bundled_data import bundled_path
+from .._validate import RegistryValidator
 from ..artifact_catalogue import (
     ArtifactDiagnosticKind,
     ArtifactDisposition,
@@ -23,6 +27,10 @@ from ..artifact_catalogue import (
     SemanticAnnotation,
     compile_artifact_catalogue,
 )
+from ..errors import RegistryValidationError
+from ..facts.schema import GovernedFactCatalogue
+from ..loader import load_registry_tree
+from ..schema import RegistryCatalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -299,3 +307,55 @@ def test_compiler_reports_a_registry_identity_that_diverges_from_catalogue(tmp_p
     assert {(diagnostic.kind, diagnostic.path) for diagnostic in catalogue.diagnostics} == {
         (ArtifactDiagnosticKind.BROKEN_REGISTRY_BINDING, _OFFICIAL_PATH),
     }
+
+
+def test_registry_validator_rejects_a_conflicting_record_design_manifest_identity(tmp_path: Path) -> None:
+    """The live validator must not let a first matching manifest row hide a conflict."""
+    _modelos, committed_catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    source = next(
+        source
+        for source in committed_catalogues.sources.values()
+        if source.corpus_path.startswith("corpus/aeat_official/disenos_registro/")
+    )
+    payload = b"official record design"
+    source = source.model_copy(
+        update={
+            "sha256": hashlib.sha256(payload).hexdigest(),
+            "bytes": len(payload),
+        }
+    )
+    parts = PurePosixPath(source.corpus_path).parts
+    manifest_path = tmp_path.joinpath(*parts[:4], "manifest.json")
+    manifest_path.parent.mkdir(parents=True)
+    stored_path = PurePosixPath(*parts[4:]).as_posix()
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "source": "AEAT",
+                "retrieved_at": "2026-09-10",
+                "artefacts": [
+                    {
+                        "stored_path": stored_path,
+                        "sha256": source.sha256,
+                        "bytes": source.bytes,
+                        "url": source.source_url,
+                    },
+                    {
+                        "stored_path": stored_path,
+                        "sha256": "f" * 64,
+                        "bytes": source.bytes,
+                        "url": source.source_url,
+                    },
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    catalogues = RegistryCatalogues(
+        legal={},
+        sources={source.id: source},
+        facts=GovernedFactCatalogue(),
+    )
+
+    with pytest.raises(RegistryValidationError, match="conflicting_identity"):
+        RegistryValidator(catalogues, source_root=tmp_path).validate_registry(())

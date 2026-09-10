@@ -54,7 +54,11 @@ from ._validation_memoization import (
     MODELO_VALIDATION_CACHE,
     REGISTRY_VALIDATION_CACHE,
 )
-from .corpus_catalogue import verify_source_catalogue
+from .corpus_catalogue import (
+    compile_record_design_manifest_catalogue,
+    verify_catalogue_identity_bindings,
+    verify_source_catalogue,
+)
 from .errors import RegistryValidationError
 from .facts.validation import governed_fact_catalogue_failures
 from .legal import verify_legal_catalogue_grounding
@@ -192,7 +196,14 @@ class RegistryValidator:
             failures.append(str(exc))
         if self._source_root is not None:
             try:
-                verify_source_catalogue(self._source_root, self._sources)
+                manifest_catalogue = compile_record_design_manifest_catalogue(self._source_root, self._sources)
+                if manifest_catalogue is not None:
+                    catalogue, record_design_sources = manifest_catalogue
+                    verify_catalogue_identity_bindings(catalogue, record_design_sources)
+                verify_source_catalogue(
+                    self._source_root,
+                    self._sources,
+                )
             except RegistryValidationError as exc:
                 failures.append(str(exc))
         # Deliberately NOT behind the source-root guard above: epoch uniqueness is a
