@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-10'
 body_schema: body-v2
-body_hash: 'sha256:80481663c5b9a6a7290bd2de02b7009f8ab9a0ce87566899f63fd25df53aec9b'
+body_hash: 'sha256:8604940f59effb76b374dce3141a0cfff045362c411ddeaddab0db4c0e4c4536'
 ---
 
 # `facts-registry` plan
@@ -148,12 +148,14 @@ Rewire invoice rate interpretation, IVA calculations, recargo lookup, inventory 
 
 ### Phase `W03.P13` - Migrate treaty and deadline consumers; classify unresolved legal lanes
 
-Rewire treaty and deadline consumers, retain apoderamientos as non-governed vocabulary, and classify or migrate amendment, foreign-asset, and direct legal-parameter paths before the consumer boundary.
+Rewire treaty and deadline consumers, retain apoderamientos as non-governed vocabulary, replace unbounded legal-parameter projections with source-grounded temporal variants, and only then migrate residual direct legal-parameter paths before the consumer boundary.
 
 - [x] `W03.P13.S52` - Rewire treaty consumers while retaining apoderamientos as classified non-governed product vocabulary; `src/cadrumo/domain/calculations/registry/_formula_runtime_irnr.py and src/cadrumo/entrypoints/cli/config_payloads.py`.
 - [x] `W03.P13.S53` - Rewire deadline and notification consumers while retaining unclassified amendment and foreign-asset projections pending evidence; `src/cadrumo/domain/deadlines and src/cadrumo/core`.
-- [ ] `W03.P13.S64` - Migrate or explicitly classify every remaining legal-parameter consumer before retiring its direct loader; `src/cadrumo/application/modelo/_objective_estimation_advisory.py and src/cadrumo/domain/transactions`.
+- [ ] `W03.P13.S68` - Replace unbounded legal-parameter projections with source-cited, fact-specific temporal variants and refuse ungrounded historical dates; `src/cadrumo/domain/calculations/registry/facts/legal_parameters.py and src/cadrumo/_data/registry/aeat/legal`.
+- [ ] `W03.P13.S64` - Migrate remaining legal-parameter consumers only after their facts carry source-grounded temporal applicability; `src/cadrumo/application/modelo/_objective_estimation_advisory.py, src/cadrumo/domain/transactions, and src/cadrumo/domain/calculations/registry/facts/legal_parameters.py`.
 - [ ] `W03.P13.S66` - Replace generic fact selectors with provider-owned validated applicability coordinates before consumer-boundary verification; `src/cadrumo/domain/calculations/registry/facts and src/cadrumo/domain/calculations/registry`.
+- [ ] `W03.P13.S69` - Prove legal-parameter temporal coverage, date-axis selection, provenance, and refusal outside source-grounded windows; `src/cadrumo/domain/calculations/registry/facts/tests and src/cadrumo/domain/calculations/registry`.
 
 ### Phase `W03.P14` - Verify consumer boundary
 
