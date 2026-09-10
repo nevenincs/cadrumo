@@ -9,7 +9,7 @@ is made available to either component.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
@@ -20,10 +20,12 @@ from ....adapters.outbound.aeat.sede.declarations_observations import observed_c
 from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ....adapters.outbound.aeat.sede.errors import SedeParseError
 from ....adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact
+from ....core.classification.policies import SensitivityClass
 from ....core.declaracion_idioma import DeclaracionIdioma
 from ....core.ed25519_signing import generate_ed25519_keypair_hex
 from ....core.hashing import sha256_hex
 from ....core.period import Period
+from ....core.tax_domain import TaxDomain
 from ....domain.calculations.registry.authority import ValidatedRegistryAuthority, _authority_from_published_artifact
 from ....domain.calculations.registry.authority_artifact import (
     AuthorityArtifact,
@@ -33,16 +35,13 @@ from ....domain.calculations.registry.authority_artifact import (
     write_authority_artifact,
 )
 from ....domain.calculations.registry.errors import RegistryValidationError
-from ....domain.calculations.registry.schema import RegistryCatalogues
+from ....domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from ....domain.calculations.registry.schema_base import EvidenceTier
 from ....domain.calculations.registry.schema_exports import ExportLayoutDefinition
-from ....domain.calculations.registry.schema_references import SourceReference
-from ....domain.calculations.registry.tests._referential_integrity_support import (
-    minimal_catalogues,
-    minimal_modelo,
-    minimal_revision,
-    minimal_source_ref,
-    snapshot_for_revision,
-)
+from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.schema_references import LegalReference, PeriodSelector, SourceReference
+from ....domain.calculations.registry.schema_revision_members import ApplicationLinkDefinition
+from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ....domain.filing.errors import FilingExportValidationError
 from ....domain.filing.schema import ModeloDraft, ModeloDraftStatus, ModeloValue, ModeloValueKind
 from .._export_xml_dictionary import render_xml_dictionary_layout
@@ -62,6 +61,56 @@ _XSD = b"""<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 </xs:schema>
 """
 
+_LEGAL_ID = "ley-35-2006:art-1"
+_SOURCE_ID = "artifact-runtime-fixture-source"
+
+
+def _minimal_source_ref() -> SourceReference:
+    return SourceReference(
+        id=_SOURCE_ID, evidence_tier="official_source_guidance", authority="aeat", kind="instructions",
+        corpus_path="corpus/absent/fixture-source.pdf", sha256="a" * 64, bytes=1,
+        retrieved_at=date(2024, 1, 1), source_url="https://www.aeat.es/", review_status="pending_review",
+    )
+
+
+def _minimal_catalogues() -> RegistryCatalogues:
+    legal = LegalReference(
+        id=_LEGAL_ID, evidence_tier=EvidenceTier.LEGAL_AUTHORITY, authority="boe", kind="ley",
+        corpus_ref="boe/lirpf#art-1", document_id="BOE-A-2006-20764",
+        permalink="https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764",
+        effective_from=date(2006, 11, 30), review_status="operator_reviewed",
+        reviewed_at=date(2026, 7, 1), reviewed_by="artifact runtime fixture", required_text=("art-1",),
+    )
+    return RegistryCatalogues(legal={_LEGAL_ID: legal}, sources={_SOURCE_ID: _minimal_source_ref()})
+
+
+def _minimal_revision(*, export_layouts: tuple[ExportLayoutDefinition, ...]) -> ModeloRevision:
+    return ModeloRevision(
+        id="test-revision", review_status="agent_reviewed", reviewed_by="artifact runtime fixture",
+        reviewed_at=date(2026, 7, 1), authority_grade="filing",
+        localization_key="test.schema.revision.test-revision.label", valid_from=date(2024, 1, 1),
+        period_selector=PeriodSelector(year_from=2024, periods=("0A",)), legal_refs=(_LEGAL_ID,),
+        source_refs=(_SOURCE_ID,), orden_aplicabilidad=(_LEGAL_ID,),
+        casillas=(CasillaDefinition(
+            id="001", number="001", localization_keys=("test.schema.casilla.label",), section=("test",),
+            input_kind=InputKind.MANUAL, legal_refs=(_LEGAL_ID,), source_refs=(_SOURCE_ID,),
+        ),),
+        application_links=(ApplicationLinkDefinition(
+            id="al.test", surface="filing", consumer="artifact-runtime-fixture", requires_snapshot=True,
+            legal_refs=(_LEGAL_ID,), source_refs=(_SOURCE_ID,),
+        ),),
+        export_layouts=export_layouts,
+    )
+
+
+def _minimal_modelo(revision: ModeloRevision) -> ModeloDefinition:
+    return ModeloDefinition(
+        id="130", title_localization_key="test.schema.modelo.130.title",
+        official_name_localization_key="test.schema.modelo.130.official_name", tax_domain=TaxDomain.IVA,
+        cadence="annual", jurisdiction="ES-AEAT", output_sensitivity=SensitivityClass.FINANCIAL,
+        legal_refs=(_LEGAL_ID,), source_refs=(_SOURCE_ID,), revisions={revision.id: revision},
+    )
+
 
 @pytest.fixture(scope="session", autouse=True)
 def compose_runtime_ports() -> Iterator[None]:
@@ -77,7 +126,7 @@ def _reset_filing_store() -> Iterator[None]:
 
 def _source(source_id: str, *, kind: str, corpus_path: str, body: bytes) -> SourceReference:
     """Build a typed source declaration whose bytes live only in the artifact."""
-    return minimal_source_ref().model_copy(
+    return _minimal_source_ref().model_copy(
         update={
             "id": source_id,
             "kind": kind,
@@ -105,8 +154,8 @@ def _published_runtime(
 ) -> tuple[RegistrySchemaAccessor, ValidatedRegistryAuthority]:
     """Read a signed staged authority whose corpus location does not exist."""
     layout = _layout()
-    revision = minimal_revision(export_layouts=(layout,))
-    modelo = minimal_modelo(revision)
+    revision = _minimal_revision(export_layouts=(layout,))
+    modelo = _minimal_modelo(revision)
     dictionary_source = _source(
         _DICTIONARY_SOURCE_ID,
         kind="dictionary",
@@ -119,7 +168,7 @@ def _published_runtime(
         corpus_path="corpus/absent/authority-schema.xsd",
         body=_XSD,
     )
-    base_catalogues = minimal_catalogues()
+    base_catalogues = _minimal_catalogues()
     catalogues = RegistryCatalogues(
         legal=base_catalogues.legal,
         sources={**base_catalogues.sources, _DICTIONARY_SOURCE_ID: dictionary_source, _XSD_SOURCE_ID: xsd_source},
@@ -151,7 +200,7 @@ def _published_runtime(
     # The snapshot is typed production data.  Its source map contains just the
     # references that the layout declares; the paths above are intentionally
     # absent, so a raw corpus read would fail this behavioral gate.
-    snapshot = snapshot_for_revision(modelo, catalogues, revision)
+    snapshot = authority.snapshot("130", filing_year=2024, period="0A")
     provider = RegistrySchemaAccessor(
         collections={"130": collection_from_snapshot(snapshot)},
         subviews={"130": _subview_from_snapshot(snapshot)},

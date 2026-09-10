@@ -16,7 +16,7 @@ from datetime import date
 from pathlib import Path
 from secrets import token_bytes
 from threading import Condition, RLock
-from typing import Final, Protocol, override
+from typing import Final, override
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.hashing import content_hash_hex
@@ -58,41 +58,6 @@ _authority_state_lock = RLock()
 _authority_load_states: dict[object, object] = {}
 _authority_generation = 0
 _authority_reset_epoch = 0
-
-
-class RegistryAuthorityLifecycleObserver(Protocol):
-    """Development observer retained for compiler-cache reset tooling."""
-
-    def registry_cache_reset_requested(self) -> None:
-        """Observe a compiler-cache reset request."""
-        ...
-
-    def registry_cache_reset_acquired(self) -> None:
-        """Observe exclusive ownership of compiler-cache reset."""
-        ...
-
-
-class _SilentRegistryAuthorityLifecycleObserver:
-    def registry_cache_reset_requested(self) -> None:
-        pass
-
-    def registry_cache_reset_acquired(self) -> None:
-        pass
-
-
-_SILENT_AUTHORITY_LIFECYCLE_OBSERVER = _SilentRegistryAuthorityLifecycleObserver()
-
-
-class _DevelopmentCacheResetBarrier:
-    """A dev-only synchronization seam; product runtime has no source cache."""
-
-    @contextmanager
-    def reset(self) -> Generator[None]:
-        with _authority_state_lock:
-            yield
-
-
-_authority_load_barrier = _DevelopmentCacheResetBarrier()
 
 
 @dataclass(frozen=True, slots=True)
@@ -384,7 +349,7 @@ class ValidatedRegistryAuthority:
     """Load, validate, and cache registry material behind one access point."""
 
     root: Path
-    source_root: Path
+    source_root: Path | None
     modelos: tuple[ModeloDefinition, ...]
     catalogues: RegistryCatalogues
     _modelos_by_id: dict[str, ModeloDefinition]
@@ -403,6 +368,36 @@ class ValidatedRegistryAuthority:
     _capture_process_incarnation: bytes = field(default=b"", init=False, repr=False)
     _published_artifact: bool = field(default=False, init=False, repr=False)
     _state_lock: AbstractContextManager[object] = field(default_factory=RLock, init=False, repr=False)
+
+    @classmethod
+    def from_validated_components(
+        cls,
+        *,
+        modelos: tuple[ModeloDefinition, ...],
+        catalogues: RegistryCatalogues,
+        identity_digest: str,
+        evidence: AuthorityEvidenceProjection | None = None,
+    ) -> ValidatedRegistryAuthority:
+        """Construct an immutable runtime projection after development validation.
+
+        This boundary accepts models, catalogues, identity, and optional
+        published evidence only. It has no authoring-root or validator input.
+        """
+        authority = cls(
+            root=Path(),
+            source_root=None,
+            modelos=modelos,
+            catalogues=catalogues,
+            _modelos_by_id={modelo.id: modelo for modelo in modelos},
+            _validator=_PublishedArtifactValidator(),
+            _registry_validated=True,
+            _validated_modelos={modelo.id for modelo in modelos},
+            _snapshots={},
+            _identity_digest=identity_digest,
+            evidence=AuthorityEvidenceProjection() if evidence is None else evidence,
+        )
+        authority._bind_published_artifact_incarnation()
+        return authority
 
     def _bind_capture_incarnation(
         self,
@@ -989,19 +984,9 @@ def _authority_from_published_artifact(
     ensures no source evidence, compiler, repair, or conformance path is
     reached by a product authority.
     """
-    runtime_root = artifact_path.parent
-    authority = ValidatedRegistryAuthority(
-        root=runtime_root,
-        source_root=None,
+    return ValidatedRegistryAuthority.from_validated_components(
         modelos=artifact.modelos,
         catalogues=artifact.catalogues,
-        _modelos_by_id={modelo.id: modelo for modelo in artifact.modelos},
-        _validator=_PublishedArtifactValidator(),
-        _registry_validated=True,
-        _validated_modelos={modelo.id for modelo in artifact.modelos},
-        _snapshots={},
-        _identity_digest=artifact.identity_digest,
+        identity_digest=artifact.identity_digest,
         evidence=artifact.evidence,
     )
-    authority._bind_published_artifact_incarnation()
-    return authority
