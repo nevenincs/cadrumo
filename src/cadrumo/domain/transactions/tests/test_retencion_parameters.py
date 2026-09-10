@@ -27,9 +27,12 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.fact_providers import compile_registered_fact_providers
 
 from ....core.directory_scan import scan_directory
 from ....core.resources.bundled_data import bundled_path
+from ....domain.calculations.registry.facts.resolution import ScalarFactQuery, resolve_governed_fact
+from ....domain.calculations.registry.schema_base import DateAxis
 from ..errors import TransactionValidationError
 from ..retencion_parameters import (
     RirpfArt95RetencionRates,
@@ -46,22 +49,18 @@ _LEGAL_REF = "rd-439-2007:art-95"
 _CURRENT_EFFECTIVE_DATE = date(2026, 4, 1)
 
 
-def _parameters_toml() -> dict[str, dict[str, object]]:
-    path = bundled_path("registry", "aeat", "legal", "irpf-retencion-actividades.toml")
-    with path.open("rb") as handle:
-        payload = tomllib.load(handle)
-    parameters = payload["parameters"]
-    assert isinstance(parameters, dict)
-    typed_parameters: dict[str, dict[str, object]] = {}
-    for key, value in parameters.items():
-        assert isinstance(key, str)
-        assert isinstance(value, dict)
-        typed_value: dict[str, object] = {}
-        for field_name, field_value in value.items():
-            assert isinstance(field_name, str)
-            typed_value[field_name] = field_value
-        typed_parameters[key] = typed_value
-    return typed_parameters
+def _resolved_fact(fact_id: str):
+    """Resolve one authored retención fact through the development compiler."""
+    catalogue = compile_registered_fact_providers(bundled_path("registry", "aeat"))
+    return resolve_governed_fact(
+        catalogue,
+        ScalarFactQuery(
+            fact_id=fact_id,
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=_CURRENT_EFFECTIVE_DATE,
+        ),
+        authority_digest="0" * 64,
+    )
 
 
 def _corpus_text() -> str:
@@ -77,11 +76,10 @@ def test_the_bundled_boe_excerpt_states_both_retencion_rates() -> None:
     assert "7 por ciento en el período impositivo de inicio de actividades" in text
 
 
-def test_registry_parameters_match_the_percentages_the_excerpt_states() -> None:
-    """Second link: the registry values equal the BOE percentages as fractions."""
-    parameters = _parameters_toml()
-    assert Decimal(str(parameters[_GENERAL_PARAM_ID]["value"])) == Decimal("15") / Decimal("100")
-    assert Decimal(str(parameters[_INICIO_PARAM_ID]["value"])) == Decimal("7") / Decimal("100")
+def test_governed_facts_match_the_percentages_the_excerpt_states() -> None:
+    """Second link: the fact values equal the BOE percentages as fractions."""
+    assert _resolved_fact(_GENERAL_PARAM_ID).payload.value == Decimal("15") / Decimal("100")
+    assert _resolved_fact(_INICIO_PARAM_ID).payload.value == Decimal("7") / Decimal("100")
 
 
 @pytest.mark.parametrize(
@@ -89,13 +87,9 @@ def test_registry_parameters_match_the_percentages_the_excerpt_states() -> None:
     (_GENERAL_PARAM_ID, _INICIO_PARAM_ID),
     ids=("general", "inicio-actividad"),
 )
-def test_every_retencion_parameter_cites_its_binding_provision(parameter_id: str) -> None:
+def test_every_retencion_fact_cites_its_binding_provision(parameter_id: str) -> None:
     """A regulatory value without its binding provision is ungrounded."""
-    parameter = _parameters_toml()[parameter_id]
-    assert parameter["evidence_tier"] == "legal_authority"
-    legal_refs = parameter["legal_refs"]
-    assert isinstance(legal_refs, list), "legal_refs must be a list in the parameters table"
-    assert _LEGAL_REF in legal_refs
+    assert _LEGAL_REF in _resolved_fact(parameter_id).legal_refs
 
 
 def test_the_cited_provision_resolves_in_the_bundled_legal_catalogue() -> None:
@@ -114,13 +108,12 @@ def test_the_cited_provision_resolves_in_the_bundled_legal_catalogue() -> None:
 
 
 def test_loader_returns_the_registry_values_as_a_typed_record() -> None:
-    """Third link: the typed record carries exactly the committed parameters."""
-    parameters = _parameters_toml()
+    """Third link: the typed record carries exactly the resolved facts."""
     rates = load_retencion_actividades_rates(effective_date=_CURRENT_EFFECTIVE_DATE)
 
     assert isinstance(rates, RirpfArt95RetencionRates)
-    assert rates.general_rate == Decimal(str(parameters[_GENERAL_PARAM_ID]["value"]))
-    assert rates.inicio_actividad_rate == Decimal(str(parameters[_INICIO_PARAM_ID]["value"]))
+    assert rates.general_rate == _resolved_fact(_GENERAL_PARAM_ID).payload.value
+    assert rates.inicio_actividad_rate == _resolved_fact(_INICIO_PARAM_ID).payload.value
 
 
 def test_the_inference_bound_is_the_general_rate() -> None:

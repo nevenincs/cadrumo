@@ -33,28 +33,6 @@
 # the prior excerpt had NONE of it, in any form. Only the 15/7 rates are
 # grounded here; the collectives list is not consumed by any parameter.
 
-[parameters."rirpf-art-95:retencion-actividades-profesionales-general"]
-evidence_tier = "legal_authority"
-value = "0.15"
-unit = "fraction"
-applies_to = "irpf-retencion-actividades-economicas"
-legal_refs = ["rd-439-2007:art-95"]
-review_status = "agent_reviewed"
-reviewed_at = 2026-08-05
-reviewed_by = "agent-review"
-notes = "RIRPF art 95.1 primer parrafo: tipo general del 15 por ciento aplicable cuando los rendimientos sean contraprestacion de una actividad profesional. La base de retencion son los ingresos integros satisfechos, no el total con IVA repercutido. Verificado contra el texto consolidado vivo del BOE el 2026-08-05."
-
-[parameters."rirpf-art-95:retencion-actividades-profesionales-inicio"]
-evidence_tier = "legal_authority"
-value = "0.07"
-unit = "fraction"
-applies_to = "irpf-retencion-actividades-economicas"
-legal_refs = ["rd-439-2007:art-95"]
-review_status = "agent_reviewed"
-reviewed_at = 2026-08-05
-reviewed_by = "agent-review"
-notes = "RIRPF art 95.1 segundo parrafo: tipo reducido del 7 por ciento en el periodo impositivo de inicio de actividades profesionales y en los dos siguientes, siempre que no se hubiera ejercido actividad profesional alguna en el ano anterior a la fecha de inicio. Requiere comunicacion firmada al pagador. Verificado contra el texto consolidado vivo del BOE el 2026-08-05."
-
 [parameters."rirpf-art-95:retencion-actividades-profesionales-colectivos-especificos"]
 evidence_tier = "legal_authority"
 value = "0.07"
