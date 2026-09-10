@@ -10,7 +10,7 @@ related:
   - '[[2026-09-10-data-provenance-consolidation-live-lane-map-reference]]'
 modified: '2026-09-10'
 body_schema: body-v2
-body_hash: 'sha256:a8b4ab4f4ed2101df3710dc2af94766048a4f1b65d40c8fab114021b0275d45f'
+body_hash: 'sha256:7fd06ed35d920d5a0af3e4b9dc381da096b26369395ea00ccf4adb0dbe277a04'
 ---
 
 # `data-provenance-consolidation` plan
@@ -79,9 +79,9 @@ Remove only declarations and full-tree checks whose catalog-backed successors pr
 
 Delete duplicate off-host and sidecar authority routes only after exact catalog parity exists.
 
-- [ ] `W03.P06.S16` - Delete redundant off-host acquisition projection after exact manifest and registry catalog bindings exist; `src/cadrumo/_data/corpus/aeat_official/disenos_registro/off_host_sources.json`.
-- [ ] `W03.P06.S17` - Remove off-host loading, schema, and special authority routing after catalog parity; `dev/corpus/sync_aeat_record_design_corpus.py`.
-- [ ] `W03.P06.S18` - Remove retired off-host-specific tests while retaining catalog-backed detector teeth; `dev/corpus/tests/test_record_design_support.py`.
+- [x] `W03.P06.S16` - Delete redundant off-host acquisition projection after exact manifest and registry catalog bindings exist; `src/cadrumo/_data/corpus/aeat_official/disenos_registro/off_host_sources.json`.
+- [x] `W03.P06.S17` - Remove off-host loading, schema, and special authority routing after catalog parity; `dev/corpus/sync_aeat_record_design_corpus.py`.
+- [x] `W03.P06.S18` - Remove retired off-host-specific tests while retaining catalog-backed detector teeth; `dev/corpus/tests/test_record_design_support.py`.
 - [ ] `W03.P06.S19` - Replace sync-only extracted-sidecar census with explicit catalog derivation records; `dev/corpus/sync_aeat_record_design_corpus.py`.
 
 ### Phase `W03.P07` - Prose and coverage cleanup

@@ -6,7 +6,7 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:f70217891bad790bea4dd1ab36091fa561181ab05621e27376347210d9c47042'
+body_hash: 'sha256:2e5f11e191c77e90b3264d7d1fe15d8f43d14411b0e378633dce43121eccc16b'
 related:
   - '[[2026-09-10-data-provenance-consolidation-W01-P01-S01]]'
   - '[[2026-09-10-data-provenance-consolidation-W01-P01-S02]]'
@@ -23,6 +23,9 @@ related:
   - '[[2026-09-10-data-provenance-consolidation-W02-P05-S13]]'
   - '[[2026-09-10-data-provenance-consolidation-W02-P05-S14]]'
   - '[[2026-09-10-data-provenance-consolidation-W02-P05-S15]]'
+  - '[[2026-09-10-data-provenance-consolidation-W03-P06-S16]]'
+  - '[[2026-09-10-data-provenance-consolidation-W03-P06-S17]]'
+  - '[[2026-09-10-data-provenance-consolidation-W03-P06-S18]]'
   - '[[2026-09-10-data-provenance-consolidation-adr]]'
   - '[[2026-09-10-data-provenance-consolidation-lane-inventory-research]]'
   - '[[2026-09-10-data-provenance-consolidation-live-lane-map-reference]]'
@@ -42,6 +45,9 @@ related:
   - '[[2026-09-10-data-provenance-consolidation-w02-p05-s13-sidecar-owner-review-audit]]'
   - '[[2026-09-10-data-provenance-consolidation-w02-p05-s14-docs-freshness-review-audit]]'
   - '[[2026-09-10-data-provenance-consolidation-w02-p05-s15-corpus-sidecar-review-audit]]'
+  - '[[2026-09-10-data-provenance-consolidation-w03-p06-s16-off-host-projection-review-audit]]'
+  - '[[2026-09-10-data-provenance-consolidation-w03-p06-s17-catalog-routing-review-audit]]'
+  - '[[2026-09-10-data-provenance-consolidation-w03-p06-s18-support-tests-review-audit]]'
 ---
 
 # `data-provenance-consolidation` feature index
@@ -71,6 +77,9 @@ Auto-generated index of all documents tagged with `#data-provenance-consolidatio
 - `2026-09-10-data-provenance-consolidation-w02-p05-s13-sidecar-owner-review-audit` - `data-provenance-consolidation` audit: `w02 p05 s13 sidecar owner review`
 - `2026-09-10-data-provenance-consolidation-w02-p05-s14-docs-freshness-review-audit` - `data-provenance-consolidation` audit: `w02 p05 s14 docs freshness review`
 - `2026-09-10-data-provenance-consolidation-w02-p05-s15-corpus-sidecar-review-audit` - `data-provenance-consolidation` audit: `w02 p05 s15 corpus sidecar review`
+- `2026-09-10-data-provenance-consolidation-w03-p06-s16-off-host-projection-review-audit` - `data-provenance-consolidation` audit: `w03 p06 s16 off host projection review`
+- `2026-09-10-data-provenance-consolidation-w03-p06-s17-catalog-routing-review-audit` - `data-provenance-consolidation` audit: `w03 p06 s17 catalog routing review`
+- `2026-09-10-data-provenance-consolidation-w03-p06-s18-support-tests-review-audit` - `data-provenance-consolidation` audit: `w03 p06 s18 support tests review`
 
 ### exec
 
@@ -89,6 +98,9 @@ Auto-generated index of all documents tagged with `#data-provenance-consolidatio
 - `2026-09-10-data-provenance-consolidation-W02-P05-S13` - Extract shared generic sidecar hash, schema, locality, and digest validation into the sidecar owner
 - `2026-09-10-data-provenance-consolidation-W02-P05-S14` - Migrate documentation-preprocessor freshness tests to the shared generic validator
 - `2026-09-10-data-provenance-consolidation-W02-P05-S15` - Migrate corpus-sidecar freshness checks to shared validation and catalog derivation
+- `2026-09-10-data-provenance-consolidation-W03-P06-S16` - Delete redundant off-host acquisition projection after exact manifest and registry catalog bindings exist
+- `2026-09-10-data-provenance-consolidation-W03-P06-S17` - Remove off-host loading, schema, and special authority routing after catalog parity
+- `2026-09-10-data-provenance-consolidation-W03-P06-S18` - Remove retired off-host-specific tests while retaining catalog-backed detector teeth
 
 ### plan
 

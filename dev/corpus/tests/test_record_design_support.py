@@ -4,11 +4,9 @@ from __future__ import annotations
 
 import hashlib
 import json
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 
 import pytest
-
-from cadrumo.domain.calculations.registry.artifact_catalogue import ArtifactRole
 
 from .. import sync_aeat_record_design_corpus as record_design_sync
 from ..sync_aeat_record_design_corpus import (
@@ -22,10 +20,7 @@ from ..sync_aeat_record_design_corpus import (
     _Artifact,
     _authority_failures,
     _load_manifests,
-    _load_off_host_sources,
     _Manifest,
-    _OffHostSources,
-    _record_design_catalogue,
     _root_aggregate,
     check,
     unattested_corpus_files,
@@ -277,7 +272,7 @@ def test_the_shipped_root_census_agrees_with_the_shipped_manifests() -> None:
         assert root[field] == expected, f"root manifest {field} disagrees with the per-modelo manifests"
 
 
-def _corpus_fixture(tmp_path: Path) -> tuple[dict[str, _Manifest], _OffHostSources]:
+def _corpus_fixture(tmp_path: Path) -> dict[str, _Manifest]:
     """A two-artefact corpus where each artefact resolves to one authority."""
     (tmp_path / "modelo_999" / "files").mkdir(parents=True)
     (tmp_path / "modelo_999" / "files" / "01-design.pdf").write_bytes(b"%PDF-1.4")
@@ -295,30 +290,13 @@ def _corpus_fixture(tmp_path: Path) -> tuple[dict[str, _Manifest], _OffHostSourc
             ],
         }
     }
-    off_host: _OffHostSources = {
-        "schema_version": 1,
-        "authority": "boe",
-        "disposition": "official-authority-published-by-boe-not-indexed-by-aeat",
-        "reason": "fixture",
-        "artefacts": [
-            {
-                "modelo": "999",
-                "title": "Orden",
-                "url": "https://www.boe.es/boe/dias/2020/01/01/pdfs/X.pdf",
-                "stored_path": "modelo_999/files/02-orden.pdf",
-                "kind": "record_design",
-                "registry_declaration": "aeat/legal/modelo-999.toml",
-            }
-        ],
-    }
-    return manifests, off_host
+    return manifests
 
 
 def _configure_isolated_sync_check(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
     manifests: dict[str, _Manifest],
-    off_host: _OffHostSources,
 ) -> None:
     """Route ``check`` through a complete temporary corpus without live data."""
     for artifact in manifests["999"]["artefacts"]:
@@ -331,7 +309,6 @@ def _configure_isolated_sync_check(
     monkeypatch.setattr(record_design_sync, "_REQUIRED", ())
     monkeypatch.setattr(record_design_sync, "_EXTRACTION_SIDECAR_ARTEFACTS", ())
     monkeypatch.setattr(record_design_sync, "_load_manifests", lambda: manifests)
-    monkeypatch.setattr(record_design_sync, "_load_off_host_sources", lambda: off_host)
     monkeypatch.setattr(
         record_design_sync,
         "_load_historical_exclusions",
@@ -347,10 +324,10 @@ def _configure_isolated_sync_check(
 
 def test_catalog_backed_sync_rejects_an_unclassified_payload(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """A payload outside every manifest fails the synchronizer's census check."""
-    manifests, _off_host = _corpus_fixture(tmp_path)
+    manifests = _corpus_fixture(tmp_path)
     unclassified = tmp_path / "modelo_999" / "files" / "03-unclassified.pdf"
     unclassified.write_bytes(b"%PDF-1.4")
-    _configure_isolated_sync_check(monkeypatch, tmp_path, manifests, _off_host)
+    _configure_isolated_sync_check(monkeypatch, tmp_path, manifests)
 
     with pytest.raises(SystemExit, match="corpus files carrying no manifest entry have changed") as failure:
         record_design_sync.check()
@@ -362,11 +339,11 @@ def test_catalog_backed_sync_rejects_conflicting_acquisition_identity(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Two manifest origins cannot silently select a preferred acquisition identity."""
-    manifests, off_host = _corpus_fixture(tmp_path)
+    manifests = _corpus_fixture(tmp_path)
     manifests["999"]["artefacts"].append(
         _artefact("files/02-orden.pdf", "https://www.boe.es/boe/dias/2020/01/02/pdfs/X.pdf")
     )
-    _configure_isolated_sync_check(monkeypatch, tmp_path, manifests, off_host)
+    _configure_isolated_sync_check(monkeypatch, tmp_path, manifests)
 
     with pytest.raises(SystemExit, match="artifact catalog conflicting_identity") as failure:
         record_design_sync.check()
@@ -374,78 +351,24 @@ def test_catalog_backed_sync_rejects_conflicting_acquisition_identity(
     assert "modelo_999/files/02-orden.pdf" in str(failure.value)
 
 
-def test_an_artefact_with_no_declared_authority_is_refused(tmp_path: Path) -> None:
-    """The planted defect: corpus content nothing states the origin of.
-
-    This is the state the corpus was actually in - 168 of 248 artefacts named by
-    no declaration - and every other check passed throughout, because they all
-    walk from the declarations outward or from the bytes to their own digest.
-    """
-    manifests, off_host = _corpus_fixture(tmp_path)
-    required = {f"{_STATIC}/DR_900/archivos/dr999.pdf"}
-    census: tuple[str, ...] = ()
-
-    assert _authority_failures(manifests, required, off_host, tmp_path, census) == []
-
-    # The defect: an artefact arrives carrying a URL no declaration names.
-    manifests["999"]["artefacts"].append(
-        _artefact("files/03-undeclared.pdf", f"{_STATIC}/DR_900/archivos/stowaway.pdf")
-    )
-    failures = _authority_failures(manifests, required, off_host, tmp_path, census)
-
-    assert len(failures) == 1
-    assert "resolves to no declared authority" in failures[0]
-    assert "modelo_999/files/03-undeclared.pdf" in failures[0]
-
-
-def test_an_artefact_claimed_by_two_declarations_is_refused(tmp_path: Path) -> None:
-    """Two authorities is a defect, not redundancy: the acquisition path forks."""
-    manifests, off_host = _corpus_fixture(tmp_path)
-    # The off-host entry and a required row both claim the BOE artefact.
-    required = {f"{_STATIC}/DR_900/archivos/dr999.pdf", "https://www.boe.es/boe/dias/2020/01/01/pdfs/X.pdf"}
-
-    failures = _authority_failures(manifests, required, off_host, tmp_path, ())
-
-    assert any("resolves to 2 authorities" in failure for failure in failures)
-
-
-def test_an_off_host_entry_naming_an_aeat_url_or_an_absent_file_is_refused(tmp_path: Path) -> None:
-    """The off-host locus exists for what the required set CANNOT express.
-
-    An AEAT-hosted URL is expressible as a required row, so admitting one here
-    would make the same artefact declarable in two places, and the reproducibility
-    invariant would be satisfied by whichever the author happened to pick.
-    """
-    manifests, off_host = _corpus_fixture(tmp_path)
-    off_host["artefacts"][0]["url"] = f"{_STATIC}/DR_900/archivos/dr999.pdf"
-    off_host["artefacts"][0]["stored_path"] = "modelo_999/files/99-absent.pdf"
-    required = {f"{_STATIC}/DR_900/archivos/dr999.pdf"}
-
-    failures = _authority_failures(manifests, required, off_host, tmp_path, ())
-
-    assert any("belongs in the required set" in failure for failure in failures)
-    assert any("names an absent artefact" in failure for failure in failures)
-
-
 def test_the_extraction_sidecar_census_is_an_equality_not_a_suffix_rule(tmp_path: Path) -> None:
     """A third sidecar fails, and so does retiring one while it is still listed."""
-    manifests, off_host = _corpus_fixture(tmp_path)
-    required = {f"{_STATIC}/DR_900/archivos/dr999.pdf"}
+    manifests = _corpus_fixture(tmp_path)
     # The .txt carries the .xls URL it was extracted from, so a required row
     # matches it; the census is what says the match is spurious.
     manifests["999"]["artefacts"].append(_artefact("files/01-design.txt", f"{_STATIC}/DR_900/archivos/dr999.pdf"))
     sidecar = "modelo_999/files/01-design.txt"
 
-    assert _authority_failures(manifests, required, off_host, tmp_path, (sidecar,)) == []
+    assert _authority_failures(manifests, (sidecar,)) == []
 
     # Present but not censused. The URL match alone would excuse it, so the
     # reproducibility check is what catches it: the URL serves the .pdf.
-    unlisted = _authority_failures(manifests, required, off_host, tmp_path, ())
+    unlisted = _authority_failures(manifests, ())
     assert any("not reproducible from its declared URL" in failure for failure in unlisted)
 
     # Censused but no longer present.
     manifests["999"]["artefacts"].pop()
-    retired = _authority_failures(manifests, required, off_host, tmp_path, (sidecar,))
+    retired = _authority_failures(manifests, (sidecar,))
     assert any("no longer present" in failure for failure in retired)
 
 
@@ -455,46 +378,3 @@ def test_the_shipped_extraction_sidecar_census_is_the_two_known_rows() -> None:
         "modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.txt",
         "modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.txt",
     )
-
-
-def test_every_off_host_artefact_exactly_aligns_with_an_official_catalog_identity() -> None:
-    """The projection aligns path and URL, rather than merely sharing a basename.
-
-    ``off_host_sources.json`` is an acquisition projection, not a second source
-    of authority.  It therefore has to agree with the manifest-derived catalog
-    on the complete canonical location and immutable source URL; a registry
-    declaration filename cannot prove either fact.
-    """
-    catalogue, failures = _record_design_catalogue(_load_manifests(), _CORPUS)
-
-    assert failures == []
-    assert catalogue is not None
-    for entry in _load_off_host_sources()["artefacts"]:
-        path = PurePosixPath(entry["stored_path"])
-        identity = catalogue.identities.get(path)
-
-        assert identity is not None, f"{path} has no manifest catalog identity"
-        assert identity.path == path
-        assert catalogue.roles[path] is ArtifactRole.OFFICIAL_ARTIFACT
-        assert identity.source_url == entry["url"]
-
-
-def test_an_off_host_projection_url_mismatch_is_refused_against_catalog_identity(tmp_path: Path) -> None:
-    """A plausible URL cannot silently diverge from the manifest's exact identity."""
-    manifests, off_host = _corpus_fixture(tmp_path)
-    off_host["artefacts"][0]["url"] = "https://www.boe.es/boe/dias/2020/01/02/pdfs/X.pdf"
-
-    failures = _authority_failures(
-        manifests,
-        {f"{_STATIC}/DR_900/archivos/dr999.pdf"},
-        off_host,
-        tmp_path,
-        (),
-    )
-
-    assert failures == [
-        "off-host entry URL diverges from its manifest catalog identity: "
-        "modelo_999/files/02-orden.pdf "
-        "(https://www.boe.es/boe/dias/2020/01/02/pdfs/X.pdf != "
-        "https://www.boe.es/boe/dias/2020/01/01/pdfs/X.pdf)"
-    ]

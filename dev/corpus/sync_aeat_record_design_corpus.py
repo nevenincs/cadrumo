@@ -37,7 +37,6 @@ from ..packaging.hashing import sha256_path  # noqa: E402
 
 _CORPUS = _ROOT / "src/cadrumo/_data/corpus/aeat_official/disenos_registro"
 _HISTORICAL_EXCLUSIONS_PATH = _CORPUS / "historical_exclusions.json"
-_OFF_HOST_SOURCES_PATH = _CORPUS / "off_host_sources.json"
 _RETRIEVED_AT = "2026-08-26"
 _STATIC = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro"
 _INDEX = "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro"
@@ -180,23 +179,6 @@ class _HistoricalExclusions(TypedDict):
     disposition: str
     source_pages: list[str]
     urls: list[str]
-
-
-class _OffHostArtefact(TypedDict):
-    modelo: str
-    title: str
-    url: str
-    stored_path: str
-    kind: str
-    registry_declaration: str
-
-
-class _OffHostSources(TypedDict):
-    schema_version: int
-    authority: str
-    disposition: str
-    reason: str
-    artefacts: list[_OffHostArtefact]
 
 
 class _IndexLinkParser(HTMLParser):
@@ -1547,18 +1529,6 @@ def _load_historical_exclusions() -> _HistoricalExclusions:
     )
 
 
-def _load_off_host_sources() -> _OffHostSources:
-    """Read the declared artefacts published somewhere other than the AEAT host.
-
-    A ``_RequiredArtifact`` renders its URL under :data:`_STATIC`, so it cannot
-    name a document AEAT does not serve. The governing Orden for several modelos
-    is published by the BOE and is bundled from there; without this file those
-    artefacts sit in the corpus with no stated origin, which is the state the
-    reproducibility invariant in :func:`check` exists to refuse.
-    """
-    return cast("_OffHostSources", json.loads(_OFF_HOST_SOURCES_PATH.read_text(encoding=_UTF_8)))
-
-
 def _artifact_urls(artifact: _Artifact) -> set[str]:
     return {str(artifact["url"]), *(str(url) for url in artifact.get("url_aliases", []))}
 
@@ -1761,24 +1731,15 @@ def _pull() -> None:
 
 def _authority_failures(
     manifests: dict[str, _Manifest],
-    required_urls: set[str],
-    off_host: _OffHostSources,
-    corpus_root: Path,
     sidecar_census: tuple[str, ...],
     catalogue: ArtifactCatalogue | None = None,
 ) -> list[str]:
-    """Report every manifest artefact that resolves to other than one declared authority.
+    """Report manifest artefacts that lack one official catalog identity.
 
-    The rest of :func:`check` walks one direction: each declaration is present,
-    each present artefact rehashes. Neither asks where an artefact CAME from, so
-    an artefact could sit in the corpus with no stated origin and no way to
-    obtain it again, and every count would still reconcile. It did: the required
-    set named 80 of 248 artefacts and nothing noticed the other 168.
-
-    An artefact resolves through exactly one of three declarations - a required
-    row, an off-host entry, or the named extraction-sidecar census. Two claiming
-    it is as much a defect as none: the acquisition path would then depend on
-    which declaration a caller consulted.
+    The catalog owns the complete immutable acquisition identity, including
+    documents acquired from a non-AEAT publisher.  The synchronizer retains
+    byte rehashing and the temporary named sidecar exception until S19 replaces
+    that exception with catalog derivation records.
     """
     failures: list[str] = []
     catalogue_is_local = catalogue is None
@@ -1800,63 +1761,32 @@ def _authority_failures(
         )
     if catalogue_is_local:
         failures.extend(_catalogue_diagnostic_message(diagnostic) for diagnostic in catalogue.diagnostics)
-    if off_host.get("schema_version") != 1:
-        failures.append("off-host source schema_version is stale")
-
-    off_host_by_path = {entry["stored_path"]: entry for entry in off_host["artefacts"]}
-    declared_paths = set(off_host_by_path)
     sidecar_paths = set(sidecar_census)
 
     observed_sidecars: list[str] = []
     for modelo, manifest in sorted(manifests.items()):
         for artifact in manifest["artefacts"]:
             path = f"modelo_{modelo}/{artifact['stored_path']}"
-            authorities: list[str] = []
             if path in sidecar_paths:
-                # The census wins outright, and only here. A sidecar carries the
-                # URL of the payload it was extracted from, so it matches a
-                # required row it was never acquired by; treating that match as a
-                # second authority would report an ambiguity that is really the
-                # spurious match the census was written to name.
-                authorities.append("extraction-sidecar")
                 observed_sidecars.append(path)
-            else:
-                if _artifact_urls(artifact) & required_urls:
-                    authorities.append("required")
-                if path in declared_paths:
-                    authorities.append("off-host")
-                # Resolving to a declaration is not yet reproducibility. `_pull`
-                # names the stored file from the response URL's extension, so a
-                # row whose stored extension differs from its URL's could not
-                # have been produced by the acquisition path, whatever it
-                # declares: fetching that URL yields the other file. This is the
-                # check that separates an artefact from a derivative wearing its
-                # source's URL, which the authority join alone cannot see.
-                stored_suffix = PurePosixPath(artifact["stored_path"]).suffix.lower()
-                url_suffix = PurePosixPath(urlparse(artifact["url"]).path).suffix.lower()
-                if authorities and stored_suffix != url_suffix:
-                    failures.append(
-                        f"artefact is not reproducible from its declared URL: M{modelo} {path} "
-                        f"stored {stored_suffix or '<none>'} but {artifact['url']} serves {url_suffix or '<none>'}"
-                    )
-            if not authorities:
-                failures.append(f"artefact resolves to no declared authority: M{modelo} {path} <- {artifact['url']}")
-            elif len(authorities) > 1:
-                failures.append(f"artefact resolves to {len(authorities)} authorities: M{modelo} {path} {authorities}")
-
-    for path, entry in sorted(off_host_by_path.items()):
-        if entry["url"].startswith(_STATIC):
-            failures.append(f"off-host entry names an AEAT-hosted URL and belongs in the required set: {path}")
-        if not (corpus_root / path).is_file():
-            failures.append(f"off-host entry names an absent artefact: {path}")
-        catalog_identity = catalogue.identities.get(PurePosixPath(path))
-        if catalog_identity is None or catalogue.roles.get(catalog_identity.path) is not ArtifactRole.OFFICIAL_ARTIFACT:
-            failures.append(f"off-host entry does not bind an official manifest catalog identity: {path}")
-        elif catalog_identity.source_url != entry["url"]:
-            failures.append(
-                f"off-host entry URL diverges from its manifest catalog identity: {path} "
-                f"({entry['url']} != {catalog_identity.source_url})"
-            )
+                continue
+            catalog_identity = catalogue.identities.get(PurePosixPath(path))
+            if (
+                catalog_identity is None
+                or catalogue.roles.get(catalog_identity.path) is not ArtifactRole.OFFICIAL_ARTIFACT
+            ):
+                failures.append(f"artefact does not bind an official catalog identity: M{modelo} {path}")
+                continue
+            # A catalog identity proves provenance, but not reproducibility by
+            # the acquisition writer: `_pull` names files from the response URL
+            # extension. A divergent stored suffix therefore remains a failure.
+            stored_suffix = PurePosixPath(artifact["stored_path"]).suffix.lower()
+            url_suffix = PurePosixPath(urlparse(artifact["url"]).path).suffix.lower()
+            if stored_suffix != url_suffix:
+                failures.append(
+                    f"artefact is not reproducible from its declared URL: M{modelo} {path} "
+                    f"stored {stored_suffix or '<none>'} but {artifact['url']} serves {url_suffix or '<none>'}"
+                )
 
     if tuple(sorted(observed_sidecars)) != sidecar_census:
         appeared = sorted(set(observed_sidecars) - sidecar_paths)
@@ -1969,9 +1899,6 @@ def check() -> None:
     failures.extend(
         _authority_failures(
             manifests,
-            required_urls,
-            _load_off_host_sources(),
-            _CORPUS,
             _EXTRACTION_SIDECAR_ARTEFACTS,
             catalogue,
         )
