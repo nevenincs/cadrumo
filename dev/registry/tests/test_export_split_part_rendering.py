@@ -21,14 +21,14 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.loader import load_modelo_source
 
-from .....core.resources.bundled_data import bundled_path
-from ..errors import RegistryValidationError
-from ..export_value_policy import ExportValuePolicy
-from ..fixed_width_codec import render_fixed_width_export_field
-from ..loader_cache import discover_modelo_sources
-from ..schema_exports import ExportFieldDefinition
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
+from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
+from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
+from dev.registry.compiler.loader import load_modelo_source
+from dev.registry.compiler.loader_cache import discover_modelo_sources
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
