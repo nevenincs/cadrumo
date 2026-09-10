@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-10'
 body_schema: body-v2
-body_hash: 'sha256:417a6c94617263b40eebb429cb794d63d07d5c31f765ab900e49f0d803778fc4'
+body_hash: 'sha256:169991ee420e086ebde77467a6fe281d96f9fc0c85bb493c220c6205bf2dfd87'
 ---
 
 # `facts-registry` plan
@@ -155,7 +155,7 @@ Rewire treaty and deadline consumers, retain apoderamientos as non-governed voca
 - [x] `W03.P13.S70` - Capture and author the bounded administrator-retention fact slice from BOE redactions; `dev/corpus and src/cadrumo/_data/corpus/normatives/html and src/cadrumo/_data/registry/aeat/facts`.
 - [x] `W03.P13.S68` - Capture hash-pinned BOE article 95 redactions and author source-cited temporal withholding-rate facts under the governed authority; `dev/corpus and src/cadrumo/_data/corpus/normatives/html and src/cadrumo/_data/registry/aeat/facts and src/cadrumo/_data/registry/aeat/legal and src/cadrumo/domain/calculations/registry/facts/legal_parameters.py`.
 - [x] `W03.P13.S74` - Capture the official M036 activity-code mapping, author source-cited article-95 activity-selector facts, and remove their legacy adapter definitions; `dev/corpus and src/cadrumo/_data/corpus and src/cadrumo/_data/registry/aeat/facts and src/cadrumo/_data/registry/aeat/legal and src/cadrumo/domain/calculations/registry/facts/legal_parameters.py`.
-- [ ] `W03.P13.S71` - Capture hash-pinned BOE articles 109 and 110 redactions and author source-cited temporal payment-fraction activity-selector facts under the governed authority; `dev/corpus and src/cadrumo/_data/corpus/normatives/html and src/cadrumo/_data/registry/aeat/facts and src/cadrumo/_data/registry/aeat/legal and src/cadrumo/domain/calculations/registry/facts/legal_parameters.py`.
+- [ ] `W03.P13.S71` - Capture hash-pinned BOE articles 109 and 110 redactions, author source-cited temporal selectors by legal applicability, and rewire Modelo 131 to its form-specific authority; `dev/corpus and src/cadrumo/_data/corpus/normatives/html and src/cadrumo/_data/registry/aeat/facts and src/cadrumo/_data/registry/aeat/legal and src/cadrumo/domain/calculations/registry/facts/legal_parameters.py and src/cadrumo/application/modelo`.
 - [ ] `W03.P13.S72` - Capture hash-pinned BOE article 161 redactions and author source-cited temporal equivalence-surcharge facts under the governed authority; `dev/corpus and src/cadrumo/_data/corpus/normatives/html and src/cadrumo/_data/registry/aeat/facts and src/cadrumo/_data/registry/aeat/legal and src/cadrumo/domain/calculations/registry/facts/legal_parameters.py`.
 - [ ] `W03.P13.S73` - Capture hash-pinned BOE article 31 and transitional-provision redactions and author source-cited temporal objective-estimation exclusion facts under the governed authority; `dev/corpus and src/cadrumo/_data/corpus/normatives/html and src/cadrumo/_data/registry/aeat/facts and src/cadrumo/_data/registry/aeat/legal and src/cadrumo/domain/calculations/registry/facts/legal_parameters.py`.
 - [ ] `W03.P13.S64` - Migrate remaining legal-parameter consumers only after their facts carry source-grounded temporal applicability; `src/cadrumo/application/modelo/_objective_estimation_advisory.py, src/cadrumo/domain/transactions, and src/cadrumo/domain/calculations/registry/facts/legal_parameters.py`.
