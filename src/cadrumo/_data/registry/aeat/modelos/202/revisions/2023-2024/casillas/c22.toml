@@ -1,5 +1,7 @@
 [[revisions.2023-2024.casillas]]
 id = "22"
+continuidad_id = "is-pf-mod-40-3-b2-importe-pago-fraccionado"
+continuidad_origin = "seeded"
 number = "22"
 section = ["liquidacion", "modalidad_40_3_lis", "b2_casos_especificos"]
 data_type = "money"

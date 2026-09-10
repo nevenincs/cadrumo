@@ -1,5 +1,7 @@
 [[revisions.2025-y-siguientes.casillas]]
 id = "65"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_202/files/15-202-ejercicio-2025-y-siguientes-actualizado-14-07-2026.xlsx.extracted.md:144 (sha256 04e7b349b24b) prints box [65]; corpus/aeat_official/disenos_registro/modelo_202/files/03-202-ejercicio-2023-a-2024-actualizado-16-04-24-130-kb-xlsx.xlsx.extracted.md (sha256 1e4881439e25) prints no box [65] and retires none"
 number = "65"
 section = ["liquidacion", "modalidad_40_3_lis", "b2_casos_especificos"]
 data_type = "decimal"

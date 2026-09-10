@@ -1,5 +1,7 @@
 [[revisions.2023-2024.casillas]]
 id = "25"
+continuidad_id = "25"
+continuidad_origin = "seeded"
 number = "25"
 section = ["liquidacion", "modalidad_40_3_lis", "b2_casos_especificos"]
 data_type = "money"
