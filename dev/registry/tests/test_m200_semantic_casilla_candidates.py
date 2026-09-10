@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 import rtoml
-from cadrumo.domain.calculations.registry.loader import load_catalogue_file, load_modelo_directory
+from dev.registry.compiler.loader import load_catalogue_file, load_modelo_directory
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind

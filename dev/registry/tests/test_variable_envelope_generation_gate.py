@@ -6,7 +6,7 @@ import inspect
 from pathlib import Path
 
 import pytest
-from cadrumo.domain.calculations.registry.loader import load_catalogue_file
+from dev.registry.compiler.loader import load_catalogue_file
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError

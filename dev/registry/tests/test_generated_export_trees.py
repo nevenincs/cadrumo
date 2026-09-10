@@ -28,7 +28,7 @@ from pathlib import Path
 from typing import Final, override
 
 import pytest
-from cadrumo.domain.calculations.registry.loader import (
+from dev.registry.compiler.loader import (
     load_modelo_directory,
     load_registry_tree,
 )

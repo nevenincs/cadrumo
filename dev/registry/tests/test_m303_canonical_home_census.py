@@ -15,7 +15,7 @@ from functools import cache
 from pathlib import Path
 
 import pytest
-from cadrumo.domain.calculations.registry.loader import load_registry_tree
+from dev.registry.compiler.loader import load_registry_tree
 
 from cadrumo.core.estado_casilla_oficial import EstadoCasillaOficial
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind

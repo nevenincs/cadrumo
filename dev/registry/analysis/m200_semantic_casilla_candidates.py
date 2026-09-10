@@ -16,7 +16,7 @@ from enum import StrEnum
 from pathlib import Path
 
 import rtoml
-from cadrumo.domain.calculations.registry.loader import load_catalogue_file, load_modelo_directory
+from dev.registry.compiler.loader import load_catalogue_file, load_modelo_directory
 
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.resources.bundled_data import bundled_path

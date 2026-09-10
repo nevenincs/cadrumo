@@ -18,7 +18,7 @@ from datetime import date
 from pathlib import Path
 
 import pytest
-from cadrumo.domain.calculations.registry.loader import load_modelo_directory
+from dev.registry.compiler.loader import load_modelo_directory
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryError

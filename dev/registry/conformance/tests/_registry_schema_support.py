@@ -9,7 +9,7 @@ from functools import cache
 from pathlib import Path
 
 import pytest
-from cadrumo.domain.calculations.registry.loader import load_registry_tree
+from dev.registry.compiler.loader import load_registry_tree
 from pydantic import ValidationError
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade

@@ -6,7 +6,7 @@ from pathlib import Path
 from shutil import copyfile
 
 import pytest
-from cadrumo.domain.calculations.registry.loader import load_catalogue_file
+from dev.registry.compiler.loader import load_catalogue_file
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.record_design import extract_record_design

@@ -27,7 +27,7 @@ from pathlib import Path
 from typing import Final
 
 import pytest
-from cadrumo.domain.calculations.registry.loader import load_registry_tree
+from dev.registry.compiler.loader import load_registry_tree
 from pydantic import ValidationError
 
 from cadrumo.core.filing_producer_key import FilingProducerKey

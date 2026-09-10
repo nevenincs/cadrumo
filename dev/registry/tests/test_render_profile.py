@@ -10,7 +10,7 @@ from typing import get_args
 
 import pytest
 import rtoml
-from cadrumo.domain.calculations.registry.loader import load_catalogue_file
+from dev.registry.compiler.loader import load_catalogue_file
 from pydantic import ValidationError
 
 from cadrumo.core.directory_scan import scan_directory

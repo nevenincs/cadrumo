@@ -28,7 +28,7 @@ import time
 from pathlib import Path
 
 import pytest
-from cadrumo.domain.calculations.registry.loader import _load_registry_tree_cached, load_registry_tree
+from dev.registry.compiler.loader import _load_registry_tree_cached, load_registry_tree
 
 from cadrumo.core.config import override_settings
 from cadrumo.core.resources.bundled_data import bundled_path
@@ -80,7 +80,7 @@ _CHILD_PROGRAM = """
 import os
 from pathlib import Path
 
-from cadrumo.domain.calculations.registry.loader import load_registry_tree
+from dev.registry.compiler.loader import load_registry_tree
 from dev.registry.compiler.loader import load_registry_tree
 from dev.registry.compiler.loader_cache import registry_disk_cache_dir
 

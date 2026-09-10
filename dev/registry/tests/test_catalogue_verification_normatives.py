@@ -6,7 +6,7 @@ import re
 from datetime import date
 
 import pytest
-from cadrumo.domain.calculations.registry.loader import load_catalogue_file
+from dev.registry.compiler.loader import load_catalogue_file
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.corpus_text import normalise_corpus_text

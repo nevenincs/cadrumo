@@ -13,7 +13,7 @@ import re
 from collections import Counter
 
 import pytest
-from cadrumo.domain.calculations.registry.loader import load_catalogue_file
+from dev.registry.compiler.loader import load_catalogue_file
 
 from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.core.resources.bundled_data import bundled_path

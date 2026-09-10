@@ -6,7 +6,7 @@ import ast
 import inspect
 
 import pytest
-from cadrumo.domain.calculations.registry.loader import load_catalogue_file
+from dev.registry.compiler.loader import load_catalogue_file
 from pydantic import ValidationError
 
 from cadrumo.core.period import Period
