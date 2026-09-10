@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry import record_design_workbook as record_design_workbook_module
+from dev.registry.compiler import record_design_workbook as record_design_workbook_module
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from ..compiler.record_design import (
     extract_record_design,

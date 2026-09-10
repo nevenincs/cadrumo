@@ -39,11 +39,11 @@ from pathlib import Path
 
 import pytest
 
-from .....core.external_constants import UTF_8_ENCODING
-from .....core.resources.bundled_data import bundled_path
-from ..errors import RegistryValidationError
-from ..record_design import extract_record_design
-from ..record_design_sources import load_corrections, load_declared_non_record_sheet_reasons
+from cadrumo.core.external_constants import UTF_8_ENCODING
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from dev.registry.compiler.record_design import extract_record_design
+from dev.registry.compiler.record_design_sources import load_corrections, load_declared_non_record_sheet_reasons
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

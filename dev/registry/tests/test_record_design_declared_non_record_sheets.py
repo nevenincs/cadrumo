@@ -13,13 +13,13 @@ from __future__ import annotations
 import pytest
 from dev.registry.compiler.loader import load_catalogue_file
 
-from .....core.resources.bundled_data import bundled_path
-from ..errors import RegistryValidationError
-from ..record_design import extract_record_design
-from ..record_design_schema import (
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.record_design_schema import (
     RecordDesignExtraction,
     RecordDesignSkippedSheet,
 )
+from dev.registry.compiler.record_design import extract_record_design
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

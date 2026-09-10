@@ -29,8 +29,8 @@ from __future__ import annotations
 
 import pytest
 
-from ..record_design_pdf_rows import split_glued_ordinal_position
-from ..record_design_schema import RecordDesignField
+from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignField
+from dev.registry.compiler.record_design_pdf_rows import split_glued_ordinal_position
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
