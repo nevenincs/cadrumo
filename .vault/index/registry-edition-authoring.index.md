@@ -6,7 +6,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:4427bda59568d08d14db0663d0b51e81c0a7c4fbb03a7bd309dacb1afd81dc2e'
+body_hash: 'sha256:b2c6732a4afcd54b4ec1383eda1daae27a5d1ebcc3335384ba4fcd9d85fa657d'
 related:
   - '[[2026-09-09-registry-edition-authoring-W01-P01-S01]]'
   - '[[2026-09-09-registry-edition-authoring-W01-P01-S02]]'
@@ -37,6 +37,7 @@ related:
   - '[[2026-09-09-registry-edition-authoring-W02-P03-S61]]'
   - '[[2026-09-09-registry-edition-authoring-W02-P04-S13]]'
   - '[[2026-09-09-registry-edition-authoring-W02-P04-S14]]'
+  - '[[2026-09-09-registry-edition-authoring-W02-P04-S15]]'
   - '[[2026-09-09-registry-edition-authoring-W02-P04-S16]]'
   - '[[2026-09-09-registry-edition-authoring-W02-P04-S51]]'
   - '[[2026-09-09-registry-edition-authoring-W02-P04-S52]]'
@@ -93,6 +94,7 @@ Auto-generated index of all documents tagged with `#registry-edition-authoring`.
 - `2026-09-09-registry-edition-authoring-W02-P03-S61` - [S | opus-medium] Add the declared-predecessor date-agreement rule: where an edition names a predecessor and the two editions do not overlap in validity, the predecessor must be the earlier one; overlapping editions are exempt, and that exemption is exactly the parallel-variant case. Also make the lineage totality rule follow a named predecessor edge instead of the adjacent edition. Both land before the first modelo migrates. Proof: a successor naming a later non-overlapping edition is refused naming both; an overlapping pair loads; a totality fixture with a named non-adjacent predecessor resolves against the named edition.
 - `2026-09-09-registry-edition-authoring-W02-P04-S13` - [M | opus-medium] Declare source references and orden references once on the edition, inherited by rows that state none. Proof: a row stating its own overrides; a row stating none inherits; the materialised row is unchanged from today.
 - `2026-09-09-registry-edition-authoring-W02-P04-S14` - [L | opus-medium] Make export references a derived field: the loader computes them from the edition layout's own back-pointer and refuses an authored value. Delete the pipeline module that currently writes them onto casilla declarations. Proof: an authored value is refused; computed values match today's declarations byte for byte.
+- `2026-09-09-registry-edition-authoring-W02-P04-S15` - [M | sonnet-high] Remove the edition key from formula and binding identifiers by programmatic rewrite, with every reference updated in the same pass. Bounded rename, but references must not break. Proof: no identifier in these two families contains an edition key, and registry validation is clean.
 - `2026-09-09-registry-edition-authoring-W02-P04-S16` - [M | opus-medium] Resolve inherited formula and binding references through lineage against the successor edition's own declaration; an unresolvable reference is a validation failure, never an inherited pointer. Proof: a planted dangling reference is refused.
 - `2026-09-09-registry-edition-authoring-W02-P04-S51` - [M | opus-medium] Decide where an inherited row's generated export references are written, because publication refuses without an answer. The real declared-versus-generated comparison is not in any loader caller — it sits one call deeper, where the generated layout's addressed casillas are differenced against the identifiers read from the raw declaration files on disk. Under delta authoring a layout addressing an INHERITED casilla finds no file to write into, and publication fails loudly. That is the right failure mode, but it needs a decision rather than a discovery. Coordinate with the generator lane, which owns that module and has offered to retire it. Proof: a migrated modelo publishes, or refuses for a stated reason that is not this one.
 - `2026-09-09-registry-edition-authoring-W02-P04-S52` - [M | opus-medium] Fix candidate staging, which copies a predecessor's raw casilla directory wholesale and would therefore copy a DELTA rather than an edition once the predecessor is migrated. It also walks the continuity-evolution chain rather than the edition-inheritance chain, so under this decision it follows the wrong relationship. Proof: staging a candidate from a migrated predecessor produces a complete edition, and the chain it walks is the declared predecessor chain.
