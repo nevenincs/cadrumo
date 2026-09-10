@@ -223,6 +223,22 @@ source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BO
 review_status = "agent_reviewed"
 corpus_tier = "provision_excerpt"
 
+# Official AEAT guidance gives the exact Modelo 036 activity-code table.  It
+# is intentionally a bounded source: its verified 2026-03-26 update marker
+# supports this vocabulary from that date, but says nothing about older form
+# revisions.
+[sources."aeat-m036-activity-code-table-2026-03-26"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_036/files/capitulo-04-actividades-economicas-locales-actividad.html"
+sha256 = "a1c9cb40b1dbe78150421d5dd4575e1e12b0bae91c919bcabb60b5b8f012be39"
+bytes = 13893
+retrieved_at = 2026-09-10
+applies_from = 2026-03-26
+source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/guia-practica-cumplimentacion-modelo-censal-036/capitulo-04-actividades-economicas-locales/cumplimentacion-declaracion-actividades-economicas-locales/actividad.html"
+review_status = "agent_reviewed"
+
 [sources."boe-lis-art-40-statutory-facts"]
 evidence_tier = "legal_authority"
 authority = "boe"

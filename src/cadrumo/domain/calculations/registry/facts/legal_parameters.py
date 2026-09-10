@@ -27,10 +27,6 @@ LEGAL_PARAMETER_PROVIDER_DIRECTORY = "legal"
 
 _ENTITY_SET_PARAMETER_IDS = frozenset(
     {
-        "rirpf-art-95:selector-m036-actividades-profesionales",
-        "rirpf-art-95:selector-m036-actividades-agricolas-ganaderas",
-        "rirpf-art-95:selector-m036-actividades-forestales",
-        "rirpf-art-95:selector-m036-actividades-ganaderas-engorde-porcino-avicultura",
     }
 )
 _SCALAR_PARAMETER_IDS = frozenset(

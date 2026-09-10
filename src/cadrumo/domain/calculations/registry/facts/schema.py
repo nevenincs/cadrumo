@@ -174,11 +174,21 @@ class MappingFactPayload(RegistryModel):
         return self
 
 
+def _coerce_entity_set(value: object) -> object:
+    """Materialise immutable entity-set data parsed from a TOML array."""
+    if isinstance(value, (tuple, list, set, frozenset)):
+        return frozenset(value)
+    return value
+
+
+EntitySetField = Annotated[frozenset[str], BeforeValidator(_coerce_entity_set)]
+
+
 class EntitySetFactPayload(RegistryModel):
     """A closed set of stable entity tokens."""
 
     kind: Literal[GovernedFactFamily.ENTITY_SET] = GovernedFactFamily.ENTITY_SET
-    entities: frozenset[str] = frozenset()
+    entities: EntitySetField = frozenset()
 
     @model_validator(mode="after")
     def _validate_entities(self) -> EntitySetFactPayload:

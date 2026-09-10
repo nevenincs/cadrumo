@@ -1,0 +1,21 @@
+[fact]
+fact_id = "rirpf-art-95:selector-m036-actividades-ganaderas-engorde-porcino-avicultura"
+family = "entity_set"
+
+[[fact.variants]]
+variant_id = "rirpf-art-95:selector-m036-actividades-ganaderas-engorde-porcino-avicultura:2026-03-26"
+date_axis = "filing_period"
+valid_from = 2026-03-26
+legal_refs = ["rd-439-2007:art-95", "orden-eha-1274-2007:art-1"]
+source_refs = ["aeat-m036-activity-code-table-2026-03-26", "boe-rirpf-art-95-2023-01-26"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-m036-activity-code-table-2026-03-26"
+required_text = ["Código de actividad", "B02", "Actividad ganadera dependiente", "B03", "Actividad forestal", "B04", "Producción del mejillón en batea", "B05", "Actividad pesquera"]
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-art-95-2023-01-26"
+required_text = ["Actividades ganaderas de engorde de porcino y avicultura: 1 por ciento."]
+[fact.variants.payload]
+kind = "entity_set"
+entities = []

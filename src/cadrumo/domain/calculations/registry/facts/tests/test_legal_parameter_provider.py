@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -17,8 +16,6 @@ from cadrumo.domain.calculations.registry.facts.legal_parameters import (
 )
 from cadrumo.domain.calculations.registry.facts.providers import FACT_PROVIDER_REGISTRATIONS
 from cadrumo.domain.calculations.registry.facts.resolution import (
-    EntitySetFactQuery,
-    ResolvedEntitySetFact,
     ResolvedScalarFact,
     ScalarFactQuery,
     resolve_governed_fact,
@@ -49,10 +46,10 @@ def _grounding_failures(catalogue: GovernedFactCatalogue) -> tuple[str, ...]:
     )
 
 
-def test_provider_projects_exactly_the_15_remaining_adapter_parameter_ids() -> None:
+def test_provider_projects_exactly_the_11_remaining_adapter_parameter_ids() -> None:
     facts = compile_legal_parameter_facts(bundled_path("registry", "aeat"))
 
-    assert len(LEGAL_PARAMETER_FACT_IDS) == 15
+    assert len(LEGAL_PARAMETER_FACT_IDS) == 11
     assert {fact.fact_id for fact in facts} == LEGAL_PARAMETER_FACT_IDS
 
 
@@ -105,35 +102,8 @@ def test_production_validation_rejects_a_variant_with_both_evidence_lanes_erased
         )
 
 
-def test_classification_projection_preserves_nonempty_and_explicit_empty_sets() -> None:
-    catalogue = _catalogue()
-    populated = resolve_governed_fact(
-        catalogue,
-        EntitySetFactQuery(
-            fact_id="rirpf-art-95:selector-m036-actividades-profesionales",
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=date(2025, 12, 31),
-        ),
-        authority_digest="f" * 64,
-    )
-    empty = resolve_governed_fact(
-        catalogue,
-        EntitySetFactQuery(
-            fact_id="rirpf-art-95:selector-m036-actividades-ganaderas-engorde-porcino-avicultura",
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=date(2025, 12, 31),
-        ),
-        authority_digest="f" * 64,
-    )
-
-    assert isinstance(populated, ResolvedEntitySetFact)
-    assert populated.payload.entities == frozenset({"A04", "A05"})
-    assert isinstance(empty, ResolvedEntitySetFact)
-    assert empty.payload.entities == frozenset()
-
 
 def test_fact_families_define_the_canonical_query_contract() -> None:
     facts = _catalogue().facts
 
-    assert facts["rirpf-art-95:selector-m036-actividades-profesionales"].family.value == "entity_set"
     assert facts["liva-art-161:recargo-rate-general"].family.value == "scalar"
