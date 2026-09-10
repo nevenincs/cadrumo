@@ -87,7 +87,7 @@ def test_non_error_findings_do_not_block() -> None:
 def test_a_renamed_severity_field_fails_loud_instead_of_reporting_success() -> None:
     """Drift proof: the read must raise, not silently find zero errors.
 
-    ``severity`` is deleted from a REAL ``ModeloFinding`` instance's own
+    ``severity`` is deleted from a REAL ``ModeloValidationFinding`` instance's own
     ``__dict__`` rather than substituted with a look-alike class, because the
     Protocol makes the field required -- a stand-in without it is not the
     object that reaches this code path.

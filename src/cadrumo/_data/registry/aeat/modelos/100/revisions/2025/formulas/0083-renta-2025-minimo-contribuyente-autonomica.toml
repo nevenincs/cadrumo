@@ -1,3 +1,20 @@
+# Mínimo del contribuyente aplicable al GRAVAMEN AUTONÓMICO. Ley 22/2009
+# art. 46.1.a cede a cada comunidad autónoma la fijación de su propio mínimo
+# personal y familiar, y para 2025 el Manual práctico de Renta 2025 (parte 1,
+# capítulo 14) recoge que lo ejercieron Andalucía, Principado de Asturias,
+# Illes Balears, Canarias, Galicia, Madrid, La Rioja y Comunitat Valenciana.
+#
+# Cada clave despacha al importe GENERAL de su comunidad, es decir el aplicable
+# al contribuyente menor de 65 años. Las comunidades que no ejercieron la
+# competencia -- y La Rioja, que sólo la ejerció para descendientes y
+# discapacidad -- usan el importe estatal del art. 57 LIRPF, tal y como el
+# manual precisa en su ejemplo de Cantabria.
+#
+# PENDIENTE: los incrementos autonómicos por edad (mayor de 65 y mayor de 75)
+# no se modelan todavía en esta casilla, mientras que el gravamen estatal
+# (casilla 0511) sí los aplica. Illes Balears además eleva a 6.105 € el importe
+# general del contribuyente mayor de 65 años, por lo que su clave apunta hoy al
+# importe estatal, correcto sólo para menores de 65 años.
 [[revisions."2025".formulas]]
 id = "renta-2025-minimo-contribuyente-autonomica"
 target_casilla_id = "0512"
@@ -5,25 +22,36 @@ expression = { op = "lookup_parameter_by_entity_type", args = [
     { literal = "0" },
     { binding = "renta-2025-profile-tax-residence-ccaa" },
     { dispatch_table_entries = [
-        { key = "andalucia", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "andalucia", parameter = "renta-2025-minimo-contribuyente-base-andalucia-2025" },
         { key = "aragon", parameter = "renta-2025-minimo-contribuyente-base-2025" },
-        { key = "asturias", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "asturias", parameter = "renta-2025-minimo-contribuyente-base-asturias-2025" },
         { key = "baleares", parameter = "renta-2025-minimo-contribuyente-base-2025" },
-        { key = "canarias", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "canarias", parameter = "renta-2025-minimo-contribuyente-base-canarias-2025" },
         { key = "cantabria", parameter = "renta-2025-minimo-contribuyente-base-2025" },
         { key = "castilla_la_mancha", parameter = "renta-2025-minimo-contribuyente-base-2025" },
         { key = "castilla_y_leon", parameter = "renta-2025-minimo-contribuyente-base-2025" },
         { key = "cataluna", parameter = "renta-2025-minimo-contribuyente-base-2025" },
-        { key = "comunidad_valenciana", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "comunidad_valenciana", parameter = "renta-2025-minimo-contribuyente-base-valenciana-2025" },
         { key = "extremadura", parameter = "renta-2025-minimo-contribuyente-base-2025" },
-        { key = "galicia", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "galicia", parameter = "renta-2025-minimo-contribuyente-base-galicia-2025" },
         { key = "la_rioja", parameter = "renta-2025-minimo-contribuyente-base-2025" },
-        { key = "madrid", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "madrid", parameter = "renta-2025-minimo-contribuyente-base-madrid-2025" },
         { key = "murcia", parameter = "renta-2025-minimo-contribuyente-base-2025" },
     ] },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-57", "ley-35-2006:art-73", "orden-hac-277-2026:art-3"]
+legal_refs = [
+    "ley-35-2006:art-56",
+    "ley-35-2006:art-57",
+    "ley-35-2006:art-73",
+    "orden-hac-277-2026:art-3",
+    "andalucia-ley-5-2021:art-23-bis",
+    "asturias-dl-2-2014:art-2-bis",
+    "canarias-dl-1-2009:art-18-quater",
+    "galicia-dl-1-2011:art-4-bis",
+    "madrid-dl-1-2010:art-2",
+    "valenciana-ley-13-1997:art-2-bis",
+]
 source_refs = ["aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".formulas.source_citations]]

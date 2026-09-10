@@ -1,7 +1,7 @@
 """Unit tests for the strict pydantic v2 submission domain models.
 
 Covers :class:`SubmissionAttempt`, :class:`ModeloPresentado`, and
-:func:`make_submission_id`. Each test pins one validator or invariant
+the :data:`SubmissionId` digest form. Each test pins one validator or invariant
 (extra-fields rejection, frozen mutation, ordering constraints, etc.)
 so that schema drift surfaces deterministically.
 """

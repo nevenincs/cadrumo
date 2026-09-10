@@ -9,9 +9,9 @@ related:
   - '[[2026-09-09-registry-generator-corpus-provenance-research]]'
   - '[[2026-09-09-registry-generator-divergence-evidence-research]]'
   - '[[2026-09-09-registry-generator-signal-coverage-research]]'
-modified: '2026-09-09'
+modified: '2026-09-10'
 body_schema: body-v2
-body_hash: 'sha256:3fa4316f35e0e3d633c37ddf6353b2a8f9408d6c1a5aa658aefa25f4833b9e80'
+body_hash: 'sha256:6e3b5d3b417b5930a8ae2ab61292f90acae2ac68b129e2b9665647d3e39795b1'
 ---
 
 # `registry-generator` plan
@@ -188,6 +188,16 @@ Decodes official worked examples through the shipped codec and compares field by
 - [ ] `W04.P13.S70` - BLOCKED on official evidence, and the note-scope axis it sat beside is now closed: the adrift pointer population is 2, both diagnosed benign, after correcting a screen that over-reported by ninety times; `src/cadrumo/_data/corpus/manual_oracles/`.
 - [x] `W04.P13.S49` - Satisfied by the shipped worked-example oracles: the corporate-tax and instalment tests compare computed values field by field against AEAT's printed liquidacion tables, with page locators into the bundled official manuals; `src/cadrumo/application/modelo/tests/`.
 - [x] `W04.P13.S50` - Confirm no expected value in the oracle originates in the generator; `src/cadrumo/domain/calculations/registry/tests/`.
+
+### Phase `W04.P17` - make the corpus authority set total
+
+Closes the gap between the corpus and its declared authority. The acquisition script declares 80 required artefacts against 248 held, so 168 sit in the corpus with no stated origin, and check() asserts only that every declaration is present, never that every artefact is declared. Seven are hosted off the AEAT static-files base and cannot be expressed as required rows at all. Independent of the publication gap that blocks the rest of the open work, and of every other Phase.
+
+- [x] `W04.P17.S75` - Recompute the root manifest aggregate from the per-modelo manifests without fetching, so the only repair path for a purely local number no longer runs across the network; the check exits 1 on `main` today recording 247 artefacts against 248 held and M270 as 1 against 2; `dev/corpus/sync_aeat_record_design_corpus.py`.
+- [x] `W04.P17.S76` - Declare the 161 manifested artefacts that are expressible under the static-files base but named by no required entry, matching each declaration URL to the manifest URL or alias so the pull stays additive; `dev/corpus/sync_aeat_record_design_corpus.py`.
+- [x] `W04.P17.S77` - Add a declaration locus for the off-host class beside `historical_exclusions.json`, carrying per-artefact provenance and the disposition recording why a BOE document sits in an AEAT-indexed tree; five M184 and one M270 Orden PDFs as record designs, the M186 anexo image as a form spec; `src/cadrumo/_data/corpus/aeat_official/disenos_registro/`.
+- [x] `W04.P17.S78` - Add the converse invariant to the offline check once the authority set is total: every manifest artefact resolves to exactly one declared authority, either a required entry or an off-host declaration; `dev/corpus/sync_aeat_record_design_corpus.py`.
+- [x] `W04.P17.S79` - Prove the invariant has teeth by planting an undeclared artefact on a temporary corpus tree and asserting the check refuses it, with the normal path passing in the same suite; `dev/corpus/tests/`.
 
 ## Wave `W05` - the consumer lane and the held rulings
 

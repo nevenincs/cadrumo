@@ -595,12 +595,8 @@ errors:
       és incompatible amb el seu repositori.
     integrity_storage_corpus_bundle: El paquet del corpus no s'ha pogut analitzar
       ni verificar.
-    integrity_storage_corpus_bundle_verification: El paquet del corpus no ha superat
-      la verificació de sumes de comprovació respecte al seu manifest incorporat.
     integrity_storage_corpus_manifest: El manifest del corpus no s'ha pogut llegir
       o validar.
-    integrity_storage_corpus_manifest_drift: 'El corpus en disc difereix del que descriu
-      el seu manifest: s''han afegit, eliminat o modificat fitxers.'
     integrity_storage_corpus_manifest_tamper: El resum autoverificable del manifest
       del corpus no coincideix amb el seu contingut. El manifest pot estar malmès
       o manipulat.
@@ -678,12 +674,6 @@ errors:
     internal_workflow_unhandled: 'Error intern: una etapa del flux de treball ha llançat
       una excepció no controlada.'
   iva:
-    category_has_no_legal_basis: Aquesta categoria d'IVA no té base legal al catàleg
-      i no es pot citar.
-    citation_legal_reference_absent: La referència legal de la citació no consta al
-      catàleg legal del registre.
-    cite_requires_catalogue_or_date: Citar una categoria d'IVA requereix un catàleg
-      explícit o una data d'efecte.
     rate_member_state_unregistered: El registre de tipus d'IVA no conté cap tipus
       per a l'estat membre sol·licitat.
     rate_registry_coverage_gap: El registre de tipus d'IVA inclòs no arriba a aquesta
@@ -1077,8 +1067,6 @@ errors:
       per forçar-ho.'
     refused_review_filter_parse: No s'ha pogut interpretar `--filter CLAU=VALOR`.
       Comprova la sintaxi del filtre indicat.
-    refused_review_kind_reserved: El valor de `--kind` indicat està reservat i no
-      es pot fer servir.
     refused_source_mesh_invariant: 'Refusat: invariant de la malla de fonts incomplit.'
     refused_storage_bucket_already_present: La importació col·lisiona amb un bucket
       d'emmagatzematge que ja existeix.
@@ -1122,8 +1110,6 @@ errors:
       no coincideix amb la revisió de càlcul. Executa `aeat app modelo work calculate`
       per generar una revisió nova.
     refused_workflow_resume: L'execució del flux de treball anterior no es pot reprendre.
-    registry_closure_capture_not_current: El tancament del registre ha canviat mentre
-      es llegia; torneu a capturar-lo.
     submission_preflight_auth_describe_failed: El proveïdor d'autenticació no s'ha
       pogut descriure ({cause_type}).
     submission_preflight_auth_not_ready: El proveïdor d'autenticació {kind} no està
@@ -1163,8 +1149,6 @@ errors:
       schema_upgrade_path_missing: 'No hi ha ruta d''actualització d''esquema per
         a l''espai de noms {namespace}: falta un actualitzador des de la versió {missing_from_version}
         cap a {expected}.'
-      schema_upgrader_already_registered: Ja hi ha un actualitzador d'esquema registrat
-        per a l'espai de noms {namespace} des de la versió {from_version}.
       schema_version_from_future: La versió d'esquema emmagatzemada {schema_version}
         de l'espai de noms {namespace} és més recent del que admet aquesta aplicació
         (fins a {expected}); no es pot llegir.

@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-09-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:250f2f6b67be33446e57a9c8990f61204c30ff532117201cd125173c37baeb0a'
+body_hash: 'sha256:6888a5ea6628b10118f163b336989afb9da43e8b96badf287fbb445645b3879f'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---

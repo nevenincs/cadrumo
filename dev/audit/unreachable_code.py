@@ -6,12 +6,25 @@ scan in :mod:`dev.audit.dead_code`: "starting from the console scripts the
 wheel installs, which shipped modules are never imported, and which symbols
 inside the reachable modules are never referenced by shipped code?"
 
-The usage universe is deliberately the shipped tree alone. A reference from a
-test module, from ``dev/`` tooling, or from the repository-root ``conftest.py``
-is not use: those trees are not installed, and a module that only they touch
-is dead weight in the distribution. Such references are still harvested, but
-only to LABEL a finding (``used by: tests``) so the reader can tell "kept alive
-by its own tests" from "orphaned outright". Neither label clears the finding.
+The usage universe is the shipped tree, with one asymmetry that matters. A
+reference from a shipped test module or from the repository-root ``conftest.py``
+is not use: a symbol kept alive only by its own unit test is the orphan signal
+this audit exists to surface, so ``used by: tests`` LABELS a finding without
+clearing it.
+
+A reference from ``dev/`` is different, and only for SYMBOL findings. The
+``dev/`` tree is this repository's own tooling -- the locale catalogue CLI, the
+docs generators, the quality gates CI and pre-commit run. A top-level symbol
+those consume is load-bearing: deleting it does not shrink what an installed
+user reaches, it breaks the gate. Acting on such a finding is what removed
+``profile_schema_locale_keys``, ``AEAT_AUTHORITY_SHORT_NAME``,
+``require_accepted_root`` and ``resolve_source_kind_alias``, leaving the locale
+CLI unimportable and the operator-surface contract publishing source-kind
+aliases nothing could resolve. So ``used by: dev`` CLEARS a symbol finding.
+
+MODULE findings are unaffected: a whole shipped module that only ``dev/``
+imports really is bytes every installed user carries and none reaches, which is
+a distribution-size question worth keeping visible.
 
 Two reachability layers are computed:
 
@@ -229,6 +242,10 @@ class EntryPoint:
         return cls(module=module.strip(), attribute=attribute.strip())
 
 
+#: ``used by:`` label for the repository's own ``dev/`` tooling and gates.
+_DEV_LABEL = "dev"
+
+
 @dataclass(frozen=True)
 class OutsideCorpus:
     """A non-shipped tree whose references only label findings.
@@ -340,7 +357,7 @@ class ShippedTreeSpec:
             outside=(
                 OutsideCorpus(label="tests", root=src_root / package, test_modules_only=True),
                 OutsideCorpus(label="tests", root=repo_root / "conftest.py"),
-                OutsideCorpus(label="dev", root=repo_root / "dev"),
+                OutsideCorpus(label=_DEV_LABEL, root=repo_root / "dev"),
             ),
             data_globs=_DATA_GLOBS,
             companions=companions,
@@ -468,6 +485,7 @@ class UnreachableCodeResult:
     symbols: tuple[SymbolFinding, ...] = ()
     tests: tuple[TestFinding, ...] = ()
     data_cleared: int = 0
+    dev_cleared: int = 0
     reason: str = ""
 
     def __post_init__(self) -> None:
@@ -512,6 +530,7 @@ class UnreachableCodeResult:
         symbols: tuple[SymbolFinding, ...],
         tests: tuple[TestFinding, ...] = (),
         data_cleared: int = 0,
+        dev_cleared: int = 0,
     ) -> UnreachableCodeResult:
         """A scan that found unreachable modules, unused symbols, or orphaned tests."""
         if not modules and not symbols:
@@ -526,6 +545,7 @@ class UnreachableCodeResult:
             symbols=symbols,
             tests=tests,
             data_cleared=data_cleared,
+            dev_cleared=dev_cleared,
         )
 
     @classmethod
@@ -1155,6 +1175,19 @@ def _collection_uses(tree: ast.Module) -> set[str]:
 class _OutsideUse:
     names: dict[str, set[str]] = field(default_factory=dict)
     modules: dict[str, set[str]] = field(default_factory=dict)
+    resolved: dict[tuple[str, str], set[str]] = field(default_factory=dict)
+    """Corpus labels keyed by the ``(defining module, symbol)`` pair they reach.
+
+    ``names`` is a bare-token index: :func:`_references` harvests attribute
+    names, keyword-argument names and identifiers spelled inside strings, none
+    of which say which module defined the name. That looseness is harmless
+    while a label only ANNOTATES a finding, and unacceptable once a label
+    CLEARS one -- a coincidental ``verbose=`` kwarg in a dev script would
+    silence a genuinely orphaned ``verbose`` constant. This index is built with
+    :func:`resolved_symbol_uses` instead, so a clear requires the one thing that
+    proves a real cross-module reach: a ``from M import N`` or an attribute read
+    on a binding that names ``M``.
+    """
     unreadable: list[str] = field(default_factory=list)
     """Files skipped during the reference walk, and therefore never consulted.
 
@@ -1170,6 +1203,10 @@ class _OutsideUse:
 
     def labels_for_module(self, name: str) -> tuple[str, ...]:
         return tuple(sorted(self.modules.get(name, ())))
+
+    def resolved_labels(self, module: str, name: str) -> tuple[str, ...]:
+        """Labels of corpora that reach ``name`` as a resolved import or attribute."""
+        return tuple(sorted(self.resolved.get((module, name), ())))
 
 
 def _import_aliases(module: ShippedModule, known: frozenset[str]) -> dict[str, str]:
@@ -1358,6 +1395,8 @@ def _outside_use(spec: ShippedTreeSpec, known: frozenset[str]) -> _OutsideUse:
             runtime, type_only = module_edges(probe, known)
             for target in runtime | type_only:
                 use.modules.setdefault(target, set()).add(corpus.label)
+            for pair in resolved_symbol_uses(probe, known):
+                use.resolved.setdefault(pair, set()).add(corpus.label)
     if use.unreadable:
         # Reported at the point of loss rather than folded into the findings.
         # These files' references were never read, so any symbol only THEY use
@@ -1481,8 +1520,15 @@ def _symbol_findings(
     outside: _OutsideUse,
     data_tokens: frozenset[str],
     declared_values: frozenset[str],
-) -> tuple[tuple[SymbolFinding, ...], int]:
-    """Return the symbol findings and how many data-shaped members the data corpus cleared."""
+) -> tuple[tuple[SymbolFinding, ...], int, int]:
+    """Return the symbol findings, the data-corpus clears, and the ``dev/`` clears.
+
+    The two clear counts stay separate because they answer different
+    questions: ``data_cleared`` is a registry declaration naming a member the
+    import graph cannot see, while ``dev_cleared`` is a repository gate that
+    consumes the symbol. Folding them into one number under the data name
+    would misreport both.
+    """
     entry_attributes = {entry.attribute for entry in spec.entry_points}
     member_names: set[str] = set(entry_attributes)
     literal_tokens: set[str] = set(entry_attributes)
@@ -1500,6 +1546,7 @@ def _symbol_findings(
 
     findings: list[SymbolFinding] = []
     data_cleared = 0
+    dev_cleared = 0
     audited_reach = sorted(
         name for name in runtime_reach if name == spec.package or name.startswith(spec.package + ".")
     )
@@ -1532,6 +1579,18 @@ def _symbol_findings(
             if definition.kind is SymbolKind.CLASS and definition.name in declared_values:
                 data_cleared += 1
                 continue
+            labels = outside.labels_for_name(definition.name)
+            # A symbol reached from ``dev/`` is consumed by a repository gate that
+            # CI and pre-commit actually run. Deleting it does not shrink the
+            # distribution's reachable surface, it breaks the gate -- which is
+            # exactly what happened when four such symbols were removed and the
+            # locale CLI, its audit and its contract test stopped importing. The
+            # ``tests`` label still does NOT clear: a shipped symbol kept alive
+            # only by its own unit test is the orphan signal this audit exists to
+            # surface.
+            if definition.kind in _TOP_LEVEL_KINDS and _DEV_LABEL in outside.resolved_labels(name, definition.name):
+                dev_cleared += 1
+                continue
             findings.append(
                 SymbolFinding(
                     path=relative_to_repo(module.path, spec),
@@ -1539,12 +1598,12 @@ def _symbol_findings(
                     kind=definition.kind,
                     name=definition.name,
                     qualname=definition.qualname,
-                    used_by=outside.labels_for_name(definition.name),
+                    used_by=labels,
                     module=name,
                 ),
             )
     # An overloaded definition yields one row per signature; keep the first.
-    return tuple({finding.id: finding for finding in findings}.values()), data_cleared
+    return tuple({finding.id: finding for finding in findings}.values()), data_cleared, dev_cleared
 
 
 def _test_subjects(test: ShippedModule, known: frozenset[str]) -> tuple[frozenset[str], frozenset[tuple[str, str]]]:
@@ -1718,7 +1777,7 @@ def scan_unreachable_code(spec: ShippedTreeSpec) -> UnreachableCodeResult:
     module_findings = _module_findings(
         spec, modules, script_reach, runtime_reach, full_reach, outside, shipped_importers
     )
-    symbol_findings, data_cleared = _symbol_findings(
+    symbol_findings, data_cleared, dev_cleared = _symbol_findings(
         spec, modules, runtime_reach, full_reach, outside, data_tokens, declared_values
     )
 
@@ -1734,6 +1793,7 @@ def scan_unreachable_code(spec: ShippedTreeSpec) -> UnreachableCodeResult:
         symbols=symbol_findings,
         tests=_test_findings(spec, known, module_findings, symbol_findings),
         data_cleared=data_cleared,
+        dev_cleared=dev_cleared,
     )
 
 
@@ -1798,6 +1858,8 @@ def render_console_report(result: UnreachableCodeResult, *, full: bool = False, 
     out.append(f"  roots: {', '.join(result.roots)}")
     if result.data_cleared:
         out.append(f"  {result.data_cleared} data-shaped member(s) cleared by the shipped registry/locale payloads")
+    if result.dev_cleared:
+        out.append(f"  {result.dev_cleared} top-level symbol(s) cleared by a resolved reference from dev/ tooling")
     if result.outcome is UnreachableCodeOutcome.CLEAN:
         return "\n".join(out)
 
@@ -1852,6 +1914,7 @@ def result_as_json(result: UnreachableCodeResult) -> str:
             "shipped_modules": result.shipped_modules,
             "reachable_modules": result.reachable_modules,
             "data_cleared": result.data_cleared,
+            "dev_cleared": result.dev_cleared,
             "exact_finding_ids": [finding.id for finding in result.exact_findings],
             "modules": [
                 {

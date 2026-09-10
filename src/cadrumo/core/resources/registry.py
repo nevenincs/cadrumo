@@ -21,7 +21,6 @@ from ._repos.iva_catalogues import IvaCatalogueRepository
 from ._repos.iva_rate_tables import IvaRateTableRepository
 from ._repos.manuals import ManualRepository
 from ._repos.recargo_bands import RecargoBandsRepository
-from ._repos.topics import TopicCatalogueRepository
 
 
 @dataclass(slots=True, frozen=True)
@@ -40,7 +39,6 @@ class ResourceRegistry:
     holiday_calendars: HolidayCalendarRepository = field(default_factory=HolidayCalendarRepository)
     manuals: ManualRepository = field(default_factory=ManualRepository)
     recargo_bands: RecargoBandsRepository = field(default_factory=RecargoBandsRepository)
-    topics: TopicCatalogueRepository = field(default_factory=TopicCatalogueRepository)
     iva_catalogues: IvaCatalogueRepository = field(default_factory=IvaCatalogueRepository)
     iva_rate_tables: IvaRateTableRepository = field(default_factory=IvaRateTableRepository)
 

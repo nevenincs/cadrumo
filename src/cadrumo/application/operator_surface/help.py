@@ -207,10 +207,6 @@ def _root_help() -> HelpDocument:
                         command="aeat app review queue",
                         description=tr("cli.operator_surface.help.root.workflow_review_queue"),
                     ),
-                    HelpEntry(
-                        command="aeat app registry inspect",
-                        description=tr("cli.operator_surface.help.root.workflow_registry"),
-                    ),
                 ),
             ),
             HelpSection(
@@ -628,14 +624,6 @@ def _app_help() -> HelpDocument:
                     HelpEntry(
                         command="aeat app review view ID",
                         description=tr("cli.operator_surface.help.app.review_view"),
-                    ),
-                    HelpEntry(
-                        command="aeat app registry inspect",
-                        description=tr("cli.operator_surface.help.app.registry_inspect"),
-                    ),
-                    HelpEntry(
-                        command="aeat app registry verify",
-                        description=tr("cli.operator_surface.help.app.registry_verify"),
                     ),
                 ),
             ),

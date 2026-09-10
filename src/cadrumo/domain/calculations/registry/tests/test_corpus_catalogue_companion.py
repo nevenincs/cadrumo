@@ -23,6 +23,7 @@ from ..corpus_catalogue import (
     verify_source_catalogue,
     verify_source_file,
 )
+from ..corpus_provenance import NormativeCorpusProvenance, classify_normative_corpus_provenance
 from ..errors import RegistryValidationError
 from ..schema_references import SourceReference
 from ._registry_schema_support import _committed_registry_tree
@@ -40,6 +41,20 @@ def _committed_present_companion_binary() -> SourceReference:
         if on_disk.is_file() and on_disk.stat().st_size < 5_000_000:
             return source
     raise AssertionError("no present companion corpus binary found in the committed catalogue")
+
+
+def _committed_attested_normative_source() -> SourceReference:
+    """Return a hash-pinned normative source whose bytes carry BOE attestation."""
+    _modelos, catalogues = _committed_registry_tree()
+    for source in catalogues.sources.values():
+        if not source.corpus_path.startswith("corpus/normatives/"):
+            continue
+        if (
+            classify_normative_corpus_provenance(bundled_path(), source.corpus_path)
+            is NormativeCorpusProvenance.BOE_ATTESTED
+        ):
+            return source
+    raise AssertionError("no BOE-attested normative source found in the committed catalogue")
 
 
 def _absent_source(*, corpus_path: str, kind: str) -> SourceReference:
@@ -97,3 +112,14 @@ def test_absent_non_companion_corpus_file_still_hard_fails(tmp_path: Path) -> No
 
     with pytest.raises(RegistryValidationError, match="missing corpus file"):
         verify_source_catalogue(tmp_path, {source.id: source})
+
+
+def test_normative_source_catalogue_hash_validation_preserves_provenance_classification() -> None:
+    """A catalogue path is hash-verified before its existing provenance is observed."""
+    source = _committed_attested_normative_source()
+
+    verify_source_file(bundled_path(), source)
+    assert (
+        classify_normative_corpus_provenance(bundled_path(), source.corpus_path)
+        is NormativeCorpusProvenance.BOE_ATTESTED
+    )

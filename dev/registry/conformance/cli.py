@@ -11,6 +11,7 @@ Verbs:
 
 * ``report`` -- every conformance axis, one row per modelo revision.
 * ``coverage`` -- per-axis measured counts against their real populations.
+* ``integrity`` -- fail-closed registry and legal-corpus integrity gate.
 * ``closure [--check]`` -- the derived temporal and filing release predicate.
   ``--check`` blocks a shipped-completeness claim while any limb is refused or
   the two denominators disagree.
@@ -52,8 +53,8 @@ authority-dependent support data — report ``n/a`` rather than a fabricated zer
 See Also:
     :mod:`~dev.registry.conformance.manager`
         Pure folds and renderers behind every verb here.
-    :func:`~application.registry.audit_bundled_registry_conformance`
-        Shipped composer the manager reads.
+    :func:`~dev.registry.conformance.profile.audit_bundled_registry_conformance`
+        Development-only conformance composer used by the manager.
     :mod:`~entrypoints.cli._modelo_discovery_cli`
         Operator-facing support-matrix command over the same shipped capability
         authority ``report`` probes per revision.
@@ -61,11 +62,16 @@ See Also:
 
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated
 
 import typer
+
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.legal import verify_legal_catalogue
 
 from ._stamp import StampableReviewStatus, StampError, bundled_registry_root, stamp_revision
 from .authorities import canonical_live_registry_closure_authorities
@@ -145,6 +151,55 @@ def coverage(as_json: _AsJson = False, no_validate: _NoValidate = False) -> None
         return
     typer.echo(render_coverage(projected))
     _warn_if_vacuous(composed)
+
+
+@app.command("integrity")
+def integrity(
+    as_json: _AsJson = False,
+    registry_root: Annotated[
+        Path | None,
+        typer.Option("--registry-root", help="Registry tree to verify; defaults to the bundled registry."),
+    ] = None,
+    source_root: Annotated[
+        Path | None,
+        typer.Option("--source-root", help="Source tree holding the legal corpus; defaults to bundled data."),
+    ] = None,
+) -> None:
+    """Fail closed on registry validity or a missing required legal-corpus quotation.
+
+    This is a development and release gate. It validates the complete registry
+    authority and every legal catalogue reference's declared corpus text; it
+    does not claim calculation or filing correctness.
+    """
+    resolved_registry_root = registry_root or bundled_path("registry", "aeat")
+    resolved_source_root = source_root or bundled_path()
+    authority = ValidatedRegistryAuthority.load(resolved_registry_root, source_root=resolved_source_root)
+    verify_legal_catalogue(authority.catalogues.legal, source_root=resolved_source_root)
+    revision_count = sum(len(modelo.revisions) for modelo in authority.modelos)
+    if as_json:
+        typer.echo(
+            json.dumps(
+                {
+                "registry_root": str(resolved_registry_root),
+                "source_root": str(resolved_source_root),
+                "status": "passed",
+                "modelo_count": len(authority.modelos),
+                "revision_count": revision_count,
+                "legal_reference_count": len(authority.catalogues.legal),
+                },
+                indent=2,
+            )
+        )
+        return
+    typer.echo(
+        "integrity"
+        f"\tregistry_root={resolved_registry_root}"
+        f"\tsource_root={resolved_source_root}"
+        "\tstatus=passed"
+        f"\tmodelos={len(authority.modelos)}"
+        f"\trevisions={revision_count}"
+        f"\tlegal_references={len(authority.catalogues.legal)}",
+    )
 
 
 @app.command("closure")

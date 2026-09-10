@@ -96,7 +96,6 @@ def test_initial_actions_are_deterministic_and_lookup_by_stable_identity() -> No
             source_key="yes",
         ),
     )
-    assert lookup_action("operator.registry.verify").target_command_key == "registry.verify"
     assert lookup_action("operator.overview.explain").argument_specifications == (
         ActionArgumentBindingSpecification(
             argument_name="modelo",

@@ -535,12 +535,8 @@ errors:
     integrity_storage_classification: A record's declared sensitivity class is incompatible
       with its repository.
     integrity_storage_corpus_bundle: The corpus bundle could not be parsed or verified.
-    integrity_storage_corpus_bundle_verification: The corpus bundle failed checksum
-      verification against its embedded manifest.
     integrity_storage_corpus_manifest: The corpus manifest could not be parsed or
       validated.
-    integrity_storage_corpus_manifest_drift: 'The on-disk corpus diverges from its
-      manifest: files have been added, removed or modified.'
     integrity_storage_corpus_manifest_tamper: The corpus manifest's self-attesting
       digest does not match its body. The manifest may be corrupted or tampered with.
     integrity_storage_decryption: Decryption of a stored object failed. The data may
@@ -613,12 +609,6 @@ errors:
     internal_workflow_unhandled: 'Internal error: a workflow stage raised an unhandled
       exception.'
   iva:
-    category_has_no_legal_basis: That IVA category carries no legal basis in the catalogue
-      and cannot be cited.
-    citation_legal_reference_absent: The citation's legal reference is absent from
-      the registry legal catalogue.
-    cite_requires_catalogue_or_date: Citing an IVA category requires either an explicit
-      catalogue or an effective date.
     rate_member_state_unregistered: The IVA rate registry carries no rates for the
       requested member state.
     rate_registry_coverage_gap: The bundled IVA rate registry does not reach that
@@ -989,8 +979,6 @@ errors:
       or re-run with --override-retention and --reason to override.'
     refused_review_filter_parse: '`--filter KEY=VALUE` could not be parsed. Check
       the syntax of the filter provided.'
-    refused_review_kind_reserved: The `--kind` value provided is reserved and cannot
-      be used.
     refused_source_mesh_invariant: 'Refused: source mesh invariant violation.'
     refused_storage_bucket_already_present: The import collides with a storage bucket
       that already exists.
@@ -1033,8 +1021,6 @@ errors:
       calculation revision. Run aeat app modelo work calculate to produce a fresh
       revision.
     refused_workflow_resume: The prior workflow run cannot be resumed.
-    registry_closure_capture_not_current: The registry closure changed while it was
-      being read; capture it again.
     submission_preflight_auth_describe_failed: Auth provider failed to describe itself
       ({cause_type}).
     submission_preflight_auth_not_ready: Auth provider {kind} is not ready (configured={configured}
@@ -1073,8 +1059,6 @@ errors:
         %{expected}, but the caller used schema %{schema_version}.
       schema_upgrade_path_missing: 'No schema upgrade path for namespace {namespace}:
         an upgrader from version {missing_from_version} toward {expected} is missing.'
-      schema_upgrader_already_registered: A schema upgrader is already registered
-        for namespace {namespace} from version {from_version}.
       schema_version_from_future: Stored schema version {schema_version} for namespace
         {namespace} is newer than this application supports (up to {expected}); it
         cannot be read.

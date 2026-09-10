@@ -497,7 +497,9 @@ def test_synthetic_tmp_path_root_disk_cache_stays_disabled_under_pytest(tmp_path
     legal_dir = registry_root / "legal"
     legal_dir.mkdir(parents=True)
     (legal_dir / "supported-filing-years.toml").write_text(
-        "[supported_filing_years]\nyears = [2025]\n",
+        "[supported_filing_years]\nyears = [2025]\n\n"
+        "[sociedades_annual_manual_coverage]\n"
+        "dispositions = [{ year = 2025, status = \"unpublished\", official_locator = \"https://example.com/manuals\", observed_at = 2026-09-10, acquisition_condition_key = \"application.registry.manuals.coverage.recheck_aeat_publication\" }]\n",
         encoding="utf-8",
         newline="\n",
     )

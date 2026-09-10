@@ -10,8 +10,6 @@ related:
   - "[[2026-09-10-data-provenance-consolidation-plan]]"
 ---
 
-
-
 # `data-provenance-consolidation` audit: `W01 P01 S01 catalog model`
 
 ## Scope

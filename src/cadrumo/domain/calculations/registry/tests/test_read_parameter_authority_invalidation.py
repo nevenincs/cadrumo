@@ -77,7 +77,11 @@ valid_to = 2025-12-31
 
 
 #: The one registry-wide declaration the loader requires of any tree.
-_SUPPORTED_FILING_YEARS_TEXT = "[supported_filing_years]\nyears = [2025]\n"
+_SUPPORTED_FILING_YEARS_TEXT = (
+    "[supported_filing_years]\nyears = [2025]\n\n"
+    "[sociedades_annual_manual_coverage]\n"
+    "dispositions = [{ year = 2025, status = \"unpublished\", official_locator = \"https://example.com/manuals\", observed_at = 2026-09-10, acquisition_condition_key = \"application.registry.manuals.coverage.recheck_aeat_publication\" }]\n"
+)
 
 
 def _write_registry_tree(tmp_path: Path, *, value: str) -> Path:

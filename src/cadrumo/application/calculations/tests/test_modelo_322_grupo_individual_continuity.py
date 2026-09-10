@@ -15,8 +15,8 @@ registry calculation engine for the same monthly period (December) of two
 distinct renta years (2025, 2026) over a real encrypted-SQLite-backed
 isolated profile, feeding the five ledger_iva_aggregation cuota bindings
 from real IVA ledger observations. Both years are recorded through the
-:class:`cross-year observation` and cross-checked against the authorization
-manifest via :func:`the cross-year behavior assertion`.
+``cross-year observation`` and cross-checked against the authorization
+manifest via ``the cross-year behavior assertion``.
 
 The ``2008-2023`` revision is genuinely year-stable: it resolves
 for both 2025 and 2026 with identical structure and rates (the REGE
@@ -172,7 +172,7 @@ def test_modelo_322_enrolls_two_renta_years(tmp_path: Path) -> None:
 
     Drives the REAL 322 backend for December of both renta years (the
     ``2008-2023`` revision resolves identically for each), records each
-    through the :class:`cross-year observation` (calculation mode, evidence =
+    through the ``cross-year observation`` (calculation mode, evidence =
     _produced-value count from a real engine run), and cross-checks the recorded
     distinct-year set against the cross-year claim claim. A single-year or
     stub run would raise, turning the gate RED.

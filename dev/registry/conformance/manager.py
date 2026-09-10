@@ -1,7 +1,7 @@
-"""Compose the shipped conformance fact libraries into rendered governance rows.
+"""Compose development conformance fact libraries into rendered governance rows.
 
 This module RENDERS; it does not compute conformance. Every fact below is read
-off :class:`~application.registry.RegistryConformanceProfile`, the shipped
+off :class:`~dev.registry.conformance.profile.RegistryConformanceProfile`, the
 composer that already joined the evidence-tier coverage audit, the support
 probe, the registry-scope validator, the external-oracle grounding relation,
 the classification-coherence check, and the
@@ -75,9 +75,9 @@ finding by the modelo's revision count, so the registry-wide total is folded at
 modelo scope in :func:`build_conformance_report` and the field name says so.
 
 See Also:
-    :func:`~application.registry.audit_bundled_registry_conformance`
-        Shipped composer every fact here is read from.
-    :class:`~application.registry.RevisionConformanceRow`
+    :func:`~dev.registry.conformance.profile.audit_bundled_registry_conformance`
+        Development-only composer every fact here is read from.
+    :class:`~dev.registry.conformance.profile.RevisionConformanceRow`
         Per-revision row the payload models project.
     :func:`~core.i18n.lookup_translation_entry`
         Shared locale-key catalogue membership the locale axis reads.
@@ -100,8 +100,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n import lookup_translation_entry
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.tests.registry_coverage import CoverageAuthorityScope
-from cadrumo.tests.registry_conformance import (
+from .profile import (
     AnnualCasillaPopulationComparison,
     RegistryConformanceProfile,
     RevisionCasillaProducerTrace,
@@ -110,6 +109,7 @@ from cadrumo.tests.registry_conformance import (
     audit_bundled_registry_conformance,
     compare_annual_casilla_population_for_revision,
 )
+from .coverage import CoverageAuthorityScope
 from dev.registry.maintenance_support import (
     ExternalOracleInventory,
     UnattributedOraclePayload,

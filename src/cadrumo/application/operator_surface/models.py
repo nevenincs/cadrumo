@@ -57,6 +57,20 @@ class RootSurfaceName(StrEnum):
     APP = "app"
 
 
+class FilingStatus(StrEnum):
+    """Filing-state vocabulary a live command family reports a declaration in.
+
+    Only :attr:`FILED` is declared: it is the one state the operator surface
+    contract currently asserts. Absence of a member is NOT a claim that the
+    other states cannot occur -- an unfiled, refused or pending declaration is
+    represented by its own typed refusal at the boundary that produces it, not
+    by a member here.
+    """
+
+    FILED = "filed"
+    """A declaration this product recorded as filed."""
+
+
 class ModeloLifecycleStep(StrEnum):
     """Canonical modelo lifecycle steps carried by :class:`LifecycleContract`."""
 

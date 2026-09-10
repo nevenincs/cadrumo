@@ -349,7 +349,7 @@ def validate_invoice_binding(binding: DataBindingDefinition) -> list[str]:
     time, preserving the underlying pydantic field error. Both this validator and
     the invoice resolvers run the same inner
     :func:`_validated_invoice_selector`, so the fact/op invariants are genuinely
-    re-checked at resolve time; :func:`validate_invoice_binding_definition` is the
+    re-checked at resolve time; :func:`validate_invoice_binding` is the
     public raise-style wrapper over that same inner check.
     """
     failures = selector_against_model(binding, _InvoiceSelector)

@@ -17,8 +17,6 @@ flows:
     invalid_decimal: Enter an amount using a decimal point (for example 1234.56).
     invalid_integer: Enter a whole number.
     select_unknown: 'Choose one of the accepted values: %{choices}.'
-    tui_abandoned: Flow {flow_id} was closed in mode {mode} before it was submitted
-      or saved; nothing was recorded.
     unsupported_console: This console cannot host interactive questions. Run the flow
       from a real terminal, or drive it with a scripted answer file.
   login:
@@ -70,52 +68,8 @@ flows:
     required_field_unavailable: Required profile field
     section_title: '{title} - {present}/{total}'
     title: 'Profile: {profile}'
-  modelo_edit:
-    footer: F2 review · Esc leave · F3 appearance
-    review:
-      nothing_staged: There are no changes to review.
-      unresolved_entries: Some values are unresolved. Correct them before reviewing.
-    review_ready: 'Review ready. Casillas changed: {changed}.'
-    stale_conflict: The data changed since this edit was opened. Review before continuing.
-    title: Edit modelo
-    unresolved: 'Unrecognised value in casilla {casilla_id}. Casillas pending: {count}.'
-    unsaved_on_leave: There are unsaved changes. Review or discard before leaving.
   modelo_review:
-    column:
-      action: Action
-      blocked_by: Blocked by
-      casilla: Casilla
-      casilla_id: Casilla ID
-      code: Code
-      concrete: Concrete origin
-      declared: Declared origin
-      expectation_id: Expectation ID
-      facts: Facts
-      grounding: Grounding
-      kind: Kind
-      label: Label
-      message: Message
-      official: Official representation
-      realised: Realised value
-      schema: Schema
-      severity: Severity
     filter:
-      absent: Absent
-      all: All values
-      binding_presence: Binding presence
-      binding_resolved: Binding resolution
-      binding_source: Concrete binding source
-      casilla_blocker: Casilla blocker action
-      casilla_blocker_presence: Casilla blocker presence
-      estado_casilla_oficial: Official box status
-      filters: Filters
-      finding_kind: Finding kind
-      finding_severity: Finding severity
-      formula_presence: Formula presence
-      input_kind: Declared input kind
-      no_matching_blockers: No blockers match the active filters.
-      no_matching_casillas: No casillas match the active filters.
-      no_matching_findings: No findings match the active filters.
       option:
         binding_source:
           atribucion_member: Income-attribution member
@@ -199,26 +153,6 @@ flows:
           formula_binding: Formula binding
           formula_relation: Formula relation
           primary_binding: Primary binding
-      origin_anomaly: Origin anomaly
-      origin_anomaly_presence: Origin anomaly presence
-      present: Present
-      realised_kind: Realised value kind
-      record_blocker: Record blocker action
-      relation_channel: Relation channel
-      relation_presence: Relation presence
-      reset: Reset filters
-      resolved: Resolved
-      unresolved: Unresolved
-    summary:
-      calculation_revision: Calculation revision
-      denominator_source: Denominator source
-      lifecycle_state: Lifecycle state
-      progress: Progress
-      registry_revision: Registry revision
-      section: Summary
-      verification_outcome: Verification outcome
-      work_unit: Work unit
-    title: Modelo {modelo} · {filing_year} · {period}
   modelo_select:
     column:
       filing_year: Filing year
@@ -226,8 +160,6 @@ flows:
       name: Name
       period: Period
       state: State
-    empty: No work units are registered on this profile yet.
-    title: Select a modelo work unit
   modelo_workspace_filing:
     column:
       capability: Capability
@@ -242,7 +174,6 @@ flows:
     why:
       draft_structural: 'Permanently unmeasured: draft building is stateless, so no
         producer records a verdict to read.'
-      export_pending_port: Unmeasured pending a contributor that reads export history.
   modelo_workspace_inputs:
     column:
       address: Address
@@ -388,24 +319,13 @@ flows:
     action_restart: Start over
     action_save_exit: Save and exit
     action_submit: Submit
-    column_answer: Answer
-    column_question: Question
-    column_registered: On record
-    column_status: Status
     edit_not_editable: Question {page_key} can no longer be edited.
     edit_unknown: There is no question numbered {number}.
     edit_which: 'Which question number do you want to edit? '
     header: Review - {answered} questions answered.
-    header_tui: 'Review - {answered} answered, {remaining} required still open, ready
-      to submit: {eligible}'
-    header_tui_stage_label: Review
-    mode_create: profile creation
-    mode_modify: profile editing
-    orphan_marker: (no longer asked)
     page_deferred: Question %{page_key} is deferred - decide before submitting.
     page_invalid: Question %{page_key} has an invalid answer.
     page_stale: Question %{page_key} needs revisiting - an earlier answer changed.
-    question_unavailable: Question no longer available
     required_unanswered: Required question %{page_key} is unanswered.
     reset_stale_confirm: Question {page_key} is no longer asked. Clear its stored
       answer?
@@ -414,63 +334,8 @@ flows:
     row: '{number}. {page_key} - status: {status}'
     save_unavailable: Save and exit is not available in mode {mode}; finish the flow
       in one sitting.
-    section_unavailable: Unavailable section
   status:
-    auth:
-      absolute_deadline: Session absolute deadline
-      certificate_source: Certificate source
-      idle_deadline: Session idle deadline
-      login_not_ready: not verified
-      login_ready: ready
-      provider: Provider
-      provider_none: not configured
-      provider_unknown: Unknown provider
-      status: Access
-      subject: Subject
-    binding_quit: Quit
-    masked_value: (hidden)
-    profile:
-      column:
-        field: Field
-        value: Value
-      field_unavailable: Profile field unavailable in this version
-      none: No active profile.
-      repeated_field: '{label} - entry {row}'
-      value_unavailable: Unavailable value
     profiles:
-      column:
-        active: Active
-        label: Profile
-        status: Status
-      none: No registered profiles.
       status:
         complete: Complete
         incomplete: Incomplete
-        unknown: Unknown
-    section:
-      auth: Authentication
-      notices: Advisories
-      profile: Active profile
-      profiles: Profiles
-    title: Status
-  tui:
-    binding_back: Back
-    binding_reset: Reset
-    binding_restart: Restart
-    binding_return: Return
-    binding_review: Review
-    binding_save_exit: Save and exit
-    binding_submit: Submit
-    button_back: Back
-    button_next: Next
-    button_review: Review
-    choice_unavailable: Unavailable choice
-    confirm_restart:
-      cancel: Cancel
-      confirm: Restart
-      message: This clears every answer given so far and returns to the first page.
-        This cannot be undone.
-      title: Restart the whole flow?
-    header: '{flow} - question {position} of {total}, section {section}'
-    header_single_section: '{flow} - question {position} of {total}'
-    section_unavailable: Unavailable section

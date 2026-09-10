@@ -68,7 +68,7 @@ def _blocked_report(findings: tuple[ModeloVerificationFinding, ...]) -> Verifica
     )
 
 
-def test_registry_snapshot_failure_is_exactly_linked_to_the_canonical_action() -> None:
+def test_registry_snapshot_failure_is_terminal_without_an_operator_action() -> None:
     finding = _finding(severity=ModeloVerificationFindingSeverity.BLOCKING)
     failure = build_verification_precondition_failure(
         calculation_revision_id=_CALCULATION_REVISION_ID,
@@ -78,7 +78,6 @@ def test_registry_snapshot_failure_is_exactly_linked_to_the_canonical_action() -
         evidence_id="modelo.work.verify.registry_snapshot",
         evidence_values={"modelo": "303", "year": 2026, "period": "1T"},
         provenance=ActionEvidenceProvenance.REGISTRY_RECORD,
-        action_id="operator.registry.verify",
     )
 
     (projection,) = project_verification_findings(
@@ -92,8 +91,7 @@ def test_registry_snapshot_failure_is_exactly_linked_to_the_canonical_action() -
         "modelo.work.verify.registry_snapshot.available",
         "modelo.work.verify.registry_snapshot.unavailable",
     )
-    assert failure.verdict.action is not None
-    assert failure.verdict.action.action_id == "operator.registry.verify"
+    assert failure.verdict.action is None
     assert failure.verdict.argument_bindings == ()
     assert failure.verdict.conditionality is ActionConditionality.IMMEDIATE
 

@@ -1497,7 +1497,6 @@ def _resolve_verification_snapshot(
                 "period": work_unit.period.registry_token,
             },
             provenance=ActionEvidenceProvenance.REGISTRY_RECORD,
-            action_id="operator.registry.verify",
         )
         return None
 

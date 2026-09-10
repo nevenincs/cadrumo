@@ -2,7 +2,7 @@
 
 Closes the regime taxonomy gap surfaced by the Modelo 369 IVA
 centralization audit. The closed :class:`OssIossRegime` and
-:class:`DeductionScope` enumerations live here. The substrate is purely
+:class:`OssIossRegime` enumeration lives here. The substrate is purely
 additive against the wider :mod:`cadrumo.domain.iva` package; existing
 rate values, classifier rules, and consumers remain unaffected.
 

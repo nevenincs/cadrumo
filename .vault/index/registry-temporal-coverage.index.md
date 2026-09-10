@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#registry-temporal-coverage'
 date: '2026-08-26'
-modified: '2026-09-07'
+modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:b34fb884886e9b4eb7d96705687da4c78b26ad73b8ae60ea2efd26ced6c7c9b9'
+body_hash: 'sha256:fda46cf8a704788568a9db783d0eea80d55e4a72f6953509c27605803e88ed54'
 related:
   - '[[2026-08-14-registry-temporal-coverage-W01-P09-S32]]'
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
@@ -53,6 +53,9 @@ related:
   - '[[2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit]]'
   - '[[2026-09-07-registry-temporal-coverage-enrolment-versus-declared-projection-research]]'
   - '[[2026-09-07-registry-temporal-coverage-s32-in-file-enrollment-census-review-audit]]'
+  - '[[2026-09-10-registry-temporal-coverage-corpus-tier-enforcement-adr]]'
+  - '[[2026-09-10-registry-temporal-coverage-corpus-tier-enforcement-research]]'
+  - '[[2026-09-10-registry-temporal-coverage-plan]]'
 ---
 
 # `registry-temporal-coverage` feature index
@@ -66,6 +69,7 @@ Auto-generated index of all documents tagged with `#registry-temporal-coverage`.
 - `2026-08-14-registry-temporal-coverage-adr` - `registry-temporal-coverage` adr: `filing-grade legal review and year-scoped registry authority` | (**status:** `accepted`)
 - `2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr` - `registry-temporal-coverage` adr: `grade-bound registry coverage and evidence horizons` | (**status:** `proposed`)
 - `2026-08-27-registry-temporal-coverage-design-authority-declaration-adr` - `registry-temporal-coverage` adr: `Declare whether a bundled record design is an authority` | (**status:** `accepted`)
+- `2026-09-10-registry-temporal-coverage-corpus-tier-enforcement-adr` - `registry-temporal-coverage` adr: `corpus tier enforcement` | (**status:** accepted)
 
 ### audit
 
@@ -110,6 +114,7 @@ Auto-generated index of all documents tagged with `#registry-temporal-coverage`.
 ### plan
 
 - `2026-08-14-registry-temporal-coverage-plan` - `registry-temporal-coverage` plan
+- `2026-09-10-registry-temporal-coverage-plan` - `registry-temporal-coverage` plan
 
 ### reference
 
@@ -123,3 +128,4 @@ Auto-generated index of all documents tagged with `#registry-temporal-coverage`.
 - `2026-08-15-registry-temporal-coverage-acquisition-worklist-research` - `registry-temporal-coverage` research: `design corpus acquisition worklist`
 - `2026-08-31-registry-temporal-coverage-modelo-165-2023-layout-composite-research` - `registry-temporal-coverage` research: `Modelo 165 2023 layout composite`
 - `2026-09-07-registry-temporal-coverage-enrolment-versus-declared-projection-research` - `registry-temporal-coverage` research: `registry temporal coverage`
+- `2026-09-10-registry-temporal-coverage-corpus-tier-enforcement-research` - `registry-temporal-coverage` research: `corpus tier enforcement`

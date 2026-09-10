@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-09-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:e8e3a22eaa08ad7f5319d09de7305fdcb5cdfae9a1275d105578e7bd5a47b803'
+body_hash: 'sha256:520797a60bd9cf9c208e9f18f64eac427e8d06b64c7913c1c00c735e1dce79ac'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
   - '[[2026-08-25-source-casilla-integration-modelo-840-source-and-repeated-row-owner-deferral-adr]]'

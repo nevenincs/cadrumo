@@ -285,13 +285,13 @@ check-docs-api:
 check-docs-synonyms:
     @uv run --no-sync python -m dev.docs.terminology.synonyms validate
 
-# Verify the production registry compiler and the bundled parity-oracle bindings.
-# The two commands are dependent: a failed production verification invalidates
+# Verify registry integrity and the bundled parity-oracle bindings.
+# The two commands are dependent: a failed integrity verification invalidates
 # any downstream parity claim, so this health gate stops before the audit.
-[doc('Verify the production registry and audit every bundled parity-oracle binding.')]
+[doc('Verify registry integrity and audit every bundled parity-oracle binding.')]
 [group('check')]
 check-registry:
-    @uv run --no-sync aeat app registry verify
+    @uv run --no-sync python -m dev.registry.conformance integrity
     @uv run --no-sync python -m dev.registry.parity.maintenance_cli audit-oracles
 
 # Refuse numeric product policy embedded beside modelo-routing branches.

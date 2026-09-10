@@ -3,7 +3,7 @@
 Decouples consumer code from the shifting sands of model IDs at each
 provider. The operator picks a *capability tier* (``LOW`` /
 ``MEDIUM`` / ``HIGH``) and a *provider* (``claude`` / ``antigravity`` /
-``codex``); :func:`resolve_profile` returns the current
+``codex``); :func:`catalogue` returns the current
 :class:`ModelProfile` whose ``model_id`` meets the tier floor for
 that provider.
 

@@ -16,7 +16,7 @@ See Also:
         Registry validator that checks the authored legal/source references.
     :func:`~domain.calculations.registry.authority.bundled_authority`
         Authority facade used to resolve annual and monthly deadline windows.
-    :data:`~core.access_gate.validated registry modelo set`
+    :class:`~core.modelo.Modelo`
         Canonical fleet membership these six informativas extend.
     :mod:`~domain.calculations.registry.tests.test_modelo_informativas_batch3_registry`
         Follow-on informativa promotion with annual and windowless deadline shapes.

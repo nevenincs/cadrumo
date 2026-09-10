@@ -1698,7 +1698,6 @@ cli:
           de evidencias de presentación antes del cálculo.
   common:
     errors:
-      draft_id_not_found: ID de borrador %{draft_id} no encontrado
       filing_requires_declared_tax_id: 'El perfil activo no declara una identidad
         fiscal, por lo que no se puede exportar una declaración con él. Indica: %{requirements}.'
       invalid_iso_date: 'Formato de fecha inválido para %{label}: %{raw}. Se requiere
@@ -3228,7 +3227,6 @@ cli:
         paragraph_operational_workflow: 'Flujo operativo: configure el perfil -> importe
           transacciones -> trabaje el modelo -> revise -> exporte.'
         registry_inspect: Inspeccionar el registro de modelos fiscales.
-        registry_verify: Verificar la integridad del registro de modelos.
         review_queue: Mostrar la cola de revisión pendiente.
         review_view: Ver el detalle de un elemento de la cola de revisión.
         section_ledger: Libro de transacciones
@@ -3297,8 +3295,8 @@ cli:
           informa en github.com/nevenincs/cadrumo/issues.
         heading: CADRUMO - flujo local con la Agencia Estatal de Administración Tributaria
           (AEAT)
-        paragraph_app_root: La raíz app gestiona resumen, libro, modelos, revisión,
-          registro y lecturas autenticadas de la AEAT.
+        paragraph_app_root: La raíz app gestiona resumen, libro, modelos, revisión
+          y lecturas autenticadas de la AEAT.
         paragraph_config_root: La raíz config gestiona perfiles, datos locales cifrados,
           claves de recuperación, sesiones, autenticación con la AEAT y reparación.
         paragraph_local_first: Cadrumo conserva los datos fiscales en local y expone
@@ -3310,8 +3308,7 @@ cli:
           El perfil activo es el contexto seleccionado. Una sesión permite reanudar
           el acceso a sus datos cifrados.
         paragraph_review_terms: La cola de revisión contiene hallazgos que requieren
-          actuación. El registro contiene reglas y fuentes fiscales validadas y versionadas;
-          no guarda datos fiscales ni presenta declaraciones.
+          actuación.
         paragraph_tax_terms: El libro contiene movimientos importados. Un modelo es
           un formulario oficial de la AEAT, distinto de su unidad de trabajo o exportación
           local.
@@ -3542,8 +3539,9 @@ cli:
     manuals:
       app_help: Inspeccionar los Manuales prácticos AEAT (Renta, IVA, Sociedades)
       kind_help: Filtrar por tipo de regla del manual
-      list_help: Listar los manuales disponibles localmente
-      manual_help: Identificador del manual (renta, iva)
+      list_help: Listar la cobertura anual declarada y las partes de manual disponibles
+        localmente
+      manual_help: Identificador del manual (renta, iva, sociedades)
       part_help: Volumen del manual (single, part1, part2-deducciones-autonomicas,
         part3)
       rules_help: Listar las reglas codificadas en un manual
@@ -3552,7 +3550,6 @@ cli:
         desconocida %{target}
       verify_dangling_section_ref: la sección %{section_id} referencia una sección
         desconocida %{target}
-      verify_failed: 'la verificación falló para %{manual_id}/%{year}/%{part}: %{messages}'
       verify_help: Verificar la integridad del manual contra su contrato
       verify_missing_manifest: '%{manifest_path} no existe; ejecuta ''aeat manual
         fetch'' para materializarlo'
@@ -3595,7 +3592,6 @@ cli:
       vínculos de declaraciones previas o relaciones
     verify_filed_state_help: Comparar el cálculo local del registro con el estado
       presentado capturado de AEAT
-    verify_help: Verificar la integridad del registro local
     verify_source_root_help: Ruta al directorio de origen para verificar
   review:
     app_help: 'Cola de revisión del operador: clasifica transacciones del libro, justificantes
@@ -3676,7 +3672,6 @@ cli:
       section_ledger: '  app ledger - importación bancaria y revisión de movimientos'
       section_modelo: '  app modelo - catálogo de modelos y unidades de trabajo'
       section_overview: '  app overview - estado del espacio y calendario fiscal'
-      section_registry: '  app registry - datos locales del registro AEAT'
       section_review: '  app review - elementos que requieren atención'
       sections_heading: Secciones principales
       session_login_command: 'Inicia o renueva una sesión de perfil: `aeat config
@@ -3690,10 +3685,3 @@ cli:
     quiet_help: Mostrar solo los errores.
     verbose_help: Habilitar salida detallada.
     version_help: Mostrar el número de versión y salir.
-  topic:
-    app_help: Mostrar ayuda conceptual sobre regímenes, modelos y procesos AEAT
-    errors:
-      not_found: 'Tema no encontrado: %{slug}. Ejecuta ''aeat app registry citations''
-        para listar los temas registrados.'
-    opts:
-      slug: Identificador del tema (kebab-case, ej. iva-regime)

@@ -7,8 +7,21 @@
 # its own full mínimo por descendientes table for 2025 (Decreto Legislativo
 # 1/2010 art. 2, as modified by Ley 13/2023: 2.575,85 € / 2.897,83 € / 4.400 €
 # / 4.950 € + 3.005,16 € menor-3, vs the general LIRPF Art. 58 2.400 € /
-# 2.700 € / 4.000 € / 4.500 € + 2.800 €); every other CCAA mirrors the
-# estatal aggregate exactly. Feeds casilla 0514 (autonómico).
+# 2.700 € / 4.000 € / 4.500 € + 2.800 €).
+#
+# KNOWN GAP -- this modelling is incomplete and the figure it produces is wrong
+# for several comunidades. Madrid is NOT the only CCAA that publishes its own
+# mínimo por descendientes for 2025. The AEAT Manual práctico de Renta 2025,
+# parte 1, capítulo 14 ("Importes del mínimo personal y familiar aprobados por
+# las comunidades autónomas para el cálculo del gravamen autonómico", pages
+# 1087-1096) also publishes distinct tables for at least Andalucía
+# (2.510/2.820/4.170/4.700 + 2.920 menor-3), Asturias
+# (2.640/2.970/4.400/4.950 + 3.080), Canarias (2.424/2.727/.../4.545 + 2.828),
+# Galicia (2.503/2.816/4.172/4.694 + 2.920), Illes Balears and Comunitat
+# Valenciana. Only Castilla y León, Cataluña and La Rioja are recorded there as
+# "igual que los mínimos estatales". Until those tables are encoded, casilla
+# 0514 under-declares the autonómico mínimo for residents of the affected
+# comunidades. Feeds casilla 0514 (autonómico).
 [[revisions."2025".bindings]]
 id = "renta-2025-profile-minimo-descendientes-autonomico"
 source = "profile"

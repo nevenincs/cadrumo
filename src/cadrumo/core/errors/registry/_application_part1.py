@@ -18,26 +18,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.registry.errors.RegistryApplicationError",
-        ErrorCode(
-            code="ERROR_APPLICATION_REGISTRY",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_application_registry",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.registry.errors.RegistryApplicationInputError",
-        ErrorCode(
-            code="REFUSED_APPLICATION_REGISTRY_INPUT",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_application_registry_input",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.application.corpus_search.errors.CorpusSearchError",
         ErrorCode(
             code="ERROR_CORPUS_SEARCH",
@@ -313,26 +293,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="ERROR_CONFIG_RESET_JOURNAL_INCOMPLETE",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_config_boundary",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.core.topics.catalogue.TopicNotFoundError",
-        ErrorCode(
-            code="REFUSED_TOPIC_NOT_FOUND",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_topic_not_found",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.core.topics.catalogue.TopicCatalogueEmptyError",
-        ErrorCode(
-            code="REFUSED_TOPIC_CATALOGUE_EMPTY",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_topic_catalogue_empty",
             retryable=False,
             runbook_id=None,
         ),

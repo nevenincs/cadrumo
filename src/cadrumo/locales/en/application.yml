@@ -151,17 +151,9 @@ application:
           to carry %{requirements}.
         provider_close_failed: AEAT browser session could not be closed safely; retry
           authentication before reading AEAT data.
-        sede_rejected: AEAT session is not accepted by the AEAT Sede; run `aeat config
-          auth test` before reading AEAT data.
-        session_expired: AEAT session is expired; run `aeat config auth test` before
-          reading AEAT data.
         session_identity_profile_mismatch: AEAT session identity does not match the
           active profile tax identity; clear auth sessions and authenticate the matching
           profile before live AEAT reads.
-        state_missing: AEAT session state is missing; run `aeat config auth test`
-          before reading AEAT data.
-        verify_failed: AEAT session could not be verified; run `aeat config auth test`
-          before reading AEAT data.
   calculations:
     binding_prefill:
       errors:
@@ -445,8 +437,6 @@ application:
         unknown: '%{reason}'
     runtime:
       errors:
-        active_profile_load_failed: 'The active filing profile could not be loaded:
-          %{reason}.'
         ambiguous_casilla_schema: 'Internal error: the runtime casilla schema is ambiguous
           (duplicate casilla.id values or dangling formula references).'
         blank_modelo_selection: Requested modelo selection must not contain blank
@@ -494,7 +484,6 @@ application:
         {page_key}, after {consumed_count} answers.
       submit_blocked: 'Flow {flow_id} cannot be submitted: {blocking_count} blocking
         findings and {required_remaining} required questions are still open.'
-      unknown_repeating_group: Flow {flow_id} declares no repeating group named {group_id}.
       validator_id_blank: A flow validator must be registered under a non-empty id.
       validator_id_duplicate: A flow validator is already registered under id {validator_id}.
       validator_id_unknown: No flow validator is registered under id {validator_id};
@@ -1205,6 +1194,13 @@ application:
         for {manual_key}.
       no_revision_for_diff_year: 'No registry revision of {modelo} covers filing year
         {filing_year}. Declared revisions: {available_revisions}.'
+    manuals:
+      coverage:
+        available: Available locally
+        recheck_aeat_publication: Re-check the official AEAT manuals archive and acquire
+          the annual PDF when published.
+        unacquired: Official manual published; local acquisition pending
+        unpublished: Not yet published by AEAT
   storage:
     calc_sheets:
       engine:
@@ -1318,14 +1314,8 @@ application:
       repository_classification_mismatch: Secure-object namespace %{namespace} is
         registered for sensitivity %{expected}, but the stored record's classification
         is %{classification}.
-      repository_profile_bucket_mismatch: Profile %{profile_id} does not belong to
-        bucket %{bucket_id}; a profile bucket holds exactly one profile identity.
-      repository_profile_snapshot_missing: Profile snapshot was not found in the active
-        bucket.
       repository_profile_snapshot_version_unsupported: Profile snapshot schema version
         is newer than this application supports.
-      unsupported_bundle_schema_version: The bundle schema version is not supported
-        by this application version.
     notices:
       censo_divergences_open: '{count} profile or certificate field(s) still diverge
         from the Certificado de Situación Censal and remain unresolved: {axes}.'

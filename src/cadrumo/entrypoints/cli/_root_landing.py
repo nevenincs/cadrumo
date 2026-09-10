@@ -99,7 +99,6 @@ def _section_lines() -> Iterable[str]:
     yield tr("cli.root.landing.section_ledger")
     yield tr("cli.root.landing.section_modelo")
     yield tr("cli.root.landing.section_review")
-    yield tr("cli.root.landing.section_registry")
 
 
 __all__ = ["render_cli_root_landing_lines"]

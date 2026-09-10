@@ -11,7 +11,6 @@ related:
   - "[[2026-09-10-data-provenance-consolidation-plan]]"
 ---
 
-
 # Define immutable artifact roles, identity, derivation, disposition, and diagnostic records keyed by bundled relative path
 
 ## Scope

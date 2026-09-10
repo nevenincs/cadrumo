@@ -95,18 +95,37 @@ What they do **not** currently establish is that this registry agrees with
 those figures. Nothing wires the engine to them, so a green replay report is
 not evidence of agreement, and the corpus must never be cited as if it were.
 
-The gap is not hypothetical. Driving the registry directly for these same
-scenarios yields casilla 0520 (`Minimo personal y familiar. Parte autonomica`)
-= 5550.00 for **every** comunidad autonoma, because the 2025 formula resolves
-every CCAA key to a single shared parameter. The captures here record 5550.00
-for Cataluna but 5606.00 for Canarias, 5789.00 for Galicia and 5956.65 for
-Madrid. So the engine and AEAT disagree on three of the four regional captures,
-and the replay reported `match` on all five throughout. Whether the registry is
-under-modelled or the captures measure something else is unresolved and needs
-official AEAT authority to settle; until it is settled, treat casilla 0520 as
-NOT externally confirmed.
+The gap this corpus exposed has since been closed. Driving the registry
+directly for these scenarios once returned casilla 0520 = 5550.00 for EVERY
+comunidad autonoma, while the captures record 5.550 (Cataluna), 5.606
+(Canarias), 5.789 (Galicia) and 5.956,65 (Madrid) -- and the replay reported
+`match` on all five throughout, because it never ran the engine.
 
-A capture without an override for `autonomous_community` is a further gap: the
-engine refuses to evaluate without that enum, so `modelo-100-2025-employee-
-default-minimo.json`, whose `profile_overrides` is null, could not be replayed
-against the engine even if the wiring existed. Its territory is undeclared.
+The AEAT Manual practico de Renta 2025, parte 1, capitulo 14 ("Importes del
+minimo personal y familiar aprobados por las comunidades autonomas para el
+calculo del gravamen autonomico", pages 1087-1096, bundled in this repository)
+settled it: the captures were right and the registry was under-modelled. Per
+Ley 22/2009 art. 46.1.a, eight comunidades set their own minimo for 2025.
+Casilla 0512 now dispatches each CCAA to its own amount, and the engine
+reproduces every captured figure exactly:
+
+| CCAA      | engine 0520 | AEAT capture |
+|-----------|-------------|--------------|
+| Cataluna  | 5550.00     | 5550.00      |
+| Canarias  | 5606.00     | 5606.00      |
+| Galicia   | 5789.00     | 5789.00      |
+| Madrid    | 5956.65     | 5956.65      |
+| Andalucia | 5790.00     | 5790.00      |
+
+Two related gaps remain open and are recorded at their owning declarations: the
+autonomic increments for contributors over 65 and over 75 are still not modelled
+on casilla 0512 (the estatal casilla 0511 does apply them), and casilla 0514
+still models only Madrid's minimo por descendientes.
+
+The capture named `modelo-100-2025-employee-default-minimo.json` is misnamed.
+Its `profile_overrides` is null, so it presents as a territory-neutral
+"default" -- but its 0520 figure is 5.790, which the manual identifies as
+**Andalucia**'s minimo del contribuyente (Ley 5/2021 art. 23 bis). There is no
+territory-neutral autonomic minimo; the engine will not even evaluate without a
+CCAA enum. Read that file as an Andalucia capture whose territory was never
+declared.

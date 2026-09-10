@@ -308,7 +308,7 @@ def test_workflow_evidence_and_product_identity_follow_the_binding_tuple() -> No
     "surface",
     (
         "aeat --version",
-        "uv run --no-sync aeat app registry verify",
+        "uv run --no-sync aeat --format json config repair",
         "echo 'AEAT is the Spanish tax authority'",
         "pip install cadrumo && aeat --version",
     ),
@@ -323,7 +323,7 @@ def test_binding_cli_and_authority_forms_are_allowed(surface: str) -> None:
     "surface",
     (
         "echo preflight\ncadrumo --version",
-        "uv run --frozen cadrumo app registry verify",
+        "uv run --frozen cadrumo --format json config repair",
         "env MODE=ci cadrumo --version",
         "MODE=ci cadrumo --version",
         "echo preflight && cadrumo --version",

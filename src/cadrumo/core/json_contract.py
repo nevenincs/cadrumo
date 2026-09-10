@@ -244,7 +244,7 @@ class Notice(BaseModel):
 
     The single uniform surface for operator-facing warnings, advisories,
     and next-step hints across every command. Domain diagnostics (e.g.
-    ``ModeloFinding``, source-resolution advisories) are projected into
+    ``ModeloValidationFinding``, source-resolution advisories) are projected into
     this shape rather than re-modelled as bespoke per-command payload
     fields.  CLI helpers such as
     :func:`entrypoints.cli._common.emit_envelope` pass these values

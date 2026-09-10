@@ -110,21 +110,6 @@ def test_bare_repair_runs_clean_without_session_on_fresh_root(_fresh_storage_roo
     assert "aeat " not in json.dumps(profile_check).lower()
 
 
-def test_integrity_registry_runs_clean_without_session_on_fresh_root(_fresh_storage_root: Path) -> None:
-    """``aeat config repair integrity registry`` runs sessionless on a fresh root.
-
-    The opt-in registry-validation verb probes the bundled registry,
-    not encrypted state, so it must run without a session regardless
-    of the storage root's contents.
-    """
-
-    result = invoke_cached_cli(["config", "repair", "integrity", "registry"])
-
-    assert result.exit_code == 0, result.output
-    assert "NoActiveBucketSession" not in result.output
-    assert "Traceback" not in result.output
-
-
 def test_quarantine_on_fresh_root_reports_nothing_to_quarantine(_fresh_storage_root: Path) -> None:
     """The cold-root quarantine guard reports a clean no-op, not a crash.
 

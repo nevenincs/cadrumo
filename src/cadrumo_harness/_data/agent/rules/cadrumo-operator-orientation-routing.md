@@ -83,11 +83,10 @@ authority this table paraphrases, and it grows as command families are added.
 
 ## Legal and registry questions
 
-- "Is the local registry authority internally consistent?" →
-  `aeat app registry verify`.
-- "What does the underlying law actually say?" → `aeat app registry citations`
-  (the normative corpus) and `aeat app registry manuals` (the AEAT Manuales
-  prácticos). Cite these, never a legal fact from memory.
+The application consumes its bundled registry while calculating and filing; it
+does not expose registry authoring, verification, or legal-corpus browsing to
+operators. For a question about the law itself, consult and cite the governing
+official source rather than treating a product command as legal authority.
 
 ## Custody and profile questions
 

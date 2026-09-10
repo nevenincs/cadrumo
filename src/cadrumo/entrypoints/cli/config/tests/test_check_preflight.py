@@ -50,7 +50,6 @@ def test_config_check_emits_typed_preflight_rows() -> None:
         "corpus:normatives",
         "corpus:manuals",
         "env:configuration",
-        "registry:referential-integrity",
     } <= set(by_id)
     for row in rows:
         assert set(row) == {

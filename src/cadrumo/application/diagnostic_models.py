@@ -240,7 +240,6 @@ class ConfigRepairReport(BaseModel):
     package_version: str
     python_version: str
     log_file: str
-    registry: RegistryVersionSummary
     setup: WizardStatusReport | None
     secure_objects: SecureObjectIntegrityReport
     checks: tuple[DiagnosticCheck, ...]
@@ -261,12 +260,3 @@ def ensure_models_rebuilt() -> None:
     SecureObjectIntegrityReport.model_rebuild(_types_namespace=locals())
     ConfigRepairReport.model_rebuild(_types_namespace={**globals(), **locals()})
     _models_rebuilt = True
-
-
-class RegistryIntegrityReport(BaseModel):
-    """Result of the opt-in full registry-validation probe."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    registry: RegistryVersionSummary
-    check: DiagnosticCheck
