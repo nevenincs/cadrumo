@@ -6,7 +6,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:41f811dfd9e5d8843ad59e33fedccc5b347c6f27bb17d9819cc77fb6be92294f'
+body_hash: 'sha256:3371d3c5e3ac27eb90bff3cc8240cd9a1ecbb643866ec3518c998004295748ad'
 related:
   - '[[2026-09-09-registry-edition-authoring-W01-P01-S01]]'
   - '[[2026-09-09-registry-edition-authoring-W01-P01-S02]]'
@@ -30,6 +30,8 @@ related:
   - '[[2026-09-09-registry-edition-authoring-W02-P03-S43]]'
   - '[[2026-09-09-registry-edition-authoring-W02-P03-S45]]'
   - '[[2026-09-09-registry-edition-authoring-W02-P03-S48]]'
+  - '[[2026-09-09-registry-edition-authoring-W02-P03-S55]]'
+  - '[[2026-09-09-registry-edition-authoring-W02-P03-S61]]'
   - '[[2026-09-09-registry-edition-authoring-adr]]'
   - '[[2026-09-09-registry-edition-authoring-code-shape-and-blast-radius-reference]]'
   - '[[2026-09-09-registry-edition-authoring-edition-restatement-measurement-research]]'
@@ -71,6 +73,8 @@ Auto-generated index of all documents tagged with `#registry-edition-authoring`.
 - `2026-09-09-registry-edition-authoring-W02-P03-S35` - [M | opus-medium] Add the predecessor forest validator: every edition of a modelo declares a predecessor except exactly one, and the graph must be a single tree rooted at that one with no cycle, no unknown or self target, and every edition reachable. The unique root positively identifies a first edition, and a successor that omits its predecessor becomes a second root and is refused naming both. Mark the field manifest-only so a section fragment cannot declare it. Proof: a three-edition fixture whose third omits the key is refused as two roots; restoring it loads.
 - `2026-09-09-registry-edition-authoring-W02-P03-S41` - [S | sonnet-high] Check every enumeration this campaign introduces against the proposed registry enum-canonicalisation ruling — one named enum per closed vocabulary, no inline unions, no allowlist — and reconcile or record the divergence. That ruling is proposed rather than accepted, so this is a compatibility check and not an obligation to obey it. Proof: each new enumeration is either conformant or carries a stated reason.
 - `2026-09-09-registry-edition-authoring-W02-P03-S48` - [S | opus-medium] Give the predecessor key an explicit value meaning no predecessor exists, distinct from the key being absent. One modelo has three editions sharing a single validity date whose own declarations each assert they have no earlier sibling; without an explicit value it would be forced into a false sequence, and with the key merely absent it would be indistinguishable from a forgotten declaration. Proof: that modelo loads with all three editions declared parallel, and the forest rule accepts it without inventing an order.
+- `2026-09-09-registry-edition-authoring-W02-P03-S55` - [S | sonnet-high] Make the materialiser's exclusion of non-casilla families explicit and tested, rather than relying on it merging only what it was told to. The completeness manifest is a revision section merged by the same fragment machinery as the casillas, so a materialiser written against the raw revision mapping picks it up by default; and its casilla collection is an append array whose duplicate-identifier validator would then refuse the load with an error naming a duplicate rather than naming inheritance. Loud but misattributed is still expensive. Proof: a planted delta whose predecessor has manifest rows materialises with the successor's own manifest untouched, and the duplicate-identifier path is never reached.
+- `2026-09-09-registry-edition-authoring-W02-P03-S61` - [S | opus-medium] Add the declared-predecessor date-agreement rule: where an edition names a predecessor and the two editions do not overlap in validity, the predecessor must be the earlier one; overlapping editions are exempt, and that exemption is exactly the parallel-variant case. Also make the lineage totality rule follow a named predecessor edge instead of the adjacent edition. Both land before the first modelo migrates. Proof: a successor naming a later non-overlapping edition is refused naming both; an overlapping pair loads; a totality fixture with a named non-adjacent predecessor resolves against the named edition.
 
 ### plan
 
