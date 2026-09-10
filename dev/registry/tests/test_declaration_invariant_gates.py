@@ -39,9 +39,10 @@ from typing import Final
 import pytest
 
 from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
 from cadrumo.domain.calculations.registry.schema_revision_members import ApplicationLinkSurface
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ...quality.unread_inputs import report_unread
 from ..analysis.casilla_id_grammar import screen_authority as grammar_screen
@@ -59,7 +60,7 @@ _UTF_8: Final[str] = "utf-8"
 
 @pytest.fixture(scope="module")
 def authority() -> ValidatedRegistryAuthority:
-    return bundled_authority()
+    return compiled_bundled_authority()
 
 
 @pytest.fixture(scope="module")

@@ -19,10 +19,10 @@ import pytest
 from cadrumo.core.estado_casilla_oficial import EstadoCasillaOficial
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.export import clasificar_casillas_oficiales
-from dev.registry.compiler.loader import load_registry_tree
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from dev.registry.compiler.loader import load_registry_tree
 
 from ..analysis.m303_semantic_census import census_m303_semantic_map, resolve_semantic_home
 from ..pipeline.joined_record_design import JoinedRecordDesign, JoinedRecordDesignField, join_record_design_semantics

@@ -96,7 +96,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Final
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.identifier_lineage import identifier_lineage
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_overlap
 from cadrumo.domain.calculations.registry.schema import (
@@ -106,6 +106,7 @@ from cadrumo.domain.calculations.registry.schema import (
     NoPredecessor,
 )
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .corpus import bundled_modelo_ids
 
@@ -429,7 +430,7 @@ def minimality_census(authority: ValidatedRegistryAuthority, modelo_ids: tuple[s
 
 def main() -> int:
     """Print one greppable row per finding and a closing census; always exit 0."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo_ids = bundled_modelo_ids()
     findings = screen_authority(authority, modelo_ids)
     census = minimality_census(authority, modelo_ids)

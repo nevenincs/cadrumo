@@ -17,7 +17,6 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
     resolve_governed_fact,
 )
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
-from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from dev.registry.compiler.fact_providers import compile_registered_fact_providers
 from dev.registry.compiler.fact_validation import migrated_legal_parameter_fact_failures

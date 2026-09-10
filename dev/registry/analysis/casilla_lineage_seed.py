@@ -63,13 +63,14 @@ from enum import StrEnum
 from itertools import pairwise
 from pathlib import Path
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageOrigin
 from cadrumo.domain.calculations.registry.casilla_lineage_totality import unresolved_successor_rows
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_overlap
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-from cadrumo.domain.calculations.registry.validate_registry_scope import validate_registry_scope
+from dev.registry.compiler.registry_scope import validate_registry_scope
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .casilla_id_grammar import classify_casilla_id
 from .corpus import bundled_modelo_ids
@@ -1425,7 +1426,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--modelo", action="append", help="limit to these modelos (repeatable)")
     args = parser.parse_args(argv)
 
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     oracle = DesignOracle(authority)
     rulings = load_rulings()
     selected = [

@@ -11,6 +11,7 @@ from types import ModuleType
 from typing import TYPE_CHECKING
 
 import pytest
+from dev.registry.compiler.loader import load_registry_tree
 
 from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
@@ -21,7 +22,6 @@ from ....core.period import Period
 from ....core.resources.bundled_data import bundled_path
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
-from ....domain.calculations.registry.loader import load_registry_tree
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.iva_compensation.filed_derivation import (
     M303_COMPENSATION_AVAILABLE_CASILLA,

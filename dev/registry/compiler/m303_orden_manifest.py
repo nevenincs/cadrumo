@@ -364,7 +364,18 @@ def collect_m303_annual_orden_fingerprints(root: Path) -> tuple[tuple[str, int, 
     key.
     """
     directory = root.resolve() / "m303_orden_anual"
-    return tuple(toml_file_fingerprint(path.resolve()) for path in scan_directory(directory))
+    return tuple(_annual_orden_file_fingerprint(path.resolve()) for path in scan_directory(directory))
+
+
+def _annual_orden_file_fingerprint(path: Path) -> tuple[str, int, int, str]:
+    """Fingerprint one generated Orden input without depending on the dev compiler cache."""
+    try:
+        stat = path.stat()
+        bundled_registry = bundled_path("registry", "aeat").resolve()
+        digest = "" if path.is_relative_to(bundled_registry) else blake2b_hex(path.read_bytes())
+    except OSError as exc:
+        raise RegistryLoadError(f"annual Orden generated input cannot be fingerprinted: {path}") from exc
+    return str(path), stat.st_size, stat.st_mtime_ns, digest
 
 
 def _single_annual_orden_source_for_year(

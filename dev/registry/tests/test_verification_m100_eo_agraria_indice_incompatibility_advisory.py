@@ -40,15 +40,15 @@ from decimal import Decimal
 from functools import cache
 
 import pytest
-from dev.registry.maintenance_support import load_modelo_path
 
+from cadrumo.application.modelo.tests._verification_substance_support import _workflow_profile
 from cadrumo.application.modelo.verification_actions import evaluate_verification_predicates
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from cadrumo.application.modelo.tests._verification_substance_support import _workflow_profile
+from dev.registry.maintenance_support import load_modelo_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

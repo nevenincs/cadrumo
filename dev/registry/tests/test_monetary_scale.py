@@ -8,8 +8,9 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.maintenance_support import resolved_export_endpoints
 
 from ..analysis.monetary_scale import _SELF_SCALING_WIRE_TYPES, CENTS_SCALE, scale_findings, screen_authority
@@ -28,7 +29,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 @pytest.fixture(scope="module")
 def authority() -> ValidatedRegistryAuthority:
-    return bundled_authority()
+    return compiled_bundled_authority()
 
 
 def test_a_self_scaling_wire_type_is_not_reported_as_unscaled(authority: ValidatedRegistryAuthority) -> None:

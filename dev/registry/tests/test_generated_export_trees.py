@@ -30,17 +30,17 @@ from typing import Final, override
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import (
     RegistryLoadError,
     RegistryValidationError,
 )
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
+from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.compiler.loader import (
     load_modelo_directory,
     load_registry_tree,
 )
-from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from dev.registry.maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
 
 from ..pipeline._export_tree import ExportTreeTransportProfile, render_complete_export_tree
@@ -109,7 +109,7 @@ class _ReproductionPendingPin:
 
 def _generated_trees() -> tuple[_GeneratedTree, ...]:
     """Project every provenance-attested tree from validated registry authority."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     assessment_horizon = coverage_assessment_horizon(authority.catalogues)
     trees: list[_GeneratedTree] = []
     for modelo in sorted(authority.modelos, key=lambda item: item.id):
@@ -188,7 +188,7 @@ def _isolated_authority(tree: _GeneratedTree, root: Path) -> Path:
     registry_root = root / "registry" / "aeat"
     supporting_modelos = _supporting_modelos(tree)
     source = next(
-        (item for ref, item in bundled_authority().catalogues.sources.items() if str(ref) == tree.source_ref),
+        (item for ref, item in compiled_bundled_authority().catalogues.sources.items() if str(ref) == tree.source_ref),
         None,
     )
     assert source is not None, f"{tree}: declared render source {tree.source_ref!r} is absent"
@@ -328,7 +328,7 @@ def test_every_reproduction_pending_pin_is_live_and_source_bound() -> None:
     assert set(_REPRODUCTION_PENDING) <= set(enrolled), (
         f"reproduction pins name no enrolled tree: {sorted(set(_REPRODUCTION_PENDING) - set(enrolled))}"
     )
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     for subject, pin in _REPRODUCTION_PENDING.items():
         tree = enrolled[subject]
         assert tree.source_ref == pin.source_ref
@@ -514,7 +514,7 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
     if differing:
         disposition = _RECORD_DRIFT_DISPOSITIONS.get(subject)
         comparison = compare_revision_against_committed(
-            bundled_authority(),
+            compiled_bundled_authority(),
             modelo=tree.modelo,
             revision=tree.revision,
         )

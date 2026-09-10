@@ -13,11 +13,11 @@ from hashlib import sha256
 from typing import NamedTuple
 
 import pytest
+from dev.registry.compiler.loader import load_catalogue_file, load_modelo_directory
 
 from .....core.resources.bundled_data import bundled_path
 from .._validate_export_layout_coverage import _position, validate_export_layout_record_coverage
 from ..errors import NoRevisionForPeriodError
-from ..loader import load_catalogue_file, load_modelo_directory
 from ..record_design import extract_record_design
 from ..temporal import select_revision
 

@@ -20,7 +20,6 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from dev.registry.maintenance_support import resolve_record_design_binary
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.hashing import hash_file
@@ -29,6 +28,7 @@ from dev.registry.compiler.validator import RegistryValidator
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError, RegistryValidationError
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
+from dev.registry.maintenance_support import resolve_record_design_binary
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

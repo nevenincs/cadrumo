@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler.authority import compile_validated_authority
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.resources.bundled_data import bundled_path
@@ -12,7 +13,6 @@ from .....core.revision_review import RevisionReviewStatus
 from .....tests.registry_snapshot import build_validated_snapshot
 from .....tests.registry_tree import bundled_registry_tree
 from .._snapshot_internals import _check_snapshot_filing_capability
-from ..authority import ValidatedRegistryAuthority
 from ..errors import RegistryValidationError
 from ..export import derive_export_layouts_from_bindings
 
@@ -49,10 +49,7 @@ def test_authority_refuses_real_m182_through_the_public_accessor() -> None:
     ``build_validated_snapshot``, and it now asserts the refusal M182 actually
     earns today.
     """
-    authority = ValidatedRegistryAuthority.load(
-        bundled_path("registry", "aeat"),
-        source_root=bundled_path(),
-    )
+    authority = compile_validated_authority(bundled_path("registry", "aeat"), bundled_path())
     revision = authority.modelo("182").revisions["2025"]
     assert revision.review_status is RevisionReviewStatus.AGENT_REVIEWED
     assert revision.authority_grade is RegistryAuthorityGrade.APPLICABILITY
@@ -104,10 +101,7 @@ def test_build_validated_snapshot_refuses_real_m182_non_operator_revision(
     the refusal it actually earns, so a status silently changing gates is a red
     test rather than a passing one.
     """
-    authority = ValidatedRegistryAuthority.load(
-        bundled_path("registry", "aeat"),
-        source_root=bundled_path(),
-    )
+    authority = compile_validated_authority(bundled_path("registry", "aeat"), bundled_path())
     modelo = authority.modelo("182")
     revision = modelo.revisions["2025"].model_copy(
         update={

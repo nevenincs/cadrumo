@@ -74,8 +74,8 @@ def cohort_stamped_wheel_data_paths() -> frozenset[str]:
     Returns:
         The wheel-relative paths of every stamped member.
     """
-    from dev.registry.compiler.verdict_cache import shipped_verdict_location
     from dev.registry.compiler.identity import registry_identity_stamp_location
+    from dev.registry.compiler.verdict_cache import shipped_verdict_location
 
     root = PurePosixPath(_WHEEL_REGISTRY_ROOT)
     return frozenset(

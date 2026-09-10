@@ -19,11 +19,11 @@ import pytest
 import yaml
 
 from cadrumo.core.i18n.render import override_locales_root
-from dev.registry.compiler.edition_materialisation import materialise_edition
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
-from dev.registry.compiler.loader import load_modelo_directory
 from cadrumo.domain.calculations.registry.modelo_localization import resolve_modelo_localization
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from dev.registry.compiler.edition_materialisation import materialise_edition
+from dev.registry.compiler.loader import load_modelo_directory
 
 from ..pipeline.cli import _stage_isolated_edition
 

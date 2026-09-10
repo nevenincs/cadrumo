@@ -11,25 +11,11 @@ from datetime import date
 from pathlib import Path
 
 import pytest
-from dev.registry.maintenance_support import (
-    coverage_assessment_horizon,
-    resolve_record_design_binary,
-    revision_selection_coordinates,
-)
 from pydantic import ValidationError
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests import REPO_ROOT
-from cadrumo.tests.aeat_literal_fixtures import RECORD_DESIGN_ROUTE_BASE_FIXTURE
-from dev.registry.conformance.coverage import (
-    EvidenceTierCoverageGate,
-    _snapshot_filing_review_proof,
-    audit_registry_model_law_coverage,
-    build_model_law_coverage_ledger,
-)
-from cadrumo.tests.registry_snapshot import build_snapshot
 from cadrumo.domain.calculations.registry._snapshot_internals import check_snapshot_filing_review_tier
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ...compiler.corpus_catalogue import verify_source_file
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError, RegistryValidationError
 from ...compiler.legal_grounding import verify_legal_catalogue_grounding
@@ -38,6 +24,22 @@ from cadrumo.domain.calculations.registry.schema import filing_period_from_scope
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.tests import REPO_ROOT
+from cadrumo.tests.aeat_literal_fixtures import RECORD_DESIGN_ROUTE_BASE_FIXTURE
+from cadrumo.tests.registry_snapshot import build_snapshot
+from dev.registry.compiler.authority import compile_validated_authority, compiled_bundled_authority
+from dev.registry.conformance.coverage import (
+    EvidenceTierCoverageGate,
+    _snapshot_filing_review_proof,
+    audit_registry_model_law_coverage,
+    build_model_law_coverage_ledger,
+)
+from dev.registry.maintenance_support import (
+    coverage_assessment_horizon,
+    resolve_record_design_binary,
+    revision_selection_coordinates,
+)
+
 from ...tests._catalogue_verification_support import _registry_tree
 from ._loader_directory_mode_support import (
     write_extracted_corpus_sidecar,
@@ -267,7 +269,7 @@ def test_modelo_038_refuses_unevidenced_history_and_keeps_historical_pdf_unselec
 
 
 def test_committed_registry_tree_has_required_model_law_coverage() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     audit = audit_registry_model_law_coverage(authority)
 
     modelo_038 = next(
@@ -450,7 +452,7 @@ source_refs = ["test-source-parity"]
 """,
     )
     clear_fingerprint_cache()
-    return ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
+    return compile_validated_authority(registry_root, tmp_path)
 
 
 def test_model_law_matrix_reports_a_non_vacuous_gap_from_a_synthetic_reviewed_corpus(tmp_path: Path) -> None:

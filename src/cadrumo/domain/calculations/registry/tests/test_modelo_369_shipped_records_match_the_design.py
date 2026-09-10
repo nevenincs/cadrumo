@@ -33,9 +33,9 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compile_validated_authority
 
 from .....core.resources.bundled_data import bundled_path
-from ..authority import ValidatedRegistryAuthority
 from ..record_design import extract_record_design
 from ..record_design_schema import RecordDesignSheet
 from ._registry_schema_support import _committed_modelo
@@ -102,7 +102,7 @@ def _records(revision):
 def _shipped_revisions():
     """``revision id -> the snapshot revision that actually ships for it``."""
     modelo, _catalogues = _committed_modelo("369")
-    authority = ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
+    authority = compile_validated_authority(bundled_path("registry", "aeat"), bundled_path())
 
     shipped = {}
     for revision_id, revision in modelo.revisions.items():

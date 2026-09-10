@@ -14,8 +14,8 @@ from cadrumo.core.filing_projection_ref import (
     M303RegimenSimplificadoFactProjectionRef,
     compile_filing_projection_ref,
 )
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..._paths import REPO_ROOT
 from ..analysis import _dp30302_field_matrix
@@ -60,7 +60,7 @@ _MINIMUM_DP30302_FIELDS_PER_EPOCH = 100
 def _dp30302_sheets() -> dict[str, tuple[RecordDesignIntermediateField, ...]]:
     """Load every epoch's real DP30302 field set through validated snapshots."""
     out: dict[str, tuple[RecordDesignIntermediateField, ...]] = {}
-    for intermediate in load_dp30302_epoch_intermediates(bundled_authority()):
+    for intermediate in load_dp30302_epoch_intermediates(compiled_bundled_authority()):
         sheet = next(sheet for sheet in intermediate.sheets if sheet.record_identity == "DP30302")
         out[intermediate.source.design_epoch] = sheet.fields
     assert len(out) >= _MINIMUM_DP30302_EPOCHS, (
@@ -153,13 +153,13 @@ def test_resolve_module_sub_indices_refuses_a_duplicate_ordinal_within_one_group
 def test_persisted_matrix_matches_a_fresh_measurement_of_the_five_binaries() -> None:
     """The checked-in artefact must still describe the live hash-pinned binaries."""
     persisted = load_dp30302_field_matrix(_ARTEFACT_PATH)
-    live = measure_dp30302_field_matrix(bundled_authority())
+    live = measure_dp30302_field_matrix(compiled_bundled_authority())
     assert persisted == live
 
 
 def test_every_epoch_measurement_uses_its_selected_validated_registry_inspection() -> None:
     """The parser may read only the source the selected M303 revision admits."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     intermediates = load_dp30302_epoch_intermediates(authority)
     assert len(intermediates) == len(DP30302_EPOCH_COORDINATES)
     for coordinate, intermediate in zip(DP30302_EPOCH_COORDINATES, intermediates, strict=True):
@@ -301,7 +301,9 @@ def test_a_repartitioned_real_anchor_desynchronises_the_persisted_matrix() -> No
     """A changed real input anchor must produce an observable persisted-matrix mismatch."""
     persisted = load_dp30302_field_matrix(_ARTEFACT_PATH)
     intermediate = next(
-        item for item in load_dp30302_epoch_intermediates(bundled_authority()) if item.source.design_epoch == "2023"
+        item
+        for item in load_dp30302_epoch_intermediates(compiled_bundled_authority())
+        if item.source.design_epoch == "2023"
     )
     sheet = next(item for item in intermediate.sheets if item.record_identity == "DP30302")
     anchor = next(

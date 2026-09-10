@@ -20,7 +20,6 @@ from datetime import date
 from typing import Any, Literal, TypedDict
 
 import pytest
-from dev.registry.maintenance_support import load_modelo_path
 from pydantic import ValidationError
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
@@ -40,11 +39,12 @@ from dev.registry.compiler._validate_semantic_roles import (
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaAlias, CasillaConstraints, CasillaDefinition
-from cadrumo.domain.calculations.registry.validate_registry_scope import validate_registry_scope
 from cadrumo.domain.calculations.registry.tests._synthetic_locale_fixtures import (
     _synthetic_locale_scope,
     _write_test_label,
 )
+from dev.registry.compiler.registry_scope import validate_registry_scope
+from dev.registry.maintenance_support import load_modelo_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -25,11 +25,11 @@ from pathlib import Path
 from typing import Final
 
 import pytest
+from dev.registry.compiler.authority import compile_validated_authority
+from dev.registry.compiler.loader import load_modelo_directory
 
 from .....core.resources.bundled_data import bundled_path
-from ..authority import ValidatedRegistryAuthority
 from ..errors import RegistryLoadError, RegistryValidationError
-from ..loader import load_modelo_directory
 from ..schema import ModeloRevision
 from ._loader_directory_mode_support import _write_standard_manifest
 
@@ -486,7 +486,7 @@ def _declare_in_manifest(edition_dir: Path, declaration: str) -> None:
 
 
 def _load(registry_root: Path, modelo_id: str) -> dict[str, ModeloRevision]:
-    return dict(ValidatedRegistryAuthority.load(registry_root, source_root=bundled_path()).modelo(modelo_id).revisions)
+    return dict(compile_validated_authority(registry_root, bundled_path()).modelo(modelo_id).revisions)
 
 
 @pytest.mark.parametrize(
@@ -577,9 +577,9 @@ def test_the_source_default_resolves_against_the_catalogue_even_when_no_row_take
 
     if failure is not None:
         with pytest.raises(RegistryValidationError, match=re.escape(failure)):
-            ValidatedRegistryAuthority.load(root, source_root=bundled_path())
+            compile_validated_authority(root, bundled_path())
         return
     revision = (
-        ValidatedRegistryAuthority.load(root, source_root=bundled_path()).modelo("111").revisions["2019-y-siguientes"]
+        compile_validated_authority(root, bundled_path()).modelo("111").revisions["2019-y-siguientes"]
     )
     assert revision.casilla_source_refs == (declared,)

@@ -7,6 +7,7 @@ from decimal import Decimal
 
 import pytest
 from dev.registry.compiler.convenio import load_convenio_authority
+from dev.registry.compiler.loader import load_catalogue_file, load_modelo_directory
 
 from .....core.irnr import ConvenioOverrideKind, TipoRentaIrnr
 from .....core.resources.bundled_data import bundled_path

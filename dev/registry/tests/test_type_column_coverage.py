@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.compiler.loader import load_modelo_directory
 
 from ..analysis.hand_authored_type_column import hand_authored_revisions
@@ -34,7 +34,7 @@ _DELTA = "2018-y-siguientes"
 
 @pytest.fixture(scope="module")
 def shipped():
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     return authority, type_column_coverage(authority.modelos, modelos_root=bundled_path("registry", "aeat", "modelos"))
 
 

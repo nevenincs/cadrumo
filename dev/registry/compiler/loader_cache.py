@@ -61,6 +61,8 @@ from ._toml_helpers import as_toml_table as _as_toml_table
 # selecting on it being unset.
 _REGISTRY_DISK_CACHE_RELATIVE_PATH = storage_location(StorageCategory.REGISTRY_DISK_CACHE).relative_path()
 
+BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS = 10.0
+
 # The bundled tree is the only tree whose fingerprints are cached at all, and
 # its window is bounded rather than process-lifetime: under an editable install
 # (the routine development mode) "bundled" resolves to the literal in-tree
@@ -75,8 +77,6 @@ _REGISTRY_DISK_CACHE_RELATIVE_PATH = storage_location(StorageCategory.REGISTRY_D
 # edit is picked up well within one operator interaction. A genuinely
 # read-only installed (non-editable) wheel benefits identically: nothing
 # ever rewrites it, so the periodic re-walk merely repeats the same answer.
-BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS = 10.0
-
 ModeloSourceLayout = Literal["single_file", "directory"]
 ModeloRevisionSourceLayout = Literal["revision_file", "fragment_directory"]
 

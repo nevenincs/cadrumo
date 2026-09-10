@@ -18,19 +18,19 @@ import shutil
 from pathlib import Path
 
 import pytest
-from dev.registry.maintenance_support import stamp_bundled_registry_release
 
 from cadrumo.core.directory_scan import scan_directory
-from dev.registry.compiler.verdict_cache import (
-    VERDICT_OUTCOME_GREEN,
-    read_verdict,
-    shipped_verdict_location,
-)
 from dev.registry.compiler.identity import (
     read_registry_identity_stamp,
     registry_identity_stamp_location,
 )
 from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
+from dev.registry.compiler.verdict_cache import (
+    VERDICT_OUTCOME_GREEN,
+    read_verdict,
+    shipped_verdict_location,
+)
+from dev.registry.maintenance_support import stamp_bundled_registry_release
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

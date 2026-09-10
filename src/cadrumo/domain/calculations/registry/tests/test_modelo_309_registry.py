@@ -6,13 +6,13 @@ from datetime import date
 from functools import cache
 
 import pytest
+from dev.registry.compiler.loader import load_modelo_directory, load_shared_catalogues
 
 from .....core.iva_deduction_fact import IvaDeductionFactKind
 from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_snapshot import build_snapshot
 from ....iva.schema import IvaLedgerObservationRole
 from .._validate import RegistryValidator
-from ..loader import load_modelo_directory, load_shared_catalogues
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ._ledger_iva_aggregation_support import _deduction_provenance
 

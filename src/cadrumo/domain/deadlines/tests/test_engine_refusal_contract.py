@@ -144,7 +144,7 @@ class TestEveryPinnedRaiseSiteIsStructurallyClean:
 
     The runtime assertions above reach four of the five sites.  The
     validation-stage refusal in ``_deadline_windows`` is not reachable from a
-    test: ``ValidatedRegistryAuthority.load`` validates eagerly, so a registry
+    test: an authority is only ever compiled validated, so a registry
     that would fail per-modelo validation is refused at the load stage instead.
     This sweep is what covers it, and it covers any site added later.
     """

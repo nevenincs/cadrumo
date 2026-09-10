@@ -119,6 +119,7 @@ from cadrumo.domain.calculations.registry.tests.test_revision_edition_round_trip
     edition_round_trip_report,
     merge_order,
 )
+from dev.registry.compiler.authority import compile_validated_authority
 
 from .analysis.delta_minimality import restatement_differences
 
@@ -1175,7 +1176,7 @@ def _is_fixed_point(works: Sequence[_EditionWork]) -> bool:
 
 
 def _load(registry_root: Path, modelo_id: str) -> ModeloDefinition:
-    return ValidatedRegistryAuthority.load(registry_root, source_root=bundled_path()).modelo(modelo_id)
+    return compile_validated_authority(registry_root, bundled_path()).modelo(modelo_id)
 
 
 def _inside(path: Path, root: Path) -> bool:

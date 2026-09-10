@@ -25,10 +25,8 @@ import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.modelo import Modelo
-from cadrumo.domain.calculations.registry.authority import (
-    ValidatedRegistryAuthority,
-    bundled_authority,
-)
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..casilla_projection import CasillaProjectionStats
 from ..search_record import CasillaSearchRecord
@@ -48,7 +46,7 @@ def full_projection() -> tuple[tuple[CasillaSearchRecord, ...], CasillaProjectio
 
 def _independent_raw_casilla_count() -> int:
     """Count casilla rows across every revision of every modelo, independently."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     total = 0
     for definition in authority.modelos:
         for _revision_id, revision in definition.revisions.items():
@@ -88,7 +86,7 @@ def test_m303_emits_every_distinct_casilla_id() -> None:
     """
     from ..casilla_projection import project_modelo_casillas
 
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     definition = authority.modelo(Modelo.M303.value)
     identities: set[str] = set()
     for _revision_id, revision in definition.revisions.items():
@@ -181,7 +179,7 @@ def test_all_legal_refs_resolve_in_the_catalogue(
     ref would be a dead provenance link.
     """
     records, _stats = full_projection
-    legal_keys = set(bundled_authority().catalogues.legal)
+    legal_keys = set(compiled_bundled_authority().catalogues.legal)
     unresolved: set[str] = set()
     for record in records:
         for ref in record.legal_refs:
@@ -199,7 +197,7 @@ def test_m303_record_has_correct_identity_and_spanish_label() -> None:
     """
     from ..casilla_projection import project_modelo_casillas
 
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     definition = authority.modelo(Modelo.M303.value)
     # Pick a known casilla from the latest revision for a stable assertion.
     latest_revision = max(definition.revisions.values(), key=lambda revision: revision.valid_from)
@@ -226,7 +224,7 @@ def test_m121_projection_preserves_canonical_id_distinct_from_display_number() -
     from ..casilla_projection import project_modelo_casillas
     from ..unified_record import to_search_record
 
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     assert isinstance(authority, ValidatedRegistryAuthority)
     definition = authority.modelo(Modelo.M121.value)
     latest_revision = max(definition.revisions.values(), key=lambda revision: revision.valid_from)

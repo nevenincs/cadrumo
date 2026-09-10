@@ -18,10 +18,10 @@ inspection passes through it: measured across the filing suite, every
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.loader import load_registry_tree
 
 from ....core.period import Period
 from ....core.resources.bundled_data import bundled_path
-from ....domain.calculations.registry.loader import load_registry_tree
 from ..draft_construction import _refuse_unsupported_filing_year
 from ..errors import ModeloApplicationError
 

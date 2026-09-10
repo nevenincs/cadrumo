@@ -31,16 +31,11 @@ import pytest
 
 from cadrumo.core.config import override_settings
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from dev.registry.compiler._loader_internals import (
     _collect_registry_directory_fingerprints,
     _collect_registry_tree_fingerprints,
     _collect_registry_tree_fingerprints_uncached,
-)
-from dev.registry.compiler.verdict_cache import (
-    certify_registry_validation,
-    compute_verdict_key,
-    registry_validation_is_certified,
-    verdict_cache_path,
 )
 from dev.registry.compiler.identity import (
     RegistryIdentity,
@@ -53,7 +48,12 @@ from dev.registry.compiler.loader_fingerprints import (
     _registry_fingerprint_cache,
     clear_fingerprint_cache,
 )
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from dev.registry.compiler.verdict_cache import (
+    certify_registry_validation,
+    compute_verdict_key,
+    registry_validation_is_certified,
+    verdict_cache_path,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -79,6 +79,7 @@ _CHILD_PROGRAM = """
 import os
 from pathlib import Path
 
+from cadrumo.domain.calculations.registry.loader import load_registry_tree
 from dev.registry.compiler.loader import load_registry_tree
 from dev.registry.compiler.loader_cache import registry_disk_cache_dir
 
@@ -132,9 +133,9 @@ def _modelo_text(number: str) -> str:
 _SUPPORTED_FILING_YEARS_TEXT = (
     "[supported_filing_years]\nyears = [2025]\n\n"
     "[sociedades_annual_manual_coverage]\n"
-    "dispositions = [{ year = 2025, status = \"unpublished\", "
-    "official_locator = \"https://example.com/manuals\", observed_at = 2026-09-10, "
-    "acquisition_condition_key = \"application.registry.manuals.coverage.recheck_aeat_publication\" }]\n"
+    'dispositions = [{ year = 2025, status = "unpublished", '
+    'official_locator = "https://example.com/manuals", observed_at = 2026-09-10, '
+    'acquisition_condition_key = "application.registry.manuals.coverage.recheck_aeat_publication" }]\n'
 )
 
 

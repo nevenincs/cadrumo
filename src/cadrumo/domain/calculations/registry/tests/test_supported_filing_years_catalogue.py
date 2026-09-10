@@ -6,13 +6,13 @@ from datetime import date
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compile_validated_authority
+from dev.registry.compiler.loader import load_registry_tree, load_shared_catalogues
 from pydantic import ValidationError
 
 from .....core.modelo import Modelo
 from .....core.resources.bundled_data import bundled_path
-from ..authority import ValidatedRegistryAuthority
 from ..errors import RegistryLoadError
-from ..loader import load_registry_tree, load_shared_catalogues
 from ..schema import (
     SociedadesAnnualManualCoverageDisposition,
     SociedadesAnnualManualCoverageStatus,
@@ -72,10 +72,7 @@ def test_sociedades_manual_coverage_disposition_refuses_ambiguous_states(
 
 
 def test_m303_annual_orden_projection_years_are_driven_by_registry_catalogue() -> None:
-    authority = ValidatedRegistryAuthority.load(
-        bundled_path("registry", "aeat"),
-        source_root=bundled_path(),
-    )
+    authority = compile_validated_authority(bundled_path("registry", "aeat"), bundled_path())
     catalogue = authority.catalogues.supported_filing_years
     assert catalogue is not None
 

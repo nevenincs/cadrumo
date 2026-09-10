@@ -45,11 +45,9 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n import lookup_translation_entry
-from cadrumo.domain.calculations.registry.authority import (
-    ValidatedRegistryAuthority,
-    bundled_authority,
-)
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..._paths import UTF_8
 from ._miss_rate import load_committed_relevance
@@ -320,7 +318,7 @@ def compute_casilla_coverage_census(
         :class:`CasillaCoverageKind` order.
     """
     resolved_relevance = relevance if relevance is not None else load_committed_relevance()
-    resolved_authority = authority if authority is not None else bundled_authority()
+    resolved_authority = authority if authority is not None else compiled_bundled_authority()
     if casilla_records is None:
         resolved_casillas = project_casilla_search_records(resolved_authority)[0]
     else:
@@ -400,7 +398,7 @@ def compute_coverage_report(
     Returns:
         A deterministic :class:`TerminologyCoverageReport`.
     """
-    resolved_authority = authority if authority is not None else bundled_authority()
+    resolved_authority = authority if authority is not None else compiled_bundled_authority()
     resolved_relevance = relevance if relevance is not None else load_committed_relevance()
     resolved_cards = concept_cards if concept_cards is not None else project_concept_cards()[0]
     resolved_casillas = (

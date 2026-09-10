@@ -12,7 +12,10 @@ from reportlab.pdfgen import canvas
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from cadrumo.domain.calculations.registry.binding_selector_utils import BindingFixedExportSelector, binding_export_selector
+from cadrumo.domain.calculations.registry.binding_selector_utils import (
+    BindingFixedExportSelector,
+    binding_export_selector,
+)
 from cadrumo.domain.calculations.registry.export import resolve_export_layout
 from cadrumo.domain.calculations.registry.record_design import (
     extract_record_design,

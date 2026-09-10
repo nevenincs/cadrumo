@@ -61,6 +61,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
 from cadrumo.core.directory_scan import scan_directory
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .._paths import REPO_ROOT, UTF_8
 from ._locale_chrome import docs_chrome
@@ -561,10 +562,9 @@ def compile_schema(
         does not resolve is simply absent from the map, and its entry renders
         from the record alone.
     """
-    from cadrumo.domain.calculations.registry.authority import bundled_authority
     from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
 
-    resolved = authority if authority is not None else bundled_authority()
+    resolved = authority if authority is not None else compiled_bundled_authority()
     modelos = {modelo.id: modelo for modelo in resolved.modelos}
 
     facts: dict[tuple[str, str], CasillaFacts] = {}

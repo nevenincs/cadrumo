@@ -6,16 +6,17 @@ from dataclasses import replace
 
 import pytest
 
-from dev.registry.conformance.coverage import build_construct_evidence_ledger
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.conformance.coverage import build_construct_evidence_ledger
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_validated_authority_rejects_invalid_source_ref_on_model_copy() -> None:
     """An invalid source id fails through the public validated-authority flow."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo = authority.modelo("130")
     assert authority.validate_modelo(modelo.id) is modelo
 
@@ -44,7 +45,7 @@ def test_validated_authority_rejects_invalid_source_ref_on_model_copy() -> None:
 
 def test_construct_evidence_classifies_incomplete_model_copy_refs_as_unresolved() -> None:
     """An incomplete construct row remains visible and is marked unresolved."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     snapshot = authority.snapshot("130", filing_year=2026, period="1T")
     formula = snapshot.revision.formulas[0]
     mutated_formula = formula.model_copy(update={"source_refs": ()})

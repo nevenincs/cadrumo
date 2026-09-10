@@ -56,7 +56,6 @@ from pydantic import BaseModel, Field
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import CrossReferenceId, OracleId
 from cadrumo.domain.calculations.registry.remote_state_guard import (
@@ -65,6 +64,7 @@ from cadrumo.domain.calculations.registry.remote_state_guard import (
 )
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .external_grounding import RentaWebOpenReplayPayload
 from .external_oracle_corpus import ExternalOracleCorpus
@@ -304,7 +304,7 @@ def verify_bundled_renta_web_open_replays() -> RentaWebOpenReplayParityReport:
     Returns:
         The :class:`RentaWebOpenReplayParityReport` for the repository corpus.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     authority.validate_registry()
     return build_renta_web_open_replay_parity(authority.modelos, registry_validated=True)
 

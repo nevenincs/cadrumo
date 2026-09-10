@@ -13,8 +13,9 @@ from typing import override
 import pytest
 
 from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..analysis.modelo_capability import capability_census, screen_authority
 
@@ -23,7 +24,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 @pytest.fixture(scope="module")
 def authority() -> ValidatedRegistryAuthority:
-    return bundled_authority()
+    return compiled_bundled_authority()
 
 
 @pytest.fixture(scope="module")
@@ -196,12 +197,11 @@ def test_the_two_deadline_conditions_never_both_fire_on_one_revision() -> None:
     another condition for - and which they did, on modelos 151 and 165, until
     measured.
     """
-    from cadrumo.domain.calculations.registry.authority import bundled_authority
 
     from ..analysis.corpus import bundled_modelo_ids
     from ..analysis.modelo_capability import screen_authority
 
-    findings = screen_authority(bundled_authority(), bundled_modelo_ids())
+    findings = screen_authority(compiled_bundled_authority(), bundled_modelo_ids())
     none_at_all = {(f.modelo, f.revision) for f in findings if f.kind == "files_here_without_deadline"}
     some_years = {(f.modelo, f.revision) for f in findings if f.kind == "files_here_for_years_it_cannot_date"}
     assert none_at_all and some_years, "one of the two conditions is empty, so this proves nothing"
@@ -217,13 +217,12 @@ def test_the_year_gap_condition_is_the_filing_grade_subset_of_the_temporal_scree
     that it narrows rather than duplicates - a screen reporting the same set
     would be one fact under two names.
     """
-    from cadrumo.domain.calculations.registry.authority import bundled_authority
 
     from ..analysis.corpus import bundled_modelo_ids
     from ..analysis.modelo_capability import screen_authority
     from ..analysis.temporal_site_agreement import screen_authority as temporal_screen
 
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo_ids = bundled_modelo_ids()
     theirs = {
         (f.modelo, f.revision)
@@ -246,13 +245,12 @@ def test_the_undated_years_come_from_the_temporal_screen() -> None:
     finding PROSE, which is a second implementation in disguise and would have
     returned nothing at all had the wording changed.
     """
-    from cadrumo.domain.calculations.registry.authority import bundled_authority
 
     from ..analysis.corpus import bundled_modelo_ids
     from ..analysis.modelo_capability import capability_census
     from ..analysis.temporal_site_agreement import undated_window_years
 
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo_ids = bundled_modelo_ids()
     checked = 0
     for row in capability_census(authority, modelo_ids):

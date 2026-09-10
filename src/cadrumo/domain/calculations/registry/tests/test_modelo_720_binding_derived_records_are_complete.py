@@ -30,9 +30,9 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compile_validated_authority
 
 from .....core.resources.bundled_data import bundled_path
-from ..authority import ValidatedRegistryAuthority
 from ..record_design import extract_record_design
 from ._registry_schema_support import _committed_modelo
 
@@ -53,7 +53,7 @@ _RECORD_TO_DESIGN_SHEET = {
 
 
 def _snapshot_revision():
-    authority = ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
+    authority = compile_validated_authority(bundled_path("registry", "aeat"), bundled_path())
     snapshot = authority.snapshot("720", filing_year=_FILING_YEAR, period="0A")
     assert snapshot.revision.id == _REVISION_ID, (
         f"filing year {_FILING_YEAR} resolves to revision {snapshot.revision.id!r}, not {_REVISION_ID!r}; "

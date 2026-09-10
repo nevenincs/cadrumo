@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .._runner import load_scenario, run_golden_scenario
 from ._real_cli_support import valid_cli_commands
@@ -72,7 +72,9 @@ def test_provenance_dimension_is_not_vacuous() -> None:
     # pass is grounded, not an empty-set tautology.
 
     scenario = load_scenario(_SCENARIO)
-    snapshot = bundled_authority().snapshot(scenario.modelo, filing_year=scenario.filing_year, period=scenario.period)
+    snapshot = compiled_bundled_authority().snapshot(
+        scenario.modelo, filing_year=scenario.filing_year, period=scenario.period
+    )
     casillas = snapshot.revision.casillas
     rows = list(casillas.values()) if isinstance(casillas, dict) else list(casillas)
     assert rows, "modelo-130 revision has no casillas to ground"
@@ -129,7 +131,9 @@ def test_verification_dimension_is_grounded_and_not_vacuous() -> None:
 
     scenario = load_scenario(_SCENARIO)
     revision = (
-        bundled_authority().snapshot(scenario.modelo, filing_year=scenario.filing_year, period=scenario.period).revision
+        compiled_bundled_authority()
+        .snapshot(scenario.modelo, filing_year=scenario.filing_year, period=scenario.period)
+        .revision
     )
     expectations = list(revision.verification_expectations)
     assert expectations, "modelo-130 revision declares no verification contract"

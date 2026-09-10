@@ -9,12 +9,13 @@ from __future__ import annotations
 
 from typing import override
 
-from dev.registry.maintenance_support import LiveParityCatalogue, OracleEnvironment
-from dev.registry.parity.live_parity import OracleSurfaceKind
 from pydantic import AnyUrl
 
 from cadrumo.core.config import Settings
 from cadrumo.domain.calculations.registry.ids import OracleId
+from dev.registry.maintenance_support import LiveParityCatalogue, OracleEnvironment
+from dev.registry.parity.live_parity import OracleSurfaceKind
+
 from .checker_oracle import CheckerDriver, CheckerOperationPlan, CheckerOracle
 
 ORACLE_ID: OracleId = "aeat-nif-iva-checker"

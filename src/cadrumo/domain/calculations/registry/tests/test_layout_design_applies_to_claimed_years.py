@@ -92,6 +92,7 @@ from collections.abc import Collection, Mapping
 from datetime import date
 
 import pytest
+from dev.registry.compiler.authority import compile_validated_authority
 
 from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
@@ -106,7 +107,7 @@ _OPEN_ENDED_HORIZON = 2026
 
 
 def _authority() -> ValidatedRegistryAuthority:
-    return ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
+    return compile_validated_authority(bundled_path("registry", "aeat"), bundled_path())
 
 
 def _record_design_windows() -> dict[str, tuple[int | None, int | None]]:

@@ -22,6 +22,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.loader import load_registry_tree
 
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
@@ -34,7 +35,6 @@ from ....domain.calculations.registry._m347_threshold import (
 from ....domain.calculations.registry.export import derive_export_layouts_from_bindings
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.invoice_bindings import InvoiceObservation, resolve_invoice_binding_row_values
-from ....domain.calculations.registry.loader import load_registry_tree
 from ....domain.calculations.registry.schema_exports import ExportRecordDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

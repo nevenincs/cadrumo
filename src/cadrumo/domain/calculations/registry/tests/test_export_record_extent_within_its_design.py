@@ -51,6 +51,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compile_validated_authority
 
 from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
@@ -63,7 +64,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _authority() -> ValidatedRegistryAuthority:
-    return ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
+    return compile_validated_authority(bundled_path("registry", "aeat"), bundled_path())
 
 
 def _record_design_sources() -> dict[str, Path]:

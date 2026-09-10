@@ -15,8 +15,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path as _bundled_path
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from dev.registry.compiler.authority import compile_validated_authority
 
 from ..filing_export_proof import (
     build_pinned_conformance_evidence,
@@ -42,7 +42,7 @@ def test_the_shipped_pin_materializes_against_the_current_generated_tree() -> No
     coordinate = vectors[0].evidence.coordinate
     assert (str(coordinate.modelo), str(coordinate.revision)) == ("200", "2025-y-siguientes")
 
-    authority = ValidatedRegistryAuthority.load(_REGISTRY_ROOT, source_root=_bundled_path())
+    authority = compile_validated_authority(_REGISTRY_ROOT, _bundled_path())
     enrollment = derive_filing_export_conformance_enrollment(
         workspace_root=Path.cwd(),
         registry_root=_REGISTRY_ROOT,

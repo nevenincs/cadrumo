@@ -39,10 +39,10 @@ from itertools import pairwise
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError
-from dev.registry.compiler.loader import load_registry_tree
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.compiler.loader import load_registry_tree
 
 from ..temporal_coverage import compose_temporal_coverage
 
@@ -50,7 +50,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _authority():
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     authority.validate_registry()
     return authority
 

@@ -16,7 +16,6 @@ from threading import Barrier, Event, Lock, Thread
 from typing import Final, cast
 
 import pytest
-from dev.registry.maintenance_support import reset_registry_caches
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.directory_scan import scan_directory
@@ -27,12 +26,13 @@ from cadrumo.domain.calculations.registry.authority import (
     RegistryAuthorityCurrentCoordinate,
     RegistryAuthorityProjection,
     ValidatedRegistryAuthority,
-    bundled_authority,
 )
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from cadrumo.tests import REPO_ROOT
+from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.maintenance_support import reset_registry_caches
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -283,7 +283,7 @@ def test_native_capture_refuses_a_reset_stale_coordinate_in_its_same_domain(
     )
 
     reset_registry_caches()
-    current = bundled_authority().read_current_coordinate()
+    current = compiled_bundled_authority().read_current_coordinate()
 
     assert stale_capture.comparison_domain == current.comparison_domain
     assert stale_capture.generation != current.generation
@@ -593,7 +593,7 @@ def test_native_capture_rejects_an_old_authority_after_reset_and_refuses_aba_reu
     with pytest.raises(RegistrySnapshotError, match="invalidated by cache reset"):
         registry_authority.read_current_coordinate()
 
-    reloaded = bundled_authority()
+    reloaded = compiled_bundled_authority()
     after_reset = reloaded.capture_law_selected_projection(
         _MODEL0_ID,
         filing_year=_FILING_YEAR,

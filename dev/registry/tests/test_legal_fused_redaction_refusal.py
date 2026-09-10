@@ -37,6 +37,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from ..compiler.legal_grounding import verify_legal_reference, verify_legal_reference_grounding
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
+
 from ._catalogue_verification_support import _registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

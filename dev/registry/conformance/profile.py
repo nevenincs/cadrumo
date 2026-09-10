@@ -97,13 +97,8 @@ from datetime import date
 from pathlib import Path
 from typing import Literal
 
-from dev.registry.maintenance_support import UnattributedOraclePayload as _UnattributedOraclePayload
-from dev.registry.maintenance_support import (
-    load_bundled_external_oracle_inventory as _load_bundled_external_oracle_inventory,
-)
 from pydantic import BaseModel, Field, NonNegativeInt
 
-from .errors import RegistryPreconditionCondition, registry_terminal_refusal
 from cadrumo.core.casilla_id import CasillaId as _CasillaId
 from cadrumo.core.export_layout_format import ExportLayoutFormat as _ExportLayoutFormat
 from cadrumo.core.filing_year import FilingYear
@@ -126,12 +121,6 @@ from cadrumo.domain.calculations.registry.ids import ModeloId as _ModeloId
 from cadrumo.domain.calculations.registry.ids import RelationId as _RelationId
 from cadrumo.domain.calculations.registry.ids import RevisionId as _RevisionId
 from cadrumo.domain.calculations.registry.ids import SourceRefId as _SourceRefId
-from dev.registry.compiler.identity import resolve_registry_identity as _resolve_registry_identity
-from dev.registry.compiler.authority import compile_validated_authority as _compile_validated_authority
-from dev.registry.compiler.loader import (
-    collect_registry_tree_fingerprints as _collect_registry_tree_fingerprints,
-    load_registry_tree as _load_registry_tree,
-)
 from cadrumo.domain.calculations.registry.schema import CasillaProducerKind as _CasillaProducerKind
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition as _ModeloDefinition
 from cadrumo.domain.calculations.registry.schema import ModeloRevision as _ModeloRevision
@@ -144,7 +133,38 @@ from cadrumo.domain.calculations.registry.schema_references import SourceReferen
 from cadrumo.domain.calculations.registry.support_matrix import ModeloEntry as _ModeloEntry
 from cadrumo.domain.calculations.registry.support_matrix import build_support_matrix as _build_support_matrix
 from cadrumo.domain.calculations.registry.support_matrix import revision_capability_probe as _revision_capability_probe
-from cadrumo.domain.calculations.registry.validate_registry_scope import validate_registry_scope as _validate_registry_scope
+from dev.registry.compiler.authority import compile_validated_authority as _compile_validated_authority
+from dev.registry.compiler.identity import resolve_registry_identity as _resolve_registry_identity
+from dev.registry.compiler.loader import (
+    collect_registry_tree_fingerprints as _collect_registry_tree_fingerprints,
+)
+from dev.registry.compiler.loader import (
+    load_registry_tree as _load_registry_tree,
+)
+from dev.registry.compiler.registry_scope import (
+    validate_registry_scope as _validate_registry_scope,
+)
+from dev.registry.maintenance_support import UnattributedOraclePayload as _UnattributedOraclePayload
+from dev.registry.maintenance_support import (
+    load_bundled_external_oracle_inventory as _load_bundled_external_oracle_inventory,
+)
+
+from .coverage import REQUIRED_COVERAGE_TIERS as _REQUIRED_COVERAGE_TIERS
+from .coverage import ConstructEvidenceLedger as _ConstructEvidenceLedger
+from .coverage import ConstructEvidenceRow as _ConstructEvidenceRow
+from .coverage import CoverageAuthorityScope as _CoverageAuthorityScope
+from .coverage import EvidenceTierCoverageGate as _EvidenceTierCoverageGate
+from .coverage import ModelLawCoverageLedger as _ModelLawCoverageLedger
+from .coverage import RegistryConstructEvidenceAudit as _RegistryConstructEvidenceAudit
+from .coverage import RegistryCoverageAudit as _RegistryCoverageAudit
+from .coverage import RequiredCoverageTier as _RequiredCoverageTier
+from .coverage import (
+    audit_registry_construct_evidence as _audit_registry_construct_evidence,
+)
+from .coverage import (
+    audit_registry_model_law_coverage as _audit_registry_model_law_coverage,
+)
+from .errors import RegistryPreconditionCondition, registry_terminal_refusal
 from .external_grounding import (
     RegistryExternalGroundingAudit as _RegistryExternalGroundingAudit,
 )
@@ -161,21 +181,6 @@ from .registry_classification_coherence import (
 )
 from .registry_classification_coherence import (
     build_classification_coherence_audit as _build_classification_coherence_audit,
-)
-from .coverage import REQUIRED_COVERAGE_TIERS as _REQUIRED_COVERAGE_TIERS
-from .coverage import ConstructEvidenceLedger as _ConstructEvidenceLedger
-from .coverage import ConstructEvidenceRow as _ConstructEvidenceRow
-from .coverage import CoverageAuthorityScope as _CoverageAuthorityScope
-from .coverage import EvidenceTierCoverageGate as _EvidenceTierCoverageGate
-from .coverage import ModelLawCoverageLedger as _ModelLawCoverageLedger
-from .coverage import RegistryConstructEvidenceAudit as _RegistryConstructEvidenceAudit
-from .coverage import RegistryCoverageAudit as _RegistryCoverageAudit
-from .coverage import RequiredCoverageTier as _RequiredCoverageTier
-from .coverage import (
-    audit_registry_construct_evidence as _audit_registry_construct_evidence,
-)
-from .coverage import (
-    audit_registry_model_law_coverage as _audit_registry_model_law_coverage,
 )
 
 __all__ = [

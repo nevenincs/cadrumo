@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ...._paths import REPO_ROOT
 from .._resolution import ChunkHit, TargetResolver
@@ -94,7 +94,7 @@ def test_normatives_source_resolves_to_the_generated_legal_anchor(resolver: Targ
     from ..search_record import SearchRecordKind
 
     # ley-37-1992:art-104 has corpus_ref corpus/normatives/html/ley-37-1992-art-104.html#a104
-    catalogue = bundled_authority().catalogues.legal
+    catalogue = compiled_bundled_authority().catalogues.legal
     legal_id = "ley-37-1992:art-104"
     entry = catalogue[legal_id]
     path = "src/cadrumo/_data/corpus/normatives/html/ley-37-1992-art-104.html"
@@ -121,7 +121,7 @@ def test_normatives_target_uses_generated_legal_reference_and_preserves_permalin
     from ...legal_reference import legal_reference_target
     from .._resolution import ResolvedTarget
 
-    catalogue = bundled_authority().catalogues.legal
+    catalogue = compiled_bundled_authority().catalogues.legal
     legal_id = "ley-37-1992:art-104"
     entry = catalogue[legal_id]
     path = "src/cadrumo/_data/corpus/normatives/html/ley-37-1992-art-104.html"
@@ -175,7 +175,7 @@ def test_precise_legal_toml_range_resolves_named_provision_and_preserves_boe_pro
 
     path = "src/cadrumo/_data/registry/aeat/legal/atribucion-rentas.toml"
     legal_id = "orden-hap-2250-2015:art-1"
-    entry = bundled_authority().catalogues.legal[legal_id]
+    entry = compiled_bundled_authority().catalogues.legal[legal_id]
     out = resolver.resolve(_hit(path, line_start=2, line_end=19))
 
     assert isinstance(out, ResolvedTarget)
