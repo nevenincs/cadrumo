@@ -9,7 +9,7 @@ from cadrumo.domain.calculations.registry._supplementary_orden import compile_su
 from cadrumo.domain.calculations.registry._validate import RegistryValidator
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-from cadrumo.domain.calculations.registry.identity import RegistryIdentity
+from .identity import RegistryIdentity
 from cadrumo.domain.iva.compilation_catalogues import compiling_catalogues
 
 from .convenio import load_convenio_authority, validate_convenio_legal_refs

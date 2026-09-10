@@ -13,7 +13,7 @@ from cadrumo.core.identity import SPANISH_TAX_ID_WIDTH, IdentityError, validate_
 from dev.registry.conformance.coverage import build_model_law_coverage_ledger
 from cadrumo.tests.registry_snapshot import build_snapshot
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from cadrumo.domain.calculations.registry._loader_internals import load_modelo_file
+from dev.registry.compiler._loader_internals import load_modelo_file
 from cadrumo.domain.calculations.registry._validate import RegistryValidator
 from cadrumo.domain.calculations.registry._validate_export_field_widths import DRAFT_ATTRIBUTE_CANONICAL_WIDTHS, validate_draft_field_slot_width
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority

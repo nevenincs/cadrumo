@@ -1,4 +1,4 @@
-"""Canonical registry-tree identity: the one answer to "which tree is this?".
+"""Development-only mutable registry-tree identity and publication receipts.
 
 Every consumer derives tree identity HERE and nowhere else -- the authority's
 in-process cache key, the loader's compiled-artefact key, the validation-verdict
@@ -51,9 +51,9 @@ from typing import override
 
 from pydantic import BaseModel
 
-from .... import __version__
-from ....core.external_constants import UTF_8_ENCODING
-from ....core.models import STRICT_FROZEN_CONFIG
+from cadrumo import __version__
+from cadrumo.core.external_constants import UTF_8_ENCODING
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from .loader_cache import is_bundled_registry_root
 
 FingerprintTuples = tuple[tuple[str, int, int, str], ...]

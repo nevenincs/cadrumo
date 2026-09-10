@@ -25,12 +25,12 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.loader import load_shared_catalogues
 
 from ....core.concepto_ingreso import ConceptoIngreso
 from ....core.period import Period
 from ....core.resources.bundled_data import bundled_path
 from ....core.tipos_actividad import TipoActividad
-from ....domain.calculations.registry.loader import load_legal_parameters_only
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.irpf_categories import IRPF_CATEGORY_ACTIVIDAD_ECONOMICA
 from ....domain.transactions.models import Transaction, TransactionCatalogue
@@ -108,7 +108,7 @@ def _coverage(*rows: Transaction):
 
 
 def _declared_concepts(parameter_id: str) -> frozenset[ConceptoIngreso]:
-    parameter = load_legal_parameters_only(bundled_path("registry", "aeat"))[parameter_id]
+    parameter = load_shared_catalogues(bundled_path("registry", "aeat")).parameters[parameter_id]
     return frozenset(ConceptoIngreso(token.strip()) for token in parameter.value.split(",") if token.strip())
 
 

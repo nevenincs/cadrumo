@@ -17,7 +17,7 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
 from dev.registry.conformance.coverage import build_model_law_coverage_ledger
 from cadrumo.tests.registry_snapshot import build_snapshot
-from cadrumo.domain.calculations.registry._loader_internals import load_modelo_file
+from dev.registry.compiler._loader_internals import load_modelo_file
 from cadrumo.domain.calculations.registry._validate import RegistryValidator
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError

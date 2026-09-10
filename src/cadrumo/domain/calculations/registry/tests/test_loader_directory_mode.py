@@ -17,11 +17,16 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.loader import (
+    load_modelo_directory,
+    load_modelo_source,
+    load_registry_tree,
+    load_shared_catalogues,
+)
 
 from .....core.directory_scan import scan_directory
 from .._loader_internals import load_modelo_file
 from ..errors import RegistryFailureCondition, RegistryLoadError, RegistryValidationError
-from ..loader import load_legal_parameters_only, load_modelo_directory, load_modelo_source, load_registry_tree
 from ..loader_cache import ModeloSource, discover_modelo_sources
 from ..loader_fingerprints import clear_fingerprint_cache
 from ._loader_directory_mode_support import (
@@ -380,7 +385,7 @@ def test_committed_registry_tree_loads_directory_modelos() -> None:
     assert all(source.layout == "directory" for source in sources)
 
 
-def test_legal_parameters_only_rejects_unknown_legal_refs(tmp_path: Path) -> None:
+def test_shared_catalogues_reject_unknown_legal_refs(tmp_path: Path) -> None:
     """The cycle-safe parameter loader must not return ungrounded legal refs."""
 
     legal_dir = tmp_path / "legal"
@@ -404,10 +409,10 @@ reviewed_by = "registry-test"
         RegistryLoadError,
         match=r"legal parameter 'test-rate' references unknown legal id 'ley-test:art-1'",
     ):
-        load_legal_parameters_only(tmp_path)
+        load_shared_catalogues(tmp_path)
 
 
-def test_legal_parameters_only_rejects_duplicate_legal_ids_across_fragments(tmp_path: Path) -> None:
+def test_shared_catalogues_reject_duplicate_legal_ids_across_fragments(tmp_path: Path) -> None:
     """The cycle-safe loader must preserve the full catalogue's unique legal authority."""
 
     legal_dir = tmp_path / "legal"
@@ -452,10 +457,10 @@ reviewed_by = "registry-test"
         RegistryLoadError,
         match=r"duplicate catalogue ids legal=\['ley-test:art-1'\] sources=\[\] parameters=\[\]",
     ):
-        load_legal_parameters_only(tmp_path)
+        load_shared_catalogues(tmp_path)
 
 
-def test_legal_parameters_only_rejects_noncanonical_parameter_key(tmp_path: Path) -> None:
+def test_shared_catalogues_reject_noncanonical_parameter_key(tmp_path: Path) -> None:
     """The TOML map key must pass the canonical ParameterId boundary."""
 
     legal_dir = tmp_path / "legal"
@@ -479,10 +484,10 @@ reviewed_by = "registry-test"
         RegistryLoadError,
         match=r"invalid legal parameter 'bad id with spaces'",
     ):
-        load_legal_parameters_only(tmp_path)
+        load_shared_catalogues(tmp_path)
 
 
-def test_legal_parameters_only_preserves_valid_parameter_key_identity(tmp_path: Path) -> None:
+def test_shared_catalogues_preserves_valid_parameter_key_identity(tmp_path: Path) -> None:
     """A valid TOML key is the identity of the loaded typed parameter."""
 
     legal_dir = tmp_path / "legal"
@@ -516,7 +521,7 @@ reviewed_by = "registry-test"
         encoding="utf-8",
     )
 
-    parameters = load_legal_parameters_only(tmp_path)
+    parameters = load_shared_catalogues(tmp_path).parameters
 
     assert tuple(parameters) == ("test-rate",)
     assert parameters["test-rate"].id == "test-rate"
