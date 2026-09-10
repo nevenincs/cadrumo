@@ -7,9 +7,10 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ...authority import ValidatedRegistryAuthority
-from ..providers import compile_registered_fact_providers
-from ..schema import GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
+from dev.registry.compiler import fact_providers
+from dev.registry.compiler.fact_providers import compile_registered_fact_providers
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -42,10 +43,19 @@ unit = "EUR"
     )
 
 
-def test_registered_providers_compile_an_identity_keyed_catalogue(tmp_path: Path) -> None:
+def _limit_to_authored_provider(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Isolate the one provider whose scratch declaration this test authors."""
+    authored = next(item for item in fact_providers.FACT_PROVIDER_REGISTRATIONS if item.provider_id == "authored-facts")
+    monkeypatch.setattr(fact_providers, "FACT_PROVIDER_REGISTRATIONS", (authored,))
+
+
+def test_registered_providers_compile_an_identity_keyed_catalogue(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     facts_dir = tmp_path / "facts"
     facts_dir.mkdir()
     _write_scalar_fact(facts_dir / "0001-test-threshold.toml")
+    _limit_to_authored_provider(monkeypatch)
 
     catalogue = compile_registered_fact_providers(tmp_path)
 
@@ -53,10 +63,13 @@ def test_registered_providers_compile_an_identity_keyed_catalogue(tmp_path: Path
     assert catalogue.facts["test.threshold"].fact_id == "test.threshold"
 
 
-def test_catalogue_refuses_a_key_that_differs_from_semantic_identity(tmp_path: Path) -> None:
+def test_catalogue_refuses_a_key_that_differs_from_semantic_identity(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     facts_dir = tmp_path / "facts"
     facts_dir.mkdir()
     _write_scalar_fact(facts_dir / "0001-test-threshold.toml")
+    _limit_to_authored_provider(monkeypatch)
     fact = compile_registered_fact_providers(tmp_path).facts["test.threshold"]
 
     with pytest.raises(ValidationError, match="does not match fact_id"):

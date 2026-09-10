@@ -6,9 +6,9 @@ from pathlib import Path
 
 import pytest
 
-from ...errors import RegistryLoadError
-from ..loader import load_governed_fact_file, load_governed_facts
-from ..schema import GovernedFactFamily
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFactFamily
+from dev.registry.compiler.fact_loader import load_governed_fact_file, load_governed_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

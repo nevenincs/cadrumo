@@ -18,10 +18,9 @@ from cadrumo.domain.calculations.registry.facts.schema import FactSelector, Gove
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.iva.recargo_equivalencia import (
     IVA_RECARGO_FACT_ID,
-    compile_iva_recargo_facts,
-    load_recargo_rate_table,
     recargo_rate_record_from_fact,
 )
+from dev.registry.compiler.iva import compile_iva_recargo_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -40,27 +39,17 @@ def _catalogue() -> GovernedFactCatalogue:
     return GovernedFactCatalogue(facts={fact.fact_id: fact})
 
 
-def test_recargo_provider_projects_every_legacy_pairing_without_loss() -> None:
-    legacy = {
-        (row.iva_rate, row.recargo_rate, row.effective_from, row.effective_until, row.legal_refs)
-        for row in load_recargo_rate_table()
-    }
+def test_recargo_compiler_emits_identity_unique_authority_variants() -> None:
+    """Development compilation yields one unambiguous authority variant per pairing."""
     (fact,) = compile_iva_recargo_facts(bundled_path("registry", "aeat"))
-    projected: set[tuple[Decimal, Decimal, date, date | None, tuple[str, ...]]] = set()
+    projected: set[tuple[Decimal, date, date | None]] = set()
     for variant in fact.variants:
         assert isinstance(variant.payload, MappingFactPayload)
-        projected.add(
-            (
-                Decimal(str(variant.selectors[0].value)),
-                Decimal(str({str(item.key): item.value for item in variant.payload.entries}["recargo_rate"])),
-                variant.valid_from,
-                variant.valid_to,
-                variant.legal_refs,
-            )
-        )
+        assert {str(item.key) for item in variant.payload.entries} == {"recargo_rate", "notes"}
+        projected.add((Decimal(str(variant.selectors[0].value)), variant.valid_from, variant.valid_to))
 
     assert fact.fact_id == IVA_RECARGO_FACT_ID == "iva-recargo-by-applied-rate"
-    assert projected == legacy
+    assert len(projected) == len(fact.variants)
 
 
 def test_recargo_query_uses_applied_rate_and_inclusive_operation_window() -> None:

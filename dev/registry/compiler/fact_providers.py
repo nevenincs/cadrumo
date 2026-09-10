@@ -11,10 +11,11 @@ from typing import Protocol
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
-from .loader_cache import toml_file_fingerprint
-from .loader_fingerprints import RegistryPathFingerprints
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from dev.registry.compiler.fact_loader import is_governed_fact_filename, load_governed_facts
+
+from .loader_cache import toml_file_fingerprint
+from .loader_fingerprints import RegistryPathFingerprints
 
 __all__ = [
     "FACT_PROVIDER_REGISTRATIONS",
@@ -330,7 +331,7 @@ def _category_profile_provider_registration() -> FactProviderRegistration:
 
 
 def _modelo_parameter_projection_registration() -> FactProviderRegistration:
-    from cadrumo.domain.calculations.registry.facts.modelo_projections import (
+    from dev.registry.compiler.modelo_projections import (
         MODELO_PARAMETER_PROJECTION_PROVIDER_ID,
         compile_modelo_parameter_projection_facts,
     )

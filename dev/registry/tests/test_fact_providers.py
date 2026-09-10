@@ -6,15 +6,15 @@ from pathlib import Path
 
 import pytest
 
-from ...errors import RegistryValidationError
-from ..providers import (
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFact
+from dev.registry.compiler.fact_providers import (
     FACT_PROVIDER_REGISTRATIONS,
     FactProviderCompiler,
     FactProviderRegistration,
     registered_fact_provider_directories,
     validate_fact_provider_registrations,
 )
-from ..schema import GovernedFact
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -7,18 +7,18 @@ from decimal import Decimal
 
 import pytest
 
-from ......core.revision_review import RevisionReviewStatus
-from ...schema import ModeloDefinition
-from ...schema_base import DateAxis
-from ...schema_formula import ParameterDefinition
-from ..modelo_projections import (
+from cadrumo.core.revision_review import RevisionReviewStatus
+from cadrumo.domain.calculations.registry.facts.resolution import ScalarFactQuery
+from cadrumo.domain.calculations.registry.facts.schema import FactSelector, ScalarFactPayload
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_base import DateAxis
+from cadrumo.domain.calculations.registry.schema_formula import ParameterDefinition
+from dev.registry.compiler.fact_providers import FACT_PROVIDER_REGISTRATIONS
+from dev.registry.compiler.modelo_projections import (
     MODELO_PARAMETER_PROJECTION_PROVIDER_ID,
     ModeloParameterFact,
     compile_modelo_parameter_projection_facts,
 )
-from ..providers import FACT_PROVIDER_REGISTRATIONS
-from ..resolution import ScalarFactQuery
-from ..schema import FactSelector, ScalarFactPayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

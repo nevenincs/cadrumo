@@ -6,8 +6,8 @@ from datetime import date
 
 import pytest
 
-from ..schema import GovernedFact, GovernedFactCatalogue
-from ..validation import governed_fact_catalogue_failures
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
+from dev.registry.compiler.fact_validation import governed_fact_catalogue_failures
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -85,7 +85,7 @@ def test_validation_accepts_an_acyclic_ordered_overlap() -> None:
 
 
 def test_facts_package_initializer_is_an_inert_namespace_marker() -> None:
-    from .. import __dict__ as namespace
+    from cadrumo.domain.calculations.registry.facts import __dict__ as namespace
 
     assert "GovernedFact" not in namespace
     assert "ScalarFactPayload" not in namespace

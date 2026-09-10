@@ -10,7 +10,7 @@ from typing import Any
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.facts.modelo_projections import ModeloParameterFact
+from cadrumo.domain.calculations.registry.facts.modelo_parameter_fact import ModeloParameterFact
 from cadrumo.domain.calculations.registry.facts.schema import FactSelector
 from dev.registry.compiler.fact_providers import (
     FACT_PROVIDER_REGISTRATIONS,
