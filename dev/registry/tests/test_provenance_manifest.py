@@ -14,6 +14,7 @@ from cadrumo.core.filing_projection_ref import (
     M303ProrrataActivityProjectionRef,
 )
 from cadrumo.core.hashing import canonical_json_bytes
+from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
@@ -25,9 +26,11 @@ from ..pipeline.export_fragment_provenance import (
     EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION,
     EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION,
     ExportFieldDerivation,
+    ExportFieldVerdict,
     ExportFragmentOutputDigest,
     ExportFragmentProvenanceManifest,
     ExportFragmentTarget,
+    attach_field_verdicts,
     build_export_fragment_provenance_manifest,
     export_fragment_provenance_manifest_json_bytes,
     load_export_fragment_provenance_manifest,
@@ -700,3 +703,88 @@ def test_a_stored_manifest_spelling_an_undeclared_sign_position_as_null_is_not_c
 
     with pytest.raises(RegistryValidationError, match="not canonical"):
         load_export_fragment_provenance_manifest(with_null)
+
+
+def _amount_derivation(*, aeat_type: str, signed: bool) -> ExportFieldDerivation:
+    """One numeric field derived from a row the design types ``aeat_type``."""
+    base = _field_derivation()
+    casilla_id = validated_casilla_id("01", surface="provenance verdict test")
+    semantic_entry = base.semantic_entry.model_copy(
+        update={"kind": CasillaFieldKind.CASILLA, "casilla_id": casilla_id, "literal": None},
+    )
+    field = ExportFieldDefinition.model_validate(
+        {
+            "id": base.field.id,
+            "offset": base.field.offset,
+            "length": 11,
+            "kind": "casilla",
+            "casilla_id": casilla_id,
+            "data_type": "money",
+            "required": False,
+            "padding": "left_zero",
+            "justification": "right",
+            "signed": signed,
+            "legal_refs": base.field.legal_refs,
+            "source_refs": base.field.source_refs,
+        },
+    )
+    return base.model_copy(
+        update={
+            "parser_field": base.parser_field.model_copy(update={"aeat_type": aeat_type, "length": 11}),
+            "semantic_entry": semantic_entry,
+            "field": field,
+            "derivation_code": "numeric-decimal-v1",
+        },
+    )
+
+
+def test_a_field_agreeing_with_its_official_row_is_attested_as_agreeing() -> None:
+    (attested,) = attach_field_verdicts((_amount_derivation(aeat_type="N", signed=True),), {})
+
+    assert attested.verdict == ExportFieldVerdict(outcome="agrees")
+
+
+def test_a_constant_in_a_numerically_typed_slot_agrees_rather_than_diverging() -> None:
+    """The modelo-number slot is typed N and holds text; that is a design quirk, not a divergence."""
+    literal = _field_derivation().model_copy(
+        update={"parser_field": _field_derivation().parser_field.model_copy(update={"aeat_type": "N"})},
+    )
+
+    (attested,) = attach_field_verdicts((literal,), {})
+
+    assert attested.verdict == ExportFieldVerdict(outcome="agrees")
+
+
+def test_a_divergence_is_adjudicated_only_by_a_ruling_on_its_derivation() -> None:
+    divergent = _amount_derivation(aeat_type="N", signed=False)
+
+    (attested,) = attach_field_verdicts((divergent,), {"numeric-decimal-v1": "type_column_contradiction 999/2026"})
+
+    assert attested.verdict == ExportFieldVerdict(outcome="adjudicated", ruling="type_column_contradiction 999/2026")
+    with pytest.raises(RegistryValidationError, match="no ruling adjudicates"):
+        attach_field_verdicts((divergent,), {"numeric-integer-v1": "a ruling on another derivation"})
+
+
+def test_a_stored_verdict_cannot_claim_agreement_for_a_divergent_field() -> None:
+    """The verdict is recomputed on load, so a manifest cannot attest what its own rows contradict."""
+    divergent = _amount_derivation(aeat_type="Num", signed=True)
+
+    with pytest.raises(ValidationError, match="records verdict 'agrees'"):
+        ExportFieldDerivation.model_validate(
+            {**divergent.model_dump(), "verdict": {"outcome": "agrees", "ruling": None}},
+        )
+    with pytest.raises(ValidationError, match="records verdict 'adjudicated'"):
+        ExportFieldDerivation.model_validate(
+            {
+                **_amount_derivation(aeat_type="Num", signed=False).model_dump(),
+                "verdict": {"outcome": "adjudicated", "ruling": "an unneeded ruling"},
+            },
+        )
+
+
+def test_an_unattached_verdict_moves_no_attested_byte() -> None:
+    manifest = _manifest()
+    payload = export_fragment_provenance_manifest_json_bytes(manifest)
+
+    assert b'"verdict"' not in payload
+    assert load_export_fragment_provenance_manifest(payload) == manifest
