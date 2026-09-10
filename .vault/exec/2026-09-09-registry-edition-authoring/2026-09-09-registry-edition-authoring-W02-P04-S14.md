@@ -57,3 +57,5 @@ related:
 - The declarado record of modelo 347 is the only `binding_rows` record without `binding_record`, so its 18 row-mapped binding fields are the only edges derived through the record row mapping. Whether those back-references should exist is open for the export lane; it does not block this Step.
 - The check that casilla files differ only on their `export_refs` line had no standalone site; it lived inside the deleted writer module.
 - The code review is outstanding: the reviewer persona could not be launched from this session.
+
+- The export lane (REGISTRY-TYPE) reviewed the resolver and approved it. Their gates ran against the tree: 95 passed, exit 0, covering generated-tree reproduction, the modelo 200 own-sheet bindings, design sign positions, the hand-authored type column, design agreement, and the derivation tests. The orchestrating session re-ran the derivation, delta-publication and materialisation tests (23 passed) and `registry verify` (exit 0). Landed in c1df8e45a5.

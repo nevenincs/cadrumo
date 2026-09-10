@@ -11,7 +11,7 @@ related:
   - '[[2026-09-09-registry-edition-authoring-code-shape-and-blast-radius-reference]]'
 modified: '2026-09-10'
 body_schema: body-v2
-body_hash: 'sha256:cb69f857e3b015faa0d2e779a29d74ec2539f009c44e9b0be2abd6563e0c67c9'
+body_hash: 'sha256:ed0498229327a9624e5b224d6069632af2028cb42008ce0d42408d1362aab23f'
 ---
 
 # `registry-edition-authoring` plan
@@ -181,7 +181,7 @@ One format with an explicit predecessor, one reader, and the proof obligations t
 Move source references to the edition, make export references derived, and stop formula and binding identifiers embedding an edition key.
 
 - [x] `W02.P04.S51` - [M | opus-medium] Decide where an inherited row's generated export references are written, because publication refuses without an answer. The real declared-versus-generated comparison is not in any loader caller — it sits one call deeper, where the generated layout's addressed casillas are differenced against the identifiers read from the raw declaration files on disk. Under delta authoring a layout addressing an INHERITED casilla finds no file to write into, and publication fails loudly. That is the right failure mode, but it needs a decision rather than a discovery. Coordinate with the generator lane, which owns that module and has offered to retire it. Proof: a migrated modelo publishes, or refuses for a stated reason that is not this one.; `dev/registry/pipeline`.
-- [ ] `W02.P04.S14` - [L | opus-medium] Make export references a derived field: the loader computes them from the edition layout's own back-pointer and refuses an authored value. Delete the pipeline module that currently writes them onto casilla declarations. Proof: an authored value is refused; computed values match today's declarations byte for byte.; `src/cadrumo/domain/calculations/registry`.
+- [x] `W02.P04.S14` - [L | opus-medium] Make export references a derived field: the loader computes them from the edition layout's own back-pointer and refuses an authored value. Delete the pipeline module that currently writes them onto casilla declarations. Proof: an authored value is refused; computed values match today's declarations byte for byte.; `src/cadrumo/domain/calculations/registry`.
 - [x] `W02.P04.S13` - [M | opus-medium] Declare source references and orden references once on the edition, inherited by rows that state none. Proof: a row stating its own overrides; a row stating none inherits; the materialised row is unchanged from today.; `src/cadrumo/domain/calculations/registry`.
 - [ ] `W02.P04.S16` - [M | opus-medium] Resolve inherited formula and binding references through lineage against the successor edition's own declaration; an unresolvable reference is a validation failure, never an inherited pointer. Proof: a planted dangling reference is refused.; `src/cadrumo/domain/calculations/registry`.
 - [ ] `W02.P04.S15` - [M | sonnet-high] Remove the edition key from formula and binding identifiers by programmatic rewrite, with every reference updated in the same pass. Bounded rename, but references must not break. Proof: no identifier in these two families contains an edition key, and registry validation is clean.; `src/cadrumo/_data/registry/aeat/modelos`.
