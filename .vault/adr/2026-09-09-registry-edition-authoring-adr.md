@@ -175,14 +175,25 @@ It also makes the minimality screen non-vacuous: the denominator is every editio
 predecessor, so a single-edition modelo reports not-applicable rather than clean.
 
 **A predecessor may not be declared where the successor withholds by design.** An edition
-declaring a lower authority grade than its predecessor, or deliberately declaring only a header
-while refusing to state figures it cannot ground, must remain full-copy. Inheriting into such an
-edition would silently materialise rows the author explicitly withheld, converting an honest
-deferral into a complete-looking edition. This is real and present: one modelo declares nearly two
-thousand rows in one edition and two in the next, its own declaration recording that the sparse
-edition refuses to fabricate what it cannot ground. The minimality screen is blind to it — two
-stated rows match nothing inherited, so it reports clean — so this is a load-time refusal keyed on
-the declared grades, not a screen finding.
+declaring a lower authority grade than its predecessor withholds by design and must remain
+full-copy: inheriting into it would silently materialise rows it deliberately does not claim,
+converting an honest deferral into a complete-looking edition. The minimality screen is blind to
+it — a sparse edition's stated rows match nothing inherited, so it reports clean — so this is a
+load-time refusal keyed on the declared grades, not a screen finding. The one live instance is a
+successor that falls from filing to applicability grade because no exact positional design for its
+span is bundled.
+
+A sparse successor at an **equal** grade is not withholding and earns no declared field. The case
+that prompted the question — nearly two thousand rows in one edition and two in the next — was
+grounded against the official sources: the successor's form is approved in full by its Orden and
+its record design is published and bundled, so the sparse edition is an authoring backlog across a
+measured design re-layout, not a refusal to state figures. A "withholds by design" field would have
+nothing official to cite and would exist only to lock a gate. What protects that case today is that
+a predecessor is an explicit, reviewable declaration and that the round-trip gate fails a migration
+that materialises rows its full copy never had. That protection ends when a migration is accepted
+and does not cover a successor authored delta-first; a load-time guard against inheriting across a
+design re-layout, derived from the pinned record designs rather than authored, is the grounded
+option if that residual risk needs closing.
 
 **A printed box number is not unique within a modelo.** On the largest modelo in the corpus the
 same printed number appears on three different páginas of the same edition, carrying three
