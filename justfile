@@ -153,11 +153,17 @@ doctor-pip:
 # typically needs root/apt access; a non-root Linux box may need
 # `google-chrome-stable` pre-installed by an administrator, or rerun this
 # recipe with elevation. Verify the result with `just doctor-playwright`.
+#
+# The chrome channel is probed FIRST and installed only when it does not launch.
+# `playwright install chrome` reinstalls system Chrome through `sudo` every time,
+# even over a working install, and a CI runner never has sudo (the self-hosted
+# fleet provisions Chrome at host setup instead) - so an unconditional install
+# failed every Linux job on a runner whose Chrome was fine.
 [doc('Provision both Playwright browser channels the codebase needs (Chromium and the chrome channel).')]
 [group('setup')]
 setup-playwright:
     uv run --no-sync playwright install chromium
-    uv run --no-sync playwright install chrome
+    uv run --no-sync python -m dev.env.playwright_doctor --channel chrome || uv run --no-sync playwright install chrome
 
 # Verify the local environment is correctly provisioned with the CONFIGURED
 # Playwright browser channel (per `cadrumo_browser_channel`, default `chrome`)

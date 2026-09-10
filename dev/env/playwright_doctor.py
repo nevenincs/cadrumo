@@ -24,6 +24,7 @@ Exit codes:
 
 from __future__ import annotations
 
+import argparse
 import asyncio
 import sys
 
@@ -90,9 +91,22 @@ def run_doctor(*, channel: str | None = None, headless: bool = True) -> int:
     return 0
 
 
-def main() -> int:
-    """Run :func:`run_doctor` against the live configured channel."""
-    return run_doctor()
+def main(argv: list[str] | None = None) -> int:
+    """Run :func:`run_doctor` against the live configured channel, or ``--channel``.
+
+    ``--channel`` lets ``just setup-playwright`` ask whether a SPECIFIC channel
+    already launches before it reinstalls it: ``playwright install chrome``
+    reinstalls system Chrome through ``sudo`` unconditionally on Linux, which a
+    non-root CI runner cannot do even when Chrome is already installed.
+    """
+    parser = argparse.ArgumentParser(prog="python -m dev.env.playwright_doctor")
+    parser.add_argument(
+        "--channel",
+        default=None,
+        help="probe this Playwright channel instead of the configured one",
+    )
+    args = parser.parse_args(argv)
+    return run_doctor(channel=args.channel)
 
 
 if __name__ == "__main__":

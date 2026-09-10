@@ -12,7 +12,7 @@ import pytest
 
 from cadrumo.core.config import Settings
 
-from ..playwright_doctor import remediation_for_channel, run_doctor
+from ..playwright_doctor import main, remediation_for_channel, run_doctor
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -76,3 +76,15 @@ def test_run_doctor_defaults_to_the_live_configured_setting() -> None:
     assert Settings().cadrumo_browser_channel == "chrome"
     exit_code = run_doctor()
     assert exit_code == 0
+
+
+def test_main_probes_the_channel_named_on_the_command_line(capsys: pytest.CaptureFixture[str]) -> None:
+    """`--channel` overrides the configured channel, which `just setup-playwright` relies on.
+
+    The recipe asks whether `chrome` already launches before reinstalling it; a
+    flag that is parsed but ignored would probe the configured channel instead
+    and could skip an install that was needed.
+    """
+    exit_code = main(["--channel", "definitely-not-a-real-channel-xyz"])
+    assert exit_code == 1
+    assert "definitely-not-a-real-channel-xyz" in capsys.readouterr().err
