@@ -16,16 +16,14 @@ from pathlib import Path, PurePosixPath
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.directory_scan import iter_directory
 from cadrumo.core.link_safety import is_link_like
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.loader import (
-    load_modelo_directory,
-    load_registry_tree,
-)
+from cadrumo.domain.calculations.registry.identity import resolve_registry_identity
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from cadrumo.domain.calculations.registry.validate_registry_scope import validate_registry_scope
 from cadrumo.tests.registry_snapshot import build_snapshot
+from dev.registry.compiler.authority import compile_validated_authority
+from dev.registry.compiler.loader import collect_registry_tree_fingerprints, load_modelo_directory, load_registry_tree
 
 from ._export_tree import RenderedExportTree
 from ._tree_paths import require_existing_non_link
@@ -208,7 +206,11 @@ def _validated_target_snapshot(
     stale target by copying one into the witness.
     """
     if context.continuity_metadata_modelo_root is None:
-        authority = ValidatedRegistryAuthority.load(registry_root, source_root=source_root)
+        identity = resolve_registry_identity(
+            registry_root,
+            collect_fingerprints=collect_registry_tree_fingerprints,
+        )
+        authority = compile_validated_authority(registry_root, source_root, identity=identity)
         return authority.snapshot(
             modelo_id,
             filing_year=context.filing_year,

@@ -10,7 +10,7 @@ related:
   - '[[2026-09-10-data-provenance-consolidation-live-lane-map-reference]]'
 modified: '2026-09-10'
 body_schema: body-v2
-body_hash: 'sha256:2b67f9a081b8cfcdbe2bd31f99229f06aa33317a1bf4af375bbe9afd1b977430'
+body_hash: 'sha256:717308b2eefa1457d773d2b0702d4e1a62e8238dfe0fa139e5054b245c4c810e'
 ---
 
 # `data-provenance-consolidation` plan
@@ -102,7 +102,7 @@ Exercise the compiled catalog and all retained distinct quality contracts agains
 
 - [ ] `W04.P08.S23` - Verify catalog compilation classifies every shipped bundled data file exactly once; `src/cadrumo/domain/calculations/registry/tests/test_artifact_catalogue.py`.
 - [ ] `W04.P08.S24` - Verify real registry authority publication rejects divergent source bindings; `src/cadrumo/domain/calculations/registry/tests/test_catalogue_verification_record_design.py`.
-- [ ] `W04.P08.S25` - Verify record-design sync reproducibility and catalog-backed coverage without network writes; `dev/corpus/tests/test_record_design_support.py`.
+- [x] `W04.P08.S25` - Verify record-design sync reproducibility and catalog-backed coverage without network writes; `dev/corpus/tests/test_record_design_support.py`.
 - [ ] `W04.P08.S26` - Verify sidecar, export, normative-text, and calculation-oracle contracts remain distinct; `dev/docs/preprocess/tests/test_corpus_sidecar_freshness.py`.
 
 ## Parallelization

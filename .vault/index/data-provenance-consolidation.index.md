@@ -6,7 +6,7 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:2e5f11e191c77e90b3264d7d1fe15d8f43d14411b0e378633dce43121eccc16b'
+body_hash: 'sha256:e9430754ee90d5b8366e53ed92b9b77ba9281d5fa80910e41fae37f7e72d277a'
 related:
   - '[[2026-09-10-data-provenance-consolidation-W01-P01-S01]]'
   - '[[2026-09-10-data-provenance-consolidation-W01-P01-S02]]'
@@ -26,6 +26,10 @@ related:
   - '[[2026-09-10-data-provenance-consolidation-W03-P06-S16]]'
   - '[[2026-09-10-data-provenance-consolidation-W03-P06-S17]]'
   - '[[2026-09-10-data-provenance-consolidation-W03-P06-S18]]'
+  - '[[2026-09-10-data-provenance-consolidation-W03-P06-S19]]'
+  - '[[2026-09-10-data-provenance-consolidation-W03-P07-S20]]'
+  - '[[2026-09-10-data-provenance-consolidation-W03-P07-S21]]'
+  - '[[2026-09-10-data-provenance-consolidation-W03-P07-S22]]'
   - '[[2026-09-10-data-provenance-consolidation-adr]]'
   - '[[2026-09-10-data-provenance-consolidation-lane-inventory-research]]'
   - '[[2026-09-10-data-provenance-consolidation-live-lane-map-reference]]'
@@ -48,6 +52,10 @@ related:
   - '[[2026-09-10-data-provenance-consolidation-w03-p06-s16-off-host-projection-review-audit]]'
   - '[[2026-09-10-data-provenance-consolidation-w03-p06-s17-catalog-routing-review-audit]]'
   - '[[2026-09-10-data-provenance-consolidation-w03-p06-s18-support-tests-review-audit]]'
+  - '[[2026-09-10-data-provenance-consolidation-w03-p06-s19-derived-sidecar-review-audit]]'
+  - '[[2026-09-10-data-provenance-consolidation-w03-p07-s20-provenance-docs-review-audit]]'
+  - '[[2026-09-10-data-provenance-consolidation-w03-p07-s21-coverage-noop-review-audit]]'
+  - '[[2026-09-10-data-provenance-consolidation-w03-p07-s22-sidecar-dedup-review-audit]]'
 ---
 
 # `data-provenance-consolidation` feature index
@@ -80,6 +88,10 @@ Auto-generated index of all documents tagged with `#data-provenance-consolidatio
 - `2026-09-10-data-provenance-consolidation-w03-p06-s16-off-host-projection-review-audit` - `data-provenance-consolidation` audit: `w03 p06 s16 off host projection review`
 - `2026-09-10-data-provenance-consolidation-w03-p06-s17-catalog-routing-review-audit` - `data-provenance-consolidation` audit: `w03 p06 s17 catalog routing review`
 - `2026-09-10-data-provenance-consolidation-w03-p06-s18-support-tests-review-audit` - `data-provenance-consolidation` audit: `w03 p06 s18 support tests review`
+- `2026-09-10-data-provenance-consolidation-w03-p06-s19-derived-sidecar-review-audit` - `data-provenance-consolidation` audit: `w03 p06 s19 derived sidecar review`
+- `2026-09-10-data-provenance-consolidation-w03-p07-s20-provenance-docs-review-audit` - `data-provenance-consolidation` audit: `w03 p07 s20 provenance docs review`
+- `2026-09-10-data-provenance-consolidation-w03-p07-s21-coverage-noop-review-audit` - `data-provenance-consolidation` audit: `w03 p07 s21 coverage noop review`
+- `2026-09-10-data-provenance-consolidation-w03-p07-s22-sidecar-dedup-review-audit` - `data-provenance-consolidation` audit: `w03 p07 s22 sidecar dedup review`
 
 ### exec
 
@@ -101,6 +113,10 @@ Auto-generated index of all documents tagged with `#data-provenance-consolidatio
 - `2026-09-10-data-provenance-consolidation-W03-P06-S16` - Delete redundant off-host acquisition projection after exact manifest and registry catalog bindings exist
 - `2026-09-10-data-provenance-consolidation-W03-P06-S17` - Remove off-host loading, schema, and special authority routing after catalog parity
 - `2026-09-10-data-provenance-consolidation-W03-P06-S18` - Remove retired off-host-specific tests while retaining catalog-backed detector teeth
+- `2026-09-10-data-provenance-consolidation-W03-P06-S19` - Replace sync-only extracted-sidecar census with explicit catalog derivation records
+- `2026-09-10-data-provenance-consolidation-W03-P07-S20` - Restrict PROVENANCE documentation checks to readable audit attribution rather than identity admission
+- `2026-09-10-data-provenance-consolidation-W03-P07-S21` - Remove duplicated payload, metadata, and derivative classification from the retired coverage sweep
+- `2026-09-10-data-provenance-consolidation-W03-P07-S22` - Remove duplicate generic full-tree sidecar validation after shared validator parity
 
 ### plan
 

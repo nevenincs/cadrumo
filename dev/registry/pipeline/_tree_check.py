@@ -18,7 +18,7 @@ from cadrumo.domain.calculations.registry.errors import (
     RegistryError,
     RegistryValidationError,
 )
-from cadrumo.domain.calculations.registry.loader import load_modelo_directory
+from dev.registry.compiler.loader import load_modelo_directory
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
 
 from ._export_tree import ExportTreeTransportProfile, RenderedExportTree, render_complete_export_tree

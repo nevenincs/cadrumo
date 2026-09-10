@@ -35,7 +35,6 @@ from cadrumo.domain.calculations.registry.authority import (
     _authority_load_states,
     _authority_state_lock,
     _guard_authority_process,
-    collect_registry_identity_fingerprints,
 )
 from cadrumo.domain.calculations.registry.condition_mode import ConditionModeField
 from cadrumo.domain.calculations.registry.corpus_catalogue import (
@@ -60,9 +59,10 @@ from cadrumo.domain.calculations.registry.identity import (
     registry_identity_stamp_location,
 )
 from cadrumo.domain.calculations.registry.ids import CrossReferenceId, OracleId
-from cadrumo.domain.calculations.registry.loader import (
-    ModeloDefinition,
-    RegistryLoadError,
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from dev.registry.compiler.loader import (
+    collect_registry_tree_fingerprints as collect_registry_identity_fingerprints,
     load_modelo_directory,
     load_modelo_file,
 )
@@ -128,7 +128,7 @@ def reset_registry_caches(
     package exposes the whole reset rather than its parts.
     """
     _guard_authority_process()
-    from cadrumo.domain.calculations.registry.loader import _load_registry_tree_cached
+    from dev.registry.compiler.loader import _load_registry_tree_cached
     from cadrumo.domain.calculations.registry.loader_fingerprints import clear_fingerprint_cache
 
     lifecycle_observer.registry_cache_reset_requested()

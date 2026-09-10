@@ -314,6 +314,7 @@ def _configure_isolated_sync_check(
     (tmp_path / "manifest.json").write_text(json.dumps(aggregate), encoding="utf-8")
     monkeypatch.setattr(record_design_sync, "_CORPUS", tmp_path)
     monkeypatch.setattr(record_design_sync, "_REQUIRED", ())
+    monkeypatch.setattr(record_design_sync, "_UNATTESTED_CORPUS_FILES", ())
     monkeypatch.setattr(record_design_sync, "_EXTRACTION_SIDECAR_DERIVATIONS", ())
     monkeypatch.setattr(record_design_sync, "_load_manifests", lambda: manifests)
     monkeypatch.setattr(
@@ -356,6 +357,42 @@ def test_catalog_backed_sync_rejects_conflicting_acquisition_identity(
         record_design_sync.check()
 
     assert "modelo_999/files/02-orden.pdf" in str(failure.value)
+
+
+def _forbid_http_client(*_args: object, **_kwargs: object) -> object:
+    """Fail if an offline sync check attempts to create a network client."""
+    raise AssertionError("the offline record-design check must not use the network")
+
+
+def test_catalog_backed_sync_check_succeeds_without_constructing_a_network_client(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The catalog-backed local corpus path remains a wholly offline gate."""
+    manifests = _corpus_fixture(tmp_path)
+    _configure_isolated_sync_check(monkeypatch, tmp_path, manifests)
+    monkeypatch.setattr(record_design_sync.httpx, "Client", _forbid_http_client)
+
+    record_design_sync.check()
+
+
+def test_catalog_backed_sync_rejects_a_nonreproducible_stored_suffix_offline(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Identity admission cannot hide a filename the acquisition writer cannot recreate."""
+    manifests = _corpus_fixture(tmp_path)
+    original = tmp_path / "modelo_999" / "files" / "02-orden.pdf"
+    replacement = original.with_suffix(".xlsx")
+    original.rename(replacement)
+    manifests["999"]["artefacts"][1]["stored_path"] = replacement.relative_to(tmp_path / "modelo_999").as_posix()
+    _configure_isolated_sync_check(monkeypatch, tmp_path, manifests)
+    monkeypatch.setattr(record_design_sync.httpx, "Client", _forbid_http_client)
+
+    with pytest.raises(SystemExit, match="artefact is not reproducible from its declared URL") as failure:
+        record_design_sync.check()
+
+    failure_text = str(failure.value)
+    assert "modelo_999/files/02-orden.xlsx" in failure_text
+    assert "does not bind an official catalog identity" not in failure_text
 
 
 def test_named_sheet_text_is_catalogued_as_a_fresh_derivative(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

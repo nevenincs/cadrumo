@@ -78,8 +78,12 @@ def test_art_95_selector_resolution_retains_typed_fact_provenance() -> None:
     ("parameter_id", "expected_ref"),
     (
         (
-            "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrario-objetiva",
+            "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrarias-pesqueras",
             "rd-439-2007:art-110",
+        ),
+        (
+            "modelo-131:selector-m036-volumen-ingresos-agrario",
+            "orden-eha-672-2007:art-3",
         ),
         (
             "rd-439-2007-art-109:selector-m036-actividades-exencion-pago-fraccionado",
@@ -95,11 +99,11 @@ def test_non_art_95_activity_selectors_resolve_through_the_same_fact_authority(
     parameter_id: str,
     expected_ref: str,
 ) -> None:
-    selector = resolve_tipo_actividad_selector(parameter_id, effective_date=date(2025, 12, 31))
+    selector = resolve_tipo_actividad_selector(parameter_id, effective_date=date(2026, 4, 1))
 
     assert expected_ref in selector.legal_refs
     assert selector.authority_digest
-    assert tipo_actividad_code_set(parameter_id, effective_date=date(2025, 12, 31)) == frozenset(
+    assert tipo_actividad_code_set(parameter_id, effective_date=date(2026, 4, 1)) == frozenset(
         TipoActividad(token) for token in selector.payload.entities
     )
 

@@ -43,7 +43,7 @@ from cadrumo.core.hashing import canonical_json_bytes, hash_file
 from cadrumo.core.link_safety import is_link_like
 from cadrumo.core.locks import exclusive_file_lock
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.loader import load_modelo_directory
+from dev.registry.compiler.loader import load_modelo_directory
 
 from ..conformance.manager import reset_conformance_cache
 from ._casilla_export_refs import export_refs_by_casilla, write_generated_casilla_export_refs

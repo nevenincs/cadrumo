@@ -14,6 +14,8 @@ silently divergent second answer.
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from ....core.concepto_ingreso import INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE, ConceptoIngreso
@@ -26,7 +28,7 @@ from ..volumen_ingresos import counts_toward_volumen_de_ingresos
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _EXCLUDED_PARAM = "rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario"
-_ACTIVITY_PARAM = "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrario-objetiva"
+_ACTIVITY_PARAM = "modelo-131:selector-m036-volumen-ingresos-agrario"
 
 
 @pytest.mark.parametrize(
@@ -91,25 +93,25 @@ def test_the_registry_exclusion_set_agrees_with_the_typed_one() -> None:
     assert declared == INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE
 
 
-def test_the_art_110_activity_selector_is_not_the_art_95_one() -> None:
-    """The agrarian pago fraccionado selector is its own, and must stay its own.
+def test_the_modelo_131_activity_selector_is_not_the_art_95_one() -> None:
+    """The form-specific agrarian selector is its own, and must stay its own.
 
-    Art. 110.1.c) names *agrícolas, ganaderas, forestales o pesqueras* while art. 95
-    fixes no pesquera rate at all, so the two sets are not interchangeable even though
-    they overlap almost completely. Reusing the art. 95 agrícola/ganadera selector for
-    a Modelo 131 casilla is the specific mistake this asserts against: it carries no
-    forestal code, so a forestal filer's whole quarterly volume would vanish.
+    Modelo 131 instructions name agricultural, livestock, and forestry activity;
+    art. 95's agricultural/livestock set has no forestry code. Reusing it for a
+    Modelo 131 casilla would therefore drop a forestry filer's quarterly volume.
     """
-    art_110 = tipo_actividad_code_set(_ACTIVITY_PARAM)
-    art_95_agrarian = tipo_actividad_code_set("rirpf-art-95:selector-m036-actividades-agricolas-ganaderas")
+    m131 = tipo_actividad_code_set(_ACTIVITY_PARAM, effective_date=date(2026, 4, 1))
+    art_95_agrarian = tipo_actividad_code_set(
+        "rirpf-art-95:selector-m036-actividades-agricolas-ganaderas", effective_date=date(2026, 4, 1)
+    )
 
-    assert TipoActividad.B03_FORESTAL in art_110
+    assert TipoActividad.B03_FORESTAL in m131
     assert TipoActividad.B03_FORESTAL not in art_95_agrarian
-    assert art_110 != art_95_agrarian
-    assert art_95_agrarian < art_110
+    assert m131 != art_95_agrarian
+    assert art_95_agrarian < m131
 
 
-def test_pesquera_is_absent_and_that_is_the_form_talking_not_the_article() -> None:
+def test_pesquera_is_absent_because_the_form_is_narrower_than_article_110() -> None:
     """Modelo 131 is estimación objetiva, and pesca is not in the módulos regime.
 
     The article's wording is wider than this casilla. The AEAT Modelo 131
@@ -122,7 +124,7 @@ def test_pesquera_is_absent_and_that_is_the_form_talking_not_the_article() -> No
     modelling an activity this form cannot present -- and would then face the
     ``B04`` mejillón question that the current set deliberately never raises.
     """
-    declared = tipo_actividad_code_set(_ACTIVITY_PARAM)
+    declared = tipo_actividad_code_set(_ACTIVITY_PARAM, effective_date=date(2026, 4, 1))
 
     assert TipoActividad.B05_PESQUERA not in declared
     assert TipoActividad.B04_PRODUCCION_DE_MEJILLON not in declared

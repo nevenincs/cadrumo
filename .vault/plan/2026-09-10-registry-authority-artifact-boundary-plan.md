@@ -9,7 +9,7 @@ related:
   - '[[2026-09-10-registry-authority-artifact-boundary-research]]'
 modified: '2026-09-10'
 body_schema: body-v2
-body_hash: 'sha256:e999b5841a10d8b597fbb8762109cbfc444cd2e9810660d0ea61abfe387b3b44'
+body_hash: 'sha256:00542b2979038d7c6a3c7f294d110d5e774391359d3e5c793027f31d4bdc4578'
 ---
 
 # `registry-authority-artifact-boundary` plan
@@ -36,7 +36,7 @@ Define the versioned, digest-verified immutable authority representation and its
 
 Make development validation publish an artifact atomically without using runtime fallback semantics.
 
-- [ ] `W01.P02.S02` - Publish validated registry candidates as authority artifacts; `dev/registry/pipeline/`.
+- [x] `W01.P02.S02` - Publish validated registry candidates as authority artifacts; `dev/registry/pipeline/`.
 
 ## Wave `W02` - Artifact-only runtime
 

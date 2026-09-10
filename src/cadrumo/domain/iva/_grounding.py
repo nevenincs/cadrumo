@@ -52,7 +52,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ...core.hashing import content_hash_hex, sha256_file
-from ...core.resources.bundled_data import bundled_path
 from .errors import IvaCatalogueError
 
 if TYPE_CHECKING:
@@ -62,33 +61,23 @@ if TYPE_CHECKING:
     from ..calculations.registry.schema_references import LegalReference, SourceReference
 
 
-def registry_catalogues(
-    *,
-    registry_root: Path | None = None,
-    source_root: Path | None = None,
-) -> tuple[Mapping[str, LegalReference], Mapping[str, SourceReference], Path]:
-    """Return the legal and source catalogues, with the root they resolve against.
+def registry_catalogues() -> tuple[Mapping[str, LegalReference], Mapping[str, SourceReference], Path]:
+    """Return catalogues from the signed runtime authority.
 
-    A tree that cannot be loaded raises the registry loader's own error
-    untouched. Wrapping it in an IVA error here would replace a diagnostic
-    naming the offending file and line with one naming this module, which is
-    the wrong end of the problem.
+    The artifact is the only runtime source of catalogue facts. Its source root
+    remains the package data root solely for resolving immutable cited corpus
+    evidence; IVA cannot substitute a mutable registry root.
 
     Returns:
         The legal catalogue keyed by reference id, the source catalogue keyed by
         source id, and the bundled root every ``corpus_ref`` is relative to.
     """
-    # Keep this import local: the registry's binding modules consume the public
-    # IVA facade, and these loaders are part of that facade, so a module-level
-    # import here would close an import cycle.
-    from ..calculations.registry.loader import load_shared_catalogues
+    # Local import keeps the public IVA facade outside the registry's binding
+    # import cycle.
+    from ..calculations.registry.authority import bundled_authority
 
-    resolved_source_root = bundled_path() if source_root is None else source_root.resolve()
-    resolved_registry_root = (
-        resolved_source_root / "registry" / "aeat" if registry_root is None else registry_root.resolve()
-    )
-    catalogues = load_shared_catalogues(resolved_registry_root)
-    return catalogues.legal, catalogues.sources, resolved_source_root
+    authority = bundled_authority()
+    return authority.catalogues.legal, authority.catalogues.sources, authority.source_root
 
 
 def legal_evidence_fingerprints(

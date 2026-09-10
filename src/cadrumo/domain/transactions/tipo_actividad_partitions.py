@@ -87,7 +87,8 @@ _GOVERNED_ACTIVITY_SELECTOR_IDS: Final[frozenset[str]] = frozenset(
         *_ART_95_SELECTORS,
         "rd-439-2007-art-109:selector-m036-actividades-base-neta-de-subvenciones",
         "rd-439-2007-art-109:selector-m036-actividades-exencion-pago-fraccionado",
-        "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrario-objetiva",
+        "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrarias-pesqueras",
+        "modelo-131:selector-m036-volumen-ingresos-agrario",
     }
 )
 
