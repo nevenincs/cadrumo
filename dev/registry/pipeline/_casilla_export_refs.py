@@ -21,6 +21,7 @@ the caller can and does verify.
 from __future__ import annotations
 
 import re
+import tomllib
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -113,6 +114,19 @@ def export_refs_by_casilla(rendered: RenderedExportTree) -> dict[str, tuple[str,
     return {casilla: tuple(field_ids) for casilla, field_ids in by_casilla.items()}
 
 
+def _names_only_generated_fields(line: str, generated_field_ids: frozenset[str]) -> bool:
+    """Return whether an ``export_refs`` line names nothing but this layout's own fields.
+
+    A line that does not parse as one complete array is never treated as
+    generator-owned: it is refused rather than overwritten.
+    """
+    try:
+        declared = tomllib.loads(line).get("export_refs")
+    except tomllib.TOMLDecodeError:
+        return False
+    return isinstance(declared, list) and bool(declared) and set(declared) <= generated_field_ids
+
+
 def write_generated_casilla_export_refs(
     revision_root: Path,
     *,
@@ -122,9 +136,12 @@ def write_generated_casilla_export_refs(
 
     Returns every file changed. An addressed casilla that already declares
     ``export_refs`` is RECONCILED, never merged: an identical declaration is
-    left untouched, and a differing one raises, because two disagreeing answers
-    to "which field addresses this casilla" is a finding rather than something
-    to silently union.
+    left untouched, a differing one that names only fields of this layout is
+    replaced, because it is derived from the layout and a field moved to
+    another casilla is exactly such a difference, and a differing one naming
+    any other field raises, because two disagreeing answers to "which field
+    addresses this casilla" is then a finding rather than something to
+    silently union.
 
     Every casilla file is read and validated before any file is written. A
     conflicting declaration on one file, or an addressed casilla missing from
@@ -136,6 +153,7 @@ def write_generated_casilla_export_refs(
     if not casillas_root.is_dir():
         raise RegistryValidationError(f"generated export_refs write found no casillas directory: {casillas_root}")
 
+    generated_field_ids = frozenset(field_id for refs in export_refs_by_casilla.values() for field_id in refs)
     pending: list[tuple[Path, str]] = []
     seen: set[str] = set()
     for path in scan_directory(casillas_root, pattern="*.toml"):
@@ -174,6 +192,18 @@ def write_generated_casilla_export_refs(
                 continue
             seen.add(casilla_id)
             if existing is not None:
+                if lines[existing].strip() == _render(expected):
+                    continue
+                if _names_only_generated_fields(lines[existing], generated_field_ids):
+                    # Every ref already on the casilla is a field of the layout
+                    # being written, so the declaration is derived from that
+                    # layout and not authored by anyone. A field moved to another
+                    # casilla leaves it naming the field's old home; the layout
+                    # is the one answer, so the declaration follows it.
+                    ending = "\r\n" if lines[existing].endswith("\r\n") else "\n"
+                    lines[existing] = _render(expected) + ending
+                    changed = True
+                    continue
                 if lines[existing].strip() != _render(expected):
                     raise RegistryValidationError(
                         f"{path}: casilla {casilla_id!r} already declares {lines[existing].strip()!r} but the "

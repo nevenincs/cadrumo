@@ -128,6 +128,61 @@ export_refs = ["generated.displaced"]
     assert 'id = "displaced"\nsource_refs = ["source"]\nexport_refs' not in rendered
 
 
+def test_generated_casilla_export_refs_follow_a_field_moved_to_another_casilla(tmp_path: Path) -> None:
+    """A derived declaration naming only this layout's fields follows the layout.
+
+    Modelo 200 prints one box number on several sheets, so a field bound to the
+    right number on the wrong sheet is repaired by moving it to the casilla on
+    its own sheet. The old casilla still names it; every ref it carries is a
+    field of this very layout, so the declaration is derived, not authored, and
+    is rewritten to what the layout now says.
+    """
+    casillas = tmp_path / "casillas"
+    casillas.mkdir()
+    path = casillas / "0001-casillas.toml"
+    path.write_text(
+        """[[revisions.current.casillas]]
+id = "old-home"
+source_refs = ["source"]
+export_refs = ["generated.moved", "generated.stays"]
+
+[[revisions.current.casillas]]
+id = "new-home"
+source_refs = ["source"]
+""",
+        encoding="utf-8",
+    )
+
+    write_generated_casilla_export_refs(
+        tmp_path,
+        export_refs_by_casilla={"old-home": ("generated.stays",), "new-home": ("generated.moved",)},
+    )
+
+    rendered = path.read_text(encoding="utf-8")
+    assert 'id = "old-home"\nsource_refs = ["source"]\nexport_refs = ["generated.stays"]' in rendered
+    assert 'id = "new-home"\nsource_refs = ["source"]\nexport_refs = ["generated.moved"]' in rendered
+
+
+def test_generated_casilla_export_refs_still_refuse_a_declaration_naming_a_foreign_field(tmp_path: Path) -> None:
+    """A ref to any field outside the layout makes the declaration authored, and it is refused."""
+    casillas = tmp_path / "casillas"
+    casillas.mkdir()
+    path = casillas / "0001-casillas.toml"
+    original = (
+        '[[revisions.current.casillas]]\nid = "old-home"\nsource_refs = ["source"]\n'
+        'export_refs = ["generated.moved", "authored.elsewhere"]\n'
+    )
+    path.write_text(original, encoding="utf-8")
+
+    with pytest.raises(RegistryValidationError, match="disagreeing answers"):
+        write_generated_casilla_export_refs(
+            tmp_path,
+            export_refs_by_casilla={"old-home": ("generated.stays",), "other": ("generated.moved",)},
+        )
+
+    assert path.read_text(encoding="utf-8") == original
+
+
 def test_generated_casilla_export_refs_accepts_toml_literal_and_basic_ids_but_not_nested_decoys(
     tmp_path: Path,
 ) -> None:
