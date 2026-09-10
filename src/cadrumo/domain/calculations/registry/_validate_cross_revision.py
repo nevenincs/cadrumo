@@ -20,6 +20,7 @@ from ._cross_revision_divergence import (
     revisions_overlap,
 )
 from ._validate_cross_revision_evolution import strict_continuity_evolution_failures
+from ._validate_cross_revision_lineage_origin import role_exempt_occurrences
 from .ids import RevisionId
 from .schema import ModeloDefinition, ModeloRevision
 from .schema_surfaces import CasillaDefinition
@@ -43,15 +44,19 @@ def declared_cross_revision_continuity_semantic_linkage_failures(
 
     The registry records an id as a continuity assertion, not as a label
     heuristic. This audit consequently requires a semantic role for every
-    casilla on a chain that appears in two non-overlapping revisions. It only
-    derives the id from the role when that role is unique throughout that
-    chain; changed or ambiguous roles remain evidence questions rather than
-    being silently renamed.
+    casilla on a chain that appears in two non-overlapping revisions, unless
+    every lineage link that casilla takes part in is grounded in cited
+    evidence: a matching role is the weaker proof of the same link. A seeded
+    or unmarked link never lifts the requirement. It only derives the id from
+    the role when that role is unique throughout that chain; changed or
+    ambiguous roles remain evidence questions rather than being silently
+    renamed.
     """
     failures: list[str] = []
     for modelo in modelos:
+        grounded = role_exempt_occurrences(modelo)
         for continuidad_id, occurrences in sorted(_continuity_occurrences(modelo).items()):
-            failures.extend(_semantic_linkage_failures(modelo, continuidad_id, occurrences))
+            failures.extend(_semantic_linkage_failures(modelo, continuidad_id, occurrences, grounded))
     return tuple(failures)
 
 
@@ -70,13 +75,14 @@ def _semantic_linkage_failures(
     modelo: ModeloDefinition,
     continuidad_id: str,
     occurrences: list[_ContinuityOccurrence],
+    grounded: frozenset[tuple[RevisionId, CasillaId]],
 ) -> tuple[str, ...]:
     """Return semantic-linkage failures for one declared continuity chain."""
     chain_revisions = _chain_revision_ids(occurrences)
     if not _crosses_revision_boundary(modelo, chain_revisions):
         return ()
 
-    missing_roles = _missing_semantic_role_failures(modelo, continuidad_id, occurrences)
+    missing_roles = _missing_semantic_role_failures(modelo, continuidad_id, occurrences, grounded)
     if missing_roles:
         return missing_roles
 
@@ -111,6 +117,7 @@ def _missing_semantic_role_failures(
     modelo: ModeloDefinition,
     continuidad_id: str,
     occurrences: Iterable[_ContinuityOccurrence],
+    grounded: frozenset[tuple[RevisionId, CasillaId]],
 ) -> tuple[str, ...]:
     """Format every occurrence that lacks the semantic role required by a chain."""
     return tuple(
@@ -118,7 +125,7 @@ def _missing_semantic_role_failures(
         f"modelo {modelo.id} continuidad_id {continuidad_id!r} "
         f"revision {revision.id!r} casilla {casilla.id!r} has no semantic_role"
         for revision, casilla in occurrences
-        if casilla.semantic_role is None
+        if casilla.semantic_role is None and (revision.id, casilla.id) not in grounded
     )
 
 
