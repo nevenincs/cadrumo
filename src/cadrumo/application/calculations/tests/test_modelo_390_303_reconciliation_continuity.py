@@ -25,9 +25,9 @@ real relation resolver — no mocks) across two distinct renta years: for
 each of 2024 and 2025 it computes the four 303 quarters, persists them as
 filed observations, then computes the 390/0A annual and asserts the annual
 reconciliation casillas equal the sum of the four quarters. Both annual
-computations are recorded through the :class:`cross-year observation` and
+computations are recorded through the ``cross-year observation`` and
 cross-checked against the cross-year claim via
-:func:`the cross-year behavior assertion`.
+``the cross-year behavior assertion``.
 
 Grounding (non-tautological): each 303 quarter's totals are _produced by
 the engine, never hand-computed; the load-bearing assertion is the
@@ -391,7 +391,7 @@ def test_modelo_390_reconciliation_enrolls_two_renta_years(tmp_path: Path) -> No
 
     Drives the REAL 390 backend for both renta years (each reconciling its own
     four 303 quarters), records each annual computation through the
-    :class:`cross-year observation` (calculation mode, evidence = _produced-value
+    ``cross-year observation`` (calculation mode, evidence = _produced-value
     count from a real engine run), and cross-checks the recorded distinct-year
     set against the cross-year claim claim. A single-year or stub run
     would raise, turning the gate RED.

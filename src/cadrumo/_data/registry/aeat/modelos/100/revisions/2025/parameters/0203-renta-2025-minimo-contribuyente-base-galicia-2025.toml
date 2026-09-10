@@ -1,0 +1,20 @@
+# Mínimo del contribuyente aplicable al GRAVAMEN AUTONÓMICO para residentes en
+# Galicia (Ley 22/2009 art. 46.1.a cede esta competencia a la comunidad).
+# Importe general, es decir el aplicable al contribuyente menor de 65 años; los
+# incrementos por edad autonómicos todavía no se modelan en esta revisión.
+[[revisions."2025".parameters]]
+id = "renta-2025-minimo-contribuyente-base-galicia-2025"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["galicia-dl-1-2011:art-4-bis"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["5.789 euros anuales con carácter general"]
+
+[[revisions."2025".parameters.values]]
+value = "5789"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31

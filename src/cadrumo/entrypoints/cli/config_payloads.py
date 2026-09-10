@@ -110,19 +110,6 @@ class ProfileFactPayload(OutputSchema):
 # P05 — repair verb result schemas
 
 
-class ConfigRepairRegistryPayload(OutputSchema):
-    """JSON-safe projection of the config-repair registry summary."""
-
-    available: bool
-    registry_root: str
-    modelo_count: int
-    revision_count: int
-    casilla_count: int
-    formula_count: int
-    revision_ids: list[str]
-    error: str | None = None
-
-
 class ConfigRepairSetupPayload(OutputSchema):
     """JSON-safe projection of the active-profile readiness summary."""
 
@@ -177,8 +164,8 @@ class ConfigRepairCheckPayload(OutputSchema):
 class ConfigRepairResult(OutputSchema):
     """JSON envelope for the composite ``aeat config repair`` report.
 
-    The application diagnostics service owns the nested registry, setup,
-    secure-object, and check records. This transport schema fixes the report's
+    The application diagnostics service owns the nested setup, secure-object,
+    and check records. This transport schema fixes the report's
     top-level contract while preserving those already validated nested DTOs.
     """
 
@@ -187,7 +174,6 @@ class ConfigRepairResult(OutputSchema):
     package_version: str
     python_version: str
     log_file: str
-    registry: ConfigRepairRegistryPayload
     setup: ConfigRepairSetupPayload | None
     secure_objects: ConfigRepairSecureObjectsPayload
     checks: list[ConfigRepairCheckPayload]
@@ -1004,22 +990,6 @@ class RepairIntegrityObjectsResult(OutputSchema):
     readable_total: NonNegativeInt
     unreadable_total: NonNegativeInt
     check: RepairIntegrityCheckPayload
-
-
-class RepairIntegrityRegistryResult(OutputSchema):
-    """JSON envelope for ``aeat config repair integrity registry``.
-
-    Projects
-    :class:`~cadrumo.application.diagnostics.RegistryIntegrityReport` through
-    the same CLI-local payload rows the composite ``config repair`` report
-    uses: :class:`ConfigRepairRegistryPayload` for the registry summary and
-    :class:`ConfigRepairCheckPayload` for the validation verdict, whose
-    application-owned ``precondition_verdict`` is resolved to a wire
-    ``precondition_action`` at the CLI boundary.
-    """
-
-    registry: ConfigRepairRegistryPayload
-    check: ConfigRepairCheckPayload
 
 
 # Apoderado verb result schemas

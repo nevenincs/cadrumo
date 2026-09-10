@@ -54,8 +54,8 @@ class WorkflowFindingLike(Protocol):
     """Narrow structural port over one registry-backed draft finding.
 
     Wider than :class:`domain.submission.ModeloFindingLike`, which declares
-    only ``severity`` -- the preflight gate's minimal
-    :class:`domain.submission.ModeloFinding` carries no ``code``. Every
+    only ``severity`` -- the preflight gate reads severity alone and needs no
+    ``code``. Every
     finding a :class:`RegistryModeloDraftProtocol` draft actually carries is
     a :class:`domain.filing.ModeloValidationFinding`, which declares both
     ``severity`` and ``code`` as required fields with no default. Typing

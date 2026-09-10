@@ -8,11 +8,8 @@ caller requests registry detail.
 :class:`~application.workflow.WorkflowState` loading,
 :class:`~application.workflow.ActiveProfileHealth` profile storage
 verdicts, :class:`~application.wizard.status.WizardStatusReport`
-readiness, registry summaries, and secure-object decryptability into a
-:class:`ConfigRepairReport` of :class:`DiagnosticCheck` rows. The full registry
-integrity probe is intentionally opt-in through :class:`RegistryIntegrityReport`;
-it loads the registry authority only for repair commands that ask for that
-validation.
+readiness and secure-object decryptability into a
+:class:`ConfigRepairReport` of :class:`DiagnosticCheck` rows.
 
 Every warn/fail :class:`DiagnosticCheck` carries an application-owned
 ``precondition_verdict`` whose outcome is either a canonical action reference
@@ -24,11 +21,7 @@ a typed contract, not a best-effort text scan.
 Secure-object repair helpers return :class:`SecureObjectIntegrityReport`
 instances shared with :mod:`application.repair_integrity`. Dry-run preview
 and quarantine use the same decryptability probe so the committed mutation has
-the same namespace counts the operator saw before confirming it. Registry
-validation routes through
-:class:`~domain.calculations.registry.ValidatedRegistryAuthority` and the
-core :class:`~core.Modelo` identifier enum only on the explicit
-repair-integrity path.
+the same namespace counts the operator saw before confirming it.
 
 See Also:
     :mod:`application.repair_integrity` owns metadata-only repair
@@ -46,9 +39,8 @@ from __future__ import annotations
 
 import asyncio
 import sys
-from datetime import date
 from pathlib import Path
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING
 
 from .. import __version__
 from ..core.async_cleanup import close_async_resources
@@ -56,7 +48,6 @@ from ..core.config import Settings
 from ..core.errors.hierarchy import SiteHealthError, SiteHealthState
 from ..core.i18n.render import tr
 from ..core.logging import default_log_file_path, get_logger
-from ..core.modelo import Modelo
 from ..core.operator_action_enums import NoRecoveryOutcome
 from ..core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from ..core.requirement import Requirement, RequirementValue
@@ -83,9 +74,6 @@ from .diagnostic_models import (
 )
 from .diagnostic_models import (
     DiagnosticStatusValue as _DiagnosticStatusValue,
-)
-from .diagnostic_models import (
-    RegistryIntegrityReport as _RegistryIntegrityReport,
 )
 from .diagnostic_models import (
     RegistryVersionSummary as _RegistryVersionSummary,
@@ -120,10 +108,6 @@ if TYPE_CHECKING:
     from .workflow.state_models import WorkflowState
 
 _log = get_logger(__name__)
-
-_REGISTRY_INTEGRITY_PROBE_YEAR: Final[int] = 2025
-_REGISTRY_INTEGRITY_PROBE_DATE: Final[date] = date(2025, 12, 31)
-
 
 def build_cli_version_report(
     registry_root: Path | None = None,
@@ -178,37 +162,8 @@ def _logging_repair_check(log_parent_exists: bool) -> _DiagnosticCheck:
     )
 
 
-def _registry_repair_check(registry: _RegistryVersionSummary) -> _DiagnosticCheck:
-    """Build the read-only registry availability diagnostic row."""
-    return _DiagnosticCheck(
-        name="registry.load",
-        status=_DiagnosticStatus.OK if registry.available else _DiagnosticStatus.FAIL,
-        summary=(
-            tr(
-                "cli.diagnostics.summary.registry_counts",
-                modelos=registry.modelo_count,
-                casillas=registry.casilla_count,
-            )
-            if registry.available
-            else tr("cli.diagnostics.summary.registry_unavailable")
-        ),
-        detail=registry.error,
-        precondition_verdict=(
-            None
-            if registry.available
-            else diagnostic_no_recovery_verdict(
-                condition_id="diagnostics.registry.load.available",
-                evidence_id="diagnostics.registry.load.observation",
-                values={"available": False, "registry_root": registry.registry_root},
-                outcome=NoRecoveryOutcome.TERMINAL,
-            )
-        ),
-        audience=_DiagnosticAudience.OPERATOR if registry.available else _DiagnosticAudience.INTERNAL,
-    )
-
-
-def _initial_config_repair_checks(registry: _RegistryVersionSummary) -> list[_DiagnosticCheck]:
-    """Build the environment, package, logging, and registry check rows."""
+def _initial_config_repair_checks() -> list[_DiagnosticCheck]:
+    """Build the environment, package, and logging check rows."""
     log_parent_exists = default_log_file_path().parent.exists()
     return [
         _DiagnosticCheck(
@@ -222,7 +177,6 @@ def _initial_config_repair_checks(registry: _RegistryVersionSummary) -> list[_Di
             summary=__version__,
         ),
         _logging_repair_check(log_parent_exists),
-        _registry_repair_check(registry),
     ]
 
 
@@ -317,13 +271,12 @@ def _secure_state_repair_checks() -> tuple[list[_DiagnosticCheck], WizardStatusR
     return checks, setup_report
 
 
-def build_config_repair_report(registry_root: Path | None = None) -> _ConfigRepairReport:
+def build_config_repair_report() -> _ConfigRepairReport:
     """Return local diagnostics for the ``aeat config repair`` surface.
 
     Returns a :class:`ConfigRepairReport` enumerating every diagnostic
-    check and any suggested repairs. Expensive registry validation beyond the
-    rollup check remains in :func:`build_registry_integrity_report`, so the bare
-    repair command stays focused on actionable local health.
+    check and any suggested repairs. It is restricted to actionable local
+    configuration and secure-state health.
 
     The secure-state branch reads
     :class:`~application.workflow.WorkflowState`, derives
@@ -335,15 +288,12 @@ def build_config_repair_report(registry_root: Path | None = None) -> _ConfigRepa
     the caller never receives a silent repair finding.
     """
     _ensure_models_rebuilt()
-    root = registry_root or bundled_path("registry", "aeat")
-    registry = _build_registry_version_summary(root)
-    checks = _initial_config_repair_checks(registry)
+    checks = _initial_config_repair_checks()
     secure_state_checks, setup_report = _secure_state_repair_checks()
     checks.extend(secure_state_checks)
 
     secure_objects = _probe_secure_objects_integrity()
     checks.append(_secure_objects_integrity_check(secure_objects))
-    checks.append(_registry_cross_domain_integrity_check(root))
 
     return _ConfigRepairReport(
         overall=_overall_status(tuple(checks)),
@@ -351,7 +301,6 @@ def build_config_repair_report(registry_root: Path | None = None) -> _ConfigRepa
         package_version=__version__,
         python_version=sys.version.split()[0],
         log_file=str(default_log_file_path()),
-        registry=registry,
         setup=setup_report,
         secure_objects=secure_objects,
         checks=tuple(checks),
@@ -616,83 +565,6 @@ def _secure_objects_integrity_check(report: _SecureObjectIntegrityReport) -> _Di
             action_id="operator.diagnostics.secure_objects.quarantine",
             argument_bindings=(resolved_verdict_binding("yes", True),),
         ),
-    )
-
-
-def _registry_cross_domain_integrity_check(registry_root: Path) -> _DiagnosticCheck:
-    """Cross-domain integrity check by exercising the snapshot-build gate.
-
-    Loads :class:`~domain.calculations.registry.ValidatedRegistryAuthority`
-    (which runs ``validate_registry`` at construction time) and attempts to
-    build a representative snapshot for :class:`~core.Modelo` member
-    ``M100``. The snapshot-build path wires
-    :func:`_check_all_id_references` (typed-ID existence checks +
-    renta first-slice routing target check + per-binding selector-
-    shape gate); any divergence between code-side typed contracts
-    and registry data surfaces here as a typed failure.
-
-    A failure routes the operator to a structured diagnostic rather
-    than a runtime KeyError mid-calculation.
-    """
-    from ..domain.calculations.registry.authority import ValidatedRegistryAuthority
-    from ..domain.calculations.registry.errors import RegistryValidationError
-
-    try:
-        authority = ValidatedRegistryAuthority.load(registry_root, source_root=bundled_path())
-        authority.snapshot(
-            Modelo.M100.value,
-            filing_year=_REGISTRY_INTEGRITY_PROBE_YEAR,
-            period="0A",
-            on=_REGISTRY_INTEGRITY_PROBE_DATE,
-        )
-    except RegistryValidationError as exc:
-        return _DiagnosticCheck(
-            name="registry.integrity",
-            status=_DiagnosticStatus.FAIL,
-            summary=tr("cli.diagnostics.summary.registry_integrity_failed"),
-            detail=str(exc),
-            precondition_verdict=diagnostic_no_recovery_verdict(
-                condition_id="diagnostics.registry.integrity.valid",
-                evidence_id="diagnostics.registry.integrity.validation",
-                values={"registry_root": str(registry_root), "valid": False},
-                outcome=NoRecoveryOutcome.TERMINAL,
-            ),
-            audience=_DiagnosticAudience.INTERNAL,
-        )
-    except Exception as exc:  # pragma: no cover - defensive: registry not loadable
-        return _DiagnosticCheck(
-            name="registry.integrity",
-            status=_DiagnosticStatus.WARN,
-            summary=tr("cli.diagnostics.summary.registry_integrity_skipped"),
-            detail=f"{type(exc).__name__}: {exc}",
-            precondition_verdict=diagnostic_no_recovery_verdict(
-                condition_id="diagnostics.registry.integrity.observable",
-                evidence_id="diagnostics.registry.integrity.observation",
-                values={"observable": False, "registry_root": str(registry_root)},
-                outcome=NoRecoveryOutcome.TERMINAL,
-            ),
-            audience=_DiagnosticAudience.INTERNAL,
-        )
-    return _DiagnosticCheck(
-        name="registry.integrity",
-        status=_DiagnosticStatus.OK,
-        summary=tr("cli.diagnostics.summary.registry_integrity_ok"),
-    )
-
-
-def build_registry_integrity_report(registry_root: Path | None = None) -> _RegistryIntegrityReport:
-    """Run the full registry validation as a standalone :class:`RegistryIntegrityReport` probe.
-
-    Backs the ``aeat config repair integrity registry`` verb. Bundles
-    the registry version summary with the cross-domain
-    referential-integrity check so the engineer-facing verb can render
-    both the registry's identity and its validation verdict. This stays
-    off every fast-path surface.
-    """
-    root = registry_root or bundled_path("registry", "aeat")
-    return _RegistryIntegrityReport(
-        registry=_build_registry_version_summary(root),
-        check=_registry_cross_domain_integrity_check(root),
     )
 
 
@@ -1192,7 +1064,6 @@ def quarantine_unreadable_secure_objects() -> _SecureObjectIntegrityReport:
 __all__ = [
     "build_cli_version_report",
     "build_config_repair_report",
-    "build_registry_integrity_report",
     "preview_quarantine_unreadable_secure_objects",
     "probe_browser_connectivity",
     "quarantine_unreadable_secure_objects",

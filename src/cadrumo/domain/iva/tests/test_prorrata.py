@@ -508,8 +508,8 @@ def test_no_parallel_prorrata_implementation_exists() -> None:
     """Only ``cadrumo.domain.iva.prorrata`` owns prorrata semantics.
 
     Walk the source tree and assert that ``compute_prorrata_general``,
-    ``classify_input_deduction``, ``is_especial_mandatory``, and
-    ``is_especial_mandatory`` exist exclusively in the canonical module. Any
+    ``is_especial_mandatory`` and ``deductible_percentage_for`` exist
+    exclusively in the canonical module. Any
     other module declaring a function with the same name is
     a duplicate implementation and must be removed before this test
     re-passes.
@@ -527,8 +527,8 @@ def test_no_parallel_prorrata_implementation_exists() -> None:
 
     canonical_symbols = (
         "compute_prorrata_general",
-        "classify_input_deduction",
         "is_especial_mandatory",
+        "deductible_percentage_for",
     )
 
     for py_file in scan_directory(source_root, pattern="*.py", recursive=True, require_root=True):

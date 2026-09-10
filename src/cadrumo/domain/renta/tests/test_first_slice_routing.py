@@ -136,7 +136,7 @@ def test_registered_check_fires_through_the_snapshot_build_gate() -> None:
 
     The check is scoped to a revision's OWN
     ``ledger_renta_gastos_estimacion_directa_aggregation`` binding targets (never the
-    universal :func:`first_slice_target_casillas` codomain) -- see
+    universal ``first_slice_target_casillas`` codomain) -- see
     :mod:`cadrumo.domain.renta.first_slice_routing_integrity` for why a
     revision that declares no such bindings has a legitimately empty
     required set.
@@ -168,7 +168,7 @@ def test_renta_first_slice_binding_target_casillas_is_revision_scoped() -> None:
     Social casilla on those years rather than the dedicated ``0195`` box
     introduced from 2023 onward. The 2024/2025 revisions declare the full
     14-casilla binding set. This is the property that makes the universal
-    :func:`first_slice_target_casillas` codomain unsuitable as a
+    ``first_slice_target_casillas`` codomain unsuitable as a
     per-revision referential-integrity requirement.
     """
 

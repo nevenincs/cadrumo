@@ -17,8 +17,6 @@ flows:
     invalid_decimal: Introdueix un import amb punt decimal (per exemple 1234.56).
     invalid_integer: Introdueix un nombre enter.
     select_unknown: 'Tria un dels valors acceptats: %{choices}.'
-    tui_abandoned: El flux {flow_id} s'ha tancat en el mode {mode} abans d'enviar-lo
-      o desar-lo; no s'ha registrat res.
     unsupported_console: Aquesta consola no pot mostrar preguntes interactives. Executa
       el flux des d'un terminal real o guia'l amb un fitxer de respostes.
   login:
@@ -70,55 +68,8 @@ flows:
     required_field_unavailable: Camp obligatori del perfil
     section_title: '{title} - {present}/{total}'
     title: 'Perfil: {profile}'
-  modelo_edit:
-    footer: F2 revisa · Esc surt · F3 aparença
-    review:
-      nothing_staged: No hi ha canvis per revisar.
-      unresolved_entries: Hi ha valors sense resoldre. Corregiu-los abans de revisar.
-    review_ready: 'Revisió a punt. Caselles modificades: {changed}.'
-    stale_conflict: Les dades han canviat des que es va obrir l'edició. Reviseu abans
-      de continuar.
-    title: Edita el model
-    unresolved: 'Valor no reconegut a la casella {casilla_id}. Caselles pendents:
-      {count}.'
-    unsaved_on_leave: Hi ha canvis sense desar. Reviseu-los o descarteu-los abans
-      de sortir.
   modelo_review:
-    column:
-      action: Acció
-      blocked_by: Bloquejada per
-      casilla: Casella
-      casilla_id: ID de casella
-      code: Codi
-      concrete: Origen concret
-      declared: Origen declarat
-      expectation_id: ID d'expectativa
-      facts: Fets
-      grounding: Fonamentació
-      kind: Tipus
-      label: Etiqueta
-      message: Missatge
-      official: Representació oficial
-      realised: Valor materialitzat
-      schema: Esquema
-      severity: Gravetat
     filter:
-      absent: Absent
-      all: Tots els valors
-      binding_presence: Presència de vincle
-      binding_resolved: Resolució del vincle
-      binding_source: Origen concret del vincle
-      casilla_blocker: Acció bloquejant de casella
-      casilla_blocker_presence: Presència de bloqueig de casella
-      estado_casilla_oficial: Estat de casella oficial
-      filters: Filtres
-      finding_kind: Tipus d'incidència
-      finding_severity: Gravetat de la incidència
-      formula_presence: Presència de fórmula
-      input_kind: Tipus d'entrada declarat
-      no_matching_blockers: Cap bloqueig coincideix amb els filtres actius.
-      no_matching_casillas: Cap casella coincideix amb els filtres actius.
-      no_matching_findings: Cap incidència coincideix amb els filtres actius.
       option:
         binding_source:
           atribucion_member: Membre d'atribució de rendes
@@ -203,26 +154,6 @@ flows:
           formula_binding: Vincle de fórmula
           formula_relation: Relació de fórmula
           primary_binding: Vincle principal
-      origin_anomaly: Anomalia d'origen
-      origin_anomaly_presence: Presència d'anomalia d'origen
-      present: Present
-      realised_kind: Tipus de valor realitzat
-      record_blocker: Acció bloquejant del registre
-      relation_channel: Canal de relació
-      relation_presence: Presència de relació
-      reset: Restableix els filtres
-      resolved: Resolt
-      unresolved: Sense resoldre
-    summary:
-      calculation_revision: Revisió del càlcul
-      denominator_source: Font del denominador
-      lifecycle_state: Estat del cicle de vida
-      progress: Progrés
-      registry_revision: Revisió del registre
-      section: Resum
-      verification_outcome: Resultat de la verificació
-      work_unit: Unitat de treball
-    title: Model {modelo} · {filing_year} · {period}
   modelo_select:
     column:
       filing_year: Exercici
@@ -230,8 +161,6 @@ flows:
       name: Nom
       period: Període
       state: Estat
-    empty: Encara no hi ha cap unitat de treball registrada en aquest perfil.
-    title: Seleccionar una unitat de treball de model
   modelo_workspace_filing:
     column:
       capability: Capacitat
@@ -246,8 +175,6 @@ flows:
     why:
       draft_structural: 'Sense mesurar de manera permanent: la construcció de l''esborrany
         no desa estat, així que cap productor registra un veredicte que es pugui llegir.'
-      export_pending_port: Sense mesurar a l'espera d'un contribuïdor que llegeixi
-        l'historial d'exportació.
   modelo_workspace_inputs:
     column:
       address: Adreça
@@ -394,24 +321,13 @@ flows:
     action_restart: Torna a començar
     action_save_exit: Desa i surt
     action_submit: Envia
-    column_answer: Resposta
-    column_question: Pregunta
-    column_registered: Registrat
-    column_status: Estat
     edit_not_editable: La pregunta {page_key} ja no es pot editar.
     edit_unknown: No hi ha cap pregunta amb el número {number}.
     edit_which: 'Quin número de pregunta vols editar? '
     header: Revisió - {answered} preguntes respostes.
-    header_tui: 'Revisió - {answered} respostes, {remaining} obligatòries pendents,
-      a punt per enviar: {eligible}'
-    header_tui_stage_label: Revisió
-    mode_create: mode de creació
-    mode_modify: mode de modificació
-    orphan_marker: (ja no es pregunta)
     page_deferred: 'La pregunta %{page_key} està ajornada: decideix abans de presentar.'
     page_invalid: La pregunta %{page_key} té una resposta no vàlida.
     page_stale: 'Revisa la pregunta %{page_key}: ha canviat una resposta anterior.'
-    question_unavailable: La pregunta ja no està disponible
     required_unanswered: La pregunta obligatòria %{page_key} està sense respondre.
     reset_stale_confirm: La pregunta {page_key} ja no es planteja. Vols esborrar-ne
       la resposta desada?
@@ -420,63 +336,8 @@ flows:
     row: '{number}. {page_key} - estat: {status}'
     save_unavailable: Desar i sortir no està disponible en el mode {mode}; completa
       el flux d'una sola vegada.
-    section_unavailable: Secció no disponible
   status:
-    auth:
-      absolute_deadline: Límit absolut de la sessió
-      certificate_source: Origen del certificat
-      idle_deadline: Límit d'inactivitat de la sessió
-      login_not_ready: sense verificar
-      login_ready: a punt
-      provider: Proveïdor
-      provider_none: sense configurar
-      provider_unknown: Proveïdor desconegut
-      status: Accés
-      subject: Titular
-    binding_quit: Surt
-    masked_value: (ocult)
-    profile:
-      column:
-        field: Camp
-        value: Valor
-      field_unavailable: Camp no disponible
-      none: No hi ha cap perfil actiu.
-      repeated_field: '{label} (element {row})'
-      value_unavailable: Valor no disponible
     profiles:
-      column:
-        active: Actiu
-        label: Perfil
-        status: Estat
-      none: No hi ha perfils registrats.
       status:
         complete: complet
         incomplete: incomplet
-        unknown: desconegut
-    section:
-      auth: Autenticació
-      notices: Avisos
-      profile: Perfil actiu
-      profiles: Perfils
-    title: Estat
-  tui:
-    binding_back: Anterior
-    binding_reset: Restableix
-    binding_restart: Reinicia
-    binding_return: Torna
-    binding_review: Resum
-    binding_save_exit: Desa i surt
-    binding_submit: Presenta
-    button_back: Enrere
-    button_next: Següent
-    button_review: Revisió
-    choice_unavailable: Opció no disponible
-    confirm_restart:
-      cancel: Cancel·lar
-      confirm: Reiniciar
-      message: Això esborra totes les respostes donades fins ara i torna a la primera
-        pàgina. No es pot desfer.
-      title: Reiniciar tot el procés?
-    header: '{flow} - pregunta {position} de {total}, secció {section}'
-    header_single_section: '{flow} - pregunta {position} de {total}'
-    section_unavailable: Secció no disponible

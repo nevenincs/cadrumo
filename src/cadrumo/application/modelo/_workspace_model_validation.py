@@ -143,15 +143,6 @@ def require_projection_readiness_coordinate(projection: ModeloWorkspaceProjectio
         raise ValueError("workspace readiness must retain the exact target and revision coordinate")
 
 
-def require_projection_closure_coordinates(projection: ModeloWorkspaceProjectionV1) -> None:
-    """Keep every registry closure limb on the exact resolved target and revision."""
-    if any(
-        limb.modelo != projection.target.modelo or limb.revision != projection.target.law_selected_revision_id
-        for limb in projection.registry_closure_limbs
-    ):
-        raise ValueError("workspace registry closure limbs must retain the exact target and revision coordinate")
-
-
 def require_static_projection_scope(projection: ModeloWorkspaceProjectionV1) -> None:
     """Keep static inspection free of materialized facets and review output."""
     from .workspace_models import ModeloWorkspaceCapabilityDisposition

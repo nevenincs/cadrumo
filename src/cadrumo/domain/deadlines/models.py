@@ -141,7 +141,8 @@ class IrpfActivityKind(StrEnum):
     parameters, with their own ``legal_refs`` rather than an if-chain. What was
     absent was a field holding a code.
 
-    A ledger row now holds one. :func:`~domain.transactions.irpf_activity_kind_for`
+    A ledger row now holds one.
+    :func:`~domain.transactions.tipo_actividad_partitions.resolve_tipo_actividad_selector`
     reads the registry selectors and returns a member of THIS enum, deliberately
     rather than a second classifier of its own: the apartado-level detail that
     agrícola/ganadera comes from art. 95.4.2.º and forestal from art. 95.5, both

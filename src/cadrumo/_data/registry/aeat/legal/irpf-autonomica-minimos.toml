@@ -1,0 +1,118 @@
+# Autonomic mínimo personal y familiar authorities (IRPF, gravamen autonómico).
+#
+# Ley 22/2009 art. 46.1.a cedes to each comunidad autónoma the power to set its
+# own mínimo personal y familiar for the autonomic half of the tax. For 2025 the
+# AEAT Manual práctico de Renta 2025 (parte 1, capítulo 14, "Importes del mínimo
+# personal y familiar aprobados por las comunidades autónomas para el cálculo
+# del gravamen autonómico") records that exactly eight comunidades exercised it:
+# Andalucía, Principado de Asturias, Illes Balears, Canarias, Galicia, Madrid,
+# La Rioja and Comunitat Valenciana. Every other comunidad uses the LIRPF
+# amounts for both gravámenes -- the manual states this explicitly in its
+# Cantabria worked example.
+#
+# Article attribution for Asturias is agent-prepared: the manual cites arts. 2
+# bis, 2 ter, 2 quater and 2 quinquies collectively for the whole mínimo family
+# without saying which article carries the mínimo del contribuyente. The
+# load-bearing grounding is the required_text cross-check against the bundled
+# manual, as in irpf-autonomica-madrid.toml. Operator to re-stamp.
+
+[legal."andalucia-ley-5-2021:art-23-bis"]
+evidence_tier = "legal_authority"
+authority = "autonomous_community"
+kind = "ley"
+corpus_ref = "corpus/manuals/renta/2025/part1/source.pdf.extracted.md#andalucia-minimo-contribuyente"
+document_id = "BOJA-b-2021-90014"
+article = "23 bis"
+permalink = "https://www.boe.es/buscar/act.php?id=BOJA-b-2021-90014"
+published_at = 2021-10-20
+effective_from = 2022-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-10
+reviewed_by = "agent-authored from the bundled AEAT Renta 2025 manual parte 1 cap. 14; operator to re-stamp the BOJA/BOE consolidated id"
+notes = "Ley 5/2021 art. 23 bis (Andalucía): mínimo del contribuyente para el gravamen autonómico 5.790 € con carácter general, +1.200 € mayor de 65 años, +1.460 € adicionales mayor de 75 años."
+required_text = ["Andalucía", "Mínimo del contribuyente", "5.790 euros anuales con carácter general"]
+
+[legal."asturias-dl-2-2014:art-2-bis"]
+evidence_tier = "legal_authority"
+authority = "autonomous_community"
+kind = "real_decreto_legislativo"
+corpus_ref = "corpus/manuals/renta/2025/part1/source.pdf.extracted.md#asturias-minimo-contribuyente"
+document_id = "BOPA-p-2014-90007"
+article = "2 bis"
+permalink = "https://www.boe.es/buscar/act.php?id=BOPA-p-2014-90007"
+published_at = 2014-10-22
+effective_from = 2023-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-10
+reviewed_by = "agent-authored from the bundled AEAT Renta 2025 manual parte 1 cap. 14; article attribution within arts. 2 bis-2 quinquies pending operator re-stamp"
+notes = "DL 2/2014 (Principado de Asturias): mínimo del contribuyente para el gravamen autonómico 6.105 € con carácter general, +1.265 € mayor de 65 años, +1.540 € adicionales mayor de 75 años."
+required_text = ["Principado de Asturias", "Mínimo del contribuyente", "6.105 euros anuales con carácter general"]
+
+[legal."baleares-dl-1-2014:art-2"]
+evidence_tier = "legal_authority"
+authority = "autonomous_community"
+kind = "real_decreto_legislativo"
+corpus_ref = "corpus/manuals/renta/2025/part1/source.pdf.extracted.md#baleares-minimo-contribuyente"
+document_id = "BOIB-i-2014-90003"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOIB-i-2014-90003"
+published_at = 2014-06-06
+effective_from = 2023-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-10
+reviewed_by = "agent-authored from the bundled AEAT Renta 2025 manual parte 1 cap. 14; operator to re-stamp the BOIB/BOE consolidated id"
+notes = """\
+DL 1/2014 art. 2 (Illes Balears): la comunidad NO eleva el mínimo del contribuyente general, que \
+sigue siendo el estatal de 5.550 €. Eleva un 10 % los importes por edad: para el contribuyente \
+mayor de 65 años el importe general pasa a 6.105 € y el incremento por mayor de 65 años a 1.265 €, \
+con 1.540 € adicionales por mayor de 75 años. El importe general para menores de 65 años es el \
+estatal, que es lo que esta revisión modela hoy."""
+required_text = ["Illes Balears", "Mínimo del contribuyente mayor de 65 años", "6.105 euros anuales por importe del mínimo por contribuyente general"]
+
+[legal."canarias-dl-1-2009:art-18-quater"]
+evidence_tier = "legal_authority"
+authority = "autonomous_community"
+kind = "real_decreto_legislativo"
+corpus_ref = "corpus/manuals/renta/2025/part1/source.pdf.extracted.md#canarias-minimo-contribuyente"
+document_id = "BOC-c-2009-90002"
+article = "18 quater"
+permalink = "https://www.boe.es/buscar/act.php?id=BOC-c-2009-90002"
+published_at = 2009-04-21
+effective_from = 2023-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-10
+reviewed_by = "agent-authored from the bundled AEAT Renta 2025 manual parte 1 cap. 14; operator to re-stamp the BOC/BOE consolidated id"
+notes = "DL 1/2009 art. 18 quater (Canarias): mínimo del contribuyente para el gravamen autonómico 5.606 € con carácter general, +1.162 € mayor de 65 años, +1.414 € adicionales mayor de 75 años."
+required_text = ["Canarias", "Mínimo del contribuyente", "5.606 euros anuales con carácter general"]
+
+[legal."galicia-dl-1-2011:art-4-bis"]
+evidence_tier = "legal_authority"
+authority = "autonomous_community"
+kind = "real_decreto_legislativo"
+corpus_ref = "corpus/manuals/renta/2025/part1/source.pdf.extracted.md#galicia-minimo-contribuyente"
+document_id = "DOG-g-2011-90008"
+article = "4 bis"
+permalink = "https://www.boe.es/buscar/act.php?id=DOG-g-2011-90008"
+published_at = 2011-07-28
+effective_from = 2023-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-10
+reviewed_by = "agent-authored from the bundled AEAT Renta 2025 manual parte 1 cap. 14; operator to re-stamp the DOG/BOE consolidated id"
+notes = "DL 1/2011 art. 4 bis (Galicia): mínimo del contribuyente para el gravamen autonómico 5.789 € con carácter general, +1.199 € mayor de 65 años, +1.460 € adicionales mayor de 75 años."
+required_text = ["Galicia", "Mínimo del contribuyente", "5.789 euros anuales con carácter general"]
+
+[legal."valenciana-ley-13-1997:art-2-bis"]
+evidence_tier = "legal_authority"
+authority = "autonomous_community"
+kind = "ley"
+corpus_ref = "corpus/manuals/renta/2025/part1/source.pdf.extracted.md#valenciana-minimo-contribuyente"
+document_id = "DOGV-v-1997-90013"
+article = "2 bis"
+permalink = "https://www.boe.es/buscar/act.php?id=DOGV-v-1997-90013"
+published_at = 1997-12-23
+effective_from = 2023-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-10
+reviewed_by = "agent-authored from the bundled AEAT Renta 2025 manual parte 1 cap. 14; operator to re-stamp the DOGV/BOE consolidated id"
+notes = "Ley 13/1997 art. 2 bis (Comunitat Valenciana): mínimo del contribuyente para el gravamen autonómico 6.105 € con carácter general, +1.265 € mayor de 65 años, +1.540 € adicionales mayor de 75 años."
+required_text = ["Comunitat Valenciana", "Mínimo del contribuyente", "6.105 euros anuales con carácter general"]

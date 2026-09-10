@@ -265,8 +265,6 @@ adapters:
         una página de modificación; este lector nunca modifica los datos censales.
       censal_no_dispatch: El selector de acceso de la AEAT no abrió la página censal
         en un servidor operativo; vuelve a autenticarte e inténtalo de nuevo.
-      cotejo_nav_failed: La navegación a la página de cotejo de AEAT falló; la sesión
-        puede haber expirado. Ejecute 'aeat config auth test' y vuelva a intentarlo.
       ejercicio_unavailable: El registro de declaraciones de AEAT no ofrece el ejercicio
         solicitado para este modelo.
       empty_identity_nif: El NIF de identidad de la sesión AEAT está vacío; no se

@@ -5,6 +5,7 @@ from __future__ import annotations
 import ast
 import re
 import tomllib
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -14,8 +15,15 @@ from .....core.resources.bundled_data import bundled_path
 from .._validate import RegistryValidator
 from ..authority import bundled_authority
 from ..corpus_catalogue import verify_source_catalogue
-from ..legal import verify_legal_catalogue
+from ..corpus_provenance import NormativeCorpusProvenance, classify_normative_corpus_provenance
+from ..errors import RegistryValidationError
+from ..legal import (
+    _REVIEWED_PRESUMPTIVE_NORMATIVE_CORPUS,
+    verify_legal_catalogue,
+    verify_legal_reference_grounding,
+)
 from ..schema import ModeloDefinition, RegistryCatalogues
+from ..schema_references import LegalReference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -42,6 +50,101 @@ def test_committed_registry_legal_and_construct_references_validate_through_load
 
     validator = RegistryValidator(catalogues, source_root=bundled_path())
     validator.validate_registry(modelos)
+
+
+def test_attested_and_reviewed_presumptive_legal_corpus_remain_accepted(
+    committed_registry: tuple[Path, tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
+    """The production gate accepts direct BOE evidence and its bounded legacy exception."""
+    _registry_root, _modelos, catalogues = committed_registry
+
+    for reference_id in ("rd-1065-2007:art-9", "ley-37-1992:art-94"):
+        verify_legal_reference_grounding(catalogues.legal[reference_id], source_root=bundled_path())
+
+
+def test_reviewed_presumptive_exception_set_exactly_covers_committed_legal_corpus(
+    committed_registry: tuple[Path, tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
+    """A new markup-only legal corpus cannot silently inherit the legacy exception."""
+    _registry_root, _modelos, catalogues = committed_registry
+    source_root = bundled_path()
+    observed = {
+        reference.corpus_ref.partition("#")[0]
+        for reference in catalogues.legal.values()
+        if classify_normative_corpus_provenance(source_root, reference.corpus_ref)
+        is NormativeCorpusProvenance.BOE_PRESUMPTIVE
+    }
+
+    assert observed == set(_REVIEWED_PRESUMPTIVE_NORMATIVE_CORPUS)
+    for corpus_path, exception in _REVIEWED_PRESUMPTIVE_NORMATIVE_CORPUS.items():
+        reviewed_reference = catalogues.legal[exception.reviewed_reference]
+        assert reviewed_reference.corpus_ref.partition("#")[0] == corpus_path
+        assert reviewed_reference.reviewed_by == exception.reviewed_by
+        assert reviewed_reference.reviewed_at is not None
+        assert reviewed_reference.reviewed_at.isoformat() == exception.reviewed_at
+        assert exception.reason
+
+
+def test_every_committed_normative_legal_reference_satisfies_provenance_contract(
+    committed_registry: tuple[Path, tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
+    """No normative legal authority can silently retain authored corpus text."""
+    _registry_root, _modelos, catalogues = committed_registry
+    source_root = bundled_path()
+    authored: list[str] = []
+    unreviewed_presumptive: list[str] = []
+    for reference in catalogues.legal.values():
+        corpus_path = reference.corpus_ref.partition("#")[0]
+        provenance = classify_normative_corpus_provenance(source_root, reference.corpus_ref)
+        if provenance is NormativeCorpusProvenance.AUTHORED:
+            authored.append(reference.id)
+        elif (
+            provenance is NormativeCorpusProvenance.BOE_PRESUMPTIVE
+            and corpus_path not in _REVIEWED_PRESUMPTIVE_NORMATIVE_CORPUS
+        ):
+            unreviewed_presumptive.append(reference.id)
+
+    assert not authored, f"authored normative corpus cited as legal authority: {sorted(authored)!r}"
+    assert not unreviewed_presumptive, (
+        "BOE-presumptive normative corpus cited without a reviewed per-file record: "
+        f"{sorted(unreviewed_presumptive)!r}"
+    )
+
+
+def test_authored_or_unreviewed_presumptive_normative_corpus_is_refused(
+    tmp_path: Path,
+) -> None:
+    """The production verifier fails closed before a fixture can satisfy text clauses."""
+    template = LegalReference.model_validate(
+        {
+            "id": "probe:art-1",
+            "evidence_tier": "legal_authority",
+            "authority": "boe",
+            "kind": "ley",
+            "corpus_ref": "corpus/normatives/html/attested.html#a1",
+            "document_id": "BOE-A-2024-1",
+            "article": "1",
+            "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2024-1#a1",
+            "effective_from": date(2024, 1, 1),
+            "review_status": "operator_reviewed",
+            "reviewed_at": date(2024, 1, 1),
+            "reviewed_by": "operator",
+            "required_text": ("texto",),
+        }
+    )
+    authored = tmp_path / "corpus" / "normatives" / "html" / "authored.html"
+    authored.parent.mkdir(parents=True)
+    authored.write_text("<p>Texto redactado sin procedencia oficial.</p>", encoding="utf-8")
+    unreviewed = authored.with_name("unreviewed.html")
+    unreviewed.write_text('<h5 class="articulo">Artículo 1.</h5>', encoding="utf-8")
+
+    authored_reference = template.model_copy(update={"corpus_ref": "corpus/normatives/html/authored.html#a1"})
+    with pytest.raises(RegistryValidationError, match="authored normative corpus"):
+        verify_legal_reference_grounding(authored_reference, source_root=tmp_path)
+
+    unreviewed_reference = template.model_copy(update={"corpus_ref": "corpus/normatives/html/unreviewed.html#a1"})
+    with pytest.raises(RegistryValidationError, match="no reviewed per-file exception"):
+        verify_legal_reference_grounding(unreviewed_reference, source_root=tmp_path)
 
 
 def _collect_refs(value: object, key_name: str) -> tuple[str, ...]:

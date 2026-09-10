@@ -107,8 +107,7 @@ msgstr "`uvx --from cadrumo==X.Y.Z aeat --version` feloldódik tiszta gépen"
 #: ../../_release_notes_template.md:59
 msgid ""
 "`pip install cadrumo==X.Y.Z` pulls both exact-version data distributions"
-"     and `aeat app registry verify` runs clean"
+"     and `aeat config repair integrity registry` runs clean"
 msgstr ""
 "a `pip install cadrumo==X.Y.Z` mindkét pontos verziójú adatcsomagot "
-"letölti, és az `aeat app registry verify` hiba nélkül lefut"
-
+"letölti, és az `aeat config repair integrity registry` hiba nélkül lefut"

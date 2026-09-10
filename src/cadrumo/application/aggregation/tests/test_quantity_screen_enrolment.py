@@ -9,7 +9,7 @@ declared source kind.
 
 The gate has two halves and needs both. The inventory below drives each family's
 real resolver end to end and asserts the advisory arrives; the equality check
-against :func:`screened_quantity_families` — the registry each adapter writes to
+against ``screened_quantity_families`` — the registry each adapter writes to
 at import — is what stops a THIRD family being added with readers and no wiring.
 Without that half the inventory is a hand-maintained list, and a hand-maintained
 list of things to check cannot report the thing nobody added to it.

@@ -115,7 +115,7 @@ def test_a_dropped_severity_field_is_refused_not_silently_treated_as_clean() -> 
     outcome as :func:`test_a_clean_draft_with_only_non_error_findings_passes_gate_2`'s
     genuinely clean draft. The old code could not tell "no errors" from
     "the read broke on an error". This drops ``severity`` straight off a
-    real, otherwise-valid ``ModeloFinding`` instance's own ``__dict__`` (not
+    real, otherwise-valid ``ModeloValidationFinding`` instance's own ``__dict__`` (not
     a look-alike stand-in) and asserts on the read failing with a
     cause-unique ``AttributeError`` naming the field -- never on
     ``SubmissionPreflightError``, which is the DIFFERENT, correct-behavior

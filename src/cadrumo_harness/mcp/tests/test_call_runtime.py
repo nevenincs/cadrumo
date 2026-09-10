@@ -151,12 +151,12 @@ def test_timeout_refusal_is_localized_and_names_the_tier() -> None:
     assert "420" in refusal
 
     installation = _cli_resolution_refusal_envelope(
-        command_key="registry.inspect",
+        command_key="ledger.categories",
         error=FileNotFoundError("Installed Cadrumo CLI executable is missing"),
     )
     validated_installation = validate_registered_envelope_document(installation, None)
     assert validated_installation == installation
-    assert validated_installation["command"] == "registry.inspect"
+    assert validated_installation["command"] == "ledger.categories"
     installation_error = _typed_error_envelope(validated_installation)
     assert installation_error["code"] == "mcp.transport.installation_incomplete"
     assert installation_error["context"] == {"installation_incomplete": "true"}
@@ -213,7 +213,7 @@ def test_transport_notices_carry_exact_terminal_projections() -> None:
         "no_recovery_outcome": "safety",
     }
 
-    degraded_notice = _warm_degradation_notice(command_key="registry.inspect", wedged=True)
+    degraded_notice = _warm_degradation_notice(command_key="ledger.categories", wedged=True)
     assert degraded_notice.action is not None
     assert degraded_notice.action.model_dump(mode="json") == {
         "failed_condition_id": "mcp.transport.warm_available",

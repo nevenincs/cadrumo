@@ -53,7 +53,7 @@ _REMEDY: Final[str] = (
     "REFERENCE to the activity slot, not a copy of its type. Collapse "
     "Transaction.tipo_actividad to that reference and repoint its readers "
     "(_renta_income_ledger._project_income_onto_casilla and "
-    "_tipo_actividad_partitions.irpf_activity_kind_for) rather than adding this "
+    "tipo_actividad_partitions.resolve_tipo_actividad_selector) rather than adding this "
     "second home to the allowlist."
 )
 

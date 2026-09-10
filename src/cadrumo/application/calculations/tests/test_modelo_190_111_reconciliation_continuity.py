@@ -29,8 +29,8 @@ no mocks) across two distinct renta years (2025, 2026). The simplest non-zero
 111 scenario populates only the ``trabajo dinerario`` category (casillas
 02-03) plus total retenciones (casilla 28 is computed from sub-totals) and
 zeroes the remaining eight monetary categories. Both calculated resumen years are
-recorded through the :class:`cross-year observation` and cross-checked against
-the cross-year claim via :func:`the cross-year behavior assertion`.
+recorded through the ``cross-year observation`` and cross-checked against
+the cross-year claim via ``the cross-year behavior assertion``.
 
 Grounding (non-tautological): the 111 casilla 28 (total retenciones) is
 computed by the engine as the sum over all retention sub-totals. The 190
@@ -467,7 +467,7 @@ def test_modelo_190_111_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
     """End-to-end enrollment: 111 quarterly aggregation → 190 annual across two renta years.
 
     Drives the REAL 111 and 190 backends for both renta years (2025, 2026),
-    records each 190 calculation through the :class:`cross-year observation`
+    records each 190 calculation through the ``cross-year observation``
     (RECONCILIATION evidence_class — calculation mode, evidenced by _produced
     casilla count), and cross-checks the recorded two-year set against the
     cross-year claim.

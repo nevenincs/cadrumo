@@ -44,12 +44,15 @@
           "pending_review_count": 0,
           "period": null,
           "readiness_issue_count": 0,
+          "readiness_issues": [],
           "ready": null,
           "reviewed_count": 0,
           "skipped_count": 0,
           "split_count": 0,
+          "stale_filings": [],
           "stashed_count": 0,
-          "total_count": 0
+          "total_count": 0,
+          "unconverted_currency_count": 0
         },
         "schema_version": "2",
         "status": "success"

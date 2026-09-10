@@ -259,7 +259,7 @@ import_budgets = {
 }
 selected_contracts = {
     "aeat config profile list": ("local-io", set()),
-    "aeat app registry inspect": ("compute", set()),
+    "aeat app ledger categories": ("compute", set()),
     "aeat app modelo work calculate": (
         "compute",
         {
@@ -597,7 +597,7 @@ def _probe_installed_command_specs(*, site_root: Path, work_root: Path) -> dict[
         for mode in (
             "projection",
             "aeat config profile list",
-            "aeat app registry inspect",
+            "aeat app ledger categories",
             "aeat app modelo work calculate",
         ):
             environment["AEAT_COMMAND_SPEC_PROBE_MODE"] = mode

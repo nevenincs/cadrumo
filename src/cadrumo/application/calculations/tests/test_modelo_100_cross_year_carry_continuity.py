@@ -254,12 +254,12 @@ def test_modelo_100_base_liquidable_negativa_enrolls_two_renta_years(tmp_path: P
 
     Drives the REAL M100 ``calculate_modelo_revision`` for two distinct renta
     years (2024, 2025), each sourcing the prior year's 1391 generated saldo
-    (2023, 2024), records each through the :class:`cross-year observation` (CALC;
+    (2023, 2024), records each through the ``cross-year observation`` (CALC;
     evidence = the _produced-value count from the real engine run), and
     cross-checks the recorded two-year set against the cross-year claim.
     Year N's prior filing is in the store but must not contaminate Year N+1's
     resolver. A single-year or stub run raises at
-    :func:`the cross-year behavior assertion`.
+    ``the cross-year behavior assertion``.
 
     Honest scope: this proves the general-base carry *wiring* across two renta
     years through the full calc. The integración-subtract consumption of the

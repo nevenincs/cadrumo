@@ -90,7 +90,7 @@ def test_fresh_process_gate_bites_on_unrelated_registry_loading(tmp_path: Path) 
     control = profile_cli_path((), invocation_args=("--help",), storage_root=storage)
     injector = _write_fresh_process_injector(
         tmp_path / "registry-injector",
-        'import importlib; importlib.import_module("cadrumo.application.registry")',
+        'import importlib; importlib.import_module("cadrumo.domain.calculations.registry")',
     )
     planted = profile_cli_path(
         (),
@@ -102,11 +102,8 @@ def test_fresh_process_gate_bites_on_unrelated_registry_loading(tmp_path: Path) 
     for control_phase, planted_phase in zip(_observations(control), _observations(planted), strict=True):
         assert control_phase.exit_code == planted_phase.exit_code == 0
         added = set(planted_phase.import_families["registry"]) - set(control_phase.import_families["registry"])
-        assert {
-            "cadrumo.application.registry",
-            "cadrumo.domain.calculations.registry",
-        } <= added
-        with pytest.raises(AssertionError, match=r"cadrumo\.application\.registry") as failure:
+        assert "cadrumo.domain.calculations.registry" in added
+        with pytest.raises(AssertionError, match=r"cadrumo\.domain\.calculations\.registry") as failure:
             _require_no_new_imports(control_phase, planted_phase, family="registry")
         assert "unexpected registry imports" in str(failure.value)
     assert tuple(storage.iterdir()) == ()

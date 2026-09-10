@@ -1,6 +1,11 @@
 [[revisions."2025".constructs]]
 id = "renta-cuota-chain"
 legal_refs = [
+    "andalucia-ley-5-2021:art-23-bis",
+    "asturias-dl-2-2014:art-2-bis",
+    "canarias-dl-1-2009:art-18-quater",
+    "galicia-dl-1-2011:art-4-bis",
+    "valenciana-ley-13-1997:art-2-bis",
     "ley-35-2006:art-17",
     "ley-35-2006:art-48",
     "ley-35-2006:art-22",

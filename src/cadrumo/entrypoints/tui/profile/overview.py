@@ -343,7 +343,7 @@ class ProfileManagerScreen(TypedAppAccess, Screen[None]):
         }
         """Whether each source's declared AEAT-authentication requirement is
         currently met, keyed by source. Injected from
-        :func:`resolve_acquisition_source_credential_postures` against the
+        ``resolve_acquisition_source_credential_postures`` against the
         real :class:`AuthState`, never guessed here. A host that supplies
         none renders every source without a credential badge -- an unknown
         posture is not the same claim as "credential missing"."""

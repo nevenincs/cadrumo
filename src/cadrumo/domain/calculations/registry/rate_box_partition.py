@@ -155,7 +155,7 @@ def _partition_for_rate_box_group(
 
     The formation decision is deliberately delegated to
     :func:`_unscreened_reason`: a group that has a reason must remain absent from
-    this result so :func:`rate_box_unscreened_groups` can report it instead.
+    this result so :func:`rate_box_coverage_shortfalls` can report it instead.
     """
     blind = [member for member in members if not member[1].get(_APPLIED_RATES_AXIS)]
     rated = [member for member in members if member[1].get(_APPLIED_RATES_AXIS)]
@@ -222,7 +222,7 @@ def derive_rate_box_partitions(revision: ModeloRevision) -> tuple[RateBoxPartiti
         whose rate was never recorded reaches no casilla at all. A gate rebuilt
         on this output would stop seeing precisely the case it exists for.
 
-        :func:`rate_box_unscreened_groups` returns that residue and is the
+        :func:`rate_box_coverage_shortfalls` returns that residue and is the
         correct thing to consume when the question is "what was never checked".
 
     Args:

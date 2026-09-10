@@ -107,8 +107,7 @@ msgstr "`uvx --from cadrumo==X.Y.Z aeat --version` es resol en una màquina neta
 #: ../../_release_notes_template.md:59
 msgid ""
 "`pip install cadrumo==X.Y.Z` pulls both exact-version data distributions"
-"     and `aeat app registry verify` runs clean"
+"     and `aeat config repair integrity registry` runs clean"
 msgstr ""
 "`pip install cadrumo==X.Y.Z` descarrega les dues distribucions de dades "
-"de versió exacta i `aeat app registry verify` s'executa sense errors"
-
+"de versió exacta i `aeat config repair integrity registry` s'executa sense errors"

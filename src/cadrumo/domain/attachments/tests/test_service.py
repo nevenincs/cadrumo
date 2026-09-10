@@ -76,7 +76,7 @@ def test_load_attachment_raises_on_unknown_id(tmp_path: Path) -> None:
 
 
 def test_list_attachments_returns_every_persisted_record(tmp_path: Path) -> None:
-    """list_attachments enumerates every record the caller added."""
+    """``iter_manifests`` enumerates every record the caller added."""
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         store = AttachmentStore()
@@ -153,7 +153,7 @@ def test_link_attachment_invoice_appends_a_second_distinct_invoice(tmp_path: Pat
 
 
 def test_link_attachment_invoice_makes_the_invoice_discoverable_via_list_attachments(tmp_path: Path) -> None:
-    """The attachment is discoverable from the invoice id via ``list_attachments(linked_to=...)``."""
+    """The attachment is discoverable from the invoice id through ``iter_manifests``."""
 
     source_file = tmp_path / "invoice.pdf"
     source_file.write_bytes(b"%PDF-1.4 discoverable invoice bytes")

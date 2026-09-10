@@ -207,7 +207,7 @@ def test_dotaciones_stock_enrolls_two_renta_years(tmp_path: Path) -> None:
 
     Year N's prior filing is in the store but must not contaminate Year N+1's
     resolver. A single-year or stub run raises at
-    :func:`the cross-year behavior assertion`.
+    ``the cross-year behavior assertion``.
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()

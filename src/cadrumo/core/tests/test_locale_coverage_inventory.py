@@ -64,8 +64,6 @@ _OPERATOR_ERROR_LOCALE_KEYS: frozenset[str] = frozenset(
         # application.ledger
         "application.ledger.errors.evidence_attachment_requires_ids",
         "application.ledger.errors.purchase_evidence_already_set",
-        # application.user_profile
-        "application.user_profile.errors.unsupported_bundle_schema_version",
         # aggregation (prorrata / grouping)
         "aggregation.prorrata.errors.year_out_of_range",
         "aggregation.prorrata.errors.current_year_not_after_prior",

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
@@ -17,6 +18,7 @@ from ....core.corpus_text import (
 from ....core.hashing import blake2b_hex
 from ....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES
 from ._citation_blocklist import CitationSource, find_known_bad
+from .corpus_provenance import NormativeCorpusProvenance, classify_normative_corpus_provenance
 from .errors import RegistryValidationError
 from .schema_base import CorpusTier
 from .schema_references import LegalReference
@@ -91,6 +93,97 @@ _DISPOSITIVE_KINDS = frozenset(
         "directiva",
     },
 )
+
+@dataclass(frozen=True, slots=True)
+class _PresumptiveNormativeCorpusException:
+    """The review record that admits one markup-only normative corpus file."""
+
+    reason: str
+    reviewed_reference: str
+    reviewed_by: str
+    reviewed_at: str
+
+
+def _reviewed_presumptive_exception(
+    reviewed_reference: str,
+    *,
+    reviewed_by: str,
+    reviewed_at: str,
+) -> _PresumptiveNormativeCorpusException:
+    return _PresumptiveNormativeCorpusException(
+        reason="BOE structural markup is present but the file has no direct BOE attribution marker.",
+        reviewed_reference=reviewed_reference,
+        reviewed_by=reviewed_by,
+        reviewed_at=reviewed_at,
+    )
+
+
+#: BOE markup is strong but not conclusive provenance evidence: a human can
+#: reproduce the class names. These are the measured legacy files whose linked
+#: legal-citation review records are preserved below. The mapping is file-scoped
+#: because provenance belongs to the bytes reused by every citation. Any new
+#: presumptive file refuses until it has an equally explicit record or is
+#: re-acquired with BOE attestation.
+_REVIEWED_PRESUMPTIVE_NORMATIVE_CORPUS: Final = {
+    "corpus/normatives/html/ley-37-1992-art-122.html": _reviewed_presumptive_exception(
+        "ley-37-1992:art-122", reviewed_by="operator", reviewed_at="2026-05-21"
+    ),
+    "corpus/normatives/html/ley-37-1992-art-123.html": _reviewed_presumptive_exception(
+        "ley-37-1992:art-123", reviewed_by="operator", reviewed_at="2026-05-21"
+    ),
+    "corpus/normatives/html/ley-37-1992-art-124.html": _reviewed_presumptive_exception(
+        "ley-37-1992:art-124", reviewed_by="operator", reviewed_at="2026-05-21"
+    ),
+    "corpus/normatives/html/ley-37-1992-art-94.html": _reviewed_presumptive_exception(
+        "ley-37-1992:art-94", reviewed_by="operator", reviewed_at="2026-05-21"
+    ),
+    "corpus/normatives/html/ley-37-1992-art-95.html": _reviewed_presumptive_exception(
+        "ley-37-1992:art-95", reviewed_by="operator", reviewed_at="2026-05-21"
+    ),
+    "corpus/normatives/html/orden-eha-789-2010-art-1.html": _reviewed_presumptive_exception(
+        "orden-eha-789-2010:art-1", reviewed_by="operator", reviewed_at="2026-05-06"
+    ),
+    "corpus/normatives/html/orden-eha-789-2010-art-4.html": _reviewed_presumptive_exception(
+        "orden-eha-789-2010:art-4", reviewed_by="operator", reviewed_at="2026-05-06"
+    ),
+    "corpus/normatives/html/orden-hap-2250-2015-art-2.html": _reviewed_presumptive_exception(
+        "orden-hap-2250-2015:art-2", reviewed_by="operator", reviewed_at="2026-05-06"
+    ),
+    "corpus/normatives/html/orden-hap-2250-2015-art-3.html": _reviewed_presumptive_exception(
+        "orden-hap-2250-2015:art-3", reviewed_by="operator", reviewed_at="2026-05-06"
+    ),
+    "corpus/normatives/html/orden-hap-2250-2015-art-4.html": _reviewed_presumptive_exception(
+        "orden-hap-2250-2015:art-4", reviewed_by="operator", reviewed_at="2026-05-06"
+    ),
+    "corpus/normatives/html/orden-hap-2250-2015-art-5.html": _reviewed_presumptive_exception(
+        "orden-hap-2250-2015:art-5", reviewed_by="operator", reviewed_at="2026-05-06"
+    ),
+    "corpus/normatives/html/rd-1624-1992-art-29.html": _reviewed_presumptive_exception(
+        "rd-1624-1992:art-29", reviewed_by="agent-review", reviewed_at="2026-05-19"
+    ),
+    "corpus/normatives/html/rd-1624-1992-art-30.html": _reviewed_presumptive_exception(
+        "rd-1624-1992:art-30", reviewed_by="agent-review", reviewed_at="2026-05-19"
+    ),
+}
+
+
+def _validate_legal_corpus_provenance(reference: LegalReference, source_root: Path) -> None:
+    """Refuse filing authority whose normative corpus bytes lack BOE evidence."""
+    provenance = classify_normative_corpus_provenance(source_root, reference.corpus_ref)
+    if provenance is NormativeCorpusProvenance.AUTHORED:
+        raise RegistryValidationError(
+            f"legal reference {reference.id!r} cites authored normative corpus text; "
+            "filing-grade legal authority requires BOE-attested evidence. Re-acquire the "
+            "official BOE text or retain this material only through an explicit advisory path.",
+        )
+    if provenance is NormativeCorpusProvenance.BOE_PRESUMPTIVE:
+        corpus_path = reference.corpus_ref.partition("#")[0]
+        if corpus_path not in _REVIEWED_PRESUMPTIVE_NORMATIVE_CORPUS:
+            raise RegistryValidationError(
+                f"legal reference {reference.id!r} cites BOE-presumptive normative corpus text "
+                f"at {corpus_path!r}, which has no reviewed per-file exception; re-acquire "
+                "BOE-attested evidence or add a bounded reviewed exception.",
+            )
 
 #: Calibrated against what :func:`_legal_corpus_text` actually RETURNS, not
 #: against the raw bundled HTML: ``normalise_corpus_text`` lowercases and
@@ -182,10 +275,10 @@ _PROVISION_SUFFIXED_FILENAME = re.compile(r"-(art|apartado|anexo|da|dt|df|se|pr|
 def _validate_corpus_tier_declaration(reference: LegalReference, source_root: Path) -> None:
     """Verify a DECLARED ``corpus_tier`` against the bundled file, when present.
 
-    Purely additive: nothing in the committed catalogue declares
-    ``corpus_tier`` today, so this can never fire against the existing tree.
-    It exists so a FUTURE declaration is checked rather than trusted --
-    verified against the file, never merely typed.
+    Purely additive: declarations are optional, but the committed catalogue
+    already uses them on a bounded set of legal references. It exists so a
+    declaration is checked rather than trusted -- verified against the file,
+    never merely typed.
     """
     if reference.corpus_tier is None:
         return
@@ -294,6 +387,8 @@ def verify_legal_reference_grounding(
     """
     if reference.kind == "manual" and source_root is not None:
         _validate_manual_legal_reference(reference, source_root)
+    if source_root is not None:
+        _validate_legal_corpus_provenance(reference, source_root)
     if source_root is not None and (reference.required_text or reference.forbidden_text):
         _validate_legal_corpus_clauses(reference, source_root)
     if source_root is not None:

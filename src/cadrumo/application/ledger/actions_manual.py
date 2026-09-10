@@ -855,7 +855,7 @@ def _record_attachment_back_references(
 
     The transaction side of the link is written by the catalogue save above.
     Without this, the manifest side stayed empty, so
-    :func:`~domain.attachments.list_attachments` with
+    :meth:`~domain.attachments.protocols.AttachmentStoreProtocol.iter_manifests` filtered by
     ``linked_to=<transaction_id>`` could not discover an attachment the
     transaction itself cites -- the manifest models the link and the evidence
     workflow documents the provenance as bidirectional.

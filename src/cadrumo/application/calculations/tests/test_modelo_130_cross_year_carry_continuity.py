@@ -253,10 +253,10 @@ def test_modelo_130_enrolls_two_renta_years_via_prior_year_minoracion(repos: _Re
     annual M100 net income is then seeded, and renta year N+1's 1T resolves its
     ``previous_filing`` minoración binding from the local store (no manual
     re-entry) and is computed with it. Both calculated years are recorded
-    through the :class:`cross-year observation` (calculation mode, evidence = the
+    through the ``cross-year observation`` (calculation mode, evidence = the
     _produced-value count from a real engine run) and the recorded distinct-year
     set is cross-checked against the cross-year claim claim. A single-year
-    or stub run would raise at :func:`the cross-year behavior assertion`,
+    or stub run would raise at ``the cross-year behavior assertion``,
     turning the authorization gate RED.
 
     The load-bearing cross-renta wiring invariant: renta year N+1's casilla 13

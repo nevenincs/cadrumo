@@ -410,7 +410,7 @@ def deductible_percentage_for(
     ``EXCLUSIVELY_DEDUCTIBLE`` → 100 (regla 1.ª, deducted in full),
     ``EXCLUSIVELY_NON_DEDUCTIBLE`` → 0 (regla 2.ª, no deduction),
     ``COMMON`` → ``general_percentage`` (regla 3.ª, deducted at the general
-    prorrata percentage). Consumed both by :func:`classify_input_deduction`
+    prorrata percentage). Consumed both by :func:`deductible_percentage_for`
     (per-input deduction) and by the ledger IVA aggregation's regime-aware
     especial apportionment, so the reglas live in exactly one place.
     """

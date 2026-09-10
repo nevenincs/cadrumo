@@ -7,9 +7,8 @@ is mounted, and refuses only that.
 
 An `app` signal is `filing`, or `registry`, or `calculation` together with a
 write route. `calculation` alone is deliberately insufficient: `config profile
-status` and `validate` both declare it while computing facts about the profile,
-and `config repair integrity registry` declares it while reading bundled data.
-All three are read-only, and a criterion that evicted them would be wrong about
+status` and `validate` both declare it while computing facts about the profile.
+Both are read-only, and a criterion that evicted them would be wrong about
 the most canonical `config` verbs in the tree. (`config profile preflight` was a
 fourth such verb until it was retired into `app modelo readiness`; the argument
 never rested on it.)

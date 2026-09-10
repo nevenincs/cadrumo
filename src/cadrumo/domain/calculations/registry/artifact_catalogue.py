@@ -24,6 +24,7 @@ __all__ = [
     "ArtifactDiagnosticKind",
     "ArtifactDisposition",
     "ArtifactIdentity",
+    "ArtifactIdentityInput",
     "ArtifactRole",
     "DerivedArtifact",
     "SemanticAnnotation",
@@ -60,7 +61,7 @@ def _bundled_path(value: str | PurePosixPath, *, field_name: str) -> PurePosixPa
 
 def _sha256(value: str, *, field_name: str) -> str:
     """Refuse a digest that is not the canonical lowercase SHA-256 spelling."""
-    if _SHA256.fullmatch(value) is None:
+    if not isinstance(value, str) or _SHA256.fullmatch(value) is None:
         raise ValueError(f"{field_name} must be a lowercase SHA-256 hexadecimal digest")
     return value
 
@@ -108,13 +109,47 @@ class ArtifactIdentity:
         """Reject non-canonical identity claims at the declaration boundary."""
         object.__setattr__(self, "path", _bundled_path(self.path, field_name="path"))
         object.__setattr__(self, "sha256", _sha256(self.sha256, field_name="sha256"))
-        if self.bytes <= 0:
+        if not isinstance(self.bytes, int) or isinstance(self.bytes, bool) or self.bytes <= 0:
             raise ValueError("bytes must be positive")
+        if not isinstance(self.source_url, str):
+            raise ValueError("source_url must be an absolute HTTP(S) URL")
         parsed = urlparse(self.source_url)
         if parsed.scheme not in {"http", "https"} or not parsed.netloc:
             raise ValueError("source_url must be an absolute HTTP(S) URL")
-        if self.publisher is not None and not self.publisher.strip():
+        if self.publisher is not None and (not isinstance(self.publisher, str) or not self.publisher.strip()):
             raise ValueError("publisher must be non-empty when declared")
+        if type(self.retrieved_at) is not date:
+            raise ValueError("retrieved_at must be a date without a time component")
+
+
+@dataclass(frozen=True, slots=True)
+class ArtifactIdentityInput:
+    """A typed raw official claim which the compiler validates as a unit.
+
+    Adapters normally return :class:`ArtifactIdentity` after their own source
+    shape checks.  A caller which needs malformed source claims reported with
+    the rest of a bounded catalog instead supplies this record.  It preserves
+    the unvalidated fields intentionally; only compilation materializes the
+    validated identity.
+    """
+
+    path: str | PurePosixPath
+    sha256: str
+    bytes: int
+    source_url: str
+    publisher: str | None
+    retrieved_at: date
+
+    def to_identity(self) -> ArtifactIdentity:
+        """Materialize the validated identity at the compiler boundary."""
+        return ArtifactIdentity(
+            path=_bundled_path(self.path, field_name="path"),
+            sha256=self.sha256,
+            bytes=self.bytes,
+            source_url=self.source_url,
+            publisher=self.publisher,
+            retrieved_at=self.retrieved_at,
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -195,7 +230,7 @@ class ArtifactCatalogue:
 def compile_artifact_catalogue(
     *,
     known_paths: Sequence[str | PurePosixPath],
-    official_identities: Sequence[ArtifactIdentity] = (),
+    official_identities: Sequence[ArtifactIdentity | ArtifactIdentityInput] = (),
     derived_artifacts: Sequence[DerivedArtifact] = (),
     semantic_annotations: Sequence[SemanticAnnotation] = (),
     dispositions: Sequence[ArtifactDisposition] = (),
@@ -230,7 +265,23 @@ def compile_artifact_catalogue(
         role_claims.setdefault(path, set()).add(role)
         return True
 
-    for identity in official_identities:
+    for declared_identity in official_identities:
+        if isinstance(declared_identity, ArtifactIdentityInput):
+            try:
+                identity = declared_identity.to_identity()
+            except (TypeError, ValueError) as error:
+                try:
+                    path = _bundled_path(declared_identity.path, field_name="path")
+                except (TypeError, ValueError):
+                    path = None
+                diagnostic(
+                    ArtifactDiagnosticKind.MALFORMED_IDENTITY,
+                    path,
+                    f"official identity claim is malformed: {error}",
+                )
+                continue
+        else:
+            identity = declared_identity
         if not claim_role(identity.path, ArtifactRole.OFFICIAL_ARTIFACT):
             continue
         existing = identities.get(identity.path)

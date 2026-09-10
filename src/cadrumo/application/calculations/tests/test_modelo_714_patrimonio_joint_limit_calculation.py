@@ -12,7 +12,7 @@ See Also:
     :func:`~domain.calculations.registry.calculate_registry_snapshot`
         Evaluates the registry snapshot after the relation values and manual
         Modelo 714 inputs are assembled.
-    :class:`~application.calculations.cross-year observation`
+    ``cross-year observation``
         Captures the two distinct renta years asserted against the authorization
         manifest.
     :mod:`~domain.calculations.registry.tests.test_modelo_714_registry`

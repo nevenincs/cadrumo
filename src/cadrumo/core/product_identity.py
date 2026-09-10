@@ -101,6 +101,9 @@ PRODUCT_IDENTITY: Final[ProductIdentity] = ProductIdentity(
     companion_namespace="cadrumo_data",
 )
 
+#: Short legal name retained only for the external tax authority referent.
+AEAT_AUTHORITY_SHORT_NAME: Final[str] = "AEAT"
+
 _STALE_CLI_EXECUTABLE_RE = re.compile(r"\bcadrumo(?=[ \t\r\n]+(?:app|config|manual|--|<))")
 
 
@@ -110,6 +113,7 @@ def normalise_product_identity_references(value: str) -> str:
 
 
 __all__ = [
+    "AEAT_AUTHORITY_SHORT_NAME",
     "PRODUCT_IDENTITY",
     "AeatProductSoftwareEvidence",
     "AeatProductSoftwareIdentity",

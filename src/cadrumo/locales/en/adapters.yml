@@ -231,8 +231,6 @@ adapters:
         on a modification page; this reader never changes censal data.
       censal_no_dispatch: The AEAT access selector did not open the censal page on
         a working server; re-authenticate and try again.
-      cotejo_nav_failed: Navigation to the AEAT cotejo page failed; session may have
-        expired mid-walk. Run 'aeat config auth test' and retry.
       ejercicio_unavailable: The AEAT declarations register does not offer the requested
         tax year for this modelo.
       empty_identity_nif: AEAT session identity NIF is empty; cannot bind live filing

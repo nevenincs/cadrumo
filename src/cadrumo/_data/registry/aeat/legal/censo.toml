@@ -131,9 +131,9 @@ article = "1"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-410#articulo-primero"
 published_at = 2025-01-09
 effective_from = 2025-02-03
-review_status = "operator_reviewed"
-reviewed_at = 2026-05-14
-reviewed_by = "operator"
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-10
+reviewed_by = "agent-replaced the bundled excerpt with the BOE published text of BOE-A-2025-410; the prior excerpt was hand-shaped; operator to re-stamp"
 notes = "Articulo primero de la Orden HAC/1526/2024: modifica la Orden EHA/1274/2007 para mantener Modelo 036 y suprimir las superficies activas del Modelo 037."
 required_text = [
     "modelo 036",
@@ -151,9 +151,9 @@ article = "disposicion final unica"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-410#disposicionfinalunica"
 published_at = 2025-01-09
 effective_from = 2025-02-03
-review_status = "operator_reviewed"
-reviewed_at = 2026-05-14
-reviewed_by = "operator"
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-10
+reviewed_by = "agent-replaced the bundled excerpt with the BOE published text of BOE-A-2025-410; the prior excerpt was hand-shaped; operator to re-stamp"
 notes = "Disposicion final unica de la Orden HAC/1526/2024: entrada en vigor el 3 de febrero de 2025 para los Modelos 030 y 036."
 required_text = [
     "Entrada en vigor",

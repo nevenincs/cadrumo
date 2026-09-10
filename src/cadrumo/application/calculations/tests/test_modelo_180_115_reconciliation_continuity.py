@@ -30,8 +30,8 @@ resolves the annual 180 relations for each year, and asserts:
    values (op=copy threading).
 
 Both calculated resumen years are recorded through the
-:class:`cross-year observation` and cross-checked against the authorization
-manifest via :func:`the cross-year behavior assertion`.
+``cross-year observation`` and cross-checked against the authorization
+manifest via ``the cross-year behavior assertion``.
 
 Grounding (non-tautological): the 115 casilla 03 (retenciones) is _produced
 by the registry engine from the manual base (19 % × casilla 02). The 180
@@ -317,7 +317,7 @@ def test_modelo_180_115_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
     """End-to-end enrollment: 115 quarterly aggregation → 180 annual across two renta years.
 
     Drives the REAL 115 and 180 backends for both renta years (2025, 2026),
-    records each 180 calculation through the :class:`cross-year observation`
+    records each 180 calculation through the ``cross-year observation``
     (RECONCILIATION evidence_class — calculation mode, evidenced by _produced
     casilla count), and cross-checks the recorded two-year set against the
     cross-year claim.

@@ -78,7 +78,7 @@ def verify_catalogue_against_legal(
                     source_root=source_root,
                 ),
             )
-    _logger.debug("verify_catalogue produced %d issue(s)", len(issues))
+    _logger.debug("verify_catalogue_against_legal produced %d issue(s)", len(issues))
     return IvaVerificationReport(issues=tuple(issues))
 
 

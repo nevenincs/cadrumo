@@ -66,7 +66,7 @@ def _resolved_target() -> ModeloWorkspaceResolvedTargetV1:
 def _capability(disposition: ModeloWorkspaceCapabilityDisposition) -> ModeloWorkspaceCapabilityV1:
     target = _resolved_target()
     return ModeloWorkspaceCapabilityV1(
-        capability=ModeloWorkspaceCapabilityName.FILING_EXPORT_READINESS,
+        capability=ModeloWorkspaceCapabilityName.FILING_DRAFT_READINESS,
         disposition=disposition,
         target=target,
         selected_revision_id=target.law_selected_revision_id,

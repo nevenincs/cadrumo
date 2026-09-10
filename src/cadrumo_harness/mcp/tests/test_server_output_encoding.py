@@ -6,7 +6,7 @@ without an explicit ``encoding`` decodes with ``locale.getpreferredencoding()`` 
 cp1252 on Windows — which turns every accented Spanish character in a relayed
 envelope or error into double-encoded mojibake (``encontró`` -> ``encontrÃ³``)
 for the LLM client. The live-model persona measurement observed exactly this in a
-``registry citations view`` error. ``_run_subprocess_tool`` must pin
+Spanish CLI error. ``_run_subprocess_tool`` must pin
 ``encoding="utf-8"`` so the relayed text is faithful on every host.
 
 The decode contract now lives in the supervised call runtime

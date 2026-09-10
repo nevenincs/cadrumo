@@ -33,27 +33,16 @@ directly over these same scenarios returns casilla 0520 = 5550.00 for every
 comunidad autonoma, while the captures record 5606.00 for Canarias, 5789.00 for
 Galicia and 5956.65 for Madrid -- three disagreements that this fold reported as
 ``match`` for as long as it has existed. Do not cite a green report from here as
-evidence of external grounding, and do not wire the engine in without also
-deciding what a resulting mismatch means: whether the registry is under-modelled
-or the captures measure something else is unresolved and needs official AEAT
-authority to settle.
+evidence of external grounding.
 
-Reading the guard policy
-------------------------
-
-The policy is not hand-built here. It is derived from the registry's own
-``live_cross_references`` declaration through
-:func:`remote_state_policy_from_cross_reference`, so the guard this fold runs
-under is the guard the registry declares, and a declaration change reaches the
-runner without a second edit.
-
-Verdicts stay distinct
-----------------------
-
-``match``, ``mismatch``, ``unverifiable`` and ``blocked`` are four outcomes,
-not a boolean. A payload whose expected casilla was never observed is
-``unverifiable`` -- it is not a pass and not a failure, and the report counts
-it separately so an absent observation can never be read as agreement.
+The disagreement that motivated this note has been resolved. The captures were
+correct and the registry was under-modelled: casilla 0512 resolved every CCAA
+key to a single 5.550 parameter, while the bundled AEAT Manual practico de
+Renta 2025 (parte 1, capitulo 14) publishes a per-comunidad amount. The
+registry now dispatches per CCAA and the engine reproduces all five captured
+figures exactly. Wiring this fold to the engine would therefore now pass on the
+base case -- but it still is not wired, so a green report here remains a
+statement about file self-consistency and nothing more.
 """
 
 from __future__ import annotations

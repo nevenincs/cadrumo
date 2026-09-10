@@ -358,14 +358,6 @@ def test_app_surface_uses_singular_user_domains() -> None:
         assert removed_command not in result.output
 
 
-def test_registry_verification_gate_is_registered_under_app_surface() -> None:
-    result = _invoke(["app", "registry", "verify", "--help"])
-
-    assert result.exit_code == 0, result.output
-    assert "--registry-root" in result.output
-    assert "--source-root" in result.output
-
-
 def test_modelo_introspection_surface_uses_registry_query_backend() -> None:
     listed = _invoke(["--format", "json", "app", "modelo", "list", "--year", "2026"])
     described = _invoke(

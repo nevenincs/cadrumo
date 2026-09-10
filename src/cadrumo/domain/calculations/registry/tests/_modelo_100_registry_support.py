@@ -153,7 +153,7 @@ _PERSONAL_FAMILY_CASILLAS: frozenset[CasillaId] = frozenset(
 
 _SOURCE_FOUNDATION_APPLICATION_LINKS: frozenset[str] = frozenset(
     {
-        "modelo-100-renta-web-open-cross-reference",
+        "modelo-100-portal",
         "modelo-100-export",
         "modelo-100-filed-declarations-observation",
         "modelo-100-calculation",

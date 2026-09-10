@@ -33,6 +33,7 @@ from ._verdict_cache import (
     registry_validation_is_certified,
 )
 from .convenio import collect_convenio_fingerprints, load_convenio_authority, validate_convenio_legal_refs
+from .corpus_provenance import NormativeCorpusProvenance, classify_normative_corpus_provenance
 from .errors import RegistrySnapshotError, RegistryValidationError
 from .facts.providers import (
     collect_registered_fact_provider_fingerprints,
@@ -483,6 +484,23 @@ class ValidatedRegistryAuthority:
             return self._modelos_by_id[modelo_id]
         except KeyError as exc:
             raise RegistrySnapshotError(f"modelo {modelo_id!r} is not present in the calculation registry") from exc
+
+    def legal_corpus_provenance(self, legal_ref_id: LegalRefId) -> NormativeCorpusProvenance:
+        """Return one legal reference's provenance through this validated authority.
+
+        The authority owns both catalogue selection and validation. This method
+        deliberately delegates byte resolution to the canonical classifier,
+        rather than reconstructing a second corpus-path convention here.
+        """
+        with self._state_lock:
+            self.validate_registry()
+            try:
+                reference = self.catalogues.legal[legal_ref_id]
+            except KeyError as exc:
+                raise RegistrySnapshotError(
+                    f"legal reference {legal_ref_id!r} is not present in the catalogue"
+                ) from exc
+            return classify_normative_corpus_provenance(self.source_root, reference.corpus_ref)
 
     def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
         """Resolve one typed governed-fact query through this validated authority."""

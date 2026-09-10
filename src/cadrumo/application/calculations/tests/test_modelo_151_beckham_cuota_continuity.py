@@ -10,9 +10,9 @@ two-band escala of art. 93.2.e).1.º — 24 % on the base liquidable general up 
 This module is the cross-year behavior coverage for Modelo 151. It
 drives the REAL registry calculation engine (real authority + the real
 lookup_bracket runtime — no mocks) across two distinct renta years (2024, 2025),
-records each through the :class:`cross-year observation`, and cross-checks the
+records each through the ``cross-year observation``, and cross-checks the
 recorded year-set against the cross-year claim via
-:func:`the cross-year behavior assertion`.
+``the cross-year behavior assertion``.
 
 The régimen runs for the change-of-residence year + the five following years
 (art. 93 chapeau, "el período impositivo en que se efectúe el cambio de

@@ -630,7 +630,7 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "orden"
-corpus_ref = "corpus/normatives/html/orden-eha-3290-2008.html#a1"
+corpus_ref = "corpus/normatives/html/orden-eha-3290-2008-art-1.html#a1"
 document_id = "BOE-A-2008-18497"
 article = "1"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-18497#a1"
@@ -638,7 +638,7 @@ published_at = 2008-11-17
 effective_from = 2009-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
-reviewed_by = "fetched verbatim art 1 + art 4 from BOE consolidated BOE-A-2008-18497; agent-prepared, corpus-grounded, pending operator re-stamp"
+reviewed_by = "agent-replaced the bundled excerpt with the BOE published text of arts. 1 and 4 of BOE-A-2008-18497; the prior excerpt was hand-shaped despite claiming a verbatim fetch; operator to re-stamp"
 notes = "Orden EHA/3290/2008 art 1: aprobacion del modelo 216, Impuesto sobre la Renta de no Residentes, rentas obtenidas sin mediacion de establecimiento permanente, retenciones e ingresos a cuenta, declaracion-documento de ingreso. Approval-order anchor for the Modelo 216 quarterly IRNR retencion return."
 required_text = [
     "Se aprueba el modelo 216",
@@ -650,7 +650,7 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "orden"
-corpus_ref = "corpus/normatives/html/orden-eha-3290-2008.html#a4"
+corpus_ref = "corpus/normatives/html/orden-eha-3290-2008-art-4.html#a4"
 document_id = "BOE-A-2008-18497"
 article = "4"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-18497#a4"
@@ -658,7 +658,7 @@ published_at = 2008-11-17
 effective_from = 2009-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
-reviewed_by = "fetched verbatim art 4 from BOE consolidated BOE-A-2008-18497; agent-prepared, corpus-grounded, pending operator re-stamp"
+reviewed_by = "agent-replaced the bundled excerpt with the BOE published text of art. 4 of BOE-A-2008-18497; the prior excerpt was hand-shaped despite claiming a verbatim fetch; operator to re-stamp"
 notes = "Orden EHA/3290/2008 art 4: plazo de presentacion del modelo 216. Con caracter general (trimestral), la presentacion e ingreso se efectua en los veinte primeros dias naturales de los meses de abril, julio, octubre y enero por el trimestre natural inmediato anterior. Para grandes empresas, mensual, en los veinte primeros dias naturales de cada mes. Binding deadline provision grounding the M216 trimestral deadline windows."
 required_text = [
     "Plazo de presentacion del modelo 216",

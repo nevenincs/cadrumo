@@ -1,17 +1,38 @@
 """Errors for the backend-owned operator-surface contract.
 
 :class:`OperatorSurfaceContractError` is the registered
-:class:`~core.errors.CadrumoError` raised when a command-surface declaration
-falls outside the accepted operator-surface contract.
+:class:`~core.errors.CadrumoError` raised by
+:func:`~application.operator_surface.contract.require_accepted_root` and
+:func:`~application.operator_surface.contract.resolve_source_kind_alias` when a
+caller asks for a root, source-kind token, or command-surface shape outside the
+accepted :class:`~application.operator_surface.models.OperatorSurfaceContract`.
 The application error registry binds it to ``REFUSED_OPERATOR_SURFACE_CONTRACT``
 so boundary adapters can render the refusal through the shared error contract.
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
 from ...core.i18n import tr
+from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ..operator_actions.models import PreconditionVerdict
+from ..operator_actions.preconditions import no_action_precondition_verdict
+
+
+def operator_surface_contract_verdict(
+    condition_id: str,
+    *,
+    facts: Mapping[str, str | bool | int],
+) -> PreconditionVerdict:
+    """Build the terminal verdict for an invalid operator-surface contract request."""
+    return no_action_precondition_verdict(
+        condition_id=condition_id,
+        facts=facts,
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        outcome=NoRecoveryOutcome.TERMINAL,
+    )
 
 
 class OperatorSurfaceContractError(TerminalPreconditionErrorMixin[PreconditionVerdict], CadrumoError):

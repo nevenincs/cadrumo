@@ -181,31 +181,18 @@ def test_verification_report_payload_resolves_the_exact_registry_recovery_verdic
         evidence_id="modelo.work.verify.registry_snapshot",
         evidence_values={"modelo": "999"},
         provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-        action_id="operator.registry.verify",
     )
     projection = VerificationFindingPreconditionProjection(
         finding=findings[0],
         precondition_failure=precondition_failure,
     )
     payload = _verification_report_payload(report, finding_preconditions=(projection,))
-    action = payload.findings[0].action
+    assert payload.findings[0].action is None
 
-    assert action is not None
-    assert action.action is not None
-    assert action.action.model_dump(mode="json") == {
-        "action_id": "operator.registry.verify",
-        "target_command_key": "registry.verify",
-        "cli_path": ["app", "registry", "verify"],
-    }
-    assert action.conditionality.value == "immediate"
-    assert action.missing_argument_names == ()
-    assert action.no_recovery_outcome is None
-
-    lines = _verification_report_lines(report, finding_actions=(action,))
+    lines = _verification_report_lines(report, finding_actions=(None,))
     finding_line = next(line for line in lines if line.startswith("finding\t"))
-    assert finding_line.rsplit("\t", 1)[-1] == resolved_precondition_action_json_cell(action)
-    assert '"action_id":"operator.registry.verify"' in finding_line
-    assert '"conditionality":"immediate"' in finding_line
+    assert finding_line.rsplit("\t", 1)[-1] == resolved_precondition_action_json_cell(None)
+    assert '"action_id"' not in finding_line
     assert "aeat app " not in finding_line
 
 

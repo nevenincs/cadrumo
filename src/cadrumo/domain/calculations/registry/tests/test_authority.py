@@ -14,6 +14,7 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .._loader_internals import _collect_registry_tree_fingerprints
 from ..authority import ValidatedRegistryAuthority
+from ..corpus_provenance import NormativeCorpusProvenance
 from ..errors import RegistrySnapshotError, RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
 from ..loader_cache import registry_disk_cache_dir
@@ -46,6 +47,16 @@ def test_authority_returns_isolated_validated_snapshots_for_repeated_filing_cont
     assert first.legal is not second.legal
     assert first.revision.period_selector.includes_year(2026)
     assert "1T" in first.revision.period_selector.periods
+
+
+def test_authority_exposes_validated_legal_corpus_provenance(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
+    """The authority returns the canonical classifier's result after registry validation."""
+    assert (
+        registry_authority.legal_corpus_provenance("rd-1065-2007:art-9")
+        is NormativeCorpusProvenance.BOE_ATTESTED
+    )
 
 
 def test_authority_snapshot_runs_real_modelo_calculation(registry_authority: ValidatedRegistryAuthority) -> None:
@@ -119,6 +130,9 @@ def test_authority_deadline_windows_are_validated_and_sorted(registry_authority:
 _MINIMAL_CATALOGUE_TOML = """\
 [supported_filing_years]
 years = [2025]
+
+[sociedades_annual_manual_coverage]
+dispositions = [{ year = 2025, status = "unpublished", official_locator = "https://example.com/manuals", observed_at = 2026-09-10, acquisition_condition_key = "application.registry.manuals.coverage.recheck_aeat_publication" }]
 
 [legal."test-ley-001:art-1"]
 evidence_tier = "legal_authority"

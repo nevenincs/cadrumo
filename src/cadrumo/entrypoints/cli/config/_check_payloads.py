@@ -71,10 +71,9 @@ class CheckPreflightPayload(OutputSchema):
     and mirrors :class:`PreflightCheck` rows
     from :func:`run_preflight_checks`: the
     per-auth-provider certificate / Cl@ve Móvil configuration health, the
-    secure-storage / bundled-corpus / configuration preflight, and the
-    registry referential-integrity gate. ``check`` is the stable row id
-    (e.g. ``auth-provider:certificate``, ``storage:local-root``,
-    ``registry:referential-integrity``); ``severity`` renders the
+    secure-storage / bundled-corpus / configuration preflight. ``check`` is
+    the stable row id (e.g. ``auth-provider:certificate``,
+    ``storage:local-root``); ``severity`` renders the
     :class:`HealthSeverity` verdict
     (``ok`` / ``warn`` / ``error``). Machine facts are preserved without
     forwarding producer prose. Until these rows carry typed verdicts, an

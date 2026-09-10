@@ -16,9 +16,9 @@ invariant is:
   is strictly unequal to the full observation, confirming the roundtrip
   assertions are not vacuously true.
 
-Both years are recorded through the :class:`cross-year observation` via
+Both years are recorded through the ``cross-year observation`` via
 ``record_context_year`` (non-calculation mode).
-:func:`the cross-year behavior assertion` cross-checks the recorded years
+``the cross-year behavior assertion`` cross-checks the recorded years
 against the cross-year claim's declared ``renta_years`` claim.
 
 Legal grounding: Orden HAP/2250/2015 arts. 1-5 (layout authority); Ley 35/2006

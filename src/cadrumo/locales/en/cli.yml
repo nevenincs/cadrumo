@@ -1579,7 +1579,6 @@ cli:
           JSON document before calculation.
   common:
     errors:
-      draft_id_not_found: Draft ID %{draft_id} not found
       filing_requires_declared_tax_id: 'The active profile does not declare a tax
         identity, so a declaration cannot be exported under it. Supply: %{requirements}.'
       invalid_iso_date: 'Invalid date format for %{label}: %{raw}. ISO 8601 (YYYY-MM-DD)
@@ -2986,7 +2985,6 @@ cli:
         overview_status: Summarize current profile and work state.
         paragraph_operational_workflow: App commands operate on the active profile.
         registry_inspect: Inspect registry metadata.
-        registry_verify: Verify local registry integrity.
         review_queue: List items waiting for operator review.
         review_view: Inspect one review item.
         section_ledger: Ledger
@@ -3049,7 +3047,7 @@ cli:
           at github.com/nevenincs/cadrumo/issues.
         heading: CADRUMO - local-first workflow with the Spanish Tax Agency (AEAT)
         paragraph_app_root: The app root manages profile overview, ledger, modelo,
-          review, registry, and authenticated AEAT reads.
+          review, and authenticated AEAT reads.
         paragraph_config_root: The config root manages profiles, encrypted local data,
           recovery keys, profile sessions, AEAT authentication, and repair.
         paragraph_local_first: Cadrumo keeps taxpayer data local and exposes exactly
@@ -3061,8 +3059,7 @@ cli:
           The active profile is the selected taxpayer context. A profile session provides
           resumable access to encrypted profile data.
         paragraph_review_terms: The review queue contains findings that need operator
-          action. The registry contains validated, versioned tax-rule data and sources;
-          it holds no taxpayer data and performs no live submission.
+          action.
         paragraph_tax_terms: The ledger contains imported money movements. A modelo
           is an official AEAT declaration form, distinct from its local work unit
           or export.
@@ -3275,8 +3272,8 @@ cli:
     manuals:
       app_help: Inspect AEAT Manual práctico records (Renta, IVA, Sociedades)
       kind_help: Filter by manual rule kind
-      list_help: List manual parts available locally
-      manual_help: Manual identifier (renta, iva)
+      list_help: List declared annual coverage and locally available manual parts
+      manual_help: Manual identifier (renta, iva, sociedades)
       part_help: Manual volume (single, part1, part2-deducciones-autonomicas, part3)
       rules_help: List the rules codified in a manual
       section_help: Optional section identifier to show
@@ -3284,7 +3281,6 @@ cli:
         %{target}
       verify_dangling_section_ref: section %{section_id} references unknown section
         %{target}
-      verify_failed: 'verification failed for %{manual_id}/%{year}/%{part}: %{messages}'
       verify_help: Verify the manual integrity against its contract
       verify_missing_manifest: '%{manifest_path} is absent; run ''aeat manual fetch''
         to materialise it'
@@ -3326,7 +3322,6 @@ cli:
       bindings or relations
     verify_filed_state_help: Compare local registry calculation output against captured
       filed AEAT state
-    verify_help: Verify the integrity of the local registry
     verify_source_root_help: Path to the source directory to verify
   review:
     app_help: 'Operator review queue: triage ledger transactions, purchase evidence,
@@ -3407,7 +3402,6 @@ cli:
       section_ledger: '  app ledger - bank imports and transaction review'
       section_modelo: '  app modelo - tax form catalogue and work units'
       section_overview: '  app overview - workspace status and filing calendar'
-      section_registry: '  app registry - local AEAT registry data'
       section_review: '  app review - items that need operator attention'
       sections_heading: Main sections
       session_login_command: 'Start or renew a profile session: `aeat config login
@@ -3422,10 +3416,3 @@ cli:
     quiet_help: Show errors only.
     verbose_help: Enable detailed output.
     version_help: Show the version number and exit.
-  topic:
-    app_help: Show conceptual help about regimes, modelos, and AEAT processes
-    errors:
-      not_found: 'Topic not found: %{slug}. Run ''aeat app registry citations'' to
-        list registered topics.'
-    opts:
-      slug: Topic identifier (kebab-case, e.g. iva-regime)

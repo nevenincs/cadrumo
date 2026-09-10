@@ -20,7 +20,7 @@ cross-year invariant is data-fidelity and cadence continuity across the
 - Anti-tautology: a mutated observation with one casilla omitted is strictly
   unequal to the full observation.
 
-Both years are recorded through the :class:`cross-year observation` via
+Both years are recorded through the ``cross-year observation`` via
 ``record_context_year`` (non-calculation mode) and cross-checked against the
 cross-year claim.
 

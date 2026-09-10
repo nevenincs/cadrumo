@@ -111,6 +111,7 @@ class Widget:
 
 MAX = 3
 UNUSED_CONST = 4
+COINCIDENTAL_CONST = 5
 
 
 def helper() -> None: ...
@@ -185,6 +186,11 @@ def test_run():
 _DEV = """
 import pkg.dead.b
 from pkg.used import UNUSED_CONST
+
+
+def coincidence(COINCIDENTAL_CONST=1):
+    \"\"\"Names COINCIDENTAL_CONST as a kwarg and a string, never as an import.\"\"\"
+    return {"COINCIDENTAL_CONST": COINCIDENTAL_CONST}
 """
 
 _TOOL_MAIN = """
@@ -353,17 +359,20 @@ def test_symbol_layer_reports_only_definitions_shipped_code_never_references(res
         "Config.PROSE_ONLY",
         "Widget.hidden_field",
         "Widget.hidden",
-        "UNUSED_CONST",
+        "COINCIDENTAL_CONST",
         "orphan_fn",
     }
     assert by_qualname["Color.BLUE"].kind is SymbolKind.ENUM_MEMBER
     assert by_qualname["Widget.hidden_field"].kind is SymbolKind.ATTRIBUTE
     assert by_qualname["Widget.hidden"].kind is SymbolKind.METHOD
-    assert by_qualname["UNUSED_CONST"].kind is SymbolKind.CONSTANT
+    assert by_qualname["COINCIDENTAL_CONST"].kind is SymbolKind.CONSTANT
     assert by_qualname["orphan_fn"].kind is SymbolKind.FUNCTION
     assert by_qualname["orphan_fn"].used_by == ("tests",)
-    assert by_qualname["UNUSED_CONST"].used_by == ("dev",)
     assert by_qualname["Widget.hidden"].used_by == ()
+    # ``UNUSED_CONST`` is absent: ``dev/tool.py`` imports it by name, and a
+    # resolved reference from a repository gate clears a symbol finding rather
+    # than labelling it. The two tests below pin both halves of that rule.
+    assert "UNUSED_CONST" not in by_qualname
     assert by_qualname["orphan_fn"].path == "src/pkg/used.py"
     assert by_qualname["orphan_fn"].line > 0
     # Clearing a member through the data payload never vouches for its class:
@@ -372,10 +381,45 @@ def test_symbol_layer_reports_only_definitions_shipped_code_never_references(res
 
 
 def test_docstring_prose_naming_a_symbol_does_not_clear_it(result: UnreachableCodeResult) -> None:
-    """The entry module's docstring names two dead symbols; prose describes, it does not reach."""
+    """The entry module's docstring names a dead symbol; prose describes, it does not reach.
+
+    The subject is deliberately ``orphan_fn`` alone. The docstring also names
+    ``UNUSED_CONST``, but that symbol is cleared for an unrelated and legitimate
+    reason -- a resolved ``dev/`` import -- so it could no longer distinguish
+    "prose does not clear" from "something else cleared it first".
+    """
     reported = {finding.qualname for finding in result.symbols}
 
-    assert {"orphan_fn", "UNUSED_CONST"} <= reported
+    assert "orphan_fn" in reported
+
+
+def test_a_resolved_dev_reference_clears_a_symbol_finding(result: UnreachableCodeResult) -> None:
+    """``dev/tool.py`` does ``from pkg.used import UNUSED_CONST``, so it is not dead weight.
+
+    Deleting a symbol a repository gate imports does not shrink what an
+    installed user reaches; it breaks the gate. The clear is counted under its
+    own ``dev_cleared`` tally rather than folded into the data-payload count,
+    whose report line attributes suppression to the registry/locale payloads.
+    """
+    assert "UNUSED_CONST" not in {finding.qualname for finding in result.symbols}
+    assert result.dev_cleared == 1
+
+
+def test_a_coincidental_dev_name_match_does_not_clear_a_symbol_finding(
+    result: UnreachableCodeResult,
+) -> None:
+    """``dev/tool.py`` names ``COINCIDENTAL_CONST`` as a kwarg and a string key only.
+
+    Neither is a reference to the shipped constant of that name, so the finding
+    must survive. This is the tooth on the clearing rule: it keys on a resolved
+    ``(defining module, symbol)`` edge, not on the bare-token index that also
+    harvests attribute names, keyword-argument names and identifiers spelled
+    inside strings. Without it, a stray word in any dev script would silence a
+    genuine orphan.
+    """
+    reported = {finding.qualname for finding in result.symbols}
+
+    assert "COINCIDENTAL_CONST" in reported
 
 
 def test_a_same_named_symbol_in_another_module_does_not_clear_the_dead_one(
@@ -575,7 +619,7 @@ def test_findings_carry_confidence_tiers_and_stable_ids(result: UnreachableCodeR
     assert modules["pkg.dead"].id == "module:pkg.dead"
     assert symbols["orphan_fn"].confidence is Confidence.EXACT
     assert symbols["orphan_fn"].id == "symbol:pkg.used:orphan_fn"
-    assert symbols["UNUSED_CONST"].confidence is Confidence.EXACT
+    assert symbols["COINCIDENTAL_CONST"].confidence is Confidence.EXACT
     assert symbols["Widget.hidden"].confidence is Confidence.NAME_MATCH
     assert symbols["Color.BLUE"].confidence is Confidence.NAME_MATCH_DATA
     assert symbols["Widget.hidden_field"].confidence is Confidence.NAME_MATCH_DATA

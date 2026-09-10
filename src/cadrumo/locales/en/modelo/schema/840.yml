@@ -3,7 +3,7 @@ modelo:
     '840':
       field:
         official_name: Modelo 840. Tax on Economic Activities return (registration,
-          variation, deregistration).
+          amendment, deregistration).
         title: Tax on Economic Activities (census declaration)
       revision:
         2003-y-siguientes:

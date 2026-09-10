@@ -21,10 +21,10 @@ persistence boundary:
   unequal to the full observation, confirming the roundtrip assertions are not
   vacuously true.
 
-Both years are recorded through the :class:`cross-year observation` via
+Both years are recorded through the ``cross-year observation`` via
 ``record_context_year`` (non-calculation mode; the context label is the
 un-fakeable evidence token for data-fidelity modelos).
-:func:`the cross-year behavior assertion` cross-checks the recorded years
+``the cross-year behavior assertion`` cross-checks the recorded years
 against the cross-year claim's declared ``renta_years`` claim.
 
 Legal grounding: Orden EHA/3012/2008 art. 3.1 (€3,000 threshold per

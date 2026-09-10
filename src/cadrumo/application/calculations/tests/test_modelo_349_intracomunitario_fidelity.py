@@ -27,7 +27,7 @@ for ejercicio N survives the encrypted-SQL roundtrip with all per-operator
 fields intact, and ejercicio N+1 is independently retrievable with distinct
 values that do not bleed.
 
-Both years are recorded through the :class:`cross-year observation` via
+Both years are recorded through the ``cross-year observation`` via
 ``record_context_year`` and cross-checked against the cross-year claim.
 
 Legal grounding: Orden EHA/769/2010 art. 1 (form mandate); Orden HAC/174/2020

@@ -23,7 +23,7 @@ plus the two ``ledger_iva_aggregation`` bindings), so the enrollment is
 (``calculate_registry_snapshot`` over the real authority snapshot, real binding
 resolution — no mocks) for two distinct renta years, asserting the engine
 computes ``iva.cuota-no-periodica-total`` as the two-leaf sum, and records each
-year through :meth:`cross-year observation.record_calculation_year` with the real
+year through ``cross-year observation.record_calculation_year`` with the real
 _produced-value count as un-fakeable evidence.
 
 Grounding (non-tautological): the two cuota leaves are supplied as the
@@ -247,10 +247,10 @@ def test_modelo_309_adhoc_calculation_enrolls_two_renta_years(tmp_path: Path) ->
 
     Drives the REAL 309 calculation engine for both ejercicios (real authority
     snapshot, real binding resolution, no mocks), records each through
-    :meth:`cross-year observation.record_calculation_year` (evidence = _produced-value
+    ``cross-year observation.record_calculation_year`` (evidence = _produced-value
     count from a real engine run), and cross-checks the recorded distinct-year
     set against the cross-year claim via
-    :func:`the cross-year behavior assertion`. Manifest must declare
+    ``the cross-year behavior assertion``. Manifest must declare
     renta_years = [2024, 2025] in the same commit.
     """
     with isolated_runtime_profile(tmp_path=tmp_path):

@@ -1,8 +1,8 @@
 """Off-load-path record-design coverage and calculation-closure derivations.
 
 :func:`calculation_closure_casilla_ids` and
-:func:`calculation_closure_legal_refs` derive bounded closure projections from
-a :class:`ModeloRevision`; :class:`DisenoCoverageReport` remains the advisory
+``calculation_closure_legal_refs`` derive bounded closure projections from
+a :class:`ModeloRevision`; ``DisenoCoverageReport`` remains the advisory
 full-Dise�o inventory.
 """
 
@@ -151,7 +151,7 @@ def _walk_calculation_closure(
     """Walk the within-modelo calculation closure, dispatching each member.
 
     Shared by :func:`calculation_closure_casilla_ids` and
-    :func:`calculation_closure_record_design_metadata`; ``visit_endpoint`` receives every
+    ``calculation_closure_record_design_metadata``; ``visit_endpoint`` receives every
     formula/binding endpoint casilla and ``visit_token`` every referenced
     casilla token (formula targets, transitive expression refs,
     verification-expectation operands, and within-modelo binding/relation

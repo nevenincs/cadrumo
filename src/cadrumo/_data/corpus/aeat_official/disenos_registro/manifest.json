@@ -74,7 +74,7 @@
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
   ],
   "model_count": 58,
-  "artefact_count": 247,
+  "artefact_count": 248,
   "modelos": [
     {
       "modelo": "036",
@@ -222,7 +222,7 @@
     },
     {
       "modelo": "270",
-      "artefact_count": 1
+      "artefact_count": 2
     },
     {
       "modelo": "280",

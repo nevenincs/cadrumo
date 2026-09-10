@@ -4,7 +4,7 @@
 ``Transaction.attachment_ids``, but its verification helper only loaded and
 validated the manifest -- it never appended the transaction id to
 ``Attachment.linked_transaction_ids``. The attachment domain's
-``list_attachments(linked_to=...)`` filter therefore could not discover an
+``iter_manifests`` filtered by ``linked_to`` therefore could not discover an
 attachment that the transaction itself cited, even though the manifest models
 the link and the evidence workflow documents the provenance as bidirectional.
 Invoice linkage had a dedicated manifest updater; ledger linkage now shares
@@ -123,7 +123,7 @@ def test_attaching_records_the_link_on_both_sides(secure_objects: SecureObjectRe
 def test_the_filtered_list_discovers_an_attachment_the_transaction_cites(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """``list_attachments(linked_to=...)`` is the discovery surface that was blind."""
+    """``iter_manifests`` filtered by ``linked_to`` is the discovery surface that was blind."""
     attachment_id = _seed_attachment(secure_objects, marker=b"b")
     transaction_id = _seed_transaction(secure_objects, idempotency_key="back-ref-2")
 

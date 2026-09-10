@@ -17,8 +17,6 @@ flows:
     invalid_decimal: Introduce un importe con punto decimal (por ejemplo 1234.56).
     invalid_integer: Introduce un número entero.
     select_unknown: 'Elige uno de los valores aceptados: %{choices}.'
-    tui_abandoned: El flujo {flow_id} se cerró en el modo {mode} antes de enviarlo
-      o guardarlo; no se ha registrado nada.
     unsupported_console: Esta consola no puede mostrar preguntas interactivas. Ejecuta
       el flujo desde un terminal real o guíalo con un archivo de respuestas.
   login:
@@ -69,54 +67,8 @@ flows:
     required_field_unavailable: Campo obligatorio del perfil
     section_title: '{title} - {present}/{total}'
     title: 'Perfil: {profile}'
-  modelo_edit:
-    footer: F2 revisar · Esc salir · F3 apariencia
-    review:
-      nothing_staged: No hay cambios que revisar.
-      unresolved_entries: Hay valores sin resolver. Corríjalos antes de revisar.
-    review_ready: 'Revisión lista. Casillas modificadas: {changed}.'
-    stale_conflict: Los datos han cambiado desde que se abrió la edición. Revise antes
-      de continuar.
-    title: Editar modelo
-    unresolved: 'Valor no reconocido en la casilla {casilla_id}. Casillas pendientes:
-      {count}.'
-    unsaved_on_leave: Hay cambios sin guardar. Revise o descarte antes de salir.
   modelo_review:
-    column:
-      action: Acción
-      blocked_by: Bloqueada por
-      casilla: Casilla
-      casilla_id: ID de casilla
-      code: Código
-      concrete: Origen concreto
-      declared: Origen declarado
-      expectation_id: ID de expectativa
-      facts: Hechos
-      grounding: Fundamentación
-      kind: Tipo
-      label: Etiqueta
-      message: Mensaje
-      official: Representación oficial
-      realised: Valor materializado
-      schema: Esquema
-      severity: Gravedad
     filter:
-      absent: Ausente
-      all: Todos los valores
-      binding_presence: Presencia de vínculo
-      binding_resolved: Resolución del vínculo
-      binding_source: Origen concreto del vínculo
-      casilla_blocker: Acción bloqueante de casilla
-      casilla_blocker_presence: Presencia de bloqueo de casilla
-      estado_casilla_oficial: Estado de casilla oficial
-      filters: Filtros
-      finding_kind: Tipo de incidencia
-      finding_severity: Gravedad de la incidencia
-      formula_presence: Presencia de fórmula
-      input_kind: Tipo de entrada declarado
-      no_matching_blockers: Ningún bloqueo coincide con los filtros activos.
-      no_matching_casillas: Ninguna casilla coincide con los filtros activos.
-      no_matching_findings: Ninguna incidencia coincide con los filtros activos.
       option:
         binding_source:
           atribucion_member: Miembro de atribución de rentas
@@ -201,26 +153,6 @@ flows:
           formula_binding: Vínculo de fórmula
           formula_relation: Relación de fórmula
           primary_binding: Vínculo principal
-      origin_anomaly: Anomalía de origen
-      origin_anomaly_presence: Presencia de anomalía de origen
-      present: Presente
-      realised_kind: Tipo de valor realizado
-      record_blocker: Acción bloqueante del registro
-      relation_channel: Canal de relación
-      relation_presence: Presencia de relación
-      reset: Restablecer filtros
-      resolved: Resuelto
-      unresolved: Sin resolver
-    summary:
-      calculation_revision: Revisión del cálculo
-      denominator_source: Origen del denominador
-      lifecycle_state: Estado del ciclo de vida
-      progress: Progreso
-      registry_revision: Revisión del registro
-      section: Resumen
-      verification_outcome: Resultado de la verificación
-      work_unit: Unidad de trabajo
-    title: Modelo {modelo} · {filing_year} · {period}
   modelo_select:
     column:
       filing_year: Ejercicio
@@ -228,8 +160,6 @@ flows:
       name: Nombre
       period: Periodo
       state: Estado
-    empty: Todavía no hay unidades de trabajo registradas en este perfil.
-    title: Seleccionar una unidad de trabajo de modelo
   modelo_workspace_filing:
     column:
       capability: Capacidad
@@ -244,8 +174,6 @@ flows:
     why:
       draft_structural: 'Sin medir de forma permanente: la construcción del borrador
         no guarda estado, así que ningún productor registra un veredicto que leer.'
-      export_pending_port: Sin medir a la espera de un contribuidor que lea el historial
-        de exportación.
   modelo_workspace_inputs:
     column:
       address: Dirección
@@ -392,24 +320,13 @@ flows:
     action_restart: Empezar de nuevo
     action_save_exit: Guardar y salir
     action_submit: Enviar
-    column_answer: Respuesta
-    column_question: Pregunta
-    column_registered: Registrado
-    column_status: Estado
     edit_not_editable: La pregunta {page_key} ya no se puede editar.
     edit_unknown: No existe ninguna pregunta con el número {number}.
     edit_which: '¿Qué número de pregunta quieres editar? '
     header: Revisión - {answered} preguntas respondidas.
-    header_tui: 'Revisión - {answered} respondidas, {remaining} obligatorias pendientes,
-      listo para enviar: {eligible}'
-    header_tui_stage_label: Revisión
-    mode_create: creación del perfil
-    mode_modify: edición del perfil
-    orphan_marker: (ya no se pregunta)
     page_deferred: 'La pregunta %{page_key} está aplazada: decide antes de presentar.'
     page_invalid: La pregunta %{page_key} tiene una respuesta no válida.
     page_stale: 'Revisa la pregunta %{page_key}: cambió una respuesta anterior.'
-    question_unavailable: Pregunta ya no disponible
     required_unanswered: La pregunta obligatoria %{page_key} está sin responder.
     reset_stale_confirm: La pregunta {page_key} ya no se plantea. ¿Borrar su respuesta
       guardada?
@@ -418,63 +335,8 @@ flows:
     row: '{number}. {page_key} - estado: {status}'
     save_unavailable: Guardar y salir no está disponible en el modo {mode}; completa
       el flujo de una sola vez.
-    section_unavailable: Sección no disponible
   status:
-    auth:
-      absolute_deadline: Límite absoluto de la sesión
-      certificate_source: Origen del certificado
-      idle_deadline: Límite de inactividad de la sesión
-      login_not_ready: sin verificar
-      login_ready: listo
-      provider: Proveedor
-      provider_none: sin configurar
-      provider_unknown: Proveedor desconocido
-      status: Acceso
-      subject: Titular
-    binding_quit: Salir
-    masked_value: (oculto)
-    profile:
-      column:
-        field: Campo
-        value: Valor
-      field_unavailable: Campo no disponible
-      none: No hay ningún perfil activo.
-      repeated_field: '{label} (elemento {row})'
-      value_unavailable: Valor no disponible
     profiles:
-      column:
-        active: Activo
-        label: Perfil
-        status: Estado
-      none: No hay perfiles registrados.
       status:
         complete: completo
         incomplete: incompleto
-        unknown: desconocido
-    section:
-      auth: Autenticación
-      notices: Avisos
-      profile: Perfil activo
-      profiles: Perfiles
-    title: Estado
-  tui:
-    binding_back: Anterior
-    binding_reset: Restablecer
-    binding_restart: Reiniciar
-    binding_return: Volver
-    binding_review: Resumen
-    binding_save_exit: Guardar y salir
-    binding_submit: Presentar
-    button_back: Atrás
-    button_next: Siguiente
-    button_review: Revisión
-    choice_unavailable: Opción no disponible
-    confirm_restart:
-      cancel: Cancelar
-      confirm: Reiniciar
-      message: Esto borra todas las respuestas dadas hasta ahora y vuelve a la primera
-        página. No se puede deshacer.
-      title: ¿Reiniciar todo el proceso?
-    header: '{flow} - pregunta {position} de {total}, sección {section}'
-    header_single_section: '{flow} - pregunta {position} de {total}'
-    section_unavailable: Sección no disponible

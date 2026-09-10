@@ -31,13 +31,11 @@ from ..diagnostic_models import (
     ConfigRepairReport,
     DiagnosticCheck,
     DiagnosticFinding,
-    RegistryVersionSummary,
     SecureObjectIntegrityReport,
     ensure_models_rebuilt,
 )
 from ..diagnostics import (
     _profile_check,
-    _registry_cross_domain_integrity_check,
     build_config_repair_report,
     preview_quarantine_unreadable_secure_objects,
     quarantine_unreadable_secure_objects,
@@ -750,23 +748,21 @@ def test_build_cli_version_report_fast_path_needs_no_model_rebuild() -> None:
     assert isinstance(render_cli_version_text(report), str)
 
 
-def _internal_registry_repair_report() -> ConfigRepairReport:
+def _internal_repair_report() -> ConfigRepairReport:
     """Build a repair report carrying one internal-audience failing row.
 
     Used by the operator-vs-internal wording tests below; constructs the
-    report directly so the test does not depend on the local secure
-    backend or registry corruption.
+    report directly so the test does not depend on the local secure backend.
     """
 
     ensure_models_rebuilt()
-    registry = RegistryVersionSummary(available=True, registry_root="/x", modelo_count=1, casilla_count=2)
     checks = (
         DiagnosticCheck(
-            name="registry.integrity",
+            name="application.internal",
             status="fail",
-            summary="Registry integrity failed",
-            detail="casilla 9999 missing from revision 100-2025",
-            precondition_verdict=_terminal_diagnostic_verdict("diagnostics.registry.integrity.valid"),
+            summary="Internal application fault",
+            detail="A packaged application component is unavailable",
+            precondition_verdict=_terminal_diagnostic_verdict("diagnostics.application.internal.available"),
             audience="internal",
         ),
         DiagnosticCheck(
@@ -783,7 +779,6 @@ def _internal_registry_repair_report() -> ConfigRepairReport:
         package_version="0.1.0",
         python_version="3.13.11",
         log_file="cadrumo.log",
-        registry=registry,
         setup=None,
         secure_objects=SecureObjectIntegrityReport(),
         checks=checks,
@@ -887,14 +882,12 @@ def test_render_config_repair_text_lists_specific_findings() -> None:
         next_action=_UNRENDERED_NEXT_ACTION,
     )
     check = _profile_check(report)
-    registry = RegistryVersionSummary(available=True, registry_root="/x", modelo_count=1, casilla_count=2)
     repair_report = ConfigRepairReport(
         overall="warn",
         package_name="cadrumo",
         package_version="0.1.0",
         python_version="3.13.11",
         log_file="cadrumo.log",
-        registry=registry,
         setup=None,
         secure_objects=SecureObjectIntegrityReport(),
         checks=(check,),
@@ -915,41 +908,22 @@ def test_render_config_repair_text_lists_specific_findings() -> None:
 def test_render_config_repair_text_marks_internal_problems_distinctly() -> None:
     """Internal application defects must read differently from operator gaps.
 
-    A persona saw an internal registry-integrity ``fail`` and believed
-    their own profile was invalid. The renderer tags an
+    A persona saw an internal repair ``fail`` and believed their own profile
+    was invalid. The renderer tags an
     ``audience='internal'`` row so a taxpayer is not alarmed into
     thinking they forgot a field; operator-fixable rows carry no tag.
     """
 
     from ...core.i18n import tr
 
-    rendered = render_config_repair_text(_internal_registry_repair_report())
+    rendered = render_config_repair_text(_internal_repair_report())
     internal_label = tr("cli.diagnostics.repair.audience_internal")
 
-    registry_line = next(line for line in rendered.splitlines() if line.startswith("fail\tregistry.integrity"))
+    internal_line = next(line for line in rendered.splitlines() if line.startswith("fail\tapplication.internal"))
     auth_line = next(line for line in rendered.splitlines() if line.startswith("warn\tauth.readiness"))
 
-    assert internal_label in registry_line
+    assert internal_label in internal_line
     assert internal_label not in auth_line
-
-
-def test_config_repair_report_marks_registry_integrity_internal() -> None:
-    """The live ``registry.integrity`` check is classified as internal.
-
-    When the bundled registry is healthy the row is ``ok`` and
-    operator-facing; the audience field exists so that, on a real
-    registry-integrity defect, the renderer can word it as an internal
-    problem rather than a profile gap.
-    """
-
-    from ...core.resources.bundled_data import bundled_path
-
-    check = _registry_cross_domain_integrity_check(bundled_path("registry", "aeat"))
-    # Healthy registry → ok + operator audience. A failing registry would
-    # carry audience='internal'; that branch is pinned by the renderer
-    # test above against a constructed report.
-    assert check.name == "registry.integrity"
-    assert check.audience in {"operator", "internal"}
 
 
 # ---------------------------------------------------------------------------

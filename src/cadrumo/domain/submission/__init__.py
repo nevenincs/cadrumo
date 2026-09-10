@@ -33,7 +33,7 @@ Major declarations:
   pre-submission checks and their refusal.
 * :class:`ModeloPresentado`, :class:`SubmissionAttempt`, and
   :class:`SubmissionStatus` — the persisted lifecycle records, keyed by
-  :func:`make_submission_id`.
+  the :data:`SubmissionId` digest form.
 * :class:`SubmissionRepositoryProtocol` — the read-side persistence port
   (the concrete repository lives in the persistence adapter).
 * The :class:`ModeloDraftLike`, :class:`DeadlineWindowChecker`, and

@@ -10,7 +10,7 @@ See Also:
         Deadline-window authority used for the legal plazo assertions.
     :data:`~core.UNMODELED_OBLIGATIONS`
         Central set these promoted IS-consolidation modelos must leave.
-    :data:`~core.access_gate.validated registry modelo set`
+    :class:`~core.modelo.Modelo`
         Canonical modeled-obligation fleet that must include both forms.
     :class:`~domain.calculations.registry.ModeloEntry`
         Support-matrix row type that reports registry-backed modelo coverage.

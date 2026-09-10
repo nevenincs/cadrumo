@@ -29,8 +29,8 @@ Major declarations:
   the bundled registry's report, validated or degraded.
 
 See Also:
-    :func:`~application.registry.audit_bundled_registry_conformance`
-        Shipped composer this package renders.
+    :func:`~dev.registry.conformance.profile.audit_bundled_registry_conformance`
+        Development-only composer this package renders.
     :mod:`~dev.registry.conformance.cli`
         Typer surface for the five governance verbs.
     :func:`~domain.calculations.registry.build_support_matrix`

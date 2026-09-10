@@ -209,7 +209,8 @@ def link_attachment_transaction(
     *before* the evidence is captured, but the ledger evidence flow attaches an
     already-stored attachment to an existing transaction. Without this the link
     was recorded on the transaction only, so
-    :func:`list_attachments` with ``linked_to=<transaction_id>`` could not
+    :meth:`~domain.attachments.protocols.AttachmentStoreProtocol.iter_manifests`
+    filtered by ``linked_to=<transaction_id>`` could not
     discover an attachment the transaction itself cites -- even though the
     manifest models the link and the surrounding workflow documents the
     provenance as bidirectional.

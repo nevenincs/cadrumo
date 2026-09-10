@@ -16,9 +16,9 @@ recomputes automatically.
 This module is the cross-year behavior coverage for Modelo 202
 (CALC evidence class). It drives the REAL M200 and M202 registry backends
 across two distinct renta (annual) years, records each year through the
-:class:`cross-year observation`, and cross-checks the recorded two-year set
+``cross-year observation``, and cross-checks the recorded two-year set
 against the cross-year claim via
-:func:`the cross-year behavior assertion`.
+``the cross-year behavior assertion``.
 
 Grounding (non-tautological): the prior M200 cuota líquida is a manual input
 the test supplies (no formula under test produces it), and the assertions are
@@ -341,10 +341,10 @@ def test_modelo_202_2p_enrolls_two_renta_years(tmp_path: Path) -> None:
     Drives the REAL M202 2P backend for two distinct target renta years
     (2026, 2027), each sourcing the immediately prior M200 cuota líquida
     (2025, 2026), records each calculation through the
-    :class:`cross-year observation` (CALC evidence class), and cross-checks the
+    ``cross-year observation`` (CALC evidence class), and cross-checks the
     recorded two-year set against the cross-year claim. Year N's M200 is
     in the store but must not contaminate Year N+1's resolver (year isolation).
-    A single-year or stub run raises at :func:`the cross-year behavior assertion`,
+    A single-year or stub run raises at ``the cross-year behavior assertion``,
     turning the gate RED.
     """
 

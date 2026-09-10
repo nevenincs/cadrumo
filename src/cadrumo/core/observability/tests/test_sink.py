@@ -4,7 +4,7 @@ Covers:
 
 * Append-then-load round-trip through
   :func:`cadrumo.core.observability.save_events_append` /
-  :func:`cadrumo.core.observability.load_events`, including the
+  :func:`~core.observability.store.iter_events`, including the
   DIAGNOSTIC-class URL host-only redaction property.
 * :exc:`cadrumo.core.observability.RunTraceValidationError` on a corrupted
   JSONL line.
@@ -12,7 +12,7 @@ Covers:
   whose ``run_id`` does not match its bound id, and skipping records
   that carry no ``run_event`` extra (without creating the file).
 * Strict ``run_id`` validation across :func:`load_trace`,
-  :func:`load_events`, and :func:`iter_events` — eager rejection at
+  :func:`~core.observability.store.iter_events`, and :func:`iter_events` — eager rejection at
   call time and no on-disk pollution from rejected ids.
 * Lazy iteration semantics for :func:`iter_events` plus mid-stream
   validation failure on a corrupted line.

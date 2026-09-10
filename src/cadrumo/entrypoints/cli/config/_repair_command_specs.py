@@ -28,7 +28,6 @@ from ._spec_policies import (
     CALCULATION_READ,
     ENCRYPTED_READ,
     LOCAL_READ,
-    REGISTRY_READ,
     STATE_FREE,
 )
 
@@ -171,19 +170,6 @@ CONFIG_REPAIR_COMMAND_SPECS = (
         policy=ENCRYPTED_READ,
         handler=_handler("_repair_cli", "repair_integrity_objects"),
         result_schema=_schema("RepairIntegrityObjectsResult", "config.repair.integrity.objects"),
-    ),
-    CommandSpec(
-        key="config_repair_integrity_registry",
-        parent_key="config_repair_integrity",
-        token="registry",  # noqa: S106 - CLI token, not a credential.
-        kind=CommandNodeKind.LEAF,
-        help_key=TranslationKey("cli.config.repair.integrity.registry_help"),
-        short_help_key=None,
-        invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=(),
-        policy=REGISTRY_READ,
-        handler=_handler("_repair_cli", "repair_integrity_registry"),
-        result_schema=_schema("RepairIntegrityRegistryResult", "config.repair.integrity.registry"),
     ),
     CommandSpec(
         key="config_repair_connectivity",

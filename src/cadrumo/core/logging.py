@@ -3,7 +3,7 @@
 Provides :func:`get_logger` as the consistent logger factory to avoid scattered
 bare logging instances, with :func:`configure_logging` installing the project
 defaults. The installed log-record factory reads
-:func:`cadrumo.core.observability.current_run_context` state indirectly through
+:class:`cadrumo.core.observability.sink.JsonlRunSink` state indirectly through
 contextvars, so every record automatically picks up the active ``run_id`` /
 ``step_id`` while a run context is bound.
 

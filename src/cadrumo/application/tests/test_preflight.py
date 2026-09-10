@@ -11,10 +11,7 @@ registry referential-integrity gate over the bundled production authority.
 
 from __future__ import annotations
 
-import ast
-import inspect
 import sys
-from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -22,7 +19,6 @@ from pydantic import SecretStr
 
 from ...adapters.outbound.storage.path_budget import windows_worst_case_object_path_suffix_length
 from ...core.auth_provider import AuthProviderKind
-from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.config import override_settings
 from ..auth.probes import ProviderProbeResult
 from ..preflight import (
@@ -35,7 +31,6 @@ from ..preflight import (
     grade_provider_probe_result,
     probe_auth_providers,
     probe_portal_registry_health,
-    probe_registry_referential_integrity,
     probe_storage_corpus_env,
     run_preflight_checks,
 )
@@ -192,114 +187,6 @@ def test_env_configuration_ok_with_passphrase() -> None:
     assert env.severity is HealthSeverity.OK
 
 
-def test_registry_row_healthy_when_all_references_resolve() -> None:
-    """The bundled registry passes the real ID gate and reports a healthy row."""
-    row = probe_registry_referential_integrity()
-    assert row.check == "registry:referential-integrity"
-    assert row.healthy is True
-    assert row.severity is HealthSeverity.OK
-
-
-def test_registry_probe_snapshots_every_real_revision_at_its_declared_grade() -> None:
-    """Bundled applicability, calculation, and filing revisions retain their exact grade."""
-    from ...domain.calculations.registry.authority import bundled_authority
-    from ..preflight import _probe_registry_authority
-
-    authority = bundled_authority()
-    expected = {
-        (modelo.id, revision.id): revision.effective_authority_grade
-        for modelo in authority.modelos
-        for revision in modelo.revisions.values()
-        if _representative_context_exists(revision)
-    }
-    row = _probe_registry_authority(authority)
-
-    assert row.healthy is True
-    assert set(expected.values()) == set(RegistryAuthorityGrade)
-    assert {key: value for key, value in row.facts.items() if key.startswith("grade_")} == {
-        f"grade_{grade.value}_count": sum(observed is grade for observed in expected.values())
-        for grade in RegistryAuthorityGrade
-    }
-
-
-def test_registry_probe_binds_the_snapshot_grade_to_the_observed_revision_grade() -> None:
-    """The reported grade and snapshot keyword share one production local."""
-    from ..preflight import _probe_registry_authority
-
-    tree = ast.parse(inspect.getsource(_probe_registry_authority))
-    assignments = [
-        node
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Assign)
-        and any(isinstance(target, ast.Name) and target.id == "requested_grade" for target in node.targets)
-    ]
-    assert len(assignments) == 1
-    assert ast.unparse(assignments[0].value) == "revision.effective_authority_grade"
-    snapshot_calls = [
-        node
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "snapshot"
-    ]
-    assert len(snapshot_calls) == 1
-    grade_keyword = next(keyword for keyword in snapshot_calls[0].keywords if keyword.arg == "grade")
-    assert isinstance(grade_keyword.value, ast.Name)
-    assert grade_keyword.value.id == "requested_grade"
-
-
-def test_registry_probe_still_reports_real_dangling_references() -> None:
-    """Removing the real legal catalogue makes snapshot reference validation red."""
-    from ...domain.calculations.registry.authority import bundled_authority
-
-    authority = bundled_authority()
-    broken = replace(
-        authority,
-        catalogues=authority.catalogues.model_copy(update={"legal": {}}),
-        _snapshots={},
-    )
-    from ..preflight import _probe_registry_authority
-
-    row = _probe_registry_authority(broken)
-
-    assert row.healthy is False
-    assert row.severity is HealthSeverity.ERROR
-    assert int(row.facts["failure_count"]) > 0
-
-
-def test_registry_probe_keeps_an_ungraded_revision_fail_closed() -> None:
-    """Passing the effective floor never turns an absent grade into a declaration."""
-    from ...domain.calculations.registry.authority import bundled_authority
-    from ..preflight import _probe_registry_authority
-
-    authority = bundled_authority()
-    source_modelo = authority.modelos[0]
-    source_revision = next(iter(source_modelo.revisions.values()))
-    ungraded = source_revision.model_copy(update={"authority_grade": None})
-    modelo = source_modelo.model_copy(update={"revisions": {ungraded.id: ungraded}})
-
-    broken = replace(
-        authority,
-        modelos=(modelo,),
-        _modelos_by_id={modelo.id: modelo},
-        _snapshots={},
-    )
-    row = _probe_registry_authority(broken)
-
-    assert row.healthy is False
-    assert row.facts == {
-        "revisions_checked": 1,
-        "failure_count": 1,
-        f"grade_{ungraded.effective_authority_grade.value}_count": 1,
-    }
-
-
-def _representative_context_exists(revision: object) -> bool:
-    """Mirror only the probe's inclusion boundary, not its grade decision."""
-    from ..preflight import _representative_filing_context
-
-    year, period = _representative_filing_context(revision)
-    return year is not None and period is not None
-
-
 # ── Aggregate ────────────────────────────────────────────────────────────────
 
 
@@ -315,7 +202,6 @@ def test_run_preflight_checks_never_raises_and_covers_every_dimension() -> None:
         "corpus:manuals",
         "env:configuration",
         "storage:windows-long-path",
-        "registry:referential-integrity",
         "portal-registry:health",
     } <= ids
     assert all(isinstance(row, PreflightCheck) for row in rows)

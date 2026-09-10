@@ -15,7 +15,7 @@ See Also:
         Registry validator that checks the authored legal/source references.
     :func:`~domain.calculations.registry.authority.bundled_authority`
         Authority facade used to resolve the annual windows and windowless cases.
-    :data:`~core.access_gate.validated registry modelo set`
+    :class:`~core.modelo.Modelo`
         Canonical fleet membership these five informativas extend.
     :data:`~core.UNMODELED_OBLIGATIONS`
         Former recognized-unmodeled set reduced by this Batch-3 promotion.

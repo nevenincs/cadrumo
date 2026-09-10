@@ -136,7 +136,7 @@ class InvoiceLegalMention(StrEnum):
     :attr:`~cadrumo.domain.invoices.Invoice.iva_category`: manufacturing a
     mención from our own classification would fabricate evidence of
     compliance nobody observed on the document. Use
-    :func:`invoice_legal_mention_text` to read the exact wording a member
+    the localized catalogue to read the exact wording a member
     represents.
 
     art. 6.1.j (the exemption reference) is deliberately absent from this

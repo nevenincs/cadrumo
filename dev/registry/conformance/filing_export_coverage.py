@@ -16,7 +16,7 @@ from typing import Protocol
 
 from pydantic import BaseModel, Field, computed_field, model_validator
 
-from cadrumo.application.registry.closure import (
+from .closure_models import (
     RegistryClosureEvidence,
     RegistryClosureFilingChannelRefusal,
     RegistryClosureLimb,

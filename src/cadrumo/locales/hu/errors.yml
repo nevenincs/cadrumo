@@ -550,12 +550,8 @@ errors:
       kompatibilis az adattárával.
     integrity_storage_corpus_bundle: A corpuscsomagot nem sikerült feldolgozni vagy
       ellenőrizni.
-    integrity_storage_corpus_bundle_verification: A corpuscsomag nem teljesítette
-      az ellenőrzőösszeg-ellenőrzést a beágyazott jegyzékkel szemben.
     integrity_storage_corpus_manifest: A corpus manifesztet nem sikerült elemezni
       vagy érvényesíteni.
-    integrity_storage_corpus_manifest_drift: 'A lemezen lévő corpus eltér a manifeszttől:
-      fájlok lettek hozzáadva, eltávolítva vagy módosítva.'
     integrity_storage_corpus_manifest_tamper: A corpus manifeszt önigazoló kivonata
       nem egyezik a testével. A manifeszt sérült vagy manipulált lehet.
     integrity_storage_decryption: Egy tárolt objektum visszafejtése meghiúsult. Az
@@ -630,12 +626,6 @@ errors:
     internal_workflow_unhandled: 'Belső hiba: egy munkafolyamat-szakasz kezeletlen
       kivételt dobott.'
   iva:
-    category_has_no_legal_basis: Ennek az IVA-kategóriának nincs jogalapja a katalógusban,
-      ezért nem hivatkozható.
-    citation_legal_reference_absent: A hivatkozás jogszabályi utalása hiányzik a nyilvántartás
-      jogi katalógusából.
-    cite_requires_catalogue_or_date: Egy IVA-kategória hivatkozásához kifejezett katalógus
-      vagy hatálybalépési dátum szükséges.
     rate_member_state_unregistered: Az IVA-kulcsnyilvántartás nem tartalmaz kulcsot
       a kért tagállamhoz.
     rate_registry_coverage_gap: A csomagolt IVA-kulcsnyilvántartás nem terjed ki erre
@@ -1011,7 +1001,6 @@ errors:
       a felülbíráláshoz.'
     refused_review_filter_parse: A  paramétert nem sikerült elemezni. Ellenőrizze
       a megadott szűrő szintaxisát.
-    refused_review_kind_reserved: A megadott  érték foglalt és nem használható.
     refused_source_mesh_invariant: 'Elutasítva: a forrásháló invariánsának megsértése.'
     refused_storage_bucket_already_present: Az importálás ütközik egy már létező tárolási
       bucket-tel.
@@ -1054,8 +1043,6 @@ errors:
       számítási revízióval. Futtassa a aeat app modelo work calculate parancsot egy
       friss revízió létrehozásához.
     refused_workflow_resume: A korábbi munkafolyamat-futás nem folytatható.
-    registry_closure_capture_not_current: A regisztrációs lezárás megváltozott olvasás
-      közben; rögzítse újra.
     submission_preflight_auth_describe_failed: A hitelesítési szolgáltató nem tudta
       leírni magát ({cause_type}).
     submission_preflight_auth_not_ready: A(z) {kind} hitelesítési szolgáltató nem
@@ -1096,8 +1083,6 @@ errors:
       schema_upgrade_path_missing: 'Nincs sémafrissítési útvonal a(z) {namespace}
         névtérhez: hiányzik egy frissítő a(z) {missing_from_version} verziótól a(z)
         {expected} felé.'
-      schema_upgrader_already_registered: A(z) {namespace} névtérhez már regisztrálva
-        van sémafrissítő a(z) {from_version} verziótól.
       schema_version_from_future: A(z) {namespace} névtér tárolt sémaverziója ({schema_version})
         újabb, mint amit ez az alkalmazás támogat (legfeljebb {expected}); nem olvasható.
       unknown_classification: 'A(z) %{namespace} biztonságos objektum névtér ismeretlen

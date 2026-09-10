@@ -11,9 +11,6 @@ from ....application.diagnostics import (
     build_config_repair_report as _build_config_repair_report,
 )
 from ....application.diagnostics import (
-    build_registry_integrity_report as _build_registry_integrity_report,
-)
-from ....application.diagnostics import (
     preview_quarantine_unreadable_secure_objects as _preview_quarantine_unreadable_secure_objects,
 )
 from ....application.diagnostics import (
@@ -38,14 +35,12 @@ if TYPE_CHECKING:
     from ....application.diagnostic_models import (
         ConfigRepairReport,
         DiagnosticCheck,
-        RegistryIntegrityReport,
         SecureObjectIntegrityReport,
     )
     from ....application.workflow.events import WorkflowStateResetFingerprint
     from ..config_payloads import (
         ConfigRepairCheckPayload,
         ConfigRepairResult,
-        RepairIntegrityRegistryResult,
         RepairQuarantineResult,
         RepairResetProgressResult,
         WorkflowFingerprintPayload,
@@ -105,7 +100,6 @@ def _config_repair_result(report: ConfigRepairReport) -> ConfigRepairResult:
     """
     from ..config_payloads import (
         ConfigRepairNamespacePayload,
-        ConfigRepairRegistryPayload,
         ConfigRepairResult,
         ConfigRepairSecureObjectsPayload,
         ConfigRepairSetupPayload,
@@ -118,7 +112,6 @@ def _config_repair_result(report: ConfigRepairReport) -> ConfigRepairResult:
         package_version=report.package_version,
         python_version=report.python_version,
         log_file=report.log_file,
-        registry=ConfigRepairRegistryPayload.model_validate(report.registry.model_dump(mode="json")),
         setup=(
             ConfigRepairSetupPayload(
                 active_profile=report.setup.active_profile,
@@ -152,7 +145,7 @@ def _config_repair_result(report: ConfigRepairReport) -> ConfigRepairResult:
 
 
 def repair(ctx: typer.Context) -> None:
-    """Diagnose and repair local configuration, registry, profile, auth, and log state."""
+    """Diagnose and repair local configuration, profile, auth, and log state."""
     if ctx.invoked_subcommand is not None:
         return
     from ..config_payloads import ConfigRepairResult
@@ -367,35 +360,6 @@ def repair_integrity_objects(
     )
 
 
-def _registry_integrity_result(report: RegistryIntegrityReport) -> RepairIntegrityRegistryResult:
-    """Project the registry-integrity probe into its typed CLI payload."""
-    from ..config_payloads import ConfigRepairRegistryPayload, RepairIntegrityRegistryResult
-
-    return RepairIntegrityRegistryResult(
-        registry=strict_round_trip(ConfigRepairRegistryPayload, report.registry),
-        check=_repair_check_payload(report.check),
-    )
-
-
-def repair_integrity_registry(ctx: typer.Context) -> None:
-    """Report calculation registry authority and bundled snapshot integrity."""
-    from ..config_payloads import RepairIntegrityRegistryResult
-
-    report = _build_registry_integrity_report()
-    result = strict_round_trip(RepairIntegrityRegistryResult, _registry_integrity_result(report))
-    issue_lines = tuple(f"issue\t{finding.summary}" for finding in report.check.findings)
-    emit_envelope(
-        ctx,
-        command="config.repair.integrity.registry",
-        result=result,
-        lines=(
-            f"ok\t{report.check.status == 'ok'}",
-            f"issues\t{len(report.check.findings)}",
-            *issue_lines,
-        ),
-    )
-
-
 def repair_connectivity(ctx: typer.Context, headless: bool = True) -> None:
     """Probe browser connectivity to the AEAT Sede landing page."""
     from ..config_payloads import RepairConnectivityResult
@@ -441,7 +405,6 @@ __all__ = [
     "repair",
     "repair_connectivity",
     "repair_integrity_objects",
-    "repair_integrity_registry",
     "repair_logs",
     "repair_quarantine",
     "repair_reset_progress",

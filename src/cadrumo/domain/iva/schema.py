@@ -729,7 +729,7 @@ class IvaCitation(_IvaStrictFrozen):
                     "so that it reads as examined and refused rather than merely unchecked",
                 )
             if self.quoted_text.strip():
-                # verify_catalogue deliberately skips the empty-quotation check
+                # verify_catalogue_against_legal deliberately skips the empty-quotation check
                 # for this state, so text parked here would never be read
                 # against the corpus while the record says it could not be.
                 raise IvaValidationError(
@@ -744,7 +744,7 @@ class IvaRegulation(_IvaStrictFrozen):
 
     Every regulation carries at least one :class:`IvaCitation`. The
     substrate-level invariant enforced by
-    :func:`cadrumo.domain.iva.verify_catalogue` additionally requires every
+    :func:`cadrumo.domain.iva.verify.verify_catalogue_against_legal` additionally requires every
     shipped regulation to cite real legal articles so downstream tools
     can surface the legal backing of any classification.
 
@@ -852,7 +852,7 @@ class IvaCatalogue(_IvaStrictMutable):
 
 
 class IvaVerificationIssue(_IvaStrictFrozen):
-    """A single finding produced by :func:`cadrumo.domain.iva.verify_catalogue`.
+    """A single finding produced by :func:`cadrumo.domain.iva.verify.verify_catalogue_against_legal`.
 
     Attributes:
         level: Severity, shared with every other diagnostic and validation
@@ -876,7 +876,7 @@ class IvaVerificationReport(_IvaStrictFrozen):
 
     Attributes:
         issues: All findings produced by
-            :func:`cadrumo.domain.iva.verify_catalogue`.
+            :func:`cadrumo.domain.iva.verify.verify_catalogue_against_legal`.
     """
 
     issues: tuple[IvaVerificationIssue, ...] = Field(default_factory=tuple)

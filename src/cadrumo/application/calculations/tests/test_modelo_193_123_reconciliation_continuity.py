@@ -25,9 +25,9 @@ This module is the cross-year behavior coverage for Modelo 193.
 It drives the REAL backend (real encrypted-SQLite observation store, the real
 registry authority, the real calculation engine, the real relation resolver —
 no mocks) across two distinct renta years (2025, 2026). Both calculated
-resumen years are recorded through the :class:`cross-year observation` and
+resumen years are recorded through the ``cross-year observation`` and
 cross-checked against the cross-year claim via
-:func:`the cross-year behavior assertion`.
+``the cross-year behavior assertion``.
 
 Grounding (non-tautological): the 123 computed casillas 03/06/09 are _produced
 by the registry engine from the manual sub-inputs. The 193 assertion is the
@@ -348,7 +348,7 @@ def test_modelo_193_123_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
     """End-to-end enrollment: 123 quarterly aggregation → 193 annual across two renta years.
 
     Drives the REAL 123 and 193 backends for both renta years (2025, 2026),
-    records each 193 calculation through the :class:`cross-year observation`
+    records each 193 calculation through the ``cross-year observation``
     (RECONCILIATION evidence_class — calculation mode, evidenced by _produced
     casilla count), and cross-checks the recorded two-year set against the
     cross-year claim.

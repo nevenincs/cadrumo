@@ -14,9 +14,9 @@ carried BIN stock.
 This module is the cross-year behavior coverage for Modelo 200
 (CALC evidence class). It drives the REAL M200 registry engine across two
 distinct renta (annual) years, records each through the
-:class:`cross-year observation`, and cross-checks the recorded two-year set
+``cross-year observation``, and cross-checks the recorded two-year set
 against the cross-year claim via
-:func:`the cross-year behavior assertion`.
+``the cross-year behavior assertion``.
 
 Grounding (non-tautological): the prior-year 00671 BIN stock is a manual
 input the test supplies (no formula under test produces it), and the
@@ -219,10 +219,10 @@ def test_modelo_200_bin_stock_enrolls_two_renta_years(tmp_path: Path) -> None:
 
     Drives the real M200 engine for two distinct renta years (2025, 2026),
     each sourcing the prior year's 00671 BIN stock (2024, 2025), records each
-    through the :class:`cross-year observation` (CALC), and cross-checks the
+    through the ``cross-year observation`` (CALC), and cross-checks the
     recorded two-year set against the cross-year claim. Year N's prior
     filing is in the store but must not contaminate Year N+1's resolver. A
-    single-year or stub run raises at :func:`the cross-year behavior assertion`.
+    single-year or stub run raises at ``the cross-year behavior assertion``.
     """
 
     with isolated_runtime_profile(tmp_path=tmp_path):

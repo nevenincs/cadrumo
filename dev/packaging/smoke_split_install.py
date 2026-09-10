@@ -84,16 +84,6 @@ def _install_cohort_with_pip(work_dir: Path, wheel: Path, data_wheels: Sequence[
     run_checked([str(python), "-m", "pip", "check"], cwd=work_dir)
 
 
-def _assert_registry_verify_runs_clean(work_dir: Path, venv_path: Path) -> None:
-    """With the complete cohort installed, full source verification runs clean."""
-    run_checked(
-        [str(venv_cadrumo_path(venv_path)), "app", "registry", "verify"],
-        cwd=work_dir,
-        env=isolated_product_env(work_dir / "clean-verify-state"),
-    )
-    record_proof("registry verify runs byte-exact clean")
-
-
 def main(argv: list[str] | None = None) -> int:
     """Run the three-wheel cohort packaging smoke gate."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -138,7 +128,6 @@ def main(argv: list[str] | None = None) -> int:
         env=isolated_product_env(work_dir / "cohort-import-state"),
     )
     record_proof("joined companion namespace resolves the complete corpus")
-    _assert_registry_verify_runs_clean(work_dir, venv_path)
 
     manifest = write_smoke_manifest(
         work_dir,
@@ -165,7 +154,6 @@ def main(argv: list[str] | None = None) -> int:
             "root metadata declares both exact mandatory companion requirements",
             "all three installed distributions share one version",
             "joined companion namespace resolves the complete corpus",
-            "registry verify runs byte-exact clean",
         ),
         details={
             "cohort_version": cohort.version,

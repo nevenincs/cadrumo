@@ -42,7 +42,13 @@ def test_cli_keys_extracted_from_source_are_non_empty() -> None:
     # Spot-check: representative keys from distinct namespaces are extracted.
     assert "cli.config.errors.no_active_profile" in keys
     assert "cli.app.modelo.describe.label_title" in keys
-    assert "cli.app.live.iva_wallet.acquisition.outcome.aeat_403" in keys
+    # A literal ``tr()`` first argument from the live namespace. The previous
+    # spot-check named an ``iva_wallet.acquisition.outcome.*`` key, which
+    # ``_app_live.py`` builds by f-string from LiveIvaAcquisitionFailureMode --
+    # exactly the interpolated shape this extractor documents that it does NOT
+    # capture. Those keys are covered by the f-string registry instead, so
+    # asserting one here required the extractor to break its own contract.
+    assert "cli.app.live.filed.discover_no_profile_denominator" in keys
 
 
 def test_cli_key_extractor_harvests_aliased_translation_calls(tmp_path: Path, monkeypatch) -> None:

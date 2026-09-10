@@ -48,3 +48,9 @@ var/
 # double-count every corpus document (docs-terminology-search ADR Update 1).
 *.extracted.md
 *.extracted.json
+
+# Runtime manual-text sidecars are hash-validated product payloads, consumed
+# by registry evidence validation. Their matching PDFs are already admitted
+# through the preprocess hook, so indexing these JSON derivatives duplicates
+# the same official manual prose in the development RAG corpus.
+src/cadrumo/_data/manual_corpus_text/**/*.corpus_text.json

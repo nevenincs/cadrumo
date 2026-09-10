@@ -11,6 +11,26 @@
 #   Grounds amend_modelo_revision behaviour and the ModeloRecord
 #   SUPERSEDED state transition.
 
+[legal."ley-58-2003:art-94"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003-art-94.html#a94"
+document_id = "BOE-A-2003-23186"
+article = "94"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a94"
+published_at = 2003-12-18
+effective_from = 2004-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-10
+reviewed_by = "agent"
+notes = """LGT art 94: autoridades sometidas al deber de informar y colaborar. Extiende la obligacion informativa del art 93 a las autoridades y entidades del sector publico - organos del Estado, comunidades autonomas y entidades locales, organismos autonomos y entidades publicas empresariales, camaras y colegios profesionales, mutualidades de prevision social, entidades gestoras de la Seguridad Social y en general quienes ejerzan funciones publicas - y a los partidos politicos, sindicatos y asociaciones empresariales. Es la base sustantiva del papel declarante 'entidad integrada en una Administracion publica' del Modelo 347 (clave E), que el esquema de perfil declara en declaration_roles junto al art 93 y al rd-1065-2007 art 31."""
+required_text = [
+    "Autoridades sometidas al deber de informar y colaborar",
+    "trascendencia tributaria",
+    "ejerzan funciones públicas",
+]
+
 [legal."ley-58-2003:art-93"]
 evidence_tier = "legal_authority"
 authority = "boe"

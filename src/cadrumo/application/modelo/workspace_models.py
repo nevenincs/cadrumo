@@ -34,7 +34,6 @@ from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.work_unit import WorkUnitState
 from ..ledger.preflight import LedgerPreflightIssueReason
 from ..operator_actions.models import ActionReference
-from ..registry.closure import RegistryClosureLimb
 from . import _workspace_model_validation as _workspace_validation
 from .work_addressing import ModeloExactWorkUnitTarget, ModeloVisibleFilingTarget
 from .work_review import ModeloWorkReview
@@ -49,7 +48,6 @@ _require_graded_projection_facet_names = _workspace_validation.require_graded_pr
 _require_graded_projection_facets = _workspace_validation.require_graded_projection_facets
 _require_projection_baseline_coordinate = _workspace_validation.require_projection_baseline_coordinate
 _require_projection_capability_coordinates = _workspace_validation.require_projection_capability_coordinates
-_require_projection_closure_coordinates = _workspace_validation.require_projection_closure_coordinates
 _require_projection_readiness_coordinate = _workspace_validation.require_projection_readiness_coordinate
 _require_projection_schema_facet_contributors = _workspace_validation.require_projection_schema_facet_contributors
 _require_projection_schema_facet_coordinate = _workspace_validation.require_projection_schema_facet_coordinate
@@ -64,7 +62,6 @@ _MAX_SCHEMA_RECORD_FAMILY_DEPTH = 16
 _MAX_SCHEMA_RELATIONSHIPS = 128
 _MAX_SCHEMA_EVIDENCE_REFERENCES = 64
 _MAX_REPEATED_ROW_VALUES = 200
-_MAX_CLOSURE_LIMBS = 16
 _MAX_SAFE_FACTS = 32
 _MAX_SAFE_FACT_TEXT_LENGTH = 256
 
@@ -111,7 +108,6 @@ class ModeloWorkspaceCapabilityName(StrEnum):
     CALCULATION_MATERIALIZATION = "calculation_materialization"
     VERIFICATION_READINESS = "verification_readiness"
     FILING_DRAFT_READINESS = "filing_draft_readiness"
-    FILING_EXPORT_READINESS = "filing_export_readiness"
 
 
 class ModeloWorkspaceCapabilityDisposition(StrEnum):
@@ -996,7 +992,6 @@ class ModeloWorkspaceProjectionV1(_WorkspaceModel):
     provenance_facet: ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceProvenanceRecordV1] | None = None
     work_review: ModeloWorkspaceWorkReviewFacetV1
     readiness: ModeloWorkspaceReadinessV1 | None = None
-    registry_closure_limbs: Annotated[tuple[RegistryClosureLimb, ...], Field(max_length=_MAX_CLOSURE_LIMBS)] = ()
     capabilities: Annotated[
         tuple[ModeloWorkspaceCapabilityV1, ...],
         Field(min_length=len(ModeloWorkspaceCapabilityName), max_length=len(ModeloWorkspaceCapabilityName)),
@@ -1025,15 +1020,6 @@ class ModeloWorkspaceProjectionV1(_WorkspaceModel):
     ) -> tuple[ModeloWorkspaceContributorIdentityV1, ...]:
         return _require_unique_contributor_identities(value)
 
-    @field_validator("registry_closure_limbs")
-    @classmethod
-    def _require_unique_closure_limb_names(
-        cls, value: tuple[RegistryClosureLimb, ...]
-    ) -> tuple[RegistryClosureLimb, ...]:
-        if len({limb.name for limb in value}) != len(value):
-            raise ValueError("workspace registry closure limbs must be unique")
-        return tuple(sorted(value, key=lambda limb: limb.name))
-
     @model_validator(mode="after")
     def _enforce_admission_scope(self) -> ModeloWorkspaceProjectionV1:
         _require_projection_schema_facet_name(self)
@@ -1043,7 +1029,6 @@ class ModeloWorkspaceProjectionV1(_WorkspaceModel):
         _require_projection_schema_facet_contributors(self)
         _require_projection_capability_coordinates(self)
         _require_projection_readiness_coordinate(self)
-        _require_projection_closure_coordinates(self)
         if isinstance(self.admission, ModeloWorkspaceStaticInspectionScopeV1):
             _require_static_projection_scope(self)
             return self
