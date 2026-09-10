@@ -11,7 +11,7 @@ related:
   - '[[2026-09-09-registry-generator-signal-coverage-research]]'
 modified: '2026-09-10'
 body_schema: body-v2
-body_hash: 'sha256:9f81601caf7e366b8582c4246fc6b6f4884abc808c776dbdaed5cf72bb08ee48'
+body_hash: 'sha256:119bd4aafa81a615e7f74e14579d8d59464dcf5a1d5d434fc6af33226b7194eb'
 ---
 
 # `registry-generator` plan

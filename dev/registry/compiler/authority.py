@@ -8,14 +8,11 @@ from cadrumo.domain.calculations.registry._source_evidence_fingerprint import co
 from cadrumo.domain.calculations.registry._supplementary_orden import compile_supplementary_ordenes
 from cadrumo.domain.calculations.registry._validate import RegistryValidator
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.convenio import load_convenio_authority, validate_convenio_legal_refs
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-from cadrumo.domain.calculations.registry.facts.providers import (
-    compile_registered_fact_providers,
-    validate_fact_provider_directory_ownership,
-)
 from cadrumo.domain.calculations.registry.identity import RegistryIdentity
 
+from .convenio import load_convenio_authority, validate_convenio_legal_refs
+from .fact_providers import compile_registered_fact_providers, validate_fact_provider_directory_ownership
 from .loader import load_registry_tree
 
 

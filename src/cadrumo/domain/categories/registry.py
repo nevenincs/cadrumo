@@ -23,19 +23,19 @@ from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
 from types import MappingProxyType
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from pydantic import ValidationError
 
 from ...core.citation_grounding import CitationGrounding
 from ...core.decimal.coercion import coerce_decimal
 from ...core.i18n import Translatable as tr
-from ...core.paths import path_stat_fingerprint
-from ...core.resources.bundled_data import bundled_path
 from ...core.revision_review import RevisionReviewStatus
 from ...core.toml import read_toml
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ...core.validity_window import ValidityWindow, years_covered_by_any, years_covered_by_every_group
+from ..calculations.registry.errors import RegistryValidationError
+from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact, ScalarFactQuery
 from ..calculations.registry.facts.schema import (
     FactOwnership,
     FactSelector,
@@ -63,6 +63,9 @@ from .proportionality import (
 )
 from .spending_category import SpendingCategory
 
+if TYPE_CHECKING:
+    from ..calculations.registry.authority import ValidatedRegistryAuthority
+
 CATEGORY_PROFILE_FACT_ID = "categories.profile"
 CATEGORY_STATUTORY_CAP_FACT_ID = "categories.statutory-cap"
 CATEGORY_FACT_PROVIDER_ID = "category-profiles"
@@ -88,13 +91,12 @@ def load_category_profiles(path: Path | None = None) -> Mapping[SpendingCategory
         CategoryValidationError: When the file is unreadable, malformed, carries
             a duplicate category, or omits a declared spending category.
     """
-    target = path if path is not None else bundled_path("registry", "aeat", "categories", "profiles.toml")
-    resolved = target.resolve()
-    try:
-        fingerprint = path_stat_fingerprint(resolved)
-    except OSError as exc:
-        raise CategoryValidationError(f"{resolved}: cannot stat category profile registry: {exc}") from exc
-    return _load_category_profiles_cached(*fingerprint)
+    if path is not None:
+        raise CategoryValidationError("category source paths are available only to development publication tooling")
+    years = category_profile_years()
+    if not years:
+        raise CategoryValidationError("installed authority has no complete category profile coverage")
+    return resolve_category_profiles(max(years))
 
 
 @lru_cache(maxsize=8)
@@ -142,8 +144,20 @@ def category_profile_years(path: Path | None = None) -> frozenset[int]:
     Returns:
         The derived set of resolvable filing years.
     """
-    profiles = load_category_profiles(path)
-    return years_covered_by_every_group(_grounding_windows(profile) for profile in profiles.values())
+    if path is not None:
+        raise CategoryValidationError("category source paths are available only to development publication tooling")
+    from ..calculations.registry.authority import bundled_authority
+
+    fact = bundled_authority().catalogues.facts.facts.get(CATEGORY_PROFILE_FACT_ID)
+    if fact is None:
+        return frozenset()
+    by_category: dict[str, set[int]] = {}
+    for variant in fact.variants:
+        category = next((selector.value for selector in variant.selectors if selector.name == "category"), None)
+        if category is None or variant.valid_to is None:
+            continue
+        by_category.setdefault(category, set()).update(range(variant.valid_from.year, variant.valid_to.year + 1))
+    return frozenset.intersection(*by_category.values()) if by_category else frozenset()
 
 
 def _grounding_windows(profile: CategoryProfile) -> tuple[ValidityWindow, ...]:
@@ -178,14 +192,99 @@ def resolve_category_profiles(year: int) -> Mapping[SpendingCategory, CategoryPr
         CategoryValidationError: When the corpus grounds no such year. There is
             no fallback to an adjacent year.
     """
-    return _resolve_category_profiles_cached(year, tuple(sorted(category_profile_years())))
+    from ..calculations.registry.authority import bundled_authority
+
+    authority = bundled_authority()
+    profiles: dict[SpendingCategory, CategoryProfile] = {}
+    for category in SpendingCategory:
+        resolved = authority.resolve_governed_fact(
+            MappingFactQuery(
+                fact_id=CATEGORY_PROFILE_FACT_ID,
+                date_axis=DateAxis.FILING_PERIOD,
+                effective_date=date(year, 12, 31),
+                selectors=(FactSelector(name="category", value=category.value),),
+            )
+        )
+        if not isinstance(resolved, ResolvedMappingFact):
+            raise CategoryValidationError("category profile authority returned a non-mapping fact")
+        profiles[category] = _profile_from_authority_fact(resolved, authority=authority, year=year)
+    return MappingProxyType(profiles)
+
+
+def _profile_from_authority_fact(
+    resolved: ResolvedMappingFact,
+    *,
+    authority: ValidatedRegistryAuthority,
+    year: int,
+) -> CategoryProfile:
+    """Hydrate the public category model from one signed, dated fact."""
+    values = {str(entry.key): entry.value for entry in resolved.payload.entries}
+    citations: list[CategoryCitation] = []
+    index = 0
+    while f"citation.{index}.source" in values:
+        prefix = f"citation.{index}"
+        citations.append(
+            CategoryCitation(
+                source=CategoryCitationSource(str(values[f"{prefix}.source"])),
+                reference=str(values[f"{prefix}.reference"]),
+                locator=str(values[f"{prefix}.locator"]),
+                url=parse_http_url(str(values[f"{prefix}.url"])),
+                quote=str(values.get(f"{prefix}.quote", "")),
+                grounding=CitationGrounding(str(values[f"{prefix}.grounding"])),
+                grounding_reason=str(values.get(f"{prefix}.grounding_reason", "")),
+                legal_ref=str(values[f"{prefix}.legal_ref"]) if f"{prefix}.legal_ref" in values else None,
+                valid_from=values[f"{prefix}.valid_from"],
+                valid_to=values[f"{prefix}.valid_to"],
+            )
+        )
+        index += 1
+    cap = None
+    if values.get("proportionality_kind") == ProportionalityKind.STATUTORY_CAP.value:
+        try:
+            cap_resolved = authority.resolve_governed_fact(  # type: ignore[attr-defined]
+                ScalarFactQuery(
+                    fact_id=CATEGORY_STATUTORY_CAP_FACT_ID,
+                    date_axis=DateAxis.FILING_PERIOD,
+                    effective_date=date(year, 12, 31),
+                    selectors=(FactSelector(name="category", value=resolved.matched_selectors[0].value),),
+                )
+            )
+            cap = cap_resolved.payload.value
+        except RegistryValidationError as exc:
+            if "statutory_cap_eur" not in values:
+                raise CategoryValidationError(
+                    f"category authority has no dated statutory cap for {resolved.matched_selectors[0].value}/{year}"
+                ) from exc
+            cap = values["statutory_cap_eur"]
+    rule_data: dict[str, object] = {
+        "kind": values["proportionality_kind"],
+        "notes": tr(str(values["notes"])),
+        "citations": tuple(citations),
+        "fixed_pct": values.get("fixed_pct"),
+        "default_ratio": values.get("default_ratio"),
+        "statutory_multiplier": values.get("statutory_multiplier"),
+        "statutory_cap_eur_per_day": values.get("statutory_cap_eur_per_day"),
+        "statutory_cap_eur": cap,
+        "statutory_cap_period": values.get("statutory_cap_period"),
+    }
+    return CategoryProfile(
+        category=SpendingCategory(resolved.matched_selectors[0].value),
+        display_label=tr(str(values["display_label"])),
+        proportionality=ProportionalityRule.model_validate(rule_data),
+        iva_hint=IvaDeductibilityHint(str(values["iva_hint"])) if "iva_hint" in values else None,
+    )
 
 
 def compile_category_profile_facts(registry_root: Path) -> tuple[GovernedFact, ...]:
     """Project the retained category corpus into typed governed facts."""
     target = registry_root.resolve() / CATEGORY_FACT_PROVIDER_DIRECTORY / "profiles.toml"
-    profiles = load_category_profiles(target)
-    years = sorted(category_profile_years(target))
+    resolved = target.resolve()
+    try:
+        stat = resolved.stat()
+    except OSError as exc:
+        raise CategoryValidationError(f"{resolved}: cannot stat category profile registry: {exc}") from exc
+    profiles = _load_category_profiles_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+    years = sorted(years_covered_by_every_group(_grounding_windows(profile) for profile in profiles.values()))
     profile_variants = tuple(
         _category_profile_fact_variant(profile, year) for profile in profiles.values() for year in years
     )

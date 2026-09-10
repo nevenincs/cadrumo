@@ -190,7 +190,7 @@ def test_inference_above_the_supported_rate_is_refused_not_capped() -> None:
 
 def test_the_refusal_boundary_is_the_registry_rate_not_a_local_literal() -> None:
     """A withholding exactly at the registry maximum is accepted, a cent more is not."""
-    rate = maximum_supported_activity_retencion_rate()
+    rate = maximum_supported_activity_retencion_rate(effective_date=date(2024, 3, 15))
     base = Decimal("2000.00")
     at_bound = base * rate
 

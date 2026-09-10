@@ -178,10 +178,14 @@ def test_the_retencion_expectation_is_the_statutory_rate_not_the_engine_route() 
     article names as the base -- and the fact that the two routes meet is what
     the assertions further down are entitled to rely on.
     """
-    statutory = (_BASE * load_retencion_actividades_rates().general_rate).quantize(Decimal("0.01"))
+    statutory = (
+        _BASE * load_retencion_actividades_rates(effective_date=_VALUE_DATE).general_rate
+    ).quantize(Decimal("0.01"))
 
     assert statutory == _RETENCION
-    assert statutory != (_TOTAL * load_retencion_actividades_rates().general_rate).quantize(Decimal("0.01")), (
+    assert statutory != (
+        _TOTAL * load_retencion_actividades_rates(effective_date=_VALUE_DATE).general_rate
+    ).quantize(Decimal("0.01")), (
         "the retencion base is the base imponible, never the IVA-inclusive total"
     )
 
@@ -218,9 +222,11 @@ def test_the_declared_invoice_reaches_the_retenciones_casilla_at_the_statutory_f
     aggregation = _aggregated(declares_substrate=True)
 
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
-    statutory = (_BASE * load_retencion_actividades_rates().general_rate).quantize(Decimal("0.01"))
+    statutory = (
+        _BASE * load_retencion_actividades_rates(effective_date=_VALUE_DATE).general_rate
+    ).quantize(Decimal("0.01"))
 
-    rate = load_retencion_actividades_rates().general_rate
+    rate = load_retencion_actividades_rates(effective_date=_VALUE_DATE).general_rate
 
     assert resolved[_RETENCIONES_BINDING] == statutory
     assert resolved[_RETENCIONES_BINDING] == _RETENCION
@@ -308,7 +314,9 @@ def test_the_unrecorded_invoice_is_surfaced_rather_than_silently_folded() -> Non
 # differ, which is what a real practitioner in their first years actually
 # invoices.
 
-_INICIO_RETENCION = (_BASE * load_retencion_actividades_rates().inicio_actividad_rate).quantize(Decimal("0.01"))
+_INICIO_RETENCION = (
+    _BASE * load_retencion_actividades_rates(effective_date=_VALUE_DATE).inicio_actividad_rate
+).quantize(Decimal("0.01"))
 _INICIO_CASH = _TOTAL - _INICIO_RETENCION
 
 
@@ -319,7 +327,7 @@ def test_the_inicio_de_actividad_rate_is_genuinely_below_the_general_rate() -> N
     published the same figure for both, this case would silently stop testing a
     sub-cap path while still passing, and the calibration claim would be false.
     """
-    rates = load_retencion_actividades_rates()
+    rates = load_retencion_actividades_rates(effective_date=_VALUE_DATE)
 
     assert rates.inicio_actividad_rate < rates.general_rate
     assert _INICIO_RETENCION < _RETENCION
@@ -357,7 +365,9 @@ def test_the_sub_cap_invoice_reaches_the_retenciones_casilla_at_its_own_statutor
     aggregation = _aggregated(declares_substrate=True, cash=_INICIO_CASH)
 
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
-    statutory = (_BASE * load_retencion_actividades_rates().inicio_actividad_rate).quantize(Decimal("0.01"))
+    statutory = (
+        _BASE * load_retencion_actividades_rates(effective_date=_VALUE_DATE).inicio_actividad_rate
+    ).quantize(Decimal("0.01"))
 
     assert resolved[_RETENCIONES_BINDING] == statutory
     assert resolved[_INGRESOS_BINDING] == _BASE

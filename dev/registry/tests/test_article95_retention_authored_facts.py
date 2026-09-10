@@ -9,8 +9,6 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.facts.legal_parameters import compile_legal_parameter_facts
-from cadrumo.domain.calculations.registry.facts.loader import load_governed_facts
 from cadrumo.domain.calculations.registry.facts.resolution import (
     ResolvedScalarFact,
     ScalarFactQuery,
@@ -18,8 +16,10 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
 )
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.facts.validation import governed_fact_catalogue_failures
-from cadrumo.domain.calculations.registry.loader import load_shared_catalogues
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
+from dev.registry.compiler.fact_loader import load_governed_facts
+from dev.registry.compiler.legal_parameters import compile_legal_parameter_facts
+from dev.registry.compiler.loader import load_shared_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

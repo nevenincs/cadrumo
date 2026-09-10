@@ -10,7 +10,7 @@ from pydantic import ValidationError
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.facts.providers import FACT_PROVIDER_REGISTRATIONS
+from dev.registry.compiler.fact_providers import FACT_PROVIDER_REGISTRATIONS
 from cadrumo.domain.calculations.registry.facts.resolution import (
     MappingFactQuery,
     ResolvedMappingFact,
@@ -26,10 +26,9 @@ from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.iva.rates import (
     IVA_RATE_FACT_ID,
     IVA_RATE_PROVIDER_ID,
-    compile_iva_rate_facts,
     iva_rate_record_from_fact,
-    load_iva_rate_table,
 )
+from dev.registry.compiler.iva import compile_iva_rate_facts, load_iva_rate_table_for_publication
 from cadrumo.domain.iva.schema import EUMemberState, IvaRateKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -68,7 +67,7 @@ def test_iva_provider_projects_every_legacy_row_without_semantic_loss() -> None:
     root = bundled_path("registry", "aeat")
     legacy = {
         (row.member_state, row.kind, row.effective_from, row.pct, row.supersedes_tier_default)
-        for rows in load_iva_rate_table().values()
+        for rows in load_iva_rate_table_for_publication(root).values()
         for row in rows
     }
     (fact,) = compile_iva_rate_facts(root)

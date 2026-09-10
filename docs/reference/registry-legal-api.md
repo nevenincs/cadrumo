@@ -19,6 +19,48 @@ identify the exact rule set.
 | `source_refs` | Official manual or source material supporting the implementation |
 | Evidence provenance | Local record, document, observation, or prior filed revision that supplied a value |
 
+## Runtime authority artifact
+
+The runtime authority artifact is the signed, versioned publication of the
+validated AEAT registry intended for installed calculations and filing exports.
+Its identity digest identifies the validated development generation. When
+published and packaged, `bundled_authority()` reads
+`registry/authority/authority.json`. It verifies the schema version, content
+digest, and Ed25519 signature against its compiled public trust anchor before
+reconstructing typed authority data.
+
+| Term | Meaning |
+| --- | --- |
+| Validated candidate | The registry and source-evidence inputs accepted by the development compiler. |
+| Validation receipt | The digests captured for those inputs; a change before publication refuses the candidate. |
+| Authority artifact | The atomically written signed JSON publication containing the resolved authority. |
+| Trusted publisher | The release holder of the private key corresponding to the package's compiled public key. |
+| Schema version | The artifact format identifier. Runtime refuses an unsupported version. |
+
+The `bundled_authority()` artifact-loading path has no source-compilation,
+validation, repair, or cache fallback. A missing artifact raises an unavailable
+error. A malformed artifact or invalid signature encoding raises a format
+error. A digest or signature failure raises an integrity error. These failures
+occur before authority-dependent calculation or filing proceeds.
+
+Release tooling uses the development-only
+`dev.registry.pipeline.cli.publish_authority_candidate_workflow` API:
+
+```python
+publish_authority_candidate_workflow(
+    registry_root=registry_root,
+    source_root=source_root,
+    artifact_path=artifact_path,
+    signing_private_key_hex=signing_private_key_hex,
+)
+```
+
+The caller owns all four values. In particular, the caller must obtain
+`signing_private_key_hex` through its approved external release-secret system.
+The project provides no private key, release-secret provider, or runtime
+override for the trusted public key. See [Publish a validated runtime authority](../how-to/publish-runtime-authority.md)
+for the release workflow and recovery path.
+
 ## Filing-input contract shapes
 
 The validated registry snapshot is the read-model authority for one modelo,

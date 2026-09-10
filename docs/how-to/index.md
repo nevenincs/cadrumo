@@ -313,6 +313,13 @@ Expose the toolset to Claude or any MCP client, with the safety boundary intact.
 Fix active-profile, storage, registry, and authentication problems.
 :::
 
+:::{grid-item-card} Publish runtime authority
+:link: publish-runtime-authority
+:link-type: doc
+
+Publish and verify a signed registry authority as a release operator.
+:::
+
 ::::
 
 ```{toctree}

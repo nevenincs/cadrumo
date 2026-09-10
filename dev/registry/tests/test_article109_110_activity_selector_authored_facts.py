@@ -8,8 +8,6 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.facts.legal_parameters import compile_legal_parameter_facts
-from cadrumo.domain.calculations.registry.facts.loader import load_governed_facts
 from cadrumo.domain.calculations.registry.facts.resolution import (
     EntitySetFactQuery,
     ResolvedEntitySetFact,
@@ -17,8 +15,10 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
 )
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.facts.validation import governed_fact_catalogue_failures
-from cadrumo.domain.calculations.registry.loader import load_shared_catalogues
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
+from dev.registry.compiler.fact_loader import load_governed_facts
+from dev.registry.compiler.legal_parameters import compile_legal_parameter_facts
+from dev.registry.compiler.loader import load_shared_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -117,14 +117,21 @@ def test_payment_fraction_selectors_cite_hash_pinned_boe_redactions_and_the_m036
     shared = load_shared_catalogues(source_root / "registry" / "aeat")
     catalogue = _catalogue()
 
-    assert shared.sources[_ARTICLE_109_SOURCE].sha256 == "ca201b3eb296e5af063ff5bb1ff9944fc9e14f0cf84053cb29c002245397d2c9"
+    assert shared.sources[_ARTICLE_109_SOURCE].sha256 == (
+        "ca201b3eb296e5af063ff5bb1ff9944fc9e14f0cf84053cb29c002245397d2c9"
+    )
     assert shared.sources[_ARTICLE_109_SOURCE].bytes == 1994
     assert shared.sources[_ARTICLE_109_SOURCE].applies_from == date(2007, 4, 1)
-    assert shared.sources[_ARTICLE_110_SOURCE].sha256 == "2d2f769c57987b8a14fa8ed861ef921a0345a1d8b898d3342f0c9de87ba5405c"
+    assert shared.sources[_ARTICLE_110_SOURCE].sha256 == (
+        "2d2f769c57987b8a14fa8ed861ef921a0345a1d8b898d3342f0c9de87ba5405c"
+    )
     assert shared.sources[_ARTICLE_110_SOURCE].bytes == 11554
     assert shared.sources[_ARTICLE_110_SOURCE].applies_from == date(2018, 12, 23)
     assert shared.sources[_M036_TABLE_SOURCE].applies_from == _FIRST_GROUNDED_DATE
-    assert catalogue.facts["modelo-131:selector-m036-volumen-ingresos-agrario"].variants[0].valid_from == _M131_FIRST_GROUNDED_DATE
+    assert (
+        catalogue.facts["modelo-131:selector-m036-volumen-ingresos-agrario"].variants[0].valid_from
+        == _M131_FIRST_GROUNDED_DATE
+    )
     assert shared.sources["aeat-modelo-131-instructions-2026-04-01"].applies_from == _M131_FIRST_GROUNDED_DATE
     assert (
         governed_fact_catalogue_failures(

@@ -7,10 +7,8 @@ from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
-from .....core.revision_review import RevisionReviewStatus
-from ..loader_cache import toml_file_fingerprint
-from ..schema_base import DateAxis, SourceCitation
-from .schema import (
+from cadrumo.core.revision_review import RevisionReviewStatus
+from cadrumo.domain.calculations.registry.facts.schema import (
     FactOwnership,
     GovernedFact,
     GovernedFactFamily,
@@ -19,6 +17,8 @@ from .schema import (
     MappingFactPayload,
     ScalarFactPayload,
 )
+from cadrumo.domain.calculations.registry.loader_cache import toml_file_fingerprint
+from cadrumo.domain.calculations.registry.schema_base import DateAxis, SourceCitation
 
 STATUTORY_CONSTANTS_PROVIDER_ID = "statutory-constants"
 STATUTORY_CONSTANTS_PROVIDER_DIRECTORY = "statutory"

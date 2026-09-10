@@ -52,6 +52,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.resources.bundled_data import bundled_path
 from ...core.revision_review import RevisionReviewStatus
 from ...core.toml import read_toml
+from ..calculations.registry.facts.resolution import EventFactQuery, ResolvedEventFact
 from ..calculations.registry.facts.schema import (
     EventFactPayload,
     FactOwnership,
@@ -61,7 +62,6 @@ from ..calculations.registry.facts.schema import (
     GovernedFactVariant,
     NamedFactValue,
 )
-from ..calculations.registry.facts.resolution import EventFactQuery, ResolvedEventFact
 from ..calculations.registry.loader_cache import toml_file_fingerprint
 from ..calculations.registry.loader_fingerprints import RegistryPathFingerprints
 from ..calculations.registry.schema_base import DateAxis, SourceCitation
@@ -281,19 +281,15 @@ def _calendar_path(year: int) -> Path:
 
 @lru_cache(maxsize=64)
 def load_holiday_calendar(year: int) -> HolidayCalendar:
-    """Load the BOE-published holiday calendar for ``year``.
+    """Return the published calendar from the installed authority artifact.
 
-    Reads ``registry/aeat/calendars/festivos-{year}.toml``, parses it
-    into immutable :class:`Holiday` records under the
-    :class:`HolidayCalendar` aggregate, and caches the result. The
-    cache is unbounded by use but bounded by call site (lru_cache with
-    ``maxsize=64``).
-
-    Raises :class:`DeadlineValidationError` when the TOML file is
-    missing or malformed (caller-recoverable; the surrounding deadline
-    engine can degrade to weekend-only shifts).
+    A calendar is usable only when the signed artifact carries its publication
+    event.  Runtime never parses an authoring TOML tree or treats an absent file
+    as a holiday-free year.
     """
-    return _load_holiday_calendar_path(year, _calendar_path(year).resolve())
+    from ..calculations.registry.authority import bundled_authority
+
+    return holiday_calendar_from_authority(year, authority=bundled_authority())
 
 
 @lru_cache(maxsize=64)
@@ -353,7 +349,9 @@ def compile_holiday_calendar_facts(registry_root: Path) -> tuple[GovernedFact, .
         if calendar.boe_url is None:
             continue
         publication_variants.append(_holiday_calendar_publication_variant(calendar))
-        holiday_variants.extend(_holiday_fact_variant(calendar, holiday) for holiday in (*calendar.national, *calendar.ccaa))
+        holiday_variants.extend(
+            _holiday_fact_variant(calendar, holiday) for holiday in (*calendar.national, *calendar.ccaa)
+        )
     if not publication_variants:
         return ()
     facts = [
@@ -465,6 +463,8 @@ def holiday_calendar_from_authority(
         else:
             ccaa.append(holiday)
     return HolidayCalendar(year=year, boe_ref=boe_ref, boe_url=boe_url, national=tuple(national), ccaa=tuple(ccaa))
+
+
 def collect_holiday_calendar_fact_fingerprints(registry_root: Path) -> RegistryPathFingerprints:
     """Fingerprint every calendar, including excluded bootstrap declarations."""
     calendar_root = registry_root.resolve() / HOLIDAY_CALENDAR_PROVIDER_DIRECTORY
@@ -709,8 +709,8 @@ def shift_deadline(
 __all__ = (
     "HOLIDAY_CALENDAR_PROVIDER_DIRECTORY",
     "HOLIDAY_CALENDAR_PROVIDER_ID",
-    "HOLIDAY_EVENT_FACT_ID",
     "HOLIDAY_CALENDAR_PUBLICATION_EVENT_FACT_ID",
+    "HOLIDAY_EVENT_FACT_ID",
     "MODELOS_WITHOUT_SHIFT",
     "CalendarCCAA",
     "DeadlineShift",

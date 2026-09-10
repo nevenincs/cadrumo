@@ -8,8 +8,6 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.facts.legal_parameters import compile_legal_parameter_facts
-from cadrumo.domain.calculations.registry.facts.loader import load_governed_facts
 from cadrumo.domain.calculations.registry.facts.resolution import (
     EntitySetFactQuery,
     ResolvedEntitySetFact,
@@ -17,8 +15,10 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
 )
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.facts.validation import governed_fact_catalogue_failures
-from cadrumo.domain.calculations.registry.loader import load_shared_catalogues
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
+from dev.registry.compiler.fact_loader import load_governed_facts
+from dev.registry.compiler.legal_parameters import compile_legal_parameter_facts
+from dev.registry.compiler.loader import load_shared_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -91,7 +91,11 @@ def test_article_95_activity_selectors_cite_the_hash_pinned_table_and_boe_redact
     assert table.published_at is None
     assert table.applies_from == _FIRST_GROUNDED_DATE
     assert shared.sources[_ARTICLE_95_SOURCE].applies_from == date(2023, 1, 26)
-    assert all(variant.valid_from == _FIRST_GROUNDED_DATE for fact in catalogue.facts.values() for variant in fact.variants)
+    assert all(
+        variant.valid_from == _FIRST_GROUNDED_DATE
+        for fact in catalogue.facts.values()
+        for variant in fact.variants
+    )
     assert (
         governed_fact_catalogue_failures(
             catalogue,

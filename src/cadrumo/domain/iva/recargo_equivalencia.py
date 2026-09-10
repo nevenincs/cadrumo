@@ -28,38 +28,16 @@ the four IVA tiers per LIVA art. 161:
 
 from __future__ import annotations
 
-import tomllib
-from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
-from functools import lru_cache
-from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core.decimal.coercion import coerce_decimal_strict
-from ...core.external_constants import UTF_8_ENCODING
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.paths import path_stat_fingerprint
-from ...core.resources.bundled_data import bundled_path
-from ...core.revision_review import RevisionReviewStatus
-from ...core.type_guards import is_object_list
 from ...core.unit_proportion import UnitProportion
-from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ..calculations.registry.facts.schema import (
-    FactOwnership,
-    FactSelector,
-    GovernedFact,
-    GovernedFactFamily,
-    GovernedFactVariant,
-    MappingFactEntry,
-    MappingFactPayload,
-)
-from ..calculations.registry.loader_cache import toml_file_fingerprint
-from ..calculations.registry.loader_fingerprints import RegistryPathFingerprints
+from ..calculations.registry.facts.resolution import FactSelector, MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.schema_base import DateAxis
-from ._grounding import verify_table_legal_refs
 from .errors import IvaCatalogueError, IvaValidationError
 
 if TYPE_CHECKING:
@@ -112,108 +90,32 @@ class RecargoRateRecord(BaseModel):
         return self.effective_until is None or on_date <= self.effective_until
 
 
-def load_recargo_rate_table(path: Path | None = None) -> tuple[RecargoRateRecord, ...]:
-    """Load the windowed recargo de equivalencia rate table from the registry.
+def load_recargo_rate_table() -> tuple[RecargoRateRecord, ...]:
+    """Return published recargo pairings from the authority artifact.
 
-    Resolves the bundled path on every call so ``bundled_path`` stays the single
-    resolution surface, mirroring the IVA rate table loader.
-
-    Returns:
-        Every :class:`RecargoRateRecord` in the committed table.
-
-    Raises:
-        IvaCatalogueError: If the table cannot be read.
-        IvaValidationError: If a record is malformed, or if two records claim
-            the same IVA rate over overlapping windows.
+    The optional source path belongs to development publication only; accepting
+    it in runtime would make an unsigned authoring tree a second authority.
     """
-    target = path if path is not None else bundled_path("registry", "aeat", "iva", "recargo-rates.toml")
-    resolved = target.resolve()
-    try:
-        fingerprint = path_stat_fingerprint(resolved)
-    except OSError as exc:
-        raise IvaCatalogueError(f"{resolved}: cannot stat recargo rate registry: {exc}") from exc
-    return _load_recargo_rate_table_cached(*fingerprint)
+    from ..calculations.registry.authority import bundled_authority
 
-
-@lru_cache(maxsize=16)
-def _load_recargo_rate_table_cached(path: str, byte_count: int, modified_ns: int) -> tuple[RecargoRateRecord, ...]:
-    del byte_count, modified_ns
-    target = Path(path)
-    try:
-        payload = tomllib.loads(target.read_text(encoding=UTF_8_ENCODING))
-    except OSError as exc:
-        raise IvaCatalogueError(f"{target}: cannot read recargo rate registry: {exc}") from exc
-    except tomllib.TOMLDecodeError as exc:
-        raise IvaValidationError(f"{target}: malformed recargo rate registry: {exc}") from exc
-
-    rows = payload.get("recargo_rates", ())
-    try:
-        records = tuple(RecargoRateRecord.model_validate(_hydrate_row(row)) for row in rows)
-    except (ValueError, TypeError) as exc:
-        raise IvaValidationError(f"{target}: invalid recargo rate record: {exc}") from exc
-    _reject_overlapping_windows(records)
-    verify_table_legal_refs(
-        str(target),
-        [(f"{record.iva_rate}/{record.effective_from.isoformat()}", record.legal_refs) for record in records],
-    )
-    return records
-
-
-def _hydrate_row(row: Mapping[str, object]) -> dict[str, object]:
-    """Widen TOML scalars to the strict model's types at the load boundary.
-
-    The record model is strict, so the authoring tree's strings stay strings
-    until here. Rates are authored as strings rather than TOML floats because a
-    float cannot represent 0.0062 exactly and a recargo is money-bearing.
-    """
-    hydrated = dict(row)
-    for field in ("iva_rate", "recargo_rate"):
-        raw = hydrated.get(field)
-        if isinstance(raw, str):
-            # DECIMAL-TEXT-RATIONALE-RECARGO-TOML-RATE: authored TOML scalar, not
-            # operator text -- the separator convention is Python/TOML decimal-point
-            # literal syntax, fixed by the authoring format rather than chosen by a
-            # human typist, so there is no European/American thousands ambiguity here.
-            hydrated[field] = coerce_decimal_strict(raw)
-    raw_refs = hydrated.get("legal_refs")
-    if is_object_list(raw_refs):
-        hydrated["legal_refs"] = _coerce_legal_refs(raw_refs)
-    return hydrated
-
-
-def _coerce_legal_refs(refs: list[object]) -> tuple[str, ...]:
-    """Validate and widen a raw TOML ``legal_refs`` array to ``tuple[str, ...]``."""
-    coerced: list[str] = []
-    for ref in refs:
-        if not isinstance(ref, str):
-            raise IvaValidationError(f"legal_refs entries must be strings, got {type(ref)!r}")
-        coerced.append(ref)
-    return tuple(coerced)
-
-
-def _reject_overlapping_windows(records: tuple[RecargoRateRecord, ...]) -> None:
-    """Refuse two records claiming one IVA rate over overlapping windows.
-
-    Without this a lookup would silently answer with whichever record happened
-    to be first, which is the failure mode that made the tier-keyed shape
-    unsafe in the first place -- an ambiguous key resolving to a plausible
-    answer rather than to a refusal.
-    """
-    open_ended = date.max
-    by_rate: dict[Decimal, list[RecargoRateRecord]] = {}
-    for record in records:
-        by_rate.setdefault(record.iva_rate, []).append(record)
-    for iva_rate, group in by_rate.items():
-        for index, first in enumerate(group):
-            for second in group[index + 1 :]:
-                first_end = first.effective_until or open_ended
-                second_end = second.effective_until or open_ended
-                if first.effective_from <= second_end and second.effective_from <= first_end:
-                    raise IvaValidationError(
-                        f"recargo rate registry: IVA rate {iva_rate} has overlapping windows "
-                        f"({first.effective_from}..{first.effective_until}) and "
-                        f"({second.effective_from}..{second.effective_until})",
-                    )
+    fact = bundled_authority().catalogues.facts.facts.get(IVA_RECARGO_FACT_ID)
+    if fact is None:
+        raise IvaCatalogueError("installed authority has no IVA recargo facts")
+    records: list[RecargoRateRecord] = []
+    for variant in fact.variants:
+        selectors = {selector.name: selector.value for selector in variant.selectors}
+        payload = {str(entry.key): entry.value for entry in variant.payload.entries}
+        records.append(
+            RecargoRateRecord(
+                iva_rate=Decimal(str(selectors["applied_rate"])),
+                recargo_rate=Decimal(str(payload["recargo_rate"])),
+                effective_from=variant.valid_from,
+                effective_until=variant.valid_to,
+                legal_refs=variant.legal_refs,
+                notes=str(payload["notes"]),
+            )
+        )
+    return tuple(records)
 
 
 def recargo_rate_for_applied_rate(applied_rate: Decimal, on_date: date) -> Decimal | None:
@@ -293,36 +195,6 @@ def _recargo_fact_candidate_exists(
     )
 
 
-def compile_iva_recargo_facts(registry_root: Path) -> tuple[GovernedFact, ...]:
-    """Project the legacy applied-rate schedule into governed facts."""
-    records = load_recargo_rate_table(registry_root.resolve() / "iva" / "recargo-rates.toml")
-    return (
-        GovernedFact(
-            fact_id=IVA_RECARGO_FACT_ID,
-            family=GovernedFactFamily.MAPPING,
-            variants=tuple(_recargo_fact_variant(record) for record in records),
-        ),
-    )
-
-
-def collect_iva_recargo_fact_fingerprints(registry_root: Path) -> RegistryPathFingerprints:
-    """Fingerprint the exact recargo schedule owned by the IVA provider.
-
-    An absent schedule contributes NO fingerprint rather than raising, for the
-    reason the sibling rate collector states: a partial registry carries only
-    what its subject needs, and there is no content to invalidate on.
-    """
-    path = (registry_root.resolve() / "iva" / "recargo-rates.toml").resolve()
-    if not path.is_file():
-        return ()
-    return (toml_file_fingerprint(path),)
-
-
-def reset_iva_recargo_fact_provider() -> None:
-    """Clear the recargo parser cache under the authority reset barrier."""
-    _load_recargo_rate_table_cached.cache_clear()
-
-
 def recargo_rate_record_from_fact(resolved: ResolvedMappingFact) -> RecargoRateRecord:
     """Project a provenance-bearing authority result onto the retained public record."""
     selectors = {selector.name: selector.value for selector in resolved.matched_selectors}
@@ -337,33 +209,11 @@ def recargo_rate_record_from_fact(resolved: ResolvedMappingFact) -> RecargoRateR
     )
 
 
-def _recargo_fact_variant(record: RecargoRateRecord) -> GovernedFactVariant:
-    return GovernedFactVariant(
-        variant_id=f"iva-recargo.{record.iva_rate}.{record.effective_from}",
-        selectors=(FactSelector(name="applied_rate", value=record.iva_rate),),
-        date_axis=DateAxis.DEVENGO_DATE,
-        valid_from=record.effective_from,
-        valid_to=record.effective_until,
-        payload=MappingFactPayload(
-            entries=(
-                MappingFactEntry(key="recargo_rate", value=record.recargo_rate),
-                MappingFactEntry(key="notes", value=record.notes),
-            ),
-        ),
-        legal_refs=record.legal_refs,
-        review_status=RevisionReviewStatus.AGENT_REVIEWED,
-        ownership=FactOwnership.GENERATED,
-    )
-
-
 __all__ = [
     "IVA_RECARGO_FACT_ID",
     "RecargoRateRecord",
-    "collect_iva_recargo_fact_fingerprints",
-    "compile_iva_recargo_facts",
     "load_recargo_rate_table",
     "recargo_rate_for_applied_rate",
     "recargo_rate_record_from_fact",
-    "reset_iva_recargo_fact_provider",
     "resolve_recargo_rate_for_applied_rate",
 ]
