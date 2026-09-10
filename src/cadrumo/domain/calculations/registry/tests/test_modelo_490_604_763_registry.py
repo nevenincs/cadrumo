@@ -16,7 +16,7 @@ See Also:
         Closed tax-family enum that carries the IDSD, ITF and juego members.
     :func:`~domain.calculations.registry.tests._registry_schema_support._committed_modelo`
         Test loader for committed registry definitions and legal catalogues.
-    :class:`~domain.calculations.registry._validate.RegistryValidator`
+    :class:`~dev.registry.compiler.validator.RegistryValidator`
         Registry validator that checks the plazo and legal catalogue references.
     :class:`~core.modelo.Modelo`
         Canonical fleet membership these new-tax registrations extend.
@@ -31,15 +31,15 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler.validator import RegistryValidator
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.resources.bundled_data import bundled_path
 from .....core.tax_domain import TaxDomain
 from .....tests.registry_snapshot import build_snapshot
-from .._validate import RegistryValidator
 from ..errors import NoRevisionForPeriodError
 from ..temporal import select_revision
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

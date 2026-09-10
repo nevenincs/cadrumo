@@ -14,7 +14,7 @@ article are cross-checked against the bundled BOE corpus at build.
 See Also:
     :func:`~domain.calculations.registry.tests._registry_schema_support._committed_modelo`
         Test loader for committed modelo registry definitions and catalogues.
-    :class:`~domain.calculations.registry._validate.RegistryValidator`
+    :class:`~dev.registry.compiler.validator.RegistryValidator`
         Registry validator that cross-checks legal/source catalogue references.
     :func:`~domain.calculations.registry.authority.bundled_authority`
         Authority facade used to inspect generated deadline windows.
@@ -29,11 +29,11 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler.validator import RegistryValidator
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 
 from .....core.resources.bundled_data import bundled_path
-from .._validate import RegistryValidator
 from ..authority import bundled_authority
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import shutil
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
@@ -17,11 +19,16 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
     resolve_governed_fact,
 )
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
+from dev.registry.compiler import fact_providers
+from dev.registry.compiler.authority import compile_validated_authority
 from dev.registry.compiler.fact_providers import compile_registered_fact_providers
 from dev.registry.compiler.fact_validation import migrated_legal_parameter_fact_failures
 from dev.registry.compiler.loader import load_shared_catalogues
 from dev.registry.compiler.validator import RegistryValidator
+from dev.registry.pipeline.candidate_staging import stage_generated_export_candidate
+from dev.registry.pipeline.cli import _supporting_modelos
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -79,9 +86,7 @@ def test_gate_detects_a_missing_fact_and_non_filing_date_axis() -> None:
     catalogue = _catalogue()
     missing = GovernedFactCatalogue(
         facts={
-            fact_id: fact
-            for fact_id, fact in catalogue.facts.items()
-            if fact_id != "liva-art-161:recargo-rate-general"
+            fact_id: fact for fact_id, fact in catalogue.facts.items() if fact_id != "liva-art-161:recargo-rate-general"
         }
     )
     fact = catalogue.facts["liva-art-161:recargo-rate-general"]
@@ -151,3 +156,56 @@ def test_real_resolution_refuses_before_the_source_grounded_windows() -> None:
         _resolve_entities("rirpf-art-95:selector-m036-actividades-profesionales", date(2026, 3, 25))
     with pytest.raises(RegistryValidationError, match="has no variant for the exact query context"):
         _resolve_entities("modelo-131:selector-m036-volumen-ingresos-agrario", date(2026, 3, 31))
+
+
+def test_the_gate_applies_only_to_a_registry_that_enrolls_fact_providers(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The obligation exists where the migration happened: in a registry enrolling governed-fact providers."""
+    empty = GovernedFactCatalogue(facts={})
+
+    enrolled_failures = migrated_legal_parameter_fact_failures(empty, source_refs={})
+    monkeypatch.setattr(fact_providers, "FACT_PROVIDER_REGISTRATIONS", ())
+    unenrolled_failures = migrated_legal_parameter_fact_failures(empty, source_refs={})
+
+    assert "migrated legal-parameter fact 'liva-art-161:recargo-rate-general' is not authored" in enrolled_failures
+    assert unenrolled_failures == ()
+
+
+_STAGED_MODELO = "210"
+#: The modelo's root edition, which claims no predecessor, so an isolated copy compiles whole.
+_STAGED_REVISION = "2025"
+_REMOVED_FACT_ID = "lirpf-art-101:retencion-administrador-general"
+_REMOVED_FACT_FILE = "0001-lirpf-art-101-retencion-administrador-general.toml"
+
+
+def _staged_bundled_copy(work: Path) -> Path:
+    """Stage a copy of the bundled registry's shared authority plus one modelo, export tree included."""
+    source_root = _registry_root()
+    candidate_root = work / "registry" / "aeat"
+    stage_generated_export_candidate(
+        source_root,
+        candidate_root,
+        modelo=_STAGED_MODELO,
+        revision=_STAGED_REVISION,
+        supporting_modelos=_supporting_modelos(_STAGED_MODELO),
+    )
+    shutil.copytree(
+        source_root / "modelos" / _STAGED_MODELO / "revisions" / _STAGED_REVISION / "export",
+        candidate_root / "modelos" / _STAGED_MODELO / "revisions" / _STAGED_REVISION / "export",
+    )
+    return candidate_root
+
+
+def test_a_copy_of_the_bundled_tree_compiles_with_its_migrated_facts(tmp_path: Path) -> None:
+    candidate_root = _staged_bundled_copy(tmp_path)
+
+    authority = compile_validated_authority(candidate_root, bundled_path())
+
+    assert _REMOVED_FACT_ID in authority.catalogues.facts.facts
+
+
+def test_a_copy_of_the_bundled_tree_missing_one_migrated_fact_is_refused_by_name(tmp_path: Path) -> None:
+    candidate_root = _staged_bundled_copy(tmp_path)
+    (candidate_root / "facts" / _REMOVED_FACT_FILE).unlink()
+
+    with pytest.raises(RegistryValidationError, match=f"migrated legal-parameter fact '{_REMOVED_FACT_ID}' is not"):
+        compile_validated_authority(candidate_root, bundled_path())

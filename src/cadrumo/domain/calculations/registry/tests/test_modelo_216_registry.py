@@ -9,7 +9,7 @@ July, October and January for the immediately preceding natural quarter.
 See Also:
     :func:`~domain.calculations.registry.tests._registry_schema_support._committed_modelo`
         Test loader for the committed registry definition and legal catalogue.
-    :class:`~domain.calculations.registry._validate.RegistryValidator`
+    :class:`~dev.registry.compiler.validator.RegistryValidator`
         Registry validator that checks the authored legal/source references.
     :func:`~domain.calculations.registry.authority.bundled_authority`
         Authority facade used to resolve the trimestral deadline windows.
@@ -31,15 +31,15 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.validator import RegistryValidator
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import PeriodKind, registry_period_kind
 from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_snapshot import build_snapshot
-from .._validate import RegistryValidator
 from ..formula_runtime import calculate_registry_snapshot
 from ..temporal import select_revision
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

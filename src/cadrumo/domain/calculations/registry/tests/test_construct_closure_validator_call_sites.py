@@ -8,17 +8,17 @@ layout-only source cannot make a construct filing-grade.
 See Also:
     :func:`~domain.calculations.registry._validate_constructs.validate_construct_closure`
         Construct grounding gate exercised through the public validator.
-    :class:`~domain.calculations.registry._validate.RegistryValidator`
+    :class:`~dev.registry.compiler.validator.RegistryValidator`
         Modelo-level validator whose call path this regression pins.
 """
 
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler._validate_constructs import _CONSTRUCT_MEMBER_ATTRS, validate_construct_closure
+from dev.registry.compiler._validate_evidence import EvidenceValidator
+from dev.registry.compiler.validator import RegistryValidator
 
-from .._validate import RegistryValidator
-from .._validate_constructs import _CONSTRUCT_MEMBER_ATTRS, validate_construct_closure
-from .._validate_evidence import EvidenceValidator
 from ..errors import RegistryValidationError
 from ..schema_revision_members import ConstructDefinition
 from ._referential_integrity_support import (

@@ -79,7 +79,6 @@ _CHILD_PROGRAM = """
 import os
 from pathlib import Path
 
-from cadrumo.domain.calculations.registry.loader import load_registry_tree
 from dev.registry.compiler.loader import load_registry_tree
 from dev.registry.compiler.loader_cache import registry_disk_cache_dir
 

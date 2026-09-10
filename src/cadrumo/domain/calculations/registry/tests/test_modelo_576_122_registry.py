@@ -10,7 +10,7 @@ calendar windows.
 See Also:
     :func:`~domain.calculations.registry.tests._registry_schema_support._committed_modelo`
         Test loader for the committed registry definitions and legal catalogues.
-    :class:`~domain.calculations.registry._validate.RegistryValidator`
+    :class:`~dev.registry.compiler.validator.RegistryValidator`
         Registry validator that checks the authored legal/source references.
     :class:`~core.TaxDomain`
         Closed tax-family enum extended for the plastico and IEDMT registrations.
@@ -27,16 +27,16 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler.validator import RegistryValidator
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.resources.bundled_data import bundled_path
 from .....core.revision_review import RevisionReviewStatus
 from .....core.tax_domain import TaxDomain
 from .....tests.registry_snapshot import build_snapshot, build_validated_snapshot
-from .._validate import RegistryValidator
 from ..errors import RegistryValidationError
 from ..support_matrix import revision_capability_probe
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

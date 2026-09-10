@@ -61,10 +61,11 @@ class RegistryApplicationError(Exception):
         precondition_verdict: PreconditionVerdict,
         translated_message: str | None = None,
     ) -> None:
+        """Carry the refusal's context and its classified no-action verdict."""
         self.context = dict(context)
         self.precondition_verdict = precondition_verdict
         self.translated_message = translated_message
-        super().__init__(translated_message or precondition_verdict.condition_id)
+        super().__init__(translated_message or precondition_verdict.failed_condition_id)
 
 
 class RegistryApplicationInputError(RegistryApplicationError):

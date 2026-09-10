@@ -12,6 +12,10 @@ Verbs:
 * ``report`` -- every conformance axis, one row per modelo revision.
 * ``coverage`` -- per-axis measured counts against their real populations.
 * ``integrity`` -- fail-closed registry and legal-corpus integrity gate.
+* ``edition MODELO REVISION`` -- one edition as the complete edition it
+  compiles to, with the provenance of every casilla row and the reach of its
+  review stamp. A registry that declares no such modelo or edition is refused
+  on stderr with exit code 2.
 * ``closure [--check]`` -- the derived temporal and filing release predicate.
   ``--check`` blocks a shipped-completeness claim while any limb is refused or
   the two denominators disagree.
@@ -70,11 +74,12 @@ from typing import TYPE_CHECKING, Annotated
 import typer
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from ..compiler.legal_grounding import verify_legal_catalogue
 from dev.registry.compiler.authority import compile_validated_authority
 
+from ..compiler.legal_grounding import verify_legal_catalogue
 from ._stamp import StampableReviewStatus, StampError, bundled_registry_root, stamp_revision
+from .edition import RegistryEditionView, read_registry_edition, render_registry_edition
+from .errors import RegistryApplicationInputError
 from .manager import (
     ConformanceReport,
     build_coverage_report,
@@ -197,6 +202,45 @@ def integrity(
         f"\trevisions={revision_count}"
         f"\tlegal_references={len(authority.catalogues.legal)}",
     )
+
+
+_EDITION_REFUSED_EXIT_CODE = 2
+
+
+@app.command("edition")
+def edition(
+    modelo: Annotated[str, typer.Argument(help="Modelo id whose edition to print, e.g. 303.")],
+    revision: Annotated[str, typer.Argument(help="Revision id of the edition, e.g. 2025.")],
+    as_json: _AsJson = False,
+    registry_root: Annotated[
+        Path | None,
+        typer.Option("--registry-root", help="Registry tree to read; defaults to the bundled registry."),
+    ] = None,
+) -> None:
+    """Print one edition of one modelo as the complete edition the registry compiles.
+
+    An edition that names a predecessor states only the rows it changed; this
+    prints the whole edition those rows and the inherited ones make. The text
+    form is TOML in the shape a revision file declares, with comments marking
+    the edition that states each casilla row and how far the review stamp
+    reaches. ``--json`` emits the same document beside the structured
+    provenance and review scope.
+    """
+    try:
+        report = read_registry_edition(modelo.strip(), revision.strip(), registry_root=registry_root)
+    except RegistryApplicationInputError as exc:
+        condition_id = exc.precondition_verdict.failed_condition_id
+        if as_json:
+            refusal = {"status": "refused", "failed_condition_id": condition_id, "context": exc.context}
+            typer.echo(json.dumps(refusal, indent=2, default=str), err=True)
+        else:
+            context = "".join(f"	{key}={value}" for key, value in exc.context.items())
+            typer.echo(f"edition	status=refused	condition={condition_id}{context}", err=True)
+        raise typer.Exit(code=_EDITION_REFUSED_EXIT_CODE) from exc
+    if as_json:
+        typer.echo(RegistryEditionView.from_report(report).model_dump_json(indent=2))
+        return
+    typer.echo(render_registry_edition(report), nl=False)
 
 
 @app.command("closure")

@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from dev.registry.compiler.source_evidence_fingerprint import collect_source_evidence_fingerprints
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import ModeloId, RevisionId
 from cadrumo.domain.calculations.registry.static_inspection import (
@@ -228,28 +227,9 @@ def load_registry_diagnostic_classification(
     residue; filing, export, and calculation callers must load a validated
     authority through :func:`dev.registry.compiler.authority.compile_validated_authority`.
     """
-    from cadrumo.domain.calculations.registry.authority import (
-        canonical_authority_root_pair,
-        collect_registry_identity_fingerprints,
-        construct_authority,
-        fingerprint_key,
-    )
-    from dev.registry.compiler.identity import resolve_registry_identity
+    from dev.registry.compiler.authority import compile_unvalidated_authority
 
-    identity_pair = canonical_authority_root_pair(root, source_root)
-    resolved_root = identity_pair.root
-    resolved_source_root = identity_pair.source_root
-    identity = resolve_registry_identity(
-        resolved_root,
-        collect_fingerprints=collect_registry_identity_fingerprints,
-    )
-    source_evidence_key = fingerprint_key(collect_source_evidence_fingerprints(resolved_source_root))
-    authority = construct_authority(
-        resolved_root,
-        resolved_source_root,
-        source_evidence_key.fingerprints,
-        identity=identity,
-    )
+    authority = compile_unvalidated_authority(root, source_root)
     return UnvalidatedRegistryClassification(
         strict_validation_error=str(strict_validation_error),
         filing_revisions=derive_filing_revision_classifications(authority),

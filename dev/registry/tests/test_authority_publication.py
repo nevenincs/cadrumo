@@ -299,7 +299,15 @@ def test_equal_length_timestamp_restored_source_replacement_refuses_and_preserve
         registry_root=candidate_root / "registry" / "aeat",
         source_root=candidate_root,
     )
-    source = candidate_root / "corpus" / "test" / "test-source-001.pdf"
+    source = (
+        candidate_root
+        / "corpus"
+        / "aeat_official"
+        / "disenos_registro"
+        / "modelo_999"
+        / "files"
+        / "test-source-001.pdf"
+    )
     source_stat = source.stat()
     source.write_bytes(b"y" * source_stat.st_size)
     os.utime(source, ns=(source_stat.st_atime_ns, source_stat.st_mtime_ns))

@@ -28,10 +28,12 @@ from shutil import copyfile
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry import m303_orden_manifest
-from dev.registry.compiler._m303_orden_raw_models import M303AnnualOrdenSourceCensus
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.ids import SourceRefId
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from cadrumo.tests.registry_tree import bundled_registry_tree
+from dev.registry.compiler import m303_orden_manifest
+from dev.registry.compiler._m303_orden_raw_models import M303AnnualOrdenSourceCensus
 from dev.registry.compiler.m303_orden_census_artefact import (
     M303_ORDEN_CENSUS_ARTEFACT_FILENAME,
     load_m303_annual_orden_censuses,
@@ -42,8 +44,6 @@ from dev.registry.compiler.m303_orden_manifest import (
     collect_m303_annual_orden_fingerprints,
     load_m303_annual_orden_authority,
 )
-from cadrumo.domain.calculations.registry.schema_references import SourceReference
-from cadrumo.tests.registry_tree import bundled_registry_tree
 from dev.registry.maintenance_support import check_m303_annual_orden_census_artefact
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]

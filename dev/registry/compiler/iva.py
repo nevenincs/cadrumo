@@ -137,6 +137,26 @@ def _verify_rate_grounding(table: Mapping[EUMemberState, tuple[IvaRateRecord, ..
     else:
         catalogues = load_shared_catalogues(registry_root)
         legal, sources, source_root = catalogues.legal, catalogues.sources, registry_root.parents[1]
+    verify_iva_rate_grounding(table, legal=legal, sources=sources, source_root=source_root)
+
+
+def verify_iva_rate_grounding(
+    table: Mapping[EUMemberState, tuple[IvaRateRecord, ...]],
+    *,
+    legal: Mapping[str, LegalReference],
+    sources: Mapping[str, SourceReference],
+    source_root: Path,
+) -> None:
+    """Refuse an IVA rate table any of whose rows is not grounded, naming every failure.
+
+    Each row's legal refs must resolve and corpus-verify, each source ref must
+    resolve and verify, and every non-Spanish row must fall inside the
+    applicability window of at least one of its cited sources. Spanish rows are
+    grounded by legislation, so the window rule does not apply to them.
+
+    Raises:
+        IvaCatalogueError: When any row fails; the message lists every failure.
+    """
     verified_legal: set[str] = set()
     verified_sources: set[str] = set()
     failures: list[str] = []

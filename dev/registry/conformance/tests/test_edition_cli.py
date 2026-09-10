@@ -1,4 +1,4 @@
-"""Live CLI proof for ``aeat app registry view-edition``.
+"""Live CLI proof for the registry ``edition`` development verb.
 
 Two temporary registries hold modelo 303: one exactly as shipped, where every
 edition states all of its rows, and one where edition 2025 is re-authored as a
@@ -33,15 +33,14 @@ from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
-from click.testing import Result
+from typer.testing import CliRunner, Result
 
-from ....core.resources.bundled_data import bundled_path
-from ....domain.calculations.registry.schema import REVISION_GOVERNANCE_FIELDS
-from ._registry_cli_fixtures import _isolated_registry_cli_backend, _isolated_secure_backend
-from ._registry_cli_support import invoke_cached_cli
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.schema import REVISION_GOVERNANCE_FIELDS
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-_REGISTRY_CLI_FIXTURES = (_isolated_registry_cli_backend, _isolated_secure_backend)
+from ..cli import app
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 _M303 = "303"
 _PREDECESSOR = "2024-desde-09-y-3t"
@@ -153,19 +152,8 @@ def migrated_registry(
 
 
 def _view(registry_root: Path, modelo: str, revision: str, *, output_format: str = "text") -> Result:
-    return invoke_cached_cli(
-        [
-            "--format",
-            output_format,
-            "app",
-            "registry",
-            "view-edition",
-            modelo,
-            revision,
-            "--registry-root",
-            str(registry_root),
-        ],
-    )
+    arguments = ["edition", modelo, revision, "--registry-root", str(registry_root)]
+    return CliRunner().invoke(app, [*arguments, "--json"] if output_format == "json" else arguments)
 
 
 def _rendered_edition(result: Result, revision: str) -> dict[str, object]:
@@ -264,9 +252,7 @@ def test_the_json_form_reports_row_provenance_and_the_review_scope(
 
     assert result.exit_code == 0, result.stderr
     assert result.stderr == ""
-    envelope = json.loads(result.stdout)
-    assert envelope["command"] == "registry.view.edition"
-    payload = envelope["result"]
+    payload = json.loads(result.stdout)
     assert payload["document"] == text.stdout
     assert payload["inherits_from"] == _PREDECESSOR
     rows = payload["rows"]
@@ -345,14 +331,14 @@ def test_an_unknown_modelo_or_edition_is_refused_on_the_error_channel(
 
     assert text.exit_code == _REFUSED_EXIT_CODE
     assert text.stdout == ""
-    assert all(value in text.stderr for value in refused_context.values())
+    assert f"status=refused\tcondition={condition_id}" in text.stderr
+    assert all(f"{key}={value}" in text.stderr for key, value in refused_context.items())
 
     result = _view(full_copy_registry, modelo, revision, output_format="json")
 
     assert result.exit_code == _REFUSED_EXIT_CODE
     assert result.stdout == ""
-    envelope = json.loads(result.stderr)
-    assert envelope["command"] == "registry.view.edition"
-    assert envelope["error"]["category"] == "REFUSED"
-    assert envelope["error"]["action"]["failed_condition_id"] == condition_id
-    assert envelope["error"]["context"].items() >= refused_context.items()
+    refusal = json.loads(result.stderr)
+    assert refusal["status"] == "refused"
+    assert refusal["failed_condition_id"] == condition_id
+    assert refusal["context"].items() >= refused_context.items()

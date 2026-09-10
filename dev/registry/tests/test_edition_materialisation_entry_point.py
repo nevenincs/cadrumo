@@ -8,10 +8,10 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from dev.registry.compiler.edition_materialisation import materialise_edition
-from ..errors import RegistryLoadError
-from ..schema import ModeloRevision
-from ._loader_directory_mode_support import _write_standard_manifest
+from dev.registry.conformance.tests._loader_directory_mode_support import _write_standard_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
