@@ -3,13 +3,14 @@ tags:
   - '#adr'
   - '#docs-terminology-search'
 date: '2026-07-13'
-modified: '2026-07-17'
-body_hash: 'sha256:1d4074428a0ffbed06ac1278d5dc5125df8f7909b9564ee07fcc59668281a342'
+modified: '2026-09-10'
+body_hash: 'sha256:c224fd1c268cbb53889b162c31677568c3978026a309de2b1229583e18aee8be'
 related:
   - "[[2026-07-13-docs-terminology-search-research]]"
   - "[[2026-06-10-docs-terminology-search-adr]]"
   - "[[2026-06-15-docs-terminology-search-adr]]"
 ---
+
 
 # `docs-terminology-search` adr: `next wave: upstream hook wiring, corpus coverage, and the rung-2 gate` | (**status:** `accepted`)
 
@@ -200,3 +201,24 @@ falsifiable number; D4 ratifies the operator's discoverability correction.
   2026-06-10 ADR already scoped.
 - An upstream schema major bump now reds a repo gate instead of silently
   disabling rules.
+
+## Update 3 (2026-09-10): corpus-sidecar ownership and freshness contract
+
+The product sidecars retained by Update 1 require an explicit batch owner. Based on 2026-09-10-corpus-sidecar-freshness-repair-research, D1 is refined as follows:
+
+- A single deterministic corpus-sidecar command owns the committed derivatives for enrolled normative HTML sources and record-design workbooks. It delegates extraction by source kind to the existing extractors; it does not create a second extraction implementation.
+- Its normal mode regenerates the complete enrolled set. Its --check mode writes nothing and fails closed on missing, stale, mismatched, orphaned, or structurally unexpected derivatives.
+- Enrollment is derived from the authoritative corpus source populations, so a newly enrolled source cannot silently lack its required sidecar. Current stale and missing derivatives are regenerated through this command.
+- Focused tests prove both the clean path and representative detection of source/derivative drift and incomplete enrollment. Developer recipes expose regeneration and no-write verification as the standard operator surfaces.
+- PDF corpus-text sidecars remain owned by their existing separate generator and check command; their distinct schema and runtime consumer are outside this contract.
+
+### Rationale
+
+The research establishes that product-sidecar retention without a complete owner/check leaves a correctness boundary dependent on incidental, per-file extraction. One enrolled command preserves the existing extraction truth while making corpus completeness and freshness mechanically enforceable. Separating PDF text preserves a coherent boundary instead of forcing unrelated product contracts through one tool.
+
+### Consequences
+
+- Committed HTML and workbook sidecars become reproducible product artifacts with one explicit maintenance surface and a CI-enforceable no-write drift gate.
+- Corpus updates must use the regeneration command and land the resulting reviewed derivative diff in the same change.
+- The RAG hook remains complementary: it may index source content for development, but it neither replaces nor waives this product-sidecar gate.
+- The command enrollment contract must evolve with the authoritative corpus source families; tests must continue to detect omissions rather than pinning a historic corpus count.

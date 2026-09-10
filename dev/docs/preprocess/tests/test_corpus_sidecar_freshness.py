@@ -69,6 +69,8 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.core.directory_scan import scan_directory
+from dev.corpus.extract_corpus_sidecars import check_all as check_corpus_sidecars
+from dev.corpus.extract_corpus_sidecars import extract_all as extract_corpus_sidecars
 
 from ...._paths import REPO_ROOT, UTF_8
 from .._parts import part_stand_in_path
@@ -261,6 +263,24 @@ def test_sidecar_discovery_finds_the_committed_corpus() -> None:
             f"of {floor}; the freshness, loadability and locality sweeps below iterate this same "
             f"population, so each would report a clean corpus without having read a {kind} at all"
         )
+
+
+def test_owner_check_rejects_an_enrolled_source_without_sidecars(tmp_path: Path) -> None:
+    """A newly enrolled source cannot read as fresh before it has a pair."""
+    corpus = tmp_path / "corpus"
+    source = corpus / "normatives" / "html" / "new-norm.html"
+    source.parent.mkdir(parents=True)
+    source.write_text(
+        '<div id="textoxslt"><h5 class="articulo">Artículo 1.</h5><p>Texto.</p></div>',
+        encoding="utf-8",
+        newline="\n",
+    )
+
+    failures = check_corpus_sidecars(corpus_root=corpus, repo_root=tmp_path)
+    assert any(failure.startswith("MISSING ") for failure in failures)
+
+    assert extract_corpus_sidecars(corpus_root=corpus, repo_root=tmp_path) == 0
+    assert check_corpus_sidecars(corpus_root=corpus, repo_root=tmp_path) == []
 
 
 def test_the_per_kind_floors_name_exactly_the_families_the_corpus_ships() -> None:

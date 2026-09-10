@@ -413,6 +413,20 @@ fix-corpus-text:
 check-corpus-text:
     @uv run --no-sync python -m dev.corpus.extract_manual_corpus_text --check
 
+# Operator-run: regenerate committed normative HTML and record-design workbook
+# sidecars after their authoritative corpus sources change.
+[doc('Operator-run: regenerate committed corpus HTML and workbook sidecars after source changes.')]
+[group('fix')]
+fix-corpus-sidecars:
+    @uv run --no-sync python -m dev.corpus.extract_corpus_sidecars
+
+# Freshness gate: compare every enrolled HTML/workbook sidecar with the exact
+# current extractor output without writing.
+[doc('Freshness gate: fail when committed corpus HTML or workbook sidecars drift from source.')]
+[group('check')]
+check-corpus-sidecars:
+    @uv run --no-sync python -m dev.corpus.extract_corpus_sidecars --check
+
 # Build every distribution the release publishes, then refuse any file the index
 # would reject on size. Same two operations the publish workflow performs, in the
 # same order, so the local run and the hosted one can disagree only about the host.
@@ -882,6 +896,7 @@ test-integration:
 [doc('Run the dev/ tooling gates that no other lane reaches (audit, deploy, env, identity, locales, sanitizer, registry, docs, agent-eval, ingest-harness, and TUI-harness subsystems).')]
 [group('test')]
 test-dev-tooling:
+    @just check-corpus-sidecars
     @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not resident_service and not external_tool" dev/audit/tests dev/corpus/tests dev/deploy/tests dev/docs/tests dev/env/tests dev/identity/tests dev/locales/tests dev/readme/tests dev/tests dev/test_runs/tests dev/sanitizer/tests dev/registry/tests dev/registry/newmodelo/tests dev/registry/aeip/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests dev/agent_eval/tests dev/ingest_harness/tests dev/containers/tests dev/smoke/tests dev/tui/tests dev/tui/harness/tests dev/registry/parity/tests
 
 # Run the registry conformance suite. It sits in its own lane rather than in
