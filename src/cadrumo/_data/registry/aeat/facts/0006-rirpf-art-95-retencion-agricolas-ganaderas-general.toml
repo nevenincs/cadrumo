@@ -19,7 +19,6 @@ kind = "scalar"
 value_type = "decimal"
 value = "0.02"
 unit = "fraction"
-
 [[fact.variants]]
 variant_id = "rirpf-art-95:retencion-actividades-agricolas-ganaderas-general:2015-01-01"
 date_axis = "filing_period"
@@ -90,4 +89,3 @@ kind = "scalar"
 value_type = "decimal"
 value = "0.02"
 unit = "fraction"
-
