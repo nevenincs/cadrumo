@@ -10,7 +10,7 @@ related:
   - '[[2026-09-10-data-provenance-consolidation-live-lane-map-reference]]'
 modified: '2026-09-10'
 body_schema: body-v2
-body_hash: 'sha256:6ca868233fb6b6473c4c53fe63cc85cb45b20a380a6bbcb6a3898d663638011d'
+body_hash: 'sha256:2f225e3de640f2607488982b949fd6dd9a68638913fde842bac495df2c0f97b3'
 ---
 
 # `data-provenance-consolidation` plan
@@ -59,7 +59,7 @@ Bind registry verification and broad coverage to catalog identity without expand
 
 Route sync acquisition checks through the catalog while preserving byte and retrieval validation.
 
-- [ ] `W02.P04.S10` - Route manifest loading, payload classification, and acquisition diagnostics through the catalog; `dev/corpus/sync_aeat_record_design_corpus.py`.
+- [x] `W02.P04.S10` - Route manifest loading, payload classification, and acquisition diagnostics through the catalog; `dev/corpus/sync_aeat_record_design_corpus.py`.
 - [ ] `W02.P04.S11` - Replace basename-only off-host assertion with exact catalog identity alignment fixtures; `dev/corpus/tests/test_record_design_support.py`.
 - [ ] `W02.P04.S12` - Prove catalog-backed sync rejects unclassified files and conflicting acquisition identity; `dev/corpus/tests/test_record_design_support.py`.
 

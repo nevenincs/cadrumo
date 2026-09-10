@@ -24,6 +24,14 @@ if not __package__:
     __package__ = "dev.corpus"
 
 from cadrumo.core.directory_scan import iter_directory, scan_directory  # noqa: E402
+from cadrumo.domain.calculations.registry.artifact_catalogue import (  # noqa: E402
+    ArtifactCatalogue,
+    ArtifactDiagnostic,
+    ArtifactDiagnosticKind,
+    ArtifactRole,
+    compile_artifact_catalogue,
+    record_design_manifest_identities,
+)
 
 from ..packaging.hashing import sha256_path  # noqa: E402
 
@@ -1422,6 +1430,63 @@ def _load_manifests() -> dict[str, _Manifest]:
     return manifests
 
 
+def _payload_paths(corpus_root: Path) -> tuple[PurePosixPath, ...]:
+    """Return the bounded payload candidates owned by this synchronizer.
+
+    Project declarations and extractor outputs are intentionally outside this
+    acquisition boundary: the catalog compiler assigns payload roles here,
+    while their disposition and derivation contracts remain with their owners
+    until the later migration steps.  This function discovers candidates only;
+    it does not decide whether they have an acceptable acquisition identity.
+    """
+    paths: list[PurePosixPath] = []
+    for model_dir in scan_directory(corpus_root, pattern="modelo_*"):
+        for candidate in sorted(model_dir.rglob("*")):
+            if (
+                not candidate.is_file()
+                or candidate.name in _DECLARATION_NAMES
+                or candidate.name.endswith(_DERIVED_SUFFIXES)
+            ):
+                continue
+            paths.append(PurePosixPath(candidate.relative_to(corpus_root).as_posix()))
+    return tuple(paths)
+
+
+def _catalogue_diagnostic_message(diagnostic: ArtifactDiagnostic) -> str:
+    """Render a typed catalog finding at this CLI's existing failure boundary."""
+    path = "<unknown>" if diagnostic.path is None else diagnostic.path.as_posix()
+    return f"artifact catalog {diagnostic.kind.value}: {path}: {diagnostic.message}"
+
+
+def _record_design_catalogue(
+    manifests: dict[str, _Manifest],
+    corpus_root: Path,
+) -> tuple[ArtifactCatalogue | None, list[str]]:
+    """Compile manifest acquisition identity for this synchronizer's payloads.
+
+    The compiler owns the canonical path join and payload classification.  The
+    synchronizer deliberately retains byte rehashing and retrieval checks;
+    catalog compilation is an identity/role projection, not a replacement for
+    either.  Production ``check`` always fails closed on an incomplete
+    identity row.
+    """
+    identities = []
+    failures: list[str] = []
+    for modelo, manifest in sorted(manifests.items()):
+        manifest_path = PurePosixPath(f"modelo_{modelo}/{_MANIFEST_NAME}")
+        try:
+            identities.extend(record_design_manifest_identities(manifest, manifest_path=manifest_path))
+        except (TypeError, ValueError) as error:
+            failures.append(f"manifest acquisition identity is malformed: M{modelo}: {error}")
+    if failures:
+        return None, failures
+    catalogue = compile_artifact_catalogue(
+        known_paths=_payload_paths(corpus_root),
+        official_identities=identities,
+    )
+    return catalogue, []
+
+
 def unattested_corpus_files(corpus_root: Path) -> tuple[str, ...]:
     """Corpus files under ``corpus_root`` that no manifest declares.
 
@@ -1700,6 +1765,7 @@ def _authority_failures(
     off_host: _OffHostSources,
     corpus_root: Path,
     sidecar_census: tuple[str, ...],
+    catalogue: ArtifactCatalogue | None = None,
 ) -> list[str]:
     """Report every manifest artefact that resolves to other than one declared authority.
 
@@ -1715,6 +1781,25 @@ def _authority_failures(
     which declaration a caller consulted.
     """
     failures: list[str] = []
+    catalogue_is_local = catalogue is None
+    if catalogue_is_local:
+        identities = []
+        for modelo, manifest in sorted(manifests.items()):
+            try:
+                identities.extend(
+                    record_design_manifest_identities(
+                        manifest,
+                        manifest_path=PurePosixPath(f"modelo_{modelo}/{_MANIFEST_NAME}"),
+                    )
+                )
+            except (TypeError, ValueError) as error:
+                failures.append(f"manifest acquisition identity is malformed: M{modelo}: {error}")
+        catalogue = compile_artifact_catalogue(
+            known_paths=tuple(identity.path for identity in identities),
+            official_identities=identities,
+        )
+    if catalogue_is_local:
+        failures.extend(_catalogue_diagnostic_message(diagnostic) for diagnostic in catalogue.diagnostics)
     if off_host.get("schema_version") != 1:
         failures.append("off-host source schema_version is stale")
 
@@ -1764,6 +1849,14 @@ def _authority_failures(
             failures.append(f"off-host entry names an AEAT-hosted URL and belongs in the required set: {path}")
         if not (corpus_root / path).is_file():
             failures.append(f"off-host entry names an absent artefact: {path}")
+        catalog_identity = catalogue.identities.get(PurePosixPath(path))
+        if catalog_identity is None or catalogue.roles.get(catalog_identity.path) is not ArtifactRole.OFFICIAL_ARTIFACT:
+            failures.append(f"off-host entry does not bind an official manifest catalog identity: {path}")
+        elif catalog_identity.source_url != entry["url"]:
+            failures.append(
+                f"off-host entry URL diverges from its manifest catalog identity: {path} "
+                f"({entry['url']} != {catalog_identity.source_url})"
+            )
 
     if tuple(sorted(observed_sidecars)) != sidecar_census:
         appeared = sorted(set(observed_sidecars) - sidecar_paths)
@@ -1777,6 +1870,14 @@ def check() -> None:
     manifests = _load_manifests()
     historical_exclusions = _load_historical_exclusions()
     failures = []
+    catalogue, catalogue_failures = _record_design_catalogue(manifests, _CORPUS)
+    failures.extend(catalogue_failures)
+    if catalogue is not None:
+        failures.extend(
+            _catalogue_diagnostic_message(diagnostic)
+            for diagnostic in catalogue.diagnostics
+            if diagnostic.kind is not ArtifactDiagnosticKind.UNKNOWN_FILE
+        )
     for required in _REQUIRED:
         manifest = manifests.get(required.modelo)
         if manifest is None or not any(required.url in _artifact_urls(artifact) for artifact in manifest["artefacts"]):
@@ -1845,7 +1946,15 @@ def check() -> None:
     conflicting_exclusions = sorted(set(exclusion_urls) & represented_urls)
     if conflicting_exclusions:
         failures.append(f"historical exclusions are already represented: {conflicting_exclusions[:5]!r}")
-    observed_unattested = unattested_corpus_files(_CORPUS)
+    observed_unattested = (
+        tuple(
+            diagnostic.path.as_posix()
+            for diagnostic in catalogue.diagnostics
+            if diagnostic.kind is ArtifactDiagnosticKind.UNKNOWN_FILE and diagnostic.path is not None
+        )
+        if catalogue is not None
+        else unattested_corpus_files(_CORPUS)
+    )
     if observed_unattested != _UNATTESTED_CORPUS_FILES:
         appeared = sorted(set(observed_unattested) - set(_UNATTESTED_CORPUS_FILES))
         attested = sorted(set(_UNATTESTED_CORPUS_FILES) - set(observed_unattested))
@@ -1864,6 +1973,7 @@ def check() -> None:
             _load_off_host_sources(),
             _CORPUS,
             _EXTRACTION_SIDECAR_ARTEFACTS,
+            catalogue,
         )
     )
     if failures:

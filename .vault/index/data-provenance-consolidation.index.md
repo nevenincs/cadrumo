@@ -6,7 +6,7 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:49fd3083a7c698c95f38b9b499d4cbfe8453613a5549e743d4d0a6d0dc9da421'
+body_hash: 'sha256:6ffde01a54af4ca7a260f885167748209fcce790476ad6bc12d21ec4ac857dab'
 related:
   - '[[2026-09-10-data-provenance-consolidation-W01-P01-S01]]'
   - '[[2026-09-10-data-provenance-consolidation-W01-P01-S02]]'
@@ -17,6 +17,7 @@ related:
   - '[[2026-09-10-data-provenance-consolidation-W02-P03-S07]]'
   - '[[2026-09-10-data-provenance-consolidation-W02-P03-S08]]'
   - '[[2026-09-10-data-provenance-consolidation-W02-P03-S09]]'
+  - '[[2026-09-10-data-provenance-consolidation-W02-P04-S10]]'
   - '[[2026-09-10-data-provenance-consolidation-adr]]'
   - '[[2026-09-10-data-provenance-consolidation-lane-inventory-research]]'
   - '[[2026-09-10-data-provenance-consolidation-live-lane-map-reference]]'
@@ -30,6 +31,7 @@ related:
   - '[[2026-09-10-data-provenance-consolidation-w02-p03-s07-catalogue-binding-review-audit]]'
   - '[[2026-09-10-data-provenance-consolidation-w02-p03-s08-origin-gate-review-audit]]'
   - '[[2026-09-10-data-provenance-consolidation-w02-p03-s09-integration-review-audit]]'
+  - '[[2026-09-10-data-provenance-consolidation-w02-p04-s10-sync-catalogue-review-audit]]'
 ---
 
 # `data-provenance-consolidation` feature index
@@ -53,6 +55,7 @@ Auto-generated index of all documents tagged with `#data-provenance-consolidatio
 - `2026-09-10-data-provenance-consolidation-w02-p03-s07-catalogue-binding-review-audit` - `data-provenance-consolidation` audit: `w02 p03 s07 catalogue binding review`
 - `2026-09-10-data-provenance-consolidation-w02-p03-s08-origin-gate-review-audit` - `data-provenance-consolidation` audit: `w02 p03 s08 origin gate review`
 - `2026-09-10-data-provenance-consolidation-w02-p03-s09-integration-review-audit` - `data-provenance-consolidation` audit: `w02 p03 s09 integration review`
+- `2026-09-10-data-provenance-consolidation-w02-p04-s10-sync-catalogue-review-audit` - `data-provenance-consolidation` audit: `w02 p04 s10 sync catalogue review`
 
 ### exec
 
@@ -65,6 +68,7 @@ Auto-generated index of all documents tagged with `#data-provenance-consolidatio
 - `2026-09-10-data-provenance-consolidation-W02-P03-S07` - Bind catalogue verification to the artifact identity join while retaining registry semantic validation
 - `2026-09-10-data-provenance-consolidation-W02-P03-S08` - Replace three-way origin admission with catalog diagnostics for unknown and conflicting files
 - `2026-09-10-data-provenance-consolidation-W02-P03-S09` - Prove official identity alignment and non-payload role handling in an integration fixture
+- `2026-09-10-data-provenance-consolidation-W02-P04-S10` - Route manifest loading, payload classification, and acquisition diagnostics through the catalog
 
 ### plan
 
