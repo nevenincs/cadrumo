@@ -39,38 +39,24 @@ source_sha256 = "4cdfb401624e26abe3da3758ddcdcfc85b6b05ffa74e724b2d3f5eeb0c58e80
 remedy = "repair_inputs"
 differing_records = 1
 reason = """
-The shipped declarado record repeats over binding rows and carries nine
-binding-kind fields, so one authored row becomes one emitted record. A fresh
-render of the current inputs produces neither the repeat nor the binding
-fields, which would emit a single declarado record however many counterparties
-the declaration has. The official design requires as many type-two records as
-the declaration has declarados and inmuebles, so the shipped bytes are correct
-and the current inputs are not.
-
-The repeat and the binding kinds are expressible today: SemanticMapRecord
-already carries repeat, binding_record and row_field_casilla_ids, and every
-binding the shipped record names is declared under this revision's bindings.
-A second divergence is NOT expressible, and it is what actually blocks this
-tree. The design declares one four-byte cell at offset 77, and its own content
-text splits that cell at stated offsets: "77-78 CODIGO PROVINCIA: Campo
+The shipped declarado record repeats over binding rows, once per counterparty,
+and the semantic map now authors that repeat, its per-row casilla identities and
+the eight row-binding fields exactly as the shipped tree carries them. What
+still differs is one cell. The design declares a single four-byte cell at
+offset 77 whose own content text divides it: "77-78 CODIGO PROVINCIA: Campo
 numerico de dos posiciones" and "79-80 CODIGO PAIS. Campo alfabetico de 2
-posiciones" - two fields of different AEAT type inside one printed slot. The
-shipped tree emits exactly that split, as f009a and f009b. A semantic map
-anchors one entry to one parser slot and has no vocabulary for a composite
-cell, so the generator cannot re-derive the split however the map is authored.
+posiciones". The shipped tree emits that split as f009a and f009b and the
+generator cannot: giving each half its own identity through the join needs a new
+key on the parser field or the semantic anchor, both of which every generation
+manifest stores, so the addition waits on the export-schema migration.
 
-The shipped bytes are therefore derived from the official design and the
-generator is the side that cannot follow. Repairing the inputs is not
-sufficient: this needs a declared composite-cell split, grounded in the
-design's own stated sub-offsets, before either 347 tree can reproduce.
-
-The pipeline already refuses a regeneration that would drop this repeat, in
-`_tree_check._refuse_repeat_the_candidate_would_drop`, and that refusal names
-the three things to author on the map: the record repeat, the binding record,
-and the per-row casilla identities. Read it before attempting the repair; it is
-the authoritative statement of the remedy and it predates this disposition.
+One difference runs the other way. The 2011 design declares offset 264 length
+237 a blank region ("BLANCOS"), and the shipped tree binds a counterparty NIF
+casilla there - a nine-character identifier written into a 237-byte blank run,
+copied from the 2025 design where that slot exists. A republish would correct
+it; the split cell is what prevents republishing.
 """
-reconsideration_condition = "Remove this pin when the generator can express a design cell whose own text declares sub-offsets, and the current semantic map then reproduces the published binding_rows repeat, the per-row casilla identities, and the split provincia/pais fields."
+reconsideration_condition = "Remove this pin when the export schema can carry a part identity for a design cell whose own text declares sub-offsets, and the tree is republished; the 2011 revision's blank-region NIF binding is corrected by the same republish."
 
 [[dispositions]]
 kind = "record_drift"
@@ -81,12 +67,16 @@ source_sha256 = "14583ea5ee04441356c4572d30630d46bfe0818366e575ac186370dd3fe3836
 remedy = "repair_inputs"
 differing_records = 1
 reason = """
-Same defect as the earlier revision of this modelo, in the same declarado
-record, including the unexpressible composite-cell split at offset 77 that
-the design's own text divides into a two-position provincia code and a
-two-position pais code. Must not be republished.
+The shipped declarado record repeats over binding rows, once per counterparty,
+and the semantic map now authors that repeat, its per-row casilla identities and
+the eight row-binding fields exactly as the shipped tree carries them. What
+still differs is the one cell the design divides in its own content text:
+"77-78 CODIGO PROVINCIA" and "79-80 CODIGO PAIS", two fields of different AEAT
+type in one printed slot. The shipped tree emits the split as f009a and f009b;
+the generator needs a new stored key to give each half an identity, which waits
+on the export-schema migration.
 """
-reconsideration_condition = "Remove this pin when the generator can express a design cell whose own text declares sub-offsets, and the current semantic map then reproduces the published binding_rows repeat, the per-row casilla identities, and the split provincia/pais fields."
+reconsideration_condition = "Remove this pin when the export schema can carry a part identity for a design cell whose own text declares sub-offsets, and the tree is republished; the 2011 revision's blank-region NIF binding is corrected by the same republish."
 
 [[dispositions]]
 kind = "record_drift"

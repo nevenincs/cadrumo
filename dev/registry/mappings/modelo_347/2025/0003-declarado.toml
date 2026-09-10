@@ -56,8 +56,8 @@ record_identity = "Tipo 2 - Registro De Declarado"
 
 [[entries]]
 export_field_id = "m347-2025.declarado.f005"
-kind = "casilla"
-casilla_id = "contraparte.nif"
+kind = "binding"
+binding = "modelo-347-contraparte-row-nif"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
 [entries.anchor]
@@ -80,8 +80,8 @@ record_identity = "Tipo 2 - Registro De Declarado"
 
 [[entries]]
 export_field_id = "m347-2025.declarado.f007"
-kind = "casilla"
-casilla_id = "contraparte.nombre"
+kind = "binding"
+binding = "modelo-347-contraparte-row-nombre"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
 [entries.anchor]
@@ -127,8 +127,8 @@ record_identity = "Tipo 2 - Registro De Declarado"
 
 [[entries]]
 export_field_id = "m347-2025.declarado.f011"
-kind = "casilla"
-casilla_id = "contraparte.clave-operacion"
+kind = "binding"
+binding = "modelo-347-contraparte-row-clave"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
 [entries.anchor]
@@ -139,8 +139,8 @@ record_identity = "Tipo 2 - Registro De Declarado"
 
 [[entries]]
 export_field_id = "m347-2025.declarado.f012"
-kind = "casilla"
-casilla_id = "contraparte.importe-anual"
+kind = "binding"
+binding = "modelo-347-contraparte-row-importe"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
 [entries.anchor]
@@ -223,8 +223,8 @@ record_identity = "Tipo 2 - Registro De Declarado"
 
 [[entries]]
 export_field_id = "m347-2025.declarado.f019"
-kind = "casilla"
-casilla_id = "contraparte.importe-Q1"
+kind = "binding"
+binding = "modelo-347-contraparte-row-importe-q1"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
 [entries.anchor]
@@ -247,8 +247,8 @@ record_identity = "Tipo 2 - Registro De Declarado"
 
 [[entries]]
 export_field_id = "m347-2025.declarado.f021"
-kind = "casilla"
-casilla_id = "contraparte.importe-Q2"
+kind = "binding"
+binding = "modelo-347-contraparte-row-importe-q2"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
 [entries.anchor]
@@ -271,8 +271,8 @@ record_identity = "Tipo 2 - Registro De Declarado"
 
 [[entries]]
 export_field_id = "m347-2025.declarado.f023"
-kind = "casilla"
-casilla_id = "contraparte.importe-Q3"
+kind = "binding"
+binding = "modelo-347-contraparte-row-importe-q3"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
 [entries.anchor]
@@ -295,8 +295,8 @@ record_identity = "Tipo 2 - Registro De Declarado"
 
 [[entries]]
 export_field_id = "m347-2025.declarado.f025"
-kind = "casilla"
-casilla_id = "contraparte.importe-Q4"
+kind = "binding"
+binding = "modelo-347-contraparte-row-importe-q4"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
 [entries.anchor]
