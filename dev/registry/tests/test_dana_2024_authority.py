@@ -37,7 +37,7 @@ from __future__ import annotations
 import hashlib
 import re
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import date, timedelta
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -46,12 +46,17 @@ import pytest
 from cadrumo.core.corpus_text import normalise_corpus_text, resolve_anchored_extracted_unit
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
-from ..compiler.legal_grounding import (
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.facts.resolution import ScalarFactQuery, resolve_governed_fact
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.schema_base import DateAxis
+from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+from cadrumo.tests.registry_tree import bundled_registry_tree
+from dev.registry.compiler.fact_providers import compile_registered_fact_providers
+from dev.registry.compiler.legal_grounding import (
     legal_reference_quotes_corpus,
     verify_legal_catalogue_grounding,
 )
-from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
-from cadrumo.tests.registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -72,8 +77,8 @@ ENTRY_INTO_FORCE_REF = "real-decreto-ley-7-2024:df-14"
 #: The corrección de errores, bundled as its own as-published artefact.
 CORRECTION_REF = "correccion-errores-rdl-6-2024"
 
-#: The numeric parameter the measure compiles down to.
-REDUCTION_PARAMETER = "rdl-7-2024-art-11-2:iva-simplificado-reduccion-cuota-devengada-2024"
+#: The canonical scalar fact that carries the reduction and its evidence.
+REDUCTION_FACT = "rdl-7-2024-art-11-2:iva-simplificado-reduccion-cuota-devengada"
 
 #: Distinct anexo municipality names inside one authored registry value that
 #: make it an enumeration rather than a word collision. See
@@ -132,7 +137,8 @@ class DanaAuthority:
 
     legal: dict[str, LegalReference]
     sources: dict[str, SourceReference]
-    parameter_legal_refs: tuple[str, ...]
+    facts: GovernedFactCatalogue
+    reduction_fact: GovernedFact
     source_root: Path
 
 
@@ -144,8 +150,8 @@ def dana_authority() -> DanaAuthority:
     without any test needing an injection parameter of its own.
 
     Returns:
-        The DANA legal entries, source entries, the reduction parameter's
-        declared legal refs, and the corpus root they resolve against.
+        The DANA legal entries, source entries, canonical reduction fact, and
+        the corpus root they resolve against.
 
     Raises:
         AssertionError: If any expected DANA entry is absent from the tree.
@@ -155,13 +161,15 @@ def dana_authority() -> DanaAuthority:
     missing_sources = [ref for ref in DANA_SOURCE_REFS if ref not in catalogues.sources]
     assert not missing_legal, f"DANA legal entries absent from the registry: {missing_legal!r}"
     assert not missing_sources, f"DANA source entries absent from the registry: {missing_sources!r}"
-    assert REDUCTION_PARAMETER in catalogues.parameters, (
-        f"the 25 per cent reduction parameter {REDUCTION_PARAMETER!r} is absent from the registry"
+    facts = compile_registered_fact_providers(bundled_path("registry", "aeat"))
+    assert REDUCTION_FACT in facts.facts, (
+        f"the 25 per cent reduction fact {REDUCTION_FACT!r} is absent from the registry"
     )
     return DanaAuthority(
         legal={ref: catalogues.legal[ref] for ref in DANA_LEGAL_REFS},
         sources={ref: catalogues.sources[ref] for ref in DANA_SOURCE_REFS},
-        parameter_legal_refs=tuple(catalogues.parameters[REDUCTION_PARAMETER].legal_refs),
+        facts=facts,
+        reduction_fact=facts.facts[REDUCTION_FACT],
         source_root=bundled_path(),
     )
 
@@ -351,19 +359,49 @@ def test_every_dana_identifier_resolves_to_a_bundled_official_boe_artefact() -> 
     assert not failures, "DANA authority cites artefacts that do not resolve:\n" + "\n".join(failures)
 
 
-def test_the_reduction_parameter_cites_the_three_authorities_the_measure_needs() -> None:
+def test_the_reduction_fact_cites_the_three_authorities_the_measure_needs() -> None:
     """The percentage, the entry into force and the geography are all cited."""
     authority = dana_authority()
-    declared = set(authority.parameter_legal_refs)
+    declared = set(authority.reduction_fact.variants[0].legal_refs)
     required = {REDUCTION_REF, ENTRY_INTO_FORCE_REF, GEOGRAPHY_REF}
 
     assert required <= declared, (
-        f"the reduction parameter cites {sorted(declared)!r} and so omits {sorted(required - declared)!r}; "
+        f"the reduction fact cites {sorted(declared)!r} and so omits {sorted(required - declared)!r}; "
         "the measure needs the apartado that fixes the rate, the provision that says from when, and the "
         "anexo that says where"
     )
     unresolved = sorted(ref for ref in declared if ref not in authority.legal)
-    assert not unresolved, f"the reduction parameter cites legal refs outside the DANA authority: {unresolved!r}"
+    assert not unresolved, f"the reduction fact cites legal refs outside the DANA authority: {unresolved!r}"
+
+
+def test_the_reduction_fact_resolves_only_for_the_lawful_2024_window() -> None:
+    """The legal entry into force and annual scope bound the canonical fact."""
+    authority = dana_authority()
+    resolved = resolve_governed_fact(
+        catalogue=authority.facts,
+        query=ScalarFactQuery(
+            fact_id=REDUCTION_FACT,
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=date(2024, 12, 31),
+        ),
+        authority_digest="0" * 64,
+    )
+    assert str(resolved.payload.value) == "0.25"
+    assert resolved.valid_from == date(2024, 11, 13)
+    assert resolved.valid_to == date(2024, 12, 31)
+    assert {citation.source_ref for citation in resolved.source_citations} == set(DANA_SOURCE_REFS)
+
+    for effective_date in (date(2024, 11, 12), date(2025, 1, 1)):
+        with pytest.raises(RegistryValidationError, match="no variant for the exact query context"):
+            resolve_governed_fact(
+                catalogue=authority.facts,
+                query=ScalarFactQuery(
+                    fact_id=REDUCTION_FACT,
+                    date_axis=DateAxis.FILING_PERIOD,
+                    effective_date=effective_date,
+                ),
+                authority_digest="0" * 64,
+            )
 
 
 def test_the_geography_is_cited_rather_than_transcribed() -> None:

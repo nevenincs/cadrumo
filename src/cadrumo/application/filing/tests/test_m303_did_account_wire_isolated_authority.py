@@ -562,7 +562,7 @@ def _m303_filing_facts(
             rows=regimen_rows,
             regimen_snapshot=regimen_snapshot,
             dana_2024_eligibility=None,
-            catalogues=bundled_authority().catalogues,
+            authority=bundled_authority(),
         ),
     )
     return M303FilingFacts(
