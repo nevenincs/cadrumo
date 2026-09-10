@@ -10,7 +10,7 @@ related:
   - '[[2026-09-10-data-provenance-consolidation-live-lane-map-reference]]'
 modified: '2026-09-10'
 body_schema: body-v2
-body_hash: 'sha256:3a855b63995f36537875a19f32d888ec58fb33923c2902709762392b34e8d4a9'
+body_hash: 'sha256:6ca868233fb6b6473c4c53fe63cc85cb45b20a380a6bbcb6a3898d663638011d'
 ---
 
 # `data-provenance-consolidation` plan
@@ -53,7 +53,7 @@ Bind registry verification and broad coverage to catalog identity without expand
 
 - [x] `W02.P03.S07` - Bind catalogue verification to the artifact identity join while retaining registry semantic validation; `src/cadrumo/domain/calculations/registry/corpus_catalogue.py`.
 - [x] `W02.P03.S08` - Replace three-way origin admission with catalog diagnostics for unknown and conflicting files; `src/cadrumo/domain/calculations/registry/tests/test_corpus_provenance_coverage.py`.
-- [ ] `W02.P03.S09` - Prove official identity alignment and non-payload role handling in an integration fixture; `src/cadrumo/domain/calculations/registry/tests/test_corpus_provenance_coverage.py`.
+- [x] `W02.P03.S09` - Prove official identity alignment and non-payload role handling in an integration fixture; `src/cadrumo/domain/calculations/registry/tests/test_corpus_provenance_coverage.py`.
 
 ### Phase `W02.P04` - Record-design consumer
 

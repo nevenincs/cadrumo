@@ -22,15 +22,23 @@ from pathlib import PurePosixPath
 import pytest
 
 from cadrumo.domain.calculations.registry.artifact_catalogue import (
+    ArtifactCatalogue,
     ArtifactDiagnosticKind,
+    ArtifactDisposition,
     ArtifactIdentity,
     ArtifactRole,
+    SemanticAnnotation,
     compile_artifact_catalogue,
+    record_design_manifest_identities,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _PAYLOAD = PurePosixPath("corpus/aeat_official/instructions/modelo_999/files/payload.html")
+_ANNOTATION = PurePosixPath("corpus/aeat_official/instructions/modelo_999/files/payload.annotation.json")
+_DISPOSITION = PurePosixPath("corpus/aeat_official/instructions/modelo_999/historical_exclusions.json")
+_FIXTURE = PurePosixPath("tests/fixtures/corpus/modelo_999/synthetic-payload.html")
+_MANIFEST = PurePosixPath("corpus/aeat_official/instructions/modelo_999/files/manifest.json")
 _RETRIEVED_AT = date(2026, 9, 10)
 
 
@@ -65,6 +73,58 @@ def _diagnostic_kinds(
         registry_identities=registry_identities,
     )
     return {diagnostic.kind for diagnostic in catalogue.diagnostics}
+
+
+@pytest.fixture
+def _independent_manifest_catalogue() -> ArtifactCatalogue:
+    """Compile matching acquisition manifests with all non-payload roles.
+
+    The two mappings are deliberately constructed independently.  This is an
+    integration proof for the adapter-to-compiler boundary: matching source
+    claims must align exactly, while annotation, disposition, and fixture
+    paths remain non-payload catalog roles rather than origin declarations.
+    """
+    first_manifest: dict[str, object] = {
+        "source": "AEAT",
+        "retrieved_at": "2026-09-10T00:00:00+00:00",
+        "artefacts": [
+            {
+                "stored_path": "payload.html",
+                "sha256": "a" * 64,
+                "bytes": 7,
+                "url": "https://www.agenciatributaria.gob.es/payload.html",
+            }
+        ],
+    }
+    independently_loaded_manifest: dict[str, object] = {
+        "source": "AEAT",
+        "retrieved_at": "2026-09-10T00:00:00+00:00",
+        "artefacts": [
+            {
+                "stored_path": "payload.html",
+                "sha256": "a" * 64,
+                "bytes": 7,
+                "url": "https://www.agenciatributaria.gob.es/payload.html",
+            }
+        ],
+    }
+
+    return compile_artifact_catalogue(
+        known_paths=(_PAYLOAD, _ANNOTATION, _DISPOSITION, _FIXTURE),
+        official_identities=(
+            *record_design_manifest_identities(first_manifest, manifest_path=_MANIFEST),
+            *record_design_manifest_identities(independently_loaded_manifest, manifest_path=_MANIFEST),
+        ),
+        semantic_annotations=(SemanticAnnotation(path=_ANNOTATION, target_path=_PAYLOAD),),
+        dispositions=(
+            ArtifactDisposition(
+                declaration_path=_DISPOSITION,
+                target_path=_PAYLOAD,
+                reason="historical acquisition is outside the supported window",
+            ),
+        ),
+        fixture_paths=(_FIXTURE,),
+    )
 
 
 def test_unclassified_bundled_payload_is_an_unknown_catalog_file() -> None:
@@ -132,3 +192,23 @@ def test_matching_independent_identity_assigns_the_official_role() -> None:
 
     assert catalogue.diagnostics == ()
     assert catalogue.roles == {_PAYLOAD: ArtifactRole.OFFICIAL_ARTIFACT}
+
+
+def test_independent_manifest_identity_alignment_preserves_non_payload_roles(
+    _independent_manifest_catalogue: ArtifactCatalogue,
+) -> None:
+    """Matching manifests do not promote catalog annotations or fixtures.
+
+    The bounded fixture has one official payload identity, while the remaining
+    paths are intentionally classified only by their non-payload role.
+    """
+    catalogue = _independent_manifest_catalogue
+
+    assert catalogue.diagnostics == ()
+    assert set(catalogue.identities) == {_PAYLOAD}
+    assert catalogue.roles == {
+        _PAYLOAD: ArtifactRole.OFFICIAL_ARTIFACT,
+        _ANNOTATION: ArtifactRole.SEMANTIC_ANNOTATION,
+        _DISPOSITION: ArtifactRole.DISPOSITION,
+        _FIXTURE: ArtifactRole.FIXTURE,
+    }
