@@ -84,50 +84,6 @@ verbatim contra el texto consolidado empaquetado rd-439-2007-art-95.html."""
 # 2 por ciento, but engorde de porcino y avicultura retains at 1 por ciento.
 # Grounding only the general figure would under-declare that carve-out.
 
-[parameters."rirpf-art-95:retencion-actividades-agricolas-ganaderas-general"]
-evidence_tier = "legal_authority"
-value = "0.02"
-unit = "fraction"
-applies_to = "irpf-retencion-actividades-economicas"
-legal_refs = ["rd-439-2007:art-95"]
-review_status = "agent_reviewed"
-reviewed_at = 2026-08-07
-reviewed_by = "agent-review"
-notes = "RIRPF art 95.4.2: 'Restantes casos: 2 por ciento' -- tipo general de retencion sobre rendimientos de actividades agricolas o ganaderas, aplicado sobre los ingresos integros satisfechos con excepcion de las subvenciones corrientes y de capital y de las indemnizaciones. Verificado contra el texto consolidado vivo del BOE el 2026-08-07."
-
-[parameters."rirpf-art-95:retencion-actividades-ganaderas-engorde-porcino-avicultura"]
-evidence_tier = "legal_authority"
-value = "0.01"
-unit = "fraction"
-applies_to = "irpf-retencion-actividades-economicas"
-legal_refs = ["rd-439-2007:art-95"]
-review_status = "agent_reviewed"
-reviewed_at = 2026-08-07
-reviewed_by = "agent-review"
-notes = "RIRPF art 95.4.1: 'Actividades ganaderas de engorde de porcino y avicultura: 1 por ciento' -- carve-out expreso al tipo general del 2 por ciento del apartado 4. Misma base de calculo que el tipo general. Verificado contra el texto consolidado vivo del BOE el 2026-08-07."
-
-[parameters."rirpf-art-95:retencion-actividades-forestales"]
-evidence_tier = "legal_authority"
-value = "0.02"
-unit = "fraction"
-applies_to = "irpf-retencion-actividades-economicas"
-legal_refs = ["rd-439-2007:art-95"]
-review_status = "agent_reviewed"
-reviewed_at = 2026-08-07
-reviewed_by = "agent-review"
-notes = "RIRPF art 95.5: tipo de retencion del 2 por ciento cuando los rendimientos sean contraprestacion de una actividad forestal, sobre los ingresos integros satisfechos con excepcion de las subvenciones corrientes y de capital y de las indemnizaciones. Coincide en valor con el tipo agricola/ganadero general pero lo fija un apartado distinto, por lo que se declara como parametro propio. Verificado contra el texto consolidado vivo del BOE el 2026-08-07."
-
-[parameters."rirpf-art-95:retencion-actividades-estimacion-objetiva"]
-evidence_tier = "legal_authority"
-value = "0.01"
-unit = "fraction"
-applies_to = "irpf-retencion-actividades-economicas"
-legal_refs = ["rd-439-2007:art-95"]
-review_status = "agent_reviewed"
-reviewed_at = 2026-08-07
-reviewed_by = "agent-review"
-notes = "RIRPF art 95.6.1: tipo de retencion del 1 por ciento cuando el rendimiento neto de la actividad se determine con arreglo al metodo de estimacion objetiva y la actividad figure en la relacion de grupos y epigrafes de la Seccion Primera de las Tarifas del IAE del apartado 6.2. Esa tabla de epigrafes no se consume como parametro. Verificado contra el texto consolidado vivo del BOE el 2026-08-07."
-
 # Correspondence between the Modelo 036 tipo-de-actividad codes and the art. 95
 # partitions above. Added 2026-08-07.
 #
