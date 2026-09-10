@@ -190,3 +190,52 @@ def load_sidecar(source: Path) -> PreprocessOutput:
     if rendered_text != output.render_text():
         raise PreprocessSidecarError(f"sidecar pair for {source} has divergent rendered text")
     return output
+
+
+def validate_sidecar(json_path: Path, *, repo_root: Path) -> PreprocessOutput:
+    """Validate a committed provenance sidecar through its declared origin.
+
+    Unlike :func:`load_sidecar`, which receives the expected source directly,
+    a corpus sweep begins with a JSON sidecar. This shared validator owns the
+    generic checks such sweeps need: strict schema validation, repository
+    locality, source digest freshness, and byte-exact rendered-text parity.
+    Producer-specific rules remain with their respective extractors.
+    """
+    try:
+        raw = json_path.read_text(encoding=_UTF_8)
+    except OSError as exc:
+        raise PreprocessSidecarError(f"sidecar missing or unreadable: {json_path}: {exc}") from exc
+    try:
+        output = PreprocessOutput.model_validate_json(raw)
+    except ValueError as exc:
+        raise PreprocessSidecarError(f"sidecar failed to load or validate: {json_path}: {exc}") from exc
+
+    root = repo_root.resolve()
+    source = (root / output.source_relpath).resolve()
+    if not source.is_relative_to(root):
+        raise PreprocessSidecarError(f"sidecar source escapes repository root: {json_path}: {output.source_relpath}")
+    if not source.is_file():
+        raise PreprocessSidecarError(f"sidecar names a missing source: {json_path}: {output.source_relpath}")
+
+    sidecar_base = json_path.name.removesuffix(EXTRACTED_JSON_SUFFIX)
+    expected_source = json_path.with_name(_PART_INFIX.sub("", sidecar_base)).resolve()
+    if source != expected_source:
+        raise PreprocessSidecarError(
+            f"sidecar is not local to its declared source: {json_path}: "
+            f"records {output.source_relpath} but sits beside {expected_source}"
+        )
+    live_sha256 = sha256_of(source)
+    if output.source_sha256 != live_sha256:
+        raise PreprocessSidecarError(
+            f"sidecar is stale: {json_path}: recorded source_sha256={output.source_sha256} "
+            f"but the source now hashes to {live_sha256}"
+        )
+
+    text_path = json_path.with_name(sidecar_base + EXTRACTED_TEXT_SUFFIX)
+    try:
+        rendered_bytes = text_path.read_bytes()
+    except OSError as exc:
+        raise PreprocessSidecarError(f"text sidecar missing or unreadable: {text_path}: {exc}") from exc
+    if rendered_bytes != output.render_text().encode(_UTF_8):
+        raise PreprocessSidecarError(f"sidecar pair has divergent rendered text: {json_path}")
+    return output

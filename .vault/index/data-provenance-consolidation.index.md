@@ -6,7 +6,7 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:99e6890ad98104ed274ee9eee3c1cdfe6b1d01062523e78d0c60dbc457dc84c7'
+body_hash: 'sha256:cb1cc9ee9b204d12df3f16339f70d80aaba26ef0c932685769f907530780efe6'
 related:
   - '[[2026-09-10-data-provenance-consolidation-W01-P01-S01]]'
   - '[[2026-09-10-data-provenance-consolidation-W01-P01-S02]]'
@@ -20,6 +20,7 @@ related:
   - '[[2026-09-10-data-provenance-consolidation-W02-P04-S10]]'
   - '[[2026-09-10-data-provenance-consolidation-W02-P04-S11]]'
   - '[[2026-09-10-data-provenance-consolidation-W02-P04-S12]]'
+  - '[[2026-09-10-data-provenance-consolidation-W02-P05-S13]]'
   - '[[2026-09-10-data-provenance-consolidation-adr]]'
   - '[[2026-09-10-data-provenance-consolidation-lane-inventory-research]]'
   - '[[2026-09-10-data-provenance-consolidation-live-lane-map-reference]]'
@@ -36,6 +37,7 @@ related:
   - '[[2026-09-10-data-provenance-consolidation-w02-p04-s10-sync-catalogue-review-audit]]'
   - '[[2026-09-10-data-provenance-consolidation-w02-p04-s11-off-host-alignment-review-audit]]'
   - '[[2026-09-10-data-provenance-consolidation-w02-p04-s12-sync-rejection-review-audit]]'
+  - '[[2026-09-10-data-provenance-consolidation-w02-p05-s13-sidecar-owner-review-audit]]'
 ---
 
 # `data-provenance-consolidation` feature index
@@ -62,6 +64,7 @@ Auto-generated index of all documents tagged with `#data-provenance-consolidatio
 - `2026-09-10-data-provenance-consolidation-w02-p04-s10-sync-catalogue-review-audit` - `data-provenance-consolidation` audit: `w02 p04 s10 sync catalogue review`
 - `2026-09-10-data-provenance-consolidation-w02-p04-s11-off-host-alignment-review-audit` - `data-provenance-consolidation` audit: `w02 p04 s11 off host alignment review`
 - `2026-09-10-data-provenance-consolidation-w02-p04-s12-sync-rejection-review-audit` - `data-provenance-consolidation` audit: `w02 p04 s12 sync rejection review`
+- `2026-09-10-data-provenance-consolidation-w02-p05-s13-sidecar-owner-review-audit` - `data-provenance-consolidation` audit: `w02 p05 s13 sidecar owner review`
 
 ### exec
 
@@ -77,6 +80,7 @@ Auto-generated index of all documents tagged with `#data-provenance-consolidatio
 - `2026-09-10-data-provenance-consolidation-W02-P04-S10` - Route manifest loading, payload classification, and acquisition diagnostics through the catalog
 - `2026-09-10-data-provenance-consolidation-W02-P04-S11` - Replace basename-only off-host assertion with exact catalog identity alignment fixtures
 - `2026-09-10-data-provenance-consolidation-W02-P04-S12` - Prove catalog-backed sync rejects unclassified files and conflicting acquisition identity
+- `2026-09-10-data-provenance-consolidation-W02-P05-S13` - Extract shared generic sidecar hash, schema, locality, and digest validation into the sidecar owner
 
 ### plan
 
