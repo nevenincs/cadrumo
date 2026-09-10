@@ -59,6 +59,7 @@ import sys
 import tomllib
 from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass, field
+from enum import StrEnum
 from itertools import pairwise
 from pathlib import Path
 
@@ -78,6 +79,7 @@ __all__ = [
     "DesignInventory",
     "ExcludedModelo",
     "LineagePlan",
+    "LineageRefusalCategory",
     "admit_bare_chain",
     "contradictions",
     "gate_regressions",
@@ -86,6 +88,33 @@ __all__ = [
     "plan_modelo",
     "residual_plan",
 ]
+
+
+class LineageRefusalCategory(StrEnum):
+    """Why the seeder declined to write a lineage disposition for a successor row.
+
+    The closed vocabulary of every reason a row is refused, named once so the
+    seeder, the ledger it writes and the tests reading either share one
+    spelling per reason rather than repeating the token inline.
+    """
+
+    NOT_EXAMINED = "not_examined"
+    ABSENCE_UNCLASSIFIED = "absence_unclassified"
+    ABSENCE_UNLOCALISED = "absence_unlocalised"
+    OVERLAPPING_PREDECESSOR = "overlapping_predecessor"
+    RULING_REFUSES_BARE = "ruling_refuses_bare"
+    POSITIONAL_HOLD = "positional_hold"
+    PARTIAL_STAMP = "partial_stamp"
+    CHAIN_CONTRACT = "chain_contract"
+    PRINTED_BOX_FORK = "printed_box_fork"
+    GROUNDED_UNLOCALISED = "grounded_unlocalised"
+    GROUNDED_BLOCKED = "grounded_blocked"
+    HELD = "held"
+    WITHHELD = "withheld"
+    MERGED = "merged"
+    ROLE_ABSENT = "role_absent"
+    CONTRADICTED = "contradicted"
+
 
 _UTF_8 = "utf-8"
 _ANALYSIS_DIR = Path(__file__).resolve().parent
@@ -107,12 +136,10 @@ class ExcludedModelo:
     """
 
     reason: str
-    residual_category: str | None
+    residual_category: LineageRefusalCategory | None
     residual_reason: str
 
 
-_NOT_EXAMINED = "not_examined"
-_ABSENCE_UNCLASSIFIED = "absence_unclassified"
 _M100_REASON = (
     "no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid "
     "column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically"
@@ -122,12 +149,12 @@ _M200_REASON = "export bindings are being repaired in the same tree; lineage wai
 EXCLUDED_MODELOS: Mapping[str, ExcludedModelo] = {
     "100": ExcludedModelo(
         reason=_M100_REASON,
-        residual_category=_NOT_EXAMINED,
+        residual_category=LineageRefusalCategory.NOT_EXAMINED,
         residual_reason=f"not examined; its lineage is its own campaign: {_M100_REASON}",
     ),
     "200": ExcludedModelo(
         reason=_M200_REASON,
-        residual_category=_NOT_EXAMINED,
+        residual_category=LineageRefusalCategory.NOT_EXAMINED,
         residual_reason=f"not examined: {_M200_REASON}",
     ),
     "309": ExcludedModelo(
@@ -135,7 +162,7 @@ EXCLUDED_MODELOS: Mapping[str, ExcludedModelo] = {
             "its lineage is grounded by adjudication against the official record designs, including a printed box "
             "number that moved from the record-design metadata into form_number, rather than seeded"
         ),
-        residual_category=_ABSENCE_UNCLASSIFIED,
+        residual_category=LineageRefusalCategory.ABSENCE_UNCLASSIFIED,
         residual_reason=(
             "residual after adjudication against the official record designs: no ruling chains this row or names "
             "which kind of absence it is"
@@ -322,7 +349,7 @@ class Refusal:
     modelo: str
     revision: str
     casilla_id: str
-    category: str
+    category: LineageRefusalCategory
     reason: str
     predecessor: str | None = None
 
@@ -338,7 +365,12 @@ class LineagePlan:
     notes: list[str] = field(default_factory=list)
 
     def refuse(
-        self, revision: str, casilla_id: str, category: str, reason: str, predecessor: str | None = None
+        self,
+        revision: str,
+        casilla_id: str,
+        category: LineageRefusalCategory,
+        reason: str,
+        predecessor: str | None = None,
     ) -> None:
         """Record a refusal and count it."""
         self.refusals.append(Refusal(self.modelo, revision, casilla_id, category, reason, predecessor))
@@ -414,7 +446,9 @@ def load_rulings(path: Path = RULINGS_PATH) -> dict[str, list[Ruling]]:
 # --------------------------------------------------------------------------- predicates
 
 
-def admit_bare_chain(previous: CasillaDefinition, successor: CasillaDefinition) -> tuple[str | None, str]:
+def admit_bare_chain(
+    previous: CasillaDefinition, successor: CasillaDefinition
+) -> tuple[LineageRefusalCategory | None, str]:
     """Return ``(None, detail)`` when a bare chain is admitted, else ``(category, reason)``.
 
     The identifier is already equal; role, type and the dedicated printed box
@@ -423,14 +457,23 @@ def admit_bare_chain(previous: CasillaDefinition, successor: CasillaDefinition) 
     """
     if previous.semantic_role is None or successor.semantic_role is None:
         side = "predecessor" if previous.semantic_role is None else "successor"
-        return "role_absent", f"no semantic_role on the {side} row; identity cannot be established on role"
+        return (
+            LineageRefusalCategory.ROLE_ABSENT,
+            f"no semantic_role on the {side} row; identity cannot be established on role",
+        )
     if previous.semantic_role != successor.semantic_role:
-        return "contradicted", f"semantic_role moved {previous.semantic_role!r} -> {successor.semantic_role!r}"
+        return (
+            LineageRefusalCategory.CONTRADICTED,
+            f"semantic_role moved {previous.semantic_role!r} -> {successor.semantic_role!r}",
+        )
     if previous.data_type != successor.data_type:
-        return "contradicted", f"data_type moved {previous.data_type!s} -> {successor.data_type!s}"
+        return (
+            LineageRefusalCategory.CONTRADICTED,
+            f"data_type moved {previous.data_type!s} -> {successor.data_type!s}",
+        )
     before, after = identity_box(previous), identity_box(successor)
     if before is not None and after is not None and before != after:
-        return "contradicted", f"form_number moved {before!r} -> {after!r}"
+        return LineageRefusalCategory.CONTRADICTED, f"form_number moved {before!r} -> {after!r}"
     return None, "identifier, semantic_role and data_type agree; form_number does not contradict"
 
 
@@ -754,7 +797,7 @@ class _ModeloPlanner:
                     self.plan.refuse(
                         successor.id,
                         casilla.id,
-                        "overlapping_predecessor",
+                        LineageRefusalCategory.OVERLAPPING_PREDECESSOR,
                         f"{previous.id} and {successor.id} share a validity window; neither precedes the other",
                     )
             return
@@ -791,13 +834,15 @@ class _ModeloPlanner:
                     self.plan.refuse(
                         successor.id,
                         casilla.id,
-                        "ruling_refuses_bare",
+                        LineageRefusalCategory.RULING_REFUSES_BARE,
                         "adjudication proves the identifier space was reassigned across this boundary",
                         predecessor=candidate.id,
                     )
                     continue
                 if hold is not None:
-                    self.plan.refuse(successor.id, casilla.id, "positional_hold", hold, predecessor=candidate.id)
+                    self.plan.refuse(
+                        successor.id, casilla.id, LineageRefusalCategory.POSITIONAL_HOLD, hold, predecessor=candidate.id
+                    )
                     continue
                 category, detail = admit_bare_chain(candidate, casilla)
                 if category is not None:
@@ -805,12 +850,22 @@ class _ModeloPlanner:
                     continue
                 if casilla.id in self.forbidden:
                     self.plan.refuse(
-                        successor.id, casilla.id, "partial_stamp", _PARTIAL_STAMP, predecessor=candidate.id
+                        successor.id,
+                        casilla.id,
+                        LineageRefusalCategory.PARTIAL_STAMP,
+                        _PARTIAL_STAMP,
+                        predecessor=candidate.id,
                     )
                     continue
                 refused = self._write_chain(candidate, casilla, pair, CasillaLineageOrigin.SEEDED, None, claimed)
                 if refused is not None:
-                    self.plan.refuse(successor.id, casilla.id, "chain_contract", refused, predecessor=candidate.id)
+                    self.plan.refuse(
+                        successor.id,
+                        casilla.id,
+                        LineageRefusalCategory.CHAIN_CONTRACT,
+                        refused,
+                        predecessor=candidate.id,
+                    )
                 continue
             self._classify_absence(previous, successor, casilla, prev_design, succ_design, design_trust)
 
@@ -828,20 +883,20 @@ class _ModeloPlanner:
             self.plan.refuse(
                 successor.id,
                 casilla.id,
-                "absence_unclassified",
+                LineageRefusalCategory.ABSENCE_UNCLASSIFIED,
                 "no predecessor row and no printed box, so no record design can say which kind of absence this is",
             )
             return
         if design_trust is not None or isinstance(prev_design, str) or isinstance(succ_design, str):
             reason = design_trust or "the record design pair cannot be read"
-            self.plan.refuse(successor.id, casilla.id, "absence_unclassified", reason)
+            self.plan.refuse(successor.id, casilla.id, LineageRefusalCategory.ABSENCE_UNCLASSIFIED, reason)
             return
         declarers = sorted(other.id for other in previous.casillas if printed_box(other) == box)
         if declarers:
             self.plan.refuse(
                 successor.id,
                 casilla.id,
-                "printed_box_fork",
+                LineageRefusalCategory.PRINTED_BOX_FORK,
                 f"the predecessor edition declares printed box [{box}] on {declarers[:2]}; identity is read from "
                 "form_number alone and lineage is one-to-one, so this is not an absence",
             )
@@ -851,7 +906,7 @@ class _ModeloPlanner:
             self.plan.refuse(
                 successor.id,
                 casilla.id,
-                "absence_unclassified",
+                LineageRefusalCategory.ABSENCE_UNCLASSIFIED,
                 f"box [{box}] is printed on more than one line of {succ_design.relative_path}; page is unqualified",
             )
             return
@@ -861,7 +916,7 @@ class _ModeloPlanner:
                 self.plan.refuse(
                     successor.id,
                     casilla.id,
-                    "absence_unclassified",
+                    LineageRefusalCategory.ABSENCE_UNCLASSIFIED,
                     f"box [{box}] is printed on more than one line of {prev_design.relative_path}; page is unqualified",
                 )
                 return
@@ -912,14 +967,16 @@ class _ModeloPlanner:
                 self.plan.counts[succ_row.continuidad_origin.value] += 1
                 continue
             if left in self.forbidden or right in self.forbidden:
-                self.plan.refuse(successor.id, right, "partial_stamp", _PARTIAL_STAMP, predecessor=left)
+                self.plan.refuse(
+                    successor.id, right, LineageRefusalCategory.PARTIAL_STAMP, _PARTIAL_STAMP, predecessor=left
+                )
                 continue
             evidence = _grounded_evidence(prev_row, succ_row, prev_design, succ_design, ruling.rationale)
             if evidence is None:
                 self.plan.refuse(
                     successor.id,
                     right,
-                    "grounded_unlocalised",
+                    LineageRefusalCategory.GROUNDED_UNLOCALISED,
                     "the ruling proves this continuation but neither a printed-box line nor a record campo "
                     "locates both rows in the pinned designs",
                     predecessor=left,
@@ -928,12 +985,16 @@ class _ModeloPlanner:
             refused = self._write_chain(prev_row, succ_row, pair, CasillaLineageOrigin.GROUNDED, evidence, claimed)
             if refused is not None:
                 self.plan.refuse(
-                    successor.id, right, "grounded_blocked", f"{refused}. Evidence: {evidence}", predecessor=left
+                    successor.id,
+                    right,
+                    LineageRefusalCategory.GROUNDED_BLOCKED,
+                    f"{refused}. Evidence: {evidence}",
+                    predecessor=left,
                 )
         for group, reason, category in (
-            (ruling.held, ruling.held_reason, "held"),
-            (ruling.withheld, ruling.withheld_reason, "withheld"),
-            (ruling.merged, ruling.merged_reason, "merged"),
+            (ruling.held, ruling.held_reason, LineageRefusalCategory.HELD),
+            (ruling.withheld, ruling.withheld_reason, LineageRefusalCategory.WITHHELD),
+            (ruling.merged, ruling.merged_reason, LineageRefusalCategory.MERGED),
         ):
             for left, right in group:
                 # A contested row names no single predecessor: which one it continues is the open question.
@@ -950,7 +1011,7 @@ class _ModeloPlanner:
             stem = None if casilla_id in prev_rows else stem_of(casilla_id)
             if stem is not None and stem in ruling.held_stems:
                 handled.add(casilla_id)
-                self.plan.refuse(successor.id, casilla_id, "held", ruling.held_reason)
+                self.plan.refuse(successor.id, casilla_id, LineageRefusalCategory.HELD, ruling.held_reason)
             elif casilla_id in ruling.new_on_form or (stem is not None and stem in ruling.new_on_form_stems):
                 handled.add(casilla_id)
                 if casilla.continuidad_origin is not None:
@@ -961,7 +1022,7 @@ class _ModeloPlanner:
                     self.plan.refuse(
                         successor.id,
                         casilla_id,
-                        "absence_unlocalised",
+                        LineageRefusalCategory.ABSENCE_UNLOCALISED,
                         "the ruling finds no predecessor, but neither a printed-box line nor a record campo "
                         "range locates the row in the pinned design",
                     )
@@ -1286,12 +1347,12 @@ def residual_plan(modelo_id: str, modelo: ModeloDefinition, rulings: Iterable[Ru
     reading it cannot disagree about which rows need an entry.
     """
     excluded = EXCLUDED_MODELOS[modelo_id]
-    ruled: dict[tuple[str, str], tuple[str, str, str]] = {}
+    ruled: dict[tuple[str, str], tuple[LineageRefusalCategory, str, str]] = {}
     for ruling in rulings:
         for category, pairs, reason in (
-            ("held", ruling.held, ruling.held_reason),
-            ("withheld", ruling.withheld, ruling.withheld_reason),
-            ("merged", ruling.merged, ruling.merged_reason),
+            (LineageRefusalCategory.HELD, ruling.held, ruling.held_reason),
+            (LineageRefusalCategory.WITHHELD, ruling.withheld, ruling.withheld_reason),
+            (LineageRefusalCategory.MERGED, ruling.merged, ruling.merged_reason),
         ):
             for predecessor, successor in pairs:
                 ruled[(ruling.successor, successor)] = (category, reason, predecessor)

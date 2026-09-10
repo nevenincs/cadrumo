@@ -81,6 +81,7 @@ import re
 import sys
 from collections.abc import Mapping
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import Final
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
@@ -100,6 +101,8 @@ __all__ = [
     "KINDS",
     "EditionPredecessor",
     "MinimalityCensus",
+    "MinimalityVerdict",
+    "PredecessorBasis",
     "RowJudgement",
     "definition_findings",
     "edition_predecessors",
@@ -110,21 +113,30 @@ __all__ = [
     "screen_authority",
 ]
 
-RESTATED_UNCHANGED: Final = "restated_unchanged"
-UNCHECKED_NO_LINEAGE: Final = "unchecked_no_lineage"
-UNCHECKED_AMBIGUOUS_LINEAGE: Final = "unchecked_ambiguous_lineage"
-UNCHECKED_PREDECESSOR_UNDECIDABLE: Final = "unchecked_predecessor_undecidable"
 
-#: The row verdicts that are not findings: a genuine statement of change, and a
-#: row whose chain the predecessor does not carry.
-STATED_DIFFERENCE: Final = "stated_difference"
-NEW_IN_EDITION: Final = "new_in_edition"
+class MinimalityVerdict(StrEnum):
+    """Why a stated casilla row's minimality could or could not be judged.
 
-KINDS: Final[tuple[str, ...]] = (
-    RESTATED_UNCHANGED,
-    UNCHECKED_NO_LINEAGE,
-    UNCHECKED_AMBIGUOUS_LINEAGE,
-    UNCHECKED_PREDECESSOR_UNDECIDABLE,
+    ``RESTATED_UNCHANGED`` is the only member that says an edition is
+    non-minimal. The ``UNCHECKED_*`` members report that judgement could not
+    be reached at all, so an unjudged row is never counted as a minimal one.
+    ``STATED_DIFFERENCE`` and ``NEW_IN_EDITION`` are legitimate statements, not
+    findings; see :data:`KINDS` for the subset that is.
+    """
+
+    RESTATED_UNCHANGED = "restated_unchanged"
+    UNCHECKED_NO_LINEAGE = "unchecked_no_lineage"
+    UNCHECKED_AMBIGUOUS_LINEAGE = "unchecked_ambiguous_lineage"
+    UNCHECKED_PREDECESSOR_UNDECIDABLE = "unchecked_predecessor_undecidable"
+    STATED_DIFFERENCE = "stated_difference"
+    NEW_IN_EDITION = "new_in_edition"
+
+
+KINDS: Final[tuple[MinimalityVerdict, ...]] = (
+    MinimalityVerdict.RESTATED_UNCHANGED,
+    MinimalityVerdict.UNCHECKED_NO_LINEAGE,
+    MinimalityVerdict.UNCHECKED_AMBIGUOUS_LINEAGE,
+    MinimalityVerdict.UNCHECKED_PREDECESSOR_UNDECIDABLE,
 )
 
 #: Casilla fields removed before comparison because they carry the edition, or
@@ -133,12 +145,16 @@ EDITION_LOCAL_FIELDS: Final[frozenset[str]] = frozenset(
     {"source_refs", "export_refs", "continuidad_origin", "continuidad_evidence"}
 )
 
-#: How an edition's predecessor was established.
-PREDECESSOR_DECLARED: Final = "declared"
-ROOT_DECLARED: Final = "declared_none"
-ROOT_FIRST_IN_ORDER: Final = "first_in_order"
-PREDECESSOR_ADJACENT: Final = "adjacent_in_order"
-PREDECESSOR_UNDECIDABLE: Final = "undecidable"
+
+class PredecessorBasis(StrEnum):
+    """How an edition's predecessor was established."""
+
+    DECLARED = "declared"
+    ROOT_DECLARED = "declared_none"
+    ROOT_FIRST_IN_ORDER = "first_in_order"
+    ADJACENT = "adjacent_in_order"
+    UNDECIDABLE = "undecidable"
+
 
 _EDITION_PLACEHOLDER: Final = "<edition>"
 _IDENTIFIER_FIELDS: Final[tuple[str, ...]] = ("formula", "binding", "alternate_bindings")
@@ -150,7 +166,7 @@ class EditionPredecessor:
 
     revision: str
     predecessor: str | None
-    basis: str
+    basis: PredecessorBasis
 
 
 @dataclass(frozen=True, slots=True)
@@ -165,7 +181,7 @@ class RowJudgement:
     revision: str
     predecessor: str | None
     casilla: str
-    kind: str
+    kind: MinimalityVerdict
     detail: str
 
 
@@ -178,7 +194,7 @@ class MinimalityCensus:
     declared_predecessor_editions: int
     rows_judged: int
     rows_in_root_editions: int
-    verdicts: Mapping[str, int]
+    verdicts: Mapping[MinimalityVerdict, int]
 
 
 def edition_predecessors(definition: ModeloDefinition) -> tuple[EditionPredecessor, ...]:
@@ -188,17 +204,17 @@ def edition_predecessors(definition: ModeloDefinition) -> tuple[EditionPredecess
     for position, revision in enumerate(ordered):
         declared = revision.predecessor
         if isinstance(declared, DeclaredPredecessor):
-            resolved.append(EditionPredecessor(str(revision.id), str(declared.revision_id), PREDECESSOR_DECLARED))
+            resolved.append(EditionPredecessor(str(revision.id), str(declared.revision_id), PredecessorBasis.DECLARED))
         elif isinstance(declared, NoPredecessor):
-            resolved.append(EditionPredecessor(str(revision.id), None, ROOT_DECLARED))
+            resolved.append(EditionPredecessor(str(revision.id), None, PredecessorBasis.ROOT_DECLARED))
         elif position == 0:
-            resolved.append(EditionPredecessor(str(revision.id), None, ROOT_FIRST_IN_ORDER))
+            resolved.append(EditionPredecessor(str(revision.id), None, PredecessorBasis.ROOT_FIRST_IN_ORDER))
         else:
             earlier = ordered[position - 1]
             if revisions_overlap(earlier, revision):
-                resolved.append(EditionPredecessor(str(revision.id), str(earlier.id), PREDECESSOR_UNDECIDABLE))
+                resolved.append(EditionPredecessor(str(revision.id), str(earlier.id), PredecessorBasis.UNDECIDABLE))
             else:
-                resolved.append(EditionPredecessor(str(revision.id), str(earlier.id), PREDECESSOR_ADJACENT))
+                resolved.append(EditionPredecessor(str(revision.id), str(earlier.id), PredecessorBasis.ADJACENT))
     return tuple(resolved)
 
 
@@ -254,16 +270,21 @@ def judge_definition(definition: ModeloDefinition, *, modelo_id: str) -> tuple[R
             continue
         revision = definition.revisions[edition.revision]
 
-        def judged(casilla: CasillaDefinition, kind: str, detail: str, edition: EditionPredecessor = edition) -> None:
+        def judged(
+            casilla: CasillaDefinition,
+            kind: MinimalityVerdict,
+            detail: str,
+            edition: EditionPredecessor = edition,
+        ) -> None:
             judgements.append(
                 RowJudgement(modelo_id, edition.revision, edition.predecessor, str(casilla.id), kind, detail)
             )
 
-        if edition.basis == PREDECESSOR_UNDECIDABLE:
+        if edition.basis == PredecessorBasis.UNDECIDABLE:
             for casilla in revision.casillas:
                 judged(
                     casilla,
-                    UNCHECKED_PREDECESSOR_UNDECIDABLE,
+                    MinimalityVerdict.UNCHECKED_PREDECESSOR_UNDECIDABLE,
                     f"no declared predecessor and adjacent edition {edition.predecessor} overlaps in period",
                 )
             continue
@@ -275,15 +296,15 @@ def judge_definition(definition: ModeloDefinition, *, modelo_id: str) -> tuple[R
         for casilla in revision.casillas:
             chain = str(casilla.continuidad_id) if casilla.continuidad_id else None
             if chain is None:
-                judged(casilla, UNCHECKED_NO_LINEAGE, "row carries no continuidad_id")
+                judged(casilla, MinimalityVerdict.UNCHECKED_NO_LINEAGE, "row carries no continuidad_id")
                 continue
             inherited = by_chain.get(chain, [])
             if not inherited:
-                judged(casilla, NEW_IN_EDITION, f"chain {chain} absent from {edition.predecessor}")
+                judged(casilla, MinimalityVerdict.NEW_IN_EDITION, f"chain {chain} absent from {edition.predecessor}")
             elif len(inherited) > 1:
                 judged(
                     casilla,
-                    UNCHECKED_AMBIGUOUS_LINEAGE,
+                    MinimalityVerdict.UNCHECKED_AMBIGUOUS_LINEAGE,
                     f"chain {chain} sits on {len(inherited)} rows of {edition.predecessor}",
                 )
             else:
@@ -291,11 +312,11 @@ def judge_definition(definition: ModeloDefinition, *, modelo_id: str) -> tuple[R
                     inheritable_value(casilla, revision), inheritable_value(inherited[0], predecessor)
                 )
                 if differing:
-                    judged(casilla, STATED_DIFFERENCE, f"differs in {', '.join(differing)}")
+                    judged(casilla, MinimalityVerdict.STATED_DIFFERENCE, f"differs in {', '.join(differing)}")
                 else:
                     judged(
                         casilla,
-                        RESTATED_UNCHANGED,
+                        MinimalityVerdict.RESTATED_UNCHANGED,
                         f"identical to {inherited[0].id} of {edition.predecessor} on chain {chain}",
                     )
     return tuple(judgements)
@@ -316,18 +337,18 @@ def screen_authority(authority: ValidatedRegistryAuthority, modelo_ids: tuple[st
 
 def restating_modelos(findings: tuple[RowJudgement, ...]) -> tuple[str, ...]:
     """Return the modelos with at least one row restating its inherited row unchanged."""
-    return tuple(sorted({item.modelo for item in findings if item.kind == RESTATED_UNCHANGED}))
+    return tuple(sorted({item.modelo for item in findings if item.kind == MinimalityVerdict.RESTATED_UNCHANGED}))
 
 
 def minimality_census(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]) -> MinimalityCensus:
     """Return corpus-wide edition and row counts, every verdict counted apart."""
     editions = roots = declared = root_rows = 0
-    verdicts: collections.Counter[str] = collections.Counter()
+    verdicts: collections.Counter[MinimalityVerdict] = collections.Counter()
     for modelo_id in modelo_ids:
         definition = authority.modelo(modelo_id)
         for edition in edition_predecessors(definition):
             editions += 1
-            if edition.basis == PREDECESSOR_DECLARED:
+            if edition.basis == PredecessorBasis.DECLARED:
                 declared += 1
             if edition.predecessor is None:
                 roots += 1
