@@ -20,6 +20,7 @@ from pydantic import (
     ValidationInfo,
     field_serializer,
     field_validator,
+    model_serializer,
     model_validator,
 )
 
@@ -128,6 +129,7 @@ __all__ = [
     "CasillaProducerProvenance",
     "DataBindingDefinition",
     "DecimalValue",
+    "DeclaredPredecessor",
     "FormulaDefinition",
     "ModeloDefinition",
     "ModeloRevision",
@@ -718,6 +720,42 @@ class SchemaFamilyDispositionDeclaration(RegistryModel):
     source_refs: SourceRefs
 
 
+class DeclaredPredecessor(RegistryModel):
+    """A revision's explicit claim that it is authored relative to a sibling edition.
+
+    Authored as a bare revision id, ``predecessor = "2024"``, and serialised back
+    to exactly that string. The wrapper exists so the declaration is a type
+    rather than a string: the revision id vocabulary admits any lowercase token,
+    so no reserved string could later mean "no predecessor exists" without
+    colliding with a legal revision id. A distinct declaration kind can join this
+    one on the same field instead, and a consumer matching on the declaration's
+    type keeps reading an absent key, a predecessor, and any later kind apart.
+    """
+
+    revision_id: RevisionId
+
+    @model_serializer(mode="plain")
+    def _serialise_as_authored(self) -> str:
+        return self.revision_id
+
+
+def _hydrate_declared_predecessor(value: object) -> object:
+    """Accept the one authored spelling of a predecessor: a revision id string.
+
+    A table spelling such as ``{ revision_id = "2024" }`` is refused rather than
+    accepted as an equivalent, so the declaration has a single canonical form.
+    """
+    if isinstance(value, DeclaredPredecessor):
+        return value
+    if isinstance(value, str):
+        return {"revision_id": value}
+    raise ValueError(f"predecessor must be the revision id of a sibling edition, got {type(value).__name__}")
+
+
+DeclaredPredecessorField = Annotated[DeclaredPredecessor, BeforeValidator(_hydrate_declared_predecessor)]
+"""Registry token hydrated into a :class:`DeclaredPredecessor`."""
+
+
 class ModeloRevision(RegistryModel):
     """A single versioned form layout and calculation ruleset for one modelo.
 
@@ -760,6 +798,14 @@ class ModeloRevision(RegistryModel):
     field as an unwritten position: it produced 22 confident false
     silent-data-loss findings across modelos 369, 390 and 131, twice, in trees
     that were already stamped and verified.
+
+    ``predecessor`` is the revision's explicit declaration of the sibling
+    edition it is authored relative to. A revision is delta-authored only when
+    it declares one; nothing infers a predecessor from rows the revision leaves
+    out, so a revision without the key is a full-copy revision stating every row
+    itself. Absent reads as ``None`` and is excluded from serialisation, so a
+    revision that does not declare the key dumps exactly as it did before the
+    key existed.
     """
 
     id: RevisionId
@@ -769,6 +815,7 @@ class ModeloRevision(RegistryModel):
     period_selector: PeriodSelector
     legal_refs: Annotated[LegalRefs, MANIFEST_ONLY]
     source_refs: SourceRefs
+    predecessor: DeclaredPredecessorField | None = Field(default=None, exclude_if=lambda value: value is None)
     # Required by validate_orden_aplicabilidad; kept default-empty so the
     # validator can report a grounded registry failure instead of a parse error.
     orden_aplicabilidad: Annotated[tuple[LegalRefId, ...], MANIFEST_ONLY] = ()
@@ -818,6 +865,13 @@ class ModeloRevision(RegistryModel):
     def _validate_window(self) -> ModeloRevision:
         if self.valid_to is not None and self.valid_to < self.valid_from:
             raise RegistryValidationError("revision valid_to must be on or after valid_from")
+        return self
+
+    @model_validator(mode="after")
+    def _validate_predecessor_is_another_edition(self) -> ModeloRevision:
+        """Refuse a revision declaring itself as the edition it is authored relative to."""
+        if isinstance(self.predecessor, DeclaredPredecessor) and self.predecessor.revision_id == self.id:
+            raise RegistryValidationError(f"revision {self.id!r} declares itself as its own predecessor")
         return self
 
     @property
@@ -1045,6 +1099,13 @@ class ModeloDefinition(RegistryModel):
         for key, revision in self.revisions.items():
             if key != revision.id:
                 raise RegistryValidationError(f"revision key {key!r} does not match revision id {revision.id!r}")
+            predecessor = revision.predecessor
+            if isinstance(predecessor, DeclaredPredecessor) and predecessor.revision_id not in self.revisions:
+                raise RegistryValidationError(
+                    f"modelo {self.id!r} revision {key!r} declares predecessor "
+                    f"{predecessor.revision_id!r}, which is not a revision of this modelo; "
+                    f"declared revisions are {sorted(self.revisions)!r}",
+                )
         return self
 
 

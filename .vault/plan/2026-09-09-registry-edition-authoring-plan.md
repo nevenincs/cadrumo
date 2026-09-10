@@ -11,7 +11,7 @@ related:
   - '[[2026-09-09-registry-edition-authoring-code-shape-and-blast-radius-reference]]'
 modified: '2026-09-10'
 body_schema: body-v2
-body_hash: 'sha256:6d56a944f6e609217d40acb69535024faac7775775219484a55e27652d4d2015'
+body_hash: 'sha256:2420476cc2ca1cc974ea0992a4fbbc4d821409a0368a2061cbf0974730592cf8'
 ---
 
 # `registry-edition-authoring` plan
@@ -162,7 +162,7 @@ Build the one format and the one reader: an explicit predecessor key, the loader
 
 One format with an explicit predecessor, one reader, and the proof obligations that make a migration acceptable.
 
-- [ ] `W02.P03.S09` - [M | opus-medium] Add the predecessor key to the edition schema. An edition is delta-authored only when it declares one; the loader never infers it from absent rows. Proof: an edition without the key loads as a full-copy edition unchanged.; `src/cadrumo/domain/calculations/registry`.
+- [x] `W02.P03.S09` - [M | opus-medium] Add the predecessor key to the edition schema. An edition is delta-authored only when it declares one; the loader never infers it from absent rows. Proof: an edition without the key loads as a full-copy edition unchanged.; `src/cadrumo/domain/calculations/registry`.
 - [ ] `W02.P03.S10` - [L | opus-medium] Build the materialiser between raw fragment assembly and typed construction, producing the same merged mapping typed construction already consumes. The construction signature and everything above it are untouched. Proof: consumers observe no change on an unmigrated corpus.; `src/cadrumo/domain/calculations/registry/_loader_internals.py`.
 - [ ] `W02.P03.S11` - [M | opus-medium] Add the cache-teeth test: fingerprints follow the physical edition files read, never the expanded output. Proof: editing a delta file invalidates; a materialisation difference with identical files does not.; `src/cadrumo/domain/calculations/registry`.
 - [ ] `W02.P03.S12` - [M | opus-medium] Add the round-trip gate: a materialised edition equals its pre-migration materialisation by typed equality, and its export bytes are unchanged. This gate is what makes each migration step acceptable and is retired after the last modelo. Proof: it passes on the unmigrated corpus before any modelo moves.; `src/cadrumo/domain/calculations/registry/tests`.
