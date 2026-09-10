@@ -17,7 +17,9 @@ from ..analysis.casilla_lineage_seed import (
     contradictions,
     gate_regressions,
     insert_lineage_keys,
+    load_rulings,
     parse_design_inventory,
+    residual_plan,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -216,3 +218,36 @@ def test_the_registry_gate_refuses_a_roleless_chain_unless_every_link_is_grounde
     demoted.set_keys("2025-y-siguientes", successor.id, continuidad_origin="seeded")
     regressions = gate_regressions(modelo, demoted)
     assert any(f"casilla {successor.id!r} has no semantic_role" in failure for failure in regressions), regressions
+
+
+def test_an_excluded_modelo_is_refused_row_by_row_and_never_written(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """A ruled row keeps the ruling's category; every other residual row takes the exclusion's."""
+    plan = residual_plan("309", authority.modelo("309"), load_rulings()["309"])
+    categories = {(refusal.revision, refusal.casilla_id): refusal.category for refusal in plan.refusals}
+    assert plan.edits == {}
+    assert categories[("2016-2017", "decl.transmitente-apellidos")] == "withheld"
+    assert categories[("2016-2017", "decl.transmitente-pais")] == "held"
+    assert categories[("2018-2022", "decl.transmitente-pais")] == "absence_unclassified"
+    unruled = residual_plan("309", authority.modelo("309"), ())
+    assert {refusal.category for refusal in unruled.refusals} == {"absence_unclassified"}
+
+
+def test_an_excluded_modelo_that_cannot_have_a_residual_row_refuses_to_record_one(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """Modelo 369's editions declare no predecessor; losing that declaration is an error, not a refusal."""
+    modelo = authority.modelo("369")
+    assert residual_plan("369", modelo, ()).refusals == []
+    revision_id = max(modelo.revisions)
+    stripped = modelo.model_copy(
+        update={
+            "revisions": {
+                **modelo.revisions,
+                revision_id: modelo.revisions[revision_id].model_copy(update={"predecessor": None}),
+            }
+        }
+    )
+    with pytest.raises(ValueError, match="cannot have one"):
+        residual_plan("369", stripped, ())

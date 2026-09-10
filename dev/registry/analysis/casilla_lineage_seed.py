@@ -23,6 +23,11 @@ casilla row is disposed of exactly once:
 - **refused** -- anything else, recorded in the ledger with its reason rather
   than falling through to a weaker signal.
 
+An excluded modelo is never written. Each of its successor rows that neither
+carries lineage nor declares a kind of none is still refused in the ledger, one
+row at a time, under the category its exclusion names, so the ledger stays the
+closed list of every unresolved row in the corpus.
+
 Coverage is a different question from identity: whether a row has a printed box
 at all is read from ``form_number`` OR a plain-integer ``number`` (that is the
 shipped printed-number contract); whether two rows are the same box is read
@@ -59,6 +64,7 @@ from pathlib import Path
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageOrigin
+from cadrumo.domain.calculations.registry.casilla_lineage_totality import unresolved_successor_rows
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_overlap
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
@@ -70,6 +76,7 @@ from .corpus import bundled_modelo_ids
 __all__ = [
     "EXCLUDED_MODELOS",
     "DesignInventory",
+    "ExcludedModelo",
     "LineagePlan",
     "admit_bare_chain",
     "contradictions",
@@ -77,6 +84,7 @@ __all__ = [
     "insert_lineage_keys",
     "parse_design_inventory",
     "plan_modelo",
+    "residual_plan",
 ]
 
 _UTF_8 = "utf-8"
@@ -87,17 +95,57 @@ _MODELOS_ROOT = _DATA_ROOT / "registry" / "aeat" / "modelos"
 RULINGS_PATH = _ANALYSIS_DIR / "casilla_lineage_rulings.toml"
 LEDGER_PATH = _ANALYSIS_DIR / "casilla_lineage_ledger.toml"
 
-EXCLUDED_MODELOS: Mapping[str, str] = {
-    "100": (
-        "no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid "
-        "column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically"
+
+@dataclass(frozen=True, slots=True)
+class ExcludedModelo:
+    """A modelo this seeder never writes, and how its unresolved rows are recorded.
+
+    ``residual_category`` is the ledger category every unresolved successor row
+    of the modelo is refused under, unless an adjudicated ruling names the row
+    more precisely. ``None`` means the modelo can have no unresolved successor
+    row at all, so finding one is an error rather than a refusal.
+    """
+
+    reason: str
+    residual_category: str | None
+    residual_reason: str
+
+
+_NOT_EXAMINED = "not_examined"
+_ABSENCE_UNCLASSIFIED = "absence_unclassified"
+_M100_REASON = (
+    "no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid "
+    "column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically"
+)
+_M200_REASON = "export bindings are being repaired in the same tree; lineage waits for the repaired declarations"
+
+EXCLUDED_MODELOS: Mapping[str, ExcludedModelo] = {
+    "100": ExcludedModelo(
+        reason=_M100_REASON,
+        residual_category=_NOT_EXAMINED,
+        residual_reason=f"not examined; its lineage is its own campaign: {_M100_REASON}",
     ),
-    "200": "export bindings are being repaired in the same tree; lineage waits for the repaired declarations",
-    "309": (
-        "its lineage is grounded by adjudication against the official record designs, including a printed box "
-        "number that moved from the record-design metadata into form_number, rather than seeded"
+    "200": ExcludedModelo(
+        reason=_M200_REASON,
+        residual_category=_NOT_EXAMINED,
+        residual_reason=f"not examined: {_M200_REASON}",
     ),
-    "369": "the editions are parallel schemes sharing one validity window, not a temporal sequence",
+    "309": ExcludedModelo(
+        reason=(
+            "its lineage is grounded by adjudication against the official record designs, including a printed box "
+            "number that moved from the record-design metadata into form_number, rather than seeded"
+        ),
+        residual_category=_ABSENCE_UNCLASSIFIED,
+        residual_reason=(
+            "residual after adjudication against the official record designs: no ruling chains this row or names "
+            "which kind of absence it is"
+        ),
+    ),
+    "369": ExcludedModelo(
+        reason="the editions are parallel schemes sharing one validity window, not a temporal sequence",
+        residual_category=None,
+        residual_reason="every edition declares that it has no predecessor edition",
+    ),
 }
 
 _PLAIN_INTEGER = re.compile(r"^\d+$")
@@ -332,13 +380,14 @@ def _pairs(values: Iterable[str]) -> tuple[tuple[str, str], ...]:
 
 
 def load_rulings(path: Path = RULINGS_PATH) -> dict[str, list[Ruling]]:
-    """Load every adjudicated ruling keyed by modelo."""
+    """Load every adjudicated ruling keyed by modelo.
+
+    Rulings for an excluded modelo are applied to its data by whoever owns that
+    modelo; this seeder reads them only to name its residual refusals precisely.
+    """
     document = tomllib.loads(path.read_text(encoding=_UTF_8))
     rulings: dict[str, list[Ruling]] = collections.defaultdict(list)
     for entry in document["ruling"]:
-        if entry["modelo"] in EXCLUDED_MODELOS:
-            # Rulings for a modelo this seeder does not walk are applied by whoever owns that modelo.
-            continue
         rulings[entry["modelo"]].append(
             Ruling(
                 predecessor=entry["predecessor"],
@@ -1116,6 +1165,9 @@ def gate_regressions(modelo: ModeloDefinition, plan: LineagePlan) -> list[str]:
     The seeder's incremental checks decide link by link; this is the exact
     answer, so the plan and the load-time gates cannot disagree.
     """
+    if not plan.edits:
+        # A plan with no edits materialises to the modelo itself, so it can regress nothing.
+        return []
     before = set(validate_registry_scope((modelo,)))
     return sorted(set(validate_registry_scope((materialise(modelo, plan),))) - before)
 
@@ -1224,19 +1276,60 @@ def plan_modelo(
         forbidden |= unsettled
 
 
+def residual_plan(modelo_id: str, modelo: ModeloDefinition, rulings: Iterable[Ruling]) -> LineagePlan:
+    """Refuse, row by row, every unresolved successor row of an excluded modelo.
+
+    Writes nothing: the plan carries refusals only. A row an adjudicated ruling
+    holds, withholds or merges is refused under that ruling's category and
+    reason; every other row takes the modelo's residual category. The rows are
+    exactly those the lineage totality rule reports, so the ledger and the gate
+    reading it cannot disagree about which rows need an entry.
+    """
+    excluded = EXCLUDED_MODELOS[modelo_id]
+    ruled: dict[tuple[str, str], tuple[str, str, str]] = {}
+    for ruling in rulings:
+        for category, pairs, reason in (
+            ("held", ruling.held, ruling.held_reason),
+            ("withheld", ruling.withheld, ruling.withheld_reason),
+            ("merged", ruling.merged, ruling.merged_reason),
+        ):
+            for predecessor, successor in pairs:
+                ruled[(ruling.successor, successor)] = (category, reason, predecessor)
+    rows = {
+        (str(revision.id), str(casilla.id)): casilla
+        for revision in modelo.revisions.values()
+        for casilla in revision.casillas
+    }
+    plan = LineagePlan(modelo_id)
+    for key in unresolved_successor_rows(modelo):
+        if excluded.residual_category is None:
+            raise ValueError(
+                f"modelo {modelo_id} {key.revision}/{key.casilla}: an unresolved successor row in a modelo that "
+                f"cannot have one ({excluded.residual_reason})"
+            )
+        precise = ruled.get((key.revision, key.casilla))
+        if precise is not None:
+            category, reason, predecessor = precise
+            plan.refuse(key.revision, key.casilla, category, reason, predecessor)
+            continue
+        chain = rows[(key.revision, key.casilla)].continuidad_id
+        shape = "no continuidad_id" if chain is None else f"continuidad_id {chain!r} starts its chain in this edition"
+        plan.refuse(key.revision, key.casilla, excluded.residual_category, f"{excluded.residual_reason}; {shape}")
+    return plan
+
+
 def _ledger(plans: list[LineagePlan], checks: Mapping[str, list[str]]) -> str:
     out = [
         "# Casilla lineage ledger, written by casilla_lineage_seed.py --apply. Do not edit by hand.",
         "#",
-        "# Every successor row the seeder did not write is listed here with the reason it stopped.",
-        "#",
-        "# continuidad_origin unset currently means two different things: a continuidad_id authored",
-        "# before origins existed (a declaration nobody marked), and a row nobody has examined. That",
-        "# ambiguity is inherited, not solved; the rows below are the examined-and-refused subset.",
+        "# Every successor row that neither carries lineage nor declares its kind of none is listed",
+        "# here, one refusal per row, with the category and reason it stopped. That includes every",
+        "# such row of an excluded modelo, whether examined or not. The list is closed: a row missing",
+        "# from it, or an entry whose row no longer needs it, fails the lineage totality gate.",
         "",
     ]
-    for modelo_id, reason in sorted(EXCLUDED_MODELOS.items()):
-        out += ["[[excluded]]", f"modelo = {json.dumps(modelo_id)}", f"reason = {json.dumps(reason)}", ""]
+    for modelo_id, excluded in sorted(EXCLUDED_MODELOS.items()):
+        out += ["[[excluded]]", f"modelo = {json.dumps(modelo_id)}", f"reason = {json.dumps(excluded.reason)}", ""]
     for plan in plans:
         out.append(f"[summary.{json.dumps(plan.modelo)}]")
         # Chain starts are an artefact of one write, not a disposition; the rows carry them.
@@ -1281,10 +1374,16 @@ def main(argv: list[str] | None = None) -> int:
         and len(authority.modelo(modelo_id).revisions) > 1
         and (not args.modelo or modelo_id in args.modelo)
     ]
-    unknown = set(rulings) - set(selected)
+    unknown = set(rulings) - set(selected) - set(EXCLUDED_MODELOS)
     if unknown and not args.modelo:
         raise SystemExit(f"rulings name modelos outside scope: {sorted(unknown)}")
     plans = [plan_modelo(modelo_id, authority.modelo(modelo_id), oracle, rulings) for modelo_id in selected]
+    plans += [
+        residual_plan(modelo_id, authority.modelo(modelo_id), rulings.get(modelo_id, ()))
+        for modelo_id in bundled_modelo_ids()
+        if modelo_id in EXCLUDED_MODELOS and (not args.modelo or modelo_id in args.modelo)
+    ]
+    plans.sort(key=lambda plan: plan.modelo)
     checks = {
         plan.modelo: [
             *contradictions(authority.modelo(plan.modelo), plan),
