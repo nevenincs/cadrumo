@@ -180,27 +180,6 @@ _REPRODUCTION_PENDING = {
         ),
         check_mode_refusal="cannot satisfy the requested 'filing' snapshot authority",
     ),
-    "m202-2019-2022": _ReproductionPendingPin(
-        source_ref="aeat-dr-202-2019",
-        source_sha256="96160cf2a82a4e6f2c9c9848c6061b2cfe5c4877de7a455126704af86f3ac7db",
-        reason="isolated validation makes cross-revision singleton semantic roles appear on exactly one casilla",
-        reconsideration_condition="Reconsider when generated validation preserves Modelo 202 cross-revision facts.",
-        check_mode_refusal="appears on exactly one casilla",
-    ),
-    "m202-2023-2024": _ReproductionPendingPin(
-        source_ref="aeat-dr-202-2023",
-        source_sha256="1e4881439e25417df5a8584bffd7149ca0952e2df53963b19c0346572259bec7",
-        reason="isolated validation makes cross-revision singleton semantic roles appear on exactly one casilla",
-        reconsideration_condition="Reconsider when generated validation preserves Modelo 202 cross-revision facts.",
-        check_mode_refusal="appears on exactly one casilla",
-    ),
-    "m202-2025-y-siguientes": _ReproductionPendingPin(
-        source_ref="aeat-dr-202-2025",
-        source_sha256="04e7b349b24b982d985195d4ae38b68e72e75d606cf66c7ef30b62b281c7f82c",
-        reason="isolated validation loses exact source-revision coverage needed by the cross-modelo relation",
-        reconsideration_condition="Reconsider when generated validation preserves Modelo 202 cross-revision facts.",
-        check_mode_refusal="lacks exact source revision coverage",
-    ),
     "m303-2022": _ReproductionPendingPin(
         source_ref="aeat-dr-303-2022",
         source_sha256="6648f6b319579e49cd5bfdaae69e7451db75767e7f19da0b90383b25b79b3f60",
