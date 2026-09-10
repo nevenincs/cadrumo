@@ -8,14 +8,10 @@ carve-out (apartado 4), 2 % forestal (apartado 5) and 1 % estimación objetiva
 (apartado 6.1.º). LIRPF art. 101.2, developed by RIRPF art. 80.1.3.º, fixes the
 administrador/consejero rate: 35 % general, dropping to 19 % when the paying
 entity's importe neto de la cifra de negocios is below 100.000 euros. Both are
-regulatory values, so they live in the registry catalogue —
-``registry/aeat/legal/irpf-retencion-actividades.toml`` under
-``[parameters."rirpf-art-95:*"]``, and
-``registry/aeat/legal/irpf-retencion-administradores.toml`` under
-``[parameters."lirpf-art-101:*"]`` — with their BOE citation and review
-metadata, and Python consumers read them from here rather than from a bare
-``Decimal(...)`` literal, where neither the figure nor its legal basis was
-auditable.
+regulatory values, so they live in source-cited governed-fact fragments under
+``registry/aeat/facts``. Python consumers read them from here rather than from
+a bare ``Decimal(...)`` literal, where neither the figure nor its legal basis
+was auditable.
 
 The loaders resolve typed scalar facts through ``ValidatedRegistryAuthority``
 at an explicit filing-period coordinate, then project only the values needed

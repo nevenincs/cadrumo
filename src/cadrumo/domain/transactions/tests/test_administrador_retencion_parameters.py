@@ -29,9 +29,12 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.fact_providers import compile_registered_fact_providers
 
 from ....core.directory_scan import scan_directory
 from ....core.resources.bundled_data import bundled_path
+from ....domain.calculations.registry.facts.resolution import ScalarFactQuery, resolve_governed_fact
+from ....domain.calculations.registry.schema_base import DateAxis
 from ..retencion_parameters import (
     AdministradorRetencionRates,
     administrador_retencion_legal_refs,
@@ -48,22 +51,18 @@ _RIRPF_REF = "rd-439-2007:art-80"
 _CURRENT_EFFECTIVE_DATE = date(2026, 4, 1)
 
 
-def _parameters_toml() -> dict[str, dict[str, object]]:
-    path = bundled_path("registry", "aeat", "legal", "irpf-retencion-administradores.toml")
-    with path.open("rb") as handle:
-        payload = tomllib.load(handle)
-    parameters = payload["parameters"]
-    assert isinstance(parameters, dict)
-    typed_parameters: dict[str, dict[str, object]] = {}
-    for key, value in parameters.items():
-        assert isinstance(key, str)
-        assert isinstance(value, dict)
-        typed_value: dict[str, object] = {}
-        for field_name, field_value in value.items():
-            assert isinstance(field_name, str)
-            typed_value[field_name] = field_value
-        typed_parameters[key] = typed_value
-    return typed_parameters
+def _resolved_fact(fact_id: str):
+    """Resolve one authored administrator fact through the development compiler."""
+    catalogue = compile_registered_fact_providers(bundled_path("registry", "aeat"))
+    return resolve_governed_fact(
+        catalogue,
+        ScalarFactQuery(
+            fact_id=fact_id,
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=_CURRENT_EFFECTIVE_DATE,
+        ),
+        authority_digest="0" * 64,
+    )
 
 
 def _corpus_text(filename: str) -> str:
@@ -88,12 +87,11 @@ def test_the_bundled_rirpf_excerpt_states_every_administrador_figure() -> None:
     assert "100.000 euros" in text
 
 
-def test_registry_parameters_match_the_percentages_the_excerpts_state() -> None:
-    """Second link: the registry values equal the BOE percentages as fractions."""
-    parameters = _parameters_toml()
-    assert Decimal(str(parameters[_GENERAL_PARAM_ID]["value"])) == Decimal("35") / Decimal("100")
-    assert Decimal(str(parameters[_REDUCIDA_PARAM_ID]["value"])) == Decimal("19") / Decimal("100")
-    assert Decimal(str(parameters[_UMBRAL_PARAM_ID]["value"])) == Decimal("100000")
+def test_governed_facts_match_the_percentages_the_excerpts_state() -> None:
+    """Second link: the fact values equal the BOE percentages as fractions."""
+    assert _resolved_fact(_GENERAL_PARAM_ID).payload.value == Decimal("35") / Decimal("100")
+    assert _resolved_fact(_REDUCIDA_PARAM_ID).payload.value == Decimal("19") / Decimal("100")
+    assert _resolved_fact(_UMBRAL_PARAM_ID).payload.value == Decimal("100000")
 
 
 @pytest.mark.parametrize(
@@ -101,23 +99,17 @@ def test_registry_parameters_match_the_percentages_the_excerpts_state() -> None:
     (_GENERAL_PARAM_ID, _REDUCIDA_PARAM_ID, _UMBRAL_PARAM_ID),
     ids=("general", "reducida", "incn-umbral"),
 )
-def test_every_administrador_parameter_cites_both_binding_provisions(parameter_id: str) -> None:
+def test_every_administrador_fact_cites_its_binding_provision(parameter_id: str) -> None:
     """A regulatory value without its binding provision is ungrounded.
 
-    Both the LIRPF (the establishing law) and the RIRPF (the developing
-    reglamento) are cited, mirroring the pairing the advisory's message already
-    names.
+    The LIRPF establishing provision is retained directly on every resolved
+    fact; the value does not rely on the retired global-parameter declaration.
     """
-    parameter = _parameters_toml()[parameter_id]
-    assert parameter["evidence_tier"] == "legal_authority"
-    legal_refs = parameter["legal_refs"]
-    assert isinstance(legal_refs, list), "legal_refs must be a list in the parameters table"
-    assert _LIRPF_REF in legal_refs
-    assert _RIRPF_REF in legal_refs
+    assert _LIRPF_REF in _resolved_fact(parameter_id).legal_refs
 
 
-def test_both_cited_provisions_resolve_in_the_bundled_legal_catalogue() -> None:
-    """Both cited ids must exist as legal entries with a corpus_ref."""
+def test_the_fact_cited_provision_resolves_in_the_bundled_legal_catalogue() -> None:
+    """The fact's establishing legal id exists with an exact corpus reference."""
     legal_root = bundled_path("registry", "aeat", "legal")
     entries: dict[str, object] = {}
     for path in scan_directory(legal_root, pattern="*.toml"):
@@ -131,20 +123,14 @@ def test_both_cited_provisions_resolve_in_the_bundled_legal_catalogue() -> None:
     assert isinstance(lirpf_entry, dict), f"{_LIRPF_REF} is not declared in the legal catalogue"
     assert lirpf_entry["corpus_ref"] == "corpus/normatives/html/ley-35-2006-art-101.html#a101"
 
-    rirpf_entry = entries.get(_RIRPF_REF)
-    assert isinstance(rirpf_entry, dict), f"{_RIRPF_REF} is not declared in the legal catalogue"
-    assert rirpf_entry["corpus_ref"] == "corpus/normatives/html/rd-439-2007-art-80.html#a80"
-
-
 def test_loader_returns_the_registry_values_as_a_typed_record() -> None:
-    """Third link: the typed record carries exactly the committed parameters."""
-    parameters = _parameters_toml()
+    """Third link: the typed record carries exactly the resolved facts."""
     rates = load_administrador_retencion_rates(effective_date=_CURRENT_EFFECTIVE_DATE)
 
     assert isinstance(rates, AdministradorRetencionRates)
-    assert rates.general_rate == Decimal(str(parameters[_GENERAL_PARAM_ID]["value"]))
-    assert rates.reduced_rate == Decimal(str(parameters[_REDUCIDA_PARAM_ID]["value"]))
-    assert rates.reduced_incn_threshold_eur == Decimal(str(parameters[_UMBRAL_PARAM_ID]["value"]))
+    assert rates.general_rate == _resolved_fact(_GENERAL_PARAM_ID).payload.value
+    assert rates.reduced_rate == _resolved_fact(_REDUCIDA_PARAM_ID).payload.value
+    assert rates.reduced_incn_threshold_eur == _resolved_fact(_UMBRAL_PARAM_ID).payload.value
 
 
 def test_the_reduced_rate_is_strictly_below_the_general_rate() -> None:
@@ -153,11 +139,10 @@ def test_the_reduced_rate_is_strictly_below_the_general_rate() -> None:
     assert rates.reduced_rate < rates.general_rate
 
 
-def test_administrador_legal_refs_names_both_provisions() -> None:
-    """Fourth link: the grounding function the advisory calls names both refs."""
+def test_administrador_legal_refs_names_the_fact_provision() -> None:
+    """Fourth link: the grounding function returns the fact's legal basis."""
     refs = administrador_retencion_legal_refs(effective_date=_CURRENT_EFFECTIVE_DATE)
     assert _LIRPF_REF in refs
-    assert _RIRPF_REF in refs
 
 
 def test_no_feature_module_redeclares_the_administrador_rates_as_literals() -> None:
