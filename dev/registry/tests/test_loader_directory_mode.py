@@ -17,19 +17,23 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+
+from cadrumo.core.directory_scan import scan_directory
+from cadrumo.domain.calculations.registry.errors import (
+    RegistryFailureCondition,
+    RegistryLoadError,
+    RegistryValidationError,
+)
+from dev.registry.compiler._loader_internals import load_modelo_file
 from dev.registry.compiler.loader import (
     load_modelo_directory,
     load_modelo_source,
     load_registry_tree,
     load_shared_catalogues,
 )
+from dev.registry.compiler.loader_cache import ModeloSource, discover_modelo_sources
 from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
-
-from .....core.directory_scan import scan_directory
-from .._loader_internals import load_modelo_file
-from ..errors import RegistryFailureCondition, RegistryLoadError, RegistryValidationError
-from ..loader_cache import ModeloSource, discover_modelo_sources
-from ._loader_directory_mode_support import (
+from dev.registry.conformance.tests._loader_directory_mode_support import (
     _MAX_SINGLE_FILE_MODELO_LINES,
     _MAX_TOML_FRAGMENT_LINES,
     _MAX_TOML_ROW_CHARS,
@@ -517,7 +521,17 @@ legal_refs = ["ley-test:art-1"]
 review_status = "pending_review"
 reviewed_at = 2026-06-28
 reviewed_by = "registry-test"
-""".lstrip(),
+
+[supported_filing_years]
+years = [2025]
+
+[sociedades_annual_manual_coverage]
+""".lstrip()
+        + (
+            'dispositions = [{ year = 2025, status = "unpublished", '
+            'official_locator = "https://example.com/manuals", observed_at = 2026-09-10, '
+            'acquisition_condition_key = "application.registry.manuals.coverage.recheck_aeat_publication" }]\n'
+        ),
         encoding="utf-8",
     )
 
@@ -635,7 +649,9 @@ def test_registry_tree_cache_invalidates_when_single_file_becomes_directory_insi
     (legal_dir / "supported-filing-years.toml").write_text(
         "[supported_filing_years]\nyears = [2025]\n\n"
         "[sociedades_annual_manual_coverage]\n"
-        'dispositions = [{ year = 2025, status = "unpublished", official_locator = "https://example.com/manuals", observed_at = 2026-09-10, acquisition_condition_key = "application.registry.manuals.coverage.recheck_aeat_publication" }]\n',
+        'dispositions = [{ year = 2025, status = "unpublished", '
+        'official_locator = "https://example.com/manuals", observed_at = 2026-09-10, '
+        'acquisition_condition_key = "application.registry.manuals.coverage.recheck_aeat_publication" }]\n',
         encoding="utf-8",
         newline="\n",
     )

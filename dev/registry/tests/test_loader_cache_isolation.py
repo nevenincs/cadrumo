@@ -44,17 +44,20 @@ import time
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.loader import _load_registry_tree_cached, load_registry_tree
-from dev.registry.compiler.loader_fingerprints import _registry_fingerprint_cache, clear_fingerprint_cache
 
-from .....core.config import override_settings
-from .....core.directory_scan import scan_directory
-from .....core.resources.bundled_data import bundled_path
-from .....tests.env_scope import scoped_env_var
-from .._loader_internals import _collect_registry_tree_fingerprints
-from ..loader_cache import is_bundled_registry_root, registry_disk_cache_enabled
-from ._loader_cache_support import REGISTRY_DISK_CACHE_DIR_ENV_VAR
-from ._loader_directory_mode_support import _standard_manifest_text, _standard_revision_preamble_text
+from cadrumo.core.config import override_settings
+from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.tests.env_scope import scoped_env_var
+from dev.registry.compiler._loader_internals import _collect_registry_tree_fingerprints
+from dev.registry.compiler.loader import _load_registry_tree_cached, load_registry_tree
+from dev.registry.compiler.loader_cache import is_bundled_registry_root, registry_disk_cache_enabled
+from dev.registry.compiler.loader_fingerprints import _registry_fingerprint_cache, clear_fingerprint_cache
+from dev.registry.conformance.tests._loader_directory_mode_support import (
+    _standard_manifest_text,
+    _standard_revision_preamble_text,
+)
+from dev.registry.tests._loader_cache_support import REGISTRY_DISK_CACHE_DIR_ENV_VAR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -407,7 +410,7 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
 
     def _run_real_pytest_session() -> subprocess.CompletedProcess[str]:
         node_id = f"{scratch_module_path}::test_touch_bundled_registry"
-        return subprocess.run(
+        return subprocess.run(  # noqa: S603 -- fixed interpreter and test-owned node id
             [
                 sys.executable,
                 "-m",
@@ -499,7 +502,9 @@ def test_synthetic_tmp_path_root_disk_cache_stays_disabled_under_pytest(tmp_path
     (legal_dir / "supported-filing-years.toml").write_text(
         "[supported_filing_years]\nyears = [2025]\n\n"
         "[sociedades_annual_manual_coverage]\n"
-        'dispositions = [{ year = 2025, status = "unpublished", official_locator = "https://example.com/manuals", observed_at = 2026-09-10, acquisition_condition_key = "application.registry.manuals.coverage.recheck_aeat_publication" }]\n',
+        'dispositions = [{ year = 2025, status = "unpublished", '
+        'official_locator = "https://example.com/manuals", observed_at = 2026-09-10, '
+        'acquisition_condition_key = "application.registry.manuals.coverage.recheck_aeat_publication" }]\n',
         encoding="utf-8",
         newline="\n",
     )

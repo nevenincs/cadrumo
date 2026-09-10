@@ -11,17 +11,22 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....core.config import Settings
-from .._citation_blocklist import _KNOWN_BAD_CITATIONS, KnownBadCitation, _fold_diacritics, find_known_bad
-from .._validate import RegistryValidator
-from .._validate_evidence import EvidenceValidator
+from cadrumo.core.config import Settings
+from cadrumo.domain.calculations.registry._citation_blocklist import (
+    _KNOWN_BAD_CITATIONS,
+    KnownBadCitation,
+    _fold_diacritics,
+    find_known_bad,
+)
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema_base import EvidenceTier, SourceCitation
+from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+from dev.registry.compiler._validate_evidence import EvidenceValidator
 from dev.registry.compiler.corpus_catalogue import verify_source_catalogue, verify_source_file
-from ..errors import RegistryValidationError
 from dev.registry.compiler.legal_grounding import verify_legal_catalogue
-from ..schema import RegistryCatalogues
-from ..schema_base import EvidenceTier, SourceCitation
-from ..schema_references import LegalReference, SourceReference
-from ._registry_schema_support import _committed_registry_tree
+from dev.registry.compiler.validator import RegistryValidator
+from dev.registry.conformance.tests._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
