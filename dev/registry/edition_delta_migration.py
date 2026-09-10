@@ -306,7 +306,7 @@ def _as_row(value: object) -> _Row:
     thawed = _thaw(value)
     if not isinstance(thawed, dict):
         raise MigrationRefusedError(f"expected a table, found {type(value).__name__}")
-    return thawed
+    return {str(key): item for key, item in thawed.items()}
 
 
 def _split_blocks(text: str) -> tuple[str, list[str]]:
@@ -565,7 +565,7 @@ def _lift(row: _Row, *, source_default: tuple[str, ...] | None, orden: tuple[str
 
     row_keys = removable(row)
     lifted = {key: value for key, value in row.items() if key not in row_keys}
-    constraint_keys: frozenset[str] = frozenset()
+    constraint_keys = frozenset[str]()
     constraints = row.get(_CONSTRAINTS)
     if isinstance(constraints, dict):
         constraint_keys = removable(constraints)
@@ -680,7 +680,7 @@ def _plan(
         new_defaults = _Defaults(source_refs=source_default, orden=orden)
 
         predecessor, basis, causes = _choose_predecessor(position, ordered, source)
-        drops: set[str] = set()
+        drops = set[str]()
         kept: Counter[KeptReason] = Counter()
         not_exact: list[str] = []
         if predecessor is not None and not causes:
@@ -696,9 +696,13 @@ def _plan(
             )
         stated_ids = frozenset(_row_id(row) for row in full_rows) - drops
         if causes:
-            basis, drops, stated_ids = PredecessorBasis.BLOCKED, set(), frozenset(_row_id(row) for row in full_rows)
-            kept = Counter()
-            not_exact = []
+            basis, drops, stated_ids = (
+                PredecessorBasis.BLOCKED,
+                set[str](),
+                frozenset(_row_id(row) for row in full_rows),
+            )
+            kept = Counter[KeptReason]()
+            not_exact = list[str]()
         if basis in {PredecessorBasis.FIRST, PredecessorBasis.DECLARED_ROOT, PredecessorBasis.BLOCKED}:
             materialised[revision_id] = [_Placed(lifts[_row_id(row)].row, revision_id) for row in full_rows]
         else:
@@ -828,7 +832,7 @@ def _choose_drops(
     typed = {str(casilla.id): casilla for casilla in revision.casillas}
     predecessor_revision = definition.revisions[predecessor]
     typed_predecessor = {str(casilla.continuidad_id): casilla for casilla in predecessor_revision.casillas}
-    drops: set[str] = set()
+    drops = set[str]()
     kept: Counter[KeptReason] = Counter()
     not_exact: list[str] = []
     for row in full_rows:
@@ -963,7 +967,7 @@ def _without_inline_keys(line: str, keys: frozenset[str]) -> str:
 
 def _key_of(line: str) -> str | None:
     match = re.match(r"^([A-Za-z0-9_-]+)\s*=", line)
-    return match.group(1) if match else None
+    return str(match.group(1)) if match else None
 
 
 def _lifted_text(block: _Block, lift: _Lift) -> str:

@@ -170,6 +170,7 @@ def test_the_pilot_blocks_exactly_the_editions_whose_order_inheritance_cannot_pr
         assert edition.inherited_ids, edition.revision_id
         edition_dir = _edition_dir(pilot.staged_registry, _PILOT, edition.revision_id)
         assert not set(edition.inherited_ids) & _stated_ids(edition_dir)
+        assert edition.predecessor is not None
         revision = staged.revisions[edition.revision_id]
         assert revision.predecessor == DeclaredPredecessor(revision_id=edition.predecessor)
         assert revision.reviewed_against == edition.predecessor
