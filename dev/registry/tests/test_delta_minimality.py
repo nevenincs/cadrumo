@@ -329,9 +329,7 @@ def test_every_unlineaged_successor_row_in_the_corpus_is_reported_unchecked(
             if edition.predecessor is None or edition.basis == "undecidable":
                 continue
             expected += sum(
-                1
-                for item in stated_casillas(definition.revisions[edition.revision])
-                if item.continuidad_id is None
+                1 for item in stated_casillas(definition.revisions[edition.revision]) if item.continuidad_id is None
             )
     census = minimality_census(authority, modelo_ids)
     assert expected > 0

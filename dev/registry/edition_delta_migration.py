@@ -15,24 +15,33 @@ What the migration does, edition by edition in validity order:
   design and must stay full-copy). A predecessor an edition already declares is
   kept as declared.
 - **Lifts restatement.** ``casilla_source_refs`` is declared once on the
-  edition when one ``source_refs`` value is carried by more rows than any other
-  and by at least two, and every row and constraints table states some
-  ``source_refs``; each row and constraints table stating exactly that value
-  then drops it. A row or constraints table whose ``legal_refs`` equal the
+  edition when every row and constraints table states some ``source_refs`` and
+  one leading run of references opens the ``source_refs`` of more rows than any
+  other, and of at least two; among runs opening equally many rows the longest
+  is taken, and two distinct runs of that length are a tie and declare nothing.
+  Each row and constraints table stating exactly that run then drops its
+  ``source_refs``, and one stating the run followed by further references
+  states only those, as ``additional_source_refs``, which the loader appends
+  to the default. A row or constraints table whose ``legal_refs`` equal the
   edition's ``orden_aplicabilidad`` drops them, since the loader fills that
-  default already. Nothing is ever merged into a stated value, so a row citing
-  the default together with anything else keeps its whole list.
+  default already. A ``source_refs`` value the default and additions cannot
+  reproduce exactly is kept whole.
 - **Drops rows identical to the inherited row.** A row is dropped when the
-  delta-minimality screen judges it identical to the predecessor's row of the
-  same lineage (``inheritable_value``) *and* the row the loader would
-  materialise in its place - the predecessor's raw row, defaulted from this
-  edition and with its formula and binding references resolved through
-  lineage - equals this edition's row exactly. The second condition is needed
-  because the screen deliberately ignores fields that differ by edition
-  (source references, lineage origin and evidence, orden citations as a set),
-  and a row dropped on the screen's word alone would inherit the predecessor's
-  value for them.
-- **Keeps** every changed and new row, stated in full.
+  delta-minimality screen finds no difference between it and inheriting the
+  predecessor's row of the same lineage (``restatement_differences``) *and*
+  the row the loader would materialise in its place - the predecessor's raw
+  row without its lineage claims, defaulted from this edition and with its
+  formula and binding references resolved through lineage - equals this
+  edition's row exactly. The second condition is needed because the screen
+  compares normalised loaded values, and a row dropped on its word alone could
+  inherit a raw shape, such as a full ``source_refs``, that materialises
+  differently.
+- **Keeps** every changed and new row, stated in full, and every row stating
+  ``continuidad_origin`` or ``continuidad_evidence``, which an inherited row
+  never carries.
+- **Reorders** the edition once, into the order the merge defines: inherited
+  rows in the predecessor's materialised order, superseding rows in place, new
+  rows after them in stated order.
 - **Writes** the delta: the dropped rows' blocks are removed from their
   fragments, each fragment is renamed to the span it still declares, and the
   manifest gains ``predecessor``, ``casilla_source_refs`` and, on a reviewed
@@ -40,12 +49,11 @@ What the migration does, edition by edition in validity order:
 
 An edition the materialiser cannot reproduce exactly is **blocked** and stays a
 full copy with its restatement lifted. The causes are closed: an overlapping or
-lower-grade predecessor; a row order the materialiser cannot produce (inherited
-rows keep the predecessor's order and new rows are appended, so a row inserted
-mid-sequence cannot be expressed); a predecessor lineage the successor omits
-without a ``retired`` evolution; a predecessor row carrying no lineage; a
-lineage carried twice; or a stated row colliding with an inherited row of
-another lineage. Because a modelo whose editions name predecessors admits one
+lower-grade predecessor; renamed fragments that would state the new rows out of
+their full-copy order, which the merge would then keep; a predecessor lineage
+the successor omits without a ``retired`` evolution; a predecessor row carrying
+no lineage; a lineage carried twice; or a stated row colliding with an
+inherited row of another lineage. Because a modelo whose editions name predecessors admits one
 key-less root only, a blocked edition other than the first needs an explicit
 no-predecessor declaration. That declaration is a claim about the form, so the
 tool refuses to write one unless ``--declare-blocked-roots`` is passed, and then
@@ -53,8 +61,9 @@ cites the edition's own first legal and source reference and names the cause.
 
 Proof and publication. The migration is written into a staging copy of the
 registry and compared with the unmigrated modelo through the round-trip gate:
-typed equality of every edition, casilla row order, locale identity, and export
-bytes for each edition an export scenario is given for. The staged tree must
+typed equality of every edition, casilla row order against the merge order,
+locale identity, and export bytes for each edition an export scenario is given
+for. The staged tree must
 carry ``reviewed_against`` on a reviewed delta edition or it does not load, so
 the carry-forward is decided at publication: ``--apply`` replaces the modelo in
 the target registry only when the gate reports nothing at all, including no
@@ -105,11 +114,13 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Modelo
 from cadrumo.domain.calculations.registry.tests.test_revision_edition_round_trip import (
     EditionExportScenario,
     RoundTripReport,
+    RowKey,
     copy_registry_tree,
     edition_round_trip_report,
+    merge_order,
 )
 
-from .analysis.delta_minimality import inheritable_value
+from .analysis.delta_minimality import restatement_differences
 
 __all__ = [
     "BlockedCause",
@@ -130,7 +141,9 @@ _MODELOS: Final = "modelos"
 _CASILLAS: Final = "casillas"
 _MANIFEST: Final = "revision.toml"
 _ROW_SOURCE: Final = "source_refs"
+_ROW_SOURCE_ADDITIONS: Final = "additional_source_refs"
 _ROW_LEGAL: Final = "legal_refs"
+_LINEAGE_CLAIMS: Final = frozenset({"continuidad_origin", "continuidad_evidence"})
 _CONSTRAINTS: Final = "constraints"
 _LINEAGE: Final = "continuidad_id"
 _REFERENCE_SECTIONS: Final[Mapping[str, str]] = {
@@ -174,6 +187,7 @@ class BlockedCause(StrEnum):
 
     OVERLAPPING_PREDECESSOR = "overlapping_predecessor"
     LOWER_GRADE = "lower_grade"
+    #: Renamed fragments would state the edition's new rows out of their full-copy order.
     ROW_ORDER = "row_order"
     UNRETIRED_WITHDRAWAL = "unretired_withdrawal"
     PREDECESSOR_ROW_WITHOUT_LINEAGE = "predecessor_row_without_lineage"
@@ -416,11 +430,21 @@ def _manifest_defaults(manifest: Mapping[str, object]) -> _Defaults:
 
 def _defaulted(table: _Row, defaults: _Defaults) -> _Row:
     filled = dict(table)
-    if defaults.source_refs and _ROW_SOURCE not in filled:
+    additions = filled.pop(_ROW_SOURCE_ADDITIONS, None)
+    if additions is not None:
+        if not defaults.source_refs or _ROW_SOURCE in filled or not isinstance(additions, list) or not additions:
+            raise MigrationRefusedError(f"casilla {table.get('id')!r} states additions the loader would refuse")
+        filled[_ROW_SOURCE] = list(dict.fromkeys((*defaults.source_refs, *(str(item) for item in additions))))
+    elif defaults.source_refs and _ROW_SOURCE not in filled:
         filled[_ROW_SOURCE] = list(defaults.source_refs)
     if defaults.orden and _ROW_LEGAL not in filled:
         filled[_ROW_LEGAL] = list(defaults.orden)
     return filled
+
+
+def _without_lineage_claims(row: _Row) -> _Row:
+    """The row as an inheriting edition holds it: its claims about its predecessor never travel."""
+    return {key: value for key, value in row.items() if key not in _LINEAGE_CLAIMS}
 
 
 def _effective(
@@ -479,6 +503,10 @@ def _row_id(row: Mapping[str, object]) -> str:
     return str(row["id"])
 
 
+def _row_keys(rows: Sequence[Mapping[str, object]]) -> tuple[RowKey, ...]:
+    return tuple((_row_id(row), _lineage(row)) for row in rows)
+
+
 @dataclass(frozen=True, slots=True)
 class _Placed:
     """One materialised row, the raw row the loader holds for it, and the edition that stated it."""
@@ -517,7 +545,7 @@ def _merge(
             merged.append(_Placed(stated_by_lineage[lineage], revision_id))
             superseded.add(lineage)
             continue
-        merged.append(placed)
+        merged.append(_Placed(_without_lineage_claims(placed.row), placed.origin))
         kept_ids[_row_id(placed.row)] = lineage
     for row in stated:
         lineage = _lineage(row)
@@ -532,45 +560,83 @@ def _merge(
 
 
 @dataclass(frozen=True, slots=True)
+class _TableLift:
+    """What lifting removes from one row or constraints table, and the additions it states instead."""
+
+    removed: frozenset[str] = frozenset()
+    additions: tuple[str, ...] | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class _Lift:
-    """One row's lifted form and which of its keys the lift removes."""
+    """One row's lifted form and what the lift changes in the row and in its constraints table."""
 
     row: _Row
-    row_keys: frozenset[str]
-    constraint_keys: frozenset[str]
+    row_lift: _TableLift
+    constraint_lift: _TableLift
+
+
+def _source_refs(table: Mapping[str, object]) -> tuple[str, ...] | None:
+    value = table.get(_ROW_SOURCE)
+    return tuple(str(item) for item in value) if isinstance(value, list) else None
 
 
 def _source_default(rows: Sequence[_Row]) -> tuple[tuple[str, ...] | None, str | None]:
-    """The edition's shared ``source_refs`` value, or ``None`` and the reason none is declared."""
+    """The edition's shared leading ``source_refs`` run, or ``None`` and the reason none is declared.
+
+    A run counts for a row only when the row's references open with it and
+    repeat nothing, so the default followed by the rest reproduces them exactly.
+    """
     constraints = [table for row in rows if isinstance(table := row.get(_CONSTRAINTS), dict)]
     if any(_ROW_SOURCE not in table for table in [*rows, *constraints]):
         return None, "a row or constraints table states no source_refs, so a default would add references to it"
-    counts = Counter(tuple(str(item) for item in value) for row in rows if isinstance(value := row[_ROW_SOURCE], list))
-    ranked = sorted(counts.items(), key=lambda item: (-item[1], item[0]))
-    if not ranked or ranked[0][1] < 2:
-        return None, "no source_refs value is shared by two rows"
-    if len(ranked) > 1 and ranked[1][1] == ranked[0][1]:
-        return None, f"two source_refs values tie at {ranked[0][1]} rows"
-    return ranked[0][0], None
+    scores: Counter[tuple[str, ...]] = Counter()
+    for row in rows:
+        refs = _source_refs(row)
+        if refs and len(set(refs)) == len(refs):
+            scores.update(refs[:length] for length in range(1, len(refs) + 1))
+    if not scores or max(scores.values()) < 2:
+        return None, "no leading source_refs run is shared by two rows"
+    best = max(scores.values())
+    longest = max(len(run) for run, score in scores.items() if score == best)
+    candidates = sorted(run for run, score in scores.items() if score == best and len(run) == longest)
+    if len(candidates) > 1:
+        return None, f"{len(candidates)} leading source_refs runs of length {longest} tie at {best} rows"
+    return candidates[0], None
+
+
+def _table_lift(
+    table: Mapping[str, object], *, source_default: tuple[str, ...] | None, orden: tuple[str, ...]
+) -> _TableLift:
+    removed: set[str] = set()
+    additions: tuple[str, ...] | None = None
+    refs = _source_refs(table)
+    if source_default is not None and refs is not None and refs[: len(source_default)] == source_default:
+        rest = refs[len(source_default) :]
+        if tuple(dict.fromkeys((*source_default, *rest))) == refs:
+            removed.add(_ROW_SOURCE)
+            additions = rest or None
+    if orden and table.get(_ROW_LEGAL) == list(orden):
+        removed.add(_ROW_LEGAL)
+    return _TableLift(frozenset(removed), additions)
+
+
+def _lifted_table(table: Mapping[str, object], lift: _TableLift) -> _Row:
+    lifted = {key: value for key, value in table.items() if key not in lift.removed}
+    if lift.additions is not None:
+        lifted[_ROW_SOURCE_ADDITIONS] = list(lift.additions)
+    return lifted
 
 
 def _lift(row: _Row, *, source_default: tuple[str, ...] | None, orden: tuple[str, ...]) -> _Lift:
-    def removable(table: Mapping[str, object]) -> frozenset[str]:
-        keys: set[str] = set()
-        if source_default is not None and table.get(_ROW_SOURCE) == list(source_default):
-            keys.add(_ROW_SOURCE)
-        if orden and table.get(_ROW_LEGAL) == list(orden):
-            keys.add(_ROW_LEGAL)
-        return frozenset(keys)
-
-    row_keys = removable(row)
-    lifted = {key: value for key, value in row.items() if key not in row_keys}
-    constraint_keys = frozenset[str]()
+    row_lift = _table_lift(row, source_default=source_default, orden=orden)
+    lifted = _lifted_table(row, row_lift)
+    constraint_lift = _TableLift()
     constraints = row.get(_CONSTRAINTS)
     if isinstance(constraints, dict):
-        constraint_keys = removable(constraints)
-        lifted[_CONSTRAINTS] = {key: value for key, value in constraints.items() if key not in constraint_keys}
-    return _Lift(lifted, row_keys, constraint_keys)
+        constraint_lift = _table_lift(constraints, source_default=source_default, orden=orden)
+        lifted[_CONSTRAINTS] = _lifted_table(constraints, constraint_lift)
+    return _Lift(lifted, row_lift, constraint_lift)
 
 
 # ── planning ────────────────────────────────────────────────────────────────
@@ -762,7 +828,7 @@ def _lift_counts(source: _EditionSource, lifts: Mapping[str, _Lift], stated_ids:
         for row_id in stated_ids:
             row = authored.get(row_id, {})
             table = row.get(_CONSTRAINTS) if constraint else row
-            keys = lifts[row_id].constraint_keys if constraint else lifts[row_id].row_keys
+            keys = lifts[row_id].constraint_lift.removed if constraint else lifts[row_id].row_lift.removed
             total += key in keys and isinstance(table, dict) and key in table
         return total
 
@@ -841,14 +907,12 @@ def _choose_drops(
         if len(candidates) != 1 or lineage not in typed_predecessor:
             kept[KeptReason.NEW_LINEAGE] += 1
             continue
-        if inheritable_value(typed[row_id], revision) != inheritable_value(
-            typed_predecessor[lineage], predecessor_revision
-        ):
+        if restatement_differences(typed[row_id], revision, typed_predecessor[lineage], predecessor_revision):
             kept[KeptReason.DIFFERS] += 1
             continue
         (candidate,) = candidates
         materialised = _effective(
-            candidate.row,
+            _without_lineage_claims(candidate.row),
             origin=candidate.origin,
             revision_id=revision_id,
             defaults=defaults,
@@ -870,9 +934,12 @@ def _choose_drops(
     merged, refused = _merge(inherited, stated_rows, revision_id=revision_id, retired=source.retired)
     if refused is not None:
         return [refused], set(), Counter(), []
-    if [_row_id(placed.row) for placed in merged] != [_row_id(row) for row in full_rows]:
+    expected = merge_order(_row_keys(full_rows), _row_keys([placed.row for placed in inherited]))
+    if [_row_id(placed.row) for placed in merged] != [row_id for row_id, _ in expected]:
         return [BlockedCause.ROW_ORDER], set(), Counter(), []
-    for placed, row in zip(merged, full_rows, strict=True):
+    full_by_id = {_row_id(row): row for row in full_rows}
+    for placed in merged:
+        row = full_by_id[_row_id(placed.row)]
         effective = _effective(
             placed.row,
             origin=placed.origin,
@@ -955,13 +1022,22 @@ def _top_level_items(inline: str) -> list[str]:
     return [item for item in items if item.strip()]
 
 
-def _without_inline_keys(line: str, keys: frozenset[str]) -> str:
+def _additions_assignment(additions: tuple[str, ...]) -> str:
+    return f"{_ROW_SOURCE_ADDITIONS} = {_toml_value(list(additions))}"
+
+
+def _lifted_inline(line: str, lift: _TableLift) -> str:
     key, _, rest = line.partition("=")
     body = rest.strip()
     if not (body.startswith("{") and body.endswith("}")):
         raise MigrationRefusedError(f"constraints are neither a table nor a one-line inline table: {line!r}")
-    items = [item.strip() for item in _top_level_items(body[1:-1])]
-    kept = [item for item in items if item.partition("=")[0].strip() not in keys]
+    kept: list[str] = []
+    for item in (item.strip() for item in _top_level_items(body[1:-1])):
+        name = item.partition("=")[0].strip()
+        if name not in lift.removed:
+            kept.append(item)
+        elif name == _ROW_SOURCE and lift.additions is not None:
+            kept.append(_additions_assignment(lift.additions))
     return f"{key.rstrip()} = {{ {', '.join(kept)} }}\n" if kept else f"{key.rstrip()} = {{}}\n"
 
 
@@ -971,8 +1047,8 @@ def _key_of(line: str) -> str | None:
 
 
 def _lifted_text(block: _Block, lift: _Lift) -> str:
-    """Remove the lifted keys from a row block's text, verified by re-parsing."""
-    if not lift.row_keys and not lift.constraint_keys:
+    """Remove the lifted keys from a row block's text, stating additions in their place, verified by re-parsing."""
+    if not lift.row_lift.removed and not lift.constraint_lift.removed:
         return block.text
     lines = block.text.splitlines(keepends=True)
     out: list[str] = []
@@ -987,16 +1063,18 @@ def _lifted_text(block: _Block, lift: _Lift) -> str:
         elif stripped.startswith("["):
             scope = "other"
         key = _key_of(line)
-        removable = lift.row_keys if scope == "row" else lift.constraint_keys if scope == "constraints" else frozenset()
-        if key is not None and key in removable:
+        table_lift = lift.row_lift if scope == "row" else lift.constraint_lift if scope == "constraints" else None
+        if table_lift is not None and key is not None and key in table_lift.removed:
             depth = _scan_depth(line.partition("=")[2], 0)
             while depth > 0 and index + 1 < len(lines):
                 index += 1
                 depth = _scan_depth(lines[index], depth)
+            if key == _ROW_SOURCE and table_lift.additions is not None:
+                out.append(_additions_assignment(table_lift.additions) + "\n")
             index += 1
             continue
-        if scope == "row" and key == _CONSTRAINTS and lift.constraint_keys:
-            line = _without_inline_keys(line, lift.constraint_keys)
+        if scope == "row" and key == _CONSTRAINTS and lift.constraint_lift.removed:
+            line = _lifted_inline(line, lift.constraint_lift)
         out.append(line)
         index += 1
     text = "".join(out)
