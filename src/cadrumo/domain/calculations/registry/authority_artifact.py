@@ -4,6 +4,19 @@ Development signs canonical JSON with a publisher-held Ed25519 private key.
 Runtime verifies it with a trusted public key supplied by its release boundary,
 then reconstructs fresh typed models. This module neither knows a registry root
 nor compiles, repairs, or validates authoring inputs on a failed read.
+
+Format ``cadrumo-authority-artifact-v2`` is a canonical JSON frame holding
+``schema_version``, ``payload``, ``payload_sha256`` and ``signature``. The
+payload projects every schema field of every model, and a model that declares
+its own serialiser is written in that authored shape. Decimals and dates are
+JSON strings wherever the schema types the field as a decimal or a date.
+Governed-fact atoms are typed ``str | int | Decimal | bool | date``, which JSON
+cannot tell apart, so every non-string atom in an atom position is written as a
+single-key tagged object -- ``{"$decimal": "0.40"}``, ``{"$date":
+"2025-01-01"}``, ``{"$int": 5}``, ``{"$bool": true}`` -- and a string atom stays
+a bare string. The reader decodes under the same strict schema and refuses an
+unknown tag, a malformed or non-canonical payload, and an untagged non-string
+atom. A frame of the previous format is refused by name.
 """
 
 from __future__ import annotations
@@ -16,13 +29,14 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
 from pathlib import Path, PurePath
-from typing import Final, cast
+from typing import Final, cast, get_args
 
 from pydantic import BaseModel, ValidationError
 
 from ....core.atomic_write import atomic_write_bytes
 from ....core.ed25519_signing import digest_signature_is_valid, sign_digest_hex
 from ....core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant, sha256_hex
+from .facts.schema import TAGGED_FACT_ATOM_CONTEXT, FactAtomField, OptionalFactAtomField, tagged_fact_atom_json
 from .schema import ModeloDefinition, RegistryCatalogues
 
 __all__ = [
@@ -38,7 +52,13 @@ __all__ = [
     "write_authority_artifact",
 ]
 
-AUTHORITY_ARTIFACT_SCHEMA_VERSION: Final[str] = "cadrumo-authority-artifact-v1"
+AUTHORITY_ARTIFACT_SCHEMA_VERSION: Final[str] = "cadrumo-authority-artifact-v2"
+_SUPERSEDED_SCHEMA_VERSIONS: Final = frozenset({"cadrumo-authority-artifact-v1"})
+#: The validators that mark a governed-fact atom position, read from the schema's own field types.
+_FACT_ATOM_VALIDATORS: Final = frozenset(
+    (get_args(FactAtomField)[1], get_args(OptionalFactAtomField)[1]),
+)
+_TAGGED_DECODE_CONTEXT: Final = {TAGGED_FACT_ATOM_CONTEXT: True}
 _IDENTITY_DIGEST = re.compile(r"[0-9a-f]{64}")
 
 
@@ -181,6 +201,11 @@ def _decode_artifact(raw: bytes, *, verification_public_key_hex: str) -> Authori
     payload = _required_mapping(frame, "payload")
     recorded_digest = _required_string(frame, "payload_sha256")
     signature = _required_string(frame, "signature")
+    if version in _SUPERSEDED_SCHEMA_VERSIONS:
+        raise AuthorityArtifactFormatError(
+            f"published authority artifact uses superseded format {version!r}; "
+            f"republish it as {AUTHORITY_ARTIFACT_SCHEMA_VERSION!r}"
+        )
     if version != AUTHORITY_ARTIFACT_SCHEMA_VERSION:
         raise AuthorityArtifactFormatError("published authority artifact has an unsupported schema version")
     signed_document = {"schema_version": version, "payload": payload}
@@ -227,10 +252,16 @@ def _artifact_from_document(payload: Mapping[str, object]) -> AuthorityArtifact:
         identity_digest = _required_string(payload, "identity_digest")
         evidence_document = _required_mapping(payload, "evidence")
         modelos = tuple(
-            ModeloDefinition.model_validate_json(canonical_json_bytes(_mapping_item(item, "modelos")))
+            ModeloDefinition.model_validate_json(
+                canonical_json_bytes(_mapping_item(item, "modelos")),
+                context=_TAGGED_DECODE_CONTEXT,
+            )
             for item in modelos_document
         )
-        catalogues = RegistryCatalogues.model_validate_json(canonical_json_bytes(catalogues_document))
+        catalogues = RegistryCatalogues.model_validate_json(
+            canonical_json_bytes(catalogues_document),
+            context=_TAGGED_DECODE_CONTEXT,
+        )
         legal_evidence = tuple(
             PublishedLegalEvidence(
                 legal_reference_id=_required_string(_mapping_item(item, "evidence.legal"), "legal_reference_id"),
@@ -252,7 +283,18 @@ def _artifact_from_document(payload: Mapping[str, object]) -> AuthorityArtifact:
 def _json_value(value: object) -> object:
     """Project registry values to JSON without omitting excluded model fields."""
     if isinstance(value, BaseModel):
-        return {field_name: _json_value(getattr(value, field_name)) for field_name in type(value).model_fields}
+        if type(value).__pydantic_decorators__.model_serializers:
+            # A model that declares its own serialiser is authored in that
+            # shape, and its parser accepts only that shape back.
+            return _json_value(value.model_dump(mode="python"))
+        return {
+            field_name: (
+                tagged_fact_atom_json(getattr(value, field_name))
+                if _FACT_ATOM_VALIDATORS.intersection(field.metadata)
+                else _json_value(getattr(value, field_name))
+            )
+            for field_name, field in type(value).model_fields.items()
+        }
     if isinstance(value, Mapping):
         return {_json_key(key): _json_value(item) for key, item in value.items()}
     if isinstance(value, (tuple, list, frozenset, set)):

@@ -37,6 +37,27 @@ reconstructing typed authority data.
 | Trusted publisher | The release holder of the private key corresponding to the package's compiled public key. |
 | Schema version | The artifact format identifier. Runtime refuses an unsupported version. |
 
+The current format is `cadrumo-authority-artifact-v2`. Its payload records
+every schema field of the authority. Decimals and dates are JSON strings where
+the schema types a field as a decimal or a date. A governed-fact value can be
+text, an integer, a decimal, a boolean, or a date, and JSON cannot tell those
+apart by value alone. Every non-text fact value is therefore written as an
+object with one tag that names its type:
+
+| Fact value | Written as |
+| --- | --- |
+| Decimal | `{"$decimal": "0.40"}` |
+| Date | `{"$date": "2025-01-01"}` |
+| Integer | `{"$int": 5}` |
+| Boolean | `{"$bool": true}` |
+| Text | The bare JSON string, for example `"0.40"` |
+
+Runtime decodes the payload under the same strict schema the development
+compiler uses. It refuses an unknown tag, a malformed or non-canonical tagged
+value, and an untagged non-text fact value; it never infers a type from the
+shape of a string. It refuses a `cadrumo-authority-artifact-v1` artifact and
+names the format to republish in.
+
 The `bundled_authority()` artifact-loading path has no source-compilation,
 validation, repair, or cache fallback. A missing artifact raises an unavailable
 error. A malformed artifact or invalid signature encoding raises a format

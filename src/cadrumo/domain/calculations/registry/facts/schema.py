@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import date
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from itertools import pairwise
-from typing import Annotated, Literal
+from typing import Annotated, Final, Literal
 
 from pydantic import BeforeValidator, Field, ValidationInfo, field_validator, model_validator
 
@@ -24,6 +24,7 @@ from ..schema_base import (
 from ..schema_scalars import DecimalValue
 
 __all__ = [
+    "TAGGED_FACT_ATOM_CONTEXT",
     "BracketFactPayload",
     "BracketFactRow",
     "EntitySetFactPayload",
@@ -44,6 +45,7 @@ __all__ = [
     "NamedFactValue",
     "OverrideFactPayload",
     "ScalarFactPayload",
+    "tagged_fact_atom_json",
 ]
 
 
@@ -51,6 +53,77 @@ _REGISTRY_ID_PATTERN = r"^[a-z0-9][a-z0-9._:-]*[a-z0-9]$|^[a-z0-9]$"
 FactId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REGISTRY_ID_PATTERN)]
 FactVariantId = Annotated[str, Field(min_length=1, max_length=160, pattern=_REGISTRY_ID_PATTERN)]
 FactAtom = str | int | Decimal | bool | date
+
+#: Validation-context key a reader sets when every non-string fact atom arrives
+#: in its tagged JSON form. JSON carries a decimal or a date only as a string,
+#: which the ``FactAtom`` union would read back as text; the tag keeps the type.
+TAGGED_FACT_ATOM_CONTEXT: Final = "tagged_fact_atoms"
+_DECIMAL_TAG: Final = "$decimal"
+_DATE_TAG: Final = "$date"
+_INT_TAG: Final = "$int"
+_BOOL_TAG: Final = "$bool"
+
+
+def tagged_fact_atom_json(value: FactAtom | None) -> object:
+    """Return the lossless JSON form of one fact atom.
+
+    A string stays a bare JSON string. Every other atom becomes a single-key
+    object naming its type: ``{"$decimal": "0.40"}``, ``{"$date": "2025-01-01"}``,
+    ``{"$int": 5}`` and ``{"$bool": true}``. ``None`` stays ``null``.
+    """
+    if value is None or isinstance(value, str):
+        return value
+    if isinstance(value, bool):
+        return {_BOOL_TAG: value}
+    if isinstance(value, int):
+        return {_INT_TAG: value}
+    if isinstance(value, Decimal):
+        return {_DECIMAL_TAG: str(value)}
+    return {_DATE_TAG: value.isoformat()}
+
+
+def _hydrate_tagged_fact_atom(value: object, info: ValidationInfo) -> object:
+    """Rebuild a tagged fact atom when the reader declares the tagged JSON form.
+
+    Outside that context the value is the compiler's own typed atom and passes
+    through. Inside it, only a bare string or exactly one known tag carrying a
+    canonical payload is accepted: an unknown tag, a malformed payload, or an
+    untagged non-string value is refused rather than guessed from its shape.
+    """
+    if not (isinstance(info.context, Mapping) and info.context.get(TAGGED_FACT_ATOM_CONTEXT)):
+        return value
+    if value is None or isinstance(value, str):
+        return value
+    if not isinstance(value, Mapping) or len(value) != 1:
+        raise RegistryValidationError("a non-string fact atom must be a single tagged value")
+    ((tag, payload),) = value.items()
+    if tag == _DECIMAL_TAG and isinstance(payload, str):
+        try:
+            decimal = Decimal(payload)
+        except InvalidOperation as exc:
+            raise RegistryValidationError(f"fact atom {_DECIMAL_TAG} is not a decimal: {payload!r}") from exc
+        if not decimal.is_finite() or str(decimal) != payload:
+            raise RegistryValidationError(f"fact atom {_DECIMAL_TAG} is not a canonical finite decimal: {payload!r}")
+        return decimal
+    if tag == _DATE_TAG and isinstance(payload, str):
+        try:
+            parsed = date.fromisoformat(payload)
+        except ValueError as exc:
+            raise RegistryValidationError(f"fact atom {_DATE_TAG} is not an ISO date: {payload!r}") from exc
+        if parsed.isoformat() != payload:
+            raise RegistryValidationError(f"fact atom {_DATE_TAG} is not a canonical ISO date: {payload!r}")
+        return parsed
+    if tag == _INT_TAG and isinstance(payload, int) and not isinstance(payload, bool):
+        return payload
+    if tag == _BOOL_TAG and isinstance(payload, bool):
+        return payload
+    raise RegistryValidationError(f"fact atom tag {tag!r} is unknown or carries a payload of the wrong type")
+
+
+FactAtomField = Annotated[FactAtom, BeforeValidator(_hydrate_tagged_fact_atom)]
+"""A fact atom that also accepts its tagged JSON form when a reader declares it."""
+OptionalFactAtomField = Annotated[FactAtom | None, BeforeValidator(_hydrate_tagged_fact_atom)]
+"""An optional fact atom that also accepts its tagged JSON form when a reader declares it."""
 
 
 class GovernedFactFamily(StrEnum):
@@ -85,14 +158,14 @@ class FactSelector(RegistryModel):
     """One typed, exact-match coordinate of a governed variant."""
 
     name: str = Field(min_length=1, max_length=64, pattern=r"^[a-z][a-z0-9_]*$")
-    value: FactAtom
+    value: FactAtomField
 
 
 class NamedFactValue(RegistryModel):
     """A named typed result used by mapping and multi-output payloads."""
 
     name: str = Field(min_length=1, max_length=64, pattern=r"^[a-z][a-z0-9_]*$")
-    value: FactAtom
+    value: FactAtomField
     unit: str | None = Field(default=None, min_length=1, max_length=64)
 
 
@@ -101,7 +174,7 @@ class ScalarFactPayload(RegistryModel):
 
     kind: Literal[GovernedFactFamily.SCALAR] = GovernedFactFamily.SCALAR
     value_type: Literal["decimal"] | None = None
-    value: FactAtom
+    value: FactAtomField
     unit: str = Field(min_length=1, max_length=64)
 
     @field_validator("value", mode="after")
@@ -109,6 +182,8 @@ class ScalarFactPayload(RegistryModel):
     def _materialise_declared_decimal(cls, value: FactAtom, info: ValidationInfo) -> FactAtom:
         """Materialise an authored decimal without treating ordinary strings as numbers."""
         if info.data.get("value_type") != "decimal":
+            return value
+        if isinstance(value, Decimal) and value.is_finite():
             return value
         if not isinstance(value, str):
             raise RegistryValidationError("decimal fact value_type requires a decimal string")
@@ -156,8 +231,8 @@ class BracketFactPayload(RegistryModel):
 class MappingFactEntry(RegistryModel):
     """One exact key-to-value mapping entry."""
 
-    key: FactAtom
-    value: FactAtom
+    key: FactAtomField
+    value: FactAtomField
 
 
 class MappingFactPayload(RegistryModel):
@@ -202,7 +277,7 @@ class OverrideFactPayload(RegistryModel):
 
     kind: Literal[GovernedFactFamily.OVERRIDE] = GovernedFactFamily.OVERRIDE
     override_code: str = Field(min_length=1, max_length=64, pattern=r"^[a-z][a-z0-9_]*$")
-    value: FactAtom | None = None
+    value: OptionalFactAtomField = None
     unit: str | None = Field(default=None, min_length=1, max_length=64)
 
 

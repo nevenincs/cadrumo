@@ -36,6 +36,7 @@ from ....core.modelo import Modelo
 from ....core.period import Period, RegistrySelectorPeriodCode
 from ....core.revision_review import RevisionReviewStatus
 from ....core.tax_domain import TaxDomain
+from ....core.toml import freeze_toml_value
 from ._schema_governance import (
     validate_attribution_names_somebody,
     validate_governance_stamp_coherence,
@@ -339,7 +340,10 @@ class DataBindingDefinition(RegistryModel):
                 "or has no selector model",
             )
         try:
-            return selector_model.model_validate(value)
+            # Validated in Python mode, so a selector decoded from JSON carries
+            # lists where the strict selector models require tuples; freeze it
+            # to the same shape the registry loader hands over.
+            return selector_model.model_validate(freeze_toml_value(value))
         except ValueError as exc:
             selector = _as_toml_table(value) or {}
             hint = canonical_selector_key_hint(selector, selector_model)
@@ -812,7 +816,9 @@ def _hydrate_declared_predecessor(value: object) -> object:
 def _hydrate_no_predecessor(value: object) -> object:
     """Unwrap the authored ``none`` table into the declaration it carries."""
     if isinstance(value, Mapping):
-        return value[_NO_PREDECESSOR_KEY]
+        # Unwrapped in Python mode, so a declaration decoded from JSON is frozen
+        # to the tuple shape the registry loader hands over.
+        return freeze_toml_value(value[_NO_PREDECESSOR_KEY])
     return value
 
 
