@@ -12,20 +12,20 @@ related:
 ---
 
 
-# Enforce and prove legal-parameter fact temporal coverage, date-axis selection, provenance, and refusal outside source-grounded windows
+# Enforce and prove canonical tax-fact temporal coverage, date-axis selection, provenance, and refusal outside source-grounded windows
 
 ## Scope
 
-- `src/cadrumo/domain/calculations/registry/facts/tests and src/cadrumo/domain/calculations/registry/facts/validation.py`
+- `dev/registry/compiler/fact_validation.py and dev/registry/compiler/validator.py and dev/registry/tests/test_migrated_legal_parameter_fact_gate.py`
 
 ## Changes
 
 - `M` `dev/registry/compiler/fact_validation.py`
 - `M` `dev/registry/compiler/validator.py`
 - `A` `dev/registry/tests/test_migrated_legal_parameter_fact_gate.py`
+- `verify:` `uv run pytest --confcutdir=dev/registry/tests dev/registry/tests/test_migrated_legal_parameter_fact_gate.py -q` -> `6 passed`
 - `verify:` `uv run ruff check dev/registry/compiler/fact_validation.py dev/registry/tests/test_migrated_legal_parameter_fact_gate.py` -> `pass`
-- `verify:` `uv run pytest -n 0 --confcutdir=dev/registry/tests dev/registry/tests/test_migrated_legal_parameter_fact_gate.py` -> `pass`
 
 ## Notes
 
-The ordinary public `RegistryValidator.validate_registry()` completion remains blocked after catalogue validation by the concurrent relocation's `registry_scope` import of missing `dev.registry.compiler.bindings`. The isolated dev-registry collection exercises the real canonical compiler, resolver, and catalogue-validation branch without bypassing that unrelated downstream import.
+The public `RegistryValidator.validate_registry(())` entry point rejects a compiled catalogue with a required migrated identity removed. The previously blocked `registry_scope` import was repaired by the concurrent compiler-import relocation checkpoint. Independent re-review cleared the original HIGH wiring finding. S69 remains open until its broader planned validation completes.

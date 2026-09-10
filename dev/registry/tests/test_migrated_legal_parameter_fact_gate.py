@@ -126,9 +126,9 @@ def test_canonical_compiler_validator_reports_a_missing_migrated_fact() -> None:
     )
     malformed_catalogues = catalogues.model_copy(update={"facts": missing})
 
-    failures = RegistryValidator(malformed_catalogues, source_root=bundled_path())._validate_catalogues()
-
-    assert "migrated legal-parameter fact 'liva-art-161:recargo-rate-general' is not authored" in failures
+    expected = "migrated legal-parameter fact 'liva-art-161:recargo-rate-general' is not authored"
+    with pytest.raises(RegistryValidationError, match=expected):
+        RegistryValidator(malformed_catalogues, source_root=bundled_path()).validate_registry(())
 
 
 def test_real_resolution_tracks_known_legal_change_boundaries() -> None:
