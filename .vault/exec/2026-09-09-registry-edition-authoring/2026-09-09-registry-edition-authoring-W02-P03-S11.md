@@ -5,16 +5,11 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:8e0af17386fd41c0afd7dc93713c3f107350c3736d8ef3bac702fe92a7ea8eb7'
+body_hash: 'sha256:45d88af54088953c573f040ba3b8489c4a0dbf3d7952149c93a6cfe0262c7be0'
 step_id: 'S11'
 related:
   - "[[2026-09-09-registry-edition-authoring-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # [M | opus-medium] Add the cache-teeth test: fingerprints follow the physical edition files read, never the expanded output. Proof: editing a delta file invalidates; a materialisation difference with identical files does not.
 

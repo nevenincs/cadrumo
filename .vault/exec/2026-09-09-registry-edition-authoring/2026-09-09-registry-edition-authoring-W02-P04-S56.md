@@ -5,16 +5,11 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:3c97e2bca5aa32e21982af79b07bcad266d65377ea59af24f0cb26571752655d'
+body_hash: 'sha256:74448d0fff7d3f19ead01040cc1551cb45e700188e1ef9405ba088dfbf59f8dd'
 step_id: 'S56'
 related:
   - "[[2026-09-09-registry-edition-authoring-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # [M | opus-medium] Fix isolated staging, which deletes exactly what a delta edition needs. The publication path stages a single edition by copying the modelo and removing every sibling directory, so staging a migrated successor deletes its predecessor: the staged tree then declares a predecessor that does not exist, and either the forest rule refuses it or it materialises to only its stated rows and presents a partial edition as complete. The function exists to create isolation, and isolation is precisely what an inheriting edition cannot survive. Two options: keep the ancestor chain when staging, or materialise before staging. The owning lane prefers materialise-before-staging and the reason is sound — it makes the staged thing a complete edition by construction, rather than depending on every downstream check knowing it is looking at a fragment. Proof: a migrated multi-edition modelo stages and validates in isolation, and a staged delta whose predecessor was removed is refused rather than silently thinned.
 

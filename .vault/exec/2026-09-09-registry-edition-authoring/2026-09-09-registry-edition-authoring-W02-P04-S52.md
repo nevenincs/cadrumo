@@ -5,7 +5,7 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:868afa15e9654d8a4ddb8d9d3ca376bc3517dffd2343c664359c1bbd7cb14cbc'
+body_hash: 'sha256:93862aa26a8f4c97cbcfb0295bef9212240f9e73f8db8cf263ea78d813d24079'
 step_id: 'S52'
 related:
   - "[[2026-09-09-registry-edition-authoring-plan]]"

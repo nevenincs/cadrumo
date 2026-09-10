@@ -5,16 +5,11 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:59dd5a057ab683e3b75aa7f202d34e05cf143e2ac1a88fd85017aecd5e8a4d1a'
+body_hash: 'sha256:2ea38015382a717c3f856e9bf3594959938e0ab043eded748cee60a5d59eb667'
 step_id: 'S12'
 related:
   - "[[2026-09-09-registry-edition-authoring-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # [M | opus-medium] Add the round-trip gate: a materialised edition equals its pre-migration materialisation by typed equality, and its export bytes are unchanged. This gate is what makes each migration step acceptable and is retired after the last modelo. Proof: it passes on the unmigrated corpus before any modelo moves.
 

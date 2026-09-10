@@ -5,16 +5,11 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:275cff14986eeab842c424c19957c5f98e4371ecbe8d956cdd359941be968f59'
+body_hash: 'sha256:11574fd3318fd341dc6c8e4554dbba0046031f6bff1ed04720879f817c3bc85c'
 step_id: 'S41'
 related:
   - "[[2026-09-09-registry-edition-authoring-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # [S | sonnet-high] Check every enumeration this campaign introduces against the proposed registry enum-canonicalisation ruling — one named enum per closed vocabulary, no inline unions, no allowlist — and reconcile or record the divergence. That ruling is proposed rather than accepted, so this is a compatibility check and not an obligation to obey it. Proof: each new enumeration is either conformant or carries a stated reason.
 

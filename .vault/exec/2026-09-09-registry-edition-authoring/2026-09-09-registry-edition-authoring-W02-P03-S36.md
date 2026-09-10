@@ -5,16 +5,11 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:93193793f39749a4bad357dcb03786cad14e52163a264943f121c9be95bb6a78'
+body_hash: 'sha256:4fe4ea8a13e4d8ecb6071b89518a92fc6388ae0a4b77d3a33c896af05958a5ee'
 step_id: 'S36'
 related:
   - "[[2026-09-09-registry-edition-authoring-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # [M | opus-medium] Refuse a declared predecessor where the successor withholds by design — a lower authority grade than its predecessor, or a header-only edition refusing to state figures it cannot ground. Inheriting there would silently materialise withheld rows. This must be a load-time refusal keyed on the declared grades because the minimality screen is structurally blind to it: an edition stating two rows matches nothing inherited and reports clean. Proof: the modelo declaring nearly two thousand rows then two is refused if a predecessor is declared, and loads unchanged without one.
 
