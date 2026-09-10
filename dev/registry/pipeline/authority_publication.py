@@ -17,10 +17,12 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityArtifact,
     AuthorityEvidenceProjection,
     PublishedLegalEvidence,
+    PublishedSourceEvidence,
     write_authority_artifact,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema_references import LegalReference
+from cadrumo.domain.calculations.registry.corpus_provenance import classify_normative_corpus_provenance
+from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 from dev.registry.compiler.authority import canonical_authoring_root_pair, compile_validated_authority
 from dev.registry.compiler.identity import resolve_registry_identity
 from dev.registry.compiler.legal_grounding import published_legal_evidence_text
@@ -104,7 +106,11 @@ def validate_authority_candidate(*, registry_root: Path, source_root: Path) -> V
         modelos=authority.modelos,
         catalogues=authority.catalogues,
         identity_digest=receipt_after.identity_digest,
-        evidence=_project_evidence(authority.catalogues.legal, source_root=resolved_source_root),
+        evidence=_project_evidence(
+            authority.catalogues.legal,
+            authority.catalogues.sources,
+            source_root=resolved_source_root,
+        ),
     )
     return ValidatedAuthorityCandidate(
         registry_root=resolved_registry_root,
@@ -114,17 +120,44 @@ def validate_authority_candidate(*, registry_root: Path, source_root: Path) -> V
     )
 
 
-def _project_evidence(legal: Mapping[str, LegalReference], *, source_root: Path) -> AuthorityEvidenceProjection:
+def _project_evidence(
+    legal: Mapping[str, LegalReference],
+    sources: Mapping[str, SourceReference],
+    *,
+    source_root: Path,
+) -> AuthorityEvidenceProjection:
     """Capture all validated legal anchors as signed, path-free runtime evidence."""
     entries = tuple(
         PublishedLegalEvidence(
             legal_reference_id=str(reference_id),
             anchored_text=(text := published_legal_evidence_text(reference, source_root=source_root)),
             text_sha256=sha256_hex(text.encode("utf-8")),
+            provenance=classify_normative_corpus_provenance(source_root, reference.corpus_ref),
         )
         for reference_id, reference in sorted(legal.items())
     )
-    return AuthorityEvidenceProjection(legal=entries)
+    source_entries = tuple(
+        _project_source_evidence(reference, source_root=source_root)
+        for _reference_id, reference in sorted(sources.items())
+    )
+    return AuthorityEvidenceProjection(legal=entries, sources=source_entries)
+
+
+def _project_source_evidence(reference: SourceReference, *, source_root: Path) -> PublishedSourceEvidence:
+    """Copy one compiler-validated runtime source into the signed artifact."""
+    root = source_root.resolve()
+    target = (root / reference.corpus_path).resolve()
+    if root not in target.parents or not target.is_file():
+        raise RegistryValidationError(f"source reference {reference.id!r} has no publishable corpus payload")
+    payload = target.read_bytes()
+    digest = sha256_hex(payload)
+    if digest != reference.sha256 or len(payload) != reference.bytes:
+        raise RegistryValidationError(f"source reference {reference.id!r} changed after compiler validation")
+    return PublishedSourceEvidence(
+        source_reference_id=str(reference.id),
+        payload=payload,
+        payload_sha256=digest,
+    )
 
 
 def publish_validated_authority_candidate(

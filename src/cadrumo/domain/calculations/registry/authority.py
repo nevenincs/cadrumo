@@ -466,12 +466,14 @@ class ValidatedRegistryAuthority:
     def legal_corpus_provenance(self, legal_ref_id: LegalRefId) -> NormativeCorpusProvenance:
         """Return one legal reference's provenance through this validated authority.
 
-        The authority owns both catalogue selection and validation. This method
-        deliberately delegates byte resolution to the canonical classifier,
-        rather than reconstructing a second corpus-path convention here.
+        Published authorities return the publisher's signed projection.  The
+        development compiler retains byte classification while it owns a source
+        tree; product authorities never resolve a corpus path.
         """
         with self._state_lock:
             self.validate_registry()
+            if self._published_artifact:
+                return self.evidence.legal_provenance(str(legal_ref_id))
             try:
                 reference = self.catalogues.legal[legal_ref_id]
             except KeyError as exc:
