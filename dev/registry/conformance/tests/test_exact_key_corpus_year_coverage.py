@@ -39,7 +39,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.loader import load_registry_tree
+from dev.registry.compiler.loader import load_registry_tree
 from cadrumo.domain.categories.errors import CategoryValidationError
 from cadrumo.domain.categories.registry import category_profile_years, resolve_category_profiles
 from cadrumo.domain.iva.catalogue import iva_catalogue_years, resolve_catalogue

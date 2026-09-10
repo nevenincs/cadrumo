@@ -26,11 +26,11 @@ from dev.registry.compiler.verdict_cache import (
     read_verdict,
     shipped_verdict_location,
 )
-from cadrumo.domain.calculations.registry.identity import (
+from dev.registry.compiler.identity import (
     read_registry_identity_stamp,
     registry_identity_stamp_location,
 )
-from cadrumo.domain.calculations.registry.loader_fingerprints import clear_fingerprint_cache
+from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

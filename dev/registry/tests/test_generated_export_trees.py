@@ -36,7 +36,7 @@ from cadrumo.domain.calculations.registry.errors import (
     RegistryValidationError,
 )
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
-from cadrumo.domain.calculations.registry.loader import (
+from dev.registry.compiler.loader import (
     load_modelo_directory,
     load_registry_tree,
 )

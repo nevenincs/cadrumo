@@ -120,7 +120,7 @@ def test_canonical_compiler_validator_reports_a_missing_migrated_fact() -> None:
     missing = GovernedFactCatalogue(
         facts={
             fact_id: fact
-            for fact_id, fact in catalogues.facts.items()
+            for fact_id, fact in catalogues.facts.facts.items()
             if fact_id != "liva-art-161:recargo-rate-general"
         }
     )

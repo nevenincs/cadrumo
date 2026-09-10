@@ -26,7 +26,7 @@ from cadrumo.domain.calculations.registry.errors import (
 )
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
-from cadrumo.domain.calculations.registry.loader import load_modelo_directory
+from dev.registry.compiler.loader import load_modelo_directory
 from cadrumo.domain.calculations.registry.schema_base import CorpusTier, RegistrySourceKind
 from cadrumo.domain.calculations.registry.schema_exports import ProjectionEndpointDeclaration, RecordDiscriminator
 from cadrumo.domain.calculations.registry.static_inspection import (

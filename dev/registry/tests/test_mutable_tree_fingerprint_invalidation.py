@@ -31,7 +31,7 @@ import pytest
 
 from cadrumo.core.config import override_settings
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry._loader_internals import (
+from dev.registry.compiler._loader_internals import (
     _collect_registry_directory_fingerprints,
     _collect_registry_tree_fingerprints,
     _collect_registry_tree_fingerprints_uncached,
@@ -42,14 +42,14 @@ from dev.registry.compiler.verdict_cache import (
     registry_validation_is_certified,
     verdict_cache_path,
 )
-from cadrumo.domain.calculations.registry.identity import (
+from dev.registry.compiler.identity import (
     RegistryIdentity,
     RegistryIdentityOrigin,
     compute_walked_tree_digest,
 )
-from cadrumo.domain.calculations.registry.loader import _load_registry_tree_cached, load_registry_tree
-from cadrumo.domain.calculations.registry.loader_cache import is_bundled_registry_root
-from cadrumo.domain.calculations.registry.loader_fingerprints import (
+from dev.registry.compiler.loader import _load_registry_tree_cached, load_registry_tree
+from dev.registry.compiler.loader_cache import is_bundled_registry_root
+from dev.registry.compiler.loader_fingerprints import (
     _registry_fingerprint_cache,
     clear_fingerprint_cache,
 )
@@ -79,8 +79,8 @@ _CHILD_PROGRAM = """
 import os
 from pathlib import Path
 
-from cadrumo.domain.calculations.registry.loader import load_registry_tree
-from cadrumo.domain.calculations.registry.loader_cache import registry_disk_cache_dir
+from dev.registry.compiler.loader import load_registry_tree
+from dev.registry.compiler.loader_cache import registry_disk_cache_dir
 
 root = Path(os.environ["CADRUMO_TEST_MUTABLE_TREE_ROOT"])
 edited = Path(os.environ["CADRUMO_TEST_MUTABLE_TREE_EDITED_TEXT"])

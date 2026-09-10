@@ -101,7 +101,7 @@ def test_the_plan_covers_only_filing_grade_revisions_outside_owned_trees() -> No
     """
     from cadrumo.core.authority_grade import RegistryAuthorityGrade
     from cadrumo.core.resources.bundled_data import bundled_path
-    from cadrumo.domain.calculations.registry.loader import load_registry_tree
+    from dev.registry.compiler.loader import load_registry_tree
 
     planned = plan_fragments()
     assert planned, "nothing was planned, so this proves nothing"

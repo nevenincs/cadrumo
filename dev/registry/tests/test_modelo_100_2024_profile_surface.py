@@ -14,7 +14,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry import bindings as _bindings
 from dev.registry.compiler.validator import RegistryValidator
 from cadrumo.domain.calculations.registry.bindings import ProfileSelector, selector_model_for_source
-from cadrumo.domain.calculations.registry.loader import load_catalogue_file
+from dev.registry.compiler.loader import load_catalogue_file
 from cadrumo.domain.calculations.registry.schema import RegistryCatalogues, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.tests.registry_snapshot import build_snapshot

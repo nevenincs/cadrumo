@@ -10,7 +10,7 @@ from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.loader import load_registry_tree
+from dev.registry.compiler.loader import load_registry_tree
 from cadrumo.domain.calculations.registry.schema_exports import FilingEnvelopeCloserDerivation
 
 from ..pipeline._variable_envelope import (

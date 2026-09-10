@@ -126,7 +126,7 @@ from cadrumo.domain.calculations.registry.ids import ModeloId as _ModeloId
 from cadrumo.domain.calculations.registry.ids import RelationId as _RelationId
 from cadrumo.domain.calculations.registry.ids import RevisionId as _RevisionId
 from cadrumo.domain.calculations.registry.ids import SourceRefId as _SourceRefId
-from cadrumo.domain.calculations.registry.identity import resolve_registry_identity as _resolve_registry_identity
+from dev.registry.compiler.identity import resolve_registry_identity as _resolve_registry_identity
 from dev.registry.compiler.authority import compile_validated_authority as _compile_validated_authority
 from dev.registry.compiler.loader import (
     collect_registry_tree_fingerprints as _collect_registry_tree_fingerprints,

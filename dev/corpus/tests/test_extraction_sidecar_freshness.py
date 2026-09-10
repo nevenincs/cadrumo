@@ -13,7 +13,7 @@ import pytest
 from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.loader import load_shared_catalogues
+from dev.registry.compiler.loader import load_shared_catalogues
 from cadrumo.domain.calculations.registry.schema import SociedadesAnnualManualCoverageStatus
 
 from ..extract_corpus_sidecars import check_all as check_corpus_sidecars

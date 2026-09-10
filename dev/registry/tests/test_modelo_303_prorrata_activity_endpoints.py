@@ -22,7 +22,7 @@ from dev.registry.compiler.validator import RegistryValidator
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export import clasificar_casillas_oficiales
 from cadrumo.domain.calculations.registry.formula_initial_values import initial_value_casilla_ids, initial_values
-from cadrumo.domain.calculations.registry.loader import load_catalogue_file
+from dev.registry.compiler.loader import load_catalogue_file
 from cadrumo.domain.calculations.registry.m303_prorrata_activity_projection import project_m303_prorrata_activity_rows
 from cadrumo.domain.calculations.registry.record_design import extract_record_design
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind

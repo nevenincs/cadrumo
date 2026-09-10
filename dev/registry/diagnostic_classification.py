@@ -234,7 +234,7 @@ def load_registry_diagnostic_classification(
         construct_authority,
         fingerprint_key,
     )
-    from cadrumo.domain.calculations.registry.identity import resolve_registry_identity
+    from dev.registry.compiler.identity import resolve_registry_identity
 
     identity_pair = canonical_authority_root_pair(root, source_root)
     resolved_root = identity_pair.root

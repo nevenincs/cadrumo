@@ -19,7 +19,7 @@ import pytest
 
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
-from cadrumo.domain.calculations.registry.loader import load_modelo_directory
+from dev.registry.compiler.loader import load_modelo_directory
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 from ..pipeline._tree_validation import _load_continuity_metadata_modelo

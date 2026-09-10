@@ -8,7 +8,7 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.loader import load_registry_tree
+from dev.registry.compiler.loader import load_registry_tree
 
 from ..pipeline._export_tree import render_complete_export_tree
 from ..pipeline.record_design_intermediate import (

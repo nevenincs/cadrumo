@@ -51,7 +51,7 @@ from cadrumo.domain.calculations.registry.export import (
     ResolvedExportEndpointPath,
     derive_export_layouts_from_bindings,
 )
-from cadrumo.domain.calculations.registry.identity import (
+from dev.registry.compiler.identity import (
     _LOGGER,
     REGISTRY_IDENTITY_SCHEMA_VERSION,
     FingerprintTuples,
@@ -129,7 +129,7 @@ def reset_registry_caches(
     package exposes the whole reset rather than its parts.
     """
     _guard_authority_process()
-    from cadrumo.domain.calculations.registry.loader_fingerprints import clear_fingerprint_cache
+    from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
     from dev.registry.compiler.loader import _load_registry_tree_cached
 
     lifecycle_observer.registry_cache_reset_requested()

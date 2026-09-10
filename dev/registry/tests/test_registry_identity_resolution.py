@@ -20,8 +20,8 @@ import pytest
 from dev.registry.maintenance_support import compute_installed_tree_digest, write_registry_identity_stamp
 
 from cadrumo import __version__
-from cadrumo.domain.calculations.registry import loader_cache as loader_cache
-from cadrumo.domain.calculations.registry.identity import (
+import dev.registry.compiler.loader_cache as loader_cache
+from dev.registry.compiler.identity import (
     FingerprintTuples,
     RegistryIdentityOrigin,
     read_registry_identity_stamp,
@@ -29,8 +29,8 @@ from cadrumo.domain.calculations.registry.identity import (
     resolve_registry_identity,
     stamped_cache_key_tuples,
 )
-from cadrumo.domain.calculations.registry.loader_cache import _bundled_registry_root, _bundled_root_match
-from cadrumo.domain.calculations.registry.loader_fingerprints import clear_fingerprint_cache
+from dev.registry.compiler.loader_cache import _bundled_registry_root, _bundled_root_match
+from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
 from cadrumo.tests.attribute_scope import scoped_attribute
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

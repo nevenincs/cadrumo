@@ -32,7 +32,7 @@ from cadrumo.domain.calculations.registry._schema_family_coverage import (
     build_revision_coverage_manifest,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
-from cadrumo.domain.calculations.registry.loader import load_modelo_directory
+from dev.registry.compiler.loader import load_modelo_directory
 from cadrumo.domain.calculations.registry.schema import (
     REVISION_MANIFEST_ONLY_FIELDS,
     REVISION_SCHEMA_FAMILY_FIELDS,
