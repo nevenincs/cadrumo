@@ -28,51 +28,6 @@ soportada por un recaudador municipal solo podia citar el parametro del inicio, 
 provision VECINA y no la que fija el valor, contra registry-calculation-legal-grounding. Contrastado \
 verbatim contra el texto consolidado empaquetado rd-439-2007-art-95.html."""
 
-# Activity set for the art. 110.1.c agrarian pago fraccionado. Added 2026-08-07.
-#
-# This is a SEPARATE selector from the art. 95 ones above and must stay separate.
-# Art. 110.1.c names "actividades agricolas, ganaderas, forestales o pesqueras",
-# which is not the art. 95 partition: art. 95 fixes no rate for pesca at all, so
-# B05 is deliberately absent from every art. 95 selector. Borrowing the art. 95
-# agricola/ganadera selector for a Modelo 131 casilla would have silently
-# dropped a whole class of filer.
-#
-# The set below is nevertheless the four agrarian codes WITHOUT pesquera, and
-# the reason is the form rather than the article. The AEAT Modelo 131
-# instrucciones bundled at corpus/aeat_official/instructions/modelo_131/ carry
-# the casilla-05 block under actividades agricolas, ganaderas y forestales and
-# do not mention pesqueras anywhere in the document. Modelo 131 is estimacion
-# objetiva and pesca does not appear in the modulos regime, so the article's
-# wider wording covers a case this form cannot present. That also disposes of
-# the B04 produccion de mejillon question: no pesquera-adjacent code enters,
-# so no determination about mejillon is needed for this casilla.
-#
-# A future art. 110.1.c consumer OUTSIDE estimacion objetiva (a Modelo 130
-# agrarian path) would need its own selector including pesquera, and would have
-# to settle mejillon then. It is not settled here, because guessing it into a
-# parameter carrying legal_refs would give the guess the appearance of grounding.
-
-[parameters."rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrario-objetiva"]
-evidence_tier = "legal_authority"
-value = "A02,B01,B02,B03"
-unit = "m036-tipo-actividad-code-set"
-applies_to = "irpf-pago-fraccionado-agrario"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-1274-2007:art-1"]
-review_status = "agent_reviewed"
-reviewed_at = 2026-08-07
-reviewed_by = "agent-review"
-notes = """\
-Codigos del Modelo 036 cuyo volumen de ingresos alimenta la casilla 05 del Modelo 131 (pago \
-fraccionado agrario del art 110.1.c, 2 por ciento, calculado en la casilla 06). B01 Agricola, B02 \
-Ganadera y B03 Forestal son directos; A02 Ganaderia independiente entra porque el art 95.4 la \
-incluye expresamente entre las actividades agricolas y ganaderas y el art 110 no la excluye. \
-Pesquera queda FUERA de este selector pese a que el art 110.1.c la nombra: las instrucciones AEAT \
-del Modelo 131 situan el bloque de la casilla 05 bajo actividades agricolas, ganaderas y forestales \
-y no mencionan pesqueras en ningun punto, porque el Modelo 131 es estimacion objetiva y la pesca no \
-figura en el regimen de modulos. Un consumidor del art 110.1.c fuera de estimacion objetiva \
-necesitaria su propio selector con pesquera y tendria que resolver entonces si B04 Produccion de \
-mejillon queda dentro; aqui no se resuelve."""
-
 [parameters."rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario"]
 evidence_tier = "legal_authority"
 value = "subvencion_capital,indemnizacion"
