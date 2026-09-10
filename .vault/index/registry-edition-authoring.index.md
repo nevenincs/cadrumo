@@ -6,13 +6,14 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:001a39db03c6c4fa78df471a1e37f032d55bf1c021aee14cc6b6a9aa4b3a0c93'
+body_hash: 'sha256:576b4bac0d4a3e69977ad65dd902506d89d0f0e48e8112073ab43a1f86287273'
 related:
   - '[[2026-09-09-registry-edition-authoring-W01-P01-S01]]'
   - '[[2026-09-09-registry-edition-authoring-W01-P01-S02]]'
   - '[[2026-09-09-registry-edition-authoring-W01-P01-S03]]'
   - '[[2026-09-09-registry-edition-authoring-W01-P01-S34]]'
   - '[[2026-09-09-registry-edition-authoring-W01-P02-S05]]'
+  - '[[2026-09-09-registry-edition-authoring-W01-P02-S07]]'
   - '[[2026-09-09-registry-edition-authoring-W01-P02-S46]]'
   - '[[2026-09-09-registry-edition-authoring-W01-P02-S47]]'
   - '[[2026-09-09-registry-edition-authoring-W01-P02-S49]]'
@@ -49,6 +50,7 @@ Auto-generated index of all documents tagged with `#registry-edition-authoring`.
 - `2026-09-09-registry-edition-authoring-W02-P03-S43` - [M | opus-medium] Rule on the casilla-shaped rows that live OUTSIDE the casilla family. Roughly 4,821 of them sit in the completeness manifest across 93 files — more total rows than the casilla family itself carries. The decision's scope is drawn as a FAMILY boundary, but the row shape crosses it, so the materialiser and the minimality screen both need to know whether a manifest row is inherited, restated, or out of scope entirely. Decide it explicitly rather than discovering it during the pilot. Proof: the ruling is stated in the decision record and both the merge and the screen behave as it says on a fixture containing manifest rows.
 - `2026-09-09-registry-edition-authoring-W02-P03-S45` - [L | opus-medium] Audit the thirty-six direct callers of the directory loader before the materialiser lands, because every one of them changes what it sees. Twenty-two are in the product tree and fourteen in development tooling, and three of those publish or validate generated trees — so whether a caller should observe declared or inherited rows is a real decision with a wrong answer. Classify each: correct with inherited rows, requires declared rows and needs a distinct accessor, or indifferent. Proof: every caller carries a verdict, and any that requires declared rows has one before the materialiser lands.
 - `2026-09-09-registry-edition-authoring-W01-P01-S03` - [L | opus-medium] REPLACE, never delete. Each flagged line is the anti-vacuity guard for the assertion below it; removing it leaves that assertion passing vacuously on an empty finding set forever, which manufactures more of the defect this campaign removes. The population is TWELVE GUARDS IN TEN FILES, eight of the ten owned by the export lane. Triage each: a guard on a CORPUS DEFECT we intend to repair is converted to a planted-defect fixture asserting the same invariant; a guard on a PROPERTY OF THE PUBLISHED DOCUMENT stays untouched, because nothing here repairs what AEAT wrote. The triage splits five to convert, in four files, and seven to leave, in six of the export lane's files whose populations are read from AEAT's own record-design transcriptions. The owning lane signs off BOTH kinds of decision on its files — the replacement where one is made, and the decision to leave a guard where one is not — since leaving a guard is as much a ruling on their file as replacing it. A guard of the same class found outside the twelve is converted when the owning lane asks, not silently. Proof: each replacement fixture FAILS when the planted defect is removed from it — the collected count cannot detect this class and is not sufficient evidence — and every proof names the HEAD it was measured on, because a directed removal of git operations from the dev tooling will move the baseline.
+- `2026-09-09-registry-edition-authoring-W01-P02-S07` - [L | opus-medium] Adjudicate the modelo that renumbers boxes under stable identifiers, producing evolution records where the chain is real and an explicit refusal where it is not. This may not be mechanisable. Proof: every renumbered box is chained with evidence or refused by name.
 
 ### plan
 

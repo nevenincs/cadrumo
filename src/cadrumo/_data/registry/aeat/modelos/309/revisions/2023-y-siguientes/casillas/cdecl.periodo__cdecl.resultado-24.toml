@@ -7,6 +7,9 @@ number = "11-12"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "declaracion_periodo_309"
+continuidad_id = "declaracion-periodo-309"
+continuidad_origin = "grounded"
+continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 11 'Devengo (2) - Periodo' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:44 M30901 campo 11 'Devengo (2) - Periodo'; same semantic_role and data_type. number is wire metadata. The row now cites the duplicate M30900 Periodo (line 12)."
 export_refs = ["modelo-309-p0-periodo", "modelo-309-p1-devengo-periodo"]
 # The settlement period code (PP), AD-HOC.
 required = false
@@ -46,6 +49,8 @@ number = "109-117"
 section = ["declarante", "liquidacion"]
 data_type = "nif"
 semantic_role = "transmitente_nif"
+continuidad_id = "transmitente-nif"
+continuidad_origin = "seeded"
 export_refs = ["modelo-309-p1-transmitente-nif"]
 # Design transmitente NIF.
 required = false
@@ -124,6 +129,8 @@ number = "202-241"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "vehiculo_marca"
+continuidad_id = "vehiculo-marca"
+continuidad_origin = "seeded"
 export_refs = ["modelo-309-p1-vehiculo-marca"]
 # Design vehiculo marca.
 required = false
@@ -137,6 +144,8 @@ number = "242-281"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "vehiculo_tipo"
+continuidad_id = "vehiculo-tipo"
+continuidad_origin = "seeded"
 export_refs = ["modelo-309-p1-vehiculo-tipo"]
 # Design vehiculo tipo.
 required = false
@@ -150,6 +159,8 @@ number = "282-321"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "vehiculo_modelo"
+continuidad_id = "vehiculo-modelo"
+continuidad_origin = "seeded"
 export_refs = ["modelo-309-p1-vehiculo-modelo"]
 # Design vehiculo modelo.
 required = false
@@ -163,6 +174,8 @@ number = "322-343"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "vehiculo_bastidor"
+continuidad_id = "vehiculo-bastidor"
+continuidad_origin = "seeded"
 export_refs = ["modelo-309-p1-vehiculo-bastidor"]
 # Design vehiculo bastidor.
 required = false
@@ -176,6 +189,8 @@ number = "344-349"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "vehiculo_clasificacion"
+continuidad_id = "vehiculo-clasificacion"
+continuidad_origin = "seeded"
 export_refs = ["modelo-309-p1-vehiculo-clasificacion"]
 # Design vehiculo clasificacion.
 required = false
@@ -189,6 +204,8 @@ number = "350-389"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "embarcacion_fabricante"
+continuidad_id = "embarcacion-fabricante"
+continuidad_origin = "seeded"
 export_refs = ["modelo-309-p1-embarcacion-fabricante"]
 # Design embarcacion fabricante.
 required = false
@@ -202,6 +219,8 @@ number = "390-469"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "embarcacion_tipo"
+continuidad_id = "embarcacion-tipo"
+continuidad_origin = "seeded"
 export_refs = ["modelo-309-p1-embarcacion-tipo"]
 # Design embarcacion tipo-modelo.
 required = false
@@ -215,6 +234,8 @@ number = "470-491"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "mtn_embarcacion_identificacion"
+continuidad_id = "mtn-embarcacion-identificacion"
+continuidad_origin = "seeded"
 export_refs = ["modelo-309-p1-embarcacion-identificacion"]
 # Design embarcacion numero de construccion.
 required = false
@@ -228,6 +249,8 @@ number = "492-496"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "embarcacion_eslora"
+continuidad_id = "embarcacion-eslora"
+continuidad_origin = "seeded"
 export_refs = ["modelo-309-p1-embarcacion-eslora"]
 # Design embarcacion eslora maxima.
 required = false
@@ -241,6 +264,8 @@ number = "497-536"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "aeronave_fabricante"
+continuidad_id = "aeronave-fabricante"
+continuidad_origin = "seeded"
 export_refs = ["modelo-309-p1-aeronave-fabricante"]
 # Design aeronave fabricante.
 required = false
@@ -254,6 +279,8 @@ number = "537-616"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "aeronave_marca"
+continuidad_id = "aeronave-marca"
+continuidad_origin = "seeded"
 export_refs = ["modelo-309-p1-aeronave-marca"]
 # Design aeronave marca-tipo-modelo.
 required = false
@@ -267,6 +294,8 @@ number = "617-638"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "aeronave_serie"
+continuidad_id = "aeronave-serie"
+continuidad_origin = "seeded"
 export_refs = ["modelo-309-p1-aeronave-serie"]
 # Design aeronave numero de serie.
 required = false
@@ -280,6 +309,8 @@ number = "639-642"
 section = ["declarante", "liquidacion"]
 data_type = "year"
 semantic_role = "aeronave_ano"
+continuidad_id = "aeronave-ano"
+continuidad_origin = "seeded"
 export_refs = ["modelo-309-p1-aeronave-ano"]
 # Design aeronave ano de fabricacion.
 required = false
@@ -293,6 +324,8 @@ number = "643-652"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "aeronave_peso"
+continuidad_id = "aeronave-peso"
+continuidad_origin = "seeded"
 export_refs = ["modelo-309-p1-aeronave-peso"]
 # Design aeronave peso maximo despegue.
 required = false
@@ -306,6 +339,9 @@ number = "1016"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "declaracion_complementaria"
+continuidad_id = "declaracion-complementaria"
+continuidad_origin = "grounded"
+continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 56 'Declaracion complementaria (9)' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:102 M30901 campo 59 'Declaracion complementaria (9)'; same semantic_role and data_type. number is wire metadata."
 export_refs = ["modelo-309-p1-complementaria"]
 # Design declaracion complementaria (9).
 required = false
@@ -319,6 +355,9 @@ number = "1017-1029"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "justificante_anterior"
+continuidad_id = "justificante-anterior"
+continuidad_origin = "grounded"
+continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 57 'Numero de justificante de la declaracion anterior (9)' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:103 M30901 campo 60 'Numero de justificante de la declaracion anterior (9)'; same semantic_role and data_type. number is wire metadata."
 export_refs = ["modelo-309-p1-justificante-anterior"]
 # Design numero de justificante de la declaracion anterior (9).
 required = false
@@ -332,6 +371,9 @@ number = "1030-1063"
 section = ["declarante", "liquidacion"]
 data_type = "iban"
 semantic_role = "devolucion_iban_309"
+continuidad_id = "devolucion-iban-309"
+continuidad_origin = "grounded"
+continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 58 'IBAN (10) (exclusivamente en Predeclaracion)' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:104 M30901 campo 61 'IBAN (10)'; same semantic_role and data_type. number is wire metadata."
 export_refs = ["modelo-309-p1-iban"]
 # Design IBAN (10).
 required = false
@@ -345,6 +387,9 @@ number = "1064-1078"
 section = ["declarante", "liquidacion"]
 data_type = "nif_iva"
 semantic_role = "transmitente_nif_iva"
+continuidad_id = "transmitente-nif-iva"
+continuidad_origin = "grounded"
+continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 59 'Transmitente (3)- NIF-IVA' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:105 M30901 campo 62 'Transmitente (3)- NIF-IVA'; same semantic_role and data_type. number is wire metadata."
 export_refs = ["modelo-309-p1-transmitente-nif-iva"]
 # Design transmitente NIF-IVA.
 required = false
@@ -358,6 +403,9 @@ number = "1079-1087"
 section = ["declarante", "liquidacion"]
 data_type = "nif"
 semantic_role = "adjudicatario_nif"
+continuidad_id = "adjudicatario-nif"
+continuidad_origin = "grounded"
+continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 60 'Adjudicatario (4) - NIF' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:106 M30901 campo 63 'Adjudicatario (4) - NIF'; same semantic_role and data_type. number is wire metadata."
 export_refs = ["modelo-309-p1-adjudicatario-nif"]
 # Design adjudicatario NIF.
 required = false
@@ -371,6 +419,9 @@ number = "1088-1147"
 section = ["declarante", "liquidacion"]
 data_type = "name"
 semantic_role = "adjudicatario_apellidos"
+continuidad_id = "adjudicatario-apellidos"
+continuidad_origin = "grounded"
+continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 61 'Adjudicatario (4) - Apellidos o Denominacion Social' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:107 M30901 campo 64 'Adjudicatario (4) - Apellidos o Denominacion Social'; same semantic_role and data_type. number is wire metadata."
 export_refs = ["modelo-309-p1-adjudicatario-apellidos"]
 # Design adjudicatario apellidos o denominacion social.
 required = false
@@ -384,6 +435,9 @@ number = "1148-1167"
 section = ["declarante", "liquidacion"]
 data_type = "name"
 semantic_role = "adjudicatario_nombre"
+continuidad_id = "adjudicatario-nombre"
+continuidad_origin = "grounded"
+continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 62 'Adjudicatario (4) - Nombre' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:108 M30901 campo 65 'Adjudicatario (4) - Nombre'; same semantic_role and data_type. number is wire metadata."
 export_refs = ["modelo-309-p1-adjudicatario-nombre"]
 # Design adjudicatario nombre.
 required = false
@@ -398,6 +452,8 @@ form_number = "01"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "rg_base_01"
+continuidad_id = "rg-base-01"
+continuidad_origin = "seeded"
 export_refs = ["modelo-309-p1-rg-base-01"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
 # Design regimen general base imponible [01].
@@ -413,6 +469,8 @@ form_number = "02"
 section = ["declarante", "liquidacion"]
 data_type = "ratio"
 semantic_role = "rg_tipo_02"
+continuidad_id = "rg-tipo-02"
+continuidad_origin = "seeded"
 export_refs = ["modelo-309-p1-rg-tipo-02"]
 # Design regimen general tipo % [02].
 required = false
@@ -427,6 +485,8 @@ form_number = "03"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "rg_cuota_03"
+continuidad_id = "rg-cuota-03"
+continuidad_origin = "seeded"
 export_refs = ["modelo-309-p1-rg-cuota-03"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
 # Design regimen general cuota [03].
@@ -486,6 +546,9 @@ form_number = "04"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "rg_base_04"
+continuidad_id = "rg-base-04"
+continuidad_origin = "grounded"
+continuidad_evidence = "Same printed box [04]: 2018-2022 form_number 04 equals 2023-y-siguientes form_number 04; same semantic_role and data_type. Designs print [04] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 35 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:81 M30901 campo 38. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
 export_refs = ["modelo-309-p1-rg-base-04"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
 # Design regimen general base imponible [04].
@@ -501,6 +564,9 @@ form_number = "05"
 section = ["declarante", "liquidacion"]
 data_type = "ratio"
 semantic_role = "rg_tipo_05"
+continuidad_id = "rg-tipo-05"
+continuidad_origin = "grounded"
+continuidad_evidence = "Same printed box [05]: 2018-2022 form_number 05 equals 2023-y-siguientes form_number 05; same semantic_role and data_type. Designs print [05] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 36 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:82 M30901 campo 39. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
 export_refs = ["modelo-309-p1-rg-tipo-05"]
 # Design regimen general tipo % [05].
 required = false
@@ -515,6 +581,9 @@ form_number = "06"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "rg_cuota_06"
+continuidad_id = "rg-cuota-06"
+continuidad_origin = "grounded"
+continuidad_evidence = "Same printed box [06]: 2018-2022 form_number 06 equals 2023-y-siguientes form_number 06; same semantic_role and data_type. Designs print [06] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 37 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:83 M30901 campo 40. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
 export_refs = ["modelo-309-p1-rg-cuota-06"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
 # Design regimen general cuota [06].
@@ -530,6 +599,9 @@ form_number = "07"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "rg_base_07"
+continuidad_id = "rg-base-07"
+continuidad_origin = "grounded"
+continuidad_evidence = "Same printed box [07]: 2018-2022 form_number 07 equals 2023-y-siguientes form_number 07; same semantic_role and data_type. Designs print [07] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 38 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:84 M30901 campo 41. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
 export_refs = ["modelo-309-p1-rg-base-07"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
 # Design regimen general base imponible [07].
@@ -545,6 +617,9 @@ form_number = "08"
 section = ["declarante", "liquidacion"]
 data_type = "ratio"
 semantic_role = "rg_tipo_08"
+continuidad_id = "rg-tipo-08"
+continuidad_origin = "grounded"
+continuidad_evidence = "Same printed box [08]: 2018-2022 form_number 08 equals 2023-y-siguientes form_number 08; same semantic_role and data_type. Designs print [08] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 39 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:85 M30901 campo 42. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
 export_refs = ["modelo-309-p1-rg-tipo-08"]
 # Design regimen general tipo % [08].
 required = false
@@ -559,6 +634,9 @@ form_number = "09"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "rg_cuota_09"
+continuidad_id = "rg-cuota-09"
+continuidad_origin = "grounded"
+continuidad_evidence = "Same printed box [09]: 2018-2022 form_number 09 equals 2023-y-siguientes form_number 09; same semantic_role and data_type. Designs print [09] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 40 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:86 M30901 campo 43. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
 export_refs = ["modelo-309-p1-rg-cuota-09"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
 # Design regimen general cuota [09].
@@ -574,6 +652,9 @@ form_number = "10"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "re_base_10"
+continuidad_id = "re-base-10"
+continuidad_origin = "grounded"
+continuidad_evidence = "Same printed box [10]: 2018-2022 form_number 10 equals 2023-y-siguientes form_number 10; same semantic_role and data_type. Designs print [10] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 41 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:87 M30901 campo 44. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
 export_refs = ["modelo-309-p1-re-base-10"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
 # Design recargo equivalencia base imponible [10].
@@ -589,6 +670,9 @@ form_number = "11"
 section = ["declarante", "liquidacion"]
 data_type = "ratio"
 semantic_role = "re_tipo_11"
+continuidad_id = "re-tipo-11"
+continuidad_origin = "grounded"
+continuidad_evidence = "Same printed box [11]: 2018-2022 form_number 11 equals 2023-y-siguientes form_number 11; same semantic_role and data_type. Designs print [11] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 42 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:88 M30901 campo 45. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
 export_refs = ["modelo-309-p1-re-tipo-11"]
 # Design recargo equivalencia tipo % [11].
 required = false
@@ -603,6 +687,9 @@ form_number = "12"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "re_cuota_12"
+continuidad_id = "re-cuota-12"
+continuidad_origin = "grounded"
+continuidad_evidence = "Same printed box [12]: 2018-2022 form_number 12 equals 2023-y-siguientes form_number 12; same semantic_role and data_type. Designs print [12] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 43 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:89 M30901 campo 46. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
 export_refs = ["modelo-309-p1-re-cuota-12"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
 # Design recargo equivalencia cuota [12].
@@ -618,6 +705,9 @@ form_number = "13"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "re_base_13"
+continuidad_id = "re-base-13"
+continuidad_origin = "grounded"
+continuidad_evidence = "Same printed box [13]: 2018-2022 form_number 13 equals 2023-y-siguientes form_number 13; same semantic_role and data_type. Designs print [13] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 44 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:90 M30901 campo 47. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
 export_refs = ["modelo-309-p1-re-base-13"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
 # Design recargo equivalencia base imponible [13].
@@ -633,6 +723,9 @@ form_number = "14"
 section = ["declarante", "liquidacion"]
 data_type = "ratio"
 semantic_role = "re_tipo_14"
+continuidad_id = "re-tipo-14"
+continuidad_origin = "grounded"
+continuidad_evidence = "Same printed box [14]: 2018-2022 form_number 14 equals 2023-y-siguientes form_number 14; same semantic_role and data_type. Designs print [14] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 45 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:91 M30901 campo 48. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
 export_refs = ["modelo-309-p1-re-tipo-14"]
 # Design recargo equivalencia tipo % [14].
 required = false
@@ -647,6 +740,9 @@ form_number = "15"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "re_cuota_15"
+continuidad_id = "re-cuota-15"
+continuidad_origin = "grounded"
+continuidad_evidence = "Same printed box [15]: 2018-2022 form_number 15 equals 2023-y-siguientes form_number 15; same semantic_role and data_type. Designs print [15] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 46 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:92 M30901 campo 49. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
 export_refs = ["modelo-309-p1-re-cuota-15"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
 # Design recargo equivalencia cuota [15].
@@ -662,6 +758,9 @@ form_number = "16"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "re_base_16"
+continuidad_id = "re-base-16"
+continuidad_origin = "grounded"
+continuidad_evidence = "Same printed box [16]: 2018-2022 form_number 16 equals 2023-y-siguientes form_number 16; same semantic_role and data_type. Designs print [16] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 47 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:93 M30901 campo 50. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
 export_refs = ["modelo-309-p1-re-base-16"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
 # Design recargo equivalencia base imponible [16].
@@ -677,6 +776,9 @@ form_number = "17"
 section = ["declarante", "liquidacion"]
 data_type = "ratio"
 semantic_role = "re_tipo_17"
+continuidad_id = "re-tipo-17"
+continuidad_origin = "grounded"
+continuidad_evidence = "Same printed box [17]: 2018-2022 form_number 17 equals 2023-y-siguientes form_number 17; same semantic_role and data_type. Designs print [17] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 48 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:94 M30901 campo 51. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
 export_refs = ["modelo-309-p1-re-tipo-17"]
 # Design recargo equivalencia tipo % [17].
 required = false
@@ -691,6 +793,9 @@ form_number = "18"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "re_cuota_18"
+continuidad_id = "re-cuota-18"
+continuidad_origin = "grounded"
+continuidad_evidence = "Same printed box [18]: 2018-2022 form_number 18 equals 2023-y-siguientes form_number 18; same semantic_role and data_type. Designs print [18] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 49 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:95 M30901 campo 52. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
 export_refs = ["modelo-309-p1-re-cuota-18"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
 # Design recargo equivalencia cuota [18].
@@ -706,6 +811,9 @@ form_number = "19"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "re_base_19"
+continuidad_id = "re-base-19"
+continuidad_origin = "grounded"
+continuidad_evidence = "Same printed box [19]: 2018-2022 form_number 19 equals 2023-y-siguientes form_number 19; same semantic_role and data_type. Designs print [19] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 50 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:96 M30901 campo 53. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
 export_refs = ["modelo-309-p1-re-base-19"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
 # Design recargo equivalencia base imponible [19].
@@ -721,6 +829,9 @@ form_number = "20"
 section = ["declarante", "liquidacion"]
 data_type = "ratio"
 semantic_role = "re_tipo_20"
+continuidad_id = "re-tipo-20"
+continuidad_origin = "grounded"
+continuidad_evidence = "Same printed box [20]: 2018-2022 form_number 20 equals 2023-y-siguientes form_number 20; same semantic_role and data_type. Designs print [20] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 51 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:97 M30901 campo 54. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
 export_refs = ["modelo-309-p1-re-tipo-20"]
 # Design recargo equivalencia tipo % [20].
 required = false
@@ -735,6 +846,9 @@ form_number = "21"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "re_cuota_21"
+continuidad_id = "re-cuota-21"
+continuidad_origin = "grounded"
+continuidad_evidence = "Same printed box [21]: 2018-2022 form_number 21 equals 2023-y-siguientes form_number 21; same semantic_role and data_type. Designs print [21] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 52 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:98 M30901 campo 55. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
 export_refs = ["modelo-309-p1-re-cuota-21"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
 # Design recargo equivalencia cuota [21].
@@ -750,6 +864,9 @@ form_number = "22"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "cuota_devengada_22"
+continuidad_id = "cuota-devengada-22"
+continuidad_origin = "grounded"
+continuidad_evidence = "Same printed box [22]: 2018-2022 form_number 22 equals 2023-y-siguientes form_number 22; same semantic_role and data_type. Designs print [22] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 53 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:99 M30901 campo 56. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
 export_refs = ["modelo-309-p1-cuota-devengada-22"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
 # Design total cuota devengada [22]: the design's own sum of the eight cuota casillas.
@@ -766,6 +883,9 @@ form_number = "23"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "a_deducir_23"
+continuidad_id = "a-deducir-23"
+continuidad_origin = "grounded"
+continuidad_evidence = "Same printed box [23]: 2018-2022 form_number 23 equals 2023-y-siguientes form_number 23; same semantic_role and data_type. Designs print [23] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 54 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:100 M30901 campo 57. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
 export_refs = ["modelo-309-p1-a-deducir-23"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
 # Design a deducir [23].
@@ -781,6 +901,9 @@ form_number = "24"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "resultado_24"
+continuidad_id = "resultado-24"
+continuidad_origin = "grounded"
+continuidad_evidence = "Same printed box [24]: 2018-2022 form_number 24 equals 2023-y-siguientes form_number 24; same semantic_role and data_type. Designs print [24] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 55 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:101 M30901 campo 58. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
 export_refs = ["modelo-309-p1-resultado-24"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
 # Design resultado a ingresar [24]: the design's own [22]-[23].
