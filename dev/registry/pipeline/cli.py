@@ -21,10 +21,11 @@ import typer
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.edition_materialisation import materialise_edition
 from cadrumo.domain.calculations.registry.errors import RegistryError
 
 from ._casilla_export_refs import export_refs_by_casilla, write_generated_casilla_export_refs
-from ._export_tree import RenderedExportTree, render_complete_export_tree
+from ._export_tree import RenderedExportTree, _render_toml_bytes, render_complete_export_tree
 from ._tree_check import CheckedGeneratedExportTree, GeneratedExportTreeCheckContext, check_generated_export_tree
 from ._tree_publication import (
     GeneratedExportTreePublicationContext,
@@ -40,11 +41,11 @@ from .candidate_staging import (
 )
 from .export_fragment_provenance import SHA256_PATTERN, ExportFragmentTarget
 from .render_check import (
-    record_drift_dispositions,
     GeneratedExportBootstrapTransport,
     RenderComparison,
     RevisionRenderInputs,
     compare_export_tree_roots,
+    record_drift_dispositions,
     revision_render_inputs,
 )
 from .source_defects import source_defects_for
@@ -182,11 +183,32 @@ def _stage_published_modelo(root: Path, *, modelo: str, revision: str) -> Path |
     revisions = tuple((source_modelo_root / "revisions").iterdir())
     if len(revisions) == 1:
         return None
-    staged_root = root / "published-modelo" / modelo
+    return _stage_isolated_edition(source_modelo_root, root / "published-modelo" / modelo, revision=revision)
+
+
+def _stage_isolated_edition(source_modelo_root: Path, staged_root: Path, *, revision: str) -> Path:
+    """Stage ``revision`` as the only edition of a copy of its modelo, complete by construction.
+
+    Pruning the sibling editions is what isolates the target, and it is exactly
+    what an edition inheriting from a predecessor cannot survive: its chain
+    would be deleted with them. Such an edition is therefore resolved first and
+    written back as the full-copy edition it stands for, naming no predecessor,
+    so the staged tree never presents the rows it states as the whole edition.
+    An edition whose named predecessor is absent from the source is refused by
+    that resolution rather than staged thin. An edition stating every row is
+    copied unchanged.
+    """
+    edition = materialise_edition(source_modelo_root, revision)
     shutil.copytree(source_modelo_root, staged_root)
-    for sibling in (staged_root / "revisions").iterdir():
-        if sibling.name != revision:
-            shutil.rmtree(sibling)
+    revisions_root = staged_root / "revisions"
+    for entry in revisions_root.iterdir():
+        if entry.name != revision:
+            shutil.rmtree(entry)
+    if edition.inherits_from is not None:
+        shutil.rmtree(revisions_root / revision)
+        (revisions_root / f"{revision}.toml").write_bytes(
+            _render_toml_bytes(f"{revision}.toml", {"revisions": {revision: edition.table}}),
+        )
     return staged_root
 
 
