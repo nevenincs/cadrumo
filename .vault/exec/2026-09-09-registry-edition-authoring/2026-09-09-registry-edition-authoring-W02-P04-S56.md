@@ -26,15 +26,17 @@ related:
 - `verify:` `uv run --no-sync pytest test_edition_materialisation_entry_point.py test_isolated_edition_staging.py` -> `pass`
 - `verify:` `uv run --no-sync aeat app registry verify` -> `pass`
 - `verify:` `uv run --no-sync ruff check`, `ruff format --check`, `ty check` on the four files -> `pass`
-- `verify:` `uv run --no-sync pytest test_generated_tree_cli.py test_generated_export_trees.py test_revision_edition_materialisation.py test_revision_label_inheritance.py` -> `fail` (1 pre-existing)
+- `verify:` `uv run --no-sync pytest test_isolated_edition_staging.py` with the catalogue write removed -> `fail` (label parity)
+- `verify:` `uv run --no-sync pytest test_generated_tree_cli.py` -> `fail` (1 not caused by this change)
 
 ## Notes
 
-- `test_absent_tree_is_validated_then_published_through_the_canonical_authorities` fails on modelo 184 seeded-lineage continuation refusals, identically with the HEAD `cli.py` swapped in; it predates this change.
-- Label carry-over is not landed; the staged delta is not yet a complete edition. Casilla labels resolve from the one packaged catalogue by modelo, edition and casilla id, not from the registry tree, so a staged full copy loses the origin-edition fallback key the live load adds for inherited rows. Typed equality against the live edition holds with only that key removed.
-- The designed carry-over copies the source catalogue and writes each inherited row's origin text under its own occurrence key, per locale where the row has none, through `LocaleManager.set_locale_values`; readers resolve it through `override_locales_root`. It is blocked because `dev.locales.manager` is unimportable at HEAD: `dev/locales/_registry_scanner.py` imports `profile_schema_locale_keys`, which commit `b460bd8c41` removed from `src/cadrumo/domain/user_profile/labels.py`. It was parked unapplied rather than leave `cli.py` failing at import.
-- `materialise_edition` carries `label_origins` for that carry-over.
+- `test_absent_tree_is_validated_then_published_through_the_canonical_authorities` fails on modelo 184 seeded-lineage continuation refusals, identically with the HEAD `cli.py` swapped in; it predates this change. An earlier run of the same file also failed five tests on modelo 100 strict continuity drift while another session held 368 uncommitted modelo 100 casilla files; none of the tracebacks passes through the staging code.
+- Casilla labels resolve from the packaged catalogue by modelo, edition and casilla id, not from the registry tree. A staged delta therefore carries a staged catalogue: a copy of the source catalogue with each inherited row's origin text written under the row's own occurrence key through `LocaleManager.set_locale_values`, in each locale where the row has no text of its own. Its labels resolve through `override_locales_root` at the staged catalogue. The copy is written only for a delta; no staged catalogue is read today, because the published-layout witness reads export layouts only.
+- `withdrawn_review_status` is not surfaced by staging. The staged tree is a temporary check witness that publishes nothing and is discarded with its temporary root; the withdrawn review claim is already absent from the table it is written from.
 - The pre-existing unsorted `record_drift_dispositions` import in `cli.py` was reordered to clear ruff I001.
 - The reviewer persona could not be launched from this session, so the review is still outstanding.
 
-- The orchestrating session reviewed the entry point and staging diffs against the ADR and committed them: materialisation runs before the copy, a missing predecessor is refused, and no dev import reaches an underscore module in `src`. Re-run: 9 passed, `registry verify` exit 0, ruff and ty clean. The Step stays OPEN for the staged label carry-over, which is blocked on the `dev.locales.manager` import break.
+- The orchestrating session reviewed the entry point and staging diffs against the ADR and committed them: materialisation runs before the copy, a missing predecessor is refused, and no dev import reaches an underscore module in `src`. Re-run: 9 passed, `registry verify` exit 0, ruff and ty clean. The staged label carry-over first waited on the `dev.locales.manager` import break, which 2215d0a484 fixed.
+
+- The label carry-over landed in fa67c4c2bf. The orchestrating session reviewed it against the ADR: inherited rows get the stating edition's text only where the row has none, so an edition's own label wins, and an edition that states every row is unchanged. Re-run: 15 staging and entry-point tests passed, including the four-locale parity test, which fails when the catalogue write is disabled.
