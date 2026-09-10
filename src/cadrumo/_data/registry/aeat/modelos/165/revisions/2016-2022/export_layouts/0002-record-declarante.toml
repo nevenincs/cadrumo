@@ -214,8 +214,8 @@ source_refs = ["aeat-dr-165-2016-2022"]
 
 # Posiciones 168-183. IMPORTE FONDOS PROPIOS. Signed: position 168 carries 'N'
 # when the fondos propios are below zero and a space otherwise, then 169-183
-# carry the magnitude (169-181 entera, 182-183 decimal). The signed codec emits
-# exactly that shape.
+# carry the magnitude (169-181 entera, 182-183 decimal). The sign byte is
+# reserved, so a non-negative amount never writes a digit at 168.
 [[revisions."2016-2022".export_layouts.records.fields]]
 id = "modelo-165-t1-importe-fondos-propios"
 offset = 168
@@ -227,6 +227,7 @@ required = false
 padding = "left_zero"
 justification = "right"
 signed = true
+sign_position = "blank_or_n"
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-165-2016-2022"]
 

@@ -9,6 +9,8 @@
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.nif"
+continuidad_id = "payee-nif"
+continuidad_origin = "seeded"
 number = "18-26"
 section = ["perceptor", "identificacion"]
 data_type = "nif"
@@ -20,6 +22,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.nombre"
+continuidad_id = "payee-name"
+continuidad_origin = "seeded"
 number = "36-75"
 section = ["perceptor", "identificacion"]
 data_type = "name"
@@ -31,6 +35,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.clave"
+continuidad_id = "payee-clave-percepcion"
+continuidad_origin = "seeded"
 number = "78"
 section = ["perceptor", "percepcion"]
 data_type = "text"
@@ -42,6 +48,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.subclave"
+continuidad_id = "payee-subclave-percepcion"
+continuidad_origin = "seeded"
 number = "79-80"
 section = ["perceptor", "percepcion"]
 data_type = "text"
@@ -53,6 +61,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.percepcion-dineraria"
+continuidad_id = "percepcion-integra-dineraria"
+continuidad_origin = "seeded"
 number = "82-94"
 section = ["perceptor", "percepcion"]
 data_type = "money"
@@ -65,6 +75,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.retenciones-practicadas"
+continuidad_id = "perc-retenciones-practicadas"
+continuidad_origin = "seeded"
 number = "95-107"
 section = ["perceptor", "percepcion"]
 data_type = "money"
@@ -77,6 +89,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.percepcion-especie"
+continuidad_id = "percepcion-valoracion-especie"
+continuidad_origin = "seeded"
 number = "109-121"
 section = ["perceptor", "percepcion"]
 data_type = "money"
@@ -89,6 +103,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.ingresos-a-cuenta"
+continuidad_id = "ingresos-a-cuenta-efectuados"
+continuidad_origin = "seeded"
 number = "122-134"
 section = ["perceptor", "percepcion"]
 data_type = "money"

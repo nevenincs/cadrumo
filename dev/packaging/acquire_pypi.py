@@ -216,7 +216,7 @@ def run_pypi_acquisition(
         "completed_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "index_url": index_url,
         "cohort": {
-            "source_commit": cohort.source_commit,
+            "source_digest": cohort.source_digest,
             "version": cohort.version,
             "sha256": {name: cohort.sha256[name] for name in PYTHON_COHORT_WHEEL_NAMES},
         },

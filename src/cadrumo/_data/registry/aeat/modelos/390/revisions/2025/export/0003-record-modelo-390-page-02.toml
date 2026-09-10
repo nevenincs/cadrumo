@@ -10,63 +10,16 @@ line_ending = 'crlf'
 required = true
 
 [[revisions.2025.export_layouts.records.fields]]
-id = 'modelo-390-page-02-casilla-aic-bienes-tipo-0-cuota'
-offset = 1016
-length = 17
-kind = 'casilla'
-casilla_id = 'iva.anual.aic.bienes.tipo-0.cuota'
-data_type = 'decimal'
-required = false
-padding = 'left_zero'
-justification = 'right'
-decimals = 2
-signed = false
-allowed_values = ['0']
-legal_refs = [
-    'ley-37-1992:art-13',
-    'ley-37-1992:art-69',
-    'ley-37-1992:art-70',
-    'ley-37-1992:art-85',
-    'rd-1624-1992:art-71',
-    'orden-eha-3111-2009:art-1',
-]
-source_refs = ['aeat-dr-390-2025']
-
-[[revisions.2025.export_layouts.records.fields]]
-id = 'modelo-390-page-02-casilla-aic-bienes-tipo-2-base'
-offset = 1033
-length = 17
-kind = 'casilla'
-casilla_id = 'iva.anual.aic.bienes.tipo-2.base'
-data_type = 'decimal'
-required = false
-padding = 'left_zero'
-justification = 'right'
-decimals = 2
-signed = false
-allowed_values = ['0']
-legal_refs = [
-    'ley-37-1992:art-13',
-    'ley-37-1992:art-69',
-    'ley-37-1992:art-70',
-    'ley-37-1992:art-85',
-    'rd-1624-1992:art-71',
-    'orden-eha-3111-2009:art-1',
-]
-source_refs = ['aeat-dr-390-2025']
-
-[[revisions.2025.export_layouts.records.fields]]
 id = 'modelo-390-page-02-casilla-aic-bienes-tipo-2-cuota'
 offset = 1050
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.aic.bienes.tipo-2.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-13',
@@ -126,12 +79,11 @@ offset = 1101
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.aic.bienes.tipo-5.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-13',
@@ -149,12 +101,11 @@ offset = 1118
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.aic.bienes.tipo-5.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-13',
@@ -172,12 +123,11 @@ offset = 1135
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.aic.bienes.tipo-7-5.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-13',
@@ -195,12 +145,11 @@ offset = 1152
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.aic.bienes.tipo-7-5.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-13',
@@ -323,12 +272,11 @@ offset = 1254
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.aic.servicios.tipo-0.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-13',
@@ -346,12 +294,11 @@ offset = 1271
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.aic.servicios.tipo-2.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-13',
@@ -369,12 +316,11 @@ offset = 1288
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.aic.servicios.tipo-2.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-13',
@@ -434,12 +380,11 @@ offset = 1339
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.aic.servicios.tipo-5.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-13',
@@ -457,12 +402,11 @@ offset = 1356
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.aic.servicios.tipo-5.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-13',
@@ -480,12 +424,11 @@ offset = 1373
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.aic.servicios.tipo-7-5.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-13',
@@ -503,12 +446,11 @@ offset = 1390
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.aic.servicios.tipo-7-5.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-13',

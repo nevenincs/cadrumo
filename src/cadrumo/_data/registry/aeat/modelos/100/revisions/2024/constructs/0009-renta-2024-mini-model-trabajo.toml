@@ -13,11 +13,11 @@ source_refs = [
     "aeat-dr-100-2024-dictionary",
 ]
 formulas = [
-    "renta-2024-trabajo-especie-importe-integro",
-    "renta-2024-trabajo-otros-gastos",
-    "renta-2024-trabajo-rendimiento-neto",
-    "renta-2024-trabajo-rendimiento-neto-previo",
-    "renta-2024-trabajo-rendimiento-neto-reducido",
-    "renta-2024-trabajo-suma-rendimientos-netos-previos",
-    "renta-2024-trabajo-total-ingresos-integros-computables",
+    "renta-trabajo-especie-importe-integro",
+    "renta-trabajo-otros-gastos",
+    "renta-trabajo-rendimiento-neto",
+    "renta-trabajo-rendimiento-neto-previo",
+    "renta-trabajo-rendimiento-neto-reducido",
+    "renta-trabajo-suma-rendimientos-netos-previos",
+    "renta-trabajo-total-ingresos-integros-computables",
 ]

@@ -31,6 +31,7 @@ No mocks — these tests use the real domain functions directly.
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -93,7 +94,7 @@ def test_incn_above_threshold_yields_art_40_3_mandatory() -> None:
     """
 
     profile = _sl_profile(incn=_INCN_ABOVE_THRESHOLD)
-    verdict = derive_modelo_202_modality(profile)
+    verdict = derive_modelo_202_modality(profile, effective_date=date(2025, 12, 31))
 
     assert verdict.modality is Modelo202Modality.ART_40_3_MANDATORY
     assert verdict.legal_refs  # legal grounding must be populated
@@ -107,7 +108,7 @@ def test_incn_at_threshold_yields_art_40_2_optional() -> None:
     """
 
     profile = _sl_profile(incn=_INCN_AT_THRESHOLD)
-    verdict = derive_modelo_202_modality(profile)
+    verdict = derive_modelo_202_modality(profile, effective_date=date(2025, 12, 31))
 
     assert verdict.modality is Modelo202Modality.ART_40_2_OPTIONAL
 
@@ -119,7 +120,7 @@ def test_incn_below_threshold_yields_art_40_2_optional() -> None:
     """
 
     profile = _sl_profile(incn=_INCN_BELOW_THRESHOLD)
-    verdict = derive_modelo_202_modality(profile)
+    verdict = derive_modelo_202_modality(profile, effective_date=date(2025, 12, 31))
 
     assert verdict.modality is Modelo202Modality.ART_40_2_OPTIONAL
 
@@ -134,7 +135,7 @@ def test_incn_undeclared_yields_incomplete() -> None:
     """
 
     profile = _sl_profile(incn=None)
-    verdict = derive_modelo_202_modality(profile)
+    verdict = derive_modelo_202_modality(profile, effective_date=date(2025, 12, 31))
 
     assert verdict.modality is Modelo202Modality.INCOMPLETE
 
@@ -151,7 +152,7 @@ def test_natural_person_yields_incomplete_modality() -> None:
     """
 
     profile = _natural_person_profile()
-    verdict = derive_modelo_202_modality(profile)
+    verdict = derive_modelo_202_modality(profile, effective_date=date(2025, 12, 31))
 
     assert verdict.modality is Modelo202Modality.INCOMPLETE
 
@@ -165,7 +166,7 @@ def test_attribution_entity_yields_incomplete_modality() -> None:
     """
 
     profile = _attribution_entity_profile()
-    verdict = derive_modelo_202_modality(profile)
+    verdict = derive_modelo_202_modality(profile, effective_date=date(2025, 12, 31))
 
     assert verdict.modality is Modelo202Modality.INCOMPLETE
 

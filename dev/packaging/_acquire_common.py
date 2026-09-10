@@ -507,7 +507,7 @@ def run_installed_cli_oracle(
         cli,
         storage_root=storage_root,
         work_dir=work_dir,
-        cohort_source_commit=cohort.source_commit,
+        cohort_source_digest=cohort.source_digest,
         cohort_manifest_sha256=sha256_path(cohort.manifest),
         cohort_root_wheel_sha256=cohort.sha256["cadrumo"],
         timeout_seconds=timeout_seconds,

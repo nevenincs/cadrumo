@@ -21,7 +21,6 @@ _UTF_8: Final[str] = UTF_8
 _SCHEMA: Final[Literal["cadrumo.release-cohort.v1"]] = "cadrumo.release-cohort.v1"
 _MANIFEST_NAME: Final[str] = "release-cohort.json"
 _SHA256_PATTERN: Final[str] = r"^[0-9a-f]{64}$"
-_COMMIT_PATTERN: Final[str] = r"^[0-9a-f]{40}$"
 
 
 class ArtifactKind(StrEnum):
@@ -37,11 +36,11 @@ class ArtifactKind(StrEnum):
 
 
 class SourceIdentity(BaseModel):
-    """Exact repository revision from which every cohort member was built."""
+    """Exact repository content from which every cohort member was built."""
 
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
 
-    commit: str = Field(pattern=_COMMIT_PATTERN)
+    source_digest: str = Field(pattern=_SHA256_PATTERN)
     tag: str | None = Field(default=None, min_length=2)
 
 

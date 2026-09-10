@@ -5,6 +5,8 @@
 
 [[revisions."2026-desde-02".casillas]]
 id = "iva.reconciliacion.devengada-322"
+continuidad_id = "iva-agregado-reconciliacion-devengada-322"
+continuidad_origin = "seeded"
 number = "iva.reconciliacion.devengada-322"
 section = ["iva", "regimen_general", "reconciliacion"]
 data_type = "money"
@@ -17,6 +19,8 @@ source_refs = ["aeat-dr-353-2026"]
 
 [[revisions."2026-desde-02".casillas]]
 id = "iva.reconciliacion.deducible-322"
+continuidad_id = "iva-agregado-reconciliacion-deducible-322"
+continuidad_origin = "seeded"
 number = "iva.reconciliacion.deducible-322"
 section = ["iva", "regimen_general", "reconciliacion"]
 data_type = "money"
@@ -29,6 +33,8 @@ source_refs = ["aeat-dr-353-2026"]
 
 [[revisions."2026-desde-02".casillas]]
 id = "iva.reconciliacion.resultado-322"
+continuidad_id = "iva-agregado-reconciliacion-resultado-322"
+continuidad_origin = "seeded"
 number = "iva.reconciliacion.resultado-322"
 section = ["iva", "regimen_general", "reconciliacion"]
 data_type = "money"

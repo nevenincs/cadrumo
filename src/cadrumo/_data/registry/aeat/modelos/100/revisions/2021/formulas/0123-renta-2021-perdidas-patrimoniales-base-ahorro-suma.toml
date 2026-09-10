@@ -1,5 +1,5 @@
 [[revisions."2021".formulas]]
-id = "renta-2021-perdidas-patrimoniales-base-ahorro-suma"
+id = "renta-perdidas-patrimoniales-base-ahorro-suma"
 target_casilla_id = "0423"
 expression = { op = "sum", args = [
     { casilla_id = "1609" },

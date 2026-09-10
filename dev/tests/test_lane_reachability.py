@@ -510,22 +510,31 @@ def test_a_file_level_exclusion_does_not_unsweep_its_directory(tmp_path: Path) -
     assert not directory_lane.covers_directory("outside/tests"), "an ignored directory is genuinely unswept"
 
 
-def test_tracked_discovery_ignores_untracked_scratch(tmp_path: Path) -> None:
-    """Discovery is git-backed, and the real tree is the control.
+def test_discovery_reads_the_real_tree() -> None:
+    """The real tree is the control: discovery finds a large, well-formed corpus."""
+    discovered = tracked_test_files(_ROOT)
+    assert len(discovered) > 1000, "discovery collapsed"
+    assert all(path.name.startswith("test_") for path in discovered)
 
-    Many agents work this tree at once. An untracked path is a peer's
-    uncommitted work that no lane could name and CI will never see, so counting
-    it would red a SHARED gate on private state whose only remedies are both
-    wrong: wire an uncommitted path into a lane, or delete a peer's work.
+
+def test_discovery_honours_gitignore_without_a_git_repository(tmp_path: Path) -> None:
+    """Discovery reads the working tree modulo ``.gitignore``, never a version-control tool.
+
+    No ``.git`` directory exists in this fixture at all, so a discovery
+    mechanism that shells out to a version-control tool would find nothing (or,
+    worse, silently answer for the wrong repository if it walked up to one). A
+    file the repository's own ``.gitignore`` admits is discovered whether or
+    not it has ever been committed -- the working tree is what the next lane
+    run collects -- and a file an ignore rule excludes never is.
     """
-    tracked = tracked_test_files(_ROOT)
-    assert len(tracked) > 1000, "tracked discovery collapsed"
+    (tmp_path / ".gitignore").write_text("ignored/\n", encoding="utf-8")
+    _write_test(tmp_path / "kept" / "tests" / "test_kept.py", "def test_a() -> None:\n    assert True\n")
+    _write_test(tmp_path / "ignored" / "tests" / "test_excluded.py", "def test_b() -> None:\n    assert True\n")
 
-    scratch = _ROOT / "dev" / "ci" / "tests" / "test_untracked_scratch_probe.py"
-    assert scratch not in tracked, "an untracked probe path must never be discovered"
+    discovered = tracked_test_files(tmp_path)
 
-    # The same filter over an on-disk walk would have to see it if it existed.
-    assert all(path.name.startswith("test_") for path in tracked)
+    assert Path("kept/tests/test_kept.py") in discovered
+    assert Path("ignored/tests/test_excluded.py") not in discovered
 
 
 def test_a_planted_orphan_reds_the_gate(tmp_path: Path) -> None:
@@ -589,12 +598,13 @@ def test_one_excluded_test_does_not_condemn_its_reachable_siblings(tmp_path: Pat
 
 
 def test_an_unreadable_tracked_file_is_skipped_not_reported(tmp_path: Path) -> None:
-    """A peer staging a deletion must not read as an orphaned test.
+    """A peer's in-flight deletion must not read as an orphaned test.
 
-    ``git ls-files`` lists a path the working tree no longer holds while a peer
-    stages its removal. Treating that as "no tests, therefore unreachable" would
-    red a shared gate on another agent's in-flight work; treating it as unmarked
-    would be worse still. It is counted, not judged.
+    Discovery walks the tree at one instant; a path it names can still vanish
+    before it is read, when a peer's deletion lands in between. Treating that
+    as "no tests, therefore unreachable" would red a shared gate on another
+    agent's in-flight work; treating it as unmarked would be worse still. It is
+    counted, not judged.
     """
     _synthetic_repository(tmp_path, lane="pytest -q src -m unit")
     absent = tmp_path / "src" / "tests" / "test_deleted_by_a_peer.py"

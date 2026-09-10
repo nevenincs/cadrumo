@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import tomllib
+from datetime import UTC, date, datetime, time
 from pathlib import Path
 
 import pytest
 
-from ..toml import freeze_toml, read_toml, to_str_keyed_dict
+from ..toml import freeze_toml, read_toml, render_toml, to_str_keyed_dict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -76,3 +77,78 @@ def test_freeze_toml_converts_lists_to_tuples_recursively() -> None:
     """Nested list values become nested tuples; dict structure is preserved."""
     frozen = freeze_toml({"a": [1, 2, [3, 4]], "b": {"c": [5]}})
     assert frozen == {"a": (1, 2, (3, 4)), "b": {"c": (5,)}}
+
+
+_EVERY_VALUE_SHAPE: dict[str, object] = {
+    "title": 'quote " backslash \\ tab \t newline \n bell \x07 ñ',
+    "count": -3,
+    "ratio": 0.1,
+    "tiny": 1e-07,
+    "flag": False,
+    "day": date(2025, 1, 1),
+    "moment": datetime(2025, 1, 2, 3, 4, 5, tzinfo=UTC),
+    "clock": time(6, 7, 8),
+    "empty_array": [],
+    "scalars": [1, 2, 3],
+    "mixed": [{"a": 1}, 2],
+    "inline_in_array": [[{"x": "y"}]],
+    "empty_table": {},
+    "key with space": "quoted key",
+    "revisions": {
+        "2025": {
+            "review_status": "reviewed",
+            "period_selector": {"periods": ["1T", "2T"]},
+            "casillas": [
+                {"id": "01", "section": ["a", "b"], "export": {"record": "0002"}, "nested": [{"k": 1}]},
+                {"id": "02", "required": True},
+            ],
+        },
+    },
+}
+
+
+def test_render_toml_parses_back_to_every_value_it_was_given() -> None:
+    """Every value shape tomllib produces survives render then parse unchanged."""
+    rendered = render_toml(_EVERY_VALUE_SHAPE)
+
+    assert tomllib.loads(rendered) == _EVERY_VALUE_SHAPE
+
+
+def test_render_toml_accepts_the_tuples_freeze_produces() -> None:
+    """A frozen document renders the same text as the parsed one it came from."""
+    assert render_toml(freeze_toml(_EVERY_VALUE_SHAPE)) == render_toml(_EVERY_VALUE_SHAPE)
+
+
+def test_render_toml_writes_arrays_of_tables_as_array_headers() -> None:
+    """Casilla-shaped rows keep the ``[[...]]`` block form the source files use."""
+    rendered = render_toml({"revisions": {"2025": {"casillas": [{"id": "01"}, {"id": "02"}]}}})
+
+    assert rendered == '[[revisions.2025.casillas]]\nid = "01"\n\n[[revisions.2025.casillas]]\nid = "02"\n'
+
+
+def test_render_toml_places_comments_above_their_table_and_the_parser_drops_them() -> None:
+    document = {"revisions": {"2025": {"casillas": [{"id": "01"}, {"id": "02"}]}}}
+
+    rendered = render_toml(
+        document,
+        comments={(): "head: one\nhead: two", ("revisions", "2025", "casillas", 1): "row: second"},
+    )
+
+    assert rendered.splitlines() == [
+        "# head: one",
+        "# head: two",
+        "[[revisions.2025.casillas]]",
+        'id = "01"',
+        "",
+        "# row: second",
+        "[[revisions.2025.casillas]]",
+        'id = "02"',
+    ]
+    assert tomllib.loads(rendered) == document
+
+
+def test_render_toml_refuses_a_value_with_no_toml_form() -> None:
+    with pytest.raises(TypeError, match="no TOML form"):
+        render_toml({"value": None})
+    with pytest.raises(TypeError, match="keys must be strings"):
+        render_toml({"table": {1: "x"}})

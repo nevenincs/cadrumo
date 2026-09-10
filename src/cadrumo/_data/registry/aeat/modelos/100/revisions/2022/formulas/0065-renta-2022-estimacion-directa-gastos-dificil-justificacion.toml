@@ -1,5 +1,5 @@
 [[revisions."2022".formulas]]
-id = "renta-2022-estimacion-directa-gastos-dificil-justificacion"
+id = "renta-estimacion-directa-gastos-dificil-justificacion"
 target_casilla_id = "0222"
 expression = { op = "min", args = [
     { op = "max", args = [

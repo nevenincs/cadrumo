@@ -54,7 +54,7 @@ modelo:
             label: Suma de rendiments nets
           irpf-pf-modulos-total:
             help: null
-            label: null
+            label: Total
           irpf-pf-modulos-volumen-agrario:
             help: null
             label: Volum d'ingressos agraris del trimestre

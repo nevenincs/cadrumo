@@ -18,49 +18,49 @@
 
 [[revisions."2013-2022".casillas]]
 id = "perc.nif"
+continuidad_id = "payee-nif"
 number = "18-26"
 section = ["perceptor", "identificacion"]
 data_type = "nif"
 semantic_role = "payee_nif"
 required = true
 input_kind = "manual"
-export_refs = ["modelo-270-perc-nif"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 
 [[revisions."2013-2022".casillas]]
 id = "perc.nif-representante-legal"
+continuidad_id = "payee-representative-nif"
 number = "27-35"
 section = ["perceptor", "identificacion"]
 data_type = "nif"
 semantic_role = "payee_representative_nif"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-270-perc-nif-representante-legal"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 
 [[revisions."2013-2022".casillas]]
 id = "perc.nombre"
+continuidad_id = "payee-name"
 number = "36-75"
 section = ["perceptor", "identificacion"]
 data_type = "name"
 semantic_role = "payee_name"
 required = true
 input_kind = "manual"
-export_refs = ["modelo-270-perc-nombre"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 
 [[revisions."2013-2022".casillas]]
 id = "perc.nombre-representante"
+continuidad_id = "m270-representante-nombre"
 number = "76-115"
 section = ["perceptor", "identificacion"]
 data_type = "name"
 semantic_role = "m270_representante_nombre"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-270-perc-nombre-representante"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 
@@ -71,13 +71,13 @@ source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 # sin mediación de establecimiento permanente.
 [[revisions."2013-2022".casillas]]
 id = "perc.tipo-perceptor"
+continuidad_id = "m270-tipo-perceptor"
 number = "116"
 section = ["perceptor", "identificacion"]
 data_type = "integer"
 semantic_role = "m270_tipo_perceptor"
 required = true
 input_kind = "manual"
-export_refs = ["modelo-270-perc-tipo-perceptor"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 
@@ -86,87 +86,87 @@ source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 # is clave 5.
 [[revisions."2013-2022".casillas]]
 id = "perc.clave-personalidad"
+continuidad_id = "m270-clave-personalidad"
 number = "117"
 section = ["perceptor", "identificacion"]
 data_type = "text"
 semantic_role = "m270_clave_personalidad"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-270-perc-clave-personalidad"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 
 [[revisions."2013-2022".casillas]]
 id = "perc.provincia"
+continuidad_id = "payee-province"
 number = "118-119"
 section = ["perceptor", "identificacion"]
 data_type = "province_code"
 semantic_role = "payee_province"
 required = true
 input_kind = "manual"
-export_refs = ["modelo-270-perc-provincia"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 
 [[revisions."2013-2022".casillas]]
 id = "perc.fecha-sorteo"
+continuidad_id = "m270-fecha-sorteo"
 number = "120-127"
 section = ["perceptor", "premio"]
 data_type = "date"
 semantic_role = "m270_fecha_sorteo"
 required = true
 input_kind = "manual"
-export_refs = ["modelo-270-perc-fecha-sorteo"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 
 [[revisions."2013-2022".casillas]]
 id = "perc.fecha-pago"
+continuidad_id = "m270-fecha-pago-premio"
 number = "128-135"
 section = ["perceptor", "premio"]
 data_type = "date"
 semantic_role = "m270_fecha_pago_premio"
 required = true
 input_kind = "manual"
-export_refs = ["modelo-270-perc-fecha-pago"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 
 [[revisions."2013-2022".casillas]]
 id = "perc.importe-premio"
+continuidad_id = "m270-importe-premio"
 number = "136-150"
 section = ["perceptor", "premio"]
 data_type = "money"
 semantic_role = "m270_importe_premio"
 required = true
 input_kind = "manual"
-export_refs = ["modelo-270-perc-importe-premio"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"] }
 
 [[revisions."2013-2022".casillas]]
 id = "perc.base-retencion"
+continuidad_id = "perc-base-retencion"
 number = "151-165"
 section = ["perceptor", "premio"]
 data_type = "money"
 semantic_role = "base_retenciones_ingresos_a_cuenta"
 required = true
 input_kind = "manual"
-export_refs = ["modelo-270-perc-base-retencion"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"] }
 
 [[revisions."2013-2022".casillas]]
 id = "perc.retencion"
+continuidad_id = "perc-retencion"
 number = "166-180"
 section = ["perceptor", "premio"]
 data_type = "money"
 semantic_role = "retenciones_ingresos_a_cuenta"
 required = true
 input_kind = "manual"
-export_refs = ["modelo-270-perc-retencion"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"] }
@@ -175,37 +175,37 @@ constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1"
 # presented for collection by someone who is not its ultimate beneficiary.
 [[revisions."2013-2022".casillas]]
 id = "perc.gestor-cobro"
+continuidad_id = "m270-gestor-cobro"
 number = "181"
 section = ["perceptor", "premio"]
 data_type = "text"
 semantic_role = "m270_gestor_cobro"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-270-perc-gestor-cobro"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 
 [[revisions."2013-2022".casillas]]
 id = "perc.nif-pais-residencia"
+continuidad_id = "m270-nif-pais-residencia"
 number = "433-452"
 section = ["perceptor", "no_residente"]
 data_type = "text"
 semantic_role = "m270_nif_pais_residencia"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-270-perc-nif-pais-residencia"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 
 [[revisions."2013-2022".casillas]]
 id = "perc.fecha-nacimiento"
+continuidad_id = "m270-fecha-nacimiento"
 number = "453-460"
 section = ["perceptor", "no_residente"]
 data_type = "date"
 semantic_role = "m270_fecha_nacimiento"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-270-perc-fecha-nacimiento"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 
@@ -218,24 +218,24 @@ source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 # the two-character country code from Anexo II of Orden EHA/3496/2011.
 [[revisions."2013-2022".casillas]]
 id = "perc.lugar-nacimiento"
+continuidad_id = "m270-lugar-nacimiento"
 number = "461-497"
 section = ["perceptor", "no_residente"]
 data_type = "text"
 semantic_role = "m270_lugar_nacimiento"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-270-perc-lugar-nacimiento"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 
 [[revisions."2013-2022".casillas]]
 id = "perc.pais-residencia"
+continuidad_id = "m270-pais-residencia"
 number = "498-499"
 section = ["perceptor", "no_residente"]
 data_type = "country_code"
 semantic_role = "m270_pais_residencia"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-270-perc-pais-residencia"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]

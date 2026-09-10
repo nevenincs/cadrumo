@@ -25,6 +25,7 @@ from ...packaging.evidence import (
 )
 from ...packaging.hashing import sha256_path
 from ...packaging.tests._release_cohort_support import release_cohort
+from ...source_tree import content_digest, repository_files
 from ..readiness import check_distribution_evidence_set
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -33,7 +34,7 @@ _ROW = "current-platform-python"
 
 
 def _run(*arguments: str, cwd: Path) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(  # noqa: S603 - tests invoke fixed git/Python commands directly
+    return subprocess.run(  # noqa: S603 - tests invoke a fixed Python command directly
         arguments,
         cwd=cwd,
         capture_output=True,
@@ -42,28 +43,22 @@ def _run(*arguments: str, cwd: Path) -> subprocess.CompletedProcess[str]:
     )
 
 
-def _git_repo(root: Path) -> str:
+def _source_tree(root: Path) -> str:
+    """Plant a plain source tree and return the content digest readiness checks against.
+
+    ``var/`` is excluded the same way the real repository excludes it, so
+    writing evidence and cohort artifacts beneath the tree afterward -- both
+    happen under ``root / "var"`` in these fixtures -- never moves the digest
+    a later readiness check recomputes.
+    """
     root.mkdir()
-    _run("git", "init", "--quiet", cwd=root)
+    (root / ".gitignore").write_text("var/\n", encoding="utf-8")
     (root / "source.txt").write_text("release source\n", encoding="utf-8")
-    _run("git", "add", "source.txt", cwd=root)
-    _run(
-        "git",
-        "-c",
-        "user.name=Cadrumo Readiness Test",
-        "-c",
-        "user.email=readiness@example.invalid",
-        "commit",
-        "--quiet",
-        "-m",
-        "release source",
-        cwd=root,
-    )
-    return _run("git", "rev-parse", "HEAD", cwd=root).stdout.strip()
+    return content_digest(root, repository_files(root))
 
 
-def _cohort(directory: Path, *, commit: str, payload_suffix: str = ""):
-    return release_cohort(directory, commit=commit, payload_suffix=payload_suffix)
+def _cohort(directory: Path, *, source_digest: str, payload_suffix: str = ""):
+    return release_cohort(directory, source_digest=source_digest, payload_suffix=payload_suffix)
 
 
 def _transcript(root: Path) -> CommandTranscript:
@@ -127,8 +122,8 @@ def _record(
 
 def _ready_tree(tmp_path: Path):
     repo = tmp_path / "repo"
-    commit = _git_repo(repo)
-    cohort = _cohort(repo / "var" / "release-cohort", commit=commit)
+    digest = _source_tree(repo)
+    cohort = _cohort(repo / "var" / "release-cohort", source_digest=digest)
     evidence = repo / "var" / "distribution-install-readiness"
     evidence.mkdir(parents=True)
     return repo, cohort, evidence
@@ -163,7 +158,11 @@ def test_incomplete_or_failed_evidence_set_blocks(tmp_path: Path) -> None:
 def test_evidence_from_another_cohort_blocks(tmp_path: Path) -> None:
     """A valid record for different bytes is mismatched rather than reusable."""
     repo, first, evidence = _ready_tree(tmp_path)
-    second = _cohort(repo / "var" / "other-release-cohort", commit=first.manifest.source.commit, payload_suffix="two")
+    second = _cohort(
+        repo / "var" / "other-release-cohort",
+        source_digest=first.manifest.source.source_digest,
+        payload_suffix="two",
+    )
     write_distribution_evidence(evidence, _record(repo, first))
 
     check = check_distribution_evidence_set(
@@ -177,29 +176,16 @@ def test_evidence_from_another_cohort_blocks(tmp_path: Path) -> None:
     assert "mismatched evidence" in check.detail
 
 
-def test_evidence_for_an_older_source_commit_blocks(tmp_path: Path) -> None:
+def test_evidence_for_an_older_source_digest_blocks(tmp_path: Path) -> None:
     """Even passing retained rows become stale after the checked-out source changes."""
     repo, cohort, evidence = _ready_tree(tmp_path)
     write_distribution_evidence(evidence, _record(repo, cohort))
     (repo / "source.txt").write_text("new source revision\n", encoding="utf-8")
-    _run("git", "add", "source.txt", cwd=repo)
-    _run(
-        "git",
-        "-c",
-        "user.name=Cadrumo Readiness Test",
-        "-c",
-        "user.email=readiness@example.invalid",
-        "commit",
-        "--quiet",
-        "-m",
-        "new source",
-        cwd=repo,
-    )
 
     check = check_distribution_evidence_set(repo, required_rows=(_ROW,))
 
     assert check.passed is False
-    assert "does not match checked-out commit" in check.detail
+    assert "does not match checked-out source digest" in check.detail
 
 
 @pytest.mark.parametrize(

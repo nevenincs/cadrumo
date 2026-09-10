@@ -1,5 +1,5 @@
 [[revisions."2024".bindings]]
-id = "renta-2024-family-ascendant-disability-grade"
+id = "renta-family-ascendant-disability-grade"
 source = "profile"
 selector = { profile_model = "RentaFamilyProfile", collection = "ascendants", field = "disability_grade", xsd_path = "/DatosIdentificativos/Ascendientes/Ascendiente/PCTMINASDLG", dictionary_field = "PCTMINASDLG", repeating = true }
 aggregation = { op = "rows" }

@@ -8,13 +8,13 @@
 # in LIRPF Art 85.
 
 [[revisions."2025".formulas]]
-id = "m210-base-imponible-2025"
+id = "m210-base-imponible"
 target_casilla_id = "base_imponible"
 expression = { op = "m210_resolve_base_imponible", args = [
     { casilla_id = "tipo_renta" },
     { casilla_id = "rendimientos_integros" },
     { casilla_id = "gastos_deducibles" },
-    { binding = "m210-2025-profile-country-of-fiscal-residence" },
+    { binding = "m210-profile-country-of-fiscal-residence" },
     { casilla_id = "valor_catastral" },
     { casilla_id = "coeficiente_imputacion_inmobiliaria" },
     { casilla_id = "dias_imputacion" },

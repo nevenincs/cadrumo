@@ -29,6 +29,7 @@ from .binding_selector_utils import (
 )
 from .casilla_membership import casillas_by_id
 from .errors import RegistryValidationError
+from .export_field_casilla import layout_fields_in_emission_order
 from .export_parse import xml_dictionary_entries
 from .fixed_width_codec import ExportJustification, ExportPadding
 from .ids import ExportFieldId
@@ -528,10 +529,7 @@ def _verify_layout_evidence(snapshot: RegistrySnapshot, layout: ExportLayoutDefi
 
 
 def _ordered_fields(layout: ExportLayoutDefinition) -> tuple[ExportFieldDefinition, ...]:
-    ordered: list[ExportFieldDefinition] = []
-    for record in sorted(layout.records, key=lambda item: item.order):
-        ordered.extend(sorted(record.fields, key=lambda item: (-1 if item.offset is None else item.offset, item.id)))
-    return tuple(ordered)
+    return tuple(field for _record, field in layout_fields_in_emission_order(layout))
 
 
 def _index_fields(
@@ -558,12 +556,6 @@ def _index_fields_by_casilla(
         if field.casilla_id not in casillas:
             raise RegistryValidationError(
                 f"export field {field.id!r} references unknown casilla {field.casilla_id!r}",
-            )
-        casilla = casillas[field.casilla_id]
-        if field.id not in casilla.export_refs:
-            raise RegistryValidationError(
-                f"export field {field.id!r} points to casilla {field.casilla_id!r}, "
-                "but the casilla does not declare the export ref",
             )
         grouped.setdefault(field.casilla_id, []).append(field)
     return {casilla_id: tuple(casilla_fields) for casilla_id, casilla_fields in grouped.items()}

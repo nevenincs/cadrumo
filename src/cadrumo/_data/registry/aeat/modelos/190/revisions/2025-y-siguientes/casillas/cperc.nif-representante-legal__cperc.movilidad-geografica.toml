@@ -6,6 +6,8 @@
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.nif-representante-legal"
+continuidad_id = "representante-legal-nif"
+continuidad_origin = "seeded"
 number = "27-35"
 section = ["perceptor", "identificacion"]
 data_type = "nif"
@@ -17,6 +19,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.ingresos-a-cuenta-repercutidos"
+continuidad_id = "ingresos-a-cuenta-repercutidos"
+continuidad_origin = "seeded"
 number = "135-147"
 section = ["perceptor", "percepcion"]
 data_type = "money"
@@ -29,6 +33,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.ejercicio-devengo"
+continuidad_id = "devengo-year"
+continuidad_origin = "seeded"
 number = "148-151"
 section = ["perceptor", "percepcion"]
 data_type = "year"
@@ -40,6 +46,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.nif-conyuge-titular-unidad"
+continuidad_id = "payee-spouse-or-unit-titular-nif"
+continuidad_origin = "seeded"
 number = "158-166"
 section = ["perceptor", "identificacion"]
 data_type = "nif"
@@ -51,6 +59,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.discapacidad"
+continuidad_id = "payee-disability-clave"
+continuidad_origin = "seeded"
 number = "167"
 section = ["perceptor", "identificacion"]
 data_type = "text"
@@ -64,6 +74,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.contrato-relacion"
+continuidad_id = "payee-contract-relation-clave"
+continuidad_origin = "seeded"
 number = "168"
 section = ["perceptor", "percepcion"]
 data_type = "text"
@@ -77,6 +89,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.titular-unidad-convivencia"
+continuidad_id = "payee-unit-convivencia-titular-clave"
+continuidad_origin = "seeded"
 number = "169"
 section = ["perceptor", "identificacion"]
 data_type = "text"
@@ -90,6 +104,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.movilidad-geografica"
+continuidad_id = "payee-geographic-mobility-clave"
+continuidad_origin = "seeded"
 number = "170"
 section = ["perceptor", "percepcion"]
 data_type = "text"

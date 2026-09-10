@@ -55,9 +55,11 @@ from .export_fragment_provenance import (
     ExportFieldDerivationCode,
     ExportFragmentProvenanceManifest,
     ExportFragmentTarget,
+    attach_field_verdicts,
     emit_export_fragment_provenance_manifest,
 )
-from .joined_record_design import JoinedRecordDesign, JoinedRecordDesignField, JoinedRecordDesignRecord
+from .generated_tree_dispositions import type_column_rulings_for
+from .joined_record_design import JoinedRecordDesign, JoinedRecordDesignField, JoinedRecordDesignRecord, design_view
 from .render_profile import (
     RenderProfile,
     RenderProfileAnchor,
@@ -459,6 +461,15 @@ def render_complete_export_tree(
         note_governed_amounts=note_governed_amounts,
         applicability_notes=applicability_notes,
     )
+    # Every emitted field is attested against its official row: agreeing, or
+    # adjudicated by a type-column ruling pinned to these exact design bytes. A
+    # divergence nothing rules on refuses here, before any file is written.
+    derivations = list(
+        attach_field_verdicts(
+            tuple(derivations),
+            type_column_rulings_for(str(joined.source.source_ref), joined.source.source_sha256),
+        ),
+    )
     _validate_generated_projection_bijection(tuple(derivations), joined.projection_endpoints)
     filing_envelope = (
         compile_filing_envelope_definition(
@@ -706,14 +717,17 @@ def _require_exact_record_geometry(joined_record: JoinedRecordDesignRecord) -> N
     expected_offset = 1
     for joined_field in joined_record.fields:
         parser_field = joined_field.parser_field
-        if parser_field.offset != expected_offset:
-            defect = "an overlap" if parser_field.offset < expected_offset else "a gap"
+        # A declared part stands in for its share of the cell it divides.
+        part = joined_field.semantic_entry.part
+        offset, length = (part.offset, part.length) if part is not None else (parser_field.offset, parser_field.length)
+        if offset != expected_offset:
+            defect = "an overlap" if offset < expected_offset else "a gap"
             raise RegistryValidationError(
                 f"official record {joined_record.parser_sheet.record_identity!r} has {defect} before "
                 f"field {parser_field.source_cell!r}: expected offset {expected_offset}, "
-                f"got {parser_field.offset}",
+                f"got {offset}",
             )
-        expected_offset = parser_field.offset + parser_field.length
+        expected_offset = offset + length
 
     actual_total = expected_offset - 1
     if actual_total != declared_total:
@@ -724,6 +738,57 @@ def _require_exact_record_geometry(joined_record: JoinedRecordDesignRecord) -> N
 
 
 def _normalise_field(
+    joined_field: JoinedRecordDesignField,
+    transport_profile: ExportTreeTransportProfile,
+    render_profile: RenderProfile,
+    *,
+    export_record_id: str,
+    source_defects: tuple[SourceDefectDeclaration, ...] = (),
+    note_governed_amounts: tuple[NoteGovernedAmountDeclaration, ...] = (),
+    applicability_notes: tuple[NoteStatedApplicabilityDeclaration, ...] = (),
+) -> ExportFieldDerivation:
+    """Derive one emitted field, deriving a declared part from its own printed text.
+
+    A part is derived exactly as a whole cell carrying the part's offset,
+    length, type and statement would be, so it earns no reading a printed cell
+    could not. The derivation then records the real parser row beside the part
+    it filled, and re-validates, so the attested coordinates are the part's.
+    """
+    part = joined_field.semantic_entry.part
+    if part is None:
+        return _normalise_cell(
+            joined_field,
+            transport_profile,
+            render_profile,
+            export_record_id=export_record_id,
+            source_defects=source_defects,
+            note_governed_amounts=note_governed_amounts,
+            applicability_notes=applicability_notes,
+        )
+    view = joined_field.model_copy(update={"parser_field": design_view(joined_field)})
+    derived = _normalise_cell(
+        view,
+        transport_profile,
+        render_profile,
+        export_record_id=export_record_id,
+        source_defects=source_defects,
+        note_governed_amounts=note_governed_amounts,
+        applicability_notes=applicability_notes,
+    )
+    return ExportFieldDerivation.model_validate(
+        {
+            "export_record_id": derived.export_record_id,
+            "parser_field": joined_field.parser_field,
+            "semantic_entry": derived.semantic_entry,
+            "field": derived.field,
+            "normalization_schema_version": derived.normalization_schema_version,
+            "derivation_code": derived.derivation_code,
+            "verdict": derived.verdict,
+        },
+    )
+
+
+def _normalise_cell(
     joined_field: JoinedRecordDesignField,
     transport_profile: ExportTreeTransportProfile,
     render_profile: RenderProfile,
@@ -1086,10 +1151,9 @@ def _numeric_derivation(
                 signed=signed,
                 export_record_id=export_record_id,
                 decimals=None if signed else adjudicated.decimal_digits,
-                # A note that mandates a value closes the slot's domain, and the
-                # schema carries that on the unsigned scaled shape only -- which
-                # is exactly what the declaration validator already refuses a
-                # signed run for, so no signed adjudication can arrive with one.
+                # A note that mandates a value closes the slot's domain. The
+                # schema carries it on the unsigned scaled shape and on signed
+                # money alike, so a signed run keeps its mandate.
                 allowed_values=adjudicated.mandated_values,
                 derivation_code="numeric-note-governed-amount-v1",
             )
@@ -1485,6 +1549,7 @@ def _schema_field(
                 "date_format": date_format,
                 "decimals": decimals,
                 "signed": signed,
+                "required_for": _qualified_requirement(parser_field.validation),
                 "value_policy": value_policy,
                 "allowed_values": allowed_values,
                 "legal_refs": semantic_entry.legal_refs,
@@ -1496,8 +1561,74 @@ def _schema_field(
     )
 
 
+#: The requirement wordings this project has adjudicated as unconditional,
+#: written as the designs write them once punctuation and case are set aside.
+#:
+#: ``obligatorio pi`` is modelo 303's "Tipo Declaracion" cell. "PI" is not a
+#: condition on the requirement: it is the label under which the same design's
+#: Nota 1 lists the admitted declaration types ("PI: El tipo de declaracion puede
+#: ser: C ... D ... G ... I ... N ... V ..."), so the cell states a requirement
+#: and points at its value list. Read as a qualifier, it shipped the one field
+#: every 303 filing must carry as not required.
+_UNCONDITIONAL_REQUIREMENTS: Final[frozenset[str]] = frozenset({"obligatorio", "obligatorio pi"})
+
+#: The qualified requirement wordings this project has adjudicated, mapped to
+#: the taxpayer legal form they name. Modelo 390's sujeto pasivo nombre reads
+#: "OBLIGATORIO (persona fisica)": required for a natural person, meaningless for
+#: an entity, so it is carried as ``required_for`` and evaluated per filing.
+_QUALIFIED_REQUIREMENTS: Final[dict[str, Literal["natural_person"]]] = {
+    "obligatorio (persona fisica)": "natural_person",
+}
+
+#: Trailing punctuation a design may put after the requirement word. It ends a
+#: sentence; it does not qualify the requirement, and reading it as though it
+#: did is what silently downgraded twelve stated requirements in modelo 390.
+_REQUIREMENT_SENTENCE_PUNCTUATION: Final[str] = ".:;"
+
+
+def _qualified_requirement(validation: str | None) -> Literal["natural_person"] | None:
+    """Return the taxpayer legal form a qualified requirement names, or ``None``.
+
+    Accents are set aside because the designs spell the same qualifier both
+    ways. A field carrying one is not required unconditionally; the schema
+    admits the condition on a producer-supplied header field only, so a
+    qualified wording on any other field refuses at generation instead of
+    being dropped.
+    """
+    if validation is None:
+        return None
+    folded = unicodedata.normalize("NFKD", validation.strip().rstrip(_REQUIREMENT_SENTENCE_PUNCTUATION).strip())
+    ascii_only = "".join(character for character in folded if not unicodedata.combining(character))
+    return _QUALIFIED_REQUIREMENTS.get(ascii_only.casefold())
+
+
 def _is_required(validation: str | None) -> bool:
-    return validation is not None and validation.strip().casefold() == "obligatorio"
+    """Read whether the design states this field's requirement unconditionally.
+
+    A cell is one of three things and only two are answerable here. A SILENT
+    cell makes no requirement claim. A cell stating the bare requirement word,
+    which a design may end as a sentence, states an unconditional requirement.
+    A cell stating a QUALIFIED requirement -- modelo 390's
+    ``OBLIGATORIO (persona fisica)`` -- is neither, and this function's boolean
+    result cannot carry it; ``_qualified_requirement`` reads it instead. Modelo
+    303's ``Obligatorio PI`` looks qualified and is not; see
+    ``_UNCONDITIONAL_REQUIREMENTS``.
+
+    Only the first two are repaired here. The comparison used to demand exact
+    equality with the bare word, so ``OBLIGATORIO.`` fell through to ``False``
+    and twelve stated requirements shipped as no requirement, defeated by a
+    full stop. Trailing sentence punctuation is now set aside before the
+    comparison.
+
+    A qualified cell stays unrequired here: its requirement holds only for a
+    taxpayer of one legal form, which a layout cannot know, so it is carried as
+    a condition the export evaluates against the filing's own taxpayer.
+    """
+    if validation is None:
+        return False
+    return (
+        validation.strip().rstrip(_REQUIREMENT_SENTENCE_PUNCTUATION).strip().casefold() in _UNCONDITIONAL_REQUIREMENTS
+    )
 
 
 def _render_tree_files(

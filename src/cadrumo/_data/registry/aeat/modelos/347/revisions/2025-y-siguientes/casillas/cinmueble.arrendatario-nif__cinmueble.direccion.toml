@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "inmueble.arrendatario-nif"
+continuidad_id = "arrendatario-nif"
+continuidad_origin = "seeded"
 number = "inmueble.arrendatario-nif"
 section = ["inmueble", "identificacion"]
 data_type = "nif"
@@ -8,9 +10,10 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.inmueble.f005"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "inmueble.representante-legal-nif"
+continuidad_id = "arrendatario-representante-legal-nif"
+continuidad_origin = "seeded"
 number = "inmueble.representante-legal-nif"
 section = ["inmueble", "identificacion"]
 data_type = "nif"
@@ -19,9 +22,10 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.inmueble.f006"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "inmueble.arrendatario-nombre"
+continuidad_id = "arrendatario-nombre"
+continuidad_origin = "seeded"
 number = "inmueble.arrendatario-nombre"
 section = ["inmueble", "identificacion"]
 data_type = "text"
@@ -30,9 +34,10 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.inmueble.f007"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "inmueble.importe-operacion"
+continuidad_id = "importe-operacion-arrendamiento"
+continuidad_origin = "seeded"
 number = "inmueble.importe-operacion"
 section = ["inmueble", "importes"]
 data_type = "money"
@@ -41,9 +46,10 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.inmueble.f010"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "inmueble.situacion"
+continuidad_id = "situacion-inmueble"
+continuidad_origin = "seeded"
 number = "inmueble.situacion"
 section = ["inmueble", "inmueble"]
 data_type = "integer"
@@ -52,9 +58,10 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.inmueble.f011"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "inmueble.referencia-catastral"
+continuidad_id = "referencia-catastral"
+continuidad_origin = "seeded"
 number = "inmueble.referencia-catastral"
 section = ["inmueble", "inmueble"]
 data_type = "text"
@@ -63,9 +70,10 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.inmueble.f012"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "inmueble.direccion"
+continuidad_id = "direccion-inmueble"
+continuidad_origin = "seeded"
 number = "inmueble.direccion"
 section = ["inmueble", "inmueble"]
 data_type = "text"
@@ -74,4 +82,3 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.inmueble.f013"]

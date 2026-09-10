@@ -1,5 +1,5 @@
 [[revisions."2021".formulas]]
-id = "renta-2021-capital-inmobiliario-rendimiento-neto"
+id = "renta-capital-inmobiliario-rendimiento-neto"
 target_casilla_id = "0149"
 expression = { op = "sum", args = [
         { casilla_id = "0102" },

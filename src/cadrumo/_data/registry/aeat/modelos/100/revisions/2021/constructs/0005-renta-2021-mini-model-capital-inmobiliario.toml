@@ -9,10 +9,10 @@ source_refs = [
     "lirpf-cuota-chain-authority",
 ]
 formulas = [
-    "renta-2021-atribucion-capital-inmobiliario-rendimiento-neto-computable",
-    "renta-2021-atribucion-capital-inmobiliario-suma",
-    "renta-2021-capital-inmobiliario-rendimiento-neto",
-    "renta-2021-capital-inmobiliario-rendimiento-neto-reducido",
-    "renta-2021-capital-inmobiliario-suma-rendimientos-reducidos",
-    "renta-2021-inmobiliario-suma-rentas-imputadas",
+    "renta-atribucion-capital-inmobiliario-rendimiento-neto-computable",
+    "renta-atribucion-capital-inmobiliario-suma",
+    "renta-capital-inmobiliario-rendimiento-neto",
+    "renta-capital-inmobiliario-rendimiento-neto-reducido",
+    "renta-capital-inmobiliario-suma-rendimientos-reducidos",
+    "renta-inmobiliario-suma-rentas-imputadas",
 ]

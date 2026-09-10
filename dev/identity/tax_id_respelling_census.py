@@ -309,10 +309,10 @@ def _scan_module(path: pathlib.Path, source: str) -> list[Finding]:
     return findings
 
 
-def census(revision: str) -> list[Finding]:
-    """Return every hand-respelled tax-id normalisation at *revision*."""
+def census() -> list[Finding]:
+    """Return every hand-respelled tax-id normalisation in the working tree."""
     findings: list[Finding] = []
-    for path, source in production_sources(revision):
+    for path, source in production_sources():
         try:
             findings += _scan_module(pathlib.Path(path), source)
         except SyntaxError:
@@ -321,13 +321,12 @@ def census(revision: str) -> list[Finding]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Print the respelling census for one pinned revision."""
+    """Print the respelling census for the working tree."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("revision", help="Pinned git revision to scan, e.g. HEAD")
     parser.add_argument("--kind", choices=("comparison", "keying", "unclassified", "free_standing"))
     args = parser.parse_args(argv)
 
-    findings = census(args.revision)
+    findings = census()
     if args.kind:
         findings = [f for f in findings if f.kind == args.kind]
     for finding in findings:

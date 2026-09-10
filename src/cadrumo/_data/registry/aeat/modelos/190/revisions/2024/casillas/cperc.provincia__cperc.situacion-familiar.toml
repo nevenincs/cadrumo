@@ -8,6 +8,7 @@
 
 [[revisions."2024".casillas]]
 id = "perc.provincia"
+continuidad_id = "payee-province"
 number = "76-77"
 section = ["perceptor", "identificacion"]
 data_type = "province_code"
@@ -19,6 +20,7 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2024".casillas]]
 id = "perc.ceuta-melilla"
+continuidad_id = "payee-ceuta-melilla-clave"
 number = "152"
 section = ["perceptor", "percepcion"]
 data_type = "text"
@@ -34,6 +36,7 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2024".casillas]]
 id = "perc.ano-nacimiento"
+continuidad_id = "payee-birth-year"
 number = "153-156"
 section = ["perceptor", "identificacion"]
 data_type = "year"
@@ -47,6 +50,7 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2024".casillas]]
 id = "perc.situacion-familiar"
+continuidad_id = "payee-family-situation"
 number = "157"
 section = ["perceptor", "identificacion"]
 data_type = "text"

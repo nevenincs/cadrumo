@@ -43,9 +43,9 @@ formulas = [
     # and their legal_refs are already covered by this construct's. They were
     # declared without being enrolled, so no construct owned them and the
     # workflow surfaces a construct carries did not reach them.
-    "modelo-353-2021-2025-resultado",
-    "modelo-353-2021-2025-resultado-autoliquidacion",
-    "modelo-353-2021-2025-compensar-pendientes-posteriores",
+    "modelo-353-resultado",
+    "modelo-353-resultado-autoliquidacion",
+    "modelo-353-compensar-pendientes-posteriores",
 ]
 bindings = [
     "modelo-353-iva-repercutido-general-cuota",

@@ -1,5 +1,5 @@
 [[revisions."2023".formulas]]
-id = "renta-2023-inmuebles-perdida-no-exenta-base-general"
+id = "renta-inmuebles-perdida-no-exenta-base-general"
 target_casilla_id = "1831"
 expression = { op = "min", args = [
     { literal = "0" },

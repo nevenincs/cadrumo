@@ -66,10 +66,16 @@ def test_schema_refusal_never_carries_the_reviewer_identity(reviewed_by: str) ->
     the coherence validator refuses it regardless of what ``reviewed_by`` says,
     so the refusal message must never depend on ``reviewed_by`` either.
     """
-    resolved = _Stamp(engineered_by=None, review_status="agent_reviewed", reviewed_by=reviewed_by, reviewed_at=None)
+    resolved = _Stamp(
+        engineered_by=None,
+        review_status="agent_reviewed",
+        reviewed_by=reviewed_by,
+        reviewed_at=None,
+        reviewed_against=None,
+    )
 
     with pytest.raises(StampError) as excinfo:
-        _assert_schema_accepts("2019-y-siguientes", resolved)
+        _assert_schema_accepts("2019-y-siguientes", resolved, predecessor=None)
 
     message = str(excinfo.value)
     assert reviewed_by not in message
@@ -91,9 +97,10 @@ def test_schema_refusal_message_is_independent_of_the_reviewer_identity() -> Non
             review_status="agent_reviewed",
             reviewed_by=reviewed_by,
             reviewed_at=None,
+            reviewed_against=None,
         )
         with pytest.raises(StampError) as excinfo:
-            _assert_schema_accepts("2019-y-siguientes", resolved)
+            _assert_schema_accepts("2019-y-siguientes", resolved, predecessor=None)
         messages.add(str(excinfo.value))
 
     assert messages == {
@@ -111,10 +118,12 @@ def test_schema_refusal_never_carries_pydantics_own_value_dump() -> None:
     happened to hide today's secret but left that framing intact would still
     be one string-length coincidence away from a future leak.
     """
-    resolved = _Stamp(engineered_by=None, review_status="agent_reviewed", reviewed_by="nif-Z", reviewed_at=None)
+    resolved = _Stamp(
+        engineered_by=None, review_status="agent_reviewed", reviewed_by="nif-Z", reviewed_at=None, reviewed_against=None
+    )
 
     with pytest.raises(StampError) as excinfo:
-        _assert_schema_accepts("2019-y-siguientes", resolved)
+        _assert_schema_accepts("2019-y-siguientes", resolved, predecessor=None)
 
     message = str(excinfo.value)
     assert "input_value" not in message
@@ -129,10 +138,16 @@ def test_schema_refusal_still_names_the_revision_and_the_missing_field() -> None
     still named, because that text comes from the validator's own ``msg``, not
     from pydantic's payload dump.
     """
-    resolved = _Stamp(engineered_by=None, review_status="agent_reviewed", reviewed_by="agent:x", reviewed_at=None)
+    resolved = _Stamp(
+        engineered_by=None,
+        review_status="agent_reviewed",
+        reviewed_by="agent:x",
+        reviewed_at=None,
+        reviewed_against=None,
+    )
 
     with pytest.raises(StampError, match=r"2019-y-siguientes.*reviewed_at"):
-        _assert_schema_accepts("2019-y-siguientes", resolved)
+        _assert_schema_accepts("2019-y-siguientes", resolved, predecessor=None)
 
 
 # ── Site: registry-load refusal (`_assert_revision_is_compiled`) ────────────
@@ -280,9 +295,10 @@ def test_none_of_the_three_refusal_sites_reach_pydantics_raw_input_dump(tmp_path
         review_status="agent_reviewed",
         reviewed_by=leak_prone_reviewer,
         reviewed_at=None,
+        reviewed_against=None,
     )
     with pytest.raises(StampError) as schema_excinfo:
-        _assert_schema_accepts("2019-y-siguientes", schema_resolved)
+        _assert_schema_accepts("2019-y-siguientes", schema_resolved, predecessor=None)
 
     modelo_dir = _modelo_130_with_a_short_unattributed_reviewer(tmp_path, reviewed_by=leak_prone_reviewer)
     with pytest.raises(StampError) as load_excinfo:

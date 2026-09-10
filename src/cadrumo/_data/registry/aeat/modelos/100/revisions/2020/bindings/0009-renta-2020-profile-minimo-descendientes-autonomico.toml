@@ -10,7 +10,7 @@
 # for this filing year); every other CCAA mirrors the estatal aggregate
 # exactly. Feeds casilla 0514 (autonómico).
 [[revisions."2020".bindings]]
-id = "renta-2020-profile-minimo-descendientes-autonomico"
+id = "renta-profile-minimo-descendientes-autonomico"
 source = "profile"
 selector = { profile_key = "renta_family.descendientes_minimos_aggregate_autonomico_2020" }
 aggregation = { op = "copy" }

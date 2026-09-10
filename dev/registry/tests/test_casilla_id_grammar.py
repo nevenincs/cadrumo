@@ -6,6 +6,8 @@ through the bundled registry via the validated authority.
 
 from __future__ import annotations
 
+import dataclasses
+
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
@@ -71,13 +73,48 @@ def test_every_bundled_identifier_falls_in_a_named_grammar(authority: ValidatedR
     assert not {modelo: count for modelo, count in unclassified.items() if count}
 
 
-def test_the_corpus_uses_more_than_one_grammar_and_modelos_mix_them(authority: ValidatedRegistryAuthority) -> None:
-    """The condition the screen exists to surface is present and measurable."""
-    from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
+def test_a_modelo_mixing_grammars_is_reported_and_one_that_does_not_is_not(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """The condition the screen exists to surface is detected and measured.
 
-    modelo_ids = tuple(sorted(str(code) for code in registry_modelo_codes()))
-    uses = screen_authority(authority, modelo_ids)
+    Constructed on copies of two single-grammar modelos, one numeric and one
+    dotted: one casilla of the numeric modelo is re-declared in the kebab
+    grammar, the shape an author reaching for a descriptive name leaves in a
+    numbered design. The screen must count the planted identifier under its own
+    grammar, report that modelo and only that modelo as mixing, and keep seeing
+    the untouched modelo's grammar. Constructed rather than read from the corpus,
+    so harmonising every live modelo onto one grammar leaves the proof standing.
+    """
+    numeric, dotted = authority.modelo("111"), authority.modelo("036")
+    (only_numeric,) = screen_authority(authority, ("111",))
+    assert [name for name, _ in only_numeric.counts] == ["numeric"], "the constructed mix must be the only one"
+    numeric_total = only_numeric.counts[0][1]
+    assert not screen_authority(authority, ("036",))[0].mixes
+
+    revision_id = min(numeric.revisions)
+    revision = numeric.revisions[revision_id]
+    victim = revision.casillas[0]
+    renamed = victim.model_copy(update={"id": f"{victim.id}-renombrada"})
+    assert classify_casilla_id(str(renamed.id)) == "kebab"
+    planted_revision = revision.model_copy(
+        update={"casillas": tuple(renamed if item is victim else item for item in revision.casillas)}
+    )
+    planted_modelo = numeric.model_copy(update={"revisions": {**numeric.revisions, revision_id: planted_revision}})
+    modelos = (planted_modelo, dotted)
+    planted = dataclasses.replace(
+        authority,
+        modelos=modelos,
+        _modelos_by_id={modelo.id: modelo for modelo in modelos},
+        _registry_validated=False,
+        _validated_modelos=set(),
+        _snapshots={},
+    )
+
+    uses = screen_authority(planted, ("036", "111"))
     grammars_seen = {name for use in uses for name in use.grammars_used}
     assert grammars_seen <= set(GRAMMARS)
-    assert len(grammars_seen) > 1
-    assert [use.modelo for use in uses if use.mixes], "at least one modelo mixes grammars"
+    assert grammars_seen == {"numeric", "kebab", "dotted"}
+    assert [use.modelo for use in uses if use.mixes] == ["111"]
+    mixing = next(use for use in uses if use.modelo == "111")
+    assert mixing.counts == (("numeric", numeric_total - 1), ("kebab", 1))

@@ -8,7 +8,7 @@
 # untabled epígrafe or a blank epígrafe resolves to zero (see the op's
 # docstring in _formula_runtime.py).
 [[revisions."2025".formulas]]
-id = "modelo-131-2025-modulos-rendimiento-neto-previo"
+id = "modelo-131-modulos-rendimiento-neto-previo"
 target_casilla_id = "modulos-rendimiento-neto-previo"
 expression = { op = "m131_resolve_modulos_previo", args = [
     { casilla_id = "modulos-epigrafe" },
@@ -45,7 +45,7 @@ required_text = [
 # fabricates one). Both minoraciones feed an internal advisory-support
 # casilla that never substitutes for the operator's manual casilla 01.
 [[revisions."2025".formulas]]
-id = "modelo-131-2025-modulos-rendimiento-neto-minorado"
+id = "modelo-131-modulos-rendimiento-neto-minorado"
 target_casilla_id = "modulos-rendimiento-neto-minorado"
 expression = { op = "subtract", args = [
     { casilla_id = "modulos-rendimiento-neto-previo" },
@@ -86,7 +86,7 @@ required_text = ["Fase 2ª: Determinación del rendimiento neto minorado"]
 # advisory-support figure, never a substitute for the operator's manual
 # casilla 01.
 [[revisions."2025".formulas]]
-id = "modelo-131-2025-modulos-rendimiento-neto-modulos"
+id = "modelo-131-modulos-rendimiento-neto-modulos"
 target_casilla_id = "modulos-rendimiento-neto-modulos"
 expression = { op = "m131_resolve_modulos_indices_generales", args = [
     { casilla_id = "modulos-epigrafe" },
@@ -115,7 +115,7 @@ required_text = ["Fase 3ª: Determinación del rendimiento neto de módulos"]
 # ignored because the activity carries a documented índice especial
 # (Orden HAC/1347/2024 Anexo II, instrucción 2.3).
 [[revisions."2025".formulas]]
-id = "modelo-131-2025-modulos-pequena-dimension-ignorado-flag"
+id = "modelo-131-modulos-pequena-dimension-ignorado-flag"
 target_casilla_id = "modulos-pequena-dimension-ignorado-flag"
 expression = { op = "m131_resolve_modulos_pequena_dimension_ignorado_flag", args = [
     { casilla_id = "modulos-epigrafe" },
@@ -133,7 +133,7 @@ required_text = [
 # de nuevas actividades (b.4) were declared simultaneously (mutually
 # exclusive per Orden HAC/1347/2024 Anexo II, instrucción 2.3).
 [[revisions."2025".formulas]]
-id = "modelo-131-2025-modulos-temporada-inicio-actividad-conflicto-flag"
+id = "modelo-131-modulos-temporada-inicio-actividad-conflicto-flag"
 target_casilla_id = "modulos-temporada-inicio-actividad-conflicto-flag"
 expression = { op = "m131_resolve_modulos_temporada_inicio_conflicto_flag", args = [
     { casilla_id = "modulos-indice-temporada" },
@@ -150,7 +150,7 @@ required_text = [
 # Fase 4ª — rendimiento neto de la actividad: módulos minus the 5 por 100
 # reducción general (Orden HAC/1347/2024 DA-1, apartados 1 y 3).
 [[revisions."2025".formulas]]
-id = "modelo-131-2025-modulos-rendimiento-neto-actividad"
+id = "modelo-131-modulos-rendimiento-neto-actividad"
 target_casilla_id = "modulos-rendimiento-neto-actividad"
 expression = { op = "subtract", args = [
     { casilla_id = "modulos-rendimiento-neto-modulos" },

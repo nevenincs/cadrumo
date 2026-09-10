@@ -12,7 +12,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f031"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2025"] }
 
 [[revisions."2025".casillas]]
@@ -26,7 +25,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f032"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2025"] }
 
 [[revisions."2025".casillas]]
@@ -40,7 +38,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f033"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2025"] }
 
 [[revisions."2025".casillas]]
@@ -54,7 +51,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f034"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2025"] }
 
 [[revisions."2025".casillas]]
@@ -68,7 +64,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f035"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2025"] }
 
 [[revisions."2025".casillas]]
@@ -82,7 +77,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f036"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2025"] }
 
 [[revisions."2025".casillas]]
@@ -96,7 +90,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f037"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2025"] }
 
 [[revisions."2025".casillas]]
@@ -110,7 +103,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f038"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2025"] }
 
 [[revisions."2025".casillas]]
@@ -124,7 +116,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f039"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2025"] }
 
 [[revisions."2025".casillas]]
@@ -138,7 +129,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f040"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2025"] }
 
 [[revisions."2025".casillas]]
@@ -152,7 +142,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f041"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2025"] }
 
 [[revisions."2025".casillas]]
@@ -166,7 +155,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f042"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2025"] }
 
 [[revisions."2025".casillas]]
@@ -180,7 +168,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f043"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2025"] }
 
 [[revisions."2025".casillas]]
@@ -194,7 +181,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f044"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2025"] }
 
 [[revisions."2025".casillas]]
@@ -208,7 +194,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f045"]
 [[revisions."2025".casillas]]
 id = "715"
 number = "715"
@@ -220,7 +205,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f046"]
 
 [[revisions."2025".casillas]]
 id = "716"
@@ -233,7 +217,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f047"]
 
 [[revisions."2025".casillas]]
 id = "717"
@@ -246,7 +229,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f048"]
 
 [[revisions."2025".casillas]]
 id = "718"
@@ -259,7 +241,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f049"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2025"] }
 
 [[revisions."2025".casillas]]
@@ -273,7 +254,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f050"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2025"] }
 
 [[revisions."2025".casillas]]
@@ -287,7 +267,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f051"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2025"] }
 
 [[revisions."2025".casillas]]
@@ -301,7 +280,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f052"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2025"] }
 
 [[revisions."2025".casillas]]
@@ -315,7 +293,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f053"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2025"] }
 
 [[revisions."2025".casillas]]
@@ -329,7 +306,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f054"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2025"] }
 
 [[revisions."2025".casillas]]
@@ -343,7 +319,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f055"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2025"] }
 
 [[revisions."2025".casillas]]
@@ -357,7 +332,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f056"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2025"] }
 
 [[revisions."2025".casillas]]
@@ -371,7 +345,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f057"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2025"] }
 
 [[revisions."2025".casillas]]
@@ -385,7 +358,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f058"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2025"] }
 
 [[revisions."2025".casillas]]
@@ -399,7 +371,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f059"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2025"] }
 
 [[revisions."2025".casillas]]
@@ -413,7 +384,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f060"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2025"] }
 
 [[revisions."2025".casillas]]
@@ -427,7 +397,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f061"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2025"] }
 
 [[revisions."2025".casillas]]
@@ -441,7 +410,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f062"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2025"] }
 
 [[revisions."2025".casillas]]
@@ -455,7 +423,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f063"]
 
 [[revisions."2025".casillas]]
 id = "733"
@@ -468,7 +435,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f064"]
 
 [[revisions."2025".casillas]]
 id = "734"
@@ -481,7 +447,6 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f065"]
 
 [[revisions."2025".casillas]]
 id = "735"
@@ -494,4 +459,3 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
-export_refs = ["m303-2025.dp30305.f066"]

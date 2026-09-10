@@ -8,7 +8,7 @@
 # (pérdida patrimonial), so no sign clamp is applied.
 
 [[revisions."2025".formulas]]
-id = "m210-base-ganancias-h-2025"
+id = "m210-base-ganancias-h"
 target_casilla_id = "base_imponible_ganancias_h"
 expression = { op = "add", args = [
     { casilla_id = "ganancia_importe" },

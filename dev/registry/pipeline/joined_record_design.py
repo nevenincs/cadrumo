@@ -53,6 +53,7 @@ __all__ = [
     "JoinedRecordDesignField",
     "JoinedRecordDesignRecord",
     "JoinedVariableEnvelope",
+    "design_view",
     "join_record_design_semantics",
 ]
 
@@ -175,6 +176,28 @@ class JoinedRecordDesign(_StrictModel):
         return self
 
 
+def design_view(joined_field: JoinedRecordDesignField) -> RecordDesignIntermediateField:
+    """Return the design slot a joined field fills, as the parser would print it alone.
+
+    A field filling a declared part of a cell sees the part's offset, length,
+    type and verbatim statement; every other field sees its parser row
+    unchanged. Every consumer that derives a field or decides which fields need a
+    reviewed representation reads this one view, so a part is never judged by
+    the text of the cell it divides.
+    """
+    part = joined_field.semantic_entry.part
+    if part is None:
+        return joined_field.parser_field
+    return joined_field.parser_field.model_copy(
+        update={
+            "offset": part.offset,
+            "length": part.length,
+            "aeat_type": part.aeat_type,
+            "content": part.statement,
+        },
+    )
+
+
 def _entry_is_exact_or_compiled_token(
     authored: SemanticMapEntry,
     compiled: SemanticMapEntry,
@@ -228,18 +251,18 @@ def _join_record_design_semantics(
     revision_id: RevisionId,
     projection_endpoints: tuple[ProjectionEndpointDeclaration, ...],
 ) -> JoinedRecordDesign:
-    entries_by_anchor = {semantic_anchor_key(entry.anchor): entry for entry in semantic_map.entries}
+    entries_by_anchor: dict[AnchorKey, list[SemanticMapEntry]] = {}
+    for entry in semantic_map.entries:
+        entries_by_anchor.setdefault(semantic_anchor_key(entry.anchor), []).append(entry)
     records_by_anchor = {semantic_record_key(record): record for record in semantic_map.records}
     joined_records = tuple(
         JoinedRecordDesignRecord(
             parser_sheet=sheet,
             semantic_record=records_by_anchor[intermediate_record_key(sheet)],
             fields=tuple(
-                JoinedRecordDesignField(
-                    parser_field=field,
-                    semantic_entry=_require_semantic_entry(entries_by_anchor, field),
-                )
+                JoinedRecordDesignField(parser_field=field, semantic_entry=entry)
                 for field in sheet.fields
+                for entry in _require_semantic_entries(entries_by_anchor, field)
             ),
         )
         for sheet in intermediate.sheets
@@ -270,11 +293,14 @@ def _join_record_design_semantics(
     )
 
 
-def _require_semantic_entry(
-    entries_by_anchor: dict[AnchorKey, SemanticMapEntry],
+def _require_semantic_entries(
+    entries_by_anchor: dict[AnchorKey, list[SemanticMapEntry]],
     field: RecordDesignIntermediateField,
-) -> SemanticMapEntry:
+) -> tuple[SemanticMapEntry, ...]:
     """Resolve one parser field's reviewed meaning, or refuse by name.
+
+    A cell whose own text divides it resolves to one entry per declared part,
+    in the order the parts sit in the cell; every other cell resolves to one.
 
     ``join_record_design_semantics`` always runs ``validate_semantic_map``
     first, which already proves an exact bijection between parser anchors and
@@ -285,10 +311,10 @@ def _require_semantic_entry(
     legible gap here too, never a bare ``KeyError`` inside the generator that
     authors filing artefacts.
     """
-    entry = entries_by_anchor.get(intermediate_anchor_key(field))
-    if entry is None:
+    entries = entries_by_anchor.get(intermediate_anchor_key(field))
+    if not entries:
         raise RegistryValidationError(
             f"semantic map has no entry for parser field: record_identity={field.record_identity!r}, "
             f"sheet={field.sheet!r}, ordinal={field.ordinal!r}, source_row={field.source_row!r}",
         )
-    return entry
+    return tuple(sorted(entries, key=lambda entry: entry.part.offset if entry.part is not None else 0))

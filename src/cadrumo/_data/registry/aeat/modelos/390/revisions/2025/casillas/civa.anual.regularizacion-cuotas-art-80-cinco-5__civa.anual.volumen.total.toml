@@ -35,7 +35,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-regularizacion-cuotas-art-80-cinco-5", "modelo-390-page-06-casilla-territorio-regularizacion-cuotas-art-80-cinco-5"]
 
 # Box [84] - '7. Resultado liquidación anual - Suma de resultados [84]' (offset 30, length 17 and offset 140, length 17).
 [[revisions."2025".casillas]]
@@ -51,7 +50,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-suma-resultados", "modelo-390-page-06-casilla-territorio-suma-resultados"]
 
 # Box [659] - '7. Resultado liquidación anual - IVA a la importación liquidado por la Aduana (sólo sujetos pasivos con opción de diferimiento) [659]' (offset 47, length 17 and offset 174, length 17).
 [[revisions."2025".casillas]]
@@ -67,7 +65,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-iva-importacion-diferimiento", "modelo-390-page-06-casilla-territorio-iva-importacion-diferimiento"]
 
 # Box [85] - '7. Resultado liquidación anual - Compensación de cuotas ejercicio anterior [85]' (offset 64, length 17).
 [[revisions."2025".casillas]]
@@ -83,7 +80,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-compensacion-cuotas-ejercicio-anterior"]
 
 # Box [86] - '7. Resultado liquidación anual - Resultado de la liquidación [86]' (offset 81, length 17).
 [[revisions."2025".casillas]]
@@ -99,7 +95,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-resultado-liquidacion"]
 
 # Box [87] - '8. Tributación razón de territorio - Administraciones - Territorio común [87]' (offset 98, length 5).
 [[revisions."2025".casillas]]
@@ -115,7 +110,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-territorio-comun-porcentaje"]
 
 # Box [88] - '8. Tributación razón de territorio - Administraciones - Álava [88]' (offset 103, length 5).
 [[revisions."2025".casillas]]
@@ -131,7 +125,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-territorio-alava-porcentaje"]
 
 # Box [89] - '8. Tributación razón de territorio - Administraciones - Guipúzcoa [89]' (offset 108, length 5).
 [[revisions."2025".casillas]]
@@ -147,7 +140,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-territorio-guipuzcoa-porcentaje"]
 
 # Box [90] - '8. Tributación razón de territorio - Administraciones - Vizcaya [90]' (offset 113, length 5).
 [[revisions."2025".casillas]]
@@ -163,7 +155,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-territorio-vizcaya-porcentaje"]
 
 # Box [91] - '8. Tributación razón de territorio - Administraciones - Navarra [91]' (offset 118, length 5).
 [[revisions."2025".casillas]]
@@ -179,7 +170,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-territorio-navarra-porcentaje"]
 
 # Box [92] - '8. Tributación razón de territorio - Administraciones - Resultado atribuible a territorio común [92]' (offset 157, length 17).
 [[revisions."2025".casillas]]
@@ -195,7 +185,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-territorio-resultado-atribuible-comun"]
 
 # Box [93] - '8. Tributación razón de territorio - Administraciones - Compens. cuotas ej. anterior atrib. territ. com. [93]' (offset 191, length 17).
 [[revisions."2025".casillas]]
@@ -211,7 +200,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-territorio-compensacion-atribuible-comun"]
 
 # Box [94] - '8. Tributación razón de territorio - Administraciones - Resultado liq. anual atribuible territ. comun [94]' (offset 208, length 17).
 [[revisions."2025".casillas]]
@@ -227,7 +215,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-territorio-resultado-anual-atribuible-comun"]
 
 # Box [95] - '9. Resultado de las liquidaciones - Total resultados a ingresar autoliquidaciones de IVA del ejercicio [95]' (offset 225, length 17).
 [[revisions."2025".casillas]]
@@ -243,7 +230,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-liquidaciones-total-a-ingresar"]
 
 # Box [96] - '9. Resultado de las liquidaciones - Total devoluc. mensuales IVA suj. pasivos Regtro. de devolución mensual [96]' (offset 242, length 17).
 [[revisions."2025".casillas]]
@@ -259,7 +245,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-116", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-liquidaciones-total-devoluciones-mensuales"]
 
 # Box [524] - '9. Resultado de las liquidaciones - Total devoluc. Por cuotas en la adquisicion de elementos de transporte [524]' (offset 259, length 17).
 [[revisions."2025".casillas]]
@@ -275,7 +260,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-116", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-liquidaciones-total-devoluciones-elementos-transporte"]
 
 # Box [98] - '9. Resultado de las liquidaciones - Resultado declaración-liquidación último periodo - A devolver [98]' (offset 293, length 17).
 [[revisions."2025".casillas]]
@@ -291,7 +275,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-116", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-liquidaciones-ultimo-periodo-a-devolver"]
 
 # Box [525] - '9. Resultado de las liquidaciones - Total resultados positivos del ejercicio (modelo 322) [525]' (offset 327, length 17).
 [[revisions."2025".casillas]]
@@ -307,7 +290,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-liquidaciones-total-resultados-positivos-m322"]
 
 # Box [526] - '9. Resultado de las liquidaciones - Total resultados negativos del ejercicio (modelo 322) [526]' (offset 344, length 17).
 [[revisions."2025".casillas]]
@@ -323,7 +305,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-liquidaciones-total-resultados-negativos-m322"]
 
 # Box [99] - '10. Volumen de operaciones - Operaciones en régimen general [99]' (offset 361, length 17).
 [[revisions."2025".casillas]]
@@ -339,7 +320,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-121", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-volumen-regimen-general"]
 
 # Box [653] - '10. Volumen de operaciones - Operaciones régimen especial del criterio de caja [653]' (offset 378, length 17).
 [[revisions."2025".casillas]]
@@ -355,7 +335,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-163-decies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-volumen-criterio-caja"]
 
 # Box [105] - '10. Volumen de operaciones - Operaciones exentas sin derecho a deducción [105]' (offset 429, length 17).
 [[revisions."2025".casillas]]
@@ -371,7 +350,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-20", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-volumen-exentas-sin-derecho-deduccion"]
 
 # Box [110] - '10. Volumen de operaciones - Operaciones no sujetas por reglas de localización (excepto las incluidas en la casilla 126) [110]' (offset 446, length 17).
 [[revisions."2025".casillas]]
@@ -387,7 +365,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-68", "ley-37-1992:art-69", "ley-37-1992:art-70", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-volumen-no-sujetas-reglas-localizacion"]
 
 # Box [125] - '10. Volumen de operaciones - Operaciones sujetas con inversión del sujeto pasivo [125]' (offset 463, length 17).
 [[revisions."2025".casillas]]
@@ -403,7 +380,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-84", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-volumen-inversion-sujeto-pasivo"]
 
 # Box [126] - '10. Volumen de operaciones - OSS. Operaciones no sujetas por reglas de localización acogidas a la OSS [126]' (offset 480, length 17).
 [[revisions."2025".casillas]]
@@ -419,7 +395,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-163-noniesdecies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-volumen-oss-no-sujetas-localizacion"]
 
 # Box [127] - '10. Volumen de operaciones - OSS. Operaciones sujetas y acogidas a la OSS [127]' (offset 497, length 17).
 [[revisions."2025".casillas]]
@@ -435,7 +410,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-163-noniesdecies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-volumen-oss-sujetas"]
 
 # Box [128] - '10. Volumen de operaciones - Operaciones intragrupo valoradas conforme a lo dispuesto en los arts. 78 y 79 LIVA [128]' (offset 514, length 17).
 [[revisions."2025".casillas]]
@@ -451,7 +425,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-163-sexies", "ley-37-1992:art-79", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-volumen-intragrupo-arts-78-79"]
 
 # Box [100] - '10. Volumen de operaciones - Operaciones en régimen simplificado [100]' (offset 531, length 17).
 [[revisions."2025".casillas]]
@@ -467,7 +440,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-volumen-regimen-simplificado"]
 
 # Box [101] - '10. Volumen de operaciones - Operaciones en régimen especias de la agricultura, ganadería y pesca [101]' (offset 548, length 17).
 [[revisions."2025".casillas]]
@@ -483,7 +455,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-124", "ley-37-1992:art-130", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-volumen-reagp"]
 
 # Box [102] - '10. Volumen de operaciones - Operaciones en régimen especial del recargo de equivalencia [102].' (offset 565, length 17).
 [[revisions."2025".casillas]]
@@ -499,7 +470,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-121", "ley-37-1992:art-148", "ley-37-1992:art-161", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-volumen-recargo-equivalencia"]
 
 # Box [227] - '10. Volumen de operaciones - Operaciones en régimen especias de bienes usados, objetos de arte, antigüedades y objetos de colección [227].' (offset 582, length 17).
 [[revisions."2025".casillas]]
@@ -515,7 +485,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-121", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-volumen-bienes-usados"]
 
 # Box [228] - '10. Volumen de operaciones - Operaciones en régimen especial de agencias de viajes [228].' (offset 599, length 17).
 [[revisions."2025".casillas]]
@@ -531,7 +500,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-121", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-volumen-agencias-viajes"]
 
 # Box [106] - '10. Volumen de operaciones - Entrega de bienes inmuebles y operaciones financieras no habituales [106]' (offset 616, length 17).
 [[revisions."2025".casillas]]
@@ -547,7 +515,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-121", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-volumen-inmuebles-financieras-no-habituales"]
 
 # Box [107] - '10. Volumen de operaciones - Entrega de bienes de inversion [107]' (offset 633, length 17).
 [[revisions."2025".casillas]]
@@ -563,7 +530,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-108", "ley-37-1992:art-121", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-volumen-bienes-de-inversion"]
 
 # Box [108] - '10. Volumen de operaciones - Total volumen de operaciones [108]' (offset 650, length 17).
 [[revisions."2025".casillas]]
@@ -579,7 +545,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-121", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-volumen-total"]
 
 # NOT WRITTEN -- proof failed, reported rather than assumed:
 #   @395+17: 2022 casilla 'iva.anual.volumen.entregas-intracomunitarias' is derived (formula/binding); not replicated

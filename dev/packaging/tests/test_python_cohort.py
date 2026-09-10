@@ -5,8 +5,6 @@ from __future__ import annotations
 import hashlib
 import io
 import json
-import shutil
-import subprocess
 import tarfile
 import zipfile
 from pathlib import Path
@@ -23,7 +21,6 @@ from ..python_cohort import (
     _validate_command_spec_attestation,
     digest_install_target,
     load_python_cohort,
-    source_snapshot_drift,
 )
 from ._cohort_attestation import (
     add_test_runtime_wheelhouse,
@@ -32,45 +29,6 @@ from ._cohort_attestation import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-
-def _git(repo: Path, *args: str) -> subprocess.CompletedProcess[str]:
-    git = shutil.which("git")
-    assert git is not None
-    return subprocess.run(  # noqa: S603 - resolved Git with test-owned declarative argv.
-        [git, *args],
-        cwd=repo,
-        check=True,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-    )
-
-
-def test_source_snapshot_drift_detects_worktree_index_and_untracked_bytes(
-    tmp_path: Path,
-) -> None:
-    """A HEAD archive cannot be labelled current while any source byte is excluded."""
-    _git(tmp_path, "init")
-    _git(tmp_path, "config", "user.email", "cohort-test@example.invalid")
-    _git(tmp_path, "config", "user.name", "Cohort Test")
-    tracked = tmp_path / "tracked.txt"
-    tracked.write_text("committed\n", encoding="utf-8")
-    _git(tmp_path, "add", "tracked.txt")
-    _git(tmp_path, "commit", "-m", "seed")
-    assert source_snapshot_drift(tmp_path) == ()
-
-    tracked.write_text("working\n", encoding="utf-8")
-    untracked = tmp_path / "untracked.txt"
-    untracked.write_text("untracked\n", encoding="utf-8")
-    working = source_snapshot_drift(tmp_path)
-    assert " M tracked.txt" in working
-    assert "?? untracked.txt" in working
-
-    _git(tmp_path, "add", "tracked.txt")
-    staged = source_snapshot_drift(tmp_path)
-    assert "M  tracked.txt" in staged
-    assert "?? untracked.txt" in staged
 
 
 def _write_placeholder_cohort(root: Path) -> dict[str, str]:
@@ -100,10 +58,10 @@ def _write_placeholder_cohort(root: Path) -> dict[str, str]:
             {
                 "artifacts": names,
                 "sha256": sha256,
-                "source_commit": "a" * 40,
+                "source_digest": "a" * 64,
                 "version": "1.0.0",
                 "command_spec_attestation": make_test_command_spec_attestation(
-                    root, names, source_commit="a" * 40, artifacts_are_unreadable=True
+                    root, names, source_digest="a" * 64, artifacts_are_unreadable=True
                 ),
             },
         ),
@@ -163,10 +121,10 @@ def test_load_python_cohort_rejects_digest_drift_before_metadata_parsing(
             {
                 "artifacts": names,
                 "sha256": sha256,
-                "source_commit": "a" * 40,
+                "source_digest": "a" * 64,
                 "version": "1.0.0",
                 "command_spec_attestation": make_test_command_spec_attestation(
-                    tmp_path, names, source_commit="a" * 40, artifacts_are_unreadable=True
+                    tmp_path, names, source_digest="a" * 64, artifacts_are_unreadable=True
                 ),
             },
         ),
@@ -349,7 +307,7 @@ def test_attestation_names_probe_reads_by_install_member_not_build_location(tmp_
             _command_spec_attestation(
                 projection,
                 artifact_projection,
-                source_commit="a" * 40,
+                source_digest="a" * 64,
                 root_wheel_sha256="1" * 64,
                 root_sdist_sha256="2" * 64,
                 source_archive_sha256="3" * 64,
@@ -410,7 +368,7 @@ def test_attestation_binds_the_digests_it_is_handed(tmp_path: Path) -> None:
     attestation = _command_spec_attestation(
         projection,
         (("wheel", "cadrumo/__init__.py"),),
-        source_commit="a" * 40,
+        source_digest="a" * 64,
         root_wheel_sha256=digests[0],
         root_sdist_sha256=digests[1],
         source_archive_sha256=digests[2],
@@ -425,7 +383,7 @@ def test_attestation_binds_the_digests_it_is_handed(tmp_path: Path) -> None:
     assert (
         _validate_command_spec_attestation(
             attestation,
-            expected_source_commit="a" * 40,
+            expected_source_digest="a" * 64,
             expected_root_wheel_sha256=digests[0],
             expected_root_sdist_sha256=digests[1],
             expected_source_archive_sha256=digests[2],
@@ -494,7 +452,7 @@ def test_attestation_refuses_to_attest_an_unreadable_artifact(tmp_path: Path) ->
     names = _corrupt_root_artifacts(tmp_path)
 
     with pytest.raises((OSError, tarfile.TarError, zipfile.BadZipFile)):
-        make_test_command_spec_attestation(tmp_path, names, source_commit="a" * 40)
+        make_test_command_spec_attestation(tmp_path, names, source_digest="a" * 64)
 
 
 def test_attestation_refuses_a_placeholder_declaration_over_readable_artifacts(tmp_path: Path) -> None:
@@ -515,7 +473,7 @@ def test_attestation_refuses_a_placeholder_declaration_over_readable_artifacts(t
     add_test_source_archive(tmp_path, names, {})
 
     with pytest.raises(AssertionError, match="projection succeeded"):
-        make_test_command_spec_attestation(tmp_path, names, source_commit="a" * 40, artifacts_are_unreadable=True)
+        make_test_command_spec_attestation(tmp_path, names, source_digest="a" * 64, artifacts_are_unreadable=True)
 
-    computed = make_test_command_spec_attestation(tmp_path, names, source_commit="a" * 40)
+    computed = make_test_command_spec_attestation(tmp_path, names, source_digest="a" * 64)
     assert computed["artifact_members_sha256"] != "0" * 64

@@ -14,6 +14,7 @@ from cadrumo.core.filing_projection_ref import (
     M303ProrrataActivityProjectionRef,
 )
 from cadrumo.core.hashing import canonical_json_bytes
+from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
@@ -25,13 +26,16 @@ from ..pipeline.export_fragment_provenance import (
     EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION,
     EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION,
     ExportFieldDerivation,
+    ExportFieldVerdict,
     ExportFragmentOutputDigest,
     ExportFragmentProvenanceManifest,
     ExportFragmentTarget,
+    attach_field_verdicts,
     build_export_fragment_provenance_manifest,
     export_fragment_provenance_manifest_json_bytes,
     load_export_fragment_provenance_manifest,
     loader_semantic_digest,
+    normalised_loader_semantics,
     semantic_map_digest,
 )
 from ..pipeline.joined_record_design import JoinedRecordDesign, JoinedRecordDesignField, JoinedRecordDesignRecord
@@ -638,3 +642,149 @@ def test_provenance_contract_has_no_legacy_layout_lookup_or_fallback_surface() -
     assert "intermediate" not in build_parameters
     assert build_parameters["semantic_map"].default is inspect.Signature.empty
     assert build_parameters["field_derivations"].default is inspect.Signature.empty
+
+
+def _money_layout(**field_overrides: object) -> ExportLayoutDefinition:
+    payload: dict[str, object] = {
+        "id": "importe",
+        "offset": 1,
+        "length": 11,
+        "kind": "casilla",
+        "casilla_id": "01",
+        "data_type": "money",
+        "required": False,
+        "padding": "left_zero",
+        "justification": "right",
+        "signed": True,
+        "legal_refs": ("ley-27-2014:art-40",),
+        "source_refs": ("aeat-dr-200-2025",),
+    }
+    payload.update(field_overrides)
+    field = ExportFieldDefinition.model_validate(payload)
+    layout = _one_field_layout()
+    return layout.model_copy(update={"records": (layout.records[0].model_copy(update={"fields": (field,)}),)})
+
+
+def test_an_undeclared_sign_position_is_absent_from_attested_bytes_and_a_declared_one_is_visible() -> None:
+    """A later field key must not move a single attested byte of a field that never declares it.
+
+    Otherwise admitting the key would silently invalidate every tree already
+    attested; declaring it is loader-visible meaning and must move the digest.
+    """
+    plain = _money_layout()
+    reserved = _money_layout(sign_position="blank_or_n")
+
+    records = normalised_loader_semantics(plain)["records"]
+    assert isinstance(records, list)
+    fields = [field for record in records for field in record["fields"]]
+    assert fields
+    assert all("sign_position" not in field for field in fields)
+    assert loader_semantic_digest(reserved) != loader_semantic_digest(plain)
+
+
+def test_a_stored_manifest_spelling_an_undeclared_sign_position_as_null_is_not_canonical(tmp_path) -> None:
+    export_root = tmp_path / "export"
+    (export_root / "records").mkdir(parents=True)
+    (export_root / "records" / "0001.toml").write_bytes(b"id = 'first'\n")
+    manifest = build_export_fragment_provenance_manifest(
+        joined=_joined(),
+        semantic_map=_semantic_map(),
+        target=ExportFragmentTarget(modelo="200", revision_id="2025-y-siguientes", design_epoch="2025"),
+        loaded_layout=_one_field_layout(),
+        export_root=export_root,
+        field_derivations=(_field_derivation(),),
+        render_profile=_sample_render_profile(),
+        render_profile_source_evidence=_render_profile_evidence(),
+    )
+    canonical = export_fragment_provenance_manifest_json_bytes(manifest)
+    assert b"sign_position" not in canonical
+
+    with_null = canonical_json_bytes(manifest.model_dump(mode="json"))
+
+    with pytest.raises(RegistryValidationError, match="not canonical"):
+        load_export_fragment_provenance_manifest(with_null)
+
+
+def _amount_derivation(*, aeat_type: str, signed: bool) -> ExportFieldDerivation:
+    """One numeric field derived from a row the design types ``aeat_type``."""
+    base = _field_derivation()
+    casilla_id = validated_casilla_id("01", surface="provenance verdict test")
+    semantic_entry = base.semantic_entry.model_copy(
+        update={"kind": CasillaFieldKind.CASILLA, "casilla_id": casilla_id, "literal": None},
+    )
+    field = ExportFieldDefinition.model_validate(
+        {
+            "id": base.field.id,
+            "offset": base.field.offset,
+            "length": 11,
+            "kind": "casilla",
+            "casilla_id": casilla_id,
+            "data_type": "money",
+            "required": False,
+            "padding": "left_zero",
+            "justification": "right",
+            "signed": signed,
+            "legal_refs": base.field.legal_refs,
+            "source_refs": base.field.source_refs,
+        },
+    )
+    return base.model_copy(
+        update={
+            "parser_field": base.parser_field.model_copy(update={"aeat_type": aeat_type, "length": 11}),
+            "semantic_entry": semantic_entry,
+            "field": field,
+            "derivation_code": "numeric-decimal-v1",
+        },
+    )
+
+
+def test_a_field_agreeing_with_its_official_row_is_attested_as_agreeing() -> None:
+    (attested,) = attach_field_verdicts((_amount_derivation(aeat_type="N", signed=True),), {})
+
+    assert attested.verdict == ExportFieldVerdict(outcome="agrees")
+
+
+def test_a_constant_in_a_numerically_typed_slot_agrees_rather_than_diverging() -> None:
+    """The modelo-number slot is typed N and holds text; that is a design quirk, not a divergence."""
+    literal = _field_derivation().model_copy(
+        update={"parser_field": _field_derivation().parser_field.model_copy(update={"aeat_type": "N"})},
+    )
+
+    (attested,) = attach_field_verdicts((literal,), {})
+
+    assert attested.verdict == ExportFieldVerdict(outcome="agrees")
+
+
+def test_a_divergence_is_adjudicated_only_by_a_ruling_on_its_derivation() -> None:
+    divergent = _amount_derivation(aeat_type="N", signed=False)
+
+    (attested,) = attach_field_verdicts((divergent,), {"numeric-decimal-v1": "type_column_contradiction 999/2026"})
+
+    assert attested.verdict == ExportFieldVerdict(outcome="adjudicated", ruling="type_column_contradiction 999/2026")
+    with pytest.raises(RegistryValidationError, match="no ruling adjudicates"):
+        attach_field_verdicts((divergent,), {"numeric-integer-v1": "a ruling on another derivation"})
+
+
+def test_a_stored_verdict_cannot_claim_agreement_for_a_divergent_field() -> None:
+    """The verdict is recomputed on load, so a manifest cannot attest what its own rows contradict."""
+    divergent = _amount_derivation(aeat_type="Num", signed=True)
+
+    with pytest.raises(ValidationError, match="records verdict 'agrees'"):
+        ExportFieldDerivation.model_validate(
+            {**divergent.model_dump(), "verdict": {"outcome": "agrees", "ruling": None}},
+        )
+    with pytest.raises(ValidationError, match="records verdict 'adjudicated'"):
+        ExportFieldDerivation.model_validate(
+            {
+                **_amount_derivation(aeat_type="Num", signed=False).model_dump(),
+                "verdict": {"outcome": "adjudicated", "ruling": "an unneeded ruling"},
+            },
+        )
+
+
+def test_an_unattached_verdict_moves_no_attested_byte() -> None:
+    manifest = _manifest()
+    payload = export_fragment_provenance_manifest_json_bytes(manifest)
+
+    assert b'"verdict"' not in payload
+    assert load_export_fragment_provenance_manifest(payload) == manifest

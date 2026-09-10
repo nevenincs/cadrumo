@@ -1,41 +1,40 @@
 """The project admits exactly one ``__future__`` directive.
 
-Every tracked module either carries ``from __future__ import annotations`` or
-no future statement at all. A second annotation model in the tree would make
-the same source mean different things in different files, so the population is
-read from the live git inventory rather than an enumerated list.
+Every repository module either carries ``from __future__ import annotations``
+or no future statement at all. A second annotation model in the tree would
+make the same source mean different things in different files, so the
+population is read from the repository's own file enumeration rather than an
+enumerated list.
 """
 
 from __future__ import annotations
 
 import ast
-import subprocess
 from pathlib import Path
 from typing import Final
 
 import pytest
 
 from .._paths import REPO_ROOT
+from ..source_tree import repository_files
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _ALLOWED_FUTURE_FEATURES: Final[frozenset[str]] = frozenset({"annotations"})
 
 _EXCLUDED_DIRS: Final[frozenset[str]] = frozenset(
-    {".git", ".vault", "_build", "build", "dist", "__pycache__", ".mypy_cache", ".pytest_cache", ".ruff_cache"}
+    {".vault", "_build", "build", "dist", "__pycache__", ".mypy_cache", ".pytest_cache", ".ruff_cache"}
 )
 
 
 def _tracked_python_files() -> tuple[Path, ...]:
-    """Return every tracked Python file, from git rather than a declared list."""
-    output = subprocess.check_output(("git", "ls-files", "-z"), cwd=REPO_ROOT, text=False)  # noqa: S607
-    paths = {(REPO_ROOT / raw.decode("utf-8")) for raw in output.split(b"\0") if raw}
+    """Return every repository Python file, enumerated rather than a declared list."""
     return tuple(
         sorted(
             (
-                path
-                for path in paths
-                if path.suffix == ".py" and path.is_file() and not any(part in _EXCLUDED_DIRS for part in path.parts)
+                REPO_ROOT / relative
+                for relative in repository_files(REPO_ROOT)
+                if relative.endswith(".py") and not any(part in _EXCLUDED_DIRS for part in Path(relative).parts)
             ),
             key=lambda path: path.as_posix(),
         )

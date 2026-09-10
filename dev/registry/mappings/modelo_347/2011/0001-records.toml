@@ -17,6 +17,18 @@ sheet = "Tipo 2 - Registro De Declarado"
 record_identity = "Tipo 2 - Registro De Declarado"
 export_record_id = "m347-declarado"
 record_type = "declarado"
+repeat = "binding_rows"
+
+[records.row_field_casilla_ids]
+party_tax_id = "contraparte.nif"
+party_legal_name = "contraparte.nombre"
+clave = "contraparte.clave-operacion"
+importe_total = "contraparte.importe-anual"
+importe_q1 = "contraparte.importe-Q1"
+importe_q2 = "contraparte.importe-Q2"
+importe_q3 = "contraparte.importe-Q3"
+importe_q4 = "contraparte.importe-Q4"
+country_code = "contraparte.pais-codigo"
 
 [[records]]
 sheet = "Tipo 2 - Registro De Inmueble"

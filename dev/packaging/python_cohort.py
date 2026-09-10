@@ -12,7 +12,7 @@ import subprocess
 import sys
 import tarfile
 import zipfile
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 from email.parser import Parser
 from pathlib import Path, PurePosixPath
@@ -23,6 +23,7 @@ from packaging.requirements import Requirement
 from cadrumo.core.directory_scan import scan_directory
 
 from .._paths import REPO_ROOT, UTF_8
+from ..source_tree import content_digest, repository_files, snapshot
 from ._distribution_limits import PYPI_FILE_CAP_BYTES
 from ._distribution_names import normalise_distribution_name
 from ._proof_ledger import record_proof
@@ -377,7 +378,7 @@ class PythonCohort:
 
     directory: Path
     manifest: Path
-    source_commit: str
+    source_digest: str
     version: str
     root_wheel: Path
     root_sdist: Path
@@ -503,7 +504,7 @@ def _forbidden_command_artifacts(
 def _validate_command_spec_attestation(
     value: object,
     *,
-    expected_source_commit: str | None = None,
+    expected_source_digest: str | None = None,
     expected_root_wheel_sha256: str | None = None,
     expected_root_sdist_sha256: str | None = None,
     expected_source_archive_sha256: str | None = None,
@@ -513,7 +514,7 @@ def _validate_command_spec_attestation(
     expected = {
         "schema",
         "node_count",
-        "source_commit",
+        "source_digest",
         "forbidden_artifacts_absent",
         *_ATTESTATION_DIGEST_FIELDS,
     }
@@ -525,9 +526,9 @@ def _validate_command_spec_attestation(
         raise SystemExit("Python cohort CommandSpec attestation node count is invalid")
     if value.get("forbidden_artifacts_absent") is not True:
         raise SystemExit("Python cohort carries a forbidden command authority artifact")
-    source_commit = value.get("source_commit")
-    if not isinstance(source_commit, str) or re.fullmatch(r"[0-9a-f]{40}", source_commit) is None:
-        raise SystemExit("Python cohort CommandSpec attestation source commit is invalid")
+    source_digest = value.get("source_digest")
+    if not isinstance(source_digest, str) or re.fullmatch(r"[0-9a-f]{64}", source_digest) is None:
+        raise SystemExit("Python cohort CommandSpec attestation source digest is invalid")
     for field in _ATTESTATION_DIGEST_FIELDS:
         digest = value.get(field)
         if (
@@ -540,7 +541,7 @@ def _validate_command_spec_attestation(
     if value["envelope_sha256"] != _projection_digest(envelope):
         raise SystemExit("Python cohort CommandSpec attestation envelope digest is invalid")
     comparisons = {
-        "source_commit": expected_source_commit,
+        "source_digest": expected_source_digest,
         "root_wheel_sha256": expected_root_wheel_sha256,
         "root_sdist_sha256": expected_root_sdist_sha256,
         "source_archive_sha256": expected_source_archive_sha256,
@@ -645,9 +646,9 @@ def _install_relative_probe_reads(
     sits inside a temporary clone whose own name is minted per build. Sealing
     those strings makes the envelope -- and so the cohort identifier every
     release evidence row binds to -- a function of WHERE a build ran rather than
-    of what it built. Two builds of one commit then agree on every artifact byte
-    and still publish two identifiers, which is the property an immutable cohort
-    exists to deny.
+    of what it built. Two builds of one source digest then agree on every
+    artifact byte and still publish two identifiers, which is the property an
+    immutable cohort exists to deny.
 
     A relative POSIX member is the form the wheel listing is expressed in and
     the form an installation actually carries, so this is also the form the
@@ -718,7 +719,7 @@ def _command_spec_attestation(
     projection: dict[str, Any],
     artifact_projection: tuple[tuple[str, str], ...],
     *,
-    source_commit: str,
+    source_digest: str,
     root_wheel_sha256: str,
     root_sdist_sha256: str,
     source_archive_sha256: str,
@@ -733,7 +734,7 @@ def _command_spec_attestation(
     attestation: dict[str, object] = {
         "schema": _COMMAND_SPEC_ATTESTATION_SCHEMA,
         "node_count": len(projection["identities"]),
-        "source_commit": source_commit,
+        "source_digest": source_digest,
         "root_wheel_sha256": root_wheel_sha256,
         "root_sdist_sha256": root_sdist_sha256,
         "source_archive_sha256": source_archive_sha256,
@@ -747,7 +748,7 @@ def _command_spec_attestation(
     attestation["envelope_sha256"] = _projection_digest(attestation)
     return _validate_command_spec_attestation(
         attestation,
-        expected_source_commit=source_commit,
+        expected_source_digest=source_digest,
         expected_root_wheel_sha256=root_wheel_sha256,
         expected_root_sdist_sha256=root_sdist_sha256,
         expected_source_archive_sha256=source_archive_sha256,
@@ -905,13 +906,19 @@ def _safe_recreate(directory: Path, *, repo_root: Path) -> None:
     resolved.mkdir(parents=True)
 
 
-def source_snapshot_drift(repo_root: Path) -> tuple[str, ...]:
-    """Return tracked, staged, or untracked source drift excluded from ``HEAD``."""
-    completed = _run(
-        ["git", "status", "--porcelain=v1", "--untracked-files=all"],
-        cwd=repo_root,
-    )
-    return tuple(line for line in completed.stdout.splitlines() if line.strip())
+def _archive_source_snapshot(build_root: Path, files: Sequence[str], destination: Path) -> Path:
+    """Archive an already-extracted source snapshot into one flat-member zip.
+
+    ``build_root`` already carries ``files`` with the repository's own
+    line-ending rules applied (:func:`dev.source_tree.snapshot` wrote them),
+    so this reads bytes rather than renormalising them. Members are written
+    at their bare relative path, matching the flat (no top-level directory)
+    layout the retained source archive has always carried.
+    """
+    with zipfile.ZipFile(destination, mode="x", compression=zipfile.ZIP_DEFLATED) as archive:
+        for relative in sorted(files):
+            archive.write(build_root / relative, arcname=relative)
+    return destination
 
 
 def _stamp_bundled_registry_records_into_build_tree(build_root: Path) -> frozenset[str]:
@@ -989,7 +996,7 @@ def attest_command_specs(
     root_wheel: Path,
     root_sdist: Path,
     source_archive: Path,
-    source_commit: str,
+    source_digest: str,
     work_root: Path,
     digests: tuple[str, str, str] | None = None,
 ) -> dict[str, object]:
@@ -1012,7 +1019,7 @@ def attest_command_specs(
         root_wheel: The cohort's root wheel.
         root_sdist: The cohort's root source distribution.
         source_archive: The cohort's retained source archive.
-        source_commit: The commit the cohort is built from.
+        source_digest: The content digest of the source tree the cohort is built from.
         work_root: Working directory for the probe processes and their
             redirected bytecode.
         digests: The three artifacts' already-known SHA-256 values, in the order
@@ -1038,7 +1045,7 @@ def attest_command_specs(
     return _command_spec_attestation(
         projection,
         artifact_projection,
-        source_commit=source_commit,
+        source_digest=source_digest,
         root_wheel_sha256=resolved[0],
         root_sdist_sha256=resolved[1],
         source_archive_sha256=resolved[2],
@@ -1046,7 +1053,7 @@ def attest_command_specs(
 
 
 def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
-    """Build one clean-commit cohort and write its immutable digest manifest.
+    """Build one immutable cohort from a content snapshot and write its digest manifest.
 
     Returns the cohort assembled from what the build already derived -- the
     resolved artifact paths, the digests written into the manifest, the runtime
@@ -1063,32 +1070,27 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
     """
     root = repo_root.resolve(strict=True)
     output = output_dir.resolve()
-    drift = source_snapshot_drift(root)
-    if drift:
-        raise SystemExit(
-            "immutable cohort construction requires a clean source snapshot; "
-            f"commit or remove drift before building: {drift[:20]!r}",
-        )
     _safe_recreate(output, repo_root=root)
-    source_commit = _run(["git", "rev-parse", "HEAD"], cwd=root).stdout.strip()
-    if len(source_commit) != 40:
-        raise SystemExit(f"git returned an invalid source commit: {source_commit!r}")
+    source_files = repository_files(root)
+    source_digest = content_digest(root, source_files)
 
     build_root = output.parent / var_scratch_name(COHORT_BUILD_TREE_FAMILY, output.name)
     if build_root.exists():
         shutil.rmtree(build_root)
-    build_root.mkdir(parents=True)
     archive = output.parent / var_scratch_name(COHORT_SOURCE_ARCHIVE_FAMILY, output.name)
     if archive.exists():
         archive.unlink()
-    retained_source_archive = output / f"cadrumo-source-{source_commit}.zip"
+    retained_source_archive = output / f"cadrumo-source-{source_digest}.zip"
     try:
-        _run(
-            ["git", "archive", "--format=zip", "-o", str(archive), source_commit],
-            cwd=root,
-        )
-        with zipfile.ZipFile(archive) as bundle:
-            bundle.extractall(build_root)  # noqa: S202 - archive is produced by local Git.
+        # `snapshot` creates `build_root` and copies exactly the enumerated
+        # files with the repository's own line-ending rules applied -- what a
+        # checkout of this exact content would carry, without touching the
+        # live tree the rest of the process may still be editing. The archive
+        # is written from this same copy, and BEFORE the registry records are
+        # stamped in below, so the retained source archive carries only
+        # tracked source content, never build-time stamps.
+        snapshot(root, source_files, build_root)
+        _archive_source_snapshot(build_root, source_files, archive)
         _stamp_bundled_registry_records_into_build_tree(build_root)
         uv = shutil.which("uv")
         if uv is None:
@@ -1190,7 +1192,7 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
             root_wheel=root_wheel,
             root_sdist=root_sdist,
             source_archive=retained_source_archive,
-            source_commit=source_commit,
+            source_digest=source_digest,
             work_root=output.parent,
             digests=(sha256["cadrumo"], sha256["cadrumo-sdist"], sha256["source-archive"]),
         )
@@ -1206,7 +1208,7 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
             {
                 "artifacts": artifacts,
                 "sha256": sha256,
-                "source_commit": source_commit,
+                "source_digest": source_digest,
                 "version": version,
                 "command_spec_attestation": command_spec_attestation,
             },
@@ -1222,7 +1224,7 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
     return PythonCohort(
         directory=output,
         manifest=manifest,
-        source_commit=source_commit,
+        source_digest=source_digest,
         version=version,
         root_wheel=root_wheel,
         root_sdist=root_sdist,
@@ -1247,14 +1249,14 @@ def load_python_cohort(directory: Path) -> PythonCohort:
         raise SystemExit("Python cohort manifest must be a JSON object")
     artifacts = document.get("artifacts")
     sha256 = document.get("sha256")
-    source_commit = document.get("source_commit")
+    source_digest = document.get("source_digest")
     version = document.get("version")
     command_spec_attestation_value = document.get("command_spec_attestation")
     if (
         not isinstance(artifacts, dict)
         or not isinstance(sha256, dict)
-        or not isinstance(source_commit, str)
-        or re.fullmatch(r"[0-9a-f]{40}", source_commit) is None
+        or not isinstance(source_digest, str)
+        or re.fullmatch(r"[0-9a-f]{64}", source_digest) is None
         or not isinstance(version, str)
         or not version
     ):
@@ -1299,7 +1301,7 @@ def load_python_cohort(directory: Path) -> PythonCohort:
     source_archive_digest = str(sha256["source-archive"])
     command_spec_attestation = _validate_command_spec_attestation(
         command_spec_attestation_value,
-        expected_source_commit=source_commit,
+        expected_source_digest=source_digest,
         expected_root_wheel_sha256=root_wheel_digest,
         expected_root_sdist_sha256=root_sdist_digest,
         expected_source_archive_sha256=source_archive_digest,
@@ -1339,7 +1341,7 @@ def load_python_cohort(directory: Path) -> PythonCohort:
     return PythonCohort(
         directory=cohort_dir,
         manifest=manifest,
-        source_commit=source_commit,
+        source_digest=source_digest,
         version=version,
         root_wheel=resolved["cadrumo"],
         root_sdist=resolved["cadrumo-sdist"],
@@ -1543,7 +1545,7 @@ def main() -> int:
             {
                 "directory": str(cohort.directory),
                 "sha256": cohort.sha256,
-                "source_commit": cohort.source_commit,
+                "source_digest": cohort.source_digest,
                 "version": cohort.version,
             },
             sort_keys=True,

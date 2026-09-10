@@ -369,6 +369,7 @@ def _first_year_modalidad_cuota_no_m202(bucket_id: str, *, filing_year: int) -> 
     modality = modelo_202_modality_from_inputs(
         entity_type=_entity_type_from_token(values.get("taxpayer_type.entity_type")),
         incn_prior_12_months=_parse_canonical_decimal(values.get("taxpayer_type.incn_prior_12_months")),
+        effective_date=date(filing_year, 12, 31),
     ).modality
     if modality is not Modelo202Modality.ART_40_2_OPTIONAL:
         return False

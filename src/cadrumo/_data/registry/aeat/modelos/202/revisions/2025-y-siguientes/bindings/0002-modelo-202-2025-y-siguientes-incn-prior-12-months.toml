@@ -13,7 +13,7 @@
 # `binding has no supplied value` in the formula executor so the
 # Art. 40.2 formula (clave 03) is refused when INCN is unknown.
 [[revisions.2025-y-siguientes.bindings]]
-id = "modelo-202-2025-y-siguientes-incn-prior-12-months"
+id = "modelo-202-incn-prior-12-months"
 source = "profile"
 selector = { profile_model = "taxpayer", field = "incn_prior_12_months" }
 aggregation = { op = "copy" }

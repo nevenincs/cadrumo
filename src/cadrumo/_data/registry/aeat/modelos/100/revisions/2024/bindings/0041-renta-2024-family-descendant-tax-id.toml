@@ -1,5 +1,5 @@
 [[revisions."2024".bindings]]
-id = "renta-2024-family-descendant-tax-id"
+id = "renta-family-descendant-tax-id"
 source = "profile"
 selector = { profile_model = "RentaFamilyProfile", collection = "descendants", field = "tax_id", xsd_path = "/DatosIdentificativos/Hijos/Hijo/NIFDLG", dictionary_field = "NIFDLG", repeating = true }
 aggregation = { op = "rows" }

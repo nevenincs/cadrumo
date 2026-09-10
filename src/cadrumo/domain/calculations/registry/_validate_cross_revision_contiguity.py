@@ -23,8 +23,8 @@ from __future__ import annotations
 from collections import defaultdict
 from itertools import pairwise
 
-from ._cross_revision_divergence import ordered_revisions as _ordered_revisions
-from ._cross_revision_divergence import revisions_overlap
+from .revision_order import ordered_revisions as _ordered_revisions
+from .revision_order import revisions_overlap
 from .schema import ModeloDefinition, ModeloRevision
 
 __all__ = ("strict_continuity_chain_contiguity_failures",)

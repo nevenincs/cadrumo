@@ -4,6 +4,6 @@ number = "0537"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_escala_general_resultado_autonomico"
 input_kind = "computed"
-formula = "renta-2022-cuota-escala-autonomica-sobre-base-liquidable-ahorro"
+formula = "renta-cuota-escala-autonomica-sobre-base-liquidable-ahorro"
 legal_refs = ["ley-35-2006:art-63"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]

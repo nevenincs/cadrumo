@@ -51,6 +51,26 @@ class ExportEncoding(StrEnum):
     ISO_8859_15 = "iso-8859-15"
 
 
+class ExportSignPosition(StrEnum):
+    """A sign byte an official design reserves ahead of an amount's magnitude.
+
+    The general AEAT convention reserves nothing: an 'N' displaces the leading
+    digit of a negative amount and a non-negative amount is digits throughout.
+    Some designs instead subdivide an amount into a leading alphabetic SIGNO
+    position and a numeric magnitude that "no irá precedido de signo alguno";
+    the magnitude then owns every remaining byte, and the sign byte follows
+    the design's own rule rather than the general one.
+    """
+
+    #: 'N' when the amount is below zero, otherwise a space ("En cualquier otro
+    #: caso el contenido del campo será un espacio").
+    BLANK_OR_N = "blank_or_n"
+    #: The design fixes the direction ("se consignará siempre una 'N'"), so the
+    #: value is a non-negative magnitude written after an 'N'; when there is
+    #: nothing to declare the whole slot "se rellenará a ceros".
+    N_UNLESS_ZERO = "n_unless_zero"
+
+
 def _coerce_closed_axis(value: object, axis: type[StrEnum]) -> object:
     if isinstance(value, axis):
         return value
@@ -74,6 +94,13 @@ ExportEncodingValue = Annotated[
     ExportEncoding,
     BeforeValidator(lambda value: _coerce_closed_axis(value, ExportEncoding)),
 ]
+ExportSignPositionValue = (
+    Annotated[
+        ExportSignPosition,
+        BeforeValidator(lambda value: _coerce_closed_axis(value, ExportSignPosition)),
+    ]
+    | None
+)
 
 
 class _ExportField(Protocol):
@@ -112,6 +139,9 @@ class _ExportField(Protocol):
 
     @property
     def signed(self) -> bool: ...
+
+    @property
+    def sign_position(self) -> ExportSignPosition | None: ...
 
     @property
     def value_policy(self) -> ExportValuePolicy | None: ...
@@ -174,6 +204,8 @@ def validate_fixed_width_shape(field: _ExportField) -> None:
     if kind == "filler":
         if field.signed:
             raise RegistryValidationError(f"filler export field {field.id!r} cannot declare signed")
+        if field.sign_position is not None:
+            raise RegistryValidationError(f"filler export field {field.id!r} cannot declare sign_position")
         return
     expected = {
         ExportPadding.LEFT_ZERO: ExportJustification.RIGHT,
@@ -187,6 +219,8 @@ def validate_fixed_width_shape(field: _ExportField) -> None:
         )
     if field.signed:
         _validate_signed_shape(field)
+    if field.sign_position is not None:
+        _validate_sign_position(field)
 
 
 def render_fixed_width_export_field(field: _ExportField, value: object) -> str:
@@ -405,6 +439,35 @@ def _validate_signed_shape(field: _ExportField) -> None:
         )
 
 
+def _validate_sign_position(field: _ExportField) -> None:
+    """Refuse a reserved sign byte on a slot that cannot carry one.
+
+    ``BLANK_OR_N`` writes a negative amount, so it needs ``signed``;
+    ``N_UNLESS_ZERO`` writes a magnitude whose direction the design fixes, so a
+    negative value there would say the opposite of the constant 'N' and the
+    field must stay unsigned to refuse it.
+    """
+    length = _require_length(field)
+    if field.data_type != "money":
+        raise RegistryValidationError(f"export field {field.id!r} can declare sign_position only for money data")
+    if length < 2:
+        raise RegistryValidationError(f"sign_position export field {field.id!r} requires at least two bytes")
+    if field.padding is not ExportPadding.LEFT_ZERO or field.justification is not ExportJustification.RIGHT:
+        raise RegistryValidationError(
+            f"sign_position export field {field.id!r} requires left-zero padding and right justification",
+        )
+    if field.value_policy is not None or field.allowed_values is not None:
+        raise RegistryValidationError(
+            f"sign_position export field {field.id!r} cannot also declare a value policy or allowed values",
+        )
+    required_signed = field.sign_position is ExportSignPosition.BLANK_OR_N
+    if field.signed is not required_signed:
+        raise RegistryValidationError(
+            f"sign_position {field.sign_position!s} on export field {field.id!r} requires signed = "
+            f"{str(required_signed).lower()}",
+        )
+
+
 def _require_decimals(field: _ExportField) -> int:
     if field.decimals is None:
         raise RegistryValidationError(f"decimal export field {field.id!r} must declare decimals")
@@ -584,6 +647,14 @@ def _render_numeric_digits(field: _ExportField, digits: str, *, negative: bool) 
     length = _require_length(field)
     if negative and not field.signed:
         raise RegistryValidationError(f"unsigned export field {field.id!r} cannot render a negative value")
+    if field.sign_position is not None:
+        magnitude_width = length - 1
+        if len(digits) > magnitude_width:
+            raise RegistryValidationError(f"export field {field.id!r} value exceeds length {length}")
+        magnitude = digits.rjust(magnitude_width, "0")
+        if field.sign_position is ExportSignPosition.N_UNLESS_ZERO:
+            return "0" * length if not digits.strip("0") else "N" + magnitude
+        return ("N" if negative else " ") + magnitude
     if field.signed:
         # AEAT states one convention for every diseno de registro, in "Disenos de
         # registro - breve manual de uso" v.2 (12/12/2022), CAT - Informatica
@@ -620,7 +691,16 @@ def _parse_scaled_numeric(field: _ExportField, raw: str, *, scale: int) -> Decim
 
 
 def _split_numeric_wire(field: _ExportField, raw: str) -> tuple[bool, str]:
-    if field.signed:
+    if field.sign_position is ExportSignPosition.BLANK_OR_N:
+        if raw[:1] not in {"N", " "}:
+            raise RegistryValidationError(f"export field {field.id!r} sign position must hold 'N' or a space")
+        negative, digits = raw[:1] == "N", raw[1:]
+    elif field.sign_position is ExportSignPosition.N_UNLESS_ZERO:
+        # The constant 'N' carries no direction: the value is the magnitude.
+        # An all-zero slot is the design's empty case; the canonical re-render
+        # in the caller refuses an 'N' in front of a zero magnitude.
+        negative, digits = False, raw[1:] if raw[:1] == "N" else raw
+    elif field.signed:
         # The mirror of the render rule above: a negative slot is 'N' followed by
         # its digits, and a non-negative slot is digits all the way. Refusing a
         # digit in the leading position would refuse a correctly formed AEAT

@@ -45,6 +45,18 @@ source_refs = [
     "boe-modelo-369-2021-form",
 ]
 
+[revisions."esquema-exterior".predecessor.none]
+reason = """
+Revision 'esquema-exterior' is one of three parallel scheme variants of modelo 369, not a step in a sequence. \
+Orden HAC/610/2021 art 1 approves the single modelo 369 for the special OSS/IOSS regimes, and art 2 imposes \
+three concurrent filing obligations: letter (a) is the regimen exterior de la Union, filed per trimestre \
+natural, alongside letters (b) Union and (c) importacion. All three editions take effect together on \
+2021-07-01. This manifest's casilla_continuidad_evolutions disposition records the same fact: the revision has \
+no strictly-earlier sibling revision of this modelo, so no earlier edition exists for it to be authored \
+relative to."""
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "ley-37-1992:art-163-octiesdecies"]
+source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
+
 
 [revisions."esquema-exterior".family_dispositions.casilla_continuidad_evolutions]
 reason = """

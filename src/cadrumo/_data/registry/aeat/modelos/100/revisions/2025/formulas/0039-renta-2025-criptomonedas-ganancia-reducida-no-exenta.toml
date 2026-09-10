@@ -1,5 +1,5 @@
 [[revisions."2025".formulas]]
-id = "renta-2025-criptomonedas-ganancia-reducida-no-exenta"
+id = "renta-criptomonedas-ganancia-reducida-no-exenta"
 target_casilla_id = "2232"
 expression = { op = "subtract", args = [
     { casilla_id = "2230" },

@@ -112,10 +112,10 @@ required_text = [
 id = "modelo-200-tipo-gravamen-por-forma-juridica"
 target_casilla_id = "DP200014:00558"
 expression = { op = "if_then_else", args = [
-    { binding = "modelo-200-2024-profile-new-entity-flag" },
+    { binding = "modelo-200-profile-new-entity-flag" },
     { op = "lookup_parameter_by_entity_type", args = [
         { literal = "0" },
-        { binding = "modelo-200-2024-profile-legal-entity-form" },
+        { binding = "modelo-200-profile-legal-entity-form" },
         { dispatch_table_entries = [
             { key = "sl", parameter = "is.modelo-200.tipo-gravamen-new-entity-first-2-years" },
             { key = "sa", parameter = "is.modelo-200.tipo-gravamen-new-entity-first-2-years" },
@@ -129,12 +129,12 @@ expression = { op = "if_then_else", args = [
     ] },
     { op = "if_then_else", args = [
         { op = "less_than", args = [
-            { binding = "modelo-200-2024-profile-incn-prior-12-months" },
+            { binding = "modelo-200-profile-incn-prior-12-months" },
             { parameter = "is.modelo-200.incn-umbral-microempresa" },
         ] },
         { op = "lookup_parameter_by_entity_type", args = [
             { literal = "0" },
-            { binding = "modelo-200-2024-profile-legal-entity-form" },
+            { binding = "modelo-200-profile-legal-entity-form" },
             { dispatch_table_entries = [
                 { key = "sl", parameter = "is.modelo-200.tipo-gravamen-pyme-display" },
                 { key = "sa", parameter = "is.modelo-200.tipo-gravamen-pyme-display" },
@@ -148,12 +148,12 @@ expression = { op = "if_then_else", args = [
         ] },
         { op = "if_then_else", args = [
             { op = "less_than", args = [
-                { binding = "modelo-200-2024-profile-incn-prior-12-months" },
+                { binding = "modelo-200-profile-incn-prior-12-months" },
                 { parameter = "is.modelo-200.incn-umbral-erd-art101" },
             ] },
             { op = "lookup_parameter_by_entity_type", args = [
                 { literal = "0" },
-                { binding = "modelo-200-2024-profile-legal-entity-form" },
+                { binding = "modelo-200-profile-legal-entity-form" },
                 { dispatch_table_entries = [
                     { key = "sl", parameter = "is.modelo-200.tipo-gravamen-erd-art101" },
                     { key = "sa", parameter = "is.modelo-200.tipo-gravamen-erd-art101" },
@@ -167,7 +167,7 @@ expression = { op = "if_then_else", args = [
             ] },
             { op = "lookup_parameter_by_entity_type", args = [
                 { literal = "0" },
-                { binding = "modelo-200-2024-profile-legal-entity-form" },
+                { binding = "modelo-200-profile-legal-entity-form" },
                 { dispatch_table_entries = [
                     { key = "sl", parameter = "is.modelo-200.tipo-gravamen-general" },
                     { key = "sa", parameter = "is.modelo-200.tipo-gravamen-general" },
@@ -229,10 +229,10 @@ required_text = [
 id = "modelo-200-cuota-integra"
 target_casilla_id = "DP200014:00562"
 expression = { op = "if_then_else", args = [
-    { binding = "modelo-200-2024-profile-new-entity-flag" },
+    { binding = "modelo-200-profile-new-entity-flag" },
     { op = "lookup_bracket_by_entity_type", args = [
         { casilla_id = "DP200014:01330" },
-        { binding = "modelo-200-2024-profile-legal-entity-form" },
+        { binding = "modelo-200-profile-legal-entity-form" },
         { dispatch_table_entries = [
             { key = "sl", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" },
             { key = "sa", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" },
@@ -246,12 +246,12 @@ expression = { op = "if_then_else", args = [
     ] },
     { op = "if_then_else", args = [
         { op = "less_than", args = [
-            { binding = "modelo-200-2024-profile-incn-prior-12-months" },
+            { binding = "modelo-200-profile-incn-prior-12-months" },
             { parameter = "is.modelo-200.incn-umbral-microempresa" },
         ] },
         { op = "lookup_bracket_by_entity_type", args = [
             { casilla_id = "DP200014:01330" },
-            { binding = "modelo-200-2024-profile-legal-entity-form" },
+            { binding = "modelo-200-profile-legal-entity-form" },
             { dispatch_table_entries = [
                 { key = "sl", parameter = "is.modelo-200.tipo-gravamen-pyme" },
                 { key = "sa", parameter = "is.modelo-200.tipo-gravamen-pyme" },
@@ -265,12 +265,12 @@ expression = { op = "if_then_else", args = [
         ] },
         { op = "if_then_else", args = [
             { op = "less_than", args = [
-                { binding = "modelo-200-2024-profile-incn-prior-12-months" },
+                { binding = "modelo-200-profile-incn-prior-12-months" },
                 { parameter = "is.modelo-200.incn-umbral-erd-art101" },
             ] },
             { op = "lookup_bracket_by_entity_type", args = [
                 { casilla_id = "DP200014:01330" },
-                { binding = "modelo-200-2024-profile-legal-entity-form" },
+                { binding = "modelo-200-profile-legal-entity-form" },
                 { dispatch_table_entries = [
                     { key = "sl", parameter = "is.modelo-200.cuota-integra-bracket-erd-art101" },
                     { key = "sa", parameter = "is.modelo-200.cuota-integra-bracket-erd-art101" },
@@ -284,7 +284,7 @@ expression = { op = "if_then_else", args = [
             ] },
             { op = "lookup_bracket_by_entity_type", args = [
                 { casilla_id = "DP200014:01330" },
-                { binding = "modelo-200-2024-profile-legal-entity-form" },
+                { binding = "modelo-200-profile-legal-entity-form" },
                 { dispatch_table_entries = [
                     { key = "sl", parameter = "is.modelo-200.cuota-integra-bracket-general" },
                     { key = "sa", parameter = "is.modelo-200.cuota-integra-bracket-general" },
@@ -400,7 +400,7 @@ target_casilla_id = "DP200014B:00599"
 # in the profile) do not produce a silent zero from an unsupplied casilla.
 expression = { op = "multiply", args = [
     { op = "divide", args = [
-        { binding = "modelo-200-2024-profile-tributacion-estado-porcentaje" },
+        { binding = "modelo-200-profile-tributacion-estado-porcentaje" },
         { literal = "100" },
     ] },
     { op = "subtract", args = [
@@ -456,7 +456,7 @@ required_text = [
 # internal ceiling bounds the operator-elective applied amount 00547 via a
 # BLOCKING cap_le_when_positive predicate; it never forces 00547 to the cap.
 [[revisions."2025-y-siguientes".formulas]]
-id = "modelo-200-2024-bin-aplicada-maxima"
+id = "modelo-200-bin-aplicada-maxima"
 target_casilla_id = "DP200014:bin-aplicada-maxima"
 expression = { op = "min", args = [
     { casilla_id = "00670" },

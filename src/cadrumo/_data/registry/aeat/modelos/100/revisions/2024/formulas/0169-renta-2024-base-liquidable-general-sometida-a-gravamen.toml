@@ -1,5 +1,5 @@
 [[revisions."2024".formulas]]
-id = "renta-2024-base-liquidable-general-sometida-a-gravamen"
+id = "renta-base-liquidable-general-sometida-a-gravamen"
 target_casilla_id = "0505"
 expression = { op = "max", args = [
     { literal = "0" },

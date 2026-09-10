@@ -4,8 +4,9 @@ Every other conformance fact about the registry is DERIVED — coverage, groundi
 classification coherence are all read back out of the tree. Authorship and signoff
 are not: who engineered a revision and who reviewed it are facts about people and
 agents, and nothing in the tree can compute them. They are therefore *declared*, on
-a four-scalar stamp — ``engineered_by``, ``review_status``, ``reviewed_by``,
-``reviewed_at`` — and this module owns the rules that keep a declaration honest.
+a stamp — ``engineered_by``, ``review_status``, ``reviewed_by``, ``reviewed_at``,
+and on an edition that inherits rows ``reviewed_against`` — and this module owns
+the rules that keep a declaration honest.
 
 The stamp is optional and its absence reads as
 :attr:`~cadrumo.core.RevisionReviewStatus.PENDING_REVIEW`, so an unstamped revision
@@ -71,7 +72,7 @@ same guarantee and the loader refuses both sets in the same place.
 
 See Also:
     :class:`~cadrumo.domain.calculations.registry.ModeloRevision`
-        Declares the four stamp scalars and delegates its validators here.
+        Declares the stamp scalars and delegates its validators here.
     :data:`~cadrumo.domain.calculations.registry.REVISION_GOVERNANCE_FIELDS`
         The stamp vocabulary, derived from the field markers this module documents.
 """
@@ -204,10 +205,70 @@ def validate_governance_stamp_coherence(
         )
 
 
+def validate_review_scope(
+    *,
+    revision_id: RevisionId,
+    review_status: RevisionReviewStatus,
+    predecessor_id: RevisionId | None,
+    reviewed_against: RevisionId | None,
+) -> None:
+    """Bind a delta edition's review claim to the predecessor it was reviewed against.
+
+    An edition naming a predecessor compiles with casilla rows it inherits and
+    does not state. A review of it covers the rows it states, judged against that
+    predecessor, and the inherited rows are attested by the stamp of the edition
+    that states them. ``reviewed_at`` and ``reviewed_by`` say who and when, never
+    what, so the scope is its own scalar: ``reviewed_against`` names the
+    predecessor the reviewer read the delta against. The stamp alone then says
+    what it covers, and a predecessor declared or re-pointed after the review
+    leaves a claim that names a different edition, which refuses here instead of
+    silently widening.
+
+    Args:
+        revision_id: Revision the stamp belongs to, named in the refusal message.
+        review_status: The declared review status.
+        predecessor_id: The revision id the edition declares as its predecessor,
+            or ``None`` when it states every row itself.
+        reviewed_against: The declared review scope, or ``None`` when omitted.
+
+    Raises:
+        RegistryValidationError: A review scope on an edition that names no
+            predecessor or is unreviewed, or a reviewed delta edition whose scope
+            is missing or names a different edition than its declared predecessor.
+    """
+    if predecessor_id is None:
+        if reviewed_against is not None:
+            raise RegistryValidationError(
+                f"revision {revision_id!r} declares reviewed_against={reviewed_against!r} but names no "
+                "predecessor; a review scope belongs only to an edition that inherits rows, and this one "
+                "states every row itself",
+            )
+        return
+    if review_status not in REVIEWED_REVISION_REVIEW_STATUSES:
+        if reviewed_against is not None:
+            raise RegistryValidationError(
+                f"revision {revision_id!r} declares review_status={review_status.value!r} but also declares "
+                f"reviewed_against={reviewed_against!r}; a review scope belongs to a review, so drop it or "
+                "advance review_status",
+            )
+        return
+    if reviewed_against != predecessor_id:
+        stated = (
+            "omits reviewed_against" if reviewed_against is None else f"declares reviewed_against={reviewed_against!r}"
+        )
+        raise RegistryValidationError(
+            f"revision {revision_id!r} names predecessor {predecessor_id!r} and declares "
+            f"review_status={review_status.value!r} but {stated}; the edition compiles with rows inherited "
+            f"from {predecessor_id!r} that its reviewer never read, so the review must state it was made "
+            f"against {predecessor_id!r}, or be re-made and restamped",
+        )
+
+
 __all__ = [
     "REVISION_REVIEW_DATE_CEILING",
     "REVISION_REVIEW_DATE_FLOOR",
     "validate_attribution_names_somebody",
     "validate_governance_stamp_coherence",
+    "validate_review_scope",
     "validate_reviewed_at_within_horizon",
 ]

@@ -1,5 +1,5 @@
 [[revisions."2024".formulas]]
-id = "modelo-131-2024-saldo-negativo-fin-periodo"
+id = "modelo-131-saldo-negativo-fin-periodo"
 target_casilla_id = "saldo-negativo-fin-periodo"
 expression = { op = "max", args = [
     { literal = "0" },

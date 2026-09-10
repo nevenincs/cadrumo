@@ -25,9 +25,9 @@ from cadrumo.core.optional_extras import LLM_EXTRA
 
 from ..lane_verification_core import (
     build_companion_wheels,
+    build_root_snapshot,
     build_wheel,
     create_pip_venv,
-    head_extract,
     install_targets_with_pip,
     isolated_product_env,
     venv_python_path,
@@ -95,7 +95,7 @@ def installed_core_environment(tmp_path_factory: pytest.TempPathFactory) -> tupl
     assert uv is not None, "uv is required to build the installed core cohort"
 
     work_dir = tmp_path_factory.mktemp("missing-llm-extra-boundary")
-    build_root = head_extract(_REPO_ROOT, work_dir)
+    build_root = build_root_snapshot(_REPO_ROOT, work_dir)
     root_wheel = build_wheel(_REPO_ROOT, work_dir, uv, build_root=build_root)
     data_wheels = build_companion_wheels(work_dir, uv, build_root=build_root)
     venv = create_pip_venv(work_dir, f"{sys.version_info.major}.{sys.version_info.minor}")

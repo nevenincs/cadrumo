@@ -72,7 +72,7 @@
 # discipline this table follows.
 
 [[revisions."2025".formulas]]
-id = "renta-2025-eo-agraria-rendimiento-base-mejillon-batea"
+id = "renta-eo-agraria-rendimiento-base-mejillon-batea"
 target_casilla_id = "0159"
 expression = { op = "multiply", args = [{ casilla_id = "0157" }, { casilla_id = "0158" }] }
 rounding = "money-2"
@@ -83,7 +83,7 @@ source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Determinación del rendimiento neto"]
 
 [[revisions."2025".formulas]]
-id = "renta-2025-eo-agraria-rendimiento-base-porcino-carne"
+id = "renta-eo-agraria-rendimiento-base-porcino-carne"
 target_casilla_id = "1490"
 expression = { op = "multiply", args = [{ casilla_id = "1488" }, { casilla_id = "1489" }] }
 rounding = "money-2"
@@ -94,7 +94,7 @@ source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Determinación del rendimiento neto"]
 
 [[revisions."2025".formulas]]
-id = "renta-2025-eo-agraria-rendimiento-base-remolacha"
+id = "renta-eo-agraria-rendimiento-base-remolacha"
 target_casilla_id = "1493"
 expression = { op = "multiply", args = [{ casilla_id = "1491" }, { casilla_id = "1492" }] }
 rounding = "money-2"
@@ -105,7 +105,7 @@ source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Determinación del rendimiento neto"]
 
 [[revisions."2025".formulas]]
-id = "renta-2025-eo-agraria-rendimiento-base-bovino-carne-avicultura"
+id = "renta-eo-agraria-rendimiento-base-bovino-carne-avicultura"
 target_casilla_id = "1496"
 expression = { op = "multiply", args = [{ casilla_id = "1494" }, { casilla_id = "1495" }] }
 rounding = "money-2"
@@ -116,7 +116,7 @@ source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Determinación del rendimiento neto"]
 
 [[revisions."2025".formulas]]
-id = "renta-2025-eo-agraria-rendimiento-base-forestal-corta-larga"
+id = "renta-eo-agraria-rendimiento-base-forestal-corta-larga"
 target_casilla_id = "1499"
 expression = { op = "multiply", args = [{ casilla_id = "1497" }, { casilla_id = "1498" }] }
 rounding = "money-2"
@@ -127,7 +127,7 @@ source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Determinación del rendimiento neto"]
 
 [[revisions."2025".formulas]]
-id = "renta-2025-eo-agraria-rendimiento-base-bovino-leche"
+id = "renta-eo-agraria-rendimiento-base-bovino-leche"
 target_casilla_id = "1502"
 expression = { op = "multiply", args = [{ casilla_id = "1500" }, { casilla_id = "1501" }] }
 rounding = "money-2"
@@ -138,7 +138,7 @@ source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Determinación del rendimiento neto"]
 
 [[revisions."2025".formulas]]
-id = "renta-2025-eo-agraria-rendimiento-base-cereales-citricos-horticultura"
+id = "renta-eo-agraria-rendimiento-base-cereales-citricos-horticultura"
 target_casilla_id = "1505"
 expression = { op = "multiply", args = [{ casilla_id = "1503" }, { casilla_id = "1504" }] }
 rounding = "money-2"
@@ -149,7 +149,7 @@ source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Determinación del rendimiento neto"]
 
 [[revisions."2025".formulas]]
-id = "renta-2025-eo-agraria-rendimiento-base-porcino-cria-ovino-leche-apicultura"
+id = "renta-eo-agraria-rendimiento-base-porcino-cria-ovino-leche-apicultura"
 target_casilla_id = "1508"
 expression = { op = "multiply", args = [{ casilla_id = "1506" }, { casilla_id = "1507" }] }
 rounding = "money-2"
@@ -160,7 +160,7 @@ source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Determinación del rendimiento neto"]
 
 [[revisions."2025".formulas]]
-id = "renta-2025-eo-agraria-rendimiento-base-forestal-corta-corta"
+id = "renta-eo-agraria-rendimiento-base-forestal-corta-corta"
 target_casilla_id = "1511"
 expression = { op = "multiply", args = [{ casilla_id = "1509" }, { casilla_id = "1510" }] }
 rounding = "money-2"
@@ -171,7 +171,7 @@ source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Determinación del rendimiento neto"]
 
 [[revisions."2025".formulas]]
-id = "renta-2025-eo-agraria-rendimiento-base-arroz-oleaginosas-flores"
+id = "renta-eo-agraria-rendimiento-base-arroz-oleaginosas-flores"
 target_casilla_id = "1514"
 expression = { op = "multiply", args = [{ casilla_id = "1512" }, { casilla_id = "1513" }] }
 rounding = "money-2"
@@ -182,7 +182,7 @@ source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Determinación del rendimiento neto"]
 
 [[revisions."2025".formulas]]
-id = "renta-2025-eo-agraria-rendimiento-base-otras-especies-ganaderas"
+id = "renta-eo-agraria-rendimiento-base-otras-especies-ganaderas"
 target_casilla_id = "1517"
 expression = { op = "multiply", args = [{ casilla_id = "1515" }, { casilla_id = "1516" }] }
 rounding = "money-2"
@@ -193,7 +193,7 @@ source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Determinación del rendimiento neto"]
 
 [[revisions."2025".formulas]]
-id = "renta-2025-eo-agraria-rendimiento-base-forestal-resina"
+id = "renta-eo-agraria-rendimiento-base-forestal-resina"
 target_casilla_id = "1520"
 expression = { op = "multiply", args = [{ casilla_id = "1518" }, { casilla_id = "1519" }] }
 rounding = "money-2"
@@ -208,7 +208,7 @@ required_text = ["Determinación del rendimiento neto"]
 # euros x índice 0,37 = rendimiento neto previo 6.671,10 euros. See
 # test_modelo_100_eo_agraria_rendimiento_base.py.
 [[revisions."2025".formulas]]
-id = "renta-2025-eo-agraria-rendimiento-base-raices-tuberculos-forrajes"
+id = "renta-eo-agraria-rendimiento-base-raices-tuberculos-forrajes"
 target_casilla_id = "1523"
 expression = { op = "multiply", args = [{ casilla_id = "1521" }, { casilla_id = "1522" }] }
 rounding = "money-2"
@@ -219,7 +219,7 @@ source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Ejemplo: Determinación del rendimiento neto previo de la", "El índice de rendimiento neto aplicable sobre los citados ingresos es el 0,37"]
 
 [[revisions."2025".formulas]]
-id = "renta-2025-eo-agraria-rendimiento-base-plantas-textiles"
+id = "renta-eo-agraria-rendimiento-base-plantas-textiles"
 target_casilla_id = "1526"
 expression = { op = "multiply", args = [{ casilla_id = "1524" }, { casilla_id = "1525" }] }
 rounding = "money-2"
@@ -230,7 +230,7 @@ source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Determinación del rendimiento neto"]
 
 [[revisions."2025".formulas]]
-id = "renta-2025-eo-agraria-rendimiento-base-actividades-accesorias"
+id = "renta-eo-agraria-rendimiento-base-actividades-accesorias"
 target_casilla_id = "1529"
 expression = { op = "multiply", args = [{ casilla_id = "1527" }, { casilla_id = "1528" }] }
 rounding = "money-2"
@@ -241,7 +241,7 @@ source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Determinación del rendimiento neto"]
 
 [[revisions."2025".formulas]]
-id = "renta-2025-eo-agraria-rendimiento-base-otros-trabajos-accesorios"
+id = "renta-eo-agraria-rendimiento-base-otros-trabajos-accesorios"
 target_casilla_id = "1532"
 expression = { op = "multiply", args = [{ casilla_id = "1530" }, { casilla_id = "1531" }] }
 rounding = "money-2"
@@ -252,7 +252,7 @@ source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Determinación del rendimiento neto"]
 
 [[revisions."2025".formulas]]
-id = "renta-2025-eo-agraria-rendimiento-base-cria-guarda-engorde-ganado"
+id = "renta-eo-agraria-rendimiento-base-cria-guarda-engorde-ganado"
 target_casilla_id = "1535"
 expression = { op = "multiply", args = [{ casilla_id = "1533" }, { casilla_id = "1534" }] }
 rounding = "money-2"
@@ -274,7 +274,7 @@ required_text = ["Determinación del rendimiento neto"]
 # unselected product's ingresos/índice simply stay blank (zero), so the sum
 # never fabricates a rendimiento for a product the taxpayer did not declare.
 [[revisions."2025".formulas]]
-id = "renta-2025-eo-agraria-rendimiento-neto-previo"
+id = "renta-eo-agraria-rendimiento-neto-previo"
 target_casilla_id = "1537"
 expression = { op = "sum", args = [
     { casilla_id = "0159" },
@@ -308,7 +308,7 @@ required_text = ["El rendimiento neto es el resultante de la suma de los rendimi
 # A blank amortización subtracts zero, never fabricating a depreciation
 # figure the engine has no per-element asset register to derive.
 [[revisions."2025".formulas]]
-id = "renta-2025-eo-agraria-rendimiento-neto-minorado"
+id = "renta-eo-agraria-rendimiento-neto-minorado"
 target_casilla_id = "1539"
 expression = { op = "subtract", args = [
     { casilla_id = "1537" },
@@ -332,7 +332,7 @@ required_text = ["Fase 2ª: Determinación del rendimiento neto minorado"]
 # índice aplicable en ese ejemplo) = rendimiento neto de módulos 13.233,98
 # euros. See test_modelo_100_eo_agraria_indices_correctores.py.
 [[revisions."2025".formulas]]
-id = "renta-2025-eo-agraria-rendimiento-neto-modulos"
+id = "renta-eo-agraria-rendimiento-neto-modulos"
 target_casilla_id = "1548"
 expression = { op = "m100_resolve_eo_agraria_indices_correctores", args = [
     { casilla_id = "1539" },

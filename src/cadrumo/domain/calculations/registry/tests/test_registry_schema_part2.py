@@ -388,7 +388,7 @@ def test_validator_rejects_casilla_export_ref_without_export_field() -> None:
     )
     mutated = revision.model_copy(update={"casillas": casillas})
 
-    with pytest.raises(RegistryValidationError, match="references unknown export field"):
+    with pytest.raises(RegistryValidationError, match="but the export fields resolving to it are"):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
 
 
@@ -410,7 +410,7 @@ def test_validator_rejects_export_field_not_declared_by_casilla() -> None:
     )
     mutated = revision.model_copy(update={"casillas": casillas})
 
-    with pytest.raises(RegistryValidationError, match="is not declared by casilla"):
+    with pytest.raises(RegistryValidationError, match="but the export fields resolving to it are"):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
 
 

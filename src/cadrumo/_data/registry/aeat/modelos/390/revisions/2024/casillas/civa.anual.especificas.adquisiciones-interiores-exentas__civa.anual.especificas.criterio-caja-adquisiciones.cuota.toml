@@ -29,7 +29,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-20", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-07-casilla-adquisiciones-interiores-exentas"]
 
 # Box [109] - '11. Oper. específicas - Adquisiciones intracomunitarias exentas [109]' (offset 30, length 17).
 [[revisions."2024".casillas]]
@@ -45,7 +44,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-26", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-07-casilla-adquisiciones-intracomunitarias-exentas"]
 
 # Box [231] - '11. Oper. Específicas - Importaciones exentas [231]' (offset 47, length 17).
 [[revisions."2024".casillas]]
@@ -61,7 +59,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-27", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-07-casilla-importaciones-exentas"]
 
 # Box [232] - '11. Oper. Específicas - Bases imponibles IVA soportado no deducible [232]' (offset 64, length 17).
 [[revisions."2024".casillas]]
@@ -77,7 +74,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-95", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-07-casilla-base-iva-soportado-no-deducible"]
 
 # Box [111] - '11. Oper. específicas - Oper. sujetas que originan el derecho a la devolución mensual [111]' (offset 81, length 17).
 [[revisions."2024".casillas]]
@@ -93,7 +89,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-116", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-07-casilla-operaciones-derecho-devolucion-mensual"]
 
 # Box [113] - '11. Oper. específicas - Entrega interior bienes devengada por invers. sujet. pasiv. operac. triangul. [113]' (offset 98, length 17).
 [[revisions."2024".casillas]]
@@ -109,7 +104,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-26", "ley-37-1992:art-84", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-07-casilla-entrega-interior-inversion-triangular"]
 
 # Box [523] - '11. Oper. Específicas - Servicios localizados en el territorio de aplicación del impuesto por inversión del sujeto pasivo [523]' (offset 115, length 17).
 [[revisions."2024".casillas]]
@@ -125,7 +119,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-07-casilla-servicios-tai-inversion-sujeto-pasivo"]
 
 # Box [654] - '11. Oper. Específicas - Importes de las entregas de bienes regimen especial criterio caja - Base imponible [654]' (offset 132, length 17).
 [[revisions."2024".casillas]]
@@ -141,7 +134,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-duodecies", "ley-37-1992:art-163-undecies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-07-casilla-criterio-caja-entregas-base"]
 
 # Box [655] - '11. Oper. Específicas - Importes de las entregas de bienes regimen especial criterio caja - Cuota [655]' (offset 149, length 17).
 [[revisions."2024".casillas]]
@@ -157,7 +149,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-duodecies", "ley-37-1992:art-163-undecies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-07-casilla-criterio-caja-entregas-cuota"]
 
 # Box [656] - '11. Oper. Específicas - Importes de las adquisiciones de bienes regimen especial criterio caja - Base imponible [656]' (offset 166, length 17).
 [[revisions."2024".casillas]]
@@ -173,7 +164,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-quaterdecies", "ley-37-1992:art-163-terdecies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-07-casilla-criterio-caja-adquisiciones-base"]
 
 # Box [657] - '11. Oper. Específicas - Importes de las adquisiciones de bienes regimen especial criterio caja - Cuota [657]' (offset 183, length 17).
 [[revisions."2024".casillas]]
@@ -189,4 +179,3 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-quaterdecies", "ley-37-1992:art-163-terdecies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-07-casilla-criterio-caja-adquisiciones-cuota"]

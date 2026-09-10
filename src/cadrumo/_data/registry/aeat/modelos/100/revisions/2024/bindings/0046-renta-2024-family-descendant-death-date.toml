@@ -1,5 +1,5 @@
 [[revisions."2024".bindings]]
-id = "renta-2024-family-descendant-death-date"
+id = "renta-family-descendant-death-date"
 source = "profile"
 selector = { profile_model = "RentaFamilyProfile", collection = "descendants", field = "death_date", xsd_path = "/DatosIdentificativos/Hijos/Hijo/FALLDLG", dictionary_field = "FALLDLG", repeating = true, format = "date" }
 aggregation = { op = "rows" }

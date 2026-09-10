@@ -1,5 +1,5 @@
 [[revisions."2025".formulas]]
-id = "renta-2025-acciones-no-negociadas-ganancia-reducida-no-exenta"
+id = "renta-acciones-no-negociadas-ganancia-reducida-no-exenta"
 target_casilla_id = "1594"
 expression = { op = "sum", args = [
     { casilla_id = "1586" },

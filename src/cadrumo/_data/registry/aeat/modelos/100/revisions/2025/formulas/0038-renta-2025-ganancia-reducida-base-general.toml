@@ -1,5 +1,5 @@
 [[revisions."2025".formulas]]
-id = "renta-2025-ganancia-reducida-base-general"
+id = "renta-ganancia-reducida-base-general"
 target_casilla_id = "1653"
 expression = { op = "subtract", args = [
     { casilla_id = "1645" },

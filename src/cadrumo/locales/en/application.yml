@@ -1182,6 +1182,10 @@ application:
   registry:
     errors:
       citation_not_found: No registry citation matched the requested legal reference.
+      edition_modelo_undeclared: 'The registry declares no modelo {modelo}. Declared
+        modelos: {available_modelos}.'
+      edition_revision_undeclared: 'Modelo {modelo} declares no edition {revision}.
+        Declared editions: {available_revisions}.'
       invalid_manual_id: Registry manual must be one of {allowed_manual_ids}; got
         {manual_id}.
       invalid_manual_rule_kind: Registry manual rule kind must be one of {allowed_rule_kinds};

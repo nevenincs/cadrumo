@@ -71,11 +71,39 @@ def test_a_self_scaling_wire_type_is_not_reported_as_unscaled(authority: Validat
 
 
 def test_money_rendered_by_an_unscaled_wire_type_is_reported(authority: ValidatedRegistryAuthority) -> None:
-    """A monetary casilla rendered as an integer or text has no scale anywhere."""
-    revision = authority.modelo("184").revisions["2025-y-siguientes"]
-    findings = [item for item in scale_findings(revision, modelo_id="184") if item.kind == "money_without_scale"]
-    assert findings
-    assert all("applies no scale" in item.detail for item in findings)
+    """A monetary casilla rendered as an integer has no scale anywhere.
+
+    Constructed on a copy of a revision that reports no scale finding of any
+    kind: one amount carried by a single cents field is re-declared on the
+    integer wire with no decimals. The screen must report exactly that field,
+    against its casilla, as unscaled. Constructed rather than read from the
+    corpus, so repairing every live unscaled amount leaves the proof standing.
+    """
+    revision = authority.modelo("303").revisions["2025"]
+    assert scale_findings(revision, modelo_id="303") == (), "the constructed defect must be the only one"
+    declared = {casilla.id: str(casilla.data_type) for casilla in revision.casillas}
+    layout = revision.export_layouts[0]
+
+    def sole_cents_amount(record, field: ExportFieldDefinition) -> bool:
+        return bool(
+            field.casilla_id is not None
+            and declared.get(field.casilla_id) == "money"
+            and str(field.data_type) == "decimal"
+            and field.decimals == CENTS_SCALE
+            and sum(1 for other in record.fields if other.casilla_id == field.casilla_id) == 1,
+        )
+
+    record, victim = next(
+        (record, field) for record in layout.records for field in record.fields if sole_cents_amount(record, field)
+    )
+    unscaled = victim.model_copy(update={"data_type": "integer", "decimals": None})
+
+    findings = scale_findings(_revision_with(revision, layout, record, victim, unscaled), modelo_id="303")
+
+    assert [(item.kind, str(item.casilla_id), item.field_id) for item in findings] == [
+        ("money_without_scale", str(victim.casilla_id), str(victim.id))
+    ]
+    assert "rendered as integer, which applies no scale" in findings[0].detail
 
 
 def test_the_unusual_decimal_count_is_reported_as_an_exception(authority: ValidatedRegistryAuthority) -> None:
@@ -90,12 +118,17 @@ def test_the_unscaled_fields_are_concentrated_and_bounded(authority: ValidatedRe
 
     This pins the shape of the finding rather than its count: if it ever spreads
     beyond a handful of modelos the remedy stops being per-field review.
+
+    The ceiling may legitimately see no finding at all once the unscaled fields
+    are repaired, so it asserts no population. That the screen still detects the
+    condition is proven by the constructed defect in
+    ``test_money_rendered_by_an_unscaled_wire_type_is_reported``, which fails if
+    the screen stops reporting it, not by the corpus staying defective.
     """
     from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 
     modelo_ids = tuple(sorted(str(code) for code in registry_modelo_codes()))
     unscaled = [item for item in screen_authority(authority, modelo_ids) if item.kind == "money_without_scale"]
-    assert unscaled
     assert len({item.modelo for item in unscaled}) <= 6
 
 

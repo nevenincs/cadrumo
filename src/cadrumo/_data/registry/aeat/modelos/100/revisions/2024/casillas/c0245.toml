@@ -1,7 +1,7 @@
 [[revisions."2024".casillas]]
 id = "0245"
 input_kind = "computed"
-formula = "renta-2024-matrimonio-vigente-todo-anio"
+formula = "renta-matrimonio-vigente-todo-anio"
 number = "0245"
 section = ["resultados", "calculo_impuesto_res", "deduc_conyuge_disc_res"]
 data_type = "boolean"

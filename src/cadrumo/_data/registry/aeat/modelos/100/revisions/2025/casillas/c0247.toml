@@ -1,7 +1,7 @@
 [[revisions."2025".casillas]]
 id = "0247"
 input_kind = "computed"
-formula = "renta-2025-matrimonio-mes-fin"
+formula = "renta-matrimonio-mes-fin"
 number = "0247"
 section = ["resultados", "calculo_impuesto_res", "deduc_conyuge_disc_res"]
 data_type = "integer"

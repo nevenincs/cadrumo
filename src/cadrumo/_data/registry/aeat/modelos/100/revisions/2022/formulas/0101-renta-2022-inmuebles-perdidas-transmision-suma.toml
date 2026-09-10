@@ -1,5 +1,5 @@
 [[revisions."2022".formulas]]
-id = "renta-2022-inmuebles-perdidas-transmision-suma"
+id = "renta-inmuebles-perdidas-transmision-suma"
 target_casilla_id = "1844"
 expression = { op = "sum", args = [
     { casilla_id = "1832" },

@@ -1,5 +1,5 @@
 [[revisions."2022".formulas]]
-id = "renta-2022-acciones-negociadas-ganancias-reducidas"
+id = "renta-acciones-negociadas-ganancias-reducidas"
 target_casilla_id = "0336"
 expression = { op = "sum", args = [
     { casilla_id = "0332" },

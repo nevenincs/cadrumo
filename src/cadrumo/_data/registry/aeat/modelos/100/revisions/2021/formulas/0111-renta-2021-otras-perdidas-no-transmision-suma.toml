@@ -1,5 +1,5 @@
 [[revisions."2021".formulas]]
-id = "renta-2021-otras-perdidas-no-transmision-suma"
+id = "renta-otras-perdidas-no-transmision-suma"
 target_casilla_id = "0307"
 expression = { op = "sum", args = [
     { casilla_id = "0305" },

@@ -7,11 +7,12 @@ import os
 import shutil
 import subprocess
 import sys
-import tarfile
 from pathlib import Path
 from typing import cast
 
 import pytest
+
+from ...source_tree import repository_files, snapshot
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -96,18 +97,8 @@ print(json.dumps(payload, sort_keys=True))
 
 
 def _tracked_checkout(tmp_path: Path) -> Path:
-    archive = tmp_path / "tracked.tar"
     checkout = tmp_path / "checkout"
-    git = shutil.which("git")
-    assert git is not None
-    subprocess.run(  # noqa: S603 - resolved Git executable and fixed authored arguments
-        [git, "archive", "--format=tar", f"--output={archive}", "HEAD"],
-        cwd=_REPOSITORY,
-        check=True,
-    )
-    checkout.mkdir()
-    with tarfile.open(archive) as bundle:
-        bundle.extractall(checkout, filter="data")
+    snapshot(_REPOSITORY, repository_files(_REPOSITORY), checkout)
     return checkout
 
 

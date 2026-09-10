@@ -30,7 +30,6 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-21-base"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-02-casilla-tipo-21-base"]
 
 # Box [06] - "Tipo 21 % - Cuota". Vigencia: todo el ejercicio.
 [[revisions."2024".casillas]]
@@ -47,7 +46,6 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-21-cuota"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-02-casilla-tipo-21-cuota"]
 
 # Box [03] - "Tipo 10 % - Base imponible". Vigencia: todo el ejercicio.
 [[revisions."2024".casillas]]
@@ -64,7 +62,6 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-10-base"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-02-casilla-tipo-10-base"]
 
 # Box [04] - "Tipo 10 % - Cuota". Vigencia: todo el ejercicio.
 [[revisions."2024".casillas]]
@@ -81,7 +78,6 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-10-cuota"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-02-casilla-tipo-10-cuota"]
 
 # Box [669] - "Tipo 7,5 % - Base imponible". Vigencia: desde el 1 de octubre de 2024 (RDL 4/2024 art. 1).
 [[revisions."2024".casillas]]
@@ -91,6 +87,8 @@ section = ["iva", "anual", "devengado"]
 data_type = "money"
 semantic_role = "iva_base_imponible_repercutida_tipo_7_5"
 continuidad_id = "iva-base-imponible-repercutida-tipo-7-5"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:143 (sha256 8be79bacc860) prints box [669]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [669] and retires none"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "One official AEAT box per rate; the 7,5 % tier is a distinct box from its sibling rates, not a typo twin."
 required = false
@@ -98,7 +96,6 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-7-5-base"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-02-casilla-tipo-7-5-base"]
 
 # Box [670] - "Tipo 7,5 % - Cuota". Vigencia: desde el 1 de octubre de 2024 (RDL 4/2024 art. 1).
 [[revisions."2024".casillas]]
@@ -108,6 +105,8 @@ section = ["iva", "anual", "devengado"]
 data_type = "money"
 semantic_role = "iva_cuota_repercutida_tipo_7_5"
 continuidad_id = "iva-cuota-repercutida-tipo-7-5"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:144 (sha256 8be79bacc860) prints box [670]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [670] and retires none"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "One official AEAT box per rate; the 7,5 % tier is a distinct box from its sibling rates, not a typo twin."
 required = false
@@ -115,7 +114,6 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-7-5-cuota"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-02-casilla-tipo-7-5-cuota"]
 
 # Box [702] - "Tipo 5 % - Base imponible". Vigencia: del 1 de julio al 30 de septiembre de 2024 (RDL 4/2024 art. 1).
 [[revisions."2024".casillas]]
@@ -132,7 +130,6 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-5-base"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-02-casilla-tipo-5-base"]
 
 # Box [703] - "Tipo 5 % - Cuota". Vigencia: del 1 de julio al 30 de septiembre de 2024 (RDL 4/2024 art. 1).
 [[revisions."2024".casillas]]
@@ -149,7 +146,6 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-5-cuota"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-02-casilla-tipo-5-cuota"]
 
 # Box [01] - "Tipo 4 % - Base imponible". Vigencia: todo el ejercicio.
 [[revisions."2024".casillas]]
@@ -166,7 +162,6 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-4-base"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-02-casilla-tipo-4-base"]
 
 # Box [02] - "Tipo 4 % - Cuota". Vigencia: todo el ejercicio.
 [[revisions."2024".casillas]]
@@ -183,7 +178,6 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-4-cuota"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-02-casilla-tipo-4-cuota"]
 
 # Box [667] - "Tipo 2 % - Base imponible". Vigencia: desde el 1 de octubre de 2024 (RDL 4/2024 art. 1).
 [[revisions."2024".casillas]]
@@ -193,6 +187,8 @@ section = ["iva", "anual", "devengado"]
 data_type = "money"
 semantic_role = "iva_base_imponible_repercutida_tipo_2"
 continuidad_id = "iva-base-imponible-repercutida-tipo-2"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:137 (sha256 8be79bacc860) prints box [667]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [667] and retires none"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "One official AEAT box per rate; the 2 % tier is a distinct box from its sibling rates, not a typo twin."
 required = false
@@ -200,7 +196,6 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-2-base"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-02-casilla-tipo-2-base"]
 
 # Box [668] - "Tipo 2 % - Cuota". Vigencia: desde el 1 de octubre de 2024 (RDL 4/2024 art. 1).
 [[revisions."2024".casillas]]
@@ -210,6 +205,8 @@ section = ["iva", "anual", "devengado"]
 data_type = "money"
 semantic_role = "iva_cuota_repercutida_tipo_2"
 continuidad_id = "iva-cuota-repercutida-tipo-2"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:138 (sha256 8be79bacc860) prints box [668]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [668] and retires none"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "One official AEAT box per rate; the 2 % tier is a distinct box from its sibling rates, not a typo twin."
 required = false
@@ -217,7 +214,6 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-2-cuota"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-02-casilla-tipo-2-cuota"]
 
 # Box [700] - "Tipo 0 % - Base imponible". Vigencia: todo el ejercicio.
 [[revisions."2024".casillas]]
@@ -234,7 +230,6 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-0-base"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-02-casilla-tipo-0-base"]
 
 # Box [701] - "Tipo 0 % - Cuota". Vigencia: todo el ejercicio.
 [[revisions."2024".casillas]]
@@ -251,4 +246,3 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-0-cuota"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-02-casilla-tipo-0-cuota"]

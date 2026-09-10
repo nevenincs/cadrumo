@@ -662,7 +662,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2016"]
 
@@ -693,7 +693,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2016"]
 
@@ -711,7 +711,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2016"]
 
@@ -742,7 +742,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2016"]
 
@@ -757,7 +757,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2016"]
 
@@ -788,7 +788,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2016"]
 
@@ -803,7 +803,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2016"]
 
@@ -834,7 +834,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2016"]
 
@@ -849,7 +849,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2016"]
 
@@ -880,7 +880,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2016"]
 
@@ -895,7 +895,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2016"]
 
@@ -926,7 +926,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2016"]
 
@@ -941,7 +941,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2016"]
 
@@ -972,7 +972,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2016"]
 
@@ -987,7 +987,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2016"]
 
@@ -1002,7 +1002,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2016"]
 

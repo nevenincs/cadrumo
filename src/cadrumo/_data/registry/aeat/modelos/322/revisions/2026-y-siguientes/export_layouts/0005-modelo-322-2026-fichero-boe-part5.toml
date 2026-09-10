@@ -109,7 +109,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -123,7 +123,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -137,7 +137,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -151,7 +151,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -165,7 +165,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -179,7 +179,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -206,7 +206,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -220,7 +220,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -234,7 +234,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -248,7 +248,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -262,7 +262,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -276,7 +276,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -290,7 +290,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -304,7 +304,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -333,7 +333,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -347,7 +347,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -361,7 +361,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -375,7 +375,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 

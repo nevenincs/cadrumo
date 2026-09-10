@@ -1,5 +1,5 @@
 [[revisions."2023".formulas]]
-id = "renta-2023-criptomonedas-perdida-negativa"
+id = "renta-criptomonedas-perdida-negativa"
 target_casilla_id = "1807"
 expression = { op = "min", args = [
     { literal = "0" },

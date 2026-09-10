@@ -1420,10 +1420,10 @@ def _parse_module_source(source: str, filename: str) -> ast.Module | None:
 def scan_source_text(source: str, *, filename: str) -> set[str]:
     """Emit the concrete dotted locale keys one module's source text declares.
 
-    The text form of :func:`scan_source_tree`, for callers holding a revision's
-    content rather than a working-tree file: comparing a module's key set before
-    and after a change is what makes a co-landing check possible at all.
-    Unparseable source yields an empty set, exactly as the tree walk skips it.
+    The text form of :func:`scan_source_tree`, for callers holding source text
+    directly rather than a working-tree file -- a synthetic specimen in a test,
+    for instance. Unparseable source yields an empty set, exactly as the tree
+    walk skips it.
     """
     tree = _parse_module_source(source, filename)
     if tree is None:

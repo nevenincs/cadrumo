@@ -25,6 +25,7 @@ import pytest
 from cadrumo.core.directory_scan import scan_directory
 
 from ..._paths import REPO_ROOT
+from ...source_tree import repository_files
 from ..apidocs.manager import API_SOURCE_PACKAGE, CLI_REFERENCE_SUBTREE, ApiStubManager
 from ..build import planned_doc_targets
 
@@ -311,25 +312,12 @@ def test_single_page_rejects_generated_documentation_sources(generated_page: str
 
 def test_tracked_sources_do_not_name_noncanonical_docs_build_roots() -> None:
     """Tracked code must not introduce preview/test output roots under ``docs/_build``."""
-    git = shutil.which("git")
-    assert git is not None, "git executable is required for docs build hygiene"
-    result = subprocess.run(
-        [git, "ls-files"],
-        cwd=_REPO_ROOT,
-        capture_output=True,
-        text=True,
-        check=False,
-        timeout=_SUBPROCESS_TIMEOUT_S,
-    )
-    assert result.returncode == 0, "git ls-files is required for docs build hygiene"
-
     violations: list[str] = []
-    for raw_path in result.stdout.splitlines():
-        normalised = raw_path.replace("\\", "/")
-        if not (normalised in _BUILD_ROOT_SCAN_FILES or normalised.startswith(_BUILD_ROOT_SCAN_PREFIXES)):
+    for raw_path in repository_files(_REPO_ROOT):
+        if not (raw_path in _BUILD_ROOT_SCAN_FILES or raw_path.startswith(_BUILD_ROOT_SCAN_PREFIXES)):
             continue
         path = _REPO_ROOT / raw_path
-        if not path.is_file() or "docs/_build" in normalised:
+        if not path.is_file() or "docs/_build" in raw_path:
             continue
         text = path.read_text(encoding="utf-8", errors="ignore")
         roots = [*_DOCS_BUILD_LITERAL_RE.findall(text), *_PATH_BUILD_ROOT_RE.findall(text)]

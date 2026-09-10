@@ -1,5 +1,5 @@
 [[revisions."2025".formulas]]
-id = "renta-2025-atencion-percibida-importe-total"
+id = "renta-atencion-percibida-importe-total"
 target_casilla_id = "2211"
 expression = { op = "sum", args = [
     { casilla_id = "2207" },

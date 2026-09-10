@@ -1,5 +1,5 @@
 [[revisions."2023".formulas]]
-id = "renta-2023-capital-mobiliario-general-rendimiento-neto-reducido"
+id = "renta-capital-mobiliario-general-rendimiento-neto-reducido"
 target_casilla_id = "0056"
 expression = { op = "subtract", args = [
         { casilla_id = "0054" },

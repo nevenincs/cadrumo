@@ -123,7 +123,7 @@ def modelo_202_modality_from_inputs(
     *,
     entity_type: EntityType | None,
     incn_prior_12_months: Decimal | None,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: "ValidatedRegistryAuthority | None" = None,
 ) -> Modelo202ModalityVerdict:
     """Derive the Modelo 202 modality from the two raw inputs (entity type + INCN).
@@ -159,7 +159,7 @@ def modelo_202_modality_from_inputs(
             ),
         )
     threshold_fact = resolve_modelo_202_art_40_3_incn_threshold(
-        effective_date=effective_date or date.today(),
+        effective_date=effective_date,
         authority=authority,
     )
     if incn_prior_12_months > modelo_202_incn_threshold_decimal(threshold_fact):
@@ -177,7 +177,11 @@ def modelo_202_modality_from_inputs(
     )
 
 
-def derive_modelo_202_modality(profile: TaxpayerProfile) -> Modelo202ModalityVerdict:
+def derive_modelo_202_modality(
+    profile: TaxpayerProfile,
+    *,
+    effective_date: date,
+) -> Modelo202ModalityVerdict:
     """Derive the Modelo 202 pago-fraccionado modality and return a :class:`Modelo202ModalityVerdict`.
 
     Reads :class:`TaxpayerProfile` entity type and INCN, then delegates the rule
@@ -186,6 +190,7 @@ def derive_modelo_202_modality(profile: TaxpayerProfile) -> Modelo202ModalityVer
     return modelo_202_modality_from_inputs(
         entity_type=profile.entity_type,
         incn_prior_12_months=profile.incn_prior_12_months,
+        effective_date=effective_date,
     )
 
 

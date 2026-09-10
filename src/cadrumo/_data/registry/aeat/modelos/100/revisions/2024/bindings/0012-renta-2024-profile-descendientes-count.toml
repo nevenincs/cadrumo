@@ -1,5 +1,5 @@
 [[revisions."2024".bindings]]
-id = "renta-2024-profile-descendientes-count"
+id = "renta-profile-descendientes-count"
 source = "profile"
 selector = { profile_key = "renta_family.descendientes_count" }
 aggregation = { op = "copy" }

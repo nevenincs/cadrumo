@@ -39,7 +39,7 @@
 # reduccion (applied to 1550, itself never larger than 1548) inherits the
 # same non-fabrication guarantee.
 [[revisions."2025".formulas]]
-id = "renta-2025-eo-agraria-reduccion-general"
+id = "renta-eo-agraria-reduccion-general"
 target_casilla_id = "1549"
 expression = { op = "if_then_else", args = [
     { op = "greater_than", args = [{ casilla_id = "1548" }, { literal = "0" }] },
@@ -57,7 +57,7 @@ source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Reducción de carácter general: 5 por 100"]
 
 [[revisions."2025".formulas]]
-id = "renta-2025-eo-agraria-reduccion-jovenes"
+id = "renta-eo-agraria-reduccion-jovenes"
 target_casilla_id = "1551"
 expression = { op = "if_then_else", args = [
     { op = "greater_than", args = [{ casilla_id = "AJ" }, { literal = "0" }] },
@@ -88,7 +88,7 @@ required_text = ["Reducción agricultores jóvenes: 25 por 100"]
 # objetiva (ver renta-2025-estimacion-directa-rendimiento-neto-reducido-total
 # y renta-2025-estimacion-objetiva-no-agricola-rendimiento-neto-reducido-total).
 [[revisions."2025".formulas]]
-id = "renta-2025-eo-agraria-rendimiento-neto-reducido-por-actividad"
+id = "renta-eo-agraria-rendimiento-neto-reducido-por-actividad"
 target_casilla_id = "1555"
 expression = { op = "subtract", args = [
     { op = "subtract", args = [

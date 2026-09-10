@@ -27,8 +27,7 @@ Two mechanisms close this:
   literal SHAPED as a locale-key registry (every value dotted-key-shaped) AND
   actually READ into a recognized translator sink, regardless of what its
   target is named. This is what makes such a dict's keys visible to the
-  parity/orphan audit and to the co-landing gate without requiring any
-  rename first.
+  parity/orphan audit without requiring any rename first.
 * A naming HAZARD gate (:func:`locales._ast_scanner.find_dict_constant_naming_violations`),
   this module's primary subject, flags a module-level dict that IS
   flow-confirmed as a locale-key registry but still carries no suffix, so a

@@ -88,9 +88,10 @@ def _scratch_tree(var: Path, name: str, *, read_only: bool = False) -> Path:
 def _scratch_file(var: Path, name: str) -> Path:
     """Create one scratch FILE under ``var``.
 
-    The cohort build's Git archive is a file at a working name until the moment
-    it is moved into the cohort, so a sweep that considered directories alone
-    left several hundred megabytes of it behind after every kill.
+    The cohort build's retained source archive is a file at a working name
+    until the moment it is moved into the cohort, so a sweep that considered
+    directories alone left several hundred megabytes of it behind after every
+    kill.
     """
     path = var / name
     path.write_bytes(b"archive bytes")
@@ -478,7 +479,7 @@ def test_an_abandoned_release_staging_directory_is_reclaimed(tmp_path: Path) -> 
 
 
 def test_an_abandoned_cohort_build_tree_and_its_archive_are_reclaimed(tmp_path: Path) -> None:
-    """The extracted source tree and the Git archive beside it both go.
+    """The extracted source tree and the retained source archive beside it both go.
 
     Thirty-nine thousand files and a several-hundred-megabyte zip, removed by
     the cohort build in a ``finally`` block that a kill never reaches. The

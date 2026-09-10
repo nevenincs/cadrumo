@@ -1,5 +1,5 @@
 [[revisions."2023".formulas]]
-id = "renta-2023-derechos-suscripcion-perdidas-suma"
+id = "renta-derechos-suscripcion-perdidas-suma"
 target_casilla_id = "0355"
 expression = { op = "sum", args = [
     { casilla_id = "0353" },

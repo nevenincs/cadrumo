@@ -8,7 +8,7 @@
 # an explicit binding and its own proof, not a cross-year Python fallback.
 
 [[revisions."2024".bindings]]
-id = "renta-2024-profile-deduccion-maternidad"
+id = "renta-profile-deduccion-maternidad"
 source = "profile"
 selector = { profile_key = "renta_family.deduccion_maternidad_2024" }
 aggregation = { op = "copy" }

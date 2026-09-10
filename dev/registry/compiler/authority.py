@@ -15,6 +15,7 @@ from cadrumo.domain.calculations.registry.facts.providers import (
     validate_fact_provider_directory_ownership,
 )
 from cadrumo.domain.calculations.registry.identity import RegistryIdentity
+from cadrumo.domain.iva.compilation_catalogues import compiling_catalogues
 
 from .loader import load_registry_tree
 
@@ -41,7 +42,8 @@ def compile_validated_authority(
     root, sources_root = canonical_authoring_root_pair(registry_root, source_root)
     modelos, catalogues = load_registry_tree(root, identity=identity)
     validate_fact_provider_directory_ownership(root)
-    facts = compile_registered_fact_providers(root, modelos=modelos)
+    with compiling_catalogues(catalogues.legal, catalogues.sources, sources_root):
+        facts = compile_registered_fact_providers(root, modelos=modelos)
     convenio = load_convenio_authority(root / "treaties")
     validate_convenio_legal_refs(convenio, frozenset(catalogues.legal))
     supported_filing_years = catalogues.supported_filing_years

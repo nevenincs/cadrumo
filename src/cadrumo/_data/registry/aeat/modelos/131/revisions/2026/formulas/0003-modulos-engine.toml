@@ -18,7 +18,7 @@
 # untabled epígrafe or a blank epígrafe resolves to zero (see the op's
 # docstring in _formula_runtime.py).
 [[revisions."2026".formulas]]
-id = "modelo-131-2026-modulos-rendimiento-neto-previo"
+id = "modelo-131-modulos-rendimiento-neto-previo"
 target_casilla_id = "modulos-rendimiento-neto-previo"
 expression = { op = "m131_resolve_modulos_previo", args = [
     { casilla_id = "modulos-epigrafe" },
@@ -56,7 +56,7 @@ required_text = [
 # fabricates one). Both minoraciones feed an internal advisory-support
 # casilla that never substitutes for the operator's manual casilla 01.
 [[revisions."2026".formulas]]
-id = "modelo-131-2026-modulos-rendimiento-neto-minorado"
+id = "modelo-131-modulos-rendimiento-neto-minorado"
 target_casilla_id = "modulos-rendimiento-neto-minorado"
 expression = { op = "subtract", args = [
     { casilla_id = "modulos-rendimiento-neto-previo" },
@@ -92,7 +92,7 @@ required_text = [
 # may not qualify for; omitting them keeps this an internal advisory-support
 # figure, never a substitute for the operator's manual casilla 01.
 [[revisions."2026".formulas]]
-id = "modelo-131-2026-modulos-rendimiento-neto-modulos"
+id = "modelo-131-modulos-rendimiento-neto-modulos"
 target_casilla_id = "modulos-rendimiento-neto-modulos"
 expression = { op = "m131_resolve_modulos_indice_exceso", args = [
     { casilla_id = "modulos-epigrafe" },
@@ -112,7 +112,7 @@ required_text = [
 # Fase 4ª — rendimiento neto de la actividad: módulos minus the 5 por 100
 # reducción general (Orden HAC/1425/2025 DA-1, apartados 1 y 3).
 [[revisions."2026".formulas]]
-id = "modelo-131-2026-modulos-rendimiento-neto-actividad"
+id = "modelo-131-modulos-rendimiento-neto-actividad"
 target_casilla_id = "modulos-rendimiento-neto-actividad"
 expression = { op = "subtract", args = [
     { casilla_id = "modulos-rendimiento-neto-modulos" },

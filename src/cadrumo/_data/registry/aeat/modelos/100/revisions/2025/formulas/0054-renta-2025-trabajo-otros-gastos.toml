@@ -1,5 +1,5 @@
 [[revisions."2025".formulas]]
-id = "renta-2025-trabajo-otros-gastos"
+id = "renta-trabajo-otros-gastos"
 target_casilla_id = "0019"
 expression = { op = "min", args = [
         { literal = "2000" },

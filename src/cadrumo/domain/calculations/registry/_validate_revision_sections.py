@@ -109,7 +109,6 @@ def _validate_revision_surface_sections(
             revision=revision,
             formulas=context.formulas,
             bindings=context.bindings,
-            export_field_ids=context.export_field_ids,
             legal_refs=legal_refs,
             source_refs=source_refs,
             evidence=evidence,
@@ -321,6 +320,11 @@ def validate_revision_definition(
     prefix = f"modelo {modelo.id} revision {revision.id}"
     failures.extend(_missing_refs(prefix, "revision", revision.legal_refs, legal_refs, "legal"))
     failures.extend(_missing_refs(prefix, "revision", revision.source_refs, source_refs, "source"))
+    # Checked on its own: a default every row overrides reaches no row, so the
+    # row-level checks would never see an unknown id in it.
+    failures.extend(
+        _missing_refs(prefix, "revision casilla_source_refs", revision.casilla_source_refs or (), source_refs, "source")
+    )
     failures.extend(
         evidence.require_any_source_tier(prefix, "revision", revision.source_refs, REGISTRY_SOURCE_GROUNDING_TIERS),
     )

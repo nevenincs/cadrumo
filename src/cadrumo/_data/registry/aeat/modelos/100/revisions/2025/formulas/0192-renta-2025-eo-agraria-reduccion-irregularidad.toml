@@ -19,7 +19,7 @@
 # superior a dos anos... no procede aplicar reduccion alguna por este
 # concepto").
 [[revisions."2025".formulas]]
-id = "renta-2025-eo-agraria-reduccion-irregularidad"
+id = "renta-eo-agraria-reduccion-irregularidad"
 target_casilla_id = "1554"
 expression = { op = "percent", args = [
     { op = "min", args = [

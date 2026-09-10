@@ -1,7 +1,7 @@
 # M100 Art. 85 cadastral-value imputed real-estate income.
 
 [[revisions."2024".formulas]]
-id = "renta-2024-inmobiliario-renta-imputada-art-85"
+id = "renta-inmobiliario-renta-imputada-art-85"
 target_casilla_id = "0089"
 expression = { op = "m100_resolve_renta_inmobiliaria_imputada", args = [
     { casilla_id = "0083" },

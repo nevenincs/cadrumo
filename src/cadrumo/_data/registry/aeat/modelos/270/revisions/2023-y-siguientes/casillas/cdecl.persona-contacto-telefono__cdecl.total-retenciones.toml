@@ -24,25 +24,27 @@
 # agree, and two operator-supplied facts are what the record actually carries.
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.persona-contacto-telefono"
+continuidad_id = "m270-persona-contacto-telefono"
+continuidad_origin = "seeded"
 number = "59-67"
 section = ["declarante", "contacto"]
 data_type = "text"
 semantic_role = "m270_persona_contacto_telefono"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-270-decl-persona-contacto-telefono"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.persona-contacto-nombre"
+continuidad_id = "m270-persona-contacto-nombre"
+continuidad_origin = "seeded"
 number = "68-107"
 section = ["declarante", "contacto"]
 data_type = "name"
 semantic_role = "m270_persona_contacto_nombre"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-270-decl-persona-contacto-nombre"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
@@ -51,13 +53,14 @@ source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 # operator's datum rather than a producer's.
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.numero-identificativo"
+continuidad_id = "m270-numero-identificativo"
+continuidad_origin = "seeded"
 number = "108-120"
 section = ["declarante"]
 data_type = "text"
 semantic_role = "m270_numero_identificativo"
 required = true
 input_kind = "manual"
-export_refs = ["modelo-270-decl-numero-identificativo"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
@@ -68,25 +71,27 @@ source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 # canonical "X", which this design does not admit here.
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.complementaria"
+continuidad_id = "m270-declaracion-complementaria"
+continuidad_origin = "seeded"
 number = "121"
 section = ["declarante"]
 data_type = "text"
 semantic_role = "m270_declaracion_complementaria"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-270-decl-complementaria"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.sustitutiva"
+continuidad_id = "m270-declaracion-sustitutiva"
+continuidad_origin = "seeded"
 number = "122"
 section = ["declarante"]
 data_type = "text"
 semantic_role = "m270_declaracion_sustitutiva"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-270-decl-sustitutiva"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
@@ -94,63 +99,68 @@ source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 # "en cualquier otro caso deberá rellenarse a CEROS".
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.numero-identificativo-anterior"
+continuidad_id = "m270-numero-identificativo-anterior"
+continuidad_origin = "seeded"
 number = "123-135"
 section = ["declarante"]
 data_type = "text"
 semantic_role = "m270_numero_identificativo_anterior"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-270-decl-numero-identificativo-anterior"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.total-perceptores"
+continuidad_id = "total-perceptores-count"
+continuidad_origin = "seeded"
 number = "138-146"
 section = ["declarante", "resumen"]
 data_type = "integer"
 semantic_role = "total_perceptores_count"
 required = true
 input_kind = "manual"
-export_refs = ["modelo-270-decl-total-perceptores"]
 legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.total-importe-premios"
+continuidad_id = "m270-total-importe-premios"
+continuidad_origin = "seeded"
 number = "147-163"
 section = ["declarante", "resumen"]
 data_type = "money"
 semantic_role = "m270_total_importe_premios"
 required = true
 input_kind = "manual"
-export_refs = ["modelo-270-decl-total-importe-premios"]
 legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"] }
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.total-base-retencion"
+continuidad_id = "base-retenciones-ingresos-a-cuenta"
+continuidad_origin = "seeded"
 number = "164-180"
 section = ["declarante", "resumen"]
 data_type = "money"
 semantic_role = "base_retenciones_ingresos_a_cuenta"
 required = true
 input_kind = "manual"
-export_refs = ["modelo-270-decl-total-base-retencion"]
 legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"] }
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.total-retenciones"
+continuidad_id = "retenciones-ingresos-a-cuenta"
+continuidad_origin = "seeded"
 number = "181-197"
 section = ["declarante", "resumen"]
 data_type = "money"
 semantic_role = "retenciones_ingresos_a_cuenta"
 required = true
 input_kind = "manual"
-export_refs = ["modelo-270-decl-total-retenciones"]
 legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"] }

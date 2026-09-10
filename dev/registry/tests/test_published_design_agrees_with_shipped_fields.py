@@ -23,14 +23,13 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator
-from pathlib import Path
 from typing import NamedTuple
 
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 
-from ..pipeline.render_check import record_drift_dispositions
+from ..pipeline.generated_tree_dispositions import record_drift_dispositions, type_column_contradiction_dispositions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -121,12 +120,18 @@ def test_no_unexplained_shipped_field_contradicts_the_official_type_column() -> 
     cannot outlive its cause, and a revision nobody has explained fails here. The
     alternative -- a gate that stays red until every affected revision has been
     reviewed and republished -- is a gate everyone learns to ignore.
-    """
-    explained = {item.subject for item in record_drift_dispositions()}
 
-    unexplained = [
-        line for line in _sign_disagreements(_shipped_derivations()) if line.split()[0] not in explained
-    ]
+    A second class of explanation is admitted, for a tree that REPRODUCES and
+    still contradicts its design. There the shipped bytes and the inputs agree
+    and the inputs are what the type column contradicts, so no republication
+    corrects it and a drift row would be dormant on arrival. Those rows pin the
+    exact size of the contradiction, which the next test holds them to.
+    """
+    explained = {item.subject for item in record_drift_dispositions()} | {
+        item.subject for item in type_column_contradiction_dispositions()
+    }
+
+    unexplained = [line for line in _sign_disagreements(_shipped_derivations()) if line.split()[0] not in explained]
 
     report = "\n".join(unexplained[:40])
     assert not unexplained, (
@@ -142,13 +147,29 @@ def test_an_explained_revision_still_has_its_divergence_measured() -> None:
     assert that they agree. The population stays visible so the explanation can
     be checked against it, rather than the row becoming the place a divergence
     goes to be forgotten.
+
+    A type-column contradiction row is held to more than visibility: it declares
+    how many fields it explains, and that count is checked against the live
+    population here. A row written for eighty fields cannot go on explaining
+    eight hundred, and a row whose population has been repaired away fails
+    rather than standing as a permanent exemption.
     """
-    explained = {item.subject for item in record_drift_dispositions()}
+    contradictions = type_column_contradiction_dispositions()
+    explained = {item.subject for item in record_drift_dispositions()} | {item.subject for item in contradictions}
 
     disagreements = _sign_disagreements(_shipped_derivations())
 
     assert disagreements, "the corpus reports no sign divergence at all, which the census contradicts"
     assert {line.split()[0] for line in disagreements} <= explained
+
+    for row in contradictions:
+        live = [line for line in disagreements if line.split()[0] == row.subject]
+        assert len(live) == row.field_count, (
+            f"{row.subject}: row declares {row.field_count} contradicting field(s), the corpus reports {len(live)}"
+        )
+        assert all(f"[{row.derivation_code}]" in line for line in live), (
+            f"{row.subject}: a contradicting field renders through a derivation the row does not name"
+        )
 
 
 def test_a_planted_divergence_is_detected() -> None:

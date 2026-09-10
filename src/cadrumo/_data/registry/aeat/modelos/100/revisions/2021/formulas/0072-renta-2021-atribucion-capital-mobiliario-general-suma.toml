@@ -1,5 +1,5 @@
 [[revisions."2021".formulas]]
-id = "renta-2021-atribucion-capital-mobiliario-general-suma"
+id = "renta-atribucion-capital-mobiliario-general-suma"
 target_casilla_id = "1601"
 expression = { op = "sum", args = [
     { casilla_id = "1568" },

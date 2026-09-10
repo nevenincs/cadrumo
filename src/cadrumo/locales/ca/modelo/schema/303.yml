@@ -393,256 +393,303 @@ modelo:
             label: Resultat del règim general
           m303-deducciones-sector-1-domestic-current-base:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 1 - IVA deduïble, operacions
+              interiors - Béns i serveis corrents - Base imposable
           m303-deducciones-sector-1-domestic-current-cuota:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 1 - IVA deduïble, operacions
+              interiors - Béns i serveis corrents - Quota deduïble
           m303-deducciones-sector-1-domestic-investment-base:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 1 - IVA deduïble, operacions
+              interiors - Béns d'inversió - Base imposable
           m303-deducciones-sector-1-domestic-investment-cuota:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 1 - IVA deduïble, operacions
+              interiors - Béns d'inversió - Quota deduïble
           m303-deducciones-sector-1-import-current-base:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 1 - IVA deduïble, importacions
+              - Béns corrents - Base imposable
           m303-deducciones-sector-1-import-current-cuota:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 1 - IVA deduïble, importacions
+              - Béns corrents - Quota deduïble
           m303-deducciones-sector-1-import-investment-base:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 1 - IVA deduïble, importacions
+              - Béns d'inversió - Base imposable
           m303-deducciones-sector-1-import-investment-cuota:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 1 - IVA deduïble, importacions
+              - Béns d'inversió - Quota deduïble
           m303-deducciones-sector-1-intra-eu-current-base:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 1 - IVA deduïble, adquisicions
+              intracomunitàries - Béns corrents i serveis - Base imposable
           m303-deducciones-sector-1-intra-eu-current-cuota:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 1 - IVA deduïble, adquisicions
+              intracomunitàries - Béns corrents i serveis - Quota deduïble
           m303-deducciones-sector-1-intra-eu-investment-base:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 1 - IVA deduïble, adquisicions
+              intracomunitàries - Béns d'inversió - Base imposable
           m303-deducciones-sector-1-intra-eu-investment-cuota:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 1 - IVA deduïble, adquisicions
+              intracomunitàries - Béns d'inversió - Quota deduïble
           m303-deducciones-sector-1-investment-regularisation:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 1 - Regularització de béns
+              d'inversió
           m303-deducciones-sector-1-reagp-base:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 1 - Compensació, règim especial
+              d'agricultura, ramaderia i pesca - Base imposable
           m303-deducciones-sector-1-reagp-cuota:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 1 - Compensació, règim especial
+              d'agricultura, ramaderia i pesca - Quota deduïble
           m303-deducciones-sector-1-rectification-base:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 1 - Rectificació de deduccions
+              - Base imposable
           m303-deducciones-sector-1-rectification-cuota:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 1 - Rectificació de deduccions
+              - Quota deduïble
           m303-deducciones-sector-1-total:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 1 - Suma de deduccions
           m303-deducciones-sector-2-domestic-current-base:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 2 - IVA deduïble, operacions
+              interiors - Béns i serveis corrents - Base imposable
           m303-deducciones-sector-2-domestic-current-cuota:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 2 - IVA deduïble, operacions
+              interiors - Béns i serveis corrents - Quota deduïble
           m303-deducciones-sector-2-domestic-investment-base:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 2 - IVA deduïble, operacions
+              interiors - Béns d'inversió - Base imposable
           m303-deducciones-sector-2-domestic-investment-cuota:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 2 - IVA deduïble, operacions
+              interiors - Béns d'inversió - Quota deduïble
           m303-deducciones-sector-2-import-current-base:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 2 - IVA deduïble, importacions
+              - Béns corrents - Base imposable
           m303-deducciones-sector-2-import-current-cuota:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 2 - IVA deduïble, importacions
+              - Béns corrents - Quota deduïble
           m303-deducciones-sector-2-import-investment-base:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 2 - IVA deduïble, importacions
+              - Béns d'inversió - Base imposable
           m303-deducciones-sector-2-import-investment-cuota:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 2 - IVA deduïble, importacions
+              - Béns d'inversió - Quota deduïble
           m303-deducciones-sector-2-intra-eu-current-base:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 2 - IVA deduïble, adquisicions
+              intracomunitàries - Béns corrents i serveis - Base imposable
           m303-deducciones-sector-2-intra-eu-current-cuota:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 2 - IVA deduïble, adquisicions
+              intracomunitàries - Béns corrents i serveis - Quota deduïble
           m303-deducciones-sector-2-intra-eu-investment-base:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 2 - IVA deduïble, adquisicions
+              intracomunitàries - Béns d'inversió - Base imposable
           m303-deducciones-sector-2-intra-eu-investment-cuota:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 2 - IVA deduïble, adquisicions
+              intracomunitàries - Béns d'inversió - Quota deduïble
           m303-deducciones-sector-2-investment-regularisation:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 2 - Regularització de béns
+              d'inversió
           m303-deducciones-sector-2-reagp-base:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 2 - Compensació, règim especial
+              d'agricultura, ramaderia i pesca - Base imposable
           m303-deducciones-sector-2-reagp-cuota:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 2 - Compensació, règim especial
+              d'agricultura, ramaderia i pesca - Quota deduïble
           m303-deducciones-sector-2-rectification-base:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 2 - Rectificació de deduccions
+              - Base imposable
           m303-deducciones-sector-2-rectification-cuota:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 2 - Rectificació de deduccions
+              - Quota deduïble
           m303-deducciones-sector-2-total:
             help: null
-            label: null
+            label: 13. Règims de deducció diferenciats - 2 - Suma de deduccions
           m303-exonerado-390-107:
             help: null
-            label: null
+            label: 'Informació de la tributació per raó de territori: territori comú'
           m303-exonerado-390-125:
             help: null
-            label: null
+            label: Operacions subjectes amb inversió del subjecte passiu
           m303-exonerado-390-126:
             help: null
-            label: null
+            label: Operacions no subjectes per regles de localització acollides als
+              règims especials de finestreta única
           m303-exonerado-390-127:
             help: null
-            label: null
+            label: OSS. Operacions subjectes i acollides als règims especials de finestreta
+              única
           m303-exonerado-390-128:
             help: null
-            label: null
+            label: Operacions intragrup valorades conforme al que disposen els arts.
+              78 i 79 LIVA
           m303-exonerado-390-79:
             help: null
-            label: null
+            label: Operacions realitzades en l'exercici - Lliuraments de béns immobles,
+              operacions financeres i relatives a l'or d'inversió no habituals
           m303-exonerado-390-80:
             help: null
-            label: null
+            label: Operacions realitzades en l'exercici - Operacions en règim general
           m303-exonerado-390-81:
             help: null
-            label: null
+            label: Operacions realitzades en l'exercici - Operacions en règim especial
+              del criteri de caixa conforme a l'art. 75 LIVA
           m303-exonerado-390-83:
             help: null
-            label: null
+            label: Operacions realitzades en l'exercici - Operacions exemptes sense
+              dret a deducció
           m303-exonerado-390-84:
             help: null
-            label: null
+            label: Operacions realitzades en l'exercici - Operacions no subjectes
+              per regles de localització (excepte les incloses a la casella 126)
           m303-exonerado-390-86:
             help: null
-            label: null
+            label: Operacions realitzades en l'exercici - Operacions en règim simplificat
           m303-exonerado-390-88:
             help: null
-            label: null
+            label: Operacions realitzades en l'exercici - Total volum d'operacions
           m303-exonerado-390-89:
             help: null
-            label: null
+            label: 'Informació de la tributació per raó de territori: Àlaba'
           m303-exonerado-390-90:
             help: null
-            label: null
+            label: 'Informació de la tributació per raó de territori: Guipúscoa'
           m303-exonerado-390-91:
             help: null
-            label: null
+            label: 'Informació de la tributació per raó de territori: Biscaia'
           m303-exonerado-390-92:
             help: null
-            label: null
+            label: 'Informació de la tributació per raó de territori: Navarra'
           m303-exonerado-390-93:
             help: null
-            label: null
+            label: Operacions realitzades en l'exercici - Lliuraments intracomunitaris
+              de béns i serveis
           m303-exonerado-390-94:
             help: null
-            label: null
+            label: Operacions realitzades en l'exercici - Exportacions i altres operacions
+              exemptes amb dret a deducció
           m303-exonerado-390-95:
             help: null
-            label: null
+            label: Operacions realitzades en l'exercici - Operacions en règim especial
+              de l'agricultura, ramaderia i pesca
           m303-exonerado-390-96:
             help: null
-            label: null
+            label: Operacions realitzades en l'exercici - Operacions realitzades per
+              subjectes passius acollits al règim especial del recàrrec d'equivalència
           m303-exonerado-390-97:
             help: null
-            label: null
+            label: Operacions realitzades en l'exercici - Operacions en règim especial
+              de béns usats, objectes d'art, antiguitats i objectes de col·lecció
           m303-exonerado-390-98:
             help: null
-            label: null
+            label: Operacions realitzades en l'exercici - Operacions en règim especial
+              d'agències de viatges
           m303-exonerado-390-99:
             help: null
-            label: null
+            label: Operacions realitzades en l'exercici - Lliuraments de béns d'inversió
           m303-prorrata-actividad-fila-1-cnae:
             help: null
-            label: null
+            label: Prorrates - 1 - Codi CNAE
           m303-prorrata-actividad-fila-1-operaciones-con-derecho:
             help: null
-            label: null
+            label: Prorrates - 1 - Import d'operacions amb dret a deducció
           m303-prorrata-actividad-fila-1-operaciones-total:
             help: null
-            label: null
+            label: Prorrates - 1 - Import d'operacions
           m303-prorrata-actividad-fila-1-porcentaje:
             help: null
-            label: null
+            label: Prorrates - 1 - % de prorrata
           m303-prorrata-actividad-fila-1-tipo:
             help: null
-            label: null
+            label: Prorrates - 1 - Tipus de prorrata
           m303-prorrata-actividad-fila-2-cnae:
             help: null
-            label: null
+            label: Prorrates - 2 - Codi CNAE
           m303-prorrata-actividad-fila-2-operaciones-con-derecho:
             help: null
-            label: null
+            label: Prorrates - 2 - Import d'operacions amb dret a deducció
           m303-prorrata-actividad-fila-2-operaciones-total:
             help: null
-            label: null
+            label: Prorrates - 2 - Import d'operacions
           m303-prorrata-actividad-fila-2-porcentaje:
             help: null
-            label: null
+            label: Prorrates - 2 - % de prorrata
           m303-prorrata-actividad-fila-2-tipo:
             help: null
-            label: null
+            label: Prorrates - 2 - Tipus de prorrata
           m303-prorrata-actividad-fila-3-cnae:
             help: null
-            label: null
+            label: Prorrates - 3 - Codi CNAE
           m303-prorrata-actividad-fila-3-operaciones-con-derecho:
             help: null
-            label: null
+            label: Prorrates - 3 - Import d'operacions amb dret a deducció
           m303-prorrata-actividad-fila-3-operaciones-total:
             help: null
-            label: null
+            label: Prorrates - 3 - Import d'operacions
           m303-prorrata-actividad-fila-3-porcentaje:
             help: null
-            label: null
+            label: Prorrates - 3 - % de prorrata
           m303-prorrata-actividad-fila-3-tipo:
             help: null
-            label: null
+            label: Prorrates - 3 - Tipus de prorrata
           m303-prorrata-actividad-fila-4-cnae:
             help: null
-            label: null
+            label: Prorrates - 4 - Codi CNAE
           m303-prorrata-actividad-fila-4-operaciones-con-derecho:
             help: null
-            label: null
+            label: Prorrates - 4 - Import d'operacions amb dret a deducció
           m303-prorrata-actividad-fila-4-operaciones-total:
             help: null
-            label: null
+            label: Prorrates - 4 - Import d'operacions
           m303-prorrata-actividad-fila-4-porcentaje:
             help: null
-            label: null
+            label: Prorrates - 4 - % de prorrata
           m303-prorrata-actividad-fila-4-tipo:
             help: null
-            label: null
+            label: Prorrates - 4 - Tipus de prorrata
           m303-prorrata-actividad-fila-5-cnae:
             help: null
-            label: null
+            label: Prorrates - 5 - Codi CNAE
           m303-prorrata-actividad-fila-5-operaciones-con-derecho:
             help: null
-            label: null
+            label: Prorrates - 5 - Import d'operacions amb dret a deducció
           m303-prorrata-actividad-fila-5-operaciones-total:
             help: null
-            label: null
+            label: Prorrates - 5 - Import d'operacions
           m303-prorrata-actividad-fila-5-porcentaje:
             help: null
-            label: null
+            label: Prorrates - 5 - % de prorrata
           m303-prorrata-actividad-fila-5-tipo:
             help: null
-            label: null
+            label: Prorrates - 5 - Tipus de prorrata
       construct:
         modelo-303-iva-autoliquidacion:
           field:

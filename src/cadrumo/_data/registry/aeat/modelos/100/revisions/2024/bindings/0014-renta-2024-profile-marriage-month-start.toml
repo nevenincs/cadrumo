@@ -1,5 +1,5 @@
 [[revisions."2024".bindings]]
-id = "renta-2024-profile-marriage-month-start"
+id = "renta-profile-marriage-month-start"
 source = "profile"
 selector = { profile_key = "renta_taxpayer.marriage_month_start" }
 aggregation = { op = "copy" }

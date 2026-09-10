@@ -22,11 +22,11 @@ casilla_ids = [
     "base-liq-neg-general-2024-aplicada-maxima",
 ]
 formulas = [
-    "renta-2025-base-liquidable-negativa-general-compensacion-total",
-    "renta-2025-base-liquidable-negativa-general-2024-aplicada-maxima",
-    "renta-2025-base-liquidable-negativa-general-2024-pendiente-fin",
+    "renta-base-liquidable-negativa-general-compensacion-total",
+    "renta-base-liquidable-negativa-general-2024-aplicada-maxima",
+    "renta-base-liquidable-negativa-general-2024-pendiente-fin",
 ]
 bindings = [
-    "renta-2025-base-liquidable-negativa-general-anterior",
+    "renta-base-liquidable-negativa-general-anterior",
 ]
 dependency_classifications = ["renta-2025-dep-100"]

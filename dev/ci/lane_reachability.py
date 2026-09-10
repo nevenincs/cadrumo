@@ -38,12 +38,17 @@ no lane names ``test_secure_sql.py`` for ``os_keychain``, so that one test never
 runs anywhere -- and a per-file model that stopped flagging the file would have
 closed the false positive and buried the defect with it.
 
-Discovery reads git-TRACKED files. This repository is worked by many agents at
-once, so an untracked path is a peer's uncommitted scratch that CI will never
-see, and a tracked path may be momentarily absent from disk while a peer stages
-a deletion. Neither is a coverage defect, and both would red a shared gate.
-Unreadable tracked files are skipped and counted rather than assumed unmarked,
-because assuming unmarked would report a peer's in-flight deletion as an orphan.
+Discovery enumerates the working tree the repository's own ``.gitignore`` rules
+admit (see :mod:`dev.source_tree`), never a version-control tool. This
+repository is worked by many agents at once, so a path may be momentarily
+absent from disk while a peer stages its removal; that is not a coverage
+defect, and reporting it as one would red a shared gate on another agent's
+in-flight edit. Unreadable files are skipped and counted rather than assumed
+unmarked, because assuming unmarked would report a peer's in-flight deletion
+as an orphan. A newly written, not-yet-committed test module IS discovered --
+the working tree is what a lane's next run will collect, committed or not --
+so it is the natural next question for a test author to ask before committing:
+does any lane already reach this file.
 
 TWO QUESTIONS ARE ASKED, not one, and the second exists because the first has
 blind spots. The per-test question ("does some lane select this test") is the
@@ -53,9 +58,10 @@ model cannot see two input classes:
 
 * A ``test_*.py`` holding NO test functions. There are no tests to be
   unreachable, so the per-test model reports nothing however orphaned the file.
-* A tracked file absent from disk, which cannot be read and so yields no tests.
+* A discovered file that disappears between enumeration and read (a peer's
+  in-flight deletion), which cannot be read and so yields no tests.
 
-Both classes are EMPTY in this tree today -- 0 testless modules of 182 tracked
+Both classes are EMPTY in this tree today -- 0 testless modules of 182 discovered
 under ``dev/`` at the time of writing -- but empty is not the same claim as
 impossible, and a consolidation that conflates them is how a gate silently
 sheds a capability. The path-level check is a few lines and costs nothing at
@@ -125,6 +131,7 @@ import yaml
 from cadrumo.core.directory_scan import scan_directory
 
 from .._paths import UTF_8
+from ..source_tree import repository_files
 from .workflow_job_gates import job_gate, narrowed_events
 from .workflow_run_text import executed_lines
 
@@ -1026,29 +1033,20 @@ def marker_sets_in(path: Path) -> tuple[TestMarkers, ...] | None:
 
 
 def _tracked_python_files(root: Path) -> tuple[Path, ...]:
-    """Return every git-TRACKED ``.py`` path, repository-relative.
+    """Return every ``.py`` path the working tree admits, repository-relative.
 
-    Tracked rather than on-disk: an untracked file is a peer's uncommitted work
-    that no lane could name and CI will never see, so counting it would red a
-    shared gate on private state. Field-validated -- a peer's staged deletion of
-    a whole test package arrived while this was in use and the gate correctly
-    stayed quiet.
+    Derived from the tree itself rather than a version-control tool: every
+    committed path plus every new path nobody has ignored, minus what the
+    repository's own ``.gitignore`` files exclude (see
+    :func:`dev.source_tree.repository_files`). A path absent from disk -- a
+    peer's staged deletion of a whole test package -- is therefore simply not
+    enumerated, rather than named and then failing to read.
     """
-    git = shutil.which("git")
-    if git is None:
-        message = "git is not on PATH, so tracked-file discovery cannot run"
-        raise RuntimeError(message)
-    completed = subprocess.run(  # noqa: S603 - resolved executable, fixed argv, no caller input
-        [git, "ls-files"],
-        cwd=root,
-        capture_output=True,
-        check=True,
-    )
-    return tuple(Path(entry) for entry in completed.stdout.decode(_UTF_8).split("\n") if entry.endswith(".py"))
+    return tuple(Path(entry) for entry in repository_files(root) if entry.endswith(".py"))
 
 
 def tracked_test_files(root: Path) -> tuple[Path, ...]:
-    """Return every git-TRACKED test module, repository-relative."""
+    """Return every discovered test module, repository-relative."""
     return tuple(path for path in _tracked_python_files(root) if path.name.startswith("test_"))
 
 
@@ -1071,7 +1069,7 @@ def _test_directories_of(paths: Iterable[Path]) -> tuple[str, ...]:
 
 
 def tracked_test_directories(root: Path) -> tuple[str, ...]:
-    """Return every git-tracked directory a test module could be collected from."""
+    """Return every discovered directory a test module could be collected from."""
     return _test_directories_of(_tracked_python_files(root))
 
 
@@ -1119,8 +1117,9 @@ def discover_test_directories(root: Path) -> tuple[str, ...]:
 
     The on-disk counterpart of :func:`tracked_test_directories`, and injectable
     for the same reason :func:`discover_test_files` is: the detector proofs
-    drive a synthetic tree that is not a git repository, and a gate whose
-    teeth can only be shown against the real tree has no teeth to show.
+    drive an isolated synthetic tree rather than the repository itself, and a
+    gate whose teeth can only be shown against the real tree has no teeth to
+    show.
     """
     files = scan_directory(root, pattern="*.py", recursive=True, prune_directories=_PRUNED)
     relative = tuple(path.relative_to(root) if path.is_absolute() else path for path in files)
@@ -1138,13 +1137,13 @@ def analyse_reachability(
     Args:
         root: The repository root the lanes and paths are relative to.
         lanes: Declared lanes; read from ``root`` when omitted.
-        files: Repository-relative test modules; git-tracked discovery when
-            omitted. Injectable so the anti-tautology proofs can drive a
-            synthetic tree that is not a git repository.
+        files: Repository-relative test modules; working-tree discovery when
+            omitted. Injectable so the anti-tautology proofs can drive an
+            isolated synthetic tree instead.
 
     Returns:
         The unreachable tests, the number of files successfully analysed, and
-        the tracked files that could not be read.
+        the discovered files that could not be read.
     """
     resolved = tuple(lanes) if lanes is not None else declared_lanes(root)
     candidates = tuple(files) if files is not None else tracked_test_files(root)
@@ -1160,8 +1159,8 @@ def analyse_reachability(
 
         # The path-level question, asked BEFORE the file is read so it still
         # holds for the two inputs the per-test model is blind to: a module with
-        # no test functions, and a tracked file absent from disk. Both classes
-        # are empty today; neither is impossible.
+        # no test functions, and a discovered file that disappears before it can
+        # be read. Both classes are empty today; neither is impossible.
         if not covering:
             unnamed.append(relative)
 
@@ -1193,16 +1192,16 @@ def analyse_directory_coverage(
     Both sides are derived, neither is restated. The lane scopes come from
     :func:`declared_lanes`, which resolves the justfile through ``just`` itself
     and reads the workflows, so a lane added or narrowed anywhere moves this
-    without a second edit. The directory set comes from the tracked tree. A
+    without a second edit. The directory set comes from the discovered tree. A
     hand-maintained list on either side would reproduce the defect the gate
     exists to catch, one level up.
 
     Args:
         root: The repository root the lanes and directories are relative to.
         lanes: Declared lanes; read from ``root`` when omitted.
-        directories: Repository-relative test directories; git-tracked
+        directories: Repository-relative test directories; working-tree
             discovery when omitted. Injectable so the detector proofs can drive
-            a synthetic tree that is not a git repository.
+            an isolated synthetic tree instead.
 
     Returns:
         The unswept directories and the corpus size they were measured against.

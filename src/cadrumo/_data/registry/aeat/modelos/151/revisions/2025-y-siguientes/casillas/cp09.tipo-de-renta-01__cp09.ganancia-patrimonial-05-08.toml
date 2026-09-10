@@ -11,6 +11,9 @@
 # AEAT campo: Tipo de Renta [01]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.tipo-de-renta-01"
+continuidad_id = "p07-tipo-de-renta-1-01"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 13-14 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 13-14."
 number = "13-14"
 segmento = "M15109000"
 section = ["p09", "tipo_de_renta"]
@@ -19,11 +22,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f006"]
 
 # AEAT campo: Descripción de la ganancia patrimonial [66]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.descripcion-de-la-ganancia-patrimonial-66"
+continuidad_id = "m151-descripcion-de-la-ganancia-patrimonial"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 15-114 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 15-114."
 number = "15-114"
 segmento = "M15109000"
 section = ["p09", "descripcion_de_la_ganancia_patrimonial"]
@@ -32,11 +37,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f007"]
 
 # AEAT campo: Naturaleza [02]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.naturaleza-02"
+continuidad_id = "p07-naturaleza-2-01"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 115 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 115-115."
 number = "115-115"
 segmento = "M15109000"
 section = ["p09", "naturaleza"]
@@ -45,11 +52,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f008"]
 
 # AEAT campo: Ganancia patrimonial [03]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.ganancia-patrimonial-03"
+continuidad_id = "m151-ganancia-patrimonial-3"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 116-132 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 116-132."
 number = "116-132"
 segmento = "M15109000"
 section = ["p09", "ganancia_patrimonial"]
@@ -58,11 +67,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f009"]
 
 # AEAT campo: Retención o ingreso a cuenta [04]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.retencion-o-ingreso-a-cuenta-04"
+continuidad_id = "m151-retencion-o-ingreso-a-cuenta-4"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 133-149 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 133-149."
 number = "133-149"
 segmento = "M15109000"
 section = ["p09", "retencion_o_ingreso_a_cuenta"]
@@ -71,11 +82,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f010"]
 
 # AEAT campo: Tipo de Renta [01]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.tipo-de-renta-01-02"
+continuidad_id = "p07-tipo-de-renta-1-02"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 150-151 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 150-151."
 number = "150-151"
 segmento = "M15109000"
 section = ["p09", "tipo_de_renta"]
@@ -84,11 +97,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f011"]
 
 # AEAT campo: Descripción de la ganancia patrimonial [66]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.descripcion-de-la-ganancia-patrimonial-66-02"
+continuidad_id = "p07-descripcion-de-la-ganancia-patrimonial-02"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 152-251 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 152-251."
 number = "152-251"
 segmento = "M15109000"
 section = ["p09", "descripcion_de_la_ganancia_patrimonial"]
@@ -97,11 +112,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f012"]
 
 # AEAT campo: Naturaleza [02]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.naturaleza-02-02"
+continuidad_id = "p07-naturaleza-2-02"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 252 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 252-252."
 number = "252-252"
 segmento = "M15109000"
 section = ["p09", "naturaleza"]
@@ -110,11 +127,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f013"]
 
 # AEAT campo: Ganancia patrimonial [03]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.ganancia-patrimonial-03-02"
+continuidad_id = "p07-ganancia-patrimonial-3-02"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 253-269 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 253-269."
 number = "253-269"
 segmento = "M15109000"
 section = ["p09", "ganancia_patrimonial"]
@@ -123,11 +142,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f014"]
 
 # AEAT campo: Retención o ingreso a cuenta [04]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.retencion-o-ingreso-a-cuenta-04-02"
+continuidad_id = "p07-retencion-o-ingreso-a-cuenta-4-02"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 270-286 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 270-286."
 number = "270-286"
 segmento = "M15109000"
 section = ["p09", "retencion_o_ingreso_a_cuenta"]
@@ -136,11 +157,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f015"]
 
 # AEAT campo: Tipo de Renta [01]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.tipo-de-renta-01-03"
+continuidad_id = "p07-tipo-de-renta-1-03"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 287-288 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 287-288."
 number = "287-288"
 segmento = "M15109000"
 section = ["p09", "tipo_de_renta"]
@@ -149,11 +172,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f016"]
 
 # AEAT campo: Descripción de la ganancia patrimonial [66]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.descripcion-de-la-ganancia-patrimonial-66-03"
+continuidad_id = "p07-descripcion-de-la-ganancia-patrimonial-03"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 289-388 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 289-388."
 number = "289-388"
 segmento = "M15109000"
 section = ["p09", "descripcion_de_la_ganancia_patrimonial"]
@@ -162,11 +187,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f017"]
 
 # AEAT campo: Naturaleza [02]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.naturaleza-02-03"
+continuidad_id = "p07-naturaleza-2-03"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 389 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 389-389."
 number = "389-389"
 segmento = "M15109000"
 section = ["p09", "naturaleza"]
@@ -175,11 +202,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f018"]
 
 # AEAT campo: Ganancia patrimonial [03]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.ganancia-patrimonial-03-03"
+continuidad_id = "p07-ganancia-patrimonial-3-03"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 390-406 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 390-406."
 number = "390-406"
 segmento = "M15109000"
 section = ["p09", "ganancia_patrimonial"]
@@ -188,11 +217,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f019"]
 
 # AEAT campo: Retención o ingreso a cuenta [04]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.retencion-o-ingreso-a-cuenta-04-03"
+continuidad_id = "p07-retencion-o-ingreso-a-cuenta-4-03"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 407-423 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 407-423."
 number = "407-423"
 segmento = "M15109000"
 section = ["p09", "retencion_o_ingreso_a_cuenta"]
@@ -201,11 +232,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f020"]
 
 # AEAT campo: RESTO. Ganancia patrimonial [03]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.resto-ganancia-patrimonial-03"
+continuidad_id = "p07-resto-ganancia-patrimonial-3"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 424-440 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 424-440."
 number = "424-440"
 segmento = "M15109000"
 section = ["p09", "resto_ganancia_patrimonial"]
@@ -214,11 +247,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f021"]
 
 # AEAT campo: RESTO. Retención o ingreso a cuenta [04]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.resto-retencion-o-ingreso-a-cuenta-04"
+continuidad_id = "p07-resto-retencion-o-ingreso-a-cuenta-4"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 441-457 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 441-457."
 number = "441-457"
 segmento = "M15109000"
 section = ["p09", "resto_retencion_o_ingreso_a_cuenta"]
@@ -227,11 +262,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f022"]
 
 # AEAT campo: Total ganancias patrimoniales [05]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.total-ganancias-patrimoniales-05"
+continuidad_id = "p07-total-ganancias-patrimoniales-5"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 458-474 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 458-474."
 number = "458-474"
 segmento = "M15109000"
 section = ["p09", "total_ganancias_patrimoniales"]
@@ -240,11 +277,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f023"]
 
 # AEAT campo: Total retencion o ingresos a cuenta [06]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.total-retencion-o-ingresos-a-cuenta-06"
+continuidad_id = "p07-total-retencion-o-ingresos-a-cuenta-6"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 475-491 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 475-491."
 number = "475-491"
 segmento = "M15109000"
 section = ["p09", "total_retencion_o_ingresos_a_cuenta"]
@@ -253,11 +292,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f024"]
 
 # AEAT campo: Tipo de Renta [01]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.tipo-de-renta-01-04"
+continuidad_id = "p07-tipo-de-renta-1-04"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 492-493 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 492-493."
 number = "492-493"
 segmento = "M15109000"
 section = ["p09", "tipo_de_renta"]
@@ -266,11 +307,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f025"]
 
 # AEAT campo: Descripción del elemento patrimonial [67]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.descripcion-del-elemento-patrimonial-67"
+continuidad_id = "p07-descripcion-del-elemento-patrimonial-01"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 494-593 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 494-593."
 number = "494-593"
 segmento = "M15109000"
 section = ["p09", "descripcion_del_elemento_patrimonial"]
@@ -279,11 +322,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f026"]
 
 # AEAT campo: Fecha de transmisión [68]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.fecha-de-transmision-68"
+continuidad_id = "p07-fecha-de-transmision-01"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 594-601 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 594-601."
 number = "594-601"
 segmento = "M15109000"
 section = ["p09", "fecha_de_transmision"]
@@ -292,11 +337,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f027"]
 
 # AEAT campo: Fecha de adquisición [69]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.fecha-de-adquisicion-69"
+continuidad_id = "p07-fecha-de-adquisicion-01"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 602-609 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 602-609."
 number = "602-609"
 segmento = "M15109000"
 section = ["p09", "fecha_de_adquisicion"]
@@ -305,11 +352,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f028"]
 
 # AEAT campo: Valor de transmisión [02]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.valor-de-transmision-02"
+continuidad_id = "p07-valor-de-transmision-2-01"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 610-626 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 610-626."
 number = "610-626"
 segmento = "M15109000"
 section = ["p09", "valor_de_transmision"]
@@ -318,11 +367,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f029"]
 
 # AEAT campo: Valor de adquisición [03]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.valor-de-adquisicion-03"
+continuidad_id = "p07-valor-de-adquisicion-3-01"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 627-643 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 627-643."
 number = "627-643"
 segmento = "M15109000"
 section = ["p09", "valor_de_adquisicion"]
@@ -331,11 +382,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f030"]
 
 # AEAT campo: Diferencia [04]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.diferencia-04"
+continuidad_id = "p07-diferencia-4-01"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 644-660 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 644-660."
 number = "644-660"
 segmento = "M15109000"
 section = ["p09", "diferencia"]
@@ -344,11 +397,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f031"]
 
 # AEAT campo: Ganancia patrimonial [05]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.ganancia-patrimonial-05-04"
+continuidad_id = "p07-ganancia-patrimonial-5-01"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 661-677 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 661-677."
 number = "661-677"
 segmento = "M15109000"
 section = ["p09", "ganancia_patrimonial"]
@@ -357,11 +412,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f032"]
 
 # AEAT campo: Tipo de Renta [01]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.tipo-de-renta-01-05"
+continuidad_id = "p07-tipo-de-renta-1-05"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 678-679 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 678-679."
 number = "678-679"
 segmento = "M15109000"
 section = ["p09", "tipo_de_renta"]
@@ -370,11 +427,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f033"]
 
 # AEAT campo: Descripción del elemento patrimonial [67]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.descripcion-del-elemento-patrimonial-67-02"
+continuidad_id = "p07-descripcion-del-elemento-patrimonial-02"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 680-779 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 680-779."
 number = "680-779"
 segmento = "M15109000"
 section = ["p09", "descripcion_del_elemento_patrimonial"]
@@ -383,11 +442,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f034"]
 
 # AEAT campo: Fecha de transmisión [68]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.fecha-de-transmision-68-02"
+continuidad_id = "p07-fecha-de-transmision-02"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 780-787 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 780-787."
 number = "780-787"
 segmento = "M15109000"
 section = ["p09", "fecha_de_transmision"]
@@ -396,11 +457,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f035"]
 
 # AEAT campo: Fecha de adquisición [69]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.fecha-de-adquisicion-69-02"
+continuidad_id = "p07-fecha-de-adquisicion-02"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 788-795 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 788-795."
 number = "788-795"
 segmento = "M15109000"
 section = ["p09", "fecha_de_adquisicion"]
@@ -409,11 +472,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f036"]
 
 # AEAT campo: Valor de transmisión [02]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.valor-de-transmision-02-02"
+continuidad_id = "p07-valor-de-transmision-2-02"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 796-812 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 796-812."
 number = "796-812"
 segmento = "M15109000"
 section = ["p09", "valor_de_transmision"]
@@ -422,11 +487,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f037"]
 
 # AEAT campo: Valor de adquisición [03]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.valor-de-adquisicion-03-02"
+continuidad_id = "p07-valor-de-adquisicion-3-02"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 813-829 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 813-829."
 number = "813-829"
 segmento = "M15109000"
 section = ["p09", "valor_de_adquisicion"]
@@ -435,11 +502,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f038"]
 
 # AEAT campo: Diferencia [04]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.diferencia-04-02"
+continuidad_id = "p07-diferencia-4-02"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 830-846 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 830-846."
 number = "830-846"
 segmento = "M15109000"
 section = ["p09", "diferencia"]
@@ -448,11 +517,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f039"]
 
 # AEAT campo: Ganancia patrimonial [05]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.ganancia-patrimonial-05-05"
+continuidad_id = "p07-ganancia-patrimonial-5-02"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 847-863 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 847-863."
 number = "847-863"
 segmento = "M15109000"
 section = ["p09", "ganancia_patrimonial"]
@@ -461,11 +532,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f040"]
 
 # AEAT campo: Tipo de Renta [01]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.tipo-de-renta-01-06"
+continuidad_id = "p07-tipo-de-renta-1-06"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 864-865 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 864-865."
 number = "864-865"
 segmento = "M15109000"
 section = ["p09", "tipo_de_renta"]
@@ -474,11 +547,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f041"]
 
 # AEAT campo: Descripción del elemento patrimonial [67]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.descripcion-del-elemento-patrimonial-67-03"
+continuidad_id = "p07-descripcion-del-elemento-patrimonial-03"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 866-965 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 866-965."
 number = "866-965"
 segmento = "M15109000"
 section = ["p09", "descripcion_del_elemento_patrimonial"]
@@ -487,11 +562,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f042"]
 
 # AEAT campo: Fecha de transmisión [68]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.fecha-de-transmision-68-03"
+continuidad_id = "p07-fecha-de-transmision-03"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 966-973 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 966-973."
 number = "966-973"
 segmento = "M15109000"
 section = ["p09", "fecha_de_transmision"]
@@ -500,11 +577,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f043"]
 
 # AEAT campo: Fecha de adquisición [69]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.fecha-de-adquisicion-69-03"
+continuidad_id = "p07-fecha-de-adquisicion-03"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 974-981 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 974-981."
 number = "974-981"
 segmento = "M15109000"
 section = ["p09", "fecha_de_adquisicion"]
@@ -513,11 +592,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f044"]
 
 # AEAT campo: Valor de transmisión [02]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.valor-de-transmision-02-03"
+continuidad_id = "p07-valor-de-transmision-2-03"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 982-998 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 982-998."
 number = "982-998"
 segmento = "M15109000"
 section = ["p09", "valor_de_transmision"]
@@ -526,11 +607,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f045"]
 
 # AEAT campo: Valor de adquisición [03]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.valor-de-adquisicion-03-03"
+continuidad_id = "p07-valor-de-adquisicion-3-03"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 999-1015 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 999-1015."
 number = "999-1015"
 segmento = "M15109000"
 section = ["p09", "valor_de_adquisicion"]
@@ -539,11 +622,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f046"]
 
 # AEAT campo: Diferencia [04]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.diferencia-04-03"
+continuidad_id = "p07-diferencia-4-03"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 1016-1032 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 1016-1032."
 number = "1016-1032"
 segmento = "M15109000"
 section = ["p09", "diferencia"]
@@ -552,11 +637,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f047"]
 
 # AEAT campo: Ganancia patrimonial [05]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.ganancia-patrimonial-05-06"
+continuidad_id = "p07-ganancia-patrimonial-5-03"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 1033-1049 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 1033-1049."
 number = "1033-1049"
 segmento = "M15109000"
 section = ["p09", "ganancia_patrimonial"]
@@ -565,11 +652,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f048"]
 
 # AEAT campo: Tipo de Renta [01]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.tipo-de-renta-01-07"
+continuidad_id = "p07-tipo-de-renta-1-07"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 1050-1051 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 1050-1051."
 number = "1050-1051"
 segmento = "M15109000"
 section = ["p09", "tipo_de_renta"]
@@ -578,11 +667,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f049"]
 
 # AEAT campo: Descripción del elemento patrimonial [67]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.descripcion-del-elemento-patrimonial-67-04"
+continuidad_id = "p07-descripcion-del-elemento-patrimonial-04"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 1052-1151 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 1052-1151."
 number = "1052-1151"
 segmento = "M15109000"
 section = ["p09", "descripcion_del_elemento_patrimonial"]
@@ -591,11 +682,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f050"]
 
 # AEAT campo: Fecha de transmisión [68]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.fecha-de-transmision-68-04"
+continuidad_id = "p07-fecha-de-transmision-04"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 1152-1159 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 1152-1159."
 number = "1152-1159"
 segmento = "M15109000"
 section = ["p09", "fecha_de_transmision"]
@@ -604,11 +697,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f051"]
 
 # AEAT campo: Fecha de adquisición [69]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.fecha-de-adquisicion-69-04"
+continuidad_id = "p07-fecha-de-adquisicion-04"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 1160-1167 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 1160-1167."
 number = "1160-1167"
 segmento = "M15109000"
 section = ["p09", "fecha_de_adquisicion"]
@@ -617,11 +712,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f052"]
 
 # AEAT campo: Valor de transmisión [02]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.valor-de-transmision-02-04"
+continuidad_id = "p07-valor-de-transmision-2-04"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 1168-1184 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 1168-1184."
 number = "1168-1184"
 segmento = "M15109000"
 section = ["p09", "valor_de_transmision"]
@@ -630,11 +727,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f053"]
 
 # AEAT campo: Valor de adquisición [03]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.valor-de-adquisicion-03-04"
+continuidad_id = "p07-valor-de-adquisicion-3-04"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 1185-1201 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 1185-1201."
 number = "1185-1201"
 segmento = "M15109000"
 section = ["p09", "valor_de_adquisicion"]
@@ -643,11 +742,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f054"]
 
 # AEAT campo: Diferencia [04]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.diferencia-04-04"
+continuidad_id = "p07-diferencia-4-04"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 1202-1218 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 1202-1218."
 number = "1202-1218"
 segmento = "M15109000"
 section = ["p09", "diferencia"]
@@ -656,11 +757,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f055"]
 
 # AEAT campo: Ganancia patrimonial [05]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.ganancia-patrimonial-05-07"
+continuidad_id = "p07-ganancia-patrimonial-5-04"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 1219-1235 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 1219-1235."
 number = "1219-1235"
 segmento = "M15109000"
 section = ["p09", "ganancia_patrimonial"]
@@ -669,11 +772,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f056"]
 
 # AEAT campo: Tipo de Renta [01]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.tipo-de-renta-01-08"
+continuidad_id = "p07-tipo-de-renta-1-08"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 1236-1237 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 1236-1237."
 number = "1236-1237"
 segmento = "M15109000"
 section = ["p09", "tipo_de_renta"]
@@ -682,11 +787,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f057"]
 
 # AEAT campo: Descripción del elemento patrimonial [67]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.descripcion-del-elemento-patrimonial-67-05"
+continuidad_id = "p07-descripcion-del-elemento-patrimonial-05"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 1238-1337 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 1238-1337."
 number = "1238-1337"
 segmento = "M15109000"
 section = ["p09", "descripcion_del_elemento_patrimonial"]
@@ -695,11 +802,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f058"]
 
 # AEAT campo: Fecha de transmisión [68]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.fecha-de-transmision-68-05"
+continuidad_id = "p07-fecha-de-transmision-05"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 1338-1345 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 1338-1345."
 number = "1338-1345"
 segmento = "M15109000"
 section = ["p09", "fecha_de_transmision"]
@@ -708,11 +817,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f059"]
 
 # AEAT campo: Fecha de adquisición [69]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.fecha-de-adquisicion-69-05"
+continuidad_id = "p07-fecha-de-adquisicion-05"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 1346-1353 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 1346-1353."
 number = "1346-1353"
 segmento = "M15109000"
 section = ["p09", "fecha_de_adquisicion"]
@@ -721,11 +832,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f060"]
 
 # AEAT campo: Valor de transmisión [02]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.valor-de-transmision-02-05"
+continuidad_id = "p07-valor-de-transmision-2-05"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 1354-1370 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 1354-1370."
 number = "1354-1370"
 segmento = "M15109000"
 section = ["p09", "valor_de_transmision"]
@@ -734,11 +847,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f061"]
 
 # AEAT campo: Valor de adquisición [03]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.valor-de-adquisicion-03-05"
+continuidad_id = "p07-valor-de-adquisicion-3-05"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 1371-1387 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 1371-1387."
 number = "1371-1387"
 segmento = "M15109000"
 section = ["p09", "valor_de_adquisicion"]
@@ -747,11 +862,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f062"]
 
 # AEAT campo: Diferencia [04]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.diferencia-04-05"
+continuidad_id = "p07-diferencia-4-05"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 1388-1404 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 1388-1404."
 number = "1388-1404"
 segmento = "M15109000"
 section = ["p09", "diferencia"]
@@ -760,11 +877,13 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f063"]
 
 # AEAT campo: Ganancia patrimonial [05]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p09.ganancia-patrimonial-05-08"
+continuidad_id = "p07-ganancia-patrimonial-5-05"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15107000 campo at byte position 1405-1421 continues as corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15109000 campo at byte position 1405-1421."
 number = "1405-1421"
 segmento = "M15109000"
 section = ["p09", "ganancia_patrimonial"]
@@ -773,4 +892,3 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina09.f064"]

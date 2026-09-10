@@ -340,17 +340,11 @@ class NoteGovernedAmountDeclaration(BaseModel):
 
     @model_validator(mode="after")
     def _require_a_domain_the_export_schema_can_carry(self) -> NoteGovernedAmountDeclaration:
-        # The schema admits a closed domain on the unsigned scaled-amount shape
-        # only. A signed run renders through `money`, which declares no scale on
-        # the field and carries no reviewed domain, so a mandate declared beside
-        # one would be dropped on the way to the layout with nothing to notice.
+        # The schema carries a closed domain on the unsigned scaled-amount shape
+        # and on signed money, so a design that types a slot signed AND mandates
+        # its value keeps both: the domain is never traded for the sign.
         if self.mandated_values is None:
             return self
-        if self.signed:
-            raise ValueError(
-                f"{self.sign_policy} renders through the money wire type, which carries no value domain; "
-                "a mandated value cannot be declared on it",
-            )
         if not self.mandated_values or len(set(self.mandated_values)) != len(self.mandated_values):
             raise ValueError("mandated_values must be non-empty and unique")
         invalid = tuple(
@@ -492,9 +486,9 @@ _NOTE_GOVERNED_AMOUNTS_BY_REF: dict[str, tuple[NoteGovernedAmountDeclaration, ..
             published_content="Nota 2",
             note_cell=note_cell,
             note_statement="Nota 2: estas casillas deben estar rellenas a 0",
-            integer_digits=15,
+            integer_digits=14,
             decimal_digits=2,
-            sign_policy=_UNSIGNED_SIGN_POLICY,
+            sign_policy=_N_PREFIX_SIGN_POLICY,
             mandated_values=("0",),
             evidence=(
                 "The 2025 design replaced the Contenido clause of the expired temporary-rate slots -- the "
@@ -516,7 +510,11 @@ _NOTE_GOVERNED_AMOUNTS_BY_REF: dict[str, tuple[NoteGovernedAmountDeclaration, ..
                 "also the fill AEAT prescribes for an empty numeric slot -- so the mandate and the blank "
                 "fill agree byte for byte and the constraint adds refusal without changing any emitted "
                 "record. A cents reading of '0' would be the same bytes here and a hundredfold error on any "
-                "nonzero member, which is why the domain is declared in units."
+                "nonzero member, which is why the domain is declared in units. The type column types these "
+                "slots N, and the sign is declared with the mandate rather than traded for it: N plus "
+                "fourteen integer digits and two decimals, the representation the same design states for "
+                "its signed seventeen-position amounts, so the zero still reaches the wire as seventeen zero "
+                "bytes."
             ),
         )
         for sheet, note_cell in (

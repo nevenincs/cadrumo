@@ -301,7 +301,7 @@ def test_governance_field_set_names_only_real_revision_fields() -> None:
 
 def test_governance_field_set_is_exactly_todays_declared_stamp() -> None:
     """Pin the derived set, so a marker lost in a rebase is a red test."""
-    declared_today = {"engineered_by", "review_status", "reviewed_by", "reviewed_at"}
+    declared_today = {"engineered_by", "review_status", "reviewed_by", "reviewed_at", "reviewed_against"}
 
     assert declared_today == REVISION_GOVERNANCE_FIELDS
 

@@ -1,5 +1,5 @@
 [[revisions."2021".formulas]]
-id = "renta-2021-cuota-escala-autonomica-sobre-base-liquidable-ahorro"
+id = "renta-cuota-escala-autonomica-sobre-base-liquidable-ahorro"
 target_casilla_id = "0537"
 expression = { op = "lookup_bracket", args = [
     { casilla_id = "0510" },

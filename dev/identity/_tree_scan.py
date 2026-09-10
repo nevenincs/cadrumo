@@ -4,10 +4,10 @@ WHY THIS EXISTS. A security review found a live operator identity sitting in an
 environment file in the working tree, and the project had no identity or secret
 scanner at all -- there is still none in the pre-commit config. The file that
 carried it was gitignored, which is not protection: an ignored file is one
-``git add -f`` away from history, and the exposure that motivated this reached
-the tree exactly that way. So the sweep covers TRACKED, UNTRACKED AND IGNORED
-files alike. A scanner that honoured ``.gitignore`` would have been blind to the
-very file it was built for.
+force-add away from history, and the exposure that motivated this reached the
+tree exactly that way. So the sweep covers both VISIBLE and IGNORED files. A
+scanner that honoured ``.gitignore`` alone would have been blind to the very
+file it was built for.
 
 DETECTION IS NOT IMPLEMENTED HERE. The pattern, the checksum and the value-free
 finding shape all come from the sanitiser's identity detection, reached through
@@ -50,20 +50,23 @@ today, and the narrative surfaces are reported by :func:`advisory_findings`
 instead of gated. Extending the gate to source and prose needs a declared
 synthetic-identity convention first; that is an open item, not a solved one.
 
-WHY THE GATE IS TIERED BY TRACKING STATE. Only TRACKED content blocks. Tracked
-content ships, reaches every clone and cannot be taken back out of history, so a
-checksum-valid identity there is the leak. Untracked and ignored content is
-reported in a separate, non-blocking operator tier, because a hit there is
-routinely the system working rather than a leak: the Cl@ve Movil settings MUST
-carry the operator's own DNI or NIE in order to authenticate against AEAT, and
-keeping that file gitignored is the correct handling for it.
+WHY THE GATE IS TIERED BY VISIBILITY. Only VISIBLE content blocks -- everything
+:func:`dev.source_tree.repository_files` enumerates, which is exactly the file
+set one ordinary ``git add`` reaches and the working set every collaborator's
+checkout eventually shares. A checksum-valid identity there is either already
+shipped or one commit away from being so, and that is the leak. Content
+``.gitignore`` excludes is reported in a separate, non-blocking operator tier,
+because a hit there is routinely the system working rather than a leak: the
+Cl@ve Movil settings MUST carry the operator's own DNI or NIE in order to
+authenticate against AEAT, and keeping that file gitignored is the correct
+handling for it.
 
-The tier is decided by tracking state and NEVER by path. A path exclusion for the
+The tier is decided by visibility and NEVER by path. A path exclusion for the
 environment file would re-create the exact blindness described above. Under the
 tier the ignored sweep keeps its full value, and gains its real one: enumerating
 ignored files is what proves the operator's own identity has not ALSO landed in
-tracked content. That cross-check is the property this canary is finally for, and
-it does not exist without the ignored pass.
+the visible set. That cross-check is the property this canary is finally for,
+and it does not exist without the ignored pass.
 
 WHAT THIS DOES NOT COVER, stated rather than implied. Source and prose are
 reported, never gated. Binary payloads -- spreadsheets, archives, images -- are
@@ -72,18 +75,16 @@ ignored files, machine-generated trees and transient scratch or runtime-state
 directories are not enumerated: their contents differ per machine and per hour,
 so reading them would give each developer a different verdict, and the price is
 that an identity dropped into a scratch directory is invisible here. The operator
-tier is reported and never enforced, so nothing stops an untracked identity file
-existing -- only its promotion into tracked content is gated. Of the identity
-classes, the tax-identity shapes are gated and the bank-account shape is not;
-extending the gate to IBAN is an open item. Each of these is a narrowing of the
-standing goal, which is that no real identity reaches this repository by any
-route.
+tier is reported and never enforced, so nothing stops an identity landing in a
+gitignored file -- only a VISIBLE one is gated. Of the identity classes, the
+tax-identity shapes are gated and the bank-account shape is not; extending the
+gate to IBAN is an open item. Each of these is a narrowing of the standing goal,
+which is that no real identity reaches this repository by any route.
 """
 
 from __future__ import annotations
 
-import shutil
-import subprocess
+import os
 from collections import Counter
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -93,8 +94,13 @@ from typing import Final
 
 from .._paths import UTF_8
 from ..sanitizer.residual_identity import ResidualKind, checksum_valid_spans
+from ..source_tree import repository_files as _visible_repository_files
 
 _UTF_8: Final[str] = UTF_8
+
+#: The version-control entry, never descended into on the raw sweep either: it
+#: is git's own object, index and log store, not repository content.
+_VCS_ENTRY: Final[str] = ".git"
 
 #: Suffixes carrying DATA rather than prose. These are the blocking scope: a
 #: taxpayer identity in one of these is a payload, and this project has no
@@ -176,9 +182,9 @@ EXCLUDED_PATH_FRAGMENTS: dict[str, str] = {
 #: for trees this repository does not AUTHOR, and every entry must name such a
 #: tree.
 #:
-#: They apply to the ignored sweep alone. The tracked and untracked sweeps stay
-#: unfiltered, so nothing that was in scope before this pass existed can fall
-#: out of scope because of it.
+#: They apply to the ignored sweep alone. The visible sweep stays unfiltered, so
+#: nothing that was in scope before this pass existed can fall out of scope
+#: because of it.
 UNENUMERATED_PATH_FRAGMENTS: dict[str, str] = {
     "/.git/": "git's own object, index and log store, written by git rather than authored here",
     "/__pycache__/": "compiled Python bytecode, regenerated from the sources beside it",
@@ -188,6 +194,7 @@ UNENUMERATED_PATH_FRAGMENTS: dict[str, str] = {
     "/dist/": "packaged build output, rebuilt from the sources beside it",
     "/.state/": "local application state recorded while exercising a harness against a demo profile",
     "/.vault/data/": "generated search and dependency-graph indexes for the development harness",
+    "/.logs/": "per-run test and audit scratch output, rewritten by every local test run",
 }
 
 #: Top-level directory-name PREFIXES never enumerated in the ignored sweep.
@@ -225,37 +232,38 @@ UNENUMERATED_ROOT_SUFFIXES: dict[str, str] = {
 
 
 class FileTracking(StrEnum):
-    """How git regards a file, which is what decides an occurrence's tier.
+    """Whether a file is VISIBLE to an ordinary ``git add`` or IGNORED.
 
     Attributes:
-        TRACKED: In the index. Its content ships, reaches every clone and lives
-            in history, so an identity here is the leak shape and BLOCKS.
-        UNTRACKED: Present in the working tree and not ignored. Operator tier.
-        IGNORED: Present and ignored by ``.gitignore``. Operator tier, and the
-            expected home of a credential file that must hold the operator's own
+        VISIBLE: Enumerated by :func:`dev.source_tree.repository_files` --
+            tracked content plus untracked content ``.gitignore`` does not
+            exclude. Everything here ships to every clone or is one ordinary
+            ``git add`` away from doing so, so a checksum-valid identity here
+            BLOCKS.
+        IGNORED: Excluded by ``.gitignore``. Operator tier, and the expected
+            home of a credential file that must hold the operator's own
             identity in order to authenticate.
     """
 
-    TRACKED = "tracked"
-    UNTRACKED = "untracked"
+    VISIBLE = "visible"
     IGNORED = "ignored"
 
 
-#: The tracking states whose occurrences FAIL the gate.
+#: The tiers whose occurrences FAIL the gate.
 #:
-#: Tracked content only, and the distinction is the whole point of the tier. A
-#: checksum-valid identity in tracked content ships to everyone who clones and
-#: cannot be taken back out of history: that is the leak. The same value in an
-#: ignored credential file is the system working -- the Cl@ve Movil settings MUST
-#: carry the operator's own DNI or NIE to authenticate against AEAT, and gitignore
-#: is the correct handling for them.
+#: VISIBLE only, and the distinction is the whole point of the tier. A
+#: checksum-valid identity in a visible file ships to everyone who clones, or
+#: reaches history the moment anyone runs an ordinary ``git add``: that is the
+#: leak. The same value in an ignored credential file is the system working --
+#: the Cl@ve Movil settings MUST carry the operator's own DNI or NIE to
+#: authenticate against AEAT, and gitignore is the correct handling for them.
 #:
-#: The tier is by tracking state and NEVER by path, because a path exclusion for
+#: The tier is by visibility and NEVER by path, because a path exclusion for
 #: the environment file is exactly the blindness this canary was rebuilt to
 #: remove. The ignored sweep keeps its full value under the tier: it is what
-#: proves the operator's own identity has not ALSO landed in tracked content, and
-#: that cross-check only exists because ignored files are enumerated.
-BLOCKING_TRACKING: frozenset[FileTracking] = frozenset({FileTracking.TRACKED})
+#: proves the operator's own identity has not ALSO landed in the visible set,
+#: and that cross-check only exists because ignored files are enumerated.
+BLOCKING_TRACKING: frozenset[FileTracking] = frozenset({FileTracking.VISIBLE})
 
 
 @dataclass(frozen=True, slots=True)
@@ -279,7 +287,7 @@ class TreeFinding:
 
 @dataclass(frozen=True, slots=True)
 class CandidateFile:
-    """One enumerated file, with the tracking state that decides its tier."""
+    """One enumerated file, with the tier that decides its blocking status."""
 
     path: Path
     relative: str
@@ -356,56 +364,74 @@ def unenumerated_reason(relative_path: str) -> str | None:
     return None
 
 
-def _git_lines(repo_root: Path, arguments: list[str]) -> list[str]:
-    """One ``git ls-files`` enumeration, as repository-relative POSIX paths.
+def _raw_relative_paths(repo_root: Path) -> list[str]:
+    """Every file under ``repo_root``, ``.gitignore`` aside.
 
-    The git executable is resolved rather than taken from the argv shorthand: a
-    canary whose enumeration silently resolves to whatever ``git`` a PATH entry
-    happens to supply is a canary that can be pointed at a different tree than the
-    one being guarded, and a machine without git gets one plain sentence instead
-    of a file-not-found traceback from inside a security scan.
+    The IGNORED tier's whole job is to see what ``.gitignore`` hides, so this
+    walk applies none of :func:`dev.source_tree.repository_files`'s ignore-rule
+    pruning. It prunes the trees named in :data:`UNENUMERATED_PATH_FRAGMENTS`,
+    :data:`UNENUMERATED_ROOT_PREFIXES` and :data:`UNENUMERATED_ROOT_SUFFIXES`
+    instead, for the same reason ``.gitignore`` pruning exists in the visible
+    walk: several hundred thousand machine-written files would otherwise make
+    every developer's verdict depend on which caches happen to exist locally.
+    Pruning happens at the directory boundary so a skipped tree is never opened
+    at all, matching the file-level check in :func:`repository_files` below.
     """
-    executable = shutil.which("git")
-    if executable is None:
-        raise SystemExit("git is not on PATH, so the working tree cannot be enumerated for scanning")
-    completed = subprocess.run(  # noqa: S603 - resolved executable, fixed argv, no caller input
-        [executable, "ls-files", *arguments],
-        cwd=repo_root,
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    return [line for line in completed.stdout.splitlines() if line]
+    found: list[str] = []
+
+    def visit(directory: Path, base: str) -> None:
+        try:
+            with os.scandir(directory) as entries:
+                children = sorted(entries, key=lambda entry: entry.name)
+        except OSError:
+            # A directory that cannot even be listed -- a permission denial or
+            # a concurrent process's lock on a scratch tree -- contributes
+            # nothing rather than aborting the whole ignored-tier sweep. The
+            # ignored tier is advisory only, and this is the same acceptance
+            # already stated for scratch and runtime-state trees: their
+            # contents differ per machine and per hour, so a value inside one
+            # is invisible here.
+            return
+        for entry in children:
+            if entry.name == _VCS_ENTRY:
+                continue
+            relative = f"{base}/{entry.name}" if base else entry.name
+            if entry.is_dir(follow_symlinks=False):
+                if unenumerated_reason(f"{relative}/") is None:
+                    visit(Path(entry.path), relative)
+            else:
+                found.append(relative)
+
+    visit(repo_root, "")
+    return found
 
 
 def repository_files(repo_root: Path, *, suffixes: frozenset[str]) -> list[CandidateFile]:
-    """Every tracked, untracked AND ignored file of the class ``suffixes`` selects.
+    """Every VISIBLE and IGNORED file of the class ``suffixes`` selects.
 
-    Three enumerations, because the tier is decided by tracking state and one
-    ``ls-files`` invocation cannot report which state a path came from.
-    ``--exclude-standard`` applies ``.gitignore``, so the first two passes omit
-    every ignored file; the third asks for exactly those. Reading only the
-    unignored passes is how a canary comes to report a clean tree while an
-    operator identity sits in an ignored file one ``git add -f`` from history.
-
-    The ignored pass, and only the ignored pass, skips the trees named in
+    The VISIBLE set is :func:`dev.source_tree.repository_files` -- tracked
+    content plus untracked content ``.gitignore`` does not exclude, exactly the
+    file set one ordinary ``git add`` reaches. The IGNORED set is everything
+    else :func:`_raw_relative_paths` finds on disk, minus the trees named in
     :data:`UNENUMERATED_PATH_FRAGMENTS`, :data:`UNENUMERATED_ROOT_PREFIXES` and
     :data:`UNENUMERATED_ROOT_SUFFIXES` -- installed packages, build output, tool
-    caches, scratch and local runtime state, each with its stated reason. Without
-    them the sweep opens several hundred thousand machine-written files and
-    returns a verdict that depends on which probe directories happen to exist
-    today. The tracked and untracked passes are deliberately left unfiltered.
+    caches, scratch and local runtime state, each with its stated reason.
+    Without them the sweep opens several hundred thousand machine-written files
+    and returns a verdict that depends on which probe directories happen to
+    exist today. Reading only the visible set is how a canary comes to report a
+    clean tree while an operator identity sits in an ignored file one force-add
+    from history.
 
-    A path is credited to the FIRST state that claims it, tracked first, so a
-    file that somehow appears in two enumerations can only ever be classified
+    A path is credited to the FIRST state that claims it, visible first, so a
+    file that somehow appears in both enumerations can only ever be classified
     more strictly rather than less.
     """
     tracking: dict[str, FileTracking] = {}
-    for line in _git_lines(repo_root, ["--cached"]):
-        tracking.setdefault(line, FileTracking.TRACKED)
-    for line in _git_lines(repo_root, ["--others", "--exclude-standard"]):
-        tracking.setdefault(line, FileTracking.UNTRACKED)
-    for line in _git_lines(repo_root, ["--others", "--ignored", "--exclude-standard"]):
+    for line in _visible_repository_files(repo_root):
+        tracking.setdefault(line, FileTracking.VISIBLE)
+    for line in _raw_relative_paths(repo_root):
+        if line in tracking:
+            continue
         if unenumerated_reason(line) is None:
             tracking.setdefault(line, FileTracking.IGNORED)
 
@@ -500,11 +526,11 @@ def scan_tree(
 ) -> TreeScan:
     """Every checksum-valid identity occurrence in the in-scope data payloads.
 
-    Occurrences are split by the file's tracking state, never by its path.
-    Tracked content fails the gate; untracked and ignored content is reported in
-    the operator tier. Both tiers are read from the same sweep and neither can
-    remove a file from the other: a tracked file is tracked whatever directory it
-    sits in, so the tier cannot become a route out of the blocking set.
+    Occurrences are split by the file's visibility, never by its path. A
+    visible file fails the gate; an ignored file is reported in the operator
+    tier. Both tiers are read from the same sweep and neither can remove a file
+    from the other: a visible file is visible whatever directory it sits in, so
+    the tier cannot become a route out of the blocking set.
 
     The suppressed tally is returned alongside the findings so a caller can prove
     each exclusion is still doing work. It counts occurrences, never values.
@@ -514,8 +540,8 @@ def scan_tree(
         kinds: Restrict to these pattern classes, defaulting to
             :data:`BLOCKING_KINDS`.
         files: A pre-enumerated candidate list, narrowed here to the data class.
-            Enumerating the tree costs three git walks, so a caller running both
-            this and :func:`advisory_findings` passes one
+            Enumerating the tree costs two whole-tree walks, so a caller running
+            both this and :func:`advisory_findings` passes one
             :func:`repository_files` result to both rather than paying for it
             twice.
     """

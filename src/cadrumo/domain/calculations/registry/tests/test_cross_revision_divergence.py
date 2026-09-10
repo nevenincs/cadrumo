@@ -13,7 +13,7 @@ from datetime import date
 
 import pytest
 
-from .._cross_revision_divergence import revisions_overlap
+from ..revision_order import revisions_overlap
 from ..schema import ModeloRevision
 from ..schema_references import PeriodSelector
 from ._referential_integrity_support import (

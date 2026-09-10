@@ -1,5 +1,5 @@
 [[revisions."2024".formulas]]
-id = "renta-2024-vehiculo-valor-adquisicion-suma"
+id = "renta-vehiculo-valor-adquisicion-suma"
 target_casilla_id = "1919"
 expression = { op = "sum", args = [
     { casilla_id = "1920" },

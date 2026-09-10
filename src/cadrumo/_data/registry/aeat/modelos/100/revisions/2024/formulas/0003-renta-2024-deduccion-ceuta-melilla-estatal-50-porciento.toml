@@ -1,5 +1,5 @@
 [[revisions."2024".formulas]]
-id = "renta-2024-deduccion-ceuta-melilla-estatal-50-porciento"
+id = "renta-deduccion-ceuta-melilla-estatal-50-porciento"
 target_casilla_id = "0560"
 expression = { op = "percent", args = [{ casilla_id = "0727" }, { literal = "50" }] }
 rounding = "money-2"

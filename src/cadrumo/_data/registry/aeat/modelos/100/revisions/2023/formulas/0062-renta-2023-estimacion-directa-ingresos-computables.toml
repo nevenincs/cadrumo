@@ -1,5 +1,5 @@
 [[revisions."2023".formulas]]
-id = "renta-2023-estimacion-directa-ingresos-computables"
+id = "renta-estimacion-directa-ingresos-computables"
 target_casilla_id = "0180"
 expression = { op = "sum", args = [
         { casilla_id = "0171" },

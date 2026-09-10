@@ -1,4 +1,4 @@
-"""Build every Cadrumo release artifact once from one clean Git snapshot."""
+"""Build every Cadrumo release artifact once from one clean source snapshot."""
 
 from __future__ import annotations
 
@@ -30,6 +30,7 @@ if not __package__:
 
 from cadrumo.core.directory_scan import scan_directory  # noqa: E402
 
+from ..source_tree import content_digest, repository_files, snapshot  # noqa: E402
 from .build_scratch_reclaim import (  # noqa: E402
     RELEASE_STAGING_FAMILY,
     matching_family,
@@ -49,11 +50,17 @@ from .hashing import sha256_path  # noqa: E402
 from .python_cohort import (  # noqa: E402
     PythonCohort,
     build_python_cohort,
-    source_snapshot_drift,
 )
 
 _UTF_8: Final[str] = UTF_8
 _ZIP_TIMESTAMP: Final[tuple[int, int, int, int, int, int]] = (1980, 1, 1, 0, 0, 0)
+# There is no commit timestamp to read once the build source is identified by
+# content digest rather than by a version-control revision. Reproducible
+# builds only need SOURCE_DATE_EPOCH to be FIXED for one source identity, not
+# to be a real wall-clock moment, so this reuses the same deterministic epoch
+# `_ZIP_TIMESTAMP` already gives every other archive this module writes
+# (1980-01-01T00:00:00Z).
+_SOURCE_DATE_EPOCH: Final[str] = "315532800"
 _REQUIRED_PYTHON_VERSION: Final[str] = (_REPO_ROOT / ".python-version").read_text(encoding=UTF_8).strip()
 _BUILD_CONSTRAINTS: Final[Path] = Path("packaging/build-system-constraints.txt")
 
@@ -80,13 +87,6 @@ def _run(
             f"stdout:\n{completed.stdout}\nstderr:\n{completed.stderr}",
         )
     return completed
-
-
-def _git(repo: Path, *args: str) -> str:
-    git = shutil.which("git")
-    if git is None:
-        raise SystemExit("git is required to construct the release cohort")
-    return _run([git, *args], cwd=repo).stdout.strip()
 
 
 def _safe_new_output(output_dir: Path, *, repo_root: Path) -> Path:
@@ -180,18 +180,22 @@ def _generate_channel_artifacts(
     )
 
 
-def _source_tag(clean_root: Path, *, commit: str, version: str, requested: str | None) -> str | None:
-    tags = frozenset(_git(clean_root, "tag", "--points-at", commit).splitlines())
-    if requested is not None:
-        if requested not in tags:
-            raise SystemExit(f"requested source tag {requested!r} does not identify {commit}")
-        if requested != f"v{version}":
-            raise SystemExit(
-                f"source tag {requested!r} does not match cohort version {version!r}",
-            )
-        return requested
-    expected = f"v{version}"
-    return expected if expected in tags else None
+def _source_tag(*, version: str, requested: str | None) -> str | None:
+    """Return the release tag, when the caller supplied one matching this cohort.
+
+    A tag has no content-digest analog: it names a point in a project's
+    history, and this builder reads no history, only the content it was
+    given. The caller — the release workflow, which already knows which tag
+    it is releasing — supplies the tag it expects; anything else is refused
+    rather than guessed.
+    """
+    if requested is None:
+        return None
+    if requested != f"v{version}":
+        raise SystemExit(
+            f"source tag {requested!r} does not match cohort version {version!r}",
+        )
+    return requested
 
 
 def _build_identity(clean_root: Path) -> BuildIdentity:
@@ -238,25 +242,24 @@ def build_from_clean_source(
     *,
     clean_root: Path,
     output_dir: Path,
-    expected_commit: str,
+    expected_source_digest: str,
     requested_tag: str | None,
 ) -> LoadedReleaseCohort:
     """Assemble every member in one clean process without rebuilding a lane."""
     root = clean_root.resolve(strict=True)
-    if source_snapshot_drift(root):
-        raise SystemExit("internal release source clone is not clean")
-    commit = _git(root, "rev-parse", "HEAD")
-    if commit != expected_commit:
-        raise SystemExit(f"clean source commit drifted: expected {expected_commit}, got {commit}")
+    observed_digest = content_digest(root, repository_files(root))
+    if observed_digest != expected_source_digest:
+        raise SystemExit(
+            f"clean source digest drifted: expected {expected_source_digest}, got {observed_digest}",
+        )
     output = output_dir.resolve()
     if output.exists():
         raise SystemExit(f"release cohort staging output already exists: {output}")
     output.mkdir(parents=True)
 
-    source_epoch = _git(root, "show", "-s", "--format=%ct", commit)
     builder = _build_identity(root)
     build_constraints = (root / _BUILD_CONSTRAINTS).resolve(strict=True)
-    os.environ["SOURCE_DATE_EPOCH"] = source_epoch
+    os.environ["SOURCE_DATE_EPOCH"] = _SOURCE_DATE_EPOCH
     os.environ["PYTHONHASHSEED"] = "0"
     os.environ["UV_BUILD_CONSTRAINT"] = str(build_constraints)
     os.environ["UV_REQUIRE_HASHES"] = "1"
@@ -275,15 +278,13 @@ def build_from_clean_source(
         env=env,
     )
     tag = _source_tag(
-        root,
-        commit=commit,
         version=cohort.version,
         requested=requested_tag,
     )
     manifest = create_manifest(
         root=output,
         version=cohort.version,
-        source=SourceIdentity(commit=commit, tag=tag),
+        source=SourceIdentity(source_digest=expected_source_digest, tag=tag),
         created_at=datetime.now(UTC),
         builder=builder,
         artifacts=(
@@ -345,20 +346,13 @@ def build_release_cohort(
     *,
     repo_root: Path,
     output_dir: Path,
-    expected_commit: str | None = None,
     source_tag: str | None = None,
 ) -> LoadedReleaseCohort:
-    """Clone checked-out HEAD and execute that clean snapshot's builder once."""
+    """Snapshot the current source tree and execute that clean copy's builder once."""
     root = repo_root.resolve(strict=True)
     output = _safe_new_output(output_dir, repo_root=root)
-    head = _git(root, "rev-parse", "HEAD")
-    commit = expected_commit or head
-    if len(commit) != 40 or any(character not in "0123456789abcdef" for character in commit):
-        raise SystemExit(f"expected commit must be one lowercase full SHA: {commit!r}")
-    if commit != head:
-        raise SystemExit(
-            f"expected commit does not equal the currently checked-out HEAD: expected {commit}, got {head}",
-        )
+    source_files = repository_files(root)
+    digest = content_digest(root, source_files)
     var = (root / "var").resolve()
     # A build that is killed leaves its staging directory -- a full cohort's
     # worth of bytes -- behind, and runs no cleanup of its own. The staging name
@@ -370,26 +364,15 @@ def build_release_cohort(
         sweep_var_scratch(var)
     with tempfile.TemporaryDirectory(prefix="cadrumo-release-") as temporary:
         clean_root = Path(temporary) / "source"
-        git = shutil.which("git")
-        if git is None:
-            raise SystemExit("git is required to construct the release cohort")
-        _run(
-            [
-                git,
-                "-c",
-                "core.longpaths=true",
-                "clone",
-                "--no-hardlinks",
-                "--quiet",
-                str(root),
-                str(clean_root),
-            ],
-            cwd=root,
-        )
-        cloned_commit = _git(clean_root, "rev-parse", "HEAD")
-        if cloned_commit != commit:
+        # An isolated copy of the enumerated tree, not the live one: the rest
+        # of this build runs in a child process against `clean_root`, so a
+        # peer's concurrent edit to `root` cannot land inside a build already
+        # in flight.
+        snapshot(root, source_files, clean_root)
+        snapshot_digest = content_digest(clean_root, repository_files(clean_root))
+        if snapshot_digest != digest:
             raise SystemExit(
-                f"local clean clone resolved {cloned_commit}, expected source commit {commit}",
+                f"release source snapshot content drifted from its digest: expected {digest}, got {snapshot_digest}",
             )
         staging = var / var_scratch_name(RELEASE_STAGING_FAMILY, f"{output.name}-{uuid.uuid4().hex}")
         env = os.environ.copy()
@@ -401,8 +384,8 @@ def build_release_cohort(
             "build-clean",
             "--output",
             str(staging),
-            "--expected-commit",
-            commit,
+            "--expected-source-digest",
+            digest,
         ]
         if source_tag is not None:
             argv.extend(("--source-tag", source_tag))
@@ -416,8 +399,8 @@ def build_release_cohort(
                 shutil.rmtree(staging)
             raise
     cohort = load_release_cohort(output)
-    if cohort.manifest.source.commit != commit:
-        raise SystemExit("completed release cohort lost its requested source commit")
+    if cohort.manifest.source.source_digest != digest:
+        raise SystemExit("completed release cohort lost its requested source digest")
     return cohort
 
 
@@ -426,32 +409,30 @@ def _parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
     build = subparsers.add_parser("build")
     build.add_argument("--output", required=True, type=Path)
-    build.add_argument("--expected-commit")
     build.add_argument("--source-tag")
     verify = subparsers.add_parser("verify")
     verify.add_argument("--cohort-dir", required=True, type=Path)
     clean = subparsers.add_parser("build-clean", help=argparse.SUPPRESS)
     clean.add_argument("--output", required=True, type=Path)
-    clean.add_argument("--expected-commit", required=True)
+    clean.add_argument("--expected-source-digest", required=True)
     clean.add_argument("--source-tag")
     return parser
 
 
 def main() -> int:
-    """Build from a clean clone, run the internal assembly, or verify bytes."""
+    """Build from a clean snapshot, run the internal assembly, or verify bytes."""
     args = _parser().parse_args()
     if args.command == "build":
         cohort = build_release_cohort(
             repo_root=_REPO_ROOT,
             output_dir=args.output,
-            expected_commit=args.expected_commit,
             source_tag=args.source_tag,
         )
     elif args.command == "build-clean":
         cohort = build_from_clean_source(
             clean_root=_REPO_ROOT,
             output_dir=args.output,
-            expected_commit=args.expected_commit,
+            expected_source_digest=args.expected_source_digest,
             requested_tag=args.source_tag,
         )
     else:
@@ -461,7 +442,7 @@ def main() -> int:
             {
                 "cohort_id": cohort.manifest.cohort_id,
                 "directory": str(cohort.directory),
-                "source_commit": cohort.manifest.source.commit,
+                "source_digest": cohort.manifest.source.source_digest,
                 "source_tag": cohort.manifest.source.tag,
                 "version": cohort.manifest.version,
             },

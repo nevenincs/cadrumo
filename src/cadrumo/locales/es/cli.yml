@@ -3593,6 +3593,12 @@ cli:
     verify_filed_state_help: Comparar el cálculo local del registro con el estado
       presentado capturado de AEAT
     verify_source_root_help: Ruta al directorio de origen para verificar
+    view_edition_help: Muestra una edición de un modelo como la edición completa que
+      compila el registro, en TOML, indicando si cada fila de casilla la declara la
+      propia edición o la hereda y de qué edición, y qué cubre la revisión de la edición
+    view_edition_modelo_help: Identificador del modelo cuya edición se muestra
+    view_edition_revision_help: Identificador de la revisión del registro correspondiente
+      a la edición que se muestra
   review:
     app_help: 'Cola de revisión del operador: clasifica transacciones del libro, justificantes
       de compra e incidencias de modelo'

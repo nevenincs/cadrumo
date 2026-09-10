@@ -22,6 +22,8 @@
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "impatriado.anexo-transmision-iic.tipo-renta"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15107000 campo at byte position 01; corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) prints [1] only as other concepts, at lines [130, 148, 166, 184]."
 number = "01"
 segmento = "M15107000"
 section = ["anexo", "transmision_iic"]
@@ -34,6 +36,8 @@ source_refs = ["aeat-dr-151-2023"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "impatriado.anexo-transmision-iic.nif-entidad"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15107000 campo at byte position 53; corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) prints no box [53]."
 number = "53"
 segmento = "M15107000"
 section = ["anexo", "transmision_iic"]
@@ -46,6 +50,8 @@ source_refs = ["aeat-dr-151-2023"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "impatriado.anexo-transmision-iic.ganancia-patrimonial"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15107000 campo at byte position 02; corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) prints [2] only as other concepts, at lines [131, 149, 167, 185]."
 number = "02"
 segmento = "M15107000"
 section = ["anexo", "transmision_iic"]
@@ -59,6 +65,8 @@ source_refs = ["aeat-dr-151-2023"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "impatriado.anexo-transmision-iic.retencion"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15107000 campo at byte position 03; corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) prints [3] only as other concepts, at lines [132, 150, 168, 186]."
 number = "03"
 segmento = "M15107000"
 section = ["anexo", "transmision_iic"]
@@ -72,6 +80,8 @@ source_refs = ["aeat-dr-151-2023"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "impatriado.anexo-transmision-iic.total-ganancias"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15107000 campo at byte position 04; corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) prints [4] only as other concepts, at lines [133, 151, 169, 187]."
 number = "04"
 segmento = "M15107000"
 section = ["anexo", "transmision_iic"]
@@ -83,6 +93,8 @@ source_refs = ["aeat-dr-151-2023"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "impatriado.anexo-transmision-iic.total-retenciones"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15107000 campo at byte position 05; corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) prints [5] only as other concepts, at lines [134, 152, 170, 188]."
 number = "05"
 segmento = "M15107000"
 section = ["anexo", "transmision_iic"]

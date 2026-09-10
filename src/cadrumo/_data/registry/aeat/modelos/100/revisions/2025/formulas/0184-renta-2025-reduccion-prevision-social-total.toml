@@ -1,5 +1,5 @@
 [[revisions."2025".formulas]]
-id = "renta-2025-reduccion-prevision-social-total"
+id = "renta-reduccion-prevision-social-total"
 target_casilla_id = "0468"
 # Art. 52.1 LIRPF tiered joint limit. Two independent pools, each bounded by
 # 30% of net yields (0432) as the overall global cap:

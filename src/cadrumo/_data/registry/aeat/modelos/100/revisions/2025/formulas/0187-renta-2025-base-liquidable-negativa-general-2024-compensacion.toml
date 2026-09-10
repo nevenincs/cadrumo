@@ -6,7 +6,7 @@
 # Art. 50.3 compensates the negative base liquidable general against positive
 # base liquidable general; Art. 48's 25% base-imponible mechanism is distinct.
 [[revisions."2025".formulas]]
-id = "renta-2025-base-liquidable-negativa-general-2024-aplicada-maxima"
+id = "renta-base-liquidable-negativa-general-2024-aplicada-maxima"
 target_casilla_id = "base-liq-neg-general-2024-aplicada-maxima"
 expression = { op = "min", args = [
     { casilla_id = "1388" },
@@ -33,7 +33,7 @@ required_text = ["Base liquidable general negativa", "Pendiente de aplicación"]
 # liquidable-base formula. The Anexo C applied amount (1389) is its source;
 # the carry never alters the separate Art. 48 base-imponible calculation.
 [[revisions."2025".formulas]]
-id = "renta-2025-base-liquidable-negativa-general-compensacion-total"
+id = "renta-base-liquidable-negativa-general-compensacion-total"
 target_casilla_id = "0501"
 expression = { op = "sum", args = [{ casilla_id = "1389" }] }
 rounding = "money-2"
@@ -49,7 +49,7 @@ required_text = ["Base liquidable general negativa", "Pendiente de aplicación"]
 # applied amount cannot exceed the stock (BLOCKING predicate), so the
 # subtraction is non-negative, and the clamp is defence-in-depth.
 [[revisions."2025".formulas]]
-id = "renta-2025-base-liquidable-negativa-general-2024-pendiente-fin"
+id = "renta-base-liquidable-negativa-general-2024-pendiente-fin"
 target_casilla_id = "1390"
 expression = { op = "max", args = [
     { literal = "0" },

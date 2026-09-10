@@ -34,7 +34,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-06-casilla-iva-importacion-diferimiento", "modelo-390-page-06-casilla-territorio-iva-importacion-diferimiento"]
 
 # Box [87] - '8. Tributación razón de territorio - Administraciones - Territorio común [87]' (offset 98, length 5).
 [[revisions."2022".casillas]]
@@ -44,13 +43,14 @@ section = ["iva", "anual", "tributacion_territorio"]
 data_type = "ratio"
 semantic_role = "iva_territorio_comun_porcentaje"
 continuidad_id = "iva-territorio-comun-porcentaje"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:457 (sha256 0164fbea6f50) prints box [87] (11 98 5 Num 8. Tributación razón de territorio - Administraciones -...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the pagina 6 resultado / tributacion por razon de territorio block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-06-casilla-territorio-comun-porcentaje"]
 
 # Box [88] - '8. Tributación razón de territorio - Administraciones - Álava [88]' (offset 103, length 5).
 [[revisions."2022".casillas]]
@@ -60,13 +60,14 @@ section = ["iva", "anual", "tributacion_territorio"]
 data_type = "ratio"
 semantic_role = "iva_territorio_alava_porcentaje"
 continuidad_id = "iva-territorio-alava-porcentaje"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:458 (sha256 0164fbea6f50) prints box [88] (12 103 5 Num 8. Tributación razón de territorio - Administraciones ...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the pagina 6 resultado / tributacion por razon de territorio block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-06-casilla-territorio-alava-porcentaje"]
 
 # Box [89] - '8. Tributación razón de territorio - Administraciones - Guipúzcoa [89]' (offset 108, length 5).
 [[revisions."2022".casillas]]
@@ -76,13 +77,14 @@ section = ["iva", "anual", "tributacion_territorio"]
 data_type = "ratio"
 semantic_role = "iva_territorio_guipuzcoa_porcentaje"
 continuidad_id = "iva-territorio-guipuzcoa-porcentaje"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:459 (sha256 0164fbea6f50) prints box [89] (13 108 5 Num 8. Tributación razón de territorio - Administraciones ...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the pagina 6 resultado / tributacion por razon de territorio block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-06-casilla-territorio-guipuzcoa-porcentaje"]
 
 # Box [90] - '8. Tributación razón de territorio - Administraciones - Vizcaya [90]' (offset 113, length 5).
 [[revisions."2022".casillas]]
@@ -92,13 +94,14 @@ section = ["iva", "anual", "tributacion_territorio"]
 data_type = "ratio"
 semantic_role = "iva_territorio_vizcaya_porcentaje"
 continuidad_id = "iva-territorio-vizcaya-porcentaje"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:460 (sha256 0164fbea6f50) prints box [90] (14 113 5 Num 8. Tributación razón de territorio - Administraciones ...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the pagina 6 resultado / tributacion por razon de territorio block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-06-casilla-territorio-vizcaya-porcentaje"]
 
 # Box [91] - '8. Tributación razón de territorio - Administraciones - Navarra [91]' (offset 118, length 5).
 [[revisions."2022".casillas]]
@@ -108,13 +111,14 @@ section = ["iva", "anual", "tributacion_territorio"]
 data_type = "ratio"
 semantic_role = "iva_territorio_navarra_porcentaje"
 continuidad_id = "iva-territorio-navarra-porcentaje"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:461 (sha256 0164fbea6f50) prints box [91] (15 118 5 Num 8. Tributación razón de territorio - Administraciones ...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the pagina 6 resultado / tributacion por razon de territorio block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-06-casilla-territorio-navarra-porcentaje"]
 
 # Box [92] - '8. Tributación razón de territorio - Administraciones - Resultado atribuible a territorio común [92]' (offset 157, length 17).
 [[revisions."2022".casillas]]
@@ -124,13 +128,14 @@ section = ["iva", "anual", "tributacion_territorio"]
 data_type = "money"
 semantic_role = "iva_territorio_resultado_atribuible_comun"
 continuidad_id = "iva-territorio-resultado-atribuible-comun"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:464 (sha256 0164fbea6f50) prints box [92] (18 157 17 N 8. Tributación razón de territorio - Administraciones -...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the pagina 6 resultado / tributacion por razon de territorio block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-06-casilla-territorio-resultado-atribuible-comun"]
 
 # Box [93] - '8. Tributación razón de territorio - Administraciones - Compens. cuotas ej. anterior atrib. territ. com. [93]' (offset 191, length 17).
 [[revisions."2022".casillas]]
@@ -140,13 +145,14 @@ section = ["iva", "anual", "tributacion_territorio"]
 data_type = "money"
 semantic_role = "iva_territorio_compensacion_atribuible_comun"
 continuidad_id = "iva-territorio-compensacion-atribuible-comun"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:466 (sha256 0164fbea6f50) prints box [93] (20 191 17 Num 8. Tributación razón de territorio - Administraciones...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the pagina 6 resultado / tributacion por razon de territorio block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-06-casilla-territorio-compensacion-atribuible-comun"]
 
 # Box [94] - '8. Tributación razón de territorio - Administraciones - Resultado liq. anual atribuible territ. comun [94]' (offset 208, length 17).
 [[revisions."2022".casillas]]
@@ -156,10 +162,11 @@ section = ["iva", "anual", "tributacion_territorio"]
 data_type = "money"
 semantic_role = "iva_territorio_resultado_anual_atribuible_comun"
 continuidad_id = "iva-territorio-resultado-anual-atribuible-comun"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:467 (sha256 0164fbea6f50) prints box [94] (21 208 17 N 8. Tributación razón de territorio - Administraciones -...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the pagina 6 resultado / tributacion por razon de territorio block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-06-casilla-territorio-resultado-anual-atribuible-comun"]

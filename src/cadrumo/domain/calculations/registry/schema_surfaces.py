@@ -14,6 +14,7 @@ from ....core.casilla_id import CasillaId
 from ....core.identity import AeatBoxNumber, ContinuidadId
 from ....core.period import FilingPeriodCode, RegistrySelectorPeriodCode
 from ._schema_export_exemption import ExportExemptionReasonValue
+from .casilla_lineage import CasillaLineageOriginField
 from .errors import RegistryValidationError
 from .ids import (
     BindingId,
@@ -408,6 +409,39 @@ class CasillaDefinition(RegistryModel):
             "chain independently of the revision-local casilla id."
         ),
     )
+    continuidad_origin: CasillaLineageOriginField | None = Field(
+        default=None,
+        description=(
+            "How this row stands toward its predecessor edition: a grounded or "
+            "seeded continuation of a predecessor row, or which kind of absence "
+            "-- new on the form, present on the form but not declared by the "
+            "predecessor edition, or not printed on any form. Unset carries no "
+            "claim either way."
+        ),
+    )
+    continuidad_evidence: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=512,
+        description=(
+            "The checkable source behind continuidad_origin: the official "
+            "record-design extract or adjudication record, with the line or campo "
+            "that settles it. Required for every origin except seeded."
+        ),
+    )
+    inherited_from: RevisionId | None = Field(
+        default=None,
+        exclude=True,
+        repr=False,
+        description=(
+            "The edition that last stated this row, when the edition holding it "
+            "inherits it from its declared predecessor chain; unset when the "
+            "holding edition states the row itself. Set by the loader during "
+            "materialisation and refused when authored. Excluded from "
+            "serialisation, because where a row is stated says nothing about "
+            "what it means."
+        ),
+    )
     semantic_role: str | None = Field(default=None, min_length=1, max_length=128)
     semantic_role_cardinality: SemanticRoleCardinalityField = SemanticRoleCardinality.SHARED
     semantic_role_cardinality_reason: str | None = Field(default=None, min_length=1, max_length=256)
@@ -455,6 +489,7 @@ class CasillaDefinition(RegistryModel):
         _validate_projection_only(self.id, self.input_kind, self.formula, self.binding, self.alternate_bindings)
         self._validate_export_exposure()
         self._validate_singleton_role_declaration()
+        self._validate_lineage_origin()
         return self
 
     def _validate_export_exposure(self) -> None:
@@ -509,6 +544,32 @@ class CasillaDefinition(RegistryModel):
         if self.semantic_role_cardinality_reason is None:
             raise RegistryValidationError(
                 f"casilla {self.id!r} declares intentional singleton role cardinality without reason",
+            )
+
+    def _validate_lineage_origin(self) -> None:
+        """Hold continuidad_origin, continuidad_id and continuidad_evidence coherent.
+
+        A continuation names the chain it continues, so it needs a
+        continuidad_id; an absence may still carry one, because a chain can
+        start at the row. Only this row-local coherence is checked here -- whether
+        the predecessor edition really does (or does not) carry the chain is a
+        cross-revision question.
+        """
+        origin = self.continuidad_origin
+        if origin is None:
+            if self.continuidad_evidence is not None:
+                raise RegistryValidationError(
+                    f"casilla {self.id!r} declares continuidad_evidence without continuidad_origin",
+                )
+            return
+        if origin.continues_a_chain and self.continuidad_id is None:
+            raise RegistryValidationError(
+                f"casilla {self.id!r} declares continuidad_origin {origin.value!r} without continuidad_id "
+                "(a continuation must name the chain it continues)",
+            )
+        if origin.requires_evidence and self.continuidad_evidence is None:
+            raise RegistryValidationError(
+                f"casilla {self.id!r} declares continuidad_origin {origin.value!r} without continuidad_evidence",
             )
 
 

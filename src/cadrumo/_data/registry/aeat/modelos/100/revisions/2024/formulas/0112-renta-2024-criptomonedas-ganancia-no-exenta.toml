@@ -1,5 +1,5 @@
 [[revisions."2024".formulas]]
-id = "renta-2024-criptomonedas-ganancia-no-exenta"
+id = "renta-criptomonedas-ganancia-no-exenta"
 target_casilla_id = "1811"
 expression = { op = "sum", args = [
     { casilla_id = "1804" },

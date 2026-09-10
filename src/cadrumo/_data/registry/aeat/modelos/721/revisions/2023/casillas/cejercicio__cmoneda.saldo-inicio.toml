@@ -12,6 +12,7 @@
 
 [[revisions."2023".casillas]]
 id = "ejercicio"
+continuidad_id = "filing-year"
 number = "ejercicio"
 section = ["declarante"]
 data_type = "year"
@@ -27,6 +28,7 @@ source_refs = ["boe-modelo-721-2023-layout"]
 
 [[revisions."2023".casillas]]
 id = "tipo-declaracion"
+continuidad_id = "tipo-declaracion"
 number = "tipo-declaracion"
 section = ["declarante"]
 data_type = "text"
@@ -44,6 +46,7 @@ source_refs = ["boe-modelo-721-2023-layout"]
 
 [[revisions."2023".casillas]]
 id = "custodio.nombre-razon-social"
+continuidad_id = "custodio-nombre"
 number = "custodio.nombre-razon-social"
 section = ["custodio", "identificacion"]
 data_type = "text"
@@ -60,6 +63,7 @@ source_refs = ["boe-modelo-721-2023-layout"]
 
 [[revisions."2023".casillas]]
 id = "custodio.codigo-pais"
+continuidad_id = "custodio-pais"
 number = "custodio.codigo-pais"
 section = ["custodio", "identificacion"]
 data_type = "country_code"
@@ -76,6 +80,7 @@ source_refs = ["boe-modelo-721-2023-layout"]
 
 [[revisions."2023".casillas]]
 id = "moneda.clave-token"
+continuidad_id = "moneda-virtual-clave-token"
 number = "moneda.clave-token"
 section = ["moneda", "identificacion"]
 data_type = "text"
@@ -92,6 +97,7 @@ source_refs = ["boe-modelo-721-2023-layout"]
 
 [[revisions."2023".casillas]]
 id = "moneda.saldo-31-diciembre"
+continuidad_id = "moneda-virtual-saldo-31-diciembre"
 number = "moneda.saldo-31-diciembre"
 section = ["moneda", "valoracion"]
 data_type = "money"
@@ -108,6 +114,7 @@ source_refs = ["boe-modelo-721-2023-layout"]
 
 [[revisions."2023".casillas]]
 id = "moneda.saldo-inicio"
+continuidad_id = "moneda-virtual-saldo-inicio"
 number = "moneda.saldo-inicio"
 section = ["moneda", "valoracion"]
 data_type = "money"

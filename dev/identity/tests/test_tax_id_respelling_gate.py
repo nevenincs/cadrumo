@@ -48,8 +48,8 @@ ACTIONABLE_KINDS = ("comparison", "keying")
 
 @pytest.fixture(scope="module")
 def findings() -> list[Finding]:
-    """Return the respelling census for the working revision."""
-    return census("HEAD")
+    """Return the respelling census for the working tree."""
+    return census()
 
 
 def test_no_production_site_open_codes_an_identity_comparison_or_key(

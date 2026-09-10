@@ -50,15 +50,15 @@ casilla_ids = [
     "0025",
 ]
 formulas = [
-    "renta-2025-trabajo-especie-importe-integro",
-    "renta-2025-trabajo-total-ingresos-integros-computables",
-    "renta-2025-trabajo-rendimiento-neto-previo",
-    "renta-2025-trabajo-suma-rendimientos-netos-previos",
-    "renta-2025-trabajo-rendimiento-neto",
-    "renta-2025-trabajo-rendimiento-neto-reducido",
-    "renta-2025-trabajo-otros-gastos",
+    "renta-trabajo-especie-importe-integro",
+    "renta-trabajo-total-ingresos-integros-computables",
+    "renta-trabajo-rendimiento-neto-previo",
+    "renta-trabajo-suma-rendimientos-netos-previos",
+    "renta-trabajo-rendimiento-neto",
+    "renta-trabajo-rendimiento-neto-reducido",
+    "renta-trabajo-otros-gastos",
 ]
-bindings = ["renta-2025-modelo-111-retenciones-periodicas", "renta-2025-modelo-190-retenciones-anuales"]
+bindings = ["renta-modelo-111-retenciones-periodicas", "renta-modelo-190-retenciones-anuales"]
 relations = [
     "renta-2025-rel-111-retenciones-trimestrales",
     "renta-2025-rel-111-retenciones-mensuales",

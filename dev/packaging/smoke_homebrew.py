@@ -1,4 +1,12 @@
-"""Install and exercise one generated Cadrumo Homebrew formula from source."""
+"""Install and exercise one generated Cadrumo Homebrew formula from source.
+
+This module is the single sanctioned use of the ``git`` executable anywhere
+under ``dev/``: a Homebrew tap is, by Homebrew's own design, a git
+repository, so exercising the real update flow (``git pull --ff-only``
+against a tap a formula bump was pushed to) tests an external tool's
+required format rather than anything this project's own tooling depends on
+git for.
+"""
 
 from __future__ import annotations
 
@@ -410,8 +418,8 @@ def run_homebrew_smoke(
                 str(run_root / "tax-state"),
                 "--work-dir",
                 str(run_root / "tax-work"),
-                "--cohort-source-commit",
-                python_cohort.source_commit,
+                "--cohort-source-digest",
+                python_cohort.source_digest,
                 "--cohort-manifest-sha256",
                 sha256_path(python_cohort.manifest),
                 "--cohort-root-wheel-sha256",

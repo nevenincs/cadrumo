@@ -5,7 +5,7 @@ dependency_role = "factual_evidence"
 source_modelo = "193"
 source_revision_selector = { year = 2024 }
 source_casilla_id = "decl.retenciones-total"
-target_binding = "renta-2024-modelo-193-retenciones-anuales"
+target_binding = "renta-modelo-193-retenciones-anuales"
 period_alignment = { source_periods = "annual_summary", target_period = "0A" }
 source_periods = ["0A"]
 target_periods = ["0A"]

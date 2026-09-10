@@ -10,9 +10,9 @@ leave the sweep looking for a name nothing writes -- is a convention.
 Both directions cost something real when they drift. A family named in the
 registry that no site writes reclaims nothing and reads as coverage. A name
 written at a site and registered nowhere leaks without bound: the cohort build's
-extracted source tree is thirty-nine thousand files, its Git archive several
-hundred megabytes, and both are removed only in a ``finally`` block that a
-killed process never reaches.
+extracted source tree is thirty-nine thousand files, its retained source
+archive several hundred megabytes, and both are removed only in a ``finally``
+block that a killed process never reaches.
 
 So the subjects are DISCOVERED from the source rather than enumerated. A new
 hidden name minted under ``var/`` is caught the moment it is written, or this

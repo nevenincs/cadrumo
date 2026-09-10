@@ -109,7 +109,7 @@ class InstalledMcpEvidence:
     calls: tuple[McpCallEvidence, ...]
     invoked_cli_sha256: str
     invoked_cli_sha256_by_command: dict[str, str]
-    cohort_source_commit: str
+    cohort_source_digest: str
     cohort_manifest_sha256: str
     cohort_root_wheel_sha256: str
     cohort_harness_wheel_sha256: str
@@ -460,7 +460,7 @@ async def _run_protocol(
         calls=tuple(calls),
         invoked_cli_sha256="",
         invoked_cli_sha256_by_command={},
-        cohort_source_commit="",
+        cohort_source_digest="",
         cohort_manifest_sha256="",
         cohort_root_wheel_sha256="",
         cohort_harness_wheel_sha256="",
@@ -519,7 +519,7 @@ def run_installed_mcp_oracle(
     environment_overrides: Mapping[str, str] | None = None,
     storage_root: Path,
     work_dir: Path,
-    cohort_source_commit: str,
+    cohort_source_digest: str,
     cohort_manifest_sha256: str,
     cohort_root_wheel_sha256: str,
     cohort_harness_wheel_sha256: str,
@@ -601,7 +601,7 @@ def run_installed_mcp_oracle(
         evidence,
         invoked_cli_sha256=invoked_cli_sha256,
         invoked_cli_sha256_by_command=invoked_cli_sha256_by_command,
-        cohort_source_commit=cohort_source_commit,
+        cohort_source_digest=cohort_source_digest,
         cohort_manifest_sha256=cohort_manifest_sha256,
         cohort_root_wheel_sha256=cohort_root_wheel_sha256,
         cohort_harness_wheel_sha256=cohort_harness_wheel_sha256,
@@ -634,7 +634,7 @@ def _parser() -> argparse.ArgumentParser:
         help="Execution cwd outside the source checkout.",
     )
     parser.add_argument("--timeout-seconds", type=float, default=180.0)
-    parser.add_argument("--cohort-source-commit", required=True)
+    parser.add_argument("--cohort-source-digest", required=True)
     parser.add_argument("--cohort-manifest-sha256", required=True)
     parser.add_argument("--cohort-root-wheel-sha256", required=True)
     parser.add_argument("--cohort-harness-wheel-sha256", required=True)
@@ -649,7 +649,7 @@ def main() -> int:
         args.server,
         storage_root=args.storage_root,
         work_dir=args.work_dir,
-        cohort_source_commit=args.cohort_source_commit,
+        cohort_source_digest=args.cohort_source_digest,
         cohort_manifest_sha256=args.cohort_manifest_sha256,
         cohort_root_wheel_sha256=args.cohort_root_wheel_sha256,
         cohort_harness_wheel_sha256=args.cohort_harness_wheel_sha256,

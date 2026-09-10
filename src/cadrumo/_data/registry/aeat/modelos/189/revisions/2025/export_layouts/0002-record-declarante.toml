@@ -185,9 +185,8 @@ source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
 
 # Posiciones 145-167. VALORACION. Campo alfanumerico de 23 posiciones:
 # 145 SIGNO ('N' si la suma es menor que cero, en otro caso un espacio),
-# 146-165 parte entera, 166-167 parte decimal. The signed money codec emits
-# exactly that shape: 'N' or ' ' followed by the zero-filled magnitude with
-# two implied decimals.
+# 146-165 parte entera, 166-167 parte decimal. The sign byte is reserved, so
+# the magnitude owns 146-167 and a non-negative sum writes a space at 145.
 [[revisions."2025".export_layouts.records.fields]]
 id = "modelo-189-t1-valoracion-total"
 offset = 145
@@ -199,6 +198,7 @@ required = false
 padding = "left_zero"
 justification = "right"
 signed = true
+sign_position = "blank_or_n"
 legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1180-2023:art-primero"]
 source_refs = [
     "boe-modelo-189-base-order",

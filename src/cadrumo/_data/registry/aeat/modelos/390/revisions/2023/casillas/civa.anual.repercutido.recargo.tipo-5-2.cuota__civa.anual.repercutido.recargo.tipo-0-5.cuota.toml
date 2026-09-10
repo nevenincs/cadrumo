@@ -61,6 +61,8 @@ section = ["iva", "anual", "devengado"]
 data_type = "money"
 semantic_role = "iva_cuota_recargo_equivalencia_tipo_0_62"
 continuidad_id = "iva-cuota-recargo-equivalencia-tipo-0-62"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md:212 (sha256 179c02eddc8b) prints box [666]; corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md (sha256 7c6554f3182d) prints no box [666] and retires none"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "One official AEAT box per recargo rate; the 0,62 % rung is a distinct box from its sibling rates, not a typo twin."
 required = false
@@ -68,7 +70,6 @@ input_kind = "bound"
 binding = "modelo-390-iva-recargo-equivalencia-tipo-0-62-cuota"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2023"]
-export_refs = ["modelo-390-page-02-casilla-repercutido-recargo-tipo-0-62-cuota"]
 
 # Box [36] - "Recargo de equivalencia - Tipo 0,5% - Cuota". LIVA art. 161.3,
 # paired with the art. 91.dos super-reduced 4 % rate. Vigencia: todo el

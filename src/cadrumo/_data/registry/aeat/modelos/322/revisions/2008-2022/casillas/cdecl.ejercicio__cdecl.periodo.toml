@@ -1,5 +1,6 @@
 [[revisions."2008-2022".casillas]]
 id = "decl.ejercicio"
+continuidad_id = "filing-year"
 number = "ejercicio"
 section = ["declarante"]
 data_type = "year"
@@ -11,6 +12,7 @@ source_refs = ["aeat-dr-322-2022"]
 
 [[revisions."2008-2022".casillas]]
 id = "decl.periodo"
+continuidad_id = "filing-period"
 number = "periodo"
 section = ["declarante"]
 data_type = "period_code"

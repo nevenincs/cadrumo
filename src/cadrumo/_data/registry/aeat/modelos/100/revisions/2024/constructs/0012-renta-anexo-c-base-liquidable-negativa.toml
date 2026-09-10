@@ -12,6 +12,6 @@ casilla_ids = [
     "1388",
 ]
 bindings = [
-    "renta-2024-base-liquidable-negativa-general-anterior",
+    "renta-base-liquidable-negativa-general-anterior",
 ]
 dependency_classifications = ["renta-2024-dep-100"]

@@ -15,9 +15,9 @@ from ..python_cohort import _artifact_command_projection, _projection_digest
 
 
 def add_test_source_archive(directory: Path, artifacts: dict[str, str], digests: dict[str, str]) -> Path:
-    """Add the mandatory retained Git-archive stand-in to a test cohort."""
+    """Add the mandatory retained source-snapshot archive stand-in to a test cohort."""
     lock = b"version = 1\nrevision = 1\nrequires-python = '>=3.13'\n"
-    path = directory / f"cadrumo-source-{'a' * 40}.zip"
+    path = directory / f"cadrumo-source-{'a' * 64}.zip"
     with zipfile.ZipFile(path, "w") as archive:
         archive.writestr("pyproject.toml", "[project]\nname='cadrumo'\n")
         archive.writestr("uv.lock", lock)
@@ -90,7 +90,7 @@ def make_test_command_spec_attestation(
     directory: Path,
     artifacts: dict[str, str],
     *,
-    source_commit: str,
+    source_digest: str,
     artifacts_are_unreadable: bool = False,
 ) -> dict[str, object]:
     """Build the strict envelope around real planted fixture artifacts.
@@ -120,7 +120,7 @@ def make_test_command_spec_attestation(
     value: dict[str, object] = {
         "schema": "cadrumo.command-spec-cohort.v1",
         "node_count": 1,
-        "source_commit": source_commit,
+        "source_digest": source_digest,
         "forbidden_artifacts_absent": True,
         "root_wheel_sha256": sha256_path(root_wheel),
         "root_sdist_sha256": sha256_path(root_sdist),
@@ -141,7 +141,7 @@ def make_minimal_test_python_cohort(
     directory: Path,
     *,
     version: str,
-    source_commit: str = "a" * 40,
+    source_digest: str = "a" * 64,
 ) -> dict[str, str]:
     """Write the complete minimal sealed Python cohort and strict manifest."""
     directory.mkdir(parents=True, exist_ok=True)
@@ -177,10 +177,10 @@ def make_minimal_test_python_cohort(
     manifest = {
         "artifacts": artifacts,
         "sha256": digests,
-        "source_commit": source_commit,
+        "source_digest": source_digest,
         "version": version,
         "command_spec_attestation": make_test_command_spec_attestation(
-            directory, artifacts, source_commit=source_commit
+            directory, artifacts, source_digest=source_digest
         ),
     }
     (directory / "python-cohort.json").write_text(json.dumps(manifest, sort_keys=True), encoding="utf-8", newline="\n")

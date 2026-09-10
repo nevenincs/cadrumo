@@ -18,14 +18,14 @@ _OUTSIDE_ROOTS = "<outside-tracked-data-roots>"
 
 #: Below this the tracked-data walk has stopped seeing the shipped corpus.
 #: This count is the DENOMINATOR the preflight declares ok over, so `> 0`
-#: caught only a total collapse while a narrowed root or a tightened git
+#: caught only a total collapse while a narrowed root or a tightened ignore
 #: filter would leave it reporting success over a fraction. Live: 22,598
 #: files, all under src/cadrumo/_data. A floor, not a pinned count.
 _MINIMUM_TRACKED_DATA_FILES = 15000
 
 
 def test_summary_counts_the_real_tracked_data_tree() -> None:
-    """The summary reflects the live git-tracked shipped-data set, fully partitioned."""
+    """The summary reflects the live tracked shipped-data set, fully partitioned."""
     paths = tracked_source_data_paths(find_repo_root())
     summary = _summary(paths)
 

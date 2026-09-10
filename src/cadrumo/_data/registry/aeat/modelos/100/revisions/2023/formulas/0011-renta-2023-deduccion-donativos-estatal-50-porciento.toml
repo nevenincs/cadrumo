@@ -1,5 +1,5 @@
 [[revisions."2023".formulas]]
-id = "renta-2023-deduccion-donativos-estatal-50-porciento"
+id = "renta-deduccion-donativos-estatal-50-porciento"
 target_casilla_id = "0552"
 expression = { op = "percent", args = [
     { op = "sum", args = [

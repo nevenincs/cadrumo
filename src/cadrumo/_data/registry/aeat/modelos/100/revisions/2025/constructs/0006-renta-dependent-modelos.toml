@@ -37,14 +37,14 @@ source_refs = [
     "aeat-dr-184-2025",
 ]
 bindings = [
-    "renta-2025-modelo-111-retenciones-periodicas",
-    "renta-2025-modelo-123-retenciones-periodicas",
-    "renta-2025-modelo-130-pagos-fraccionados",
-    "renta-2025-modelo-131-pagos-fraccionados",
-    "renta-2025-modelo-184-atribucion-actividades-economicas",
-    "renta-2025-modelo-190-retenciones-anuales",
-    "renta-2025-modelo-193-retenciones-anuales",
-    "renta-2025-base-liquidable-negativa-general-anterior",
+    "renta-modelo-111-retenciones-periodicas",
+    "renta-modelo-123-retenciones-periodicas",
+    "renta-modelo-130-pagos-fraccionados",
+    "renta-modelo-131-pagos-fraccionados",
+    "renta-modelo-184-atribucion-actividades-economicas",
+    "renta-modelo-190-retenciones-anuales",
+    "renta-modelo-193-retenciones-anuales",
+    "renta-base-liquidable-negativa-general-anterior",
 ]
 relations = [
     "renta-2025-rel-111-retenciones-trimestrales",

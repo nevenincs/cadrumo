@@ -95,7 +95,7 @@ def _modelo_202_incomplete_modality_finding(
     """Return a blocking finding when an M202 revision has no filing-grade modality."""
     if str(work_unit.modelo) != Modelo.M202.value:
         return None
-    verdict = derive_modelo_202_modality(profile)
+    verdict = derive_modelo_202_modality(profile, effective_date=date(work_unit.filing_year, 12, 31))
     if verdict.modality is not Modelo202Modality.INCOMPLETE:
         return None
     return ModeloVerificationFinding(

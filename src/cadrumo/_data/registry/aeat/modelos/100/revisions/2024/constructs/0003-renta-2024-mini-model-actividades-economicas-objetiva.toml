@@ -12,9 +12,9 @@ source_refs = [
     "lirpf-cuota-chain-authority",
 ]
 formulas = [
-    "renta-2024-estimacion-objetiva-agricola-rendimiento-neto-reducido-total",
-    "renta-2024-estimacion-objetiva-agricola-suma",
-    "renta-2024-estimacion-objetiva-no-agricola-rendimiento-neto-reducido-total",
-    "renta-2024-estimacion-objetiva-no-agricola-suma",
-    "renta-2024-estimacion-objetiva-agricola-rendimiento-neto-reducido",
+    "renta-estimacion-objetiva-agricola-rendimiento-neto-reducido-total",
+    "renta-estimacion-objetiva-agricola-suma",
+    "renta-estimacion-objetiva-no-agricola-rendimiento-neto-reducido-total",
+    "renta-estimacion-objetiva-no-agricola-suma",
+    "renta-estimacion-objetiva-agricola-rendimiento-neto-reducido",
 ]

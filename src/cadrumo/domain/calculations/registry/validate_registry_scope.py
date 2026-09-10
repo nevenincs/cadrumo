@@ -15,6 +15,7 @@ from ._validate_cross_revision import (
 from ._validate_cross_revision import (
     strict_cross_revision_casilla_continuity_failures as _validate_strict_cross_revision_casilla_continuity,
 )
+from ._validate_cross_revision_lineage_origin import lineage_origin_continuity_failures
 from ._validate_label_artifacts import validate_no_label_artifacts
 from ._validate_relation_sources import (
     validate_previous_filing_binding_closure,
@@ -65,6 +66,8 @@ def validate_registry_scope(modelos: Iterable[ModeloDefinition]) -> tuple[str, .
     # This is the surface-scoped strict continuity gate; it complements,
     # but does not replace, the overlap-aware repeated-id hard gate above.
     failures.extend(_validate_strict_cross_revision_casilla_continuity(modelo_tuple))
+    for modelo in modelo_tuple:
+        failures.extend(lineage_origin_continuity_failures(modelo))
     failures.extend(validate_no_label_artifacts(modelo_tuple))
     if _tree_can_answer_role_singleton_questions(modelo_tuple):
         failures.extend(_validate_semantic_role_typo_twins(modelo_tuple))

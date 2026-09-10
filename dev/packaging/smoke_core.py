@@ -178,7 +178,7 @@ def main(argv: list[str] | None = None) -> int:
         venv_cadrumo_path(venv),
         storage_root=work_dir / "tax-oracle-state",
         work_dir=work_dir / "outside-checkout",
-        cohort_source_commit=cohort.source_commit,
+        cohort_source_digest=cohort.source_digest,
         cohort_manifest_sha256=sha256_path(cohort.manifest),
         cohort_root_wheel_sha256=cohort.sha256["cadrumo"],
     )

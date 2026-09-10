@@ -1,5 +1,5 @@
 [[revisions."2022".formulas]]
-id = "renta-2022-cuota-base-liquidable-general-estatal"
+id = "renta-cuota-base-liquidable-general-estatal"
 target_casilla_id = "0532"
 # Floored at 0 per LIRPF art. 64: "sin que pueda resultar negativa como
 # consecuencia de tal minoración". Harmless for the ordinary chain, where the

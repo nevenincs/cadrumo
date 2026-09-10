@@ -11,6 +11,34 @@ source_sha256 = "4cdfb401624e26abe3da3758ddcdcfc85b6b05ffa74e724b2d3f5eeb0c58e80
 [[singleton_rules]]
 rule_kind = "singleton_numeric"
 aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 378
+ordinal = "9"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m347-declarado-provincia"
+decision_statement = "Two digits, the provincia code, in the 77-78 part of the provincia/pais cell."
+justification = "The design divides the cell in its own text: '77-78 CODIGO PROVINCIA: Campo numerico de dos posiciones', enumerating the two-digit provincia table and 99 for non-residents without a permanent establishment. The code is a label, never an arithmetic value. The 79-80 part is 'Campo alfabetico' and is text, so it takes no numeric rule."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 378
+ordinal = "9"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
 semantic_kind = "enumeration"
 value_policy = "enumerated-digits"
 integer_digits = 1
@@ -295,35 +323,6 @@ justification = "The design directs 'Consignar lo contenido en estas mismas posi
 sheet = "Tipo 2 - Registro De Declarado"
 source_row = 326
 ordinal = "3"
-record_identity = "Tipo 2 - Registro De Declarado"
-
-
-[[singleton_rules]]
-rule_kind = "singleton_numeric"
-aeat_type = "Num"
-semantic_kind = "digit_string"
-value_policy = "digit-string"
-integer_digits = 4
-decimal_digits = 0
-sign_policy = "unsigned"
-allowed_values = []
-
-[singleton_rules.anchor]
-sheet = "Tipo 2 - Registro De Declarado"
-source_row = 378
-ordinal = "9"
-record_identity = "Tipo 2 - Registro De Declarado"
-
-[singleton_rules.evidence]
-authority_kind = "reviewed_policy"
-decision_id = "m347-declarado-provincia-pais"
-decision_statement = "Four digits, a two-digit provincia code followed by a two-digit country code."
-justification = "The design heads the field 'CODIGO PROVINCIA/PAIS 77-78 CODIGO PROVINCIA' and states 'Campo numerico de dos posiciones' for the provincia half, enumerating the two-digit provincia table; the span is a code pair, never an arithmetic value."
-
-[singleton_rules.evidence.governed_anchor]
-sheet = "Tipo 2 - Registro De Declarado"
-source_row = 378
-ordinal = "9"
 record_identity = "Tipo 2 - Registro De Declarado"
 
 

@@ -80,6 +80,7 @@ says which. What each one owns:
 | `unresolvable_note_pointers` | shipped fields whose Contenido cites a note label the design defines several times with different text, so the field's governing mandate has more than one plausible reading |
 | `fabricated_required_ness` | every generated field with what its official validation cell said, so a required flag derived from silence is separable from one derived from a statement |
 | `continuity_integrity` | modelos with no continuity, and chains crossing a grammar or standing alone |
+| `delta_minimality` | successor casilla rows stated identically to the row they would inherit, and rows it cannot judge for want of lineage |
 | `revision_name_window` | revision names that misstate the window they declare, or claim none |
 | `temporal_site_agreement` | a revision's window, selector and deadline windows falling silent or disagreeing |
 | `wire_type_compatibility` | the distinct transitions from a casilla's declared type to its rendered wire type |

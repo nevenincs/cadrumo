@@ -11,7 +11,7 @@
 # TRLIRNR Art 24.
 
 [[revisions."2025".formulas]]
-id = "m210-reduccion-convenio-2025"
+id = "m210-reduccion-convenio"
 target_casilla_id = "reduccion_convenio"
 expression = { op = "subtract", args = [
     { casilla_id = "cuota_ley_irnr" },

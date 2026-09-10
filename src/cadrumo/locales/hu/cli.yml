@@ -3541,6 +3541,12 @@ cli:
     verify_filed_state_help: A helyi nyilvántartási számítás kimenetének összehasonlítása
       a rögzített benyújtott AEAT-állapottal.
     verify_source_root_help: Az ellenőrzendő forráskönyvtár elérési útja.
+    view_edition_help: Egy modell egy revízióját a nyilvántartás által fordított teljes
+      revízióként írja ki TOML formátumban, jelölve, hogy az egyes mezősorokat maga
+      a revízió rögzíti-e vagy örökli, és melyik revízióból, valamint hogy mire terjed
+      ki a revízió felülvizsgálata
+    view_edition_modelo_help: A modell azonosítója, amelynek revízióját ki kell írni
+    view_edition_revision_help: A kiírandó revízió nyilvántartási azonosítója
   review:
     app_help: 'Üzemeltetői felülvizsgálati sor: főkönyvi tranzakciók, vásárlási bizonylatok
       és nyomtatvány-megállapítások osztályozása.'

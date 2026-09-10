@@ -54,11 +54,14 @@ _FIELD_LITERALS: dict[str, str] = {
     "authority_grade": '"calculation"',
     "legal_refs": f'["{_LEGAL_REF}"]',
     "orden_aplicabilidad": f'["{_ORDEN_REF}"]',
+    "casilla_source_refs": '["aeat-manual"]',
     "valid_to": "2025-12-31",
+    "predecessor": '"2024"',
     "engineered_by": '"registry schema campaign"',
     "review_status": '"pending_review"',
     "reviewed_by": '"operator"',
     "reviewed_at": "2026-07-27",
+    "reviewed_against": '"2024"',
     # An inline table, because this field is a Mapping of declarations rather
     # than a scalar: the refusal must fire on WHERE the field is declared, so the
     # value has to be well-formed enough to reach the placement check.
@@ -211,9 +214,11 @@ def test_the_manifest_only_set_is_exactly_todays_marked_fields() -> None:
     """Pin the derived set, so a marker lost in a rebase is a red test."""
     expected = REVISION_GOVERNANCE_FIELDS | {
         "authority_grade",
+        "casilla_source_refs",
         "family_dispositions",
         "legal_refs",
         "orden_aplicabilidad",
+        "predecessor",
         "valid_to",
     }
 

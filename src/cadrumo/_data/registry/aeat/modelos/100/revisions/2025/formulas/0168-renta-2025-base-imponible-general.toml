@@ -4,7 +4,7 @@
 # Art. 50.3 base-liquidable carry is applied later through casilla 0501;
 # it must not be subtracted from this base-imponible calculation.
 [[revisions."2025".formulas]]
-id = "renta-2025-base-imponible-general"
+id = "renta-base-imponible-general"
 target_casilla_id = "0435"
 expression = { op = "max", args = [
     { literal = "0" },

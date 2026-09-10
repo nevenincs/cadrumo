@@ -1,5 +1,5 @@
 [[revisions."2025".formulas]]
-id = "renta-2025-cuota-irpf-comunidad-autonoma"
+id = "renta-cuota-irpf-comunidad-autonoma"
 target_casilla_id = "0675"
 expression = { op = "subtract", args = [
     { casilla_id = "0671" },

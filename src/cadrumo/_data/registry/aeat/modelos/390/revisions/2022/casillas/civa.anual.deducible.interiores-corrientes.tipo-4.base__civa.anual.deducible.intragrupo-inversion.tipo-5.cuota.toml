@@ -29,13 +29,14 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_interiores_corrientes_tipo_4_base"
 continuidad_id = "iva-deducible-interiores-corrientes-tipo-4-base"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:217 (sha256 0164fbea6f50) prints box [190] (6 13 17 N 5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. ...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-interiores-corrientes-tipo-4-base"]
 
 # Box [191] - "5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. corrientes bienes y servic. - Tipo 4% - Cuota [191]" (offset 30, length 17).
 [[revisions."2022".casillas]]
@@ -45,13 +46,14 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_interiores_corrientes_tipo_4_cuota"
 continuidad_id = "iva-deducible-interiores-corrientes-tipo-4-cuota"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:218 (sha256 0164fbea6f50) prints box [191] (7 30 17 N 5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. ...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-interiores-corrientes-tipo-4-cuota"]
 
 # Box [724] - "5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. corrientes bienes y servic. - Tipo 5% - Base imponible [724]" (offset 47, length 17).
 [[revisions."2022".casillas]]
@@ -61,13 +63,14 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_interiores_corrientes_tipo_5_base"
 continuidad_id = "iva-deducible-interiores-corrientes-tipo-5-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md:243 (sha256 7c6554f3182d) prints box [724]; corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md (sha256 0164fbea6f50) prints no box [724] and retires none"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-interiores-corrientes-tipo-5-base"]
 
 # Box [725] - "5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. corrientes bienes y servic. - Tipo 5% - Cuota [725]" (offset 64, length 17).
 [[revisions."2022".casillas]]
@@ -77,13 +80,14 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_interiores_corrientes_tipo_5_cuota"
 continuidad_id = "iva-deducible-interiores-corrientes-tipo-5-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md:244 (sha256 7c6554f3182d) prints box [725]; corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md (sha256 0164fbea6f50) prints no box [725] and retires none"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-interiores-corrientes-tipo-5-cuota"]
 
 # Box [603] - "5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. corrientes bienes y servic. - Tipo 10% - Base imponible [603]" (offset 81, length 17).
 [[revisions."2022".casillas]]
@@ -93,13 +97,14 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_interiores_corrientes_tipo_10_base"
 continuidad_id = "iva-deducible-interiores-corrientes-tipo-10-base"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:219 (sha256 0164fbea6f50) prints box [603] (8 47 17 N 5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. ...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-interiores-corrientes-tipo-10-base"]
 
 # Box [604] - "5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. corrientes bienes y servic. - Tipo 10% - Cuota [604]" (offset 98, length 17).
 [[revisions."2022".casillas]]
@@ -109,13 +114,14 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_interiores_corrientes_tipo_10_cuota"
 continuidad_id = "iva-deducible-interiores-corrientes-tipo-10-cuota"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:220 (sha256 0164fbea6f50) prints box [604] (9 64 17 N 5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. ...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-interiores-corrientes-tipo-10-cuota"]
 
 # Box [605] - "5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. corrientes bienes y servic. - Tipo 21% - Base imponible [605]" (offset 115, length 17).
 [[revisions."2022".casillas]]
@@ -125,13 +131,14 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_interiores_corrientes_tipo_21_base"
 continuidad_id = "iva-deducible-interiores-corrientes-tipo-21-base"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:221 (sha256 0164fbea6f50) prints box [605] (10 81 17 N 5. Operaciones Reg. Gral. - IVA deducible - Oper. inter....); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-interiores-corrientes-tipo-21-base"]
 
 # Box [606] - "5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. corrientes bienes y servic. - Tipo 21% - Cuota [606]" (offset 132, length 17).
 [[revisions."2022".casillas]]
@@ -141,13 +148,14 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_interiores_corrientes_tipo_21_cuota"
 continuidad_id = "iva-deducible-interiores-corrientes-tipo-21-cuota"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:222 (sha256 0164fbea6f50) prints box [606] (11 98 17 N 5. Operaciones Reg. Gral. - IVA deducible - Oper. inter....); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-interiores-corrientes-tipo-21-cuota"]
 
 # Box [506] - "5. Operaciones Reg. Gral. - IVA deducible - Oper. intragrupo corrientes - Tipo 4% - Base imponible [506]" (offset 183, length 17).
 [[revisions."2022".casillas]]
@@ -157,13 +165,14 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_intragrupo_corrientes_tipo_4_base"
 continuidad_id = "iva-deducible-intragrupo-corrientes-tipo-4-base"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:225 (sha256 0164fbea6f50) prints box [506] (14 149 17 N 5. Operaciones Reg. Gral. - IVA deducible - Oper. intra...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-corrientes-tipo-4-base"]
 
 # Box [507] - "5. Operaciones Reg. Gral. - IVA deducible - Oper. intragrupo corrientes - Tipo 4% - Cuota [507]" (offset 200, length 17).
 [[revisions."2022".casillas]]
@@ -173,13 +182,14 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_intragrupo_corrientes_tipo_4_cuota"
 continuidad_id = "iva-deducible-intragrupo-corrientes-tipo-4-cuota"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:226 (sha256 0164fbea6f50) prints box [507] (15 166 17 N 5. Operaciones Reg. Gral. - IVA deducible - Oper. intra...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-corrientes-tipo-4-cuota"]
 
 # Box [726] - "5. Operaciones Reg. Gral. - IVA deducible - Oper. intragrupo corrientes - Tipo 5% - Base imponible [726]" (offset 217, length 17).
 [[revisions."2022".casillas]]
@@ -189,13 +199,14 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_intragrupo_corrientes_tipo_5_base"
 continuidad_id = "iva-deducible-intragrupo-corrientes-tipo-5-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md:253 (sha256 7c6554f3182d) prints box [726]; corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md (sha256 0164fbea6f50) prints no box [726] and retires none"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-corrientes-tipo-5-base"]
 
 # Box [727] - "5. Operaciones Reg. Gral. - IVA deducible - Oper. intragrupo corrientes - Tipo 5% - Cuota [727]" (offset 234, length 17).
 [[revisions."2022".casillas]]
@@ -205,13 +216,14 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_intragrupo_corrientes_tipo_5_cuota"
 continuidad_id = "iva-deducible-intragrupo-corrientes-tipo-5-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md:254 (sha256 7c6554f3182d) prints box [727]; corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md (sha256 0164fbea6f50) prints no box [727] and retires none"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-corrientes-tipo-5-cuota"]
 
 # Box [607] - "5. Operaciones Reg. Gral. - IVA deducible - Oper. intragrupo corrientes - Tipo 10% - Base imponible [607]" (offset 251, length 17).
 [[revisions."2022".casillas]]
@@ -221,13 +233,14 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_intragrupo_corrientes_tipo_10_base"
 continuidad_id = "iva-deducible-intragrupo-corrientes-tipo-10-base"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:227 (sha256 0164fbea6f50) prints box [607] (16 183 17 N 5. Operaciones Reg. Gral. - IVA deducible - Oper. intra...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-corrientes-tipo-10-base"]
 
 # Box [608] - "5. Operaciones Reg. Gral. - IVA deducible - Oper. intragrupo corrientes - Tipo 10% - Cuota [608]" (offset 268, length 17).
 [[revisions."2022".casillas]]
@@ -237,13 +250,14 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_intragrupo_corrientes_tipo_10_cuota"
 continuidad_id = "iva-deducible-intragrupo-corrientes-tipo-10-cuota"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:228 (sha256 0164fbea6f50) prints box [608] (17 200 17 N 5. Operaciones Reg. Gral. - IVA deducible - Oper. intra...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-corrientes-tipo-10-cuota"]
 
 # Box [609] - "5. Operaciones Reg. Gral. - IVA deducible - Oper. intragrupo corrientes - Tipo 21% - Base imponible [609]" (offset 285, length 17).
 [[revisions."2022".casillas]]
@@ -253,13 +267,14 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_intragrupo_corrientes_tipo_21_base"
 continuidad_id = "iva-deducible-intragrupo-corrientes-tipo-21-base"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:229 (sha256 0164fbea6f50) prints box [609] (18 217 17 N 5. Operaciones Reg. Gral. - IVA deducible - Oper. intra...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-corrientes-tipo-21-base"]
 
 # Box [610] - "5. Operaciones Reg. Gral. - IVA deducible - Oper. intragrupo corrientes - Tipo 21% - Cuota [610]" (offset 302, length 17).
 [[revisions."2022".casillas]]
@@ -269,13 +284,14 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_intragrupo_corrientes_tipo_21_cuota"
 continuidad_id = "iva-deducible-intragrupo-corrientes-tipo-21-cuota"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:230 (sha256 0164fbea6f50) prints box [610] (19 234 17 N 5. Operaciones Reg. Gral. - IVA deducible - Oper. intra...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-corrientes-tipo-21-cuota"]
 
 # Box [512] - "5. Operaciones Reg. Gral. - IVA deducible - Total oper. intragrupo corrientes - Base imponible [512]" (offset 319, length 17).
 [[revisions."2022".casillas]]
@@ -285,13 +301,14 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_intragrupo_corrientes_total_base"
 continuidad_id = "iva-deducible-intragrupo-corrientes-total-base"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:231 (sha256 0164fbea6f50) prints box [512] (20 251 17 N 5. Operaciones Reg. Gral. - IVA deducible - Total oper....); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-corrientes-total-base"]
 
 # Box [513] - "5. Operaciones Reg. Gral. - IVA deducible - Total oper. intragrupo corrientes - Cuota [513]" (offset 336, length 17).
 [[revisions."2022".casillas]]
@@ -301,13 +318,14 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_intragrupo_corrientes_total_cuota"
 continuidad_id = "iva-deducible-intragrupo-corrientes-total-cuota"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:232 (sha256 0164fbea6f50) prints box [513] (21 268 17 N 5. Operaciones Reg. Gral. - IVA deducible - Total oper....); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-corrientes-total-cuota"]
 
 # Box [196] - "5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. bienes de inversion - Tipo 4% - Base imponible [196]" (offset 353, length 17).
 [[revisions."2022".casillas]]
@@ -317,13 +335,14 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_interiores_inversion_tipo_4_base"
 continuidad_id = "iva-deducible-interiores-inversion-tipo-4-base"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:233 (sha256 0164fbea6f50) prints box [196] (22 285 17 N 5. Operaciones Reg. Gral. - IVA deducible - Oper. inter...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-interiores-inversion-tipo-4-base"]
 
 # Box [197] - "5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. bienes de inversion - Tipo 4% - Cuota [197]" (offset 370, length 17).
 [[revisions."2022".casillas]]
@@ -333,13 +352,14 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_interiores_inversion_tipo_4_cuota"
 continuidad_id = "iva-deducible-interiores-inversion-tipo-4-cuota"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:234 (sha256 0164fbea6f50) prints box [197] (23 302 17 N 5. Operaciones Reg. Gral. - IVA deducible - Oper. inter...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-interiores-inversion-tipo-4-cuota"]
 
 # Box [728] - "5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. bienes de inversion - Tipo 5% - Base imponible [728]" (offset 387, length 17).
 [[revisions."2022".casillas]]
@@ -349,13 +369,14 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_interiores_inversion_tipo_5_base"
 continuidad_id = "iva-deducible-interiores-inversion-tipo-5-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md:263 (sha256 7c6554f3182d) prints box [728]; corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md (sha256 0164fbea6f50) prints no box [728] and retires none"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-interiores-inversion-tipo-5-base"]
 
 # Box [729] - "5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. bienes de inversion - Tipo 5% - Cuota [729]" (offset 404, length 17).
 [[revisions."2022".casillas]]
@@ -365,13 +386,14 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_interiores_inversion_tipo_5_cuota"
 continuidad_id = "iva-deducible-interiores-inversion-tipo-5-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md:264 (sha256 7c6554f3182d) prints box [729]; corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md (sha256 0164fbea6f50) prints no box [729] and retires none"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-interiores-inversion-tipo-5-cuota"]
 
 # Box [611] - "5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. bienes de inversion - Tipo 10% - Base imponible [611]" (offset 421, length 17).
 [[revisions."2022".casillas]]
@@ -381,13 +403,14 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_interiores_inversion_tipo_10_base"
 continuidad_id = "iva-deducible-interiores-inversion-tipo-10-base"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:235 (sha256 0164fbea6f50) prints box [611] (24 319 17 N 5. Operaciones Reg. Gral. - IVA deducible - Oper. inter...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-interiores-inversion-tipo-10-base"]
 
 # Box [612] - "5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. bienes de inversion - Tipo 10% - Cuota [612]" (offset 438, length 17).
 [[revisions."2022".casillas]]
@@ -397,13 +420,14 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_interiores_inversion_tipo_10_cuota"
 continuidad_id = "iva-deducible-interiores-inversion-tipo-10-cuota"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:236 (sha256 0164fbea6f50) prints box [612] (25 336 17 N 5. Operaciones Reg. Gral. - IVA deducible - Oper. inter...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-interiores-inversion-tipo-10-cuota"]
 
 # Box [613] - "5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. bienes de inversion - Tipo 21% - Base imponible [613]" (offset 455, length 17).
 [[revisions."2022".casillas]]
@@ -413,13 +437,14 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_interiores_inversion_tipo_21_base"
 continuidad_id = "iva-deducible-interiores-inversion-tipo-21-base"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:237 (sha256 0164fbea6f50) prints box [613] (26 353 17 N 5. Operaciones Reg. Gral. - IVA deducible - Oper. inter...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-interiores-inversion-tipo-21-base"]
 
 # Box [614] - "5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. bienes de inversion - Tipo 21% - Cuota [614]" (offset 472, length 17).
 [[revisions."2022".casillas]]
@@ -429,13 +454,14 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_interiores_inversion_tipo_21_cuota"
 continuidad_id = "iva-deducible-interiores-inversion-tipo-21-cuota"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:238 (sha256 0164fbea6f50) prints box [614] (27 370 17 N 5. Operaciones Reg. Gral. - IVA deducible - Oper. inter...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-interiores-inversion-tipo-21-cuota"]
 
 # Box [50] - "5. Operaciones Reg. Gral. - IVA deducible - Total oper. inter. bienes de inversion - Base imponible [50]" (offset 489, length 17).
 [[revisions."2022".casillas]]
@@ -445,13 +471,14 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_interiores_inversion_total_base"
 continuidad_id = "iva-deducible-interiores-inversion-total-base"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:239 (sha256 0164fbea6f50) prints box [50] (28 387 17 N 5. Operaciones Reg. Gral. - IVA deducible - Total oper....); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-interiores-inversion-total-base"]
 
 # Box [51] - "5. Operaciones Reg. Gral. - IVA deducible - Total oper. inter. bienes de inversion - Cuota [51]" (offset 506, length 17).
 [[revisions."2022".casillas]]
@@ -461,13 +488,14 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_interiores_inversion_total_cuota"
 continuidad_id = "iva-deducible-interiores-inversion-total-cuota"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:240 (sha256 0164fbea6f50) prints box [51] (29 404 17 N 5. Operaciones Reg. Gral. - IVA deducible - Total oper....); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-interiores-inversion-total-cuota"]
 
 # Box [514] - "5. Operaciones Reg. Gral. - IVA deducible - Oper. intra. bienes de inversion - Tipo 4% - Base imponible [514]" (offset 523, length 17).
 [[revisions."2022".casillas]]
@@ -477,13 +505,14 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_intragrupo_inversion_tipo_4_base"
 continuidad_id = "iva-deducible-intragrupo-inversion-tipo-4-base"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:241 (sha256 0164fbea6f50) prints box [514] (30 421 17 N 5. Operaciones Reg. Gral. - IVA deducible - Oper. intra...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-inversion-tipo-4-base"]
 
 # Box [515] - "5. Operaciones Reg. Gral. - IVA deducible - Oper. intra. bienes de inversion - Tipo 4% - Cuota [515]" (offset 540, length 17).
 [[revisions."2022".casillas]]
@@ -493,13 +522,14 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_intragrupo_inversion_tipo_4_cuota"
 continuidad_id = "iva-deducible-intragrupo-inversion-tipo-4-cuota"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:242 (sha256 0164fbea6f50) prints box [515] (31 438 17 N 5. Operaciones Reg. Gral. - IVA deducible - Oper. intra...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-inversion-tipo-4-cuota"]
 
 # Box [730] - "5. Operaciones Reg. Gral. - IVA deducible - Oper. intra. bienes de inversion - Tipo 5% - Base imponible [730]" (offset 557, length 17).
 [[revisions."2022".casillas]]
@@ -509,13 +539,14 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_intragrupo_inversion_tipo_5_base"
 continuidad_id = "iva-deducible-intragrupo-inversion-tipo-5-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md:273 (sha256 7c6554f3182d) prints box [730]; corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md (sha256 0164fbea6f50) prints no box [730] and retires none"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-inversion-tipo-5-base"]
 
 # Box [731] - "5. Operaciones Reg. Gral. - IVA deducible - Oper. intra. bienes de inversion - Tipo 5% - Cuota [731]" (offset 574, length 17).
 [[revisions."2022".casillas]]
@@ -525,10 +556,11 @@ section = ["iva","anual","deducible"]
 data_type = "money"
 semantic_role = "iva_deducible_intragrupo_inversion_tipo_5_cuota"
 continuidad_id = "iva-deducible-intragrupo-inversion-tipo-5-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md:274 (sha256 7c6554f3182d) prints box [731]; corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md (sha256 0164fbea6f50) prints no box [731] and retires none"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
-export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-inversion-tipo-5-cuota"]

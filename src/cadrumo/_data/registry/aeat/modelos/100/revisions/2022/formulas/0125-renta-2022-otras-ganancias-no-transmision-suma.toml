@@ -1,5 +1,5 @@
 [[revisions."2022".formulas]]
-id = "renta-2022-otras-ganancias-no-transmision-suma"
+id = "renta-otras-ganancias-no-transmision-suma"
 target_casilla_id = "0306"
 expression = { op = "sum", args = [
     { casilla_id = "0299" },

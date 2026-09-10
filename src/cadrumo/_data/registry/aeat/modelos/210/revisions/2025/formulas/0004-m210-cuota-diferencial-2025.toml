@@ -11,7 +11,7 @@
 # behaviour (see the completeness-preserving chain in casillas [24]/[27]/[28]).
 
 [[revisions."2025".formulas]]
-id = "m210-cuota-diferencial-2025"
+id = "m210-cuota-diferencial"
 target_casilla_id = "cuota_diferencial"
 expression = { op = "subtract", args = [
     { op = "subtract", args = [

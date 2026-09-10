@@ -238,13 +238,14 @@ length = 16
 kind = "casilla"
 casilla_id = "decl.percepciones-total"
 # Design campo 12, 145-160, subdivided into 145 SIGNO (an "N" only when
-# the total is negative, a space otherwise) and 146-160 IMPORTE. signed
-# renders exactly that leading sign byte plus the 15-position importe.
+# the total is negative, a space otherwise) and 146-160 IMPORTE. The sign
+# byte is reserved, so a non-negative total never writes a digit at 145.
 data_type = "money"
 required = true
 padding = "left_zero"
 justification = "right"
 signed = true
+sign_position = "blank_or_n"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 

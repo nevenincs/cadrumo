@@ -1,5 +1,5 @@
 [[revisions.2023-2024.formulas]]
-id = "modelo-202-2023-2024-cantidad-a-ingresar"
+id = "modelo-202-cantidad-a-ingresar"
 target_casilla_id = "34"
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]

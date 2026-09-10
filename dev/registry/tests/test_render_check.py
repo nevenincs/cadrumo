@@ -7,17 +7,19 @@ record drift stays pinned to its exact source authority.
 
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 
+from ..pipeline.generated_tree_dispositions import disposition_ledger_from_path, record_drift_dispositions
 from ..pipeline.render_check import (
+    compare_export_tree_roots,
     compare_revision_against_committed,
-    disposition_ledger_from_path,
-    record_drift_dispositions,
     revision_render_inputs,
 )
 
@@ -99,27 +101,39 @@ def test_a_republished_attestation_matches_its_current_authorities(authority: Va
     assert comparison.record_differing == ()
 
 
-def test_record_drift_is_reported_as_such(authority: ValidatedRegistryAuthority) -> None:
+def test_record_drift_is_reported_as_such(tmp_path: Path) -> None:
     """A tree whose record bytes differ is never reported as provenance-only.
 
-    Both revisions of this informativa ship a declarado record that repeats over
-    binding rows, which the current inputs no longer produce. Republishing them
-    would collapse every counterparty into one record, so a caller must be able
-    to tell this apart from a stale manifest before regenerating anything.
+    Modelo 347's declarado record repeats over binding rows, once per
+    counterparty. Republishing a tree that dropped the repeat would collapse
+    every counterparty into one record, so a caller must be able to tell that
+    apart from a stale manifest before regenerating anything.
 
-    Pinned to a live defect whose remedy is authored on the map, not here: the
-    pipeline's own refusal names the three things the inputs must carry before
-    this tree may be republished. When they do, both revisions reproduce and this
-    test fails, which is the repair landing. No other tree is in this class, so
-    the replacement must be constructed - a copy of a real revision with one
-    record's repeat removed. Do not delete it: this is the assertion that keeps
-    an unsafe republication from being reported as a stale manifest.
+    No shipped tree is in this class any more, so the case is constructed: a
+    copy of the real 347 tree whose declarado record has lost its repeat,
+    compared against the real one. Do not delete it: this is the assertion that
+    keeps an unsafe republication from being reported as a stale manifest.
     """
-    for revision in ("2011-2024", "2025-y-siguientes"):
-        comparison = compare_revision_against_committed(authority, modelo="347", revision=revision)
-        assert not comparison.reproduced
-        assert not comparison.provenance_only
-        assert comparison.record_differing
+    real = bundled_path("registry", "aeat", "modelos", "347", "revisions", "2025-y-siguientes", "export")
+    drifted = tmp_path / "export"
+    shutil.copytree(real, drifted)
+    declarado = drifted / "0002-record-m347-declarado.toml"
+    original = declarado.read_text(encoding="utf-8")
+    declarado.write_text(original.replace("repeat = 'binding_rows'\n", ""), encoding="utf-8")
+    assert declarado.read_text(encoding="utf-8") != original
+
+    comparison = compare_export_tree_roots(
+        modelo="347",
+        revision="2025-y-siguientes",
+        layout_id="generated-modelo-347-2025-y-siguientes-fichero",
+        committed_root=drifted,
+        rendered_root=real,
+    )
+
+    assert not comparison.reproduced
+    assert not comparison.provenance_only
+    assert comparison.record_differing == ("0002-record-m347-declarado.toml",)
+    assert comparison.disposition_class == "record_drift"
 
 
 def test_a_revision_without_a_generated_layout_is_refused_by_name(
@@ -264,7 +278,7 @@ def test_every_manifest_stale_tree_really_does_reproduce_its_records(
 _VALID_SHA = "0" * 64
 
 
-def _ledger_text(rows: str, *, version: int = 3) -> str:
+def _ledger_text(rows: str, *, version: int = 4) -> str:
     return f"schema_version = {version}\n{rows}"
 
 
@@ -287,8 +301,23 @@ modelo = "347"
 revision = "2011-2024"
 source_ref = "aeat-dr-347-2011"
 source_sha256 = "{_VALID_SHA}"
+remedy = "repair_inputs"
+differing_records = 1
 reason = "Shipped bytes are right and the inputs are not."
 reconsideration_condition = "Remove when the inputs reproduce the repeat."
+'''
+
+_CONTRADICTION_ROW = f'''
+[[dispositions]]
+kind = "type_column_contradiction"
+modelo = "390"
+revision = "2025"
+source_ref = "aeat-dr-390-2025"
+source_sha256 = "{_VALID_SHA}"
+derivation_code = "numeric-note-governed-amount-v1"
+field_count = 80
+reason = "The tree reproduces and its inputs contradict the type column."
+reconsideration_condition = "Remove when the schema carries a domain on a signed field."
 '''
 
 

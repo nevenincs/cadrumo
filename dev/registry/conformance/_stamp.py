@@ -102,6 +102,19 @@ the caller say which act they are performing. It fires only on a CHANGE of
 reviewer against a declared date: restating the same reviewer inherits a date
 that is still that reviewer's own, and a first review has nothing to inherit.
 
+A delta edition's review states its scope
+-----------------------------------------
+
+An edition that names a predecessor compiles with casilla rows it inherits and
+does not state, so a reviewer reading its file signs off on a delta. Its review
+covers the rows it states, judged against that predecessor, and the stamp says so:
+``reviewed_against`` names the predecessor. This writer fills that scalar from the
+COMPILED record's declared predecessor whenever the resolved stamp claims a
+review, and drops it when the stamp returns to ``pending_review``. No caller can
+supply it, so the scope is always the one the edition actually declares at the
+moment of the review, and the schema refuses a claim whose scope no longer
+matches.
+
 Why the stamp is manifest-only
 ------------------------------
 
@@ -196,7 +209,12 @@ from cadrumo.core.toml import to_str_keyed_dict
 from cadrumo.core.type_guards import is_object_mapping
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.loader import load_modelo_directory
-from cadrumo.domain.calculations.registry.schema import REVISION_GOVERNANCE_FIELDS, ModeloRevision
+from cadrumo.domain.calculations.registry.schema import (
+    REVISION_GOVERNANCE_FIELDS,
+    DeclaredPredecessor,
+    ModeloRevision,
+    NoPredecessor,
+)
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 
 from .manager import reset_conformance_cache
@@ -239,7 +257,13 @@ type ReviewStatusInput = StampableReviewStatus | RevisionReviewStatus | str
 
 #: Emit order for the governance scalars, chosen so a manifest reads
 #: authorship first and the review claim after it.
-_EMIT_ORDER: Final[tuple[str, ...]] = ("engineered_by", "review_status", "reviewed_by", "reviewed_at")
+_EMIT_ORDER: Final[tuple[str, ...]] = (
+    "engineered_by",
+    "review_status",
+    "reviewed_by",
+    "reviewed_at",
+    "reviewed_against",
+)
 
 GOVERNANCE_KEYS: Final[tuple[str, ...]] = (
     *(key for key in _EMIT_ORDER if key in REVISION_GOVERNANCE_FIELDS),
@@ -305,6 +329,7 @@ class _Stamp:
     review_status: str | None
     reviewed_by: str | None
     reviewed_at: date | None
+    reviewed_against: str | None
 
     def rendered(self) -> dict[str, str]:
         """Return the present scalars in canonical TOML form, in emit order."""
@@ -313,6 +338,7 @@ class _Stamp:
             "review_status": self.review_status,
             "reviewed_by": self.reviewed_by,
             "reviewed_at": self.reviewed_at,
+            "reviewed_against": self.reviewed_against,
         }
         return {key: _render_toml_value(values[key]) for key in GOVERNANCE_KEYS if values[key] is not None}
 
@@ -517,8 +543,9 @@ def stamp_revision(
         review_status=review_status,
         reviewed_by=reviewed_by,
         reviewed_at=reviewed_at,
+        scope=compiled.predecessor.revision_id if isinstance(compiled.predecessor, DeclaredPredecessor) else None,
     )
-    _assert_schema_accepts(revision, resolved)
+    _assert_schema_accepts(revision, resolved, predecessor=compiled.predecessor)
 
     rendered = resolved.rendered()
     dropped = declared.declared_keys() - resolved.declared_keys()
@@ -892,6 +919,7 @@ def _declared_governance(manifest: Path, text: str, revision: str) -> _Stamp:
         review_status=_declared_text(manifest, table, "review_status"),
         reviewed_by=_declared_text(manifest, table, "reviewed_by"),
         reviewed_at=_declared_date(manifest, table),
+        reviewed_against=_declared_text(manifest, table, "reviewed_against"),
     )
 
 
@@ -926,8 +954,17 @@ def _resolve_stamp(
     review_status: StampableReviewStatus | None,
     reviewed_by: str | None,
     reviewed_at: date | None,
+    scope: str | None,
 ) -> _Stamp:
-    """Merge the requested changes onto what the manifest already declares."""
+    """Merge the requested changes onto what the manifest already declares.
+
+    ``scope`` is the predecessor the COMPILED edition declares, or ``None`` when
+    it states every row. It is written as ``reviewed_against`` whenever the
+    resolved stamp claims a review and dropped otherwise. It is never read off
+    the manifest or taken from the caller: a declared scope that disagrees with
+    the compiled predecessor never loads, and a caller-supplied one would let the
+    stamp name an edition the reviewer did not read against.
+    """
     requested_author = engineered_by if engineered_by is not None else declared.engineered_by
     author = None if clear_engineered_by else requested_author
     status = review_status.value if review_status is not None else declared.review_status
@@ -948,16 +985,28 @@ def _resolve_stamp(
                 f"attached to a review the status denies. Record the review by also passing "
                 f"review_status={StampableReviewStatus.AGENT_REVIEWED.value!r}",
             )
-        return _Stamp(engineered_by=author, review_status=status, reviewed_by=None, reviewed_at=None)
+        return _Stamp(
+            engineered_by=author,
+            review_status=status,
+            reviewed_by=None,
+            reviewed_at=None,
+            reviewed_against=None,
+        )
     return _Stamp(
         engineered_by=author,
         review_status=status,
         reviewed_by=reviewed_by if reviewed_by is not None else declared.reviewed_by,
         reviewed_at=reviewed_at if reviewed_at is not None else declared.reviewed_at,
+        reviewed_against=scope,
     )
 
 
-def _assert_schema_accepts(revision: str, resolved: _Stamp) -> None:
+def _assert_schema_accepts(
+    revision: str,
+    resolved: _Stamp,
+    *,
+    predecessor: DeclaredPredecessor | NoPredecessor | None,
+) -> None:
     """Ask the real revision schema whether this governance combination is legal.
 
     A probe revision carrying the intended stamp is validated by
@@ -986,6 +1035,8 @@ def _assert_schema_accepts(revision: str, resolved: _Stamp) -> None:
             review_status=RevisionReviewStatus(resolved.review_status or RevisionReviewStatus.PENDING_REVIEW),
             reviewed_by=resolved.reviewed_by,
             reviewed_at=resolved.reviewed_at,
+            reviewed_against=resolved.reviewed_against,
+            predecessor=predecessor,
         )
     except (RegistryError, ValueError) as exc:
         raise StampError(

@@ -5,6 +5,6 @@ section = ["datos_identificativos", "hijos", "hijo"]
 data_type = "text"
 semantic_role = "irpf_descendiente_clave_discapacidad"
 input_kind = "bound"
-binding = "renta-2025-family-descendant-disability-grade"
+binding = "renta-family-descendant-disability-grade"
 legal_refs = ["orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]

@@ -1,5 +1,5 @@
 [[revisions."2024".formulas]]
-id = "renta-2024-deduccion-alquiler-vivienda-estatal-50-porciento"
+id = "renta-deduccion-alquiler-vivienda-estatal-50-porciento"
 target_casilla_id = "0562"
 expression = { op = "percent", args = [{ casilla_id = "0721" }, { literal = "50" }] }
 rounding = "money-2"

@@ -14,7 +14,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-89", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2023"]
-export_refs = ["modelo-390-page-04-casilla-deducible-rectificacion-intragrupo-base"]
 
 # Box [652] - '5. Operaciones Reg. Gral. - IVA deducible - Rectificación de deducciones intragrupo - Cuota [652]' (offset 132, length 17).
 [[revisions."2023".casillas]]
@@ -30,7 +29,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-89", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2023"]
-export_refs = ["modelo-390-page-04-casilla-deducible-rectificacion-intragrupo-cuota"]
 
 # NOT WRITTEN -- proof failed, reported rather than assumed:
 #   Pág. 2 @1237+17: 2022 row differs: '5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 0,5% - 

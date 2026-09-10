@@ -17,7 +17,6 @@ data_type = "text"
 semantic_role = "m345_persona_relacion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-345-t1-persona-relacion"]
 legal_refs = ["orden-hfp-823-2022:art-1"]
 source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 
@@ -32,7 +31,6 @@ data_type = "integer"
 semantic_role = "m345_numero_identificativo_declaracion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-345-t1-numero-identificativo"]
 legal_refs = ["orden-hfp-823-2022:art-1"]
 source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 
@@ -48,7 +46,6 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "One combined 'Declaracion complementaria / sustitutiva' box on this informativa; the role is modelo-scoped, so no sibling casilla can carry it. Modelo 190 records the same decision for its own complementaria and sustitutiva boxes."
 required = false
 input_kind = "manual"
-export_refs = ["modelo-345-t1-complementaria-sustitutiva"]
 legal_refs = ["orden-hfp-823-2022:art-1"]
 source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 
@@ -62,7 +59,6 @@ data_type = "integer"
 semantic_role = "m345_numero_identificativo_anterior"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-345-t1-numero-identificativo-anterior"]
 legal_refs = ["orden-hfp-823-2022:art-1"]
 source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 
@@ -78,7 +74,6 @@ data_type = "nif"
 semantic_role = "m345_representante_legal_nif"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-345-t2-representante-legal-nif"]
 legal_refs = ["orden-hfp-823-2022:art-3"]
 source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 
@@ -100,6 +95,5 @@ data_type = "text"
 semantic_role = "m345_datos_identificativos_empleador"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-345-t2-datos-empleador"]
 legal_refs = ["orden-hfp-528-2023:art-unico"]
 source_refs = ["aeat-dr-345-2025", "boe-modelo-345-2023-amendment-hfp-528"]

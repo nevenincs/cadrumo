@@ -1,5 +1,5 @@
 [[revisions."2025".formulas]]
-id = "renta-2025-cuota-liquida-autonomica"
+id = "renta-cuota-liquida-autonomica"
 target_casilla_id = "0571"
 expression = { op = "sum", args = [
     { casilla_id = "0546" },

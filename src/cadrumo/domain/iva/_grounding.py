@@ -52,6 +52,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ...core.hashing import content_hash_hex, sha256_file
+from .compilation_catalogues import compiling_catalogues_in_scope
 from .errors import IvaCatalogueError
 
 if TYPE_CHECKING:
@@ -62,7 +63,7 @@ if TYPE_CHECKING:
 
 
 def registry_catalogues() -> tuple[Mapping[str, LegalReference], Mapping[str, SourceReference], Path]:
-    """Return catalogues from the signed runtime authority.
+    """Return catalogues from the signed runtime authority, or from the compilation in progress.
 
     The artifact is the only runtime source of catalogue facts. Its source root
     remains the package data root solely for resolving immutable cited corpus
@@ -74,6 +75,9 @@ def registry_catalogues() -> tuple[Mapping[str, LegalReference], Mapping[str, So
     """
     # Local import keeps the public IVA facade outside the registry's binding
     # import cycle.
+    compiling = compiling_catalogues_in_scope()
+    if compiling is not None:
+        return compiling
     from ..calculations.registry.authority import bundled_authority
 
     authority = bundled_authority()

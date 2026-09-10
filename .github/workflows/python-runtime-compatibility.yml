@@ -125,10 +125,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          commit="$(git rev-parse HEAD)"
           uv run --no-sync python -m dev.packaging.release_cohort build \
-            --output var/python-runtime-cohort \
-            --expected-commit "$commit"
+            --output var/python-runtime-cohort
 
       - name: Verify the cohort and record archive digest
         shell: bash

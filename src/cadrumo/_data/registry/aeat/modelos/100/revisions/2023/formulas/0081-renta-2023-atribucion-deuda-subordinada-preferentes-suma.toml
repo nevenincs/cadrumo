@@ -1,5 +1,5 @@
 [[revisions."2023".formulas]]
-id = "renta-2023-atribucion-deuda-subordinada-preferentes-suma"
+id = "renta-atribucion-deuda-subordinada-preferentes-suma"
 target_casilla_id = "1603"
 expression = { op = "sum", args = [
     { casilla_id = "1570" },

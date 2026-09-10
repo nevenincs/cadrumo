@@ -1,5 +1,5 @@
 [[revisions."2025".bindings]]
-id = "renta-2025-profile-has-economic-activity"
+id = "renta-profile-has-economic-activity"
 source = "profile"
 selector = { profile_key = "taxpayer_type.irpf_income_categories" }
 aggregation = { op = "copy" }

@@ -1,5 +1,5 @@
 [[revisions."2025".bindings]]
-id = "renta-2025-profile-tax-id"
+id = "renta-profile-tax-id"
 source = "profile"
 selector = { profile_key = "identity.tax_id", xsd_path = "/DatosIdentificativos/Declarante/DPNIF_D", dictionary_field = "DPNIF_D" }
 aggregation = { op = "copy" }

@@ -6,6 +6,8 @@
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.descendientes-menores-3-total"
+continuidad_id = "payee-descendientes-menores-3-total"
+continuidad_origin = "seeded"
 number = "223"
 section = ["perceptor", "familia"]
 data_type = "integer"
@@ -17,6 +19,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.descendientes-menores-3-entero"
+continuidad_id = "payee-descendientes-menores-3-entero"
+continuidad_origin = "seeded"
 number = "224"
 section = ["perceptor", "familia"]
 data_type = "integer"
@@ -28,6 +32,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.descendientes-resto-total"
+continuidad_id = "payee-descendientes-resto-total"
+continuidad_origin = "seeded"
 number = "225-226"
 section = ["perceptor", "familia"]
 data_type = "integer"
@@ -39,6 +45,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.descendientes-resto-entero"
+continuidad_id = "payee-descendientes-resto-entero"
+continuidad_origin = "seeded"
 number = "227-228"
 section = ["perceptor", "familia"]
 data_type = "integer"
@@ -50,6 +58,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.descendientes-discapacidad-33-65-total"
+continuidad_id = "payee-descendientes-discapacidad-33-65-total"
+continuidad_origin = "seeded"
 number = "229-230"
 section = ["perceptor", "familia"]
 data_type = "integer"
@@ -61,6 +71,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.descendientes-discapacidad-33-65-entero"
+continuidad_id = "payee-descendientes-discapacidad-33-65-entero"
+continuidad_origin = "seeded"
 number = "231-232"
 section = ["perceptor", "familia"]
 data_type = "integer"
@@ -72,6 +84,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.descendientes-discapacidad-movilidad-total"
+continuidad_id = "payee-descendientes-discapacidad-movilidad-total"
+continuidad_origin = "seeded"
 number = "233-234"
 section = ["perceptor", "familia"]
 data_type = "integer"
@@ -83,6 +97,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.descendientes-discapacidad-movilidad-entero"
+continuidad_id = "payee-descendientes-discapacidad-movilidad-entero"
+continuidad_origin = "seeded"
 number = "235-236"
 section = ["perceptor", "familia"]
 data_type = "integer"
@@ -94,6 +110,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.descendientes-discapacidad-65-total"
+continuidad_id = "payee-descendientes-discapacidad-65-total"
+continuidad_origin = "seeded"
 number = "237-238"
 section = ["perceptor", "familia"]
 data_type = "integer"
@@ -105,6 +123,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.descendientes-discapacidad-65-entero"
+continuidad_id = "payee-descendientes-discapacidad-65-entero"
+continuidad_origin = "seeded"
 number = "239-240"
 section = ["perceptor", "familia"]
 data_type = "integer"
@@ -116,6 +136,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.ascendientes-menores-75-total"
+continuidad_id = "payee-ascendientes-menores-75-total"
+continuidad_origin = "seeded"
 number = "241"
 section = ["perceptor", "familia"]
 data_type = "integer"
@@ -127,6 +149,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.ascendientes-menores-75-entero"
+continuidad_id = "payee-ascendientes-menores-75-entero"
+continuidad_origin = "seeded"
 number = "242"
 section = ["perceptor", "familia"]
 data_type = "integer"
@@ -138,6 +162,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.ascendientes-75-mas-total"
+continuidad_id = "payee-ascendientes-75-mas-total"
+continuidad_origin = "seeded"
 number = "243"
 section = ["perceptor", "familia"]
 data_type = "integer"
@@ -149,6 +175,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.ascendientes-75-mas-entero"
+continuidad_id = "payee-ascendientes-75-mas-entero"
+continuidad_origin = "seeded"
 number = "244"
 section = ["perceptor", "familia"]
 data_type = "integer"
@@ -160,6 +188,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.ascendientes-discapacidad-33-65-total"
+continuidad_id = "payee-ascendientes-discapacidad-33-65-total"
+continuidad_origin = "seeded"
 number = "245"
 section = ["perceptor", "familia"]
 data_type = "integer"
@@ -171,6 +201,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.ascendientes-discapacidad-33-65-entero"
+continuidad_id = "payee-ascendientes-discapacidad-33-65-entero"
+continuidad_origin = "seeded"
 number = "246"
 section = ["perceptor", "familia"]
 data_type = "integer"
@@ -182,6 +214,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.ascendientes-discapacidad-movilidad-total"
+continuidad_id = "payee-ascendientes-discapacidad-movilidad-total"
+continuidad_origin = "seeded"
 number = "247"
 section = ["perceptor", "familia"]
 data_type = "integer"
@@ -193,6 +227,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.ascendientes-discapacidad-movilidad-entero"
+continuidad_id = "payee-ascendientes-discapacidad-movilidad-entero"
+continuidad_origin = "seeded"
 number = "248"
 section = ["perceptor", "familia"]
 data_type = "integer"
@@ -204,6 +240,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.ascendientes-discapacidad-65-total"
+continuidad_id = "payee-ascendientes-discapacidad-65-total"
+continuidad_origin = "seeded"
 number = "249"
 section = ["perceptor", "familia"]
 data_type = "integer"
@@ -215,6 +253,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.ascendientes-discapacidad-65-entero"
+continuidad_id = "payee-ascendientes-discapacidad-65-entero"
+continuidad_origin = "seeded"
 number = "250"
 section = ["perceptor", "familia"]
 data_type = "integer"
@@ -226,6 +266,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.computo-hijo-1"
+continuidad_id = "payee-computo-hijo-1"
+continuidad_origin = "seeded"
 number = "251"
 section = ["perceptor", "familia"]
 data_type = "integer"
@@ -237,6 +279,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.computo-hijo-2"
+continuidad_id = "payee-computo-hijo-2"
+continuidad_origin = "seeded"
 number = "252"
 section = ["perceptor", "familia"]
 data_type = "integer"
@@ -248,6 +292,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.computo-hijo-3"
+continuidad_id = "payee-computo-hijo-3"
+continuidad_origin = "seeded"
 number = "253"
 section = ["perceptor", "familia"]
 data_type = "integer"
@@ -259,6 +305,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.prestamos-vivienda-clave"
+continuidad_id = "payee-prestamos-vivienda-clave"
+continuidad_origin = "seeded"
 number = "254"
 section = ["perceptor", "familia"]
 data_type = "integer"

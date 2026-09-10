@@ -9,7 +9,6 @@ input_kind = "bound"
 binding = "modelo-296-prev-216-base-retenciones"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["boe-modelo-296-form-text", "boe-modelo-296-form-layout"]
-export_refs = ["m296-2024.declarante.f013"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "03"
@@ -22,7 +21,6 @@ input_kind = "bound"
 binding = "modelo-296-prev-216-retenciones-total"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["boe-modelo-296-form-text", "boe-modelo-296-form-layout"]
-export_refs = ["m296-2024.declarante.f014", "m296-2024.declarante.f015"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "04"
@@ -34,4 +32,3 @@ required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["boe-modelo-296-form-text", "boe-modelo-296-form-layout"]
-export_refs = ["m296-2024.declarante.f016", "m296-2024.declarante.f017"]

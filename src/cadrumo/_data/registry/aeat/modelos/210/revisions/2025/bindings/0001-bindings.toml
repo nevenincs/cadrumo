@@ -14,7 +14,7 @@
 # this resolution path.
 
 [[revisions."2025".bindings]]
-id = "m210-2025-profile-country-of-fiscal-residence"
+id = "m210-profile-country-of-fiscal-residence"
 source = "profile"
 selector = { profile_model = "taxpayer", field = "country_of_fiscal_residence" }
 aggregation = { op = "copy" }
@@ -36,7 +36,7 @@ required_text = ["no residentes", "país de residencia"]
 # fact.  Rate provisions (including art. 25.1) are deliberately not used as the
 # source-scope authority.
 [[revisions."2025".bindings]]
-id = "m210-2025-ledger-irnr-rendimientos-integros"
+id = "m210-ledger-irnr-rendimientos-integros"
 source = "ledger_irnr_income_aggregation"
 selector = { modelo = "210", target_casilla_id = "rendimientos_integros", fact = "gross_income_sum" }
 aggregation = { op = "sum" }

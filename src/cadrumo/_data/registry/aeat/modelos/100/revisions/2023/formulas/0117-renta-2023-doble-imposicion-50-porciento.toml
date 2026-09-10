@@ -1,5 +1,5 @@
 [[revisions."2023".formulas]]
-id = "renta-2023-doble-imposicion-50-porciento"
+id = "renta-doble-imposicion-50-porciento"
 target_casilla_id = "0672"
 expression = { op = "percent", args = [
     { op = "sum", args = [

@@ -329,9 +329,9 @@ source_refs = ["aeat-dr-280-2022", "boe-modelo-280-base-order", "boe-modelo-280-
 # Posiciones 176-186. RENDIMIENTOS NEGATIVOS IMPUTABLES. The one amount on this
 # record carrying a sign byte: "176. SIGNO: Campo alfabetico: se consignara
 # siempre una 'N'" then "177-186: RENDIMIENTO NEGATIVO", itself 177-184 entera
-# and 185-186 decimal. The signed codec emits exactly that shape -- 'N' for a
-# negative magnitude, a space otherwise, followed by the zero-filled digits,
-# which is also the design's empty case (alfabetico a blancos, numerico a ceros).
+# and 185-186 decimal. The 'N' fixes the direction, so the value is the
+# magnitude of the negative returns and is unsigned; "En otro caso el campo se
+# rellenara a ceros" is the empty case, where the whole slot is zeros.
 [[revisions."2025".export_layouts.records.fields]]
 id = "modelo-280-t2-rendimientos-negativos-imputables"
 offset = 176
@@ -342,7 +342,8 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = true
+signed = false
+sign_position = "n_unless_zero"
 legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
 source_refs = ["aeat-dr-280-2022", "boe-modelo-280-base-order", "boe-modelo-280-2016-amendment-hfp-1822"]
 

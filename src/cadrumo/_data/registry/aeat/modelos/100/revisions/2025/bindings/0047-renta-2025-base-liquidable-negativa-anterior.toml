@@ -8,7 +8,7 @@
 # Art. 48's 25%-limited integration of negative base imponible general is
 # a distinct mechanism and does not ground this base-liquidable carry.
 [[revisions."2025".bindings]]
-id = "renta-2025-base-liquidable-negativa-general-anterior"
+id = "renta-base-liquidable-negativa-general-anterior"
 source = "previous_filing"
 selector = { source_modelo = "100", source_casilla_id = "1391", filing_year_delta = -1, period = "0A" }
 aggregation = { op = "copy" }

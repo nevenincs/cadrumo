@@ -1,5 +1,5 @@
 [[revisions."2024".formulas]]
-id = "renta-2024-inmuebles-ganancia-no-exenta-reducida"
+id = "renta-inmuebles-ganancia-no-exenta-reducida"
 target_casilla_id = "1836"
 expression = { op = "sum", args = [
     { casilla_id = "1826" },

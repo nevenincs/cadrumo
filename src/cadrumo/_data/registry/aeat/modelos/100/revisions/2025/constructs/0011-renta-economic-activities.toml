@@ -29,15 +29,15 @@ source_refs = [
     "aeat-dr-184-2025",
 ]
 bindings = [
-    "renta-2025-modelo-100-estimacion-directa-es-normal",
-    "renta-2025-ledger-income-0171",
-    "renta-2025-ledger-expense-0186-deductible",
-    "renta-2025-ledger-expense-0192-deductible",
-    "renta-2025-ledger-expense-0199-deductible",
-    "renta-2025-ledger-expense-0203-deductible",
-    "renta-2025-modelo-130-pagos-fraccionados",
-    "renta-2025-modelo-131-pagos-fraccionados",
-    "renta-2025-modelo-184-atribucion-actividades-economicas",
+    "renta-modelo-100-estimacion-directa-es-normal",
+    "renta-ledger-income-0171",
+    "renta-ledger-expense-0186-deductible",
+    "renta-ledger-expense-0192-deductible",
+    "renta-ledger-expense-0199-deductible",
+    "renta-ledger-expense-0203-deductible",
+    "renta-modelo-130-pagos-fraccionados",
+    "renta-modelo-131-pagos-fraccionados",
+    "renta-modelo-184-atribucion-actividades-economicas",
 ]
 parameters = [
     "renta-2025-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
@@ -105,17 +105,17 @@ casilla_ids = [
     "0604",
 ]
 formulas = [
-    "renta-2025-estimacion-directa-ingresos-computables",
-    "renta-2025-estimacion-directa-gastos-previos",
-    "renta-2025-estimacion-directa-gastos-normal",
-    "renta-2025-estimacion-directa-diferencia-previa",
-    "renta-2025-estimacion-directa-gastos-dificil-justificacion",
-    "renta-2025-estimacion-directa-gastos-simplificada",
-    "renta-2025-estimacion-directa-rendimiento-neto",
-    "renta-2025-estimacion-directa-rendimiento-neto-reducido",
-    "renta-2025-estimacion-directa-total-rendimiento-neto-reducido",
-    "renta-2025-estimacion-directa-rendimiento-neto-reducido-total",
-    "renta-2025-pagos-fraccionados-ingresados",
+    "renta-estimacion-directa-ingresos-computables",
+    "renta-estimacion-directa-gastos-previos",
+    "renta-estimacion-directa-gastos-normal",
+    "renta-estimacion-directa-diferencia-previa",
+    "renta-estimacion-directa-gastos-dificil-justificacion",
+    "renta-estimacion-directa-gastos-simplificada",
+    "renta-estimacion-directa-rendimiento-neto",
+    "renta-estimacion-directa-rendimiento-neto-reducido",
+    "renta-estimacion-directa-total-rendimiento-neto-reducido",
+    "renta-estimacion-directa-rendimiento-neto-reducido-total",
+    "renta-pagos-fraccionados-ingresados",
 ]
 relations = [
     "renta-2025-rel-130-pagos-fraccionados",

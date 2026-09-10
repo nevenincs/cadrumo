@@ -1,5 +1,5 @@
 [[revisions."2021".formulas]]
-id = "renta-2021-ganancias-ejercicios-anteriores-suma"
+id = "renta-ganancias-ejercicios-anteriores-suma"
 target_casilla_id = "0393"
 expression = { op = "sum", args = [
     { casilla_id = "0392" },

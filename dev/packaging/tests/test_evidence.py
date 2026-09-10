@@ -131,7 +131,7 @@ def _synthetic_cohort(tmp_path: Path) -> LoadedReleaseCohort:
     """Create a valid in-memory cohort binding without rebuilding distributions."""
     root = tmp_path / "synthetic-cohort"
     root.mkdir()
-    source = SourceIdentity(commit="c" * 40, tag="v0.2.1")
+    source = SourceIdentity(source_digest="c" * 64, tag="v0.2.1")
     artifacts = tuple(
         ArtifactRecord(
             name=name,

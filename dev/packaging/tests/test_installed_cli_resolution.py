@@ -25,14 +25,15 @@ from pathlib import Path
 import pytest
 
 from ..._paths import REPO_ROOT
+from ...source_tree import content_digest, repository_files
 from ..hashing import sha256_path
 from ..installed_mcp_oracle import run_installed_mcp_oracle
 from ..installed_tax_oracle import EXPECTED_LEGAL_REF
 from ..lane_verification_core import (
     build_companion_wheels,
+    build_root_snapshot,
     build_wheel,
     create_pip_venv,
-    head_extract,
     run_checked,
     venv_bin_dir,
     venv_python_path,
@@ -57,7 +58,7 @@ def installed_agent_environment(
     assert uv is not None, "uv is required to build the real installed cohort"
 
     work_dir = tmp_path_factory.mktemp("installed-mcp-cli-resolution")
-    build_root = head_extract(_REPO_ROOT, work_dir)
+    build_root = build_root_snapshot(_REPO_ROOT, work_dir)
     root_wheel = build_wheel(_REPO_ROOT, work_dir, uv, build_root=build_root)
     data_wheels = build_companion_wheels(work_dir, uv, build_root=build_root)
     venv = create_pip_venv(work_dir, f"{sys.version_info.major}.{sys.version_info.minor}")
@@ -80,32 +81,32 @@ def installed_agent_environment(
     cli = _installed_script(venv, "aeat")
     assert mcp_server.is_file()
     assert cli.is_file()
-    source_commit = run_checked(["git", "rev-parse", "HEAD"], cwd=_REPO_ROOT).stdout.strip()
+    source_digest = content_digest(_REPO_ROOT, repository_files(_REPO_ROOT))
     root_sha256 = sha256_path(root_wheel)
     harness_sha256 = root_sha256
     capture_manifest = work_dir / "capture-cohort.json"
     capture_manifest.write_text(
         json.dumps(
             {
-                "source_commit": source_commit,
+                "source_digest": source_digest,
                 "cadrumo-wheel": root_sha256,
             },
             sort_keys=True,
         ),
         encoding="utf-8",
     )
-    return work_dir, mcp_server, source_commit, sha256_path(capture_manifest), root_sha256, harness_sha256
+    return work_dir, mcp_server, source_digest, sha256_path(capture_manifest), root_sha256, harness_sha256
 
 
 def test_installed_mcp_executes_sibling_cli_without_checkout_or_path(
     installed_agent_environment: tuple[Path, Path, str, str, str, str],
 ) -> None:
-    work_dir, mcp_server, source_commit, manifest_sha256, root_sha256, harness_sha256 = installed_agent_environment
+    work_dir, mcp_server, source_digest, manifest_sha256, root_sha256, harness_sha256 = installed_agent_environment
     evidence = run_installed_mcp_oracle(
         mcp_server,
         storage_root=work_dir / "product-state",
         work_dir=work_dir / "outside-checkout",
-        cohort_source_commit=source_commit,
+        cohort_source_digest=source_digest,
         cohort_manifest_sha256=manifest_sha256,
         cohort_root_wheel_sha256=root_sha256,
         cohort_harness_wheel_sha256=harness_sha256,

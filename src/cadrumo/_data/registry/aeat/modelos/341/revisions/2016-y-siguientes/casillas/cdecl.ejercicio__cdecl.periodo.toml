@@ -4,6 +4,8 @@
 
 [[revisions."2016-y-siguientes".casillas]]
 id = "decl.ejercicio"
+continuidad_id = "filing-year"
+continuidad_origin = "seeded"
 number = "ejercicio"
 section = ["declarante"]
 data_type = "year"
@@ -15,6 +17,8 @@ source_refs = ["enrolled-modelo-341-procedure"]
 
 [[revisions."2016-y-siguientes".casillas]]
 id = "decl.periodo"
+continuidad_id = "tipo-declaracion"
+continuidad_origin = "seeded"
 number = "periodo"
 section = ["declarante"]
 data_type = "text"

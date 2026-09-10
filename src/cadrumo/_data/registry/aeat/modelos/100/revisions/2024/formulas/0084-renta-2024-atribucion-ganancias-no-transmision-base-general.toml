@@ -1,5 +1,5 @@
 [[revisions."2024".formulas]]
-id = "renta-2024-atribucion-ganancias-no-transmision-base-general"
+id = "renta-atribucion-ganancias-no-transmision-base-general"
 target_casilla_id = "1606"
 expression = { op = "sum", args = [
     { casilla_id = "1584" },

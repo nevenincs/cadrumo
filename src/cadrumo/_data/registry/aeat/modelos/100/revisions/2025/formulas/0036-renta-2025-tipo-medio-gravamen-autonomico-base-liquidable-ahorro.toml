@@ -1,5 +1,5 @@
 [[revisions."2025".formulas]]
-id = "renta-2025-tipo-medio-gravamen-autonomico-base-liquidable-ahorro"
+id = "renta-tipo-medio-gravamen-autonomico-base-liquidable-ahorro"
 target_casilla_id = "0543"
 expression = { op = "if_then_else", args = [
     { op = "greater_than", args = [{ casilla_id = "0510" }, { literal = "0" }] },

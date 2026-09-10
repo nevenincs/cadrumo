@@ -1,5 +1,5 @@
 [[revisions."2023".formulas]]
-id = "renta-2023-otros-elementos-afectos-ganancias-suma"
+id = "renta-otros-elementos-afectos-ganancias-suma"
 target_casilla_id = "0387"
 expression = { op = "sum", args = [
     { casilla_id = "1654" },

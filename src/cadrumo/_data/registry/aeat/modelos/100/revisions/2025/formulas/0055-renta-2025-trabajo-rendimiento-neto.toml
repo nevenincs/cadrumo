@@ -1,5 +1,5 @@
 [[revisions."2025".formulas]]
-id = "renta-2025-trabajo-rendimiento-neto"
+id = "renta-trabajo-rendimiento-neto"
 target_casilla_id = "0022"
 expression = { op = "max", args = [
     { literal = "0" },

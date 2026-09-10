@@ -1,6 +1,6 @@
 [[revisions."2024".casillas]]
 id = "decl.total-perceptores"
-export_refs = ["modelo-193-decl-total-perceptores"]
+continuidad_id = "total-perceptores-count"
 number = "136-144"
 section = ["declarante", "resumen"]
 data_type = "integer"
@@ -13,7 +13,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "decl.base-total"
-export_refs = ["modelo-193-decl-base-total"]
+continuidad_id = "base-retenciones-ingresos-a-cuenta"
 number = "145-159"
 section = ["declarante", "resumen"]
 data_type = "money"
@@ -27,7 +27,7 @@ source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".casillas]]
 id = "decl.retenciones-total"
-export_refs = ["modelo-193-decl-retenciones-total"]
+continuidad_id = "retenciones-ingresos-a-cuenta"
 number = "160-174"
 section = ["declarante", "resumen"]
 data_type = "money"

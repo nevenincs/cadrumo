@@ -1,5 +1,5 @@
 [[revisions."2024".formulas]]
-id = "renta-2024-cuota-base-liquidable-general-autonomica"
+id = "renta-cuota-base-liquidable-general-autonomica"
 target_casilla_id = "0533"
 # Floored at 0 per LIRPF art. 75 (mirror of art. 64): "sin que pueda resultar
 # negativa como consecuencia de tal minoración". Harmless for the ordinary

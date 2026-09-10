@@ -19,7 +19,7 @@
 # its own end-to-end proof.
 
 [[revisions."2024".bindings]]
-id = "renta-2024-profile-incremento-guarderia"
+id = "renta-profile-incremento-guarderia"
 source = "profile"
 selector = { profile_key = "renta_family.incremento_guarderia_2024" }
 aggregation = { op = "copy" }

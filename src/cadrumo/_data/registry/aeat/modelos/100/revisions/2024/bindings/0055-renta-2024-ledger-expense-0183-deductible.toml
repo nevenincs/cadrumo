@@ -3,7 +3,7 @@
 # fact to its first-slice casilla via FIRST_SLICE_EXPENSE_CASILLAS over the full
 # ejercicio (period 0A). Parity with renta-2025-ledger-expense-0183-deductible.
 [[revisions."2024".bindings]]
-id = "renta-2024-ledger-expense-0183-deductible"
+id = "renta-ledger-expense-0183-deductible"
 source = "ledger_renta_gastos_estimacion_directa_aggregation"
 selector = { modelo = "100", period = "0A", target_casilla_id = "0183", fact = "deductible_amount_sum" }
 aggregation = { op = "sum" }

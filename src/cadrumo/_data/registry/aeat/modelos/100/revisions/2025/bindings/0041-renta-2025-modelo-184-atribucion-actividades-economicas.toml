@@ -1,5 +1,5 @@
 [[revisions."2025".bindings]]
-id = "renta-2025-modelo-184-atribucion-actividades-economicas"
+id = "renta-modelo-184-atribucion-actividades-economicas"
 source = "relation_prefill"
 selector = { source_modelo = "184", source_casilla_id = "tipo2.renta-atribuible-importe" }
 aggregation = { op = "sum" }

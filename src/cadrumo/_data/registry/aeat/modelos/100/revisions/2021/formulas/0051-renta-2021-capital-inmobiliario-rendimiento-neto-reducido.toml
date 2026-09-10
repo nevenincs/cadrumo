@@ -1,5 +1,5 @@
 [[revisions."2021".formulas]]
-id = "renta-2021-capital-inmobiliario-rendimiento-neto-reducido"
+id = "renta-capital-inmobiliario-rendimiento-neto-reducido"
 target_casilla_id = "0154"
 expression = { op = "max", args = [
         { op = "sum", args = [

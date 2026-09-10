@@ -1,5 +1,5 @@
 [[revisions."2021".formulas]]
-id = "renta-2021-ganancias-patrimoniales-base-general-saldo-negativo"
+id = "renta-ganancias-patrimoniales-base-general-saldo-negativo"
 target_casilla_id = "0421"
 expression = { op = "max", args = [
     { op = "subtract", args = [

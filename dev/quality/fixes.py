@@ -17,7 +17,7 @@ be read differently.
 `fix` MUTATES, which is why it is not a gate: a repair pass that exited
 non-zero because it repaired something would make every clean local loop red.
 Under ``VAULTSPEC_FIX_STRICT`` - set by CI, where a repairable defect is an
-uncommitted repair - a pass that changed tracked files exits
+uncommitted repair - a pass that changed the working tree's content exits
 :data:`~dev.exit_codes.DRIFT` instead.
 """
 
@@ -28,7 +28,9 @@ import subprocess
 import sys
 from typing import Final
 
+from .._paths import REPO_ROOT
 from ..exit_codes import DRIFT, FIX_STRICT_ENV, OK
+from ..source_tree import content_digest, repository_files
 
 #: Each fixer's command, in the order a repair pass wants them: lint fixes can
 #: rewrite lines the formatter then re-wraps, so formatting comes last.
@@ -38,15 +40,9 @@ FIXERS: Final[tuple[tuple[str, tuple[str, ...]], ...]] = (
 )
 
 
-def _tracked_state() -> str:
-    """Return a fingerprint of the working tree's tracked modifications."""
-    result = subprocess.run(
-        ("git", "status", "--porcelain"),
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    return result.stdout
+def _content_state() -> str:
+    """Return a fingerprint of the working tree's enumerated content."""
+    return content_digest(REPO_ROOT, repository_files(REPO_ROOT))
 
 
 def main() -> int:
@@ -58,7 +54,7 @@ def main() -> int:
         the pass had to change something.
     """
     strict = bool(os.environ.get(FIX_STRICT_ENV))
-    before = _tracked_state() if strict else ""
+    before = _content_state() if strict else ""
 
     worst = OK
     for name, command in FIXERS:
@@ -68,7 +64,7 @@ def main() -> int:
             print(f"FAIL  {name} (exit {status})", file=sys.stderr, flush=True)
             worst = worst or status
 
-    if worst == OK and strict and _tracked_state() != before:
+    if worst == OK and strict and _content_state() != before:
         print(
             "fix-all repaired files that were committed unrepaired; commit the result.",
             file=sys.stderr,
