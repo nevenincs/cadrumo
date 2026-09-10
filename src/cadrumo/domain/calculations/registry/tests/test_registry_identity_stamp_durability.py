@@ -24,6 +24,7 @@ from collections.abc import Callable, Iterator
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
 
 from ..... import __version__
 from .....core.atomic_write import atomic_write_best_effort_text
@@ -38,7 +39,6 @@ from ..identity import (
     resolve_registry_identity,
 )
 from ..loader_cache import _bundled_registry_root, _bundled_root_match
-from ..loader_fingerprints import clear_fingerprint_cache
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

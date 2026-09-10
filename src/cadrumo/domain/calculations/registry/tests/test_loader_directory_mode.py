@@ -23,12 +23,12 @@ from dev.registry.compiler.loader import (
     load_registry_tree,
     load_shared_catalogues,
 )
+from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
 
 from .....core.directory_scan import scan_directory
 from .._loader_internals import load_modelo_file
 from ..errors import RegistryFailureCondition, RegistryLoadError, RegistryValidationError
 from ..loader_cache import ModeloSource, discover_modelo_sources
-from ..loader_fingerprints import clear_fingerprint_cache
 from ._loader_directory_mode_support import (
     _MAX_SINGLE_FILE_MODELO_LINES,
     _MAX_TOML_FRAGMENT_LINES,

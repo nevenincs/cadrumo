@@ -33,8 +33,9 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 @pytest.fixture(autouse=True)
 def _fresh_registry_cache(tmp_path, monkeypatch: pytest.MonkeyPatch):
     """Run the real bundled registry against a fresh canonical compiled cache."""
+    from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
+
     from cadrumo.core.config import reset_settings_cache
-    from cadrumo.domain.calculations.registry.loader_fingerprints import clear_fingerprint_cache
 
     monkeypatch.setenv("CADRUMO_REGISTRY_DISK_CACHE_DIR", str(tmp_path / "registry-cache"))
     reset_settings_cache()

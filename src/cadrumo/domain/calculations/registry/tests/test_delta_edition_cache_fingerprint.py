@@ -28,6 +28,7 @@ from pathlib import Path
 
 import pytest
 from dev.registry.compiler.loader import _load_registry_tree_cached, load_modelo_directory, load_registry_tree
+from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
 
 from .....core.hashing import blake2b_hex
 from .._loader_internals import (
@@ -35,7 +36,6 @@ from .._loader_internals import (
     _collect_registry_tree_fingerprints_uncached,
     _load_modelo_directory_cached,
 )
-from ..loader_fingerprints import clear_fingerprint_cache
 from ..schema import ModeloDefinition
 from ._loader_directory_mode_support import write_fragmented_revision
 

@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 from dev.registry.compiler.authority import compile_validated_authority
+from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
@@ -19,7 +20,6 @@ from ..corpus_provenance import NormativeCorpusProvenance
 from ..errors import RegistrySnapshotError, RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
 from ..loader_cache import registry_disk_cache_dir
-from ..loader_fingerprints import clear_fingerprint_cache
 from ._loader_directory_mode_support import write_extracted_corpus_sidecar, write_fragmented_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

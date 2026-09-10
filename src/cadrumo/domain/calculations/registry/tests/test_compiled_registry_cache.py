@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 from dev.registry.compiler.loader import _load_registry_tree_cached, load_registry_tree
+from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
 
 from .....core.config import override_settings
 from .....core.resources.bundled_data import bundled_path
@@ -25,7 +26,6 @@ from .._compiled_cache import (
     store_compiled_registry_cache,
 )
 from .._loader_internals import _collect_registry_tree_fingerprints
-from ..loader_fingerprints import clear_fingerprint_cache
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
