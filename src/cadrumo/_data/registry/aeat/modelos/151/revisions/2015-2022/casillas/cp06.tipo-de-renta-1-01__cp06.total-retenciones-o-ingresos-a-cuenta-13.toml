@@ -25,7 +25,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f006"]
 
 # AEAT campo: Número Justificante del modelo 211
 [[revisions."2015-2022".casillas]]
@@ -40,7 +39,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f007"]
 
 # AEAT campo: Valor de transmisión (Adquisición) [2]
 [[revisions."2015-2022".casillas]]
@@ -55,7 +53,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f008"]
 
 # AEAT campo: Valor de adquisición (Adquisición) [3]
 [[revisions."2015-2022".casillas]]
@@ -70,7 +67,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f009"]
 
 # AEAT campo: Diferencia (Adquisición) [4]
 [[revisions."2015-2022".casillas]]
@@ -85,7 +81,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f010"]
 
 # AEAT campo: Ganancia o pérdida (Adquisición) [5]
 [[revisions."2015-2022".casillas]]
@@ -100,7 +95,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f011"]
 
 # AEAT campo: Valor de transmisión (Mejora o 2ª adquisición) [6]
 [[revisions."2015-2022".casillas]]
@@ -115,7 +109,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f012"]
 
 # AEAT campo: Valor de Mejora o 2ª adquisición (Mejora o 2ª adquisición) [7]
 [[revisions."2015-2022".casillas]]
@@ -130,7 +123,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f013"]
 
 # AEAT campo: Diferencia (Mejora o 2ª adquisición) [8]
 [[revisions."2015-2022".casillas]]
@@ -145,7 +137,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f014"]
 
 # AEAT campo: Ganancia o pérdida (Mejora o 2ª adquisición) [9]
 [[revisions."2015-2022".casillas]]
@@ -160,7 +151,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f015"]
 
 # AEAT campo: Ganancia Patrimonial total obtenida [10]
 [[revisions."2015-2022".casillas]]
@@ -175,7 +165,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f016"]
 
 # AEAT campo: Retención o ingreso a cuenta [11]
 [[revisions."2015-2022".casillas]]
@@ -190,7 +179,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f017"]
 
 # AEAT campo: Fecha de adquisición
 [[revisions."2015-2022".casillas]]
@@ -205,7 +193,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f018"]
 
 # AEAT campo: Fecha de mejora o 2ª adquisición
 [[revisions."2015-2022".casillas]]
@@ -220,7 +207,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f019"]
 
 # AEAT campo: Fecha de transmisión
 [[revisions."2015-2022".casillas]]
@@ -235,7 +221,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f020"]
 
 # AEAT campo: Cuota de participación
 [[revisions."2015-2022".casillas]]
@@ -250,7 +235,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f021"]
 
 # AEAT campo: Adquiriente. NIF
 [[revisions."2015-2022".casillas]]
@@ -265,7 +249,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f022"]
 
 # AEAT campo: Adquiriente. F/J
 [[revisions."2015-2022".casillas]]
@@ -280,7 +263,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f023"]
 
 # AEAT campo: Adquiriente. Apellidos o Razón social
 [[revisions."2015-2022".casillas]]
@@ -294,7 +276,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f024"]
 
 # AEAT campo: Adquiriente. Nombre
 [[revisions."2015-2022".casillas]]
@@ -308,7 +289,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f025"]
 
 # AEAT campo: 44 - Tipo de vía.
 [[revisions."2015-2022".casillas]]
@@ -323,7 +303,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f026"]
 
 # AEAT campo: 45 - Nombre de la vía pública.
 [[revisions."2015-2022".casillas]]
@@ -338,7 +317,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f027"]
 
 # AEAT campo: 46 - Tipo de numeración.
 [[revisions."2015-2022".casillas]]
@@ -353,7 +331,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f028"]
 
 # AEAT campo: 47 - Número de casa.
 [[revisions."2015-2022".casillas]]
@@ -368,7 +345,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f029"]
 
 # AEAT campo: 48 - Calificador de número.
 [[revisions."2015-2022".casillas]]
@@ -383,7 +359,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f030"]
 
 # AEAT campo: 49 - Bloque.
 [[revisions."2015-2022".casillas]]
@@ -398,7 +373,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f031"]
 
 # AEAT campo: 50 - Portal.
 [[revisions."2015-2022".casillas]]
@@ -413,7 +387,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f032"]
 
 # AEAT campo: 51 - Escalera.
 [[revisions."2015-2022".casillas]]
@@ -428,7 +401,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f033"]
 
 # AEAT campo: 52 - Planta.
 [[revisions."2015-2022".casillas]]
@@ -443,7 +415,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f034"]
 
 # AEAT campo: 53 - Puerta.
 [[revisions."2015-2022".casillas]]
@@ -458,7 +429,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f035"]
 
 # AEAT campo: 54 - Datos complementarios de domicilio.
 [[revisions."2015-2022".casillas]]
@@ -473,7 +443,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f036"]
 
 # AEAT campo: 55 - Localidad/Población
 [[revisions."2015-2022".casillas]]
@@ -488,7 +457,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f037"]
 
 # AEAT campo: 56 - Código postal.
 [[revisions."2015-2022".casillas]]
@@ -503,7 +471,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f038"]
 
 # AEAT campo: 58 - Provincia.
 [[revisions."2015-2022".casillas]]
@@ -518,7 +485,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f039"]
 
 # AEAT campo: 57 - Municipio
 [[revisions."2015-2022".casillas]]
@@ -533,7 +499,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f040"]
 
 # AEAT campo: 73 - Referencia Catastral
 [[revisions."2015-2022".casillas]]
@@ -548,7 +513,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f041"]
 
 # AEAT campo: Documento publico o privado
 [[revisions."2015-2022".casillas]]
@@ -563,7 +527,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f042"]
 
 # AEAT campo: Notario o fedetario
 [[revisions."2015-2022".casillas]]
@@ -578,7 +541,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f043"]
 
 # AEAT campo: Número de protocolo
 [[revisions."2015-2022".casillas]]
@@ -593,7 +555,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f044"]
 
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
@@ -608,7 +569,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f045"]
 
 # AEAT campo: Número Justificante del modelo 211
 [[revisions."2015-2022".casillas]]
@@ -623,7 +583,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f046"]
 
 # AEAT campo: Valor de transmisión (Adquisición) [2]
 [[revisions."2015-2022".casillas]]
@@ -638,7 +597,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f047"]
 
 # AEAT campo: Valor de adquisición (Adquisición) [3]
 [[revisions."2015-2022".casillas]]
@@ -653,7 +611,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f048"]
 
 # AEAT campo: Diferencia (Adquisición) [4]
 [[revisions."2015-2022".casillas]]
@@ -668,7 +625,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f049"]
 
 # AEAT campo: Ganancia o pérdida (Adquisición) [5]
 [[revisions."2015-2022".casillas]]
@@ -683,7 +639,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f050"]
 
 # AEAT campo: Valor de transmisión (Mejora o 2ª adquisición) [6]
 [[revisions."2015-2022".casillas]]
@@ -698,7 +653,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f051"]
 
 # AEAT campo: Valor de Mejora o 2ª adquisición (Mejora o 2ª adquisición) [7]
 [[revisions."2015-2022".casillas]]
@@ -713,7 +667,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f052"]
 
 # AEAT campo: Diferencia (Mejora o 2ª adquisición) [8]
 [[revisions."2015-2022".casillas]]
@@ -728,7 +681,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f053"]
 
 # AEAT campo: Ganancia o pérdida (Mejora o 2ª adquisición) [9]
 [[revisions."2015-2022".casillas]]
@@ -743,7 +695,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f054"]
 
 # AEAT campo: Ganancia Patrimonial total obtenida [10]
 [[revisions."2015-2022".casillas]]
@@ -758,7 +709,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f055"]
 
 # AEAT campo: Retención o ingreso a cuenta [11]
 [[revisions."2015-2022".casillas]]
@@ -773,7 +723,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f056"]
 
 # AEAT campo: Fecha de adquisición
 [[revisions."2015-2022".casillas]]
@@ -788,7 +737,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f057"]
 
 # AEAT campo: Fecha de mejora o 2ª adquisición
 [[revisions."2015-2022".casillas]]
@@ -803,7 +751,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f058"]
 
 # AEAT campo: Fecha de transmisión
 [[revisions."2015-2022".casillas]]
@@ -818,7 +765,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f059"]
 
 # AEAT campo: Cuota de participación
 [[revisions."2015-2022".casillas]]
@@ -833,7 +779,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f060"]
 
 # AEAT campo: Adquiriente. NIF
 [[revisions."2015-2022".casillas]]
@@ -848,7 +793,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f061"]
 
 # AEAT campo: Adquiriente. F/J
 [[revisions."2015-2022".casillas]]
@@ -863,7 +807,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f062"]
 
 # AEAT campo: Adquiriente. Apellidos o Razón social
 [[revisions."2015-2022".casillas]]
@@ -877,7 +820,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f063"]
 
 # AEAT campo: Adquiriente. Nombre
 [[revisions."2015-2022".casillas]]
@@ -891,7 +833,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f064"]
 
 # AEAT campo: 44 - Tipo de vía.
 [[revisions."2015-2022".casillas]]
@@ -906,7 +847,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f065"]
 
 # AEAT campo: 45 - Nombre de la vía pública.
 [[revisions."2015-2022".casillas]]
@@ -921,7 +861,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f066"]
 
 # AEAT campo: 46 - Tipo de numeración.
 [[revisions."2015-2022".casillas]]
@@ -936,7 +875,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f067"]
 
 # AEAT campo: 47 - Número de casa.
 [[revisions."2015-2022".casillas]]
@@ -951,7 +889,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f068"]
 
 # AEAT campo: 48 - Calificador de número.
 [[revisions."2015-2022".casillas]]
@@ -966,7 +903,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f069"]
 
 # AEAT campo: 49 - Bloque.
 [[revisions."2015-2022".casillas]]
@@ -981,7 +917,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f070"]
 
 # AEAT campo: 50 - Portal.
 [[revisions."2015-2022".casillas]]
@@ -996,7 +931,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f071"]
 
 # AEAT campo: 51 - Escalera.
 [[revisions."2015-2022".casillas]]
@@ -1011,7 +945,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f072"]
 
 # AEAT campo: 52 - Planta.
 [[revisions."2015-2022".casillas]]
@@ -1026,7 +959,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f073"]
 
 # AEAT campo: 53 - Puerta.
 [[revisions."2015-2022".casillas]]
@@ -1041,7 +973,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f074"]
 
 # AEAT campo: 54 - Datos complementarios de domicilio.
 [[revisions."2015-2022".casillas]]
@@ -1056,7 +987,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f075"]
 
 # AEAT campo: 55 - Localidad/Población
 [[revisions."2015-2022".casillas]]
@@ -1071,7 +1001,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f076"]
 
 # AEAT campo: 56 - Código postal.
 [[revisions."2015-2022".casillas]]
@@ -1086,7 +1015,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f077"]
 
 # AEAT campo: 58 - Provincia.
 [[revisions."2015-2022".casillas]]
@@ -1101,7 +1029,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f078"]
 
 # AEAT campo: 57 - Municipio
 [[revisions."2015-2022".casillas]]
@@ -1116,7 +1043,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f079"]
 
 # AEAT campo: 73 - Referencia Catastral
 [[revisions."2015-2022".casillas]]
@@ -1131,7 +1057,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f080"]
 
 # AEAT campo: Documento publico o privado
 [[revisions."2015-2022".casillas]]
@@ -1146,7 +1071,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f081"]
 
 # AEAT campo: Notario o fedetario
 [[revisions."2015-2022".casillas]]
@@ -1161,7 +1085,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f082"]
 
 # AEAT campo: Número de protocolo
 [[revisions."2015-2022".casillas]]
@@ -1176,7 +1099,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f083"]
 
 # AEAT campo: RESTO. Ganancia Patrimonial total obtenida [10]
 [[revisions."2015-2022".casillas]]
@@ -1190,7 +1112,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f084"]
 
 # AEAT campo: RESTO. Retención o ingreso a cuenta [11]
 [[revisions."2015-2022".casillas]]
@@ -1204,7 +1125,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f085"]
 
 # AEAT campo: Total ganancias patrimoniales [12]
 [[revisions."2015-2022".casillas]]
@@ -1218,7 +1138,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f086"]
 
 # AEAT campo: Total retenciones o ingresos a cuenta [13]
 [[revisions."2015-2022".casillas]]
@@ -1232,4 +1151,3 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina06.f087"]

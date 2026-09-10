@@ -10,7 +10,6 @@ semantic_role = "declaracion_periodo_309"
 continuidad_id = "declaracion-periodo-309"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 7 'Periodo 1T, 2T, 3T, 4T' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 11 'Devengo - Periodo'; same semantic_role and data_type. number is wire metadata."
-export_refs = ["modelo-309-p0-periodo", "modelo-309-p1-devengo-periodo"]
 # The settlement period code (PP), AD-HOC.
 required = false
 input_kind = "manual"
@@ -23,7 +22,6 @@ number = "13"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "declaracion_tipo_309"
-export_refs = ["modelo-309-p1-tipo-declaracion"]
 # Design tipo de declaracion.
 required = false
 input_kind = "manual"
@@ -36,7 +34,6 @@ number = "83-102"
 section = ["declarante", "liquidacion"]
 data_type = "name"
 semantic_role = "declarante_nombre_309"
-export_refs = ["modelo-309-p1-nombre"]
 # The person declarante's given name.
 required = false
 input_kind = "manual"
@@ -52,7 +49,6 @@ semantic_role = "transmitente_nif"
 continuidad_id = "transmitente-nif"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 8 'Transmitente - N.I.F. N.I.F. Valido P.F. o P.J.' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 12 'Transmitente - NIF'; same semantic_role and data_type. number is wire metadata."
-export_refs = ["modelo-309-p1-transmitente-nif"]
 # Design transmitente NIF.
 required = false
 input_kind = "manual"
@@ -65,7 +61,6 @@ number = "118-177"
 section = ["declarante", "liquidacion"]
 data_type = "name"
 semantic_role = "transmitente_apellidos"
-export_refs = ["modelo-309-p1-transmitente-apellidos"]
 # Design transmitente apellidos o denominacion social.
 required = false
 input_kind = "manual"
@@ -78,7 +73,6 @@ number = "178-197"
 section = ["declarante", "liquidacion"]
 data_type = "name"
 semantic_role = "transmitente_nombre"
-export_refs = ["modelo-309-p1-transmitente-nombre"]
 # Design transmitente nombre.
 required = false
 input_kind = "manual"
@@ -91,7 +85,6 @@ number = "198-199"
 section = ["declarante", "liquidacion"]
 data_type = "country_code"
 semantic_role = "transmitente_pais"
-export_refs = ["modelo-309-p1-transmitente-pais"]
 # Design transmitente pais.
 required = false
 input_kind = "manual"
@@ -104,7 +97,6 @@ number = "200"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "situacion_tributaria"
-export_refs = ["modelo-309-p1-situacion-tributaria"]
 # Design situacion tributaria (5).
 required = false
 input_kind = "manual"
@@ -117,7 +109,6 @@ number = "201"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "hecho_imponible"
-export_refs = ["modelo-309-p1-hecho-imponible"]
 # Design hecho imponible (6).
 required = false
 input_kind = "manual"
@@ -133,7 +124,6 @@ semantic_role = "vehiculo_marca"
 continuidad_id = "vehiculo-marca"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 23 'Vehiculos - Marca' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 18 'Vehiculos - Marca'; same semantic_role and data_type. number is wire metadata."
-export_refs = ["modelo-309-p1-vehiculo-marca"]
 # Design vehiculo marca.
 required = false
 input_kind = "manual"
@@ -149,7 +139,6 @@ semantic_role = "vehiculo_tipo"
 continuidad_id = "vehiculo-tipo"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 24 'Vehiculos - Tipo' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 19 'Vehiculos - Tipo'; same semantic_role and data_type. number is wire metadata."
-export_refs = ["modelo-309-p1-vehiculo-tipo"]
 # Design vehiculo tipo.
 required = false
 input_kind = "manual"
@@ -165,7 +154,6 @@ semantic_role = "vehiculo_modelo"
 continuidad_id = "vehiculo-modelo"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 25 'Vehiculos - Modelo (denominacion comercial):' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 20 'Vehiculos - Modelo (denominacion comercial):'; same semantic_role and data_type. number is wire metadata."
-export_refs = ["modelo-309-p1-vehiculo-modelo"]
 # Design vehiculo modelo.
 required = false
 input_kind = "manual"
@@ -181,7 +169,6 @@ semantic_role = "vehiculo_bastidor"
 continuidad_id = "vehiculo-bastidor"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 26 'Vehiculos - No identificacion (bastidor)' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 21 'Vehiculos - No identificacion (bastidor)'; same semantic_role and data_type. number is wire metadata."
-export_refs = ["modelo-309-p1-vehiculo-bastidor"]
 # Design vehiculo bastidor.
 required = false
 input_kind = "manual"
@@ -197,7 +184,6 @@ semantic_role = "vehiculo_clasificacion"
 continuidad_id = "vehiculo-clasificacion"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 27 'Vehiculos - Clasificacion' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 22 'Vehiculos - Clasificacion'; same semantic_role and data_type. number is wire metadata."
-export_refs = ["modelo-309-p1-vehiculo-clasificacion"]
 # Design vehiculo clasificacion.
 required = false
 input_kind = "manual"
@@ -213,7 +199,6 @@ semantic_role = "embarcacion_fabricante"
 continuidad_id = "embarcacion-fabricante"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 28 'Embarcaciones - Fabricante' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 23 'Embarcaciones - Fabricante'; same semantic_role and data_type. number is wire metadata."
-export_refs = ["modelo-309-p1-embarcacion-fabricante"]
 # Design embarcacion fabricante.
 required = false
 input_kind = "manual"
@@ -229,7 +214,6 @@ semantic_role = "embarcacion_tipo"
 continuidad_id = "embarcacion-tipo"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 29 'Embarcaciones - Tipo-Modelo' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 24 'Embarcaciones - Tipo-Modelo'; same semantic_role and data_type. number is wire metadata."
-export_refs = ["modelo-309-p1-embarcacion-tipo"]
 # Design embarcacion tipo-modelo.
 required = false
 input_kind = "manual"
@@ -245,7 +229,6 @@ semantic_role = "mtn_embarcacion_identificacion"
 continuidad_id = "mtn-embarcacion-identificacion"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 30 'Embarcaciones - Identificacion (No construccion)' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 25 'Embarcaciones - Identificacion (No construccion)'; same semantic_role and data_type. number is wire metadata."
-export_refs = ["modelo-309-p1-embarcacion-identificacion"]
 # Design embarcacion numero de construccion.
 required = false
 input_kind = "manual"
@@ -261,7 +244,6 @@ semantic_role = "embarcacion_eslora"
 continuidad_id = "embarcacion-eslora"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 31 'Embarcaciones - Eslora maxima' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 26 'Embarcaciones - Eslora maxima'; same semantic_role and data_type. number is wire metadata."
-export_refs = ["modelo-309-p1-embarcacion-eslora"]
 # Design embarcacion eslora maxima.
 required = false
 input_kind = "manual"
@@ -277,7 +259,6 @@ semantic_role = "aeronave_fabricante"
 continuidad_id = "aeronave-fabricante"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 32 'Aeronaves - Fabricante' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 27 'Aeronaves - Fabricante'; same semantic_role and data_type. number is wire metadata."
-export_refs = ["modelo-309-p1-aeronave-fabricante"]
 # Design aeronave fabricante.
 required = false
 input_kind = "manual"
@@ -293,7 +274,6 @@ semantic_role = "aeronave_marca"
 continuidad_id = "aeronave-marca"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 33 'Aeronaves - Marca - Tipo - Modelo' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 28 'Aeronaves - Marca - Tipo - Modelo'; same semantic_role and data_type. number is wire metadata."
-export_refs = ["modelo-309-p1-aeronave-marca"]
 # Design aeronave marca-tipo-modelo.
 required = false
 input_kind = "manual"
@@ -309,7 +289,6 @@ semantic_role = "aeronave_serie"
 continuidad_id = "aeronave-serie"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 34 'Aeronaves - No Serie' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 29 'Aeronaves - No Serie'; same semantic_role and data_type. number is wire metadata."
-export_refs = ["modelo-309-p1-aeronave-serie"]
 # Design aeronave numero de serie.
 required = false
 input_kind = "manual"
@@ -325,7 +304,6 @@ semantic_role = "aeronave_ano"
 continuidad_id = "aeronave-ano"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 35 'Aeronaves - Ano fabricacion' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 30 'Aeronaves - Ano fabricacion'; same semantic_role and data_type. number is wire metadata."
-export_refs = ["modelo-309-p1-aeronave-ano"]
 # Design aeronave ano de fabricacion.
 required = false
 input_kind = "manual"
@@ -341,7 +319,6 @@ semantic_role = "aeronave_peso"
 continuidad_id = "aeronave-peso"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 36 'Aeronaves - Peso maximo despegue (en Kg.)' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 31 'Aeronaves - Peso maximo despegue (en Kg.)'; same semantic_role and data_type. number is wire metadata."
-export_refs = ["modelo-309-p1-aeronave-peso"]
 # Design aeronave peso maximo despegue.
 required = false
 input_kind = "manual"
@@ -355,7 +332,6 @@ section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "declaracion_complementaria"
 continuidad_id = "declaracion-complementaria"
-export_refs = ["modelo-309-p1-complementaria"]
 # Design declaracion complementaria (9).
 required = false
 input_kind = "manual"
@@ -371,7 +347,6 @@ semantic_role = "justificante_anterior"
 continuidad_id = "justificante-anterior"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 61 'Declaracion complementaria - No de justificante' and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 57 'Numero de justificante de la declaracion anterior'; same semantic_role and data_type. number is wire metadata."
-export_refs = ["modelo-309-p1-justificante-anterior"]
 # Design numero de justificante de la declaracion anterior (9).
 required = false
 input_kind = "manual"
@@ -385,7 +360,6 @@ section = ["declarante", "liquidacion"]
 data_type = "iban"
 semantic_role = "devolucion_iban_309"
 continuidad_id = "devolucion-iban-309"
-export_refs = ["modelo-309-p1-iban"]
 # Design IBAN (10).
 required = false
 input_kind = "manual"
@@ -406,7 +380,6 @@ semantic_role = "rg_base_01"
 continuidad_id = "rg-base-01"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [01]: 2004-2015 number 01 equals 2016-2017 form_number 01; same semantic_role and data_type. Designs print [01] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 37 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 32."
-export_refs = ["modelo-309-p1-rg-base-01"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2016"] }
 # Design regimen general base imponible [01].
 required = false
@@ -424,7 +397,6 @@ semantic_role = "rg_tipo_02"
 continuidad_id = "rg-tipo-02"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [02]: 2004-2015 number 02 equals 2016-2017 form_number 02; same semantic_role and data_type. Designs print [02] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 38 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 33."
-export_refs = ["modelo-309-p1-rg-tipo-02"]
 # Design regimen general tipo % [02].
 required = false
 input_kind = "manual"
@@ -441,7 +413,6 @@ semantic_role = "rg_cuota_03"
 continuidad_id = "rg-cuota-03"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [03]: 2004-2015 number 03 equals 2016-2017 form_number 03; same semantic_role and data_type. Designs print [03] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 39 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 34."
-export_refs = ["modelo-309-p1-rg-cuota-03"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2016"] }
 # Design regimen general cuota [03].
 required = false
@@ -462,7 +433,6 @@ semantic_role = "rg_base_04"
 continuidad_id = "rg-base-04"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [04]: 2004-2015 number 04 equals 2016-2017 form_number 04; same semantic_role and data_type. Designs print [04] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 40 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 35."
-export_refs = ["modelo-309-p1-rg-base-04"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2016"] }
 # Design regimen general base imponible [04].
 required = false
@@ -480,7 +450,6 @@ semantic_role = "rg_tipo_05"
 continuidad_id = "rg-tipo-05"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [05]: 2004-2015 number 05 equals 2016-2017 form_number 05; same semantic_role and data_type. Designs print [05] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 41 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 36."
-export_refs = ["modelo-309-p1-rg-tipo-05"]
 # Design regimen general tipo % [05].
 required = false
 input_kind = "manual"
@@ -497,7 +466,6 @@ semantic_role = "rg_cuota_06"
 continuidad_id = "rg-cuota-06"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [06]: 2004-2015 number 06 equals 2016-2017 form_number 06; same semantic_role and data_type. Designs print [06] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 42 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 37."
-export_refs = ["modelo-309-p1-rg-cuota-06"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2016"] }
 # Design regimen general cuota [06].
 required = false
@@ -515,7 +483,6 @@ semantic_role = "rg_base_07"
 continuidad_id = "rg-base-07"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [07]: 2004-2015 number 07 equals 2016-2017 form_number 07; same semantic_role and data_type. Designs print [07] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 43 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 38."
-export_refs = ["modelo-309-p1-rg-base-07"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2016"] }
 # Design regimen general base imponible [07].
 required = false
@@ -533,7 +500,6 @@ semantic_role = "rg_tipo_08"
 continuidad_id = "rg-tipo-08"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [08]: 2004-2015 number 08 equals 2016-2017 form_number 08; same semantic_role and data_type. Designs print [08] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 44 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 39."
-export_refs = ["modelo-309-p1-rg-tipo-08"]
 # Design regimen general tipo % [08].
 required = false
 input_kind = "manual"
@@ -550,7 +516,6 @@ semantic_role = "rg_cuota_09"
 continuidad_id = "rg-cuota-09"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [09]: 2004-2015 number 09 equals 2016-2017 form_number 09; same semantic_role and data_type. Designs print [09] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 45 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 40."
-export_refs = ["modelo-309-p1-rg-cuota-09"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2016"] }
 # Design regimen general cuota [09].
 required = false
@@ -568,7 +533,6 @@ semantic_role = "re_base_10"
 continuidad_id = "re-base-10"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [10]: 2004-2015 number 10 equals 2016-2017 form_number 10; same semantic_role and data_type. Designs print [10] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 46 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 41."
-export_refs = ["modelo-309-p1-re-base-10"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2016"] }
 # Design recargo equivalencia base imponible [10].
 required = false
@@ -586,7 +550,6 @@ semantic_role = "re_tipo_11"
 continuidad_id = "re-tipo-11"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [11]: 2004-2015 number 11 equals 2016-2017 form_number 11; same semantic_role and data_type. Designs print [11] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 47 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 42."
-export_refs = ["modelo-309-p1-re-tipo-11"]
 # Design recargo equivalencia tipo % [11].
 required = false
 input_kind = "manual"
@@ -603,7 +566,6 @@ semantic_role = "re_cuota_12"
 continuidad_id = "re-cuota-12"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [12]: 2004-2015 number 12 equals 2016-2017 form_number 12; same semantic_role and data_type. Designs print [12] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 48 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 43."
-export_refs = ["modelo-309-p1-re-cuota-12"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2016"] }
 # Design recargo equivalencia cuota [12].
 required = false
@@ -621,7 +583,6 @@ semantic_role = "re_base_13"
 continuidad_id = "re-base-13"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [13]: 2004-2015 number 13 equals 2016-2017 form_number 13; same semantic_role and data_type. Designs print [13] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 49 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 44."
-export_refs = ["modelo-309-p1-re-base-13"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2016"] }
 # Design recargo equivalencia base imponible [13].
 required = false
@@ -639,7 +600,6 @@ semantic_role = "re_tipo_14"
 continuidad_id = "re-tipo-14"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [14]: 2004-2015 number 14 equals 2016-2017 form_number 14; same semantic_role and data_type. Designs print [14] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 50 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 45."
-export_refs = ["modelo-309-p1-re-tipo-14"]
 # Design recargo equivalencia tipo % [14].
 required = false
 input_kind = "manual"
@@ -656,7 +616,6 @@ semantic_role = "re_cuota_15"
 continuidad_id = "re-cuota-15"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [15]: 2004-2015 number 15 equals 2016-2017 form_number 15; same semantic_role and data_type. Designs print [15] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 51 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 46."
-export_refs = ["modelo-309-p1-re-cuota-15"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2016"] }
 # Design recargo equivalencia cuota [15].
 required = false
@@ -674,7 +633,6 @@ semantic_role = "re_base_16"
 continuidad_id = "re-base-16"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [16]: 2004-2015 number 16 equals 2016-2017 form_number 16; same semantic_role and data_type. Designs print [16] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 52 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 47."
-export_refs = ["modelo-309-p1-re-base-16"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2016"] }
 # Design recargo equivalencia base imponible [16].
 required = false
@@ -692,7 +650,6 @@ semantic_role = "re_tipo_17"
 continuidad_id = "re-tipo-17"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [17]: 2004-2015 number 17 equals 2016-2017 form_number 17; same semantic_role and data_type. Designs print [17] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 53 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 48."
-export_refs = ["modelo-309-p1-re-tipo-17"]
 # Design recargo equivalencia tipo % [17].
 required = false
 input_kind = "manual"
@@ -709,7 +666,6 @@ semantic_role = "re_cuota_18"
 continuidad_id = "re-cuota-18"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [18]: 2004-2015 number 18 equals 2016-2017 form_number 18; same semantic_role and data_type. Designs print [18] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 54 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 49."
-export_refs = ["modelo-309-p1-re-cuota-18"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2016"] }
 # Design recargo equivalencia cuota [18].
 required = false
@@ -727,7 +683,6 @@ semantic_role = "re_base_19"
 continuidad_id = "re-base-19"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [19]: 2004-2015 number 19 equals 2016-2017 form_number 19; same semantic_role and data_type. Designs print [19] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 55 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 50."
-export_refs = ["modelo-309-p1-re-base-19"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2016"] }
 # Design recargo equivalencia base imponible [19].
 required = false
@@ -745,7 +700,6 @@ semantic_role = "re_tipo_20"
 continuidad_id = "re-tipo-20"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [20]: 2004-2015 number 20 equals 2016-2017 form_number 20; same semantic_role and data_type. Designs print [20] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 56 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 51."
-export_refs = ["modelo-309-p1-re-tipo-20"]
 # Design recargo equivalencia tipo % [20].
 required = false
 input_kind = "manual"
@@ -762,7 +716,6 @@ semantic_role = "re_cuota_21"
 continuidad_id = "re-cuota-21"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [21]: 2004-2015 number 21 equals 2016-2017 form_number 21; same semantic_role and data_type. Designs print [21] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 57 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 52."
-export_refs = ["modelo-309-p1-re-cuota-21"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2016"] }
 # Design recargo equivalencia cuota [21].
 required = false
@@ -780,7 +733,6 @@ semantic_role = "cuota_devengada_22"
 continuidad_id = "cuota-devengada-22"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [22]: 2004-2015 number 22 equals 2016-2017 form_number 22; same semantic_role and data_type. Designs print [22] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 58 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 53."
-export_refs = ["modelo-309-p1-cuota-devengada-22"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2016"] }
 # Design total cuota devengada [22]: the design's own sum of the eight cuota casillas.
 required = true
@@ -799,7 +751,6 @@ semantic_role = "a_deducir_23"
 continuidad_id = "a-deducir-23"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [23]: 2004-2015 number 23 equals 2016-2017 form_number 23; same semantic_role and data_type. Designs print [23] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 59 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 54."
-export_refs = ["modelo-309-p1-a-deducir-23"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2016"] }
 # Design a deducir [23].
 required = false
@@ -817,7 +768,6 @@ semantic_role = "resultado_24"
 continuidad_id = "resultado-24"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [24]: 2004-2015 number 24 equals 2016-2017 form_number 24; same semantic_role and data_type. Designs print [24] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf campo 60 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/03-309-orden-eha-3212-2004-ejercicios-2016-y-2017.xls M30901 campo 55."
-export_refs = ["modelo-309-p1-resultado-24"]
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2016"] }
 # Design resultado a ingresar [24]: the design's own [22]-[23].
 required = true

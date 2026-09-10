@@ -111,7 +111,6 @@ class RevisionValidationContext:
     relations: set[RelationId]
     parameters: set[str]
     resolvable_values: set[BindingId | CasillaId | RelationId | str]
-    export_field_ids: set[str]
     exported_casillas: set[CasillaId]
 
     @property
@@ -176,6 +175,5 @@ def build_revision_validation_context(revision: ModeloRevision) -> RevisionValid
         relations=relations,
         parameters=parameters,
         resolvable_values=casillas | bindings | relations | parameters,
-        export_field_ids=collect_export_field_ids(revision),
         exported_casillas=_exported_casilla_ids(revision),
     )

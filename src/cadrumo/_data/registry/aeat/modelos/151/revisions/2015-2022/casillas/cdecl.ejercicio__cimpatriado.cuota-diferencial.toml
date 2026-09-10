@@ -42,7 +42,6 @@ input_kind = "bound"
 binding = "modelo-151-impatriado-base-liquidable-general"
 legal_refs = ["ley-35-2006:art-93"]
 source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
-export_refs = ["m151-2015.pagina08.f040"]
 
 [[revisions."2015-2022".casillas]]
 id = "impatriado.cuota-integra-general"
@@ -56,7 +55,6 @@ input_kind = "computed"
 formula = "modelo-151-cuota-integra-general"
 legal_refs = ["ley-35-2006:art-93"]
 source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
-export_refs = ["m151-2015.pagina08.f042"]
 
 [[revisions."2015-2022".casillas]]
 id = "impatriado.retenciones"
@@ -69,7 +67,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93"]
 source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
-export_refs = ["m151-2015.pagina08.f056"]
 
 # Cuota integra general menos retenciones. AEAT's Diseno de Registros has no
 # position for this figure: pagina 8 goes from cuota liquida and 'Retencion e

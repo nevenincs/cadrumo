@@ -297,6 +297,15 @@ carries the edition and the ordinal moves on insertion — so an inherited row i
 predecessor's value would inherit the wrong slot. The layout owns the edge through its own casilla
 back-pointer, and the loader computes the field and refuses an authored value.
 
+The back-pointer is the casilla a layout field resolves to, including through a record's row-field
+mapping, with one exception: a record declaring `binding_record` takes its field positions from
+its binding selectors, so its rows are templates and contribute no edge. A record whose positions
+come from the official design uses the row mapping only to name the box each field fills, so those
+rows are edges. Declaring `binding_record` on such a record would add a second source of field
+positions beside the official design. That template rows carry no back-reference is a contract
+choice, not a fact about the data — a template row still fills a real box — so a later rule that
+every box a filing writes carries an export reference would have to give template rows edges too.
+
 `formula` and `binding` references on an inherited row resolve to the successor edition's
 declaration of the same formula or binding lineage. A reference that does not resolve is a
 validation failure, not an inherited pointer. Those identifiers must therefore stop embedding an

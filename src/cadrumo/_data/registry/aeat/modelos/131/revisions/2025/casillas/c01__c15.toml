@@ -9,7 +9,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-export_refs = ["modelo-131-2025-casilla-01"]
 [[revisions."2025".casillas]]
 id = "02"
 number = "02"
@@ -21,7 +20,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-export_refs = ["modelo-131-2025-casilla-02"]
 [[revisions."2025".casillas]]
 id = "03"
 number = "03"
@@ -33,7 +31,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-export_refs = ["modelo-131-2025-casilla-03"]
 [[revisions."2025".casillas]]
 id = "04"
 number = "04"
@@ -46,7 +43,6 @@ input_kind = "computed"
 formula = "modelo-131-2025-pago-fraccionado-sin-datos-base"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-export_refs = ["modelo-131-2025-casilla-04"]
 [[revisions."2025".casillas]]
 id = "05"
 number = "05"
@@ -59,7 +55,6 @@ input_kind = "bound"
 binding = "modelo-131-volumen-ingresos-agrario"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-export_refs = ["modelo-131-2025-casilla-05"]
 [[revisions."2025".casillas]]
 id = "06"
 number = "06"
@@ -72,7 +67,6 @@ input_kind = "computed"
 formula = "modelo-131-2025-pago-fraccionado-agrario"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-export_refs = ["modelo-131-2025-casilla-06"]
 [[revisions."2025".casillas]]
 id = "07"
 number = "07"
@@ -86,7 +80,6 @@ input_kind = "computed"
 formula = "modelo-131-2025-suma-pagos-previos"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-export_refs = ["modelo-131-2025-casilla-07"]
 [[revisions."2025".casillas]]
 id = "08"
 number = "08"
@@ -99,7 +92,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-export_refs = ["modelo-131-2025-casilla-08"]
 [[revisions."2025".casillas]]
 id = "09"
 number = "09"
@@ -111,7 +103,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-export_refs = ["modelo-131-2025-casilla-09"]
 [[revisions."2025".casillas]]
 id = "10"
 number = "10"
@@ -124,7 +115,6 @@ input_kind = "computed"
 formula = "modelo-131-2025-diferencia"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-export_refs = ["modelo-131-2025-casilla-10"]
 [[revisions."2025".casillas]]
 id = "11"
 number = "11"
@@ -138,7 +128,6 @@ binding = "modelo-131-2025-resultados-negativos-anteriores"
 constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-modelo-131-instructions"] }
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-export_refs = ["modelo-131-2025-casilla-11"]
 [[revisions."2025".casillas]]
 id = "12"
 number = "12"
@@ -150,7 +139,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-export_refs = ["modelo-131-2025-casilla-12"]
 [[revisions."2025".casillas]]
 id = "13"
 number = "13"
@@ -163,7 +151,6 @@ input_kind = "computed"
 formula = "modelo-131-2025-total"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-export_refs = ["modelo-131-2025-casilla-13"]
 [[revisions."2025".casillas]]
 id = "14"
 number = "14"
@@ -175,7 +162,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-export_refs = ["modelo-131-2025-casilla-14"]
 [[revisions."2025".casillas]]
 id = "15"
 number = "15"
@@ -188,4 +174,3 @@ input_kind = "computed"
 formula = "modelo-131-2025-resultado"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-export_refs = ["modelo-131-2025-casilla-15"]

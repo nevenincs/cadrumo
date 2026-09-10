@@ -45,6 +45,7 @@ from .errors import (
     RegistryLoadError,
     RegistryValidationError,
 )
+from .export_field_casilla import derive_casilla_export_refs
 from .export_semantics import ExportComputedKey, ExportDraftAttribute
 from .ids import RevisionId
 from .loader_cache import (
@@ -86,7 +87,7 @@ from .schema import (
     SupportedFilingYearsCatalogue,
 )
 from .schema_references import LegalParameter, LegalReference, SourceReference
-from .schema_surfaces import CasillaEvolutionKind
+from .schema_surfaces import CasillaDefinition, CasillaEvolutionKind
 from .validate_revision_identity import revision_reference_identity_failures
 
 _PREDECESSOR_FIELD: Final = "predecessor"
@@ -99,6 +100,7 @@ _EDITION_ORDEN_FIELD: Final = "orden_aplicabilidad"
 _ROW_SOURCE_FIELD: Final = "source_refs"
 _ROW_LEGAL_FIELD: Final = "legal_refs"
 _ROW_CONSTRAINTS_FIELD: Final = "constraints"
+_EXPORT_REFS_FIELD: Final = "export_refs"
 _REVISION_ID_ADAPTER: Final = TypeAdapter(RevisionId)
 
 ModeloRevisionSource = _ModeloRevisionSource
@@ -168,10 +170,12 @@ def _build_modelo_definition_from_data(source_path: Path, data: Mapping[str, obj
                 label_origins=label_origins,
             )
         payload = _compile_revision_projection_semantics(source_path, payload)
+        _refuse_authored_export_refs(source_path, revision_id, payload)
         try:
             revision = ModeloRevision.model_validate(payload)
         except ValidationError as exc:
             raise RegistryLoadError(f"{source_path}: invalid revision {revision_id!r}: {exc}") from exc
+        revision = _with_derived_export_refs(source_path, revision, payload)
         _raise_on_ambiguous_revision_identity(
             source_path,
             modelo_id=modelo_id_for_context,
@@ -681,6 +685,62 @@ def _raise_on_ambiguous_revision_identity(
         raise RegistryValidationError(
             "registry revision identity is ambiguous:\n" + "\n".join(f" - {failure}" for failure in failures),
         )
+
+
+def _refuse_authored_export_refs(source_path: Path, revision_id: str, payload: Mapping[str, object]) -> None:
+    """Refuse a casilla row that declares ``export_refs``, which the loader derives from the layouts."""
+    rows = as_toml_array(payload.get(_INHERITED_SECTION, ())) or ()
+    authored = sorted(
+        str(table.get("id"))
+        for row in rows
+        if (table := _as_toml_table(row)) is not None and _EXPORT_REFS_FIELD in table
+    )
+    if authored:
+        raise RegistryLoadError(
+            f"{source_path}: revision {revision_id!r} casillas {authored!r} declare export_refs; a casilla's "
+            "export references are derived from the export fields that resolve to it, so remove the key",
+        )
+
+
+def _with_derived_export_refs(
+    source_path: Path,
+    revision: ModeloRevision,
+    payload: Mapping[str, object],
+) -> ModeloRevision:
+    """Return ``revision`` with every casilla's ``export_refs`` derived from the edition's own layouts.
+
+    The derivation runs on the materialised edition, so an inherited row takes
+    the references of the layout it now sits beside and never its origin's.
+    Each re-derived row is constructed again from its enrolled payload, so the
+    casilla's own coherence rules see the derived value exactly as they would
+    an authored one.
+    """
+    try:
+        derived = derive_casilla_export_refs(revision.export_layouts, revision.bindings)
+    except RegistryValidationError as exc:
+        raise RegistryLoadError(f"{source_path}: invalid revision {revision.id!r}: {exc}") from exc
+    if not derived:
+        return revision
+    declared = {casilla.id for casilla in revision.casillas}
+    undeclared = sorted(casilla_id for casilla_id in derived if casilla_id not in declared)
+    if undeclared:
+        raise RegistryLoadError(
+            f"{source_path}: invalid revision {revision.id!r}: export fields resolve to casillas {undeclared!r}, "
+            "which the edition does not declare",
+        )
+    rows = as_toml_array(payload.get(_INHERITED_SECTION, ())) or ()
+    casillas = []
+    for casilla, row in zip(revision.casillas, rows, strict=True):
+        refs = derived.get(casilla.id)
+        table = _as_toml_table(row)
+        if refs is None or table is None:
+            casillas.append(casilla)
+            continue
+        try:
+            casillas.append(CasillaDefinition.model_validate({**table, _EXPORT_REFS_FIELD: refs}))
+        except ValidationError as exc:
+            raise RegistryLoadError(f"{source_path}: invalid revision {revision.id!r}: {exc}") from exc
+    return revision.model_copy(update={_INHERITED_SECTION: tuple(casillas)})
 
 
 def _passthrough_toml_row(raw: object) -> dict[str, object]:

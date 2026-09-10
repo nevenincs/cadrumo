@@ -6,7 +6,6 @@
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "devolucion.importe-solicitado"
-export_refs = ["modelo-360-devolucion-importe-solicitado"]
 number = "1853-1867"
 section = ["devolucion"]
 data_type = "money"
@@ -18,7 +17,6 @@ source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "devolucion.divisa"
-export_refs = ["modelo-360-devolucion-divisa"]
 number = "1868-1870"
 section = ["devolucion"]
 data_type = "text"
@@ -30,7 +28,6 @@ source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "devolucion.numero-facturas"
-export_refs = ["modelo-360-devolucion-numero-facturas"]
 number = "1871-1875"
 section = ["devolucion"]
 data_type = "integer"
@@ -42,7 +39,6 @@ source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "devolucion.numero-documentos-importacion"
-export_refs = ["modelo-360-devolucion-numero-documentos-importacion"]
 number = "1876-1880"
 section = ["devolucion"]
 data_type = "integer"
@@ -54,7 +50,6 @@ source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "devolucion.periodo-fecha-inicio"
-export_refs = ["modelo-360-devolucion-periodo-fecha-inicio"]
 number = "1881-1888"
 section = ["devolucion"]
 data_type = "date"
@@ -66,7 +61,6 @@ source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "devolucion.periodo-fecha-fin"
-export_refs = ["modelo-360-devolucion-periodo-fecha-fin"]
 number = "1889-1896"
 section = ["devolucion"]
 data_type = "date"
@@ -78,7 +72,6 @@ source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "devolucion.declaracion-no-entrega-bienes"
-export_refs = ["modelo-360-devolucion-declaracion-no-entrega-bienes"]
 number = "1902"
 section = ["devolucion"]
 data_type = "text"
@@ -90,7 +83,6 @@ source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "prorrata.ejercicio"
-export_refs = ["modelo-360-prorrata-ejercicio"]
 number = "1903-1906"
 section = ["prorrata"]
 data_type = "year"
@@ -102,7 +94,6 @@ source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "prorrata.definitiva"
-export_refs = ["modelo-360-prorrata-definitiva"]
 number = "1907-1911"
 section = ["prorrata"]
 data_type = "ratio"

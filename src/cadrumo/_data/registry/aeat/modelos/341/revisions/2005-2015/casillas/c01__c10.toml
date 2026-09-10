@@ -11,7 +11,6 @@ data_type = "money"
 semantic_role = "reagp_importe_operaciones"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-341-historical-importe-operaciones-01"]
 legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2005-2015"]
 
@@ -24,7 +23,6 @@ data_type = "money"
 semantic_role = "reagp_importe_operaciones"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-341-historical-importe-operaciones-02"]
 legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2005-2015"]
 
@@ -37,7 +35,6 @@ data_type = "money"
 semantic_role = "reagp_importe_operaciones"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-341-historical-importe-operaciones-03"]
 legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2005-2015"]
 
@@ -50,7 +47,6 @@ data_type = "ratio"
 semantic_role = "reagp_porcentaje_compensacion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-341-historical-porcentaje-compensacion-04"]
 legal_refs = ["ley-37-1992:art-130", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2005-2015"]
 
@@ -63,7 +59,6 @@ data_type = "ratio"
 semantic_role = "reagp_porcentaje_compensacion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-341-historical-porcentaje-compensacion-05"]
 legal_refs = ["ley-37-1992:art-130", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2005-2015"]
 
@@ -76,7 +71,6 @@ data_type = "ratio"
 semantic_role = "reagp_porcentaje_compensacion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-341-historical-porcentaje-compensacion-06"]
 legal_refs = ["ley-37-1992:art-130", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2005-2015"]
 
@@ -89,7 +83,6 @@ data_type = "money"
 semantic_role = "reagp_importe_compensacion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-341-historical-importe-compensacion-07"]
 legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2005-2015"]
 
@@ -102,7 +95,6 @@ data_type = "money"
 semantic_role = "reagp_importe_compensacion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-341-historical-importe-compensacion-08"]
 legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2005-2015"]
 
@@ -115,7 +107,6 @@ data_type = "money"
 semantic_role = "reagp_importe_compensacion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-341-historical-importe-compensacion-09"]
 legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2005-2015"]
 
@@ -130,7 +121,6 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "The historical design declares one total-compensacion slot, [10] at position 117, aggregating [07], [08] and [09], which share the sibling role reagp_importe_compensacion. Singleton by the design's construction, not by a missing sibling."
 required = false
 input_kind = "manual"
-export_refs = ["modelo-341-historical-importe-total-10"]
 legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2005-2015"]
 

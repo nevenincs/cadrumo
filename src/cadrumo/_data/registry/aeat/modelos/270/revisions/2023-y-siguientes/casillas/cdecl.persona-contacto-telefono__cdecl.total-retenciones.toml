@@ -32,7 +32,6 @@ data_type = "text"
 semantic_role = "m270_persona_contacto_telefono"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-270-decl-persona-contacto-telefono"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
@@ -46,7 +45,6 @@ data_type = "name"
 semantic_role = "m270_persona_contacto_nombre"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-270-decl-persona-contacto-nombre"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
@@ -63,7 +61,6 @@ data_type = "text"
 semantic_role = "m270_numero_identificativo"
 required = true
 input_kind = "manual"
-export_refs = ["modelo-270-decl-numero-identificativo"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
@@ -82,7 +79,6 @@ data_type = "text"
 semantic_role = "m270_declaracion_complementaria"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-270-decl-complementaria"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
@@ -96,7 +92,6 @@ data_type = "text"
 semantic_role = "m270_declaracion_sustitutiva"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-270-decl-sustitutiva"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
@@ -112,7 +107,6 @@ data_type = "text"
 semantic_role = "m270_numero_identificativo_anterior"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-270-decl-numero-identificativo-anterior"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
@@ -126,7 +120,6 @@ data_type = "integer"
 semantic_role = "total_perceptores_count"
 required = true
 input_kind = "manual"
-export_refs = ["modelo-270-decl-total-perceptores"]
 legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
@@ -140,7 +133,6 @@ data_type = "money"
 semantic_role = "m270_total_importe_premios"
 required = true
 input_kind = "manual"
-export_refs = ["modelo-270-decl-total-importe-premios"]
 legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"] }
@@ -155,7 +147,6 @@ data_type = "money"
 semantic_role = "base_retenciones_ingresos_a_cuenta"
 required = true
 input_kind = "manual"
-export_refs = ["modelo-270-decl-total-base-retencion"]
 legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"] }
@@ -170,7 +161,6 @@ data_type = "money"
 semantic_role = "retenciones_ingresos_a_cuenta"
 required = true
 input_kind = "manual"
-export_refs = ["modelo-270-decl-total-retenciones"]
 legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"] }

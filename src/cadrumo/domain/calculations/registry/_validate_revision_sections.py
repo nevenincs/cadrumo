@@ -109,7 +109,6 @@ def _validate_revision_surface_sections(
             revision=revision,
             formulas=context.formulas,
             bindings=context.bindings,
-            export_field_ids=context.export_field_ids,
             legal_refs=legal_refs,
             source_refs=source_refs,
             evidence=evidence,

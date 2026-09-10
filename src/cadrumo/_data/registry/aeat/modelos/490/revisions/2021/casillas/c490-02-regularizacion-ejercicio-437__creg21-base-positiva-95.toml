@@ -7,7 +7,6 @@ section = ["490_02"]
 data_type = "year"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-490-02-regularizacion-ejercicio-437"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -18,7 +17,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-base-positiva-26"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -29,7 +27,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-base-positiva-33"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -40,7 +37,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-base-positiva-39"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -51,7 +47,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-base-positiva-45"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -62,7 +57,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-base-negativa-27"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -73,7 +67,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-base-negativa-34"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -84,7 +77,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-base-negativa-40"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -95,7 +87,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-base-negativa-46"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -106,7 +97,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-base-total-28"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -117,7 +107,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-base-total-35"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -128,7 +117,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-base-total-41"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -139,7 +127,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-base-total-47"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -150,7 +137,6 @@ section = ["490_02"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-tipo-29-645"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -161,7 +147,6 @@ section = ["490_02"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-tipo-29-648"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -172,7 +157,6 @@ section = ["490_02"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-tipo-29-651"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -183,7 +167,6 @@ section = ["490_02"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-tipo-29-654"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -194,7 +177,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-cuota-positiva-30"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -205,7 +187,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-cuota-positiva-36"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -216,7 +197,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-cuota-positiva-42"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -227,7 +207,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-cuota-positiva-48"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -238,7 +217,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-cuota-negativa-31"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -249,7 +227,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-cuota-negativa-37"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -260,7 +237,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-cuota-negativa-43"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -271,7 +247,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-cuota-negativa-49"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -282,7 +257,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-cuota-total-32"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -293,7 +267,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-cuota-total-38"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -304,7 +277,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-cuota-total-44"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -315,7 +287,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-cuota-total-50"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -326,7 +297,6 @@ section = ["490_02"]
 data_type = "year"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-490-02-regularizacion-ejercicio-861"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -337,7 +307,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-base-positiva-51"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -348,7 +317,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-base-positiva-58"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -359,7 +327,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-base-positiva-64"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -370,7 +337,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-base-positiva-70"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -381,7 +347,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-base-negativa-52"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -392,7 +357,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-base-negativa-59"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -403,7 +367,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-base-negativa-65"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -414,7 +377,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-base-negativa-71"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -425,7 +387,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-base-total-53"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -436,7 +397,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-base-total-60"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -447,7 +407,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-base-total-66"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -458,7 +417,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-base-total-72"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -469,7 +427,6 @@ section = ["490_02"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-tipo-54-1069"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -480,7 +437,6 @@ section = ["490_02"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-tipo-54-1072"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -491,7 +447,6 @@ section = ["490_02"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-tipo-54-1075"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -502,7 +457,6 @@ section = ["490_02"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-tipo-54-1078"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -513,7 +467,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-cuota-positiva-55"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -524,7 +477,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-cuota-positiva-61"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -535,7 +487,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-cuota-positiva-67"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -546,7 +497,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-cuota-positiva-73"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -557,7 +507,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-cuota-negativa-56"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -568,7 +517,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-cuota-negativa-62"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -579,7 +527,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-cuota-negativa-68"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -590,7 +537,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-cuota-negativa-74"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -601,7 +547,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-cuota-total-57"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -612,7 +557,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-cuota-total-63"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -623,7 +567,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-cuota-total-69"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -634,7 +577,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-cuota-total-75"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -645,7 +587,6 @@ section = ["490_02"]
 data_type = "year"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-490-02-regularizacion-ejercicio-1285"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -656,7 +597,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-base-positiva-76"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -667,7 +607,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-base-positiva-83"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -678,7 +617,6 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-base-positiva-89"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]
 
@@ -689,6 +627,5 @@ section = ["490_02"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-490-2021-reg21-base-positiva-95"]
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]

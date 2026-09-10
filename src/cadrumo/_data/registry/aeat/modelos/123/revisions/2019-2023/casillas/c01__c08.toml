@@ -9,7 +9,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
-export_refs = ["modelo-123-2019-2023-casilla-01"]
 
 [[revisions."2019-2023".casillas]]
 id = "02"
@@ -23,7 +22,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
-export_refs = ["modelo-123-2019-2023-casilla-02"]
 
 [[revisions."2019-2023".casillas]]
 id = "03"
@@ -37,7 +35,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
-export_refs = ["modelo-123-2019-2023-casilla-03"]
 
 [[revisions."2019-2023".casillas]]
 id = "04"
@@ -50,7 +47,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
-export_refs = ["modelo-123-2019-2023-casilla-04"]
 
 [[revisions."2019-2023".casillas]]
 id = "05"
@@ -63,7 +59,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
-export_refs = ["modelo-123-2019-2023-casilla-05"]
 
 [[revisions."2019-2023".casillas]]
 id = "06"
@@ -77,7 +72,6 @@ input_kind = "computed"
 formula = "modelo-123-2019-total-liquidacion"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
-export_refs = ["modelo-123-2019-2023-casilla-06"]
 
 [[revisions."2019-2023".casillas]]
 id = "07"
@@ -90,7 +84,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
-export_refs = ["modelo-123-2019-2023-casilla-07"]
 
 [[revisions."2019-2023".casillas]]
 id = "08"
@@ -105,5 +98,4 @@ input_kind = "computed"
 formula = "modelo-123-2019-resultado-ingresar"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
-export_refs = ["modelo-123-2019-2023-casilla-08"]
 

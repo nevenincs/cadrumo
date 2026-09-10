@@ -16,7 +16,6 @@ required = true
 input_kind = "informational"
 legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
-export_refs = ["m184-2025.declarante.f006"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.persona-relacion"
 continuidad_id = "persona-relacion"
@@ -42,7 +41,6 @@ required = true
 input_kind = "informational"
 legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
-export_refs = ["m184-2025.declarante.f009"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.complementaria-sustitutiva"
 continuidad_id = "declaracion-complementaria-sustitutiva"
@@ -57,7 +55,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
-export_refs = ["m184-2025.declarante.f010"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.total-socios"
 continuidad_id = "total-registros-socios"
@@ -74,7 +71,6 @@ source_refs = ["aeat-dr-184-2025"]
 # Entidad constituida en España: tipo de entidad and actividad principal are the
 # two sub-fields of the printed row at 145-146, which the design itself declares
 # "se subdivide en dos".
-export_refs = ["m184-2025.declarante.f012"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.entidad-espanola.tipo-entidad"
 continuidad_id = "tipo-entidad-espanola"
@@ -87,7 +83,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-1", "ley-35-2006:art-87", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
-export_refs = ["m184-2025.declarante.f013"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.entidad-espanola.actividad-principal"
 continuidad_id = "actividad-principal-espanola"
@@ -103,7 +98,6 @@ source_refs = ["aeat-dr-184-2025"]
 
 # Entidad constituida en el extranjero: the printed row at 147-155 declares "se
 # subdivide en cuatro", and these are those four sub-fields in order.
-export_refs = ["m184-2025.declarante.f014"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.entidad-extranjera.tipo-entidad"
 continuidad_id = "tipo-entidad-extranjera"
@@ -116,7 +110,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-1", "ley-35-2006:art-87", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
-export_refs = ["m184-2025.declarante.f015"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.entidad-extranjera.objeto"
 continuidad_id = "objeto-entidad-extranjera"
@@ -129,7 +122,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-1", "ley-35-2006:art-87", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
-export_refs = ["m184-2025.declarante.f016"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.entidad-extranjera.clave-pais"
 continuidad_id = "clave-pais-entidad-extranjera"
@@ -142,7 +134,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-1", "ley-35-2006:art-87", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
-export_refs = ["m184-2025.declarante.f017"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.entidad-extranjera.porcentaje-renta-residentes"
 continuidad_id = "porcentaje-renta-atribuible-residentes"
@@ -155,7 +146,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-1", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
-export_refs = ["m184-2025.declarante.f018"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.tributacion-impuesto-sociedades"
 continuidad_id = "tributacion-impuesto-sociedades"
@@ -168,7 +158,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
-export_refs = ["m184-2025.declarante.f019"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.importe-neto-cifra-negocios"
 continuidad_id = "importe-neto-cifra-negocios"
@@ -181,7 +170,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
-export_refs = ["m184-2025.declarante.f020", "m184-2025.declarante.f021"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.representante-nif"
 continuidad_id = "representante-nif"
@@ -194,7 +182,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
-export_refs = ["m184-2025.declarante.f022"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.representante-nombre"
 continuidad_id = "representante-nombre"
@@ -207,7 +194,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
-export_refs = ["m184-2025.declarante.f023"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.total-registros-entidad"
 number = "221-229"
@@ -218,4 +204,3 @@ required = true
 input_kind = "informational"
 legal_refs = ["orden-hac-1430-2025:art-4", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025"]
-export_refs = ["m184-2025.declarante.f024"]

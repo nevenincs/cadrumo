@@ -30,7 +30,6 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-21-base"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-02-casilla-tipo-21-base"]
 
 # Box [06] - "Tipo 21 % - Cuota". Vigencia: todo el ejercicio.
 [[revisions."2024".casillas]]
@@ -47,7 +46,6 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-21-cuota"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-02-casilla-tipo-21-cuota"]
 
 # Box [03] - "Tipo 10 % - Base imponible". Vigencia: todo el ejercicio.
 [[revisions."2024".casillas]]
@@ -64,7 +62,6 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-10-base"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-02-casilla-tipo-10-base"]
 
 # Box [04] - "Tipo 10 % - Cuota". Vigencia: todo el ejercicio.
 [[revisions."2024".casillas]]
@@ -81,7 +78,6 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-10-cuota"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-02-casilla-tipo-10-cuota"]
 
 # Box [669] - "Tipo 7,5 % - Base imponible". Vigencia: desde el 1 de octubre de 2024 (RDL 4/2024 art. 1).
 [[revisions."2024".casillas]]
@@ -100,7 +96,6 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-7-5-base"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-02-casilla-tipo-7-5-base"]
 
 # Box [670] - "Tipo 7,5 % - Cuota". Vigencia: desde el 1 de octubre de 2024 (RDL 4/2024 art. 1).
 [[revisions."2024".casillas]]
@@ -119,7 +114,6 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-7-5-cuota"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-02-casilla-tipo-7-5-cuota"]
 
 # Box [702] - "Tipo 5 % - Base imponible". Vigencia: del 1 de julio al 30 de septiembre de 2024 (RDL 4/2024 art. 1).
 [[revisions."2024".casillas]]
@@ -136,7 +130,6 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-5-base"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-02-casilla-tipo-5-base"]
 
 # Box [703] - "Tipo 5 % - Cuota". Vigencia: del 1 de julio al 30 de septiembre de 2024 (RDL 4/2024 art. 1).
 [[revisions."2024".casillas]]
@@ -153,7 +146,6 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-5-cuota"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-02-casilla-tipo-5-cuota"]
 
 # Box [01] - "Tipo 4 % - Base imponible". Vigencia: todo el ejercicio.
 [[revisions."2024".casillas]]
@@ -170,7 +162,6 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-4-base"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-02-casilla-tipo-4-base"]
 
 # Box [02] - "Tipo 4 % - Cuota". Vigencia: todo el ejercicio.
 [[revisions."2024".casillas]]
@@ -187,7 +178,6 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-4-cuota"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-02-casilla-tipo-4-cuota"]
 
 # Box [667] - "Tipo 2 % - Base imponible". Vigencia: desde el 1 de octubre de 2024 (RDL 4/2024 art. 1).
 [[revisions."2024".casillas]]
@@ -206,7 +196,6 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-2-base"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-02-casilla-tipo-2-base"]
 
 # Box [668] - "Tipo 2 % - Cuota". Vigencia: desde el 1 de octubre de 2024 (RDL 4/2024 art. 1).
 [[revisions."2024".casillas]]
@@ -225,7 +214,6 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-2-cuota"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-02-casilla-tipo-2-cuota"]
 
 # Box [700] - "Tipo 0 % - Base imponible". Vigencia: todo el ejercicio.
 [[revisions."2024".casillas]]
@@ -242,7 +230,6 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-0-base"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-02-casilla-tipo-0-base"]
 
 # Box [701] - "Tipo 0 % - Cuota". Vigencia: todo el ejercicio.
 [[revisions."2024".casillas]]
@@ -259,4 +246,3 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-0-cuota"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024"]
-export_refs = ["modelo-390-page-02-casilla-tipo-0-cuota"]

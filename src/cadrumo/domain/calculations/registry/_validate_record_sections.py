@@ -89,11 +89,9 @@ def _validate_casilla_links(
     casilla: CasillaDefinition,
     formulas: Mapping[str, FormulaDefinition],
     bindings: set[BindingId],
-    export_field_ids: set[str],
 ) -> None:
     _validate_casilla_formula_link(failures, prefix=prefix, casilla=casilla, formulas=formulas)
     _validate_casilla_binding_links(failures, prefix=prefix, casilla=casilla, bindings=bindings)
-    _validate_casilla_export_links(failures, prefix=prefix, casilla=casilla, export_field_ids=export_field_ids)
 
 
 def _validate_casilla_formula_link(
@@ -130,36 +128,24 @@ def _validate_casilla_binding_links(
             failures.append(f"{prefix}: casilla {casilla.id!r} references unknown alternate binding {binding!r}")
 
 
-def _validate_casilla_export_links(
-    failures: list[str],
-    *,
-    prefix: str,
-    casilla: CasillaDefinition,
-    export_field_ids: set[str],
-) -> None:
-    for export_ref in casilla.export_refs:
-        if export_ref not in export_field_ids:
-            failures.append(f"{prefix}: casilla {casilla.id!r} references unknown export field {export_ref!r}")
-
-
 def validate_casilla_section(
     *,
     prefix: str,
     revision: ModeloRevision,
     formulas: Mapping[str, FormulaDefinition],
     bindings: set[BindingId],
-    export_field_ids: set[str],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
 ) -> list[str]:
-    """Return casilla metadata, formula, binding, and export-ref failures.
+    """Return casilla metadata, formula, and binding failures.
 
     The :class:`~domain.calculations.registry.ModeloRevision` supplies
     :class:`~domain.calculations.registry.CasillaDefinition` rows. Each
     casilla, constraint, and alias must be legally/source grounded; formula,
-    binding, alternate-binding, and export-field references must point at ids in
-    the shared revision-validation context.
+    binding, and alternate-binding references must point at ids in the shared
+    revision-validation context. Export references are checked beside the
+    export layouts they are derived from.
     """
     failures: list[str] = []
     for casilla in revision.casillas:
@@ -177,7 +163,6 @@ def validate_casilla_section(
             casilla=casilla,
             formulas=formulas,
             bindings=bindings,
-            export_field_ids=export_field_ids,
         )
     return failures
 

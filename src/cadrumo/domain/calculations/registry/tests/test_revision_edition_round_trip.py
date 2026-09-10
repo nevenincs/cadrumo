@@ -909,10 +909,16 @@ def test_a_migration_that_drops_a_row_its_successor_restated_differently_fails(
         live_registry_root=live, reference_registry_root=m303_reference, modelo_id=_M303, export_scenarios={}
     )
 
-    # The inherited row carries the predecessor's export slot, which the live
-    # authority refuses; the gate reports that refusal instead of a clean edition.
-    assert _kinds(report) == [(RoundTripFindingKind.LIVE_REFUSED, None)]
-    assert "casilla '22' references unknown export field 'm303-2024-late.dp30301.f055'" in report.findings[0].detail
+    # The inherited row takes its export slot from the successor's own layout,
+    # so what it inherits is the predecessor's meaning, which the gate reports
+    # as a content change on that row rather than as a clean edition.
+    assert _kinds(report) == [
+        (RoundTripFindingKind.CONTENT, _M303_2025),
+        (RoundTripFindingKind.EXPORT_UNCHECKED, _M303_2025),
+    ]
+    detail = report.findings[0].detail
+    assert detail.startswith("casilla '22' changed [")
+    assert "export_refs" not in detail
 
 
 def test_a_content_perfect_migration_that_moves_a_row_fails_on_order_alone(
@@ -1010,9 +1016,6 @@ def test_export_bytes_are_compared_through_the_canonical_export_path(
         .replace("\0", _M131_05_FIELD_TARGET)
     )
     layouts.write_text(swapped, encoding="utf-8", newline="\n")
-    edition_dir = modelo_dir / "revisions" / _M131_2025
-    _rewrite_row(edition_dir, "03", '"modelo-131-2025-casilla-03"', '"modelo-131-2025-casilla-05"')
-    _rewrite_row(edition_dir, "05", '"modelo-131-2025-casilla-05"', '"modelo-131-2025-casilla-03"')
 
     failing = edition_round_trip_report(
         live_registry_root=altered, reference_registry_root=m131_reference, modelo_id=_M131, export_scenarios=scenarios

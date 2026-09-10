@@ -15,7 +15,6 @@ data_type = "name"
 semantic_role = "m181_declarante_razon_social"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t1-razon-social"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -29,7 +28,6 @@ data_type = "text"
 semantic_role = "m181_persona_relacion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t1-persona-relacion"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -42,7 +40,6 @@ data_type = "integer"
 semantic_role = "m181_numero_identificativo_declaracion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t1-numero-identificativo"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -57,7 +54,6 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "One combined 'Declaracion complementaria / sustitutiva' box on this informativa; the role is modelo-scoped, so no sibling casilla can carry it. Modelo 190 records the same decision for its own complementaria and sustitutiva boxes."
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t1-complementaria-sustitutiva"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -70,7 +66,6 @@ data_type = "integer"
 semantic_role = "m181_numero_identificativo_anterior"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t1-numero-identificativo-anterior"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -83,7 +78,6 @@ data_type = "integer"
 semantic_role = "m181_numero_total_declarados"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t1-numero-total-declarados"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -98,7 +92,6 @@ data_type = "money"
 semantic_role = "m181_importe_total_capital_amortizado"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t1-importe-total-capital-amortizado"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -113,7 +106,6 @@ data_type = "money"
 semantic_role = "m181_importe_total_intereses"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t1-importe-total-intereses"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -128,7 +120,6 @@ data_type = "money"
 semantic_role = "m181_importe_total_gastos_financiacion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t1-importe-total-gastos-financiacion"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -143,7 +134,6 @@ data_type = "money"
 semantic_role = "m181_importe_total_saldos_pendientes"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t1-importe-total-saldos-pendientes"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -156,7 +146,6 @@ data_type = "nif"
 semantic_role = "m181_declarado_nif"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t2-declarado-nif"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -169,7 +158,6 @@ data_type = "nif"
 semantic_role = "m181_representante_legal_nif"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t2-representante-legal-nif"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -182,7 +170,6 @@ data_type = "name"
 semantic_role = "m181_declarado_nombre"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t2-declarado-nombre"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -195,7 +182,6 @@ data_type = "text"
 semantic_role = "m181_codigo_provincia"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t2-codigo-provincia"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -208,7 +194,6 @@ data_type = "text"
 semantic_role = "m181_clave_tipo_identificacion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t2-clave-tipo-identificacion"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -221,7 +206,6 @@ data_type = "text"
 semantic_role = "m181_prefijo_codigo_iban"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t2-prefijo-codigo-iban"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -235,7 +219,6 @@ data_type = "text"
 semantic_role = "m181_identificacion_operacion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t2-identificacion-operacion"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -249,7 +232,6 @@ data_type = "text"
 semantic_role = "m181_fecha_operacion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t2-fecha-operacion"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -262,7 +244,6 @@ data_type = "integer"
 semantic_role = "m181_duracion_operacion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t2-duracion-operacion"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -276,7 +257,6 @@ data_type = "money"
 semantic_role = "m181_importe_operacion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t2-importe-operacion"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -290,7 +270,6 @@ data_type = "money"
 semantic_role = "m181_importe_amortizacion_capital"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t2-importe-amortizacion-capital"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -304,7 +283,6 @@ data_type = "money"
 semantic_role = "m181_importe_intereses"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t2-importe-intereses"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -318,7 +296,6 @@ data_type = "money"
 semantic_role = "m181_importe_gastos_financiacion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t2-importe-gastos-financiacion"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -332,7 +309,6 @@ data_type = "decimal"
 semantic_role = "m181_porcentaje_participacion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t2-porcentaje-participacion"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -345,7 +321,6 @@ data_type = "text"
 semantic_role = "m181_origen_operacion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t2-origen-operacion"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -358,7 +333,6 @@ data_type = "text"
 semantic_role = "m181_tipo_operacion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t2-tipo-operacion"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -371,7 +345,6 @@ data_type = "text"
 semantic_role = "m181_subclave_operacion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t2-subclave-operacion"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -384,7 +357,6 @@ data_type = "text"
 semantic_role = "m181_situacion_inmueble"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t2-situacion-inmueble"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -397,7 +369,6 @@ data_type = "text"
 semantic_role = "m181_referencia_catastral"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t2-referencia-catastral"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -411,7 +382,6 @@ data_type = "money"
 semantic_role = "m181_valor_tasacion_inmueble"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t2-valor-tasacion-inmueble"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -425,7 +395,6 @@ data_type = "money"
 semantic_role = "m181_saldo_pendiente"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t2-saldo-pendiente"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -445,7 +414,6 @@ data_type = "text"
 semantic_role = "m181_direccion_inmueble"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t2-direccion-inmueble"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -458,7 +426,6 @@ data_type = "text"
 semantic_role = "m181_clave_intervencion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t2-clave-intervencion"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -471,7 +438,6 @@ data_type = "name"
 semantic_role = "m181_prestamista_nombre"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t2-prestamista-nombre"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -484,7 +450,6 @@ data_type = "nif"
 semantic_role = "m181_prestamista_nif"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t2-prestamista-nif"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -499,7 +464,6 @@ data_type = "decimal"
 semantic_role = "m181_porcentaje_financiacion_vivienda_habitual"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t2-porcentaje-financiacion-vivienda"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -513,7 +477,6 @@ data_type = "money"
 semantic_role = "m181_importe_reintegro_intereses"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t2-importe-reintegro-intereses"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -527,7 +490,6 @@ data_type = "money"
 semantic_role = "m181_intereses_indemnizatorios"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t2-intereses-indemnizatorios"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -540,7 +502,6 @@ data_type = "money"
 semantic_role = "m181_otras_cantidades_indemnizatorias"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t2-otras-cantidades-indemnizatorias"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]
 
@@ -554,6 +515,5 @@ data_type = "money"
 semantic_role = "m181_cantidades_minorar_principal"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-181-t2-cantidades-minorar-principal"]
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]

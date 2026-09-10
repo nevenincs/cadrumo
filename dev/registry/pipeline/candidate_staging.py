@@ -40,7 +40,6 @@ _BOOTSTRAP_TARGETS_PATH: Final[Path] = Path(__file__).with_name("generated_expor
 _CONTINUITY_SECTIONS: Final[tuple[str, ...]] = ("casillas", "casilla_continuidad_evolutions")
 _PREDECESSOR_DECLARATION: Final = "predecessor"
 _CASILLA_SECTION: Final = "casillas"
-_EXPORT_REFS: Final = "export_refs"
 _COMPLETE_CASILLA_FRAGMENT: Final = "complete-edition.toml"
 
 
@@ -282,30 +281,14 @@ def _write_complete_candidate_edition(revision_root: Path, edition: Materialised
     drops the predecessor and any review claim the full copy does not carry, and
     the casilla section becomes one fragment holding every resolved row in the
     loader's order.
-
-    An inherited row is written without ``export_refs``. The back-reference is
-    derived from the edition's own layout, and the value an inherited row
-    carries is its origin edition's, naming slots of another layout; the
-    candidate's references are therefore the ones generation derives for it.
     """
     manifest = tomllib.loads((revision_root / "revision.toml").read_text("utf-8"))
     manifest_members = frozenset(manifest.get("revisions", {}).get(edition.revision_id, {}))
     revision_table = {key: value for key, value in edition.table.items() if key in manifest_members}
     rows = edition.table.get(_CASILLA_SECTION, ())
-    origins = edition.label_origins
-    if (
-        not isinstance(rows, list | tuple)
-        or not all(isinstance(row, Mapping) for row in rows)
-        or origins is None
-        or len(origins) != len(rows)
-    ):
-        raise ValueError(
-            f"edition {edition.modelo_id}/{edition.revision_id} resolved no casilla rows aligned with their origins",
-        )
-    staged_rows = [
-        dict(row) if origin is None else {key: value for key, value in row.items() if key != _EXPORT_REFS}
-        for row, origin in zip(rows, origins, strict=True)
-    ]
+    if not isinstance(rows, list | tuple) or not all(isinstance(row, Mapping) for row in rows):
+        raise ValueError(f"edition {edition.modelo_id}/{edition.revision_id} resolved no casilla rows")
+    staged_rows = [dict(row) for row in rows]
     (revision_root / "revision.toml").write_bytes(
         _render_toml_bytes("revision.toml", {"revisions": {edition.revision_id: revision_table}}),
     )

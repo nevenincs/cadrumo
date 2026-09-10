@@ -26,7 +26,6 @@ data_type = "nif"
 semantic_role = "payee_nif"
 required = true
 input_kind = "manual"
-export_refs = ["modelo-270-perc-nif"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
@@ -40,7 +39,6 @@ data_type = "nif"
 semantic_role = "payee_representative_nif"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-270-perc-nif-representante-legal"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
@@ -54,7 +52,6 @@ data_type = "name"
 semantic_role = "payee_name"
 required = true
 input_kind = "manual"
-export_refs = ["modelo-270-perc-nombre"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
@@ -68,7 +65,6 @@ data_type = "name"
 semantic_role = "m270_representante_nombre"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-270-perc-nombre-representante"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
@@ -87,7 +83,6 @@ data_type = "integer"
 semantic_role = "m270_tipo_perceptor"
 required = true
 input_kind = "manual"
-export_refs = ["modelo-270-perc-tipo-perceptor"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
@@ -104,7 +99,6 @@ data_type = "text"
 semantic_role = "m270_clave_personalidad"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-270-perc-clave-personalidad"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
@@ -118,7 +112,6 @@ data_type = "province_code"
 semantic_role = "payee_province"
 required = true
 input_kind = "manual"
-export_refs = ["modelo-270-perc-provincia"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
@@ -132,7 +125,6 @@ data_type = "date"
 semantic_role = "m270_fecha_sorteo"
 required = true
 input_kind = "manual"
-export_refs = ["modelo-270-perc-fecha-sorteo"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
@@ -146,7 +138,6 @@ data_type = "date"
 semantic_role = "m270_fecha_pago_premio"
 required = true
 input_kind = "manual"
-export_refs = ["modelo-270-perc-fecha-pago"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
@@ -160,7 +151,6 @@ data_type = "money"
 semantic_role = "m270_importe_premio"
 required = true
 input_kind = "manual"
-export_refs = ["modelo-270-perc-importe-premio"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"] }
@@ -175,7 +165,6 @@ data_type = "money"
 semantic_role = "base_retenciones_ingresos_a_cuenta"
 required = true
 input_kind = "manual"
-export_refs = ["modelo-270-perc-base-retencion"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"] }
@@ -190,7 +179,6 @@ data_type = "money"
 semantic_role = "retenciones_ingresos_a_cuenta"
 required = true
 input_kind = "manual"
-export_refs = ["modelo-270-perc-retencion"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"] }
@@ -207,7 +195,6 @@ data_type = "text"
 semantic_role = "m270_gestor_cobro"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-270-perc-gestor-cobro"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
@@ -221,7 +208,6 @@ data_type = "text"
 semantic_role = "m270_nif_pais_residencia"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-270-perc-nif-pais-residencia"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
@@ -235,7 +221,6 @@ data_type = "date"
 semantic_role = "m270_fecha_nacimiento"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-270-perc-fecha-nacimiento"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
@@ -256,7 +241,6 @@ data_type = "text"
 semantic_role = "m270_lugar_nacimiento"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-270-perc-lugar-nacimiento"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
@@ -270,6 +254,5 @@ data_type = "country_code"
 semantic_role = "m270_pais_residencia"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-270-perc-pais-residencia"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]

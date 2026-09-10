@@ -16,7 +16,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f018"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-1-fjo"
@@ -29,7 +28,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f019"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-1-razon-social"
@@ -42,7 +40,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f020"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-1-tipo-vinculacion"
@@ -55,7 +52,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f022"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-1-provincia-pais"
@@ -68,7 +64,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f023"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-1-tipo-operacion"
@@ -81,7 +76,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f024"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-1-ingreso-pago"
@@ -94,7 +88,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f025"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-1-metodo-valoracion"
@@ -107,7 +100,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f026"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-1-importe"
@@ -120,7 +112,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f027"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-2-nif"
@@ -133,7 +124,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f028"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-2-fjo"
@@ -146,7 +136,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f029"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-2-razon-social"
@@ -159,7 +148,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f030"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-2-tipo-vinculacion"
@@ -172,7 +160,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f032"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-2-provincia-pais"
@@ -185,7 +172,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f033"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-2-tipo-operacion"
@@ -198,7 +184,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f034"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-2-ingreso-pago"
@@ -211,7 +196,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f035"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-2-metodo-valoracion"
@@ -224,7 +208,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f036"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-2-importe"
@@ -237,7 +220,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f037"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-3-nif"
@@ -250,7 +232,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f038"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-3-fjo"
@@ -263,7 +244,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f039"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-3-razon-social"
@@ -276,7 +256,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f040"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-3-tipo-vinculacion"
@@ -289,7 +268,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f042"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-3-provincia-pais"
@@ -302,7 +280,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f043"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-3-tipo-operacion"
@@ -315,7 +292,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f044"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-3-ingreso-pago"
@@ -328,7 +304,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f045"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-3-metodo-valoracion"
@@ -341,7 +316,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f046"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-3-importe"
@@ -354,7 +328,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f047"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-4-nif"
@@ -367,7 +340,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f048"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-4-fjo"
@@ -380,7 +352,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f049"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-4-razon-social"
@@ -393,7 +364,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f050"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-4-tipo-vinculacion"
@@ -406,7 +376,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f052"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-4-provincia-pais"
@@ -419,7 +388,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f053"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-4-tipo-operacion"
@@ -432,7 +400,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f054"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-4-ingreso-pago"
@@ -445,7 +412,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f055"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-4-metodo-valoracion"
@@ -458,7 +424,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f056"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-4-importe"
@@ -471,7 +436,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f057"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-5-nif"
@@ -484,7 +448,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f058"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-5-fjo"
@@ -497,7 +460,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f059"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-5-razon-social"
@@ -510,7 +472,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f060"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-5-tipo-vinculacion"
@@ -523,7 +484,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f062"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-5-provincia-pais"
@@ -536,7 +496,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f063"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-5-tipo-operacion"
@@ -549,7 +508,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f064"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-5-ingreso-pago"
@@ -562,7 +520,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f065"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-5-metodo-valoracion"
@@ -575,7 +532,6 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f066"]
 
 [[revisions."2016-2017".casillas]]
 id = "vinculada-5-importe"
@@ -588,4 +544,3 @@ required = false
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
-export_refs = ["m232-2016.dr23201.f067"]

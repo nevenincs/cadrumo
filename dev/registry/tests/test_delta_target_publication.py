@@ -8,10 +8,10 @@ and publication entry points over it, with no substituted component.
 
 The candidate must be the complete edition the loader resolves, naming no
 predecessor, and a delta whose predecessor is gone must be refused rather than
-staged thin. Publication writes each addressed casilla's ``export_refs`` onto the
-target edition's own declarations after the export tree is swapped in; a layout
-addressing an inherited casilla must therefore be refused before anything in the
-target is written, never after the cutover.
+staged thin. Publication swaps in the export tree and nothing else: the loader
+derives every addressed casilla's ``export_refs`` from that tree, inherited
+rows included, so a published delta resolves to exactly the references its
+full-copy form carries.
 """
 
 from __future__ import annotations
@@ -31,7 +31,6 @@ from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor
 
 from ..analysis.delta_minimality import MinimalityVerdict, judge_definition
 from ..pipeline._export_tree import _render_toml_bytes
-from ..pipeline._tree_publication import GeneratedExportTreeTargetStateReceipt
 from ..pipeline._tree_validation import GeneratedExportTreeValidationContext
 from ..pipeline.candidate_staging import (
     ignore_export_authority_directories,
@@ -43,7 +42,6 @@ from ..pipeline.cli import (
     _Invocation,
     _PreparedInvocation,
     _publish,
-    _render_candidate,
     _stage_isolated_edition,
     _supporting_modelos,
 )
@@ -192,11 +190,9 @@ def test_a_delta_target_stages_as_the_complete_edition_it_resolves_to(tmp_path: 
     resolved_rows = resolved.table["casillas"]
     assert isinstance(resolved_rows, tuple | list)
     assert [str(casilla.id) for casilla in staged.casillas] == [row["id"] for row in resolved_rows]
-    # A stated row keeps the back-reference it declares; an inherited row carries none of its origin's.
-    by_id = {str(casilla.id): casilla for casilla in staged.casillas}
-    assert all(by_id[casilla_id].export_refs == () for casilla_id in inherited)
-    stated = [casilla for casilla_id, casilla in by_id.items() if casilla_id not in inherited]
-    assert any(casilla.export_refs for casilla in stated)
+    # The candidate holds no export tree yet, so no row, stated or inherited, carries a back-reference:
+    # the loader derives them from the layout the candidate is later rendered with.
+    assert all(casilla.export_refs == () for casilla in staged.casillas)
 
 
 def test_a_delta_target_whose_predecessor_is_absent_is_refused(tmp_path: Path) -> None:
@@ -236,46 +232,46 @@ def test_a_target_stating_every_row_stages_as_the_plain_copy_it_always_was(tmp_p
     assert _tree_bytes(staged_modelo / "revisions" / _REVISION) == _tree_bytes(expected)
 
 
-def test_a_published_delta_target_is_refused_by_validation_before_anything_is_written(tmp_path: Path) -> None:
+def test_a_delta_target_with_its_existing_tree_is_refused_for_its_withdrawn_review_without_writing(
+    tmp_path: Path,
+) -> None:
+    """Check of a published tree demands a reviewed edition, and a staged delta's review does not carry over."""
     target_root = _registry_copy(tmp_path / "target")
     _migrate(target_root)
     prepared = _prepared(tmp_path / "work", target_root)
     before = _tree_bytes(target_root / "modelos" / _MODELO)
 
-    with pytest.raises(RegistryValidationError, match="is not declared by casilla"):
+    with pytest.raises(RegistryValidationError, match="is 'pending_review'; filing-grade snapshot requires") as refusal:
         _check(prepared)
 
+    assert "export_refs" not in str(refusal.value)
     assert _tree_bytes(target_root / "modelos" / _MODELO) == before
 
 
-def test_an_absent_tree_on_a_delta_addressing_inherited_casillas_is_refused_before_cutover(tmp_path: Path) -> None:
+def test_an_absent_tree_on_a_delta_target_publishes_and_derives_the_full_copys_references(tmp_path: Path) -> None:
     target_root = _registry_copy(tmp_path / "target")
     inherited = _migrate(target_root)
     _cite_successor_design_on_inherited_rows(target_root)
     modelo_root = target_root / "modelos" / _MODELO
     shutil.rmtree(modelo_root / "revisions" / _REVISION / "export")
-    prepared = _prepared(tmp_path / "work", target_root)
-    before = _tree_bytes(modelo_root)
+    declarations_before = _tree_bytes(modelo_root)
 
-    with pytest.raises(ValueError, match="which the edition inherits from '2025'") as refusal:
-        _check(prepared)
-    named = str(refusal.value)
-    assert all(f"'{casilla_id}'" not in named for casilla_id in _stated_ids(modelo_root))
-    assert any(f"'{casilla_id}'" in named for casilla_id in inherited)
+    checked = _prepared(tmp_path / "check", target_root)
+    result, _rendered, _target_state = _check(checked)
+    assert result == "publishable_absence"
+    assert not checked.target_export_root.exists()
 
-    # Publication refuses on its own, not only because check did: republication reaches it without a check.
     publication = _prepared(tmp_path / "publish", target_root)
-    rendered = _render_candidate(publication)
-    with pytest.raises(ValueError, match="which the edition inherits from '2025'"):
-        _publish(publication, rendered, GeneratedExportTreeTargetStateReceipt.observe(publication.target_export_root))
+    _result, rendered, target_state = _check(publication)
+    _publish(publication, rendered, target_state)
 
-    assert not prepared.target_export_root.exists()
-    assert _tree_bytes(modelo_root) == before
-
-
-def _stated_ids(modelo_root: Path) -> frozenset[str]:
-    return frozenset(
-        str(row["id"])
-        for path in (modelo_root / "revisions" / _REVISION / "casillas").glob("*.toml")
-        for row in tomllib.loads(path.read_text("utf-8"))["revisions"][_REVISION]["casillas"]
-    )
+    assert publication.target_export_root.is_dir()
+    after = _tree_bytes(modelo_root)
+    export_prefix = f"revisions/{_REVISION}/export/"
+    assert {path: data for path, data in after.items() if not path.startswith(export_prefix)} == declarations_before
+    published = load_modelo_directory(modelo_root).revisions[_REVISION]
+    full_copy = bundled_authority().modelo(_MODELO).revisions[_REVISION]
+    assert {str(c.id): c.export_refs for c in published.casillas} == {
+        str(c.id): c.export_refs for c in full_copy.casillas
+    }
+    assert any(casilla.export_refs for casilla in published.casillas if str(casilla.id) in inherited)

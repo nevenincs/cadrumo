@@ -32,7 +32,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f011"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.regimen-determinacion-rendimientos"
 continuidad_id = "regimen-determinacion-rendimientos"
@@ -45,7 +44,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f012"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.tipo-actividad"
 continuidad_id = "tipo-actividad"
@@ -58,7 +56,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f013"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.epigrafe-iae"
 continuidad_id = "epigrafe-iae"
@@ -71,7 +68,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f014"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.cesionario-nif"
 continuidad_id = "cesionario-nif"
@@ -84,7 +80,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f015"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.cesionario-denominacion"
 continuidad_id = "cesionario-denominacion"
@@ -97,7 +92,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f016"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.fecha-adquisicion"
 continuidad_id = "fecha-adquisicion"
@@ -110,7 +104,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f017", "m184-2023.entidad.f018", "m184-2023.entidad.f019"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.valor-liquidativo"
 continuidad_id = "valor-liquidativo-o-ajustes-aumentos"
@@ -123,7 +116,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f020", "m184-2023.entidad.f021"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.valor-adquisicion"
 continuidad_id = "valor-adquisicion-o-ajustes-disminuciones"
@@ -136,7 +128,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f022", "m184-2023.entidad.f023"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.ingresos-integros"
 continuidad_id = "ingresos-integros-atribuibles"
@@ -149,7 +140,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f024"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos"
 continuidad_id = "gastos-deducibles-atribuibles"
@@ -162,7 +152,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f025", "m184-2023.entidad.f026"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.porcentaje-reduccion"
 continuidad_id = "porcentaje-reduccion-renta-atribuible"
@@ -175,7 +164,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f028", "m184-2023.entidad.f029"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.renta-atribuible-con-reduccion"
 continuidad_id = "renta-atribuible-con-derecho-reduccion"
@@ -188,7 +176,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f030"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.ganancias-perdidas"
 continuidad_id = "ganancias-perdidas-patrimoniales-atribuibles"
@@ -201,7 +188,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f031", "m184-2023.entidad.f032"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.base-deduccion"
 continuidad_id = "base-deduccion-o-importe"
@@ -214,7 +200,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f033", "m184-2023.entidad.f034"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.retenciones"
 continuidad_id = "retenciones-ingresos-a-cuenta-atribuibles"
@@ -227,7 +212,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f035", "m184-2023.entidad.f036"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.situacion-inmueble"
 continuidad_id = "situacion-inmueble"
@@ -240,7 +224,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f037"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.referencia-catastral"
 continuidad_id = "referencia-catastral"
@@ -253,7 +236,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f038"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.criterio-cobros-pagos"
 continuidad_id = "criterio-cobros-y-pagos"
@@ -266,7 +248,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f061"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.dias-arrendamiento"
 continuidad_id = "numero-dias-arrendamiento"
@@ -279,7 +260,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f082"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-actividad.gastos-personal"
 continuidad_id = "gasto-actividad-gastos-personal"
@@ -292,7 +272,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f039", "m184-2023.entidad.f040"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-actividad.consumos-explotacion"
 continuidad_id = "gasto-actividad-consumos-explotacion"
@@ -305,7 +284,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f041", "m184-2023.entidad.f042"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-actividad.tributos-deducibles"
 continuidad_id = "gasto-actividad-tributos-deducibles"
@@ -318,7 +296,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f043", "m184-2023.entidad.f044"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-actividad.arrendamientos-canones"
 continuidad_id = "gasto-actividad-arrendamientos-canones"
@@ -331,7 +308,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f045", "m184-2023.entidad.f046"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-actividad.reparaciones-conservacion"
 continuidad_id = "gasto-actividad-reparaciones-conservacion"
@@ -344,7 +320,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f047", "m184-2023.entidad.f048"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-actividad.servicios-profesionales"
 continuidad_id = "gasto-actividad-servicios-profesionales"
@@ -357,7 +332,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f049", "m184-2023.entidad.f050"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-actividad.suministros"
 continuidad_id = "gasto-actividad-suministros"
@@ -370,7 +344,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f051", "m184-2023.entidad.f052"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-actividad.gastos-financieros"
 continuidad_id = "gasto-actividad-gastos-financieros"
@@ -383,7 +356,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f053", "m184-2023.entidad.f054"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-actividad.amortizaciones"
 continuidad_id = "gasto-actividad-amortizaciones"
@@ -396,7 +368,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f055", "m184-2023.entidad.f056"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-actividad.provisiones"
 continuidad_id = "gasto-actividad-provisiones"
@@ -409,7 +380,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f057", "m184-2023.entidad.f058"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-actividad.otros-gastos-deducibles"
 continuidad_id = "gasto-actividad-otros-gastos-deducibles"
@@ -422,7 +392,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f059", "m184-2023.entidad.f060"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-inmobiliario.intereses-financiacion"
 continuidad_id = "gasto-inmobiliario-intereses-financiacion"
@@ -435,7 +404,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f062", "m184-2023.entidad.f063"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-inmobiliario.conservacion-reparacion"
 continuidad_id = "gasto-inmobiliario-conservacion-reparacion"
@@ -448,7 +416,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f064", "m184-2023.entidad.f065"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-inmobiliario.intereses-gastos-reparacion"
 continuidad_id = "gasto-inmobiliario-intereses-gastos-reparacion"
@@ -461,7 +428,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f066", "m184-2023.entidad.f067"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-inmobiliario.tributos-recargos"
 continuidad_id = "gasto-inmobiliario-tributos-recargos"
@@ -474,7 +440,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f068", "m184-2023.entidad.f069"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-inmobiliario.saldos-dudoso-cobro"
 continuidad_id = "gasto-inmobiliario-saldos-dudoso-cobro"
@@ -487,7 +452,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f070", "m184-2023.entidad.f071"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-inmobiliario.cantidades-devengadas-terceros"
 continuidad_id = "gasto-inmobiliario-cantidades-devengadas-terceros"
@@ -500,7 +464,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f072", "m184-2023.entidad.f073"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-inmobiliario.primas-seguros"
 continuidad_id = "gasto-inmobiliario-primas-seguros"
@@ -513,7 +476,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f074", "m184-2023.entidad.f075"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-inmobiliario.amortizacion-inmueble"
 continuidad_id = "gasto-inmobiliario-amortizacion-inmueble"
@@ -526,7 +488,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f076", "m184-2023.entidad.f077"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-inmobiliario.amortizacion-bienes-muebles"
 continuidad_id = "gasto-inmobiliario-amortizacion-bienes-muebles"
@@ -539,7 +500,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f078", "m184-2023.entidad.f079"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.gastos-inmobiliario.otros-gastos-deducibles"
 continuidad_id = "gasto-inmobiliario-otros-gastos-deducibles"
@@ -552,7 +512,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f080", "m184-2023.entidad.f081"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.miembro-nif"
 continuidad_id = "miembro-nif"
@@ -565,7 +524,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.socio.f005"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.representante-fiscal-nif"
 continuidad_id = "miembro-representante-fiscal-nif"
@@ -578,7 +536,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.socio.f006"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.miembro-nombre"
 continuidad_id = "miembro-nombre-razon-social"
@@ -591,7 +548,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.socio.f007"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.tipo-hoja"
 continuidad_id = "tipo3-tipo-hoja"
@@ -616,7 +572,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.socio.f009"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.clave-pais"
 continuidad_id = "miembro-clave-pais"
@@ -629,7 +584,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.socio.f010"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.clave-tipo-participe"
 continuidad_id = "clave-tipo-participe"
@@ -642,7 +596,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.socio.f011"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.miembro-a-31-diciembre"
 continuidad_id = "miembro-a-31-diciembre"
@@ -655,7 +608,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.socio.f012"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.dias-miembro"
 continuidad_id = "numero-dias-miembro"
@@ -668,7 +620,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.socio.f013"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.porcentaje-participacion"
 continuidad_id = "porcentaje-participacion"
@@ -681,7 +632,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.socio.f014", "m184-2023.socio.f015"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.clave"
 continuidad_id = "tipo3-clave"
@@ -694,7 +644,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.socio.f016"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.subclave"
 continuidad_id = "tipo3-subclave"
@@ -707,7 +656,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.socio.f017"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.importe"
 continuidad_id = "importe-atribuido-miembro"
@@ -720,7 +668,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.socio.f018"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.reduccion"
 continuidad_id = "reduccion-atribuida-miembro"
@@ -733,7 +680,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.socio.f019", "m184-2023.socio.f020"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.domicilio-fiscal"
 continuidad_id = "miembro-domicilio-fiscal"
@@ -746,7 +692,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.socio.f021"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.provisiones-gastos-dificil-justificacion"
 continuidad_id = "provisiones-y-gastos-dificil-justificacion"
@@ -759,7 +704,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.socio.f022"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.naturaleza-inmueble"
 continuidad_id = "naturaleza-inmueble"
@@ -772,7 +716,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.socio.f023"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.situacion-inmueble"
 continuidad_id = "tipo3-situacion-inmueble"
@@ -785,7 +728,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.socio.f024"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.referencia-catastral"
 continuidad_id = "tipo3-referencia-catastral"
@@ -798,7 +740,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.socio.f025"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.clave-declarado"
 continuidad_id = "clave-declarado"
@@ -811,7 +752,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.socio.f026"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.porcentaje-titularidad-inmueble"
 continuidad_id = "porcentaje-titularidad-inmueble"
@@ -824,7 +764,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.socio.f027"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.dias-arrendamiento"
 continuidad_id = "tipo3-dias-arrendamiento"
@@ -837,7 +776,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.socio.f028"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.rendimiento-neto-previo-eo"
 continuidad_id = "rendimiento-neto-previo-estimacion-objetiva"
@@ -850,7 +788,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.socio.f029", "m184-2023.socio.f030"]
 [[revisions."2023-2024".casillas]]
 id = "tipo3.rendimiento-neto-minorado-agricola-eo"
 continuidad_id = "rendimiento-neto-minorado-agricola-estimacion-objetiva"
@@ -863,4 +800,3 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.socio.f031"]

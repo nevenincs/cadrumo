@@ -28,7 +28,6 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Modelo 190's declarante record carries exactly one contact telephone; the concept has no sibling casilla in this revision."
 required = false
 input_kind = "manual"
-export_refs = ["modelo-190-decl-persona-contacto-telefono"]
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
@@ -43,7 +42,6 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Modelo 190's declarante record names exactly one contact person; the concept has no sibling casilla in this revision."
 required = false
 input_kind = "manual"
-export_refs = ["modelo-190-decl-persona-contacto-nombre"]
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
@@ -58,7 +56,6 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "One declaration carries one numero identificativo; the concept has no sibling casilla in this revision."
 required = false
 input_kind = "manual"
-export_refs = ["modelo-190-decl-numero-identificativo"]
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
@@ -73,7 +70,6 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "The complementaria flag is one byte of the declarante record; the concept has no sibling casilla in this revision."
 required = false
 input_kind = "manual"
-export_refs = ["modelo-190-decl-complementaria"]
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
@@ -88,7 +84,6 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "The sustitutiva flag is one byte of the declarante record; the concept has no sibling casilla in this revision."
 required = false
 input_kind = "manual"
-export_refs = ["modelo-190-decl-sustitutiva"]
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
@@ -103,7 +98,6 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "A complementaria or sustitutiva declaration names one prior declaration; the concept has no sibling casilla in this revision."
 required = false
 input_kind = "manual"
-export_refs = ["modelo-190-decl-numero-identificativo-anterior"]
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
@@ -118,6 +112,5 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Modelo 190's declarante record carries exactly one contact email address; the concept has no sibling casilla in this revision."
 required = false
 input_kind = "manual"
-export_refs = ["modelo-190-decl-correo-electronico"]
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]

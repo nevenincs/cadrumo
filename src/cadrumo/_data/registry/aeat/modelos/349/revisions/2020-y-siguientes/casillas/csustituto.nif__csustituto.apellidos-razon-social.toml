@@ -13,7 +13,6 @@
 [[revisions."2020-y-siguientes".casillas]]
 id = "sustituto.nif"
 number = "179-195"
-export_refs = ["modelo-349-op-sustituto-nif", "modelo-349-rect-sustituto-nif"]
 section = ["sustituto", "identificacion"]
 data_type = "text"
 semantic_role = "intracomunitario_sustituto_nif"
@@ -25,7 +24,6 @@ source_refs = ["aeat-dr-349-2020-current"]
 [[revisions."2020-y-siguientes".casillas]]
 id = "sustituto.apellidos-razon-social"
 number = "196-235"
-export_refs = ["modelo-349-op-sustituto-apellidos", "modelo-349-rect-sustituto-apellidos"]
 section = ["sustituto", "identificacion"]
 data_type = "text"
 semantic_role = "intracomunitario_sustituto_nombre"

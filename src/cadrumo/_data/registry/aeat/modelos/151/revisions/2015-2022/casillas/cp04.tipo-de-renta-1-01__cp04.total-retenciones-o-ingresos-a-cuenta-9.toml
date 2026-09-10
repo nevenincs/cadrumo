@@ -25,7 +25,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f006"]
 
 # AEAT campo: Naturaleza [2]
 [[revisions."2015-2022".casillas]]
@@ -40,7 +39,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f007"]
 
 # AEAT campo: Valoración [3]
 [[revisions."2015-2022".casillas]]
@@ -55,7 +53,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f008"]
 
 # AEAT campo: Ingresos a cuenta [4]
 [[revisions."2015-2022".casillas]]
@@ -70,7 +67,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f009"]
 
 # AEAT campo: Ingresos a cuenta repercutidos [5]
 [[revisions."2015-2022".casillas]]
@@ -85,7 +81,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f010"]
 
 # AEAT campo: Rendimiento integro [6]
 [[revisions."2015-2022".casillas]]
@@ -100,7 +95,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f011"]
 
 # AEAT campo: Rentención o ingreso a cuenta [7]
 [[revisions."2015-2022".casillas]]
@@ -115,7 +109,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f012"]
 
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
@@ -130,7 +123,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f013"]
 
 # AEAT campo: Naturaleza [2]
 [[revisions."2015-2022".casillas]]
@@ -145,7 +137,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f014"]
 
 # AEAT campo: Valoración [3]
 [[revisions."2015-2022".casillas]]
@@ -160,7 +151,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f015"]
 
 # AEAT campo: Ingresos a cuenta [4]
 [[revisions."2015-2022".casillas]]
@@ -175,7 +165,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f016"]
 
 # AEAT campo: Ingresos a cuenta repercutidos [5]
 [[revisions."2015-2022".casillas]]
@@ -190,7 +179,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f017"]
 
 # AEAT campo: Rendimiento integro [6]
 [[revisions."2015-2022".casillas]]
@@ -205,7 +193,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f018"]
 
 # AEAT campo: Rentención o ingreso a cuenta [7]
 [[revisions."2015-2022".casillas]]
@@ -220,7 +207,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f019"]
 
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
@@ -235,7 +221,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f020"]
 
 # AEAT campo: Naturaleza [2]
 [[revisions."2015-2022".casillas]]
@@ -250,7 +235,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f021"]
 
 # AEAT campo: Valoración [3]
 [[revisions."2015-2022".casillas]]
@@ -265,7 +249,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f022"]
 
 # AEAT campo: Ingresos a cuenta [4]
 [[revisions."2015-2022".casillas]]
@@ -280,7 +263,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f023"]
 
 # AEAT campo: Ingresos a cuenta repercutidos [5]
 [[revisions."2015-2022".casillas]]
@@ -295,7 +277,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f024"]
 
 # AEAT campo: Rendimiento integro [6]
 [[revisions."2015-2022".casillas]]
@@ -310,7 +291,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f025"]
 
 # AEAT campo: Rentención o ingreso a cuenta [7]
 [[revisions."2015-2022".casillas]]
@@ -325,7 +305,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f026"]
 
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
@@ -340,7 +319,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f027"]
 
 # AEAT campo: Naturaleza [2]
 [[revisions."2015-2022".casillas]]
@@ -355,7 +333,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f028"]
 
 # AEAT campo: Valoración [3]
 [[revisions."2015-2022".casillas]]
@@ -370,7 +347,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f029"]
 
 # AEAT campo: Ingresos a cuenta [4]
 [[revisions."2015-2022".casillas]]
@@ -385,7 +361,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f030"]
 
 # AEAT campo: Ingresos a cuenta repercutidos [5]
 [[revisions."2015-2022".casillas]]
@@ -400,7 +375,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f031"]
 
 # AEAT campo: Rendimiento integro [6]
 [[revisions."2015-2022".casillas]]
@@ -415,7 +389,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f032"]
 
 # AEAT campo: Rentención o ingreso a cuenta [7]
 [[revisions."2015-2022".casillas]]
@@ -430,7 +403,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f033"]
 
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
@@ -445,7 +417,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f034"]
 
 # AEAT campo: Naturaleza [2]
 [[revisions."2015-2022".casillas]]
@@ -460,7 +431,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f035"]
 
 # AEAT campo: Valoración [3]
 [[revisions."2015-2022".casillas]]
@@ -475,7 +445,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f036"]
 
 # AEAT campo: Ingresos a cuenta [4]
 [[revisions."2015-2022".casillas]]
@@ -490,7 +459,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f037"]
 
 # AEAT campo: Ingresos a cuenta repercutidos [5]
 [[revisions."2015-2022".casillas]]
@@ -505,7 +473,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f038"]
 
 # AEAT campo: Rendimiento integro [6]
 [[revisions."2015-2022".casillas]]
@@ -520,7 +487,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f039"]
 
 # AEAT campo: Rentención o ingreso a cuenta [7]
 [[revisions."2015-2022".casillas]]
@@ -535,7 +501,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f040"]
 
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
@@ -550,7 +515,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f041"]
 
 # AEAT campo: Naturaleza [2]
 [[revisions."2015-2022".casillas]]
@@ -565,7 +529,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f042"]
 
 # AEAT campo: Valoración [3]
 [[revisions."2015-2022".casillas]]
@@ -580,7 +543,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f043"]
 
 # AEAT campo: Ingresos a cuenta [4]
 [[revisions."2015-2022".casillas]]
@@ -595,7 +557,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f044"]
 
 # AEAT campo: Ingresos a cuenta repercutidos [5]
 [[revisions."2015-2022".casillas]]
@@ -610,7 +571,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f045"]
 
 # AEAT campo: Rendimiento integro [6]
 [[revisions."2015-2022".casillas]]
@@ -625,7 +585,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f046"]
 
 # AEAT campo: Rentención o ingreso a cuenta [7]
 [[revisions."2015-2022".casillas]]
@@ -640,7 +599,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f047"]
 
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
@@ -655,7 +613,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f048"]
 
 # AEAT campo: Naturaleza [2]
 [[revisions."2015-2022".casillas]]
@@ -670,7 +627,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f049"]
 
 # AEAT campo: Valoración [3]
 [[revisions."2015-2022".casillas]]
@@ -685,7 +641,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f050"]
 
 # AEAT campo: Ingresos a cuenta [4]
 [[revisions."2015-2022".casillas]]
@@ -700,7 +655,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f051"]
 
 # AEAT campo: Ingresos a cuenta repercutidos [5]
 [[revisions."2015-2022".casillas]]
@@ -715,7 +669,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f052"]
 
 # AEAT campo: Rendimiento integro [6]
 [[revisions."2015-2022".casillas]]
@@ -730,7 +683,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f053"]
 
 # AEAT campo: Rentención o ingreso a cuenta [7]
 [[revisions."2015-2022".casillas]]
@@ -745,7 +697,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f054"]
 
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
@@ -760,7 +711,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f055"]
 
 # AEAT campo: Naturaleza [2]
 [[revisions."2015-2022".casillas]]
@@ -775,7 +725,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f056"]
 
 # AEAT campo: Valoración [3]
 [[revisions."2015-2022".casillas]]
@@ -790,7 +739,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f057"]
 
 # AEAT campo: Ingresos a cuenta [4]
 [[revisions."2015-2022".casillas]]
@@ -805,7 +753,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f058"]
 
 # AEAT campo: Ingresos a cuenta repercutidos [5]
 [[revisions."2015-2022".casillas]]
@@ -820,7 +767,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f059"]
 
 # AEAT campo: Rendimiento integro [6]
 [[revisions."2015-2022".casillas]]
@@ -835,7 +781,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f060"]
 
 # AEAT campo: Rentención o ingreso a cuenta [7]
 [[revisions."2015-2022".casillas]]
@@ -850,7 +795,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f061"]
 
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
@@ -865,7 +809,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f062"]
 
 # AEAT campo: Naturaleza [2]
 [[revisions."2015-2022".casillas]]
@@ -880,7 +823,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f063"]
 
 # AEAT campo: Valoración [3]
 [[revisions."2015-2022".casillas]]
@@ -895,7 +837,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f064"]
 
 # AEAT campo: Ingresos a cuenta [4]
 [[revisions."2015-2022".casillas]]
@@ -910,7 +851,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f065"]
 
 # AEAT campo: Ingresos a cuenta repercutidos [5]
 [[revisions."2015-2022".casillas]]
@@ -925,7 +865,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f066"]
 
 # AEAT campo: Rendimiento integro [6]
 [[revisions."2015-2022".casillas]]
@@ -940,7 +879,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f067"]
 
 # AEAT campo: Rentención o ingreso a cuenta [7]
 [[revisions."2015-2022".casillas]]
@@ -955,7 +893,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f068"]
 
 # AEAT campo: RESTO. Rendimientos íntegro [6]
 [[revisions."2015-2022".casillas]]
@@ -969,7 +906,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f069"]
 
 # AEAT campo: RESTO. Rentención o ingreso a cuenta [7]
 [[revisions."2015-2022".casillas]]
@@ -984,7 +920,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f070"]
 
 # AEAT campo: Total rendimientos íntegros [8]
 [[revisions."2015-2022".casillas]]
@@ -998,7 +933,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f071"]
 
 # AEAT campo: Total retenciones o ingresos a cuenta [9]
 [[revisions."2015-2022".casillas]]
@@ -1013,4 +947,3 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2015.pagina04.f072"]

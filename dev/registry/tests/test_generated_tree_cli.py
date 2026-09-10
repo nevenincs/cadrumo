@@ -412,40 +412,13 @@ def _prepared_absent_target(candidate_base: Path, target_root: Path) -> _Prepare
     )
 
 
-def _remove_candidate_export_refs(prepared: _PreparedInvocation) -> None:
-    """Inject the missing-derived-ref defect bootstrap must repair before validation."""
-    for path in (
-        prepared.candidate_root / "modelos" / _ISOLATED_TREE.modelo / "revisions" / _ISOLATED_TREE.revision / "casillas"
-    ).glob("*.toml"):
-        path.write_text(
-            "".join(
-                line
-                for line in path.read_text(encoding="utf-8").splitlines(keepends=True)
-                if not line.startswith("export_refs = ")
-            ),
-            encoding="utf-8",
-        )
-
-
 def test_absent_tree_is_validated_then_published_through_the_canonical_authorities(tmp_path: Path) -> None:
     """An owed tree is bootstrap-publishable only after its fresh candidate validates."""
     first = _prepared_absent_target(tmp_path / "check", tmp_path / "target" / "registry" / "aeat")
     shutil.copytree(first.candidate_root, first.target_root)
-    _remove_candidate_export_refs(first)
 
     result, _rendered, _target_state = _check(first)
     assert result == "publishable_absence"
-    assert any(
-        "export_refs = [" in path.read_text(encoding="utf-8")
-        for path in (
-            first.candidate_root
-            / "modelos"
-            / _ISOLATED_TREE.modelo
-            / "revisions"
-            / _ISOLATED_TREE.revision
-            / "casillas"
-        ).glob("*.toml")
-    )
     assert first.candidate_root.joinpath(
         "modelos",
         _ISOLATED_TREE.modelo,

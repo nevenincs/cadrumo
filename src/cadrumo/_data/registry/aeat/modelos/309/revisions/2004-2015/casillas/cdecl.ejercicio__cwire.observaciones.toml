@@ -21,7 +21,6 @@ semantic_role = "declaracion_periodo_309"
 continuidad_id = "declaracion-periodo-309"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-periodo"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -32,7 +31,6 @@ data_type = "text"
 semantic_role = "letras_etiqueta_persona_fisica"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-letras-etiqueta"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -44,7 +42,6 @@ semantic_role = "transmitente_nif"
 continuidad_id = "transmitente-nif"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-transmitente-nif"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -55,7 +52,6 @@ data_type = "name"
 semantic_role = "transmitente_apellidos"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-transmitente-apellidos"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -69,7 +65,6 @@ data_type = "text"
 semantic_role = "transmitente_pais_texto_historico"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-transmitente-pais"]
 constraints = { max_length = 14, legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2004"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
@@ -83,7 +78,6 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "The 2004 design alone carries this X-or-blank taxpayer-status slot."
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-situacion-tributaria-agricola"]
 constraints = { max_length = 1, enum = ["X", ""], legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2004"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
@@ -97,7 +91,6 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "The 2004 design alone carries this X-or-blank taxpayer-status slot."
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-situacion-tributaria-recargo-equivalencia"]
 constraints = { max_length = 1, enum = ["X", ""], legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2004"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
@@ -111,7 +104,6 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "The 2004 design alone carries this X-or-blank taxpayer-status slot."
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-situacion-tributaria-sin-derecho-deduccion"]
 constraints = { max_length = 1, enum = ["X", ""], legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2004"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
@@ -125,7 +117,6 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "The 2004 design alone carries this X-or-blank taxpayer-status slot."
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-situacion-tributaria-persona-juridica-no-empresario"]
 constraints = { max_length = 1, enum = ["X", ""], legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2004"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
@@ -139,7 +130,6 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "The 2004 design alone carries this X-or-blank taxpayer-status slot."
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-situacion-tributaria-persona-fisica-no-empresario"]
 constraints = { max_length = 1, enum = ["X", ""], legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2004"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
@@ -153,7 +143,6 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "The 2004 design alone carries this X-or-blank taxpayer-status slot."
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-situacion-tributaria-otras"]
 constraints = { max_length = 1, enum = ["X", ""], legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2004"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
@@ -165,7 +154,6 @@ data_type = "text"
 semantic_role = "hecho_imponible_adquisicion_intracomunitaria"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-hecho-imponible-adquisicion-intracomunitaria"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -176,7 +164,6 @@ data_type = "text"
 semantic_role = "hecho_imponible_medios_transporte_nuevos"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-hecho-imponible-medios-transporte-nuevos"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -187,7 +174,6 @@ data_type = "text"
 semantic_role = "hecho_imponible_inversion_sujeto_pasivo"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-hecho-imponible-inversion-sujeto-pasivo"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -198,7 +184,6 @@ data_type = "text"
 semantic_role = "hecho_imponible_entrega_inversion_inmobiliaria"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-hecho-imponible-entrega-inversion-inmobiliaria"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -209,7 +194,6 @@ data_type = "text"
 semantic_role = "hecho_imponible_procedimiento_administrativo_judicial"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-hecho-imponible-procedimiento-administrativo-judicial"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -220,7 +204,6 @@ data_type = "text"
 semantic_role = "hecho_imponible_otros"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-hecho-imponible-otros"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -232,7 +215,6 @@ semantic_role = "vehiculo_marca"
 continuidad_id = "vehiculo-marca"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-vehiculo-marca"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -244,7 +226,6 @@ semantic_role = "vehiculo_tipo"
 continuidad_id = "vehiculo-tipo"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-vehiculo-tipo"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -256,7 +237,6 @@ semantic_role = "vehiculo_modelo"
 continuidad_id = "vehiculo-modelo"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-vehiculo-modelo"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -268,7 +248,6 @@ semantic_role = "vehiculo_bastidor"
 continuidad_id = "vehiculo-bastidor"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-vehiculo-bastidor"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -280,7 +259,6 @@ semantic_role = "vehiculo_clasificacion"
 continuidad_id = "vehiculo-clasificacion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-vehiculo-clasificacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -292,7 +270,6 @@ semantic_role = "embarcacion_fabricante"
 continuidad_id = "embarcacion-fabricante"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-embarcacion-fabricante"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -304,7 +281,6 @@ semantic_role = "embarcacion_tipo"
 continuidad_id = "embarcacion-tipo"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-embarcacion-tipo"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -316,7 +292,6 @@ semantic_role = "mtn_embarcacion_identificacion"
 continuidad_id = "mtn-embarcacion-identificacion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-embarcacion-identificacion"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -328,7 +303,6 @@ semantic_role = "embarcacion_eslora"
 continuidad_id = "embarcacion-eslora"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-embarcacion-eslora"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -340,7 +314,6 @@ semantic_role = "aeronave_fabricante"
 continuidad_id = "aeronave-fabricante"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-aeronave-fabricante"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -352,7 +325,6 @@ semantic_role = "aeronave_marca"
 continuidad_id = "aeronave-marca"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-aeronave-marca"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -364,7 +336,6 @@ semantic_role = "aeronave_serie"
 continuidad_id = "aeronave-serie"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-aeronave-serie"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -376,7 +347,6 @@ semantic_role = "aeronave_ano"
 continuidad_id = "aeronave-ano"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-aeronave-ano"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -388,7 +358,6 @@ semantic_role = "aeronave_peso"
 continuidad_id = "aeronave-peso"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-aeronave-peso"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -400,7 +369,6 @@ semantic_role = "justificante_anterior"
 continuidad_id = "justificante-anterior"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-justificante-anterior"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -411,6 +379,5 @@ data_type = "text"
 semantic_role = "observaciones_presentacion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-309-historical-observaciones"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]

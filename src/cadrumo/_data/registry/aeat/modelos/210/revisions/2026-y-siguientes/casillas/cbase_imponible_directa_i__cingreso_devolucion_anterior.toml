@@ -42,7 +42,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
-export_refs = ["m210-2026.pagina01.f082"]
 
 # --- Determinación de la base imponible: 210 R (rendimientos) ---
 
@@ -58,7 +57,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
 source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
-export_refs = ["m210-2026.pagina01.f084"]
 constraints = { sign = "non_negative", legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_refs = ["aeat-dr-210-2026"] }
 
 # --- Determinación de la base imponible: 210 H (ganancias patrimoniales) ---
@@ -75,7 +73,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
 source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
-export_refs = ["m210-2026.pagina01.f092"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "ganancia_valor_adquisicion"
@@ -89,7 +86,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
 source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
-export_refs = ["m210-2026.pagina01.f093"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "ganancia_diferencia"
@@ -103,7 +99,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
 source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
-export_refs = ["m210-2026.pagina01.f094"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "ganancia_importe"
@@ -117,7 +112,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
 source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
-export_refs = ["m210-2026.pagina01.f095"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "mejora_valor_transmision"
@@ -131,7 +125,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
 source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
-export_refs = ["m210-2026.pagina01.f096"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "mejora_valor_adquisicion"
@@ -145,7 +138,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
 source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
-export_refs = ["m210-2026.pagina01.f097"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "mejora_diferencia"
@@ -159,7 +151,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
 source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
-export_refs = ["m210-2026.pagina01.f098"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "mejora_ganancia"
@@ -173,7 +164,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
 source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
-export_refs = ["m210-2026.pagina01.f099"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "base_imponible_ganancias_h"
@@ -188,7 +178,6 @@ input_kind = "computed"
 formula = "m210-base-ganancias-h-2025"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
 source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
-export_refs = ["m210-2026.pagina01.f100"]
 
 # --- Determinación de la base imponible: 210 G (direct) ---
 
@@ -206,7 +195,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
-export_refs = ["m210-2026.pagina01.f104"]
 
 # --- Liquidación ---
 
@@ -222,7 +210,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
-export_refs = ["m210-2026.pagina01.f105"]
 constraints = { min_value = "0", max_value = "1", legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_refs = ["aeat-dr-210-2026"] }
 
 [[revisions."2026-y-siguientes".casillas]]
@@ -237,7 +224,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
-export_refs = ["m210-2026.pagina01.f106"]
 constraints = { min_value = "0", max_value = "1", legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_refs = ["aeat-dr-210-2026"] }
 
 [[revisions."2026-y-siguientes".casillas]]
@@ -252,7 +238,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
-export_refs = ["m210-2026.pagina01.f109"]
 constraints = { sign = "non_negative", legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_refs = ["aeat-dr-210-2026"] }
 
 [[revisions."2026-y-siguientes".casillas]]
@@ -268,7 +253,6 @@ input_kind = "computed"
 formula = "m210-cuota-ley-irnr-2025"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
-export_refs = ["m210-2026.pagina01.f110"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "porcentaje_convenio"
@@ -282,7 +266,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
-export_refs = ["m210-2026.pagina01.f111"]
 constraints = { min_value = "0", max_value = "1", legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_refs = ["aeat-dr-210-2026"] }
 
 [[revisions."2026-y-siguientes".casillas]]
@@ -297,7 +280,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
-export_refs = ["m210-2026.pagina01.f112"]
 constraints = { sign = "non_negative", legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_refs = ["aeat-dr-210-2026"] }
 
 [[revisions."2026-y-siguientes".casillas]]
@@ -313,7 +295,6 @@ input_kind = "computed"
 formula = "m210-reduccion-convenio-2025"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
-export_refs = ["m210-2026.pagina01.f113"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "cuota_integra_reducida"
@@ -328,7 +309,6 @@ input_kind = "computed"
 formula = "m210-cuota-integra-reducida-2025"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
-export_refs = ["m210-2026.pagina01.f114"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "ingreso_devolucion_anterior"
@@ -342,4 +322,3 @@ required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
-export_refs = ["m210-2026.pagina01.f116"]

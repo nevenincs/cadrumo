@@ -10,7 +10,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.declarado.f006"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.importe-anual"
 continuidad_id = "importe-anual-operaciones"
@@ -23,7 +22,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.declarado.f012"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.operacion-seguro"
 continuidad_id = "operacion-seguro"
@@ -36,7 +34,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.declarado.f013"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.arrendamiento-local-negocio"
 continuidad_id = "arrendamiento-local-negocio"
@@ -49,7 +46,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.declarado.f014"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.importe-metalico"
 continuidad_id = "importe-percibido-metalico"
@@ -62,7 +58,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.declarado.f015", "m347-2025.declarado.f016"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.importe-transmisiones-inmuebles"
 continuidad_id = "importe-transmisiones-inmuebles"
@@ -75,7 +70,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.declarado.f017"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.ejercicio-operacion"
 continuidad_id = "ejercicio-operacion"
@@ -88,7 +82,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.declarado.f018"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.importe-transmisiones-Q1"
 continuidad_id = "importe-transmisiones-q1"
@@ -101,7 +94,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.declarado.f020"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.importe-transmisiones-Q2"
 continuidad_id = "importe-transmisiones-q2"
@@ -114,7 +106,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.declarado.f022"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.importe-transmisiones-Q3"
 continuidad_id = "importe-transmisiones-q3"
@@ -127,7 +118,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.declarado.f024"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.importe-transmisiones-Q4"
 continuidad_id = "importe-transmisiones-q4"
@@ -140,7 +130,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.declarado.f026"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.nif-operador-comunitario"
 continuidad_id = "nif-operador-comunitario"
@@ -153,7 +142,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.declarado.f027"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.criterio-caja"
 number = "contraparte.criterio-caja"
@@ -164,7 +152,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.declarado.f028"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.inversion-sujeto-pasivo"
 number = "contraparte.inversion-sujeto-pasivo"
@@ -175,7 +162,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.declarado.f029"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.bienes-vinculados"
 number = "contraparte.bienes-vinculados"
@@ -186,7 +172,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.declarado.f030"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.importe-criterio-caja"
 number = "contraparte.importe-criterio-caja"
@@ -197,7 +182,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.declarado.f031"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.numero-convocatoria-bdns"
 number = "contraparte.numero-convocatoria-bdns"
@@ -208,4 +192,3 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-export_refs = ["m347-2025.declarado.f032"]

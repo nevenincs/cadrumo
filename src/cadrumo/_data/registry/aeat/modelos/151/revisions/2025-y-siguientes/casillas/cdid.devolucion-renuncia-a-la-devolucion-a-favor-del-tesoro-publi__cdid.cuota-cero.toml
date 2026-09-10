@@ -19,7 +19,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.did.f006"]
 
 # AEAT campo: Devolución. Solicita la devolución por transferencia
 [[revisions."2025-y-siguientes".casillas]]
@@ -32,7 +31,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.did.f007"]
 
 # AEAT campo: Ingreso/Domiciliación/Devolución - IBAN
 [[revisions."2025-y-siguientes".casillas]]
@@ -45,7 +43,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.did.f008"]
 
 # AEAT campo: Devolución. SWIFT-BIC
 [[revisions."2025-y-siguientes".casillas]]
@@ -58,7 +55,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.did.f009"]
 
 # AEAT campo: Devolución - Banco/Bank name
 [[revisions."2025-y-siguientes".casillas]]
@@ -73,7 +69,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.did.f010"]
 
 # AEAT campo: Devolución - Dirección del Banco/ Bank address
 [[revisions."2025-y-siguientes".casillas]]
@@ -88,7 +83,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.did.f011"]
 
 # AEAT campo: Devolución - Ciudad/City
 [[revisions."2025-y-siguientes".casillas]]
@@ -103,7 +97,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.did.f012"]
 
 # AEAT campo: Devolución - Código País/Country code
 [[revisions."2025-y-siguientes".casillas]]
@@ -118,7 +111,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.did.f013"]
 
 # AEAT campo: Cuota cero
 [[revisions."2025-y-siguientes".casillas]]
@@ -131,4 +123,3 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.did.f015"]

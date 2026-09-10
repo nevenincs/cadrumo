@@ -19,7 +19,6 @@ data_type = "money"
 semantic_role = "m322_operaciones_sujetas_con_inversion_del_sujeto_pasivo"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c125"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -33,7 +32,6 @@ data_type = "money"
 semantic_role = "m322_operaciones_no_sujetas_por_reglas_de_localizacion_acogidas_a_los_regimenes_especiales_de_ventanilla_unica"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c126"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -47,7 +45,6 @@ data_type = "money"
 semantic_role = "m322_operaciones_sujetas_y_acogidas_a_los_regimenes_especiales_de_ventanilla_unica"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c127"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -58,7 +55,6 @@ section = ["iva", "regimen_general", "intragrupo", "devengado"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c128"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -72,7 +68,6 @@ data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c150"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -86,7 +81,6 @@ data_type = "ratio"
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_tipo"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c151"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -100,7 +94,6 @@ data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_cuota"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c152"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -114,7 +107,6 @@ data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c153"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -128,7 +120,6 @@ data_type = "ratio"
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_tipo"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c154"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -142,7 +133,6 @@ data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_cuota"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c155"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -156,7 +146,6 @@ data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_base_imponible"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c156"]
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -170,7 +159,6 @@ data_type = "ratio"
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_tipo"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c157"]
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -184,7 +172,6 @@ data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_cuota"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c158"]
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -198,7 +185,6 @@ data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_base_imponible"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c159"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -212,7 +198,6 @@ data_type = "ratio"
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_tipo"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c160"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -226,7 +211,6 @@ data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_cuota"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c161"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -240,7 +224,6 @@ data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_base_imponible"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c162"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -254,7 +237,6 @@ data_type = "ratio"
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_tipo"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c163"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -268,7 +250,6 @@ data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_cuota"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c164"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -279,7 +260,6 @@ section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c165"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -293,7 +273,6 @@ data_type = "ratio"
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_tipo"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c166"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -307,7 +286,6 @@ data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_cuota"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c167"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -321,7 +299,6 @@ data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_base_imponible"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c168"]
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -335,7 +312,6 @@ data_type = "ratio"
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_tipo"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c169"]
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -349,7 +325,6 @@ data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_cuota"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c170"]
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -363,7 +338,6 @@ data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_base_imponible"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c171"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -377,7 +351,6 @@ data_type = "ratio"
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_tipo"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c172"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -391,7 +364,6 @@ data_type = "money"
 semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_cuota"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c173"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -402,7 +374,6 @@ section = ["iva", "prorratas"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c500"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -413,7 +384,6 @@ section = ["iva", "prorratas"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c501"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -424,7 +394,6 @@ section = ["iva", "prorratas"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c502"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -435,7 +404,6 @@ section = ["iva", "prorratas"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c503"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -446,7 +414,6 @@ section = ["iva", "prorratas"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c504"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -457,7 +424,6 @@ section = ["iva", "prorratas"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c505"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -468,7 +434,6 @@ section = ["iva", "prorratas"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c506"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -479,7 +444,6 @@ section = ["iva", "prorratas"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c507"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -490,7 +454,6 @@ section = ["iva", "prorratas"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c508"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -501,7 +464,6 @@ section = ["iva", "prorratas"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c509"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -512,7 +474,6 @@ section = ["iva", "prorratas"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c510"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -523,7 +484,6 @@ section = ["iva", "prorratas"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c511"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -534,7 +494,6 @@ section = ["iva", "prorratas"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c512"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -545,7 +504,6 @@ section = ["iva", "prorratas"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c513"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -556,7 +514,6 @@ section = ["iva", "prorratas"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c514"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -567,7 +524,6 @@ section = ["iva", "prorratas"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c515"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -578,7 +534,6 @@ section = ["iva", "prorratas"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c516"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -589,7 +544,6 @@ section = ["iva", "prorratas"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c517"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -600,7 +554,6 @@ section = ["iva", "prorratas"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c518"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -611,7 +564,6 @@ section = ["iva", "prorratas"]
 data_type = "ratio"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c519"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -622,7 +574,6 @@ section = ["iva", "prorratas"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c520"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
 
@@ -633,6 +584,5 @@ section = ["iva", "prorratas"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-322-2026-c521"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]

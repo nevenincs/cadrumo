@@ -10,7 +10,6 @@ required = true
 input_kind = "informational"
 legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024"]
-export_refs = ["m184-2023.declarante.f003"]
 [[revisions."2023-2024".casillas]]
 id = "decl.tipo-declaracion"
 continuidad_id = "tipo-declaracion"
@@ -41,7 +40,6 @@ required = true
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f009"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.subclave"
 continuidad_id = "tipo-renta-atribuida-subclave"
@@ -63,7 +61,6 @@ source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
 # the declarante rather than a member. The member's NIF is record 3's 18-26 and
 # is already modelled correctly as 'tipo3.miembro-nif'. Left in place it bound a
 # casilla named for the member to the bytes carrying the DECLARANTE's NIF.
-export_refs = ["m184-2023.entidad.f010"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.renta-atribuible-importe"
 continuidad_id = "renta-atribuible-importe"
@@ -80,4 +77,3 @@ required = true
 input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "boe-modelo-184-2015-form"]
-export_refs = ["m184-2023.entidad.f027"]

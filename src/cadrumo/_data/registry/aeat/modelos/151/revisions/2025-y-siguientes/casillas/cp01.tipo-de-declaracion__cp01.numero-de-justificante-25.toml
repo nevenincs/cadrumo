@@ -19,7 +19,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f006"]
 
 # AEAT campo: Contribuyente. Sexo [04]
 [[revisions."2025-y-siguientes".casillas]]
@@ -35,7 +34,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f011"]
 
 # AEAT campo: Contribuyente. Fecha de nacimiento [05]
 [[revisions."2025-y-siguientes".casillas]]
@@ -51,7 +49,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f012"]
 
 # AEAT campo: Contribuyente. Condicion. Contribuyente principal [06]
 [[revisions."2025-y-siguientes".casillas]]
@@ -66,7 +63,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f013"]
 
 # AEAT campo: Contribuyente. Condicion. Contribuyente asociado a otro principal [07]
 [[revisions."2025-y-siguientes".casillas]]
@@ -81,7 +77,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f014"]
 
 # AEAT campo: Contribuyente. Tipo de vinculación. Cónyuge [08]
 [[revisions."2025-y-siguientes".casillas]]
@@ -96,7 +91,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f015"]
 
 # AEAT campo: Contribuyente. Tipo de vinculación. Progenitor sin vínculo matrimonial [09]
 [[revisions."2025-y-siguientes".casillas]]
@@ -111,7 +105,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f016"]
 
 # AEAT campo: Contribuyente. Tipo de vinculación. Hijo/a [10]
 [[revisions."2025-y-siguientes".casillas]]
@@ -126,7 +119,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f017"]
 
 # AEAT campo: Contribuyente. Datos del contribuyente principal. NIF [11]
 [[revisions."2025-y-siguientes".casillas]]
@@ -141,7 +133,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f018"]
 
 # AEAT campo: Contribuyente. Datos del contribuyente principal. Apellidos y nombre [12]
 [[revisions."2025-y-siguientes".casillas]]
@@ -156,7 +147,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f019"]
 
 # AEAT campo: Contribuyente. Cambio de domicilio [13]
 [[revisions."2025-y-siguientes".casillas]]
@@ -172,7 +162,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f020"]
 
 # AEAT campo: Contribuyente. Tipo de vía [26]
 [[revisions."2025-y-siguientes".casillas]]
@@ -188,7 +177,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f021"]
 
 # AEAT campo: Contribuyente. Nombre de la vía pública [27]
 [[revisions."2025-y-siguientes".casillas]]
@@ -204,7 +192,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f022"]
 
 # AEAT campo: Contribuyente. Tipo de numeración [28]
 [[revisions."2025-y-siguientes".casillas]]
@@ -220,7 +207,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f023"]
 
 # AEAT campo: Contribuyente. Número de casa [29]
 [[revisions."2025-y-siguientes".casillas]]
@@ -236,7 +222,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f024"]
 
 # AEAT campo: Contribuyente. Calificador de número [30]
 [[revisions."2025-y-siguientes".casillas]]
@@ -252,7 +237,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f025"]
 
 # AEAT campo: Contribuyente. Bloque [31]
 [[revisions."2025-y-siguientes".casillas]]
@@ -268,7 +252,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f026"]
 
 # AEAT campo: Contribuyente. Portal [32]
 [[revisions."2025-y-siguientes".casillas]]
@@ -284,7 +267,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f027"]
 
 # AEAT campo: Contribuyente. Escalera [33]
 [[revisions."2025-y-siguientes".casillas]]
@@ -300,7 +282,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f028"]
 
 # AEAT campo: Contribuyente. Planta [34]
 [[revisions."2025-y-siguientes".casillas]]
@@ -316,7 +297,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f029"]
 
 # AEAT campo: Contribuyente. Puerta [35]
 [[revisions."2025-y-siguientes".casillas]]
@@ -332,7 +312,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f030"]
 
 # AEAT campo: Contribuyente. Datos complementarios del domicilio [36]
 [[revisions."2025-y-siguientes".casillas]]
@@ -348,7 +327,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f031"]
 
 # AEAT campo: Contribuyente. Localidad/Poblacion [37]
 [[revisions."2025-y-siguientes".casillas]]
@@ -364,7 +342,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f032"]
 
 # AEAT campo: Contribuyente. Código postal del domicilio [38]
 [[revisions."2025-y-siguientes".casillas]]
@@ -377,7 +354,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f033"]
 
 # AEAT campo: Contribuyente. Codigo de Provincia [40]
 [[revisions."2025-y-siguientes".casillas]]
@@ -390,7 +366,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f034"]
 
 # AEAT campo: Contribuyente. Nombre del Municipio [39]
 [[revisions."2025-y-siguientes".casillas]]
@@ -403,7 +378,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f035"]
 
 # AEAT campo: Contribuyente. Teléfono fijo [41]
 [[revisions."2025-y-siguientes".casillas]]
@@ -419,7 +393,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f036"]
 
 # AEAT campo: Contribuyente. Teléfono móvil [42]
 [[revisions."2025-y-siguientes".casillas]]
@@ -435,7 +408,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f037"]
 
 # AEAT campo: Contribuyente Domicilio Extranjero. Domicilio [43]
 [[revisions."2025-y-siguientes".casillas]]
@@ -451,7 +423,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f038"]
 
 # AEAT campo: Contribuyente Domicilio Extranjero. Datos complementarios domicilio [44]
 [[revisions."2025-y-siguientes".casillas]]
@@ -467,7 +438,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f039"]
 
 # AEAT campo: Contribuyente Domicilio Extranjero. Poblacion/Ciudad [45]
 [[revisions."2025-y-siguientes".casillas]]
@@ -483,7 +453,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f040"]
 
 # AEAT campo: Contribuyente Domicilio Extranjero. Email [46]
 [[revisions."2025-y-siguientes".casillas]]
@@ -499,7 +468,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f041"]
 
 # AEAT campo: Contribuyente Domicilio Extranjero. Codigo postal/ZIP [47]
 [[revisions."2025-y-siguientes".casillas]]
@@ -515,7 +483,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f042"]
 
 # AEAT campo: Contribuyente Domicilio Extranjero. Provincia/Region/Estado [48]
 [[revisions."2025-y-siguientes".casillas]]
@@ -531,7 +498,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f043"]
 
 # AEAT campo: Contribuyente Domicilio Extranjero. Pais [50]
 [[revisions."2025-y-siguientes".casillas]]
@@ -547,7 +513,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f044"]
 
 # AEAT campo: Contribuyente Domicilio Extranjero. Teléfono Fijo [51]
 [[revisions."2025-y-siguientes".casillas]]
@@ -563,7 +528,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f045"]
 
 # AEAT campo: Contribuyente Domicilio Extranjero. Teléfono Móvil [52]
 [[revisions."2025-y-siguientes".casillas]]
@@ -579,7 +543,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f046"]
 
 # AEAT campo: Contribuyente Datos Adicionales vivienda actual. Titularidad [14]
 [[revisions."2025-y-siguientes".casillas]]
@@ -595,7 +558,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f047"]
 
 # AEAT campo: Contribuyente Datos Adicionales vivienda actual. Porcentaje participación [15]
 [[revisions."2025-y-siguientes".casillas]]
@@ -611,7 +573,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f048"]
 
 # AEAT campo: Contribuyente Datos Adicionales vivienda actual. Situacion [16]
 [[revisions."2025-y-siguientes".casillas]]
@@ -627,7 +588,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f049"]
 
 # AEAT campo: Contribuyente Datos Adicionales vivienda actual. Referencia catastral [17]
 [[revisions."2025-y-siguientes".casillas]]
@@ -643,7 +603,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f050"]
 
 # AEAT campo: Representante. NIF [18]
 [[revisions."2025-y-siguientes".casillas]]
@@ -659,7 +618,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f051"]
 
 # AEAT campo: Representante. Apellidos y nombre o razón social o denominación [19]
 [[revisions."2025-y-siguientes".casillas]]
@@ -672,7 +630,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f052"]
 
 # AEAT campo: Representante. Tipo de vía [26]
 [[revisions."2025-y-siguientes".casillas]]
@@ -688,7 +645,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f053"]
 
 # AEAT campo: Representante. Nombre de la vía pública [27]
 [[revisions."2025-y-siguientes".casillas]]
@@ -704,7 +660,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f054"]
 
 # AEAT campo: Representante. Tipo de numeración [28]
 [[revisions."2025-y-siguientes".casillas]]
@@ -720,7 +675,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f055"]
 
 # AEAT campo: Representante. Número de casa [29]
 [[revisions."2025-y-siguientes".casillas]]
@@ -736,7 +690,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f056"]
 
 # AEAT campo: Representante. Calificador de número [30]
 [[revisions."2025-y-siguientes".casillas]]
@@ -752,7 +705,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f057"]
 
 # AEAT campo: Representante. Bloque [31]
 [[revisions."2025-y-siguientes".casillas]]
@@ -768,7 +720,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f058"]
 
 # AEAT campo: Representante. Portal [32]
 [[revisions."2025-y-siguientes".casillas]]
@@ -784,7 +735,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f059"]
 
 # AEAT campo: Representante. Escalera [33]
 [[revisions."2025-y-siguientes".casillas]]
@@ -800,7 +750,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f060"]
 
 # AEAT campo: Representante. Planta [34]
 [[revisions."2025-y-siguientes".casillas]]
@@ -816,7 +765,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f061"]
 
 # AEAT campo: Representante. Puerta [35]
 [[revisions."2025-y-siguientes".casillas]]
@@ -832,7 +780,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f062"]
 
 # AEAT campo: Representante. Datos complementarios del domicilio [36]
 [[revisions."2025-y-siguientes".casillas]]
@@ -848,7 +795,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f063"]
 
 # AEAT campo: Representante. Localidad/Poblacion (si es distinta del municipio) [37]
 [[revisions."2025-y-siguientes".casillas]]
@@ -861,7 +807,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f064"]
 
 # AEAT campo: Representante. Código postal del domicilio [38]
 [[revisions."2025-y-siguientes".casillas]]
@@ -874,7 +819,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f065"]
 
 # AEAT campo: Representante. Nombre del Municipio [39]
 [[revisions."2025-y-siguientes".casillas]]
@@ -887,7 +831,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f066"]
 
 # AEAT campo: Representante. Codigo de Provincia [40]
 [[revisions."2025-y-siguientes".casillas]]
@@ -900,7 +843,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f067"]
 
 # AEAT campo: Representante. Teléfono fijo [41]
 [[revisions."2025-y-siguientes".casillas]]
@@ -916,7 +858,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f068"]
 
 # AEAT campo: Representante. Teléfono móvil [42]
 [[revisions."2025-y-siguientes".casillas]]
@@ -932,7 +873,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f069"]
 
 # AEAT campo: Comunidad Autonoma de residencia durante el ejercicio indicado [20]
 [[revisions."2025-y-siguientes".casillas]]
@@ -948,7 +888,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f070"]
 
 # AEAT campo: Asignacion Tributaria a la Iglesia Catolica [21]
 [[revisions."2025-y-siguientes".casillas]]
@@ -964,7 +903,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f071"]
 
 # AEAT campo: Asignacion de cantidades a fines sociales [22]
 [[revisions."2025-y-siguientes".casillas]]
@@ -980,7 +918,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f072"]
 
 # AEAT campo: Declaracion Complementaria [23]
 [[revisions."2025-y-siguientes".casillas]]
@@ -996,7 +933,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f073"]
 
 # AEAT campo: Declaracion Complementaria 2 [24]
 [[revisions."2025-y-siguientes".casillas]]
@@ -1012,7 +948,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f074"]
 
 # AEAT campo: Número de Justificante [25]
 [[revisions."2025-y-siguientes".casillas]]
@@ -1028,4 +963,3 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
-export_refs = ["m151-2023.pagina01.f075"]

@@ -18,7 +18,6 @@ data_type = "name"
 semantic_role = "m280_declarante_razon_social"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-280-t1-razon-social"]
 legal_refs = ["orden-hap-2118-2015:art-1", "orden-hap-2118-2015:art-2"]
 source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
 
@@ -33,7 +32,6 @@ data_type = "text"
 semantic_role = "m280_persona_relacion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-280-t1-persona-relacion"]
 legal_refs = ["orden-hap-2118-2015:art-1"]
 source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
 
@@ -47,7 +45,6 @@ data_type = "integer"
 semantic_role = "m280_numero_identificativo_declaracion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-280-t1-numero-identificativo"]
 legal_refs = ["orden-hap-2118-2015:art-1"]
 source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
 
@@ -63,7 +60,6 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "One combined 'Declaracion complementaria / sustitutiva' box on this informativa; the role is modelo-scoped, so no sibling casilla can carry it. Modelo 190 records the same decision for its own complementaria and sustitutiva boxes."
 required = false
 input_kind = "manual"
-export_refs = ["modelo-280-t1-complementaria-sustitutiva"]
 legal_refs = ["orden-hap-2118-2015:art-1"]
 source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
 
@@ -78,7 +74,6 @@ data_type = "integer"
 semantic_role = "m280_numero_identificativo_anterior"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-280-t1-numero-identificativo-anterior"]
 legal_refs = ["orden-hap-2118-2015:art-1"]
 source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
 
@@ -92,7 +87,6 @@ data_type = "integer"
 semantic_role = "m280_numero_total_declarados"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-280-t1-numero-total-declarados"]
 legal_refs = ["orden-hap-2118-2015:art-1"]
 source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
 
@@ -110,7 +104,6 @@ semantic_role = "m280_importe_total_aportaciones"
 required = false
 input_kind = "manual"
 constraints = { sign = "non_negative", legal_refs = ["orden-hfp-1822-2016:art-sexto"], source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"] }
-export_refs = ["modelo-280-t1-importe-total-aportaciones"]
 legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
 source_refs = ["boe-modelo-280-base-order", "boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"]
 
@@ -125,7 +118,6 @@ semantic_role = "m280_base_retenciones"
 required = false
 input_kind = "manual"
 constraints = { sign = "non_negative", legal_refs = ["orden-hfp-1822-2016:art-sexto"], source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"] }
-export_refs = ["modelo-280-t1-base-retenciones"]
 legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
 source_refs = ["boe-modelo-280-base-order", "boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"]
 
@@ -143,7 +135,6 @@ data_type = "nif"
 semantic_role = "m280_representante_legal_nif"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-280-t2-representante-legal-nif"]
 legal_refs = ["orden-hap-2118-2015:art-1", "orden-hap-2118-2015:art-2"]
 source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
 
@@ -158,7 +149,6 @@ semantic_role = "m280_tipo_plan_ahorro"
 required = false
 input_kind = "manual"
 constraints = { max_length = 1, enum = ["1", "2"], legal_refs = ["orden-hap-2118-2015:art-1"], source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"] }
-export_refs = ["modelo-280-t2-tipo-plan"]
 legal_refs = ["orden-hap-2118-2015:art-1"]
 source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
 
@@ -173,7 +163,6 @@ semantic_role = "m280_tipo_identificador"
 required = false
 input_kind = "manual"
 constraints = { max_length = 1, enum = ["I", "O"], legal_refs = ["orden-hap-2118-2015:art-1"], source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"] }
-export_refs = ["modelo-280-t2-tipo-identificador"]
 legal_refs = ["orden-hap-2118-2015:art-1"]
 source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
 
@@ -188,7 +177,6 @@ semantic_role = "m280_identificador_producto"
 required = false
 input_kind = "manual"
 constraints = { max_length = 24, legal_refs = ["orden-hap-2118-2015:art-1"], source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"] }
-export_refs = ["modelo-280-t2-identificador-producto"]
 legal_refs = ["orden-hap-2118-2015:art-1"]
 source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
 
@@ -204,7 +192,6 @@ semantic_role = "m280_fecha_apertura"
 required = false
 input_kind = "manual"
 constraints = { max_length = 8, legal_refs = ["orden-hap-2118-2015:art-1"], source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"] }
-export_refs = ["modelo-280-t2-fecha-apertura"]
 legal_refs = ["orden-hap-2118-2015:art-1"]
 source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
 
@@ -219,7 +206,6 @@ semantic_role = "m280_base_retencion_practicada"
 required = false
 input_kind = "manual"
 constraints = { sign = "non_negative", legal_refs = ["orden-hfp-1822-2016:art-sexto"], source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"] }
-export_refs = ["modelo-280-t2-base-retencion-practicada"]
 legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
 source_refs = ["boe-modelo-280-base-order", "boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"]
 
@@ -238,6 +224,5 @@ data_type = "money"
 semantic_role = "m280_rendimientos_negativos_imputables"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-280-t2-rendimientos-negativos-imputables"]
 legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
 source_refs = ["boe-modelo-280-base-order", "boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"]

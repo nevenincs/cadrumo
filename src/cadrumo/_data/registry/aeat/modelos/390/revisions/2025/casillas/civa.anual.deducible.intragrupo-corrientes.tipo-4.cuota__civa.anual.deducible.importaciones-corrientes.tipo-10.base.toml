@@ -14,7 +14,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-corrientes-tipo-4-cuota"]
 
 # Box [51] - '5. Operaciones Reg. Gral. - IVA deducible - Total oper. inter. bienes de inversion - Cuota [51]' (Pág. 3 offset 710, length 17).
 [[revisions."2025".casillas]]
@@ -30,7 +29,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-03-casilla-deducible-interiores-inversion-total-cuota"]
 
 # Box [512] - '5. Operaciones Reg. Gral. - IVA deducible - Total oper. intragrupo corrientes - Base imponible [512]' (Pág. 3 offset 455, length 17).
 [[revisions."2025".casillas]]
@@ -46,7 +44,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-corrientes-total-base"]
 
 # Box [513] - '5. Operaciones Reg. Gral. - IVA deducible - Total oper. intragrupo corrientes - Cuota [513]' (Pág. 3 offset 472, length 17).
 [[revisions."2025".casillas]]
@@ -62,7 +59,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-corrientes-total-cuota"]
 
 # Box [514] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intra. bienes de inversion - Tipo 4% - Base imponible [514]' (Pág. 3 offset 761, length 17).
 [[revisions."2025".casillas]]
@@ -78,7 +74,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-inversion-tipo-4-base"]
 
 # Box [515] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intra. bienes de inversion - Tipo 4% - Cuota [515]' (Pág. 3 offset 778, length 17).
 [[revisions."2025".casillas]]
@@ -94,7 +89,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-inversion-tipo-4-cuota"]
 
 # Box [52] - '5. Operaciones Reg. Gral. - IVA deducible - Total import. bienes corrientes - Base imponible [52]' (Pág. 3 offset 1169, length 17).
 [[revisions."2025".casillas]]
@@ -110,7 +104,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-03-casilla-deducible-importaciones-corrientes-total-base"]
 
 # Box [520] - '5. Operaciones Reg. Gral. - IVA deducible - Total oper. intra. bienes de inversion - Base imponible [520]' (Pág. 3 offset 931, length 17).
 [[revisions."2025".casillas]]
@@ -126,7 +119,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-inversion-total-base"]
 
 # Box [521] - '5. Operaciones Reg. Gral. - IVA deducible - Total oper. intra. bienes de inversion - Cuota [521]' (Pág. 3 offset 948, length 17).
 [[revisions."2025".casillas]]
@@ -142,7 +134,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-inversion-total-cuota"]
 
 # Box [54] - '5. Operaciones Reg. Gral. - IVA deducible - Total importacion bienes inversion - Base imponible [54]' (Pág. 3 offset 1407, length 17).
 [[revisions."2025".casillas]]
@@ -158,7 +149,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-03-casilla-deducible-importaciones-inversion-total-base"]
 
 # Box [55] - '5. Operaciones Reg. Gral. - IVA deducible - Total importacion bienes inversion - Cuota [55]' (Pág. 3 offset 1424, length 17).
 [[revisions."2025".casillas]]
@@ -174,7 +164,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-03-casilla-deducible-importaciones-inversion-total-cuota"]
 
 # Box [56] - '5. Operaciones Reg. Gral. - IVA deducible - Total adqui. intra. bienes corrientes - Base imponible [56]' (Pág. 3 offset 1645, length 17).
 [[revisions."2025".casillas]]
@@ -190,7 +179,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-03-casilla-deducible-aic-corrientes-total-base"]
 
 # Box [57] - '5. Operaciones Reg. Gral. - IVA deducible - Total adqui. intra. bienes corrientes - Cuota [57]' (Pág. 3 offset 1662, length 17).
 [[revisions."2025".casillas]]
@@ -206,7 +194,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-03-casilla-deducible-aic-corrientes-total-cuota"]
 
 # Box [58] - '5. Operaciones Reg. Gral. - IVA deducible - Total adqui. intra. bienes inversion - Base imponible [58]' (Pág. 4 offset 217, length 17).
 [[revisions."2025".casillas]]
@@ -222,7 +209,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-04-casilla-deducible-aic-inversion-total-base"]
 
 # Box [587] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 4% - Base imponible [587]' (Pág. 4 offset 285, length 17).
 [[revisions."2025".casillas]]
@@ -238,7 +224,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-04-casilla-deducible-aic-servicios-tipo-4-base"]
 
 # Box [588] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 4% - Cuota [588]' (Pág. 4 offset 302, length 17).
 [[revisions."2025".casillas]]
@@ -254,7 +239,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-04-casilla-deducible-aic-servicios-tipo-4-cuota"]
 
 # Box [59] - '5. Operaciones Reg. Gral. - IVA deducible - Total adqui. intra. bienes inversion - Cuota [59]' (Pág. 4 offset 234, length 17).
 [[revisions."2025".casillas]]
@@ -270,7 +254,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-04-casilla-deducible-aic-inversion-total-cuota"]
 
 # Box [597] - '5. Operaciones Reg. Gral. - IVA deducible - Total adqui. intra. servicios - Base imponible [597]' (Pág. 4 offset 455, length 17).
 [[revisions."2025".casillas]]
@@ -286,7 +269,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-04-casilla-deducible-aic-servicios-total-base"]
 
 # Box [598] - '5. Operaciones Reg. Gral. - IVA deducible - Total adqui. intra. servicios - Cuota [598]' (Pág. 4 offset 472, length 17).
 [[revisions."2025".casillas]]
@@ -302,7 +284,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-04-casilla-deducible-aic-servicios-total-cuota"]
 
 # Box [599] - '5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 1,4% - Base imponible [599]' (Pág. 2 bis offset 183, length 17).
 [[revisions."2025".casillas]]
@@ -318,7 +299,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-02b-casilla-repercutido-recargo-tipo-1-4-base"]
 
 # Box [60] - '5. Operaciones Reg. Gral. - IVA deducible - Compensac. rég. especial agric./ganad./pesca - Base impon. [60]' (Pág. 4 offset 489, length 17).
 [[revisions."2025".casillas]]
@@ -334,7 +314,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-04-casilla-deducible-compensaciones-reagp-base"]
 
 # Box [601] - '5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 5,2% - Base imponible [601]' (Pág. 2 bis offset 217, length 17).
 [[revisions."2025".casillas]]
@@ -350,7 +329,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-02b-casilla-repercutido-recargo-tipo-5-2-base"]
 
 # Box [603] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. corrientes bienes y servic. - Tipo 10% - Base imponible [603]' (Pág. 3 offset 149, length 17).
 [[revisions."2025".casillas]]
@@ -366,7 +344,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-03-casilla-deducible-interiores-corrientes-tipo-10-base"]
 
 # Box [604] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. corrientes bienes y servic. - Tipo 10% - Cuota [604]' (Pág. 3 offset 166, length 17).
 [[revisions."2025".casillas]]
@@ -382,7 +359,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-03-casilla-deducible-interiores-corrientes-tipo-10-cuota"]
 
 # Box [605] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. corrientes bienes y servic. - Tipo 21% - Base imponible [605]' (Pág. 3 offset 183, length 17).
 [[revisions."2025".casillas]]
@@ -398,7 +374,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-03-casilla-deducible-interiores-corrientes-tipo-21-base"]
 
 # Box [606] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. corrientes bienes y servic. - Tipo 21% - Cuota [606]' (Pág. 3 offset 200, length 17).
 [[revisions."2025".casillas]]
@@ -414,7 +389,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-03-casilla-deducible-interiores-corrientes-tipo-21-cuota"]
 
 # Box [607] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intragrupo corrientes - Tipo 10% - Base imponible [607]' (Pág. 3 offset 387, length 17).
 [[revisions."2025".casillas]]
@@ -430,7 +404,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-corrientes-tipo-10-base"]
 
 # Box [608] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intragrupo corrientes - Tipo 10% - Cuota [608]' (Pág. 3 offset 404, length 17).
 [[revisions."2025".casillas]]
@@ -446,7 +419,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-corrientes-tipo-10-cuota"]
 
 # Box [609] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intragrupo corrientes - Tipo 21% - Base imponible [609]' (Pág. 3 offset 421, length 17).
 [[revisions."2025".casillas]]
@@ -462,7 +434,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-corrientes-tipo-21-base"]
 
 # Box [61] - '5. Operaciones Reg. Gral. - IVA deducible - Compensac. rég. especial agric./ganad./pesca - Cuota deduc. [61]' (Pág. 4 offset 506, length 17).
 [[revisions."2025".casillas]]
@@ -478,7 +449,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-04-casilla-deducible-compensaciones-reagp-cuota"]
 
 # Box [610] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intragrupo corrientes - Tipo 21% - Cuota [610]' (Pág. 3 offset 438, length 17).
 [[revisions."2025".casillas]]
@@ -494,7 +464,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-corrientes-tipo-21-cuota"]
 
 # Box [611] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. bienes de inversion - Tipo 10% - Base imponible [611]' (Pág. 3 offset 625, length 17).
 [[revisions."2025".casillas]]
@@ -510,7 +479,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-03-casilla-deducible-interiores-inversion-tipo-10-base"]
 
 # Box [612] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. bienes de inversion - Tipo 10% - Cuota [612]' (Pág. 3 offset 642, length 17).
 [[revisions."2025".casillas]]
@@ -526,7 +494,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-03-casilla-deducible-interiores-inversion-tipo-10-cuota"]
 
 # Box [613] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. bienes de inversion - Tipo 21% - Base imponible [613]' (Pág. 3 offset 659, length 17).
 [[revisions."2025".casillas]]
@@ -542,7 +509,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-03-casilla-deducible-interiores-inversion-tipo-21-base"]
 
 # Box [614] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. bienes de inversion - Tipo 21% - Cuota [614]' (Pág. 3 offset 676, length 17).
 [[revisions."2025".casillas]]
@@ -558,7 +524,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-03-casilla-deducible-interiores-inversion-tipo-21-cuota"]
 
 # Box [615] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intra. bienes de inversion - Tipo 10% - Base imponible [615]' (Pág. 3 offset 863, length 17).
 [[revisions."2025".casillas]]
@@ -574,7 +539,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-inversion-tipo-10-base"]
 
 # Box [616] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intra. bienes de inversion - Tipo 10% - Cuota [616]' (Pág. 3 offset 880, length 17).
 [[revisions."2025".casillas]]
@@ -590,7 +554,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-inversion-tipo-10-cuota"]
 
 # Box [617] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intra. bienes de inversion - Tipo 21% - Base imponible [617]' (Pág. 3 offset 897, length 17).
 [[revisions."2025".casillas]]
@@ -606,7 +569,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-inversion-tipo-21-base"]
 
 # Box [618] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intra. bienes de inversion - Tipo 21% - Cuota [618]' (Pág. 3 offset 914, length 17).
 [[revisions."2025".casillas]]
@@ -622,7 +584,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-inversion-tipo-21-cuota"]
 
 # Box [619] - '5. Operaciones Reg. Gral. - IVA deducible - Import. bienes corrientes - Tipo 10% - Base imponible [619]' (Pág. 3 offset 1101, length 17).
 [[revisions."2025".casillas]]
@@ -638,4 +599,3 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-03-casilla-deducible-importaciones-corrientes-tipo-10-base"]
