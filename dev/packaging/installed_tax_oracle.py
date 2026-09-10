@@ -93,7 +93,7 @@ class InstalledTaxEvidence:
     requested_executable: str
     resolved_executable: str
     version_output: str
-    cohort_source_commit: str
+    cohort_source_digest: str
     cohort_manifest_sha256: str
     cohort_root_wheel_sha256: str
     executable_sha256: str
@@ -460,7 +460,7 @@ def run_installed_tax_oracle(
     *,
     storage_root: Path,
     work_dir: Path,
-    cohort_source_commit: str,
+    cohort_source_digest: str,
     cohort_manifest_sha256: str,
     cohort_root_wheel_sha256: str,
     timeout_seconds: float = 180.0,
@@ -594,7 +594,7 @@ def run_installed_tax_oracle(
         requested_executable=str(requested_cli),
         resolved_executable=str(resolved_cli),
         version_output=version.stdout.strip(),
-        cohort_source_commit=cohort_source_commit,
+        cohort_source_digest=cohort_source_digest,
         cohort_manifest_sha256=cohort_manifest_sha256,
         cohort_root_wheel_sha256=cohort_root_wheel_sha256,
         executable_sha256=executable_sha256,
@@ -619,7 +619,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--cli", required=True, type=Path, help="Absolute installed aeat executable.")
     parser.add_argument("--storage-root", required=True, type=Path, help="Fresh isolated product storage root.")
     parser.add_argument("--work-dir", required=True, type=Path, help="Execution cwd outside the source checkout.")
-    parser.add_argument("--cohort-source-commit", required=True)
+    parser.add_argument("--cohort-source-digest", required=True)
     parser.add_argument("--cohort-manifest-sha256", required=True)
     parser.add_argument("--cohort-root-wheel-sha256", required=True)
     parser.add_argument("--timeout-seconds", type=float, default=180.0)
@@ -634,7 +634,7 @@ def main() -> int:
         args.cli,
         storage_root=args.storage_root,
         work_dir=args.work_dir,
-        cohort_source_commit=args.cohort_source_commit,
+        cohort_source_digest=args.cohort_source_digest,
         cohort_manifest_sha256=args.cohort_manifest_sha256,
         cohort_root_wheel_sha256=args.cohort_root_wheel_sha256,
         timeout_seconds=args.timeout_seconds,

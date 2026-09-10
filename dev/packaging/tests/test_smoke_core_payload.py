@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core.directory_scan import iter_directory, scan_directory
+from cadrumo.core.directory_scan import iter_directory
 
 from ..._paths import REPO_ROOT
 from .._distribution_limits import PYPI_FILE_CAP_BYTES
@@ -22,14 +22,14 @@ from ..lane_verification_core import (
     _RENTA_PDF_ALLOW_LIST,
     _configured_corpus_binary_suffixes,
     _is_corpus_source_binary,
+    _validated_source_data_inventory,
     assert_wheel_contains_tracked_data,
     build_companion_wheels,
+    build_root_snapshot,
     build_sdist,
     build_source_data_paths,
     build_wheel,
-    commit_defined_build_root,
     expected_wheel_data_paths,
-    head_extract,
     recorded_proofs,
     reset_proof_ledger,
     run_checked,
@@ -54,11 +54,11 @@ _REVIEW_FOUND_PATHS = {
 }
 
 
-# The dirty-tree branch of `commit_defined_build_root` extracts roughly forty
-# thousand files before any build starts, measured at three minutes on the
-# Windows build host. CI checks out clean and never pays it, but the shared
-# factory worktree always does, and the 300 s project ceiling would kill the
-# worker mid-extraction with an opaque "node down" instead of a result.
+# `build_root_snapshot` copies roughly forty thousand files before any build
+# starts, measured at three minutes on the Windows build host, because every
+# build now runs from an isolated snapshot rather than the live tree. The
+# 300 s project ceiling would kill the worker mid-copy with an opaque "node
+# down" instead of a result.
 @pytest.mark.timeout(900)
 def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_path: Path) -> None:
     """Build the wheel and prove tracked-data parity against companion ownership."""
@@ -69,13 +69,13 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
     split_owned = {path for path in tracked if "/tests/" not in path and _is_corpus_source_binary(path, suffixes)}
     assert split_owned >= _REVIEW_FOUND_PATHS
 
-    # Build every artifact from a tree that corresponds to a commit, never from
-    # a dirty working tree: the expectations above come from `git ls-files` at
-    # HEAD, and in the shared factory worktree a tree build can snapshot a torn
-    # peer edit, producing an artifact that matches no commit and failing this
-    # test as if it were a packaging regression (issue 613). On a clean checkout
-    # this is the tree itself, so CI pays nothing. One root serves all six builds.
-    build_root = commit_defined_build_root(_REPO_ROOT, tmp_path / "build-source")
+    # Build every artifact from an isolated snapshot, never from the live
+    # working tree: the expectations above come from the same enumeration
+    # `build_root_snapshot` copies from, and in the shared factory worktree a
+    # live-tree build can straddle a torn peer edit, producing an artifact
+    # that matches no fixed content and failing this test as if it were a
+    # packaging regression (issue 613). One root serves all six builds.
+    build_root = build_root_snapshot(_REPO_ROOT, tmp_path / "build-source")
 
     wheel = build_wheel(_REPO_ROOT, tmp_path, uv, build_root=build_root)
     with zipfile.ZipFile(wheel) as archive:
@@ -151,10 +151,10 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
             {
                 "artifacts": filenames,
                 "sha256": digests,
-                "source_commit": "a" * 40,
+                "source_digest": "a" * 64,
                 "version": expected_version,
                 "command_spec_attestation": make_test_command_spec_attestation(
-                    cohort_dir, filenames, source_commit="a" * 40
+                    cohort_dir, filenames, source_digest="a" * 64
                 ),
             },
         ),
@@ -165,53 +165,8 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
     assert cohort.sha256 == digests
 
 
-def test_commit_defined_build_root_excludes_uncommitted_working_tree_state(tmp_path: Path) -> None:
-    """A dirty tree yields a HEAD extract; a clean tree is used directly.
-
-    This is the property the payload build above depends on. If the resolver
-    degraded into always returning the working tree, uncommitted peer edits
-    would flow into the artifacts while the expectations still came from HEAD,
-    which is the torn-snapshot failure issue 613 observed live. If it always
-    extracted, CI would pay three minutes per run for a byte-identical copy.
-
-    Exercised against a real throwaway repository rather than this one: the
-    property is about Git, and archiving the full corpus tree to assert it
-    costs minutes for no extra discrimination.
-    """
-    origin = tmp_path / "origin"
-    (origin / "packaging").mkdir(parents=True)
-    run_checked(["git", "init", "--quiet"], cwd=origin)
-    run_checked(["git", "config", "user.email", "probe@example.invalid"], cwd=origin)
-    run_checked(["git", "config", "user.name", "probe"], cwd=origin)
-    (origin / "committed.txt").write_text("committed content\n", encoding="utf-8")
-    (origin / "packaging" / "kept.txt").write_text("nested committed\n", encoding="utf-8")
-    run_checked(["git", "add", "committed.txt", "packaging/kept.txt"], cwd=origin)
-    run_checked(["git", "commit", "--quiet", "-m", "probe commit"], cwd=origin)
-
-    # Clean tree: the tree already IS the commit, so it is used as-is.
-    assert commit_defined_build_root(origin, tmp_path / "clean-work") == origin
-
-    # Dirty the tree exactly as a mid-sweep peer would: one edit to a tracked
-    # file and one entirely new untracked file.
-    (origin / "committed.txt").write_text("TORN EDIT\n", encoding="utf-8")
-    (origin / "untracked.txt").write_text("never committed\n", encoding="utf-8")
-
-    build_root = commit_defined_build_root(origin, tmp_path / "dirty-work")
-
-    assert build_root != origin
-    extracted = {
-        path.relative_to(build_root).as_posix() for path in scan_directory(build_root, recursive=True) if path.is_file()
-    }
-    assert extracted == {"committed.txt", "packaging/kept.txt"}, sorted(extracted)
-    assert (build_root / "committed.txt").read_text(encoding="utf-8") == "committed content\n"
-    assert not (build_root / ".git").exists()
-
-
 def _seed_shipped_data_repository(origin: Path) -> set[str]:
-    """Create a throwaway repository carrying a minimal tracked shipped-data tree."""
-    run_checked(["git", "init", "--quiet"], cwd=origin)
-    run_checked(["git", "config", "user.email", "probe@example.invalid"], cwd=origin)
-    run_checked(["git", "config", "user.name", "probe"], cwd=origin)
+    """Plant a minimal shipped-data tree with one ignore rule, no version control."""
     (origin / ".gitignore").write_text(
         "__pycache__/\n/src/cadrumo/_data/registry/aeat/.*.lock\n",
         encoding="utf-8",
@@ -221,28 +176,24 @@ def _seed_shipped_data_repository(origin: Path) -> set[str]:
         path = origin / relative
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(relative.encode("utf-8"))
-    run_checked(["git", "add", "--all"], cwd=origin)
-    run_checked(["git", "commit", "--quiet", "-m", "shipped data"], cwd=origin)
     return tracked
 
 
-def test_shipped_data_inventory_is_identical_across_every_build_root_branch(tmp_path: Path) -> None:
-    """VCS-ignored artefacts beside the sources cannot move the shipped-data inventory.
+def test_shipped_data_inventory_is_identical_between_the_live_tree_and_a_snapshot(tmp_path: Path) -> None:
+    """Ignored artefacts beside the sources cannot move the shipped-data inventory.
 
-    Porcelain does not report ignored paths, so a working tree carrying registry
-    transaction mutexes and bytecode caches still reads clean and is used as the
-    build root directly. A filesystem-derived inventory counted those artefacts
-    as payload the wheel must contain, while the ignore-aware build shed them,
-    so the very same source produced a passing or failing result according to
-    whether a peer's transient file happened to exist. The inventory therefore
-    reads Git, and the live working tree and its own HEAD extract must agree.
+    A working tree carrying registry transaction mutexes and bytecode caches
+    is filtered by the same ignore rules the wheel build's file selection
+    uses, so counting them would demand payload the wheel can never contain.
+    The inventory therefore reads the same on the live tree and on a snapshot
+    build root taken from it.
     """
     origin = tmp_path / "origin"
     origin.mkdir()
     tracked = _seed_shipped_data_repository(origin)
 
     assert build_source_data_paths(origin) == tracked
-    assert build_source_data_paths(head_extract(origin, tmp_path / "extract-before")) == tracked
+    assert build_source_data_paths(build_root_snapshot(origin, tmp_path / "snapshot-before")) == tracked
 
     ignored_artefacts = (
         origin / "src/cadrumo/_data/registry/aeat/.publication-transaction.lock",
@@ -253,25 +204,68 @@ def test_shipped_data_inventory_is_identical_across_every_build_root_branch(tmp_
         artefact.write_bytes(b"transient\n")
     assert all(artefact.is_file() for artefact in ignored_artefacts)
 
-    # The blind spot itself: these files exist, and Git still calls the tree clean.
-    porcelain = run_checked(["git", "status", "--porcelain"], cwd=origin).stdout.strip()
-    assert porcelain == "", porcelain
-    assert commit_defined_build_root(origin, tmp_path / "fast-path") == origin
-
     assert build_source_data_paths(origin) == tracked
-    assert build_source_data_paths(head_extract(origin, tmp_path / "extract-after")) == tracked
+    assert build_source_data_paths(build_root_snapshot(origin, tmp_path / "snapshot-after")) == tracked
 
 
-def test_shipped_data_inventory_refuses_a_source_tree_missing_tracked_data(tmp_path: Path) -> None:
-    """A tracked shipped-data file absent from the build tree fails the derivation."""
+def test_shipped_data_inventory_reflects_a_deleted_tracked_file(tmp_path: Path) -> None:
+    """A file removed from the source tree drops out of the derived inventory.
+
+    The enumerated tree has no index separate from the working tree, so a
+    deleted file is excluded from the inventory rather than flagged as a
+    stale reference: the derivation always describes what is actually on
+    disk, never what used to be.
+    """
+    origin = tmp_path / "origin"
+    origin.mkdir()
+    tracked = _seed_shipped_data_repository(origin)
+    removed = "src/cadrumo/_data/registry/aeat/modelos/036/manifest.toml"
+    (origin / removed).unlink()
+
+    remaining = build_source_data_paths(origin)
+
+    assert removed not in remaining
+    assert remaining == tracked - {removed}
+
+
+def test_shipped_data_inventory_refuses_a_named_path_absent_from_disk(tmp_path: Path) -> None:
+    """A derived inventory naming a path that is not on disk fails closed.
+
+    The enumerated tree only ever names files that exist, so this exercises
+    the validation directly against a synthetic inventory -- the shape a
+    caller would see if a named path vanished between being enumerated and
+    being read.
+    """
+    origin = tmp_path / "origin"
+    (origin / "src/cadrumo/_data").mkdir(parents=True)
+    present = "src/cadrumo/_data/present.toml"
+    (origin / present).write_bytes(b"present")
+
+    with pytest.raises(SystemExit, match="are absent from"):
+        _validated_source_data_inventory(
+            origin,
+            {present, "src/cadrumo/_data/missing.toml"},
+            origin="synthetic inventory",
+        )
+
+
+def test_tracked_source_data_paths_refuses_a_missing_renta_pdf_allow_list_member(tmp_path: Path) -> None:
+    """A deleted Renta PDF allow-list file still fails the preflight, by name.
+
+    General shipped-data deletion is no longer detectable without a git index
+    (see the sibling "reflects a deleted tracked file" test), but this
+    specific, enumerated allow-list is checked by membership rather than by
+    comparing the inventory to itself, so a deletion inside it still fails
+    closed -- the property `source_preflight` still has teeth for.
+    """
     origin = tmp_path / "origin"
     origin.mkdir()
     _seed_shipped_data_repository(origin)
-    manifest = origin / "src/cadrumo/_data/registry/aeat/modelos/036/manifest.toml"
-    manifest.unlink()
+    removed = next(iter(sorted(_RENTA_PDF_ALLOW_LIST)))
+    (origin / removed).unlink()
 
-    with pytest.raises(SystemExit, match="are absent from"):
-        build_source_data_paths(origin)
+    with pytest.raises(SystemExit, match="missing Renta PDF allow-list files"):
+        tracked_source_data_paths(origin)
 
 
 def _write_data_wheel(path: Path, members: set[str]) -> Path:
@@ -286,8 +280,8 @@ def _write_data_wheel(path: Path, members: set[str]) -> Path:
 def test_wheel_data_gate_detects_both_absent_and_surplus_payload(tmp_path: Path) -> None:
     """The payload gate still fails closed on a genuinely incomplete or padded wheel.
 
-    Deriving the expectation from Git rather than from a filesystem walk must
-    not blunt the gate it feeds, so both directions are proven here against
+    Deriving the expectation from the enumerated tree rather than from a naive
+    filesystem walk must not blunt the gate it feeds, so both directions are proven here against
     synthetic archives: a wheel that omits expected data, and a wheel that
     carries an ignored artefact the source tree never tracked. The complete
     archive is asserted to pass in the same test, so a gate that stopped

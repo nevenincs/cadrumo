@@ -13,13 +13,12 @@ from __future__ import annotations
 
 import ast
 import pathlib
-import shutil
-import subprocess
 from pathlib import Path
 
 import pytest
 
 from ..._paths import REPO_ROOT
+from ...source_tree import repository_files
 from ..duplication import (
     CloneGroup,
     DuplicationOutcome,
@@ -209,8 +208,8 @@ def test_only_one_jscpd_invocation_exists_in_the_tree() -> None:
     that ``report.py`` built for itself. This pins the single-runner shape so the
     measurement tool cannot re-become the duplication it measures.
 
-    Scoped to the whole GIT-TRACKED tree (not just ``dev/**/*.py``), so a
-    reintroduced scanner in the justfile, a shell script, ``src/``, or
+    Scoped to the whole enumerated repository tree (not just ``dev/**/*.py``),
+    so a reintroduced scanner in the justfile, a shell script, ``src/``, or
     ``packaging/`` is caught rather than passing silently. Narrowed to files
     that can actually EXECUTE a command -- Python, the justfile, and
     shell/PowerShell scripts -- so prose in a Markdown record or the
@@ -220,15 +219,7 @@ def test_only_one_jscpd_invocation_exists_in_the_tree() -> None:
     via :func:`_mentions_jscpd_outside_docstrings`, so a test module can name
     the literal in prose without needing its own exemption entry here.
     """
-    git = shutil.which("git")
-    assert git is not None, "git is required to enumerate the tracked tree"
-    tracked = subprocess.run(  # noqa: S603 - resolved Git with test-owned declarative argv.
-        [git, "ls-files"],
-        cwd=REPO_ROOT,
-        capture_output=True,
-        text=True,
-        check=True,
-    ).stdout.splitlines()
+    tracked = repository_files(REPO_ROOT)
 
     executable_suffixes = {".py", ".sh", ".bash", ".ps1", ".cmd", ".bat"}
     candidates = [rel for rel in tracked if Path(rel).name == "justfile" or Path(rel).suffix in executable_suffixes]
@@ -250,9 +241,9 @@ def test_only_one_jscpd_invocation_exists_in_the_tree() -> None:
     # clear either and both stay named here.
     exempt = {"dev/audit/duplication.py", "dev/audit/tests/test_duplication.py"}
 
-    # A tracked path may be absent from the working tree while a peer's
-    # deletion is in flight, and this worktree runs many agents at once. A file
-    # that does not exist cannot invoke jscpd, so skipping it costs the gate
+    # A candidate may be absent from the working tree while a peer's deletion
+    # is in flight, and this worktree runs many agents at once. A file that
+    # does not exist cannot invoke jscpd, so skipping it costs the gate
     # nothing; crashing on it would red this gate for whoever happens to run it
     # mid-deletion.
     builders = [

@@ -38,9 +38,9 @@ from ..packaging.evidence import artifact_map_digest
 from ..packaging.hashing import sha256_path, sha256_text
 from ..packaging.lane_verification_core import (
     build_companion_wheels,
+    build_root_snapshot,
     build_sdist,
     clean_product_env,
-    commit_defined_build_root,
     require_executable,
     resolve_work_dir,
     venv_bin_dir,
@@ -49,6 +49,7 @@ from ..packaging.lane_verification_core import (
 )
 from ..packaging.python_cohort import digest_install_target, load_python_cohort
 from ..packaging.runtime_wheelhouse import extract_runtime_wheelhouse, load_runtime_wheelhouse
+from ..source_tree import content_digest, repository_files
 
 _UTF_8: Final[str] = UTF_8
 _SCHEMA: Final[str] = "cadrumo.python-runtime-compatibility.v1"
@@ -158,7 +159,7 @@ class ProbeEvidenceData(TypedDict):
     lock_sha256: str
     artifact_sha256: str
     artifact_digests: dict[str, str]
-    source_commit: str | None
+    source_digest: str | None
     cohort_manifest_sha256: str | None
     builder_python: str | None
     dependency: dict[str, str]
@@ -181,7 +182,7 @@ class ProbeEvidence:
     lock_sha256: str
     artifact_sha256: str
     artifact_digests: dict[str, str]
-    source_commit: str | None
+    source_digest: str | None
     cohort_manifest_sha256: str | None
     builder_python: str | None
     dependency: dict[str, str]
@@ -812,8 +813,8 @@ def _source_artifacts(
     repo_root: Path,
     work_dir: Path,
 ) -> tuple[tuple[tuple[str, Path], ...], str, dict[str, str], str | None]:
-    """Build source artifacts from one commit-defined snapshot and hash them."""
-    build_root = commit_defined_build_root(repo_root, work_dir / "source-snapshot")
+    """Build source artifacts from one isolated tree snapshot and hash them."""
+    build_root = build_root_snapshot(repo_root, work_dir / "source-snapshot")
     sdist = build_sdist(work_dir, require_executable("uv"), build_root=build_root)
     manuals, official = build_companion_wheels(work_dir, require_executable("uv"), build_root=build_root)
     artifacts = (
@@ -822,17 +823,10 @@ def _source_artifacts(
         ("cadrumo-data-official", official),
     )
     digests = {name: sha256_path(path) for name, path in artifacts}
-    commit_result = run_command(
-        (require_executable("git"), "rev-parse", "HEAD"),
-        cwd=build_root,
-        environment=clean_product_env(),
-    )
-    if commit_result.returncode != 0:
-        raise CompatibilityProbeError("could not identify source commit", category="source-identity-missing")
-    commit = commit_result.stdout.strip()
-    if not re.fullmatch(r"[0-9a-f]{40}", commit):
-        raise CompatibilityProbeError(f"invalid source commit {commit!r}", category="source-identity-missing")
-    return artifacts, _read_lock_digest(build_root / "uv.lock"), digests, commit
+    # The snapshot is a private, per-probe copy nobody else writes to, so its
+    # content digest names exactly the bytes the builders above consumed.
+    source_digest = content_digest(build_root, repository_files(build_root))
+    return artifacts, _read_lock_digest(build_root / "uv.lock"), digests, source_digest
 
 
 def run_probe(
@@ -865,7 +859,7 @@ def run_probe(
     wheelhouse_platform: str | None = None
     wheelhouse_runtime: str | None = None
     wheelhouse_bundle: Any | None = None
-    source_commit: str | None = None
+    source_digest: str | None = None
     cohort_manifest_sha256: str | None = None
     builder_python: str | None = None
     artifact_sha256 = _digest_bytes(b"unavailable")
@@ -895,7 +889,7 @@ def run_probe(
     }
     try:
         if selected_mode is ProbeMode.SOURCE:
-            artifacts, lock_sha256, artifact_digests, source_commit = _source_artifacts(repo_root, work_dir)
+            artifacts, lock_sha256, artifact_digests, source_digest = _source_artifacts(repo_root, work_dir)
             artifact_sha256 = artifact_map_digest(artifact_digests)
         else:
             if cohort_dir is None:
@@ -925,7 +919,7 @@ def run_probe(
             artifact_digests["runtime-wheelhouse"] = cohort.sha256["runtime-wheelhouse"]
             artifact_sha256 = artifact_map_digest(artifact_digests)
             cohort_manifest_sha256 = sha256_path(cohort.manifest)
-            source_commit = cohort.source_commit
+            source_digest = cohort.source_digest
         venv, created = _venv(uv, repo_root=repo_root, work_dir=work_dir, selector=python)
         commands.extend(created)
         runtime = _runtime_identity(
@@ -1004,7 +998,7 @@ def run_probe(
         lock_sha256=lock_sha256,
         artifact_sha256=artifact_sha256,
         artifact_digests=artifact_digests,
-        source_commit=source_commit,
+        source_digest=source_digest,
         cohort_manifest_sha256=cohort_manifest_sha256,
         builder_python=builder_python,
         dependency=dependency,

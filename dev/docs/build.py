@@ -1,4 +1,4 @@
-"""Build only documentation pages affected by local source changes."""
+"""Build documentation pages, either explicitly named or the whole tree."""
 
 from __future__ import annotations
 
@@ -61,63 +61,6 @@ def _executable(name: str) -> str:
     if resolved is None:
         raise SystemExit(f"Required executable not found on PATH: {name}")
     return resolved
-
-
-def _run_git(args: list[str], repo_root: Path) -> list[Path]:
-    """Run a git path query and return repository-relative paths.
-
-    Args:
-        args: Arguments after ``git``.
-        repo_root: Repository root used as the process working directory.
-
-    Returns:
-        Unique paths listed by git, in output order.
-    """
-    result = subprocess.run(
-        [_executable("git"), *args],
-        cwd=repo_root,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    if result.returncode != 0:
-        return []
-    seen: set[Path] = set()
-    paths: list[Path] = []
-    for line in result.stdout.splitlines():
-        if not line.strip():
-            continue
-        path = Path(line.strip())
-        if path not in seen:
-            seen.add(path)
-            paths.append(path)
-    return paths
-
-
-def changed_paths(repo_root: Path, base: str) -> list[Path]:
-    """Return changed tracked and untracked paths relevant to the worktree.
-
-    Args:
-        repo_root: Repository root.
-        base: Git revision used for committed branch changes.
-
-    Returns:
-        Deduplicated repository-relative paths.
-    """
-    queries = [
-        ["diff", "--name-only", "--diff-filter=ACMRD", f"{base}...HEAD"],
-        ["diff", "--cached", "--name-only", "--diff-filter=ACMRD"],
-        ["diff", "--name-only", "--diff-filter=ACMRD"],
-        ["ls-files", "--others", "--exclude-standard"],
-    ]
-    seen: set[Path] = set()
-    paths: list[Path] = []
-    for query in queries:
-        for path in _run_git(query, repo_root):
-            if path not in seen:
-                seen.add(path)
-                paths.append(path)
-    return paths
 
 
 _SOURCE_PACKAGE_PARTS: Final[tuple[str, ...]] = ("src", API_SOURCE_PACKAGE)
@@ -874,14 +817,13 @@ def update_rag_index(repo_root: Path) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """CLI entrypoint for changed-document builds."""
+    """CLI entrypoint for documentation builds."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "paths",
         nargs="*",
-        help="Optional repository-relative paths to build instead of scanning git changes.",
+        help="Optional repository-relative paths to build; a full build runs when none are given.",
     )
-    parser.add_argument("--base", default="HEAD", help="Git revision used for committed branch changes.")
     parser.add_argument("--strict", action="store_true", help="Use nitpicky warnings-as-errors mode.")
     parser.add_argument(
         "--rag-index",
@@ -944,17 +886,12 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit(f"scope must be 'full' or 'user'; got {scope!r}")
     if args.single_page and args.paths:
         raise SystemExit("--single-page cannot be combined with positional paths")
-    if scope == "user" and not args.single_page and not args.paths:
-        # `--scope user` with no target is the ergonomic "build all user docs"
-        # command: force a full build (docs/conf.py is the full-build trigger),
-        # scoped to the user surface by CADRUMO_DOCS_SCOPE.
+    if not args.single_page and not args.paths:
+        # No target named: build everything (docs/conf.py is the full-build
+        # trigger), scoped by CADRUMO_DOCS_SCOPE/--scope.
         paths = [Path("docs") / "conf.py"]
     else:
-        paths = (
-            [Path(args.single_page)]
-            if args.single_page
-            else ([Path(path) for path in args.paths] if args.paths else changed_paths(repo_root, args.base))
-        )
+        paths = [Path(args.single_page)] if args.single_page else [Path(path) for path in args.paths]
     if args.single_page and _is_generated_doc(
         repo_root / "docs",
         (repo_root / args.single_page).resolve(),
@@ -966,7 +903,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.single_page and (plan.full_build_required or len(plan.targets) != 1):
         raise SystemExit(f"--single-page requires one existing docs source file: {args.single_page}")
     if not plan.full_build_required and not plan.targets:
-        print("No changed documentation targets detected.", flush=True)
+        print("No documentation targets resolved from the given paths.", flush=True)
         if args.rag_index:
             update_rag_index(repo_root)
         return 0
@@ -977,7 +914,7 @@ def main(argv: list[str] | None = None) -> int:
         print("Building canonical documentation page:", flush=True)
         print(f"  {plan.targets[0].relative_to(repo_root)}", flush=True)
     else:
-        print("Building changed documentation targets:", flush=True)
+        print("Building named documentation targets:", flush=True)
         for target in plan.targets:
             print(f"  {target.relative_to(repo_root)}", flush=True)
     build_docs(

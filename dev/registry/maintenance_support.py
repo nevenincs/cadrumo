@@ -870,8 +870,8 @@ def compute_installed_tree_digest(
     """Digest a tree into the install-stable identity the build stamps.
 
     The walked digest folds absolute paths and ``mtime_ns``, and neither
-    survives packaging: the cohort builds the wheel from a ``git archive``
-    extraction and installation rewrites mtimes and directory sizes. This
+    survives packaging: the cohort builds the wheel from a snapshot of the
+    enumerated source tree and installation rewrites mtimes and directory sizes. This
     derivation keys on the package version plus the sorted
     ``(relative-path, size, content-digest)`` of every registry FILE, all three
     byte-stable from the build machine to every install because the bundled tree

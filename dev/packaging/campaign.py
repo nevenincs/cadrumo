@@ -562,29 +562,28 @@ def main(argv: list[str] | None = None) -> int:
     workers = _worker_count(args.max_workers)
 
     # Do-once memoization (operator directive 2026-07-20): the quick profile's
-    # job is to ENSURE a proof exists for this committed source identity on
-    # this toolchain, not to unconditionally re-prove it. A prior green quick
-    # run for the same (source, environment) fingerprints is carried — with
-    # its provenance printed, never silently re-stamped — so a push that left
-    # the wheel-relevant scope untouched finishes in seconds. Dirty scope or
-    # absent proof falls through to a fresh run. The full campaign's evidence
-    # rows are never memoized; this cache is a runner-local speed signal only.
-    source_fp: str | None = None
+    # job is to ENSURE a proof exists for this exact source content on this
+    # toolchain, not to unconditionally re-prove it. A prior green quick run
+    # for the same (source, environment) fingerprints is carried — with its
+    # provenance printed, never silently re-stamped — so a push that left the
+    # wheel-relevant scope byte-identical finishes in seconds. An absent proof
+    # falls through to a fresh run. The full campaign's evidence rows are
+    # never memoized; this cache is a runner-local speed signal only.
+    source_fp = ""
     env_fp = ""
     if args.profile == "quick":
         source_fp = proof_cache.source_fingerprint(repo_root)
-        if source_fp is not None:
-            env_fp = proof_cache.environment_fingerprint()
-            carried = proof_cache.lookup(proof_cache.default_cache_dir(), _QUICK_PROOF_KIND, source_fp, env_fp)
-            if carried is not None:
-                print(
-                    f"[campaign] carried proof: {_QUICK_PROOF_KIND} already proven for "
-                    f"source {source_fp[:16]} on env {env_fp} at {carried.created_at} "
-                    f"(commit {carried.origin.commit[:12]}, run {carried.origin.run_id or 'local'}); "
-                    "nothing to re-prove",
-                    flush=True,
-                )
-                return 0
+        env_fp = proof_cache.environment_fingerprint()
+        carried = proof_cache.lookup(proof_cache.default_cache_dir(), _QUICK_PROOF_KIND, source_fp, env_fp)
+        if carried is not None:
+            print(
+                f"[campaign] carried proof: {_QUICK_PROOF_KIND} already proven for "
+                f"source {source_fp[:16]} on env {env_fp} at {carried.created_at} "
+                f"(digest {carried.origin.source_digest[:12]}, run {carried.origin.run_id or 'local'}); "
+                "nothing to re-prove",
+                flush=True,
+            )
+            return 0
 
     if not args.skip_preflight:
         _run_step([sys.executable, "-m", "dev.packaging.dependency_surface"], repo_root, "dependency-surface")
@@ -606,10 +605,11 @@ def main(argv: list[str] | None = None) -> int:
         if preflight_failures:
             raise SystemExit("campaign preflight failed: " + "; ".join(preflight_failures))
 
-    # Fail before any wheel or venv work if a git-tracked shipped data file is
+    # Fail before any wheel or venv work if a tracked shipped data file is
     # missing from the worktree (seconds). Runs in every profile that reaches
     # here; a carried quick proof returns above, which is safe because a missing
-    # tracked file dirties the proof scope and suppresses the carry.
+    # tracked file changes the proof scope's content digest and so cannot match
+    # a proof recorded while the file was present.
     _run_step([sys.executable, "-m", "dev.packaging.source_preflight"], repo_root, "source-preflight")
 
     _run_step(
@@ -642,9 +642,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.profile == "quick":
         # The per-push probe ends here: the installed-oracles pytest pass is
         # a release-campaign proof and stays out of the ten-minute budget.
-        if source_fp is not None:
-            path = proof_cache.record(proof_cache.default_cache_dir(), _QUICK_PROOF_KIND, source_fp, env_fp, repo_root)
-            print(f"[campaign] proof recorded: {path}", flush=True)
+        path = proof_cache.record(proof_cache.default_cache_dir(), _QUICK_PROOF_KIND, source_fp, env_fp)
+        print(f"[campaign] proof recorded: {path}", flush=True)
         return 0
 
     _run_step(

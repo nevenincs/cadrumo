@@ -1,4 +1,4 @@
-"""Validate that every git-tracked shipped data file exists on disk."""
+"""Validate that every tracked shipped data file exists on disk."""
 
 from __future__ import annotations
 

@@ -23,32 +23,29 @@ The banned tokens are assembled from fragments at runtime so this file itself
 contains none of them verbatim — the scan therefore covers this gate too,
 without a self-exclusion.
 
-Implementation note: the scan shells out to ``git grep`` (fixed-string and ERE
-modes, ``-I`` to skip binary blobs) over the tracked working tree, which is far
-faster than reading every tracked file in Python.
+Implementation note: the scan reads every file the repository enumerates
+(:func:`dev.source_tree.repository_files`, which already returns the same
+union a VCS would honour -- committed content plus new files nobody has
+ignored) rather than asking twice for a "tracked" half and an "untracked"
+half. That split used to matter only because it was answered by two different
+commands with two different blind spots; this repo's own records once carried
+an account DNS zone id while untracked, and the tracked-only half of the old
+scan was green for the whole time it did.
 """
 
 from __future__ import annotations
 
 import re
-import subprocess
+from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
 
+from ..._paths import REPO_ROOT
+from ...source_tree import repository_files
 from ..unread_inputs import report_unread
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-
-
-def _repo_root() -> Path:
-    top = subprocess.run(
-        ["git", "rev-parse", "--show-toplevel"],  # noqa: S607 - git resolved from PATH like every dev gate
-        capture_output=True,
-        text=True,
-        check=True,
-    ).stdout.strip()
-    return Path(top)
 
 
 def _token(*fragments: str) -> str:
@@ -88,8 +85,8 @@ _BANNED_IN_SHIPPED_SURFACES: tuple[str, ...] = (
     _token("hello@gergely", "-wootsch.com"),  # retired public contact email
 )
 
-# Pathspec excluding the removable dev-scaffolding trees for the shipped-only set.
-_SCAFFOLDING_EXCLUSIONS: tuple[str, ...] = (":!.vault", ":!.vaultspec")
+# Scaffolding trees excluded from the shipped-only set.
+_SCAFFOLDING_PREFIXES: tuple[str, ...] = (".vault/", ".vaultspec/")
 
 # ERE banned patterns for network identifiers.
 _BANNED_PATTERNS: tuple[str, ...] = (
@@ -141,103 +138,66 @@ _BANNED_CROSS_PROJECT_PATTERNS: tuple[str, ...] = (
 # the token list.
 _ALLOWLIST: dict[tuple[str, str], str] = {}
 
-#: Untracked binaries and build outputs are read as text, so a size ceiling
+#: A large untracked binary or build output is read as text, so a size ceiling
 #: keeps an accidental large artifact from stalling the gate.
 _MAX_SCANNED_BYTES: int = 2_000_000
 
 
-def _git_grep(root: Path, args: list[str]) -> list[str]:
-    """Return ``path:line:content`` hits, or [] when git grep finds nothing."""
-    result = subprocess.run(  # noqa: S603 - fixed git argv over the tracked tree
-        ["git", "grep", "-n", "-I", *args],  # noqa: S607 - git resolved from PATH like every dev gate
-        cwd=root,
-        capture_output=True,
-        text=True,
-        errors="replace",
-    )
-    # git grep exits 1 with no output when there are no matches.
-    if result.returncode not in (0, 1):
-        raise RuntimeError(f"git grep failed: {result.stderr}")
-    return [line for line in result.stdout.splitlines() if line]
+@dataclass(frozen=True, slots=True)
+class _ScannedFile:
+    """One file's full decoded text, kept whole so a fast substring probe can
+    reject the common case before the cost of splitting it into lines."""
+
+    relative: str
+    text: str
 
 
-def _tracked_file_count(root: Path, pathspec: tuple[str, ...] = ()) -> int:
-    """Return how many tracked files a pathspec actually reaches.
+def _read_corpus(root: Path, files: tuple[str, ...]) -> tuple[tuple[_ScannedFile, ...], list[str]]:
+    """Read every file in ``files`` once. Returns the corpus and any unread paths.
 
-    ``git grep`` reports no match for a pathspec that reaches no file, and
-    exits 1 doing so -- the same status, and the same empty output, as a scan
-    that searched the whole tree and found nothing. The tree-wide bans below
-    are therefore floored on what their pathspecs REACH, not only on what they
-    return, so a scaffolding exclusion grown to cover the tree is refused
-    rather than read as clean. A count is all the floor needs, so the plain
-    line-oriented listing is used rather than the NUL-delimited one.
+    Both skips below leave a file unscanned, and an unscanned file is
+    indistinguishable from a clean one in a gate about leaked private data, so
+    every skip is collected and reported by the caller rather than swallowed.
     """
-    result = subprocess.run(  # noqa: S603 - fixed git argv over the tracked tree
-        ["git", "ls-files", "--", *(pathspec or (".",))],  # noqa: S607 - git from PATH like every dev gate
-        cwd=root,
-        capture_output=True,
-        text=True,
-        errors="replace",
-        check=True,
-    )
-    return len([entry for entry in result.stdout.splitlines() if entry])
-
-
-def _untracked_files(root: Path) -> list[str]:
-    """Return untracked, non-ignored paths -- the half ``git grep`` cannot see.
-
-    ``git grep`` reads the tracked tree, so a file that has never been added is
-    invisible to it. That is not a theoretical gap: this repo's own records
-    once carried an account DNS zone id while untracked, and the gate was
-    green for the whole time it did. It can only ever have caught that leak
-    after the commit introducing it, by which point removing it is a history
-    rewrite rather than an edit.
-    """
-    result = subprocess.run(
-        ["git", "ls-files", "--others", "--exclude-standard"],  # noqa: S607 - git from PATH like every dev gate
-        cwd=root,
-        capture_output=True,
-        text=True,
-        errors="replace",
-    )
-    if result.returncode != 0:
-        raise RuntimeError(f"git ls-files failed: {result.stderr}")
-    return [line for line in result.stdout.splitlines() if line]
-
-
-def _scan_untracked(root: Path, needles: tuple[str, ...], patterns: tuple[str, ...]) -> list[str]:
-    """Return ``path:line`` hits for banned shapes in untracked files."""
-    offenders: list[str] = []
-    # Both skips below leave a file unscanned, and an unscanned file is
-    # indistinguishable from a clean one in a gate about leaked private data.
-    # Announced rather than refused: these are UNTRACKED paths, so a peer's
-    # half-written or vanishing file is expected and must not red the gate.
-    unscanned: list[str] = []
-    compiled = [re.compile(pattern) for pattern in patterns]
-    for relative in _untracked_files(root):
+    corpus: list[_ScannedFile] = []
+    unread: list[str] = []
+    for relative in files:
         path = root / relative
         try:
             if path.stat().st_size > _MAX_SCANNED_BYTES:
-                unscanned.append(f"{relative} (larger than {_MAX_SCANNED_BYTES} bytes)")
+                unread.append(f"{relative} (larger than {_MAX_SCANNED_BYTES} bytes)")
                 continue
             text = path.read_text(encoding="utf-8", errors="replace")
-        except (OSError, ValueError) as refusal:
-            unscanned.append(f"{relative} ({refusal})")
+        except OSError as refusal:
+            unread.append(f"{relative} ({refusal})")
             continue
-        for number, line in enumerate(text.splitlines(), start=1):
-            for needle in needles:
-                if needle in line:
-                    offenders.append(f"[{needle!r}] {relative}:{number}")
-            for pattern in compiled:
-                if pattern.search(line):
-                    offenders.append(f"[/{pattern.pattern}/] {relative}:{number}")
+        corpus.append(_ScannedFile(relative, text))
+    return tuple(corpus), unread
 
-    report_unread(
-        "untracked privacy scan",
-        "these files were not searched, so a banned shape inside one would not appear below",
-        unscanned,
-    )
-    return offenders
+
+def _find_literal(corpus: tuple[_ScannedFile, ...], literal: str) -> list[str]:
+    """Return ``path:line:content`` hits for one fixed-string needle."""
+    hits: list[str] = []
+    for scanned in corpus:
+        if literal not in scanned.text:
+            continue
+        for number, line in enumerate(scanned.text.splitlines(), start=1):
+            if literal in line:
+                hits.append(f"{scanned.relative}:{number}:{line}")
+    return hits
+
+
+def _find_pattern(corpus: tuple[_ScannedFile, ...], pattern: str) -> list[str]:
+    """Return ``path:line:content`` hits for one ERE pattern."""
+    compiled = re.compile(pattern)
+    hits: list[str] = []
+    for scanned in corpus:
+        if not compiled.search(scanned.text):
+            continue
+        for number, line in enumerate(scanned.text.splitlines(), start=1):
+            if compiled.search(line):
+                hits.append(f"{scanned.relative}:{number}:{line}")
+    return hits
 
 
 def _is_allowlisted(hit: str, token: str) -> bool:
@@ -245,8 +205,8 @@ def _is_allowlisted(hit: str, token: str) -> bool:
     return (path, token) in _ALLOWLIST
 
 
-def _probe_repo(root: Path) -> None:
-    """Materialise a real git repo carrying one instance of each banned shape.
+def _probe_tree(root: Path) -> None:
+    """Materialise a scratch tree carrying one instance of each banned shape.
 
     Every planted token is assembled through :func:`_token` for the same reason
     the ban list is: a literal here would be a real leak in a tracked file and
@@ -263,12 +223,16 @@ def _probe_repo(root: Path) -> None:
         ),
     )
     (root / "leak.txt").write_text(leak + "\n", encoding="utf-8")
-    for argv in (
-        ["git", "init", "-q"],
-        ["git", "add", "-A"],
-        ["git", "-c", "user.email=p@example.invalid", "-c", "user.name=probe", "commit", "-qm", "probe"],
-    ):
-        subprocess.run(argv, cwd=root, check=True, capture_output=True)  # noqa: S603 - fixed git argv in a temp repo
+
+
+@pytest.fixture(scope="module")
+def repository_corpus() -> tuple[tuple[_ScannedFile, ...], list[str]]:
+    """Read the live repository's enumerated text once, shared by both whole-tree gates.
+
+    Both gates below read the same corpus; reading it twice would double the
+    cost of a scan that already has to touch tens of thousands of files.
+    """
+    return _read_corpus(REPO_ROOT, repository_files(REPO_ROOT))
 
 
 def test_the_banned_token_sets_are_not_empty() -> None:
@@ -278,22 +242,23 @@ def test_the_banned_token_sets_are_not_empty() -> None:
     assert _BANNED_PATTERNS
 
 
-def test_the_scan_finds_every_banned_shape_in_a_repository_that_carries_them(tmp_path: Path) -> None:
-    """Positive control: the real scan, run against a repo that really leaks.
+def test_the_scan_finds_every_banned_shape_in_a_tree_that_carries_them(tmp_path: Path) -> None:
+    """Positive control: the real scan, run against a tree that really leaks.
 
     The tree-wide assertion below reports zero offenders, which is the same
-    result it would report if the patterns had stopped matching or ``git grep``
-    had stopped reading anything. Nothing distinguishes a scrubbed tree from a
-    blind scan without exercising the scan against a corpus known to contain
-    each shape, through the gate's own ``_git_grep``.
+    result it would report if the patterns had stopped matching or nothing had
+    been read at all. Nothing distinguishes a scrubbed tree from a blind scan
+    without exercising the scan against a corpus known to contain each shape.
     """
-    _probe_repo(tmp_path)
+    _probe_tree(tmp_path)
+    corpus, unread = _read_corpus(tmp_path, repository_files(tmp_path))
+    assert not unread
 
-    literal_hits = _git_grep(tmp_path, ["-F", "-e", _BANNED_LITERALS[0]])
-    assert literal_hits, f"the fixed-string scan no longer finds {_BANNED_LITERALS[0]!r}"
+    literal_hits = _find_literal(corpus, _BANNED_LITERALS[0])
+    assert literal_hits, f"the scan no longer finds {_BANNED_LITERALS[0]!r}"
 
     for pattern in _BANNED_PATTERNS:
-        assert _git_grep(tmp_path, ["-E", "-e", pattern]), f"the ERE scan no longer matches {pattern!r}"
+        assert _find_pattern(corpus, pattern), f"the scan no longer matches {pattern!r}"
 
 
 def test_the_network_range_pattern_stops_at_its_boundaries(tmp_path: Path) -> None:
@@ -302,9 +267,10 @@ def test_the_network_range_pattern_stops_at_its_boundaries(tmp_path: Path) -> No
     A pattern widened to every ``100.x`` address would flag ordinary public
     addresses and get silenced rather than corrected, so both edges are pinned.
     """
-    _probe_repo(tmp_path)
+    _probe_tree(tmp_path)
+    corpus, _ = _read_corpus(tmp_path, repository_files(tmp_path))
     cgnat = next(pattern for pattern in _BANNED_PATTERNS if "12[0-7]" in pattern)
-    matched = "\n".join(_git_grep(tmp_path, ["-E", "-e", cgnat]))
+    matched = "\n".join(_find_pattern(corpus, cgnat))
 
     for inside in (_token("100.", "64.0.1"), _token("100.", "127.255.254"), _token("100.", "101.102.103")):
         assert inside in matched, f"{inside} is inside the CGNAT range and must match"
@@ -312,36 +278,70 @@ def test_the_network_range_pattern_stops_at_its_boundaries(tmp_path: Path) -> No
         assert outside not in matched, f"{outside} is outside the CGNAT range and must not match"
 
 
-def test_no_operator_identifying_tokens_in_tracked_files() -> None:
-    """No tracked file may carry a leaked host / login / path / network token."""
-    root = _repo_root()
-    offenders: list[str] = []
+def test_a_gitignored_file_is_not_scanned(tmp_path: Path) -> None:
+    """An ignored file cannot reach a commit, so it is not this gate's problem.
 
-    reached = _tracked_file_count(root)
-    shipped = _tracked_file_count(root, (".", *_SCAFFOLDING_EXCLUSIONS))
-    assert reached > 20000 and shipped > 20000, (
-        f"the scan reached {reached} tracked files and {shipped} shipped-surface files; the corpus "
-        "collapsed, so an empty offender list would mean nothing was searched rather than nothing "
-        "is wrong"
+    Without this, a contributor's local scratch file would fail a gate about
+    what gets SHIPPED.
+    """
+    (tmp_path / "notes.md").write_text(f"zone {_BANNED_CROSS_PROJECT_LITERALS[0]}\n", encoding="utf-8")
+    (tmp_path / ".gitignore").write_text("secret.md\n", encoding="utf-8")
+    (tmp_path / "secret.md").write_text(f"zone {_BANNED_CROSS_PROJECT_LITERALS[0]}\n", encoding="utf-8")
+
+    corpus, _ = _read_corpus(tmp_path, repository_files(tmp_path))
+    hits = _find_literal(corpus, _BANNED_CROSS_PROJECT_LITERALS[0])
+
+    assert any("notes.md" in hit for hit in hits), "an in-scope leak must be found"
+    assert not any("secret.md" in hit for hit in hits), "an ignored file cannot reach a commit"
+
+
+def test_the_scan_matches_cross_project_shape_patterns(tmp_path: Path) -> None:
+    """The distinctive-shape half of the cross-project ban.
+
+    Assembled from fragments like every other banned value: a literal here
+    would be a real hit in a tracked file and this gate would flag itself.
+    """
+    planted = _token("arn:aws", ":iam::123456789012:role/example")
+    (tmp_path / "role.tf").write_text(f'role = "{planted}"\n', encoding="utf-8")
+
+    corpus, _ = _read_corpus(tmp_path, repository_files(tmp_path))
+    hits = _find_pattern(corpus, _BANNED_CROSS_PROJECT_PATTERNS[0])
+
+    assert any("role.tf" in hit for hit in hits)
+
+
+def test_no_operator_identifying_tokens_in_the_repository(
+    repository_corpus: tuple[tuple[_ScannedFile, ...], list[str]],
+) -> None:
+    """No file in the tree may carry a leaked host / login / path / network token."""
+    corpus, unread = repository_corpus
+    shipped_corpus = tuple(scanned for scanned in corpus if not scanned.relative.startswith(_SCAFFOLDING_PREFIXES))
+    assert len(corpus) > 20000 and len(shipped_corpus) > 20000, (
+        f"the scan reached {len(corpus)} files and {len(shipped_corpus)} shipped-surface files; the "
+        "corpus collapsed, so an empty offender list would mean nothing was searched rather than "
+        "nothing is wrong"
     )
 
+    offenders: list[str] = []
+
     for token in _BANNED_LITERALS:
-        for hit in _git_grep(root, ["-F", "-e", token]):
+        for hit in _find_literal(corpus, token):
             if not _is_allowlisted(hit, token):
                 offenders.append(f"[{token!r}] {hit}")
 
     # Retired-identity tokens are banned only in shipped surfaces; historical
     # .vault/.vaultspec records legitimately retain the prior attribution.
     for token in _BANNED_IN_SHIPPED_SURFACES:
-        for hit in _git_grep(root, ["-F", "-e", token, "--", ".", *_SCAFFOLDING_EXCLUSIONS]):
+        for hit in _find_literal(shipped_corpus, token):
             if not _is_allowlisted(hit, token):
                 offenders.append(f"[{token!r}] {hit}")
 
     for pattern in _BANNED_PATTERNS:
-        for hit in _git_grep(root, ["-E", "-e", pattern]):
+        for hit in _find_pattern(corpus, pattern):
             if not _is_allowlisted(hit, pattern):
                 offenders.append(f"[/{pattern}/] {hit}")
 
+    report_unread("privacy scan", "a banned shape inside one would not appear below", unread)
     assert not offenders, (
         "Operator-identifying tokens found in committed text. Scrub them "
         "(host/login/path/network data must not ship) or, for a genuine "
@@ -355,98 +355,30 @@ def test_the_cross_project_token_sets_are_not_empty() -> None:
     assert _BANNED_CROSS_PROJECT_PATTERNS
 
 
-def test_no_cross_project_identifier_in_tracked_files() -> None:
+def test_no_cross_project_identifier_in_the_repository(
+    repository_corpus: tuple[tuple[_ScannedFile, ...], list[str]],
+) -> None:
     """This repository is public and carries its own concerns only.
 
     Account-level and sibling-product identifiers belong in the operator's
     private notes, not here, so a leak is a disclosure question rather than a
     tidiness one.
     """
-    root = _repo_root()
-    offenders: list[str] = []
-
-    # The same floor the sibling tracked-file ban carries, for the same reason:
-    # an empty offender list is the output of a scan that searched everything and
-    # of one that searched nothing. The untracked ban below is deliberately NOT
-    # floored -- an empty untracked set is the normal state of a clean checkout,
-    # so a floor there would refuse the healthy case.
-    reached = _tracked_file_count(root)
-    assert reached > 20000, (
-        f"the scan reached {reached} tracked files; the corpus collapsed, so an empty offender "
+    corpus, unread = repository_corpus
+    assert len(corpus) > 20000, (
+        f"the scan reached {len(corpus)} files; the corpus collapsed, so an empty offender "
         "list would mean nothing was searched rather than nothing is wrong"
     )
 
+    offenders: list[str] = []
+
     for token in _BANNED_CROSS_PROJECT_LITERALS:
-        offenders.extend(f"[{token!r}] {hit}" for hit in _git_grep(root, ["-F", "-e", token]))
+        offenders.extend(f"[{token!r}] {hit}" for hit in _find_literal(corpus, token))
     for pattern in _BANNED_CROSS_PROJECT_PATTERNS:
-        offenders.extend(f"[/{pattern}/] {hit}" for hit in _git_grep(root, ["-E", "-e", pattern]))
+        offenders.extend(f"[/{pattern}/] {hit}" for hit in _find_pattern(corpus, pattern))
+
+    report_unread("cross-project identifier scan", "a banned identifier inside one would not appear below", unread)
     assert not offenders, (
         "Cross-project infrastructure identifiers found in committed text. Name the "
         "account dependency abstractly and keep the value in private notes:\n" + "\n".join(sorted(offenders))
     )
-
-
-def test_no_banned_shape_in_untracked_files() -> None:
-    """The half a tracked-only scan cannot see, and the shape of the real breach.
-
-    This repo's own records once carried an account DNS zone id while
-    untracked, and the gate was green throughout. A tracked-only scan can
-    only catch that after the commit that introduces it, when removal is a
-    history rewrite.
-    """
-    root = _repo_root()
-    offenders = _scan_untracked(
-        root,
-        _BANNED_LITERALS + _BANNED_CROSS_PROJECT_LITERALS,
-        _BANNED_PATTERNS + _BANNED_CROSS_PROJECT_PATTERNS,
-    )
-    assert not offenders, (
-        "Banned tokens found in untracked files. Scrub them BEFORE committing; "
-        "after the commit, removal is a history rewrite:\n" + "\n".join(sorted(offenders))
-    )
-
-
-def test_the_untracked_scan_finds_a_planted_leak(tmp_path: Path) -> None:
-    """Anti-tautology against an injectable root, not the real tree.
-
-    Without this the untracked scan passes because it read nothing just as
-    readily as because the tree is clean, and those look identical.
-    """
-    for argv in (["git", "init", "-q"], ["git", "config", "user.email", "p@example.invalid"]):
-        subprocess.run(argv, cwd=tmp_path, check=True, capture_output=True)  # noqa: S603 - fixed git argv in a temp repo
-
-    planted = tmp_path / "notes.md"
-    planted.write_text(f"zone {_BANNED_CROSS_PROJECT_LITERALS[0]}\n", encoding="utf-8")
-    hits = _scan_untracked(tmp_path, _BANNED_CROSS_PROJECT_LITERALS, ())
-    assert any("notes.md" in hit for hit in hits), "an untracked leak must be found"
-
-    # Ignored files are not scanned: they are not candidates for commit.
-    (tmp_path / ".gitignore").write_text("secret.md\n", encoding="utf-8")
-    (tmp_path / "secret.md").write_text(f"zone {_BANNED_CROSS_PROJECT_LITERALS[0]}\n", encoding="utf-8")
-    ignored = _scan_untracked(tmp_path, _BANNED_CROSS_PROJECT_LITERALS, ())
-    assert not any("secret.md" in hit for hit in ignored), "an ignored file cannot reach a commit"
-
-
-def test_the_untracked_scan_matches_shape_patterns_too(tmp_path: Path) -> None:
-    """The shapes half of the ban reaches untracked files.
-
-    Only the pattern family is driven here: this call passes an empty literal
-    tuple, so a green result says nothing about fixed tokens. The literal half
-    has its own case above, which passes the literals and an empty pattern
-    tuple. Each family is exercised against ``_scan_untracked`` separately so a
-    failure names which of the two stopped reaching untracked files -- and so
-    this docstring does not read as coverage the body never delivers.
-    """
-    subprocess.run(
-        ["git", "init", "-q"],  # noqa: S607 - git resolved from PATH like every dev gate
-        cwd=tmp_path,
-        check=True,
-        capture_output=True,
-    )
-    # Assembled from fragments like every other banned value: a literal here
-    # would be a real hit in a tracked file and this gate would flag itself,
-    # which is exactly what it did on the first draft of this test.
-    planted = _token("arn:aws", ":iam::123456789012:role/example")
-    (tmp_path / "role.tf").write_text(f'role = "{planted}"\n', encoding="utf-8")
-    hits = _scan_untracked(tmp_path, (), _BANNED_CROSS_PROJECT_PATTERNS)
-    assert any("role.tf" in hit for hit in hits)

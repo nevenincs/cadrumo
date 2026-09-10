@@ -104,28 +104,14 @@ def allocate_run_root(now: datetime | None = None) -> Path:
     return run_root
 
 
-def _head_commit() -> str | None:
-    """Return the checked-out commit, or ``None`` when git cannot answer."""
-    try:
-        completed = subprocess.run(
-            ["git", "rev-parse", "HEAD"],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-    except OSError:
-        return None
-    if completed.returncode != 0:
-        return None
-    return completed.stdout.strip() or None
-
-
-def _build_cohort(cohort: Path, commit: str) -> int:
+def _build_cohort(cohort: Path) -> int:
     """Build the release cohort once, for every binary row to share.
+
+    The builder snapshots the working tree itself and names that snapshot by
+    its own content digest, so the sweep has nothing to resolve or pass in.
 
     Args:
         cohort: Where the sealed cohort is written.
-        commit: The commit the cohort must attest to.
 
     Returns:
         The builder's exit code.
@@ -137,8 +123,6 @@ def _build_cohort(cohort: Path, commit: str) -> int:
             "build",
             "--output",
             str(cohort),
-            "--expected-commit",
-            commit,
         )
     )
 
@@ -231,18 +215,9 @@ def sweep() -> int:
         print("runtime inventory produced no rows", file=sys.stderr, flush=True)
         return 1
 
-    commit = _head_commit()
-    if commit is None:
-        print(
-            "could not resolve HEAD - the release cohort must attest to a commit",
-            file=sys.stderr,
-            flush=True,
-        )
-        return 1
-
     run_root = allocate_run_root()
     cohort = run_root / "cohort"
-    code = _build_cohort(cohort, commit)
+    code = _build_cohort(cohort)
     if code != 0:
         return code
 

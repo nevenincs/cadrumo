@@ -43,6 +43,7 @@ from typing import Any, Final
 from cadrumo.core.directory_scan import iter_directory, scan_directory
 
 from .._paths import REPO_ROOT, UTF_8
+from ..source_tree import repository_files, snapshot
 from ._distribution_limits import PYPI_FILE_CAP_BYTES
 from ._distribution_names import normalise_distribution_name
 from ._proof_ledger import (
@@ -67,16 +68,14 @@ __all__ = [
     "assert_wheel_contains_tracked_data",
     "assert_wheel_metadata_matches_pyproject",
     "build_companion_wheels",
+    "build_root_snapshot",
     "build_sdist",
     "build_source_data_paths",
     "build_wheel",
     "clean_product_env",
-    "commit_defined_build_root",
     "create_pip_venv",
     "expected_wheel_data_paths",
-    "extract_source_commit",
     "find_repo_root",
-    "head_extract",
     "install_targets_with_pip",
     "install_wheel",
     "installed_product_env",
@@ -219,110 +218,23 @@ def find_repo_root() -> Path:
     return REPO_ROOT
 
 
-def head_extract(repo_root: Path, work_dir: Path) -> Path:
-    """Extract a pristine ``git archive HEAD`` tree to build a lane's artifacts from.
+def build_root_snapshot(repo_root: Path, work_dir: Path) -> Path:
+    """Snapshot the enumerated tree into an isolated build root.
 
     A working tree may carry uncommitted changes (including registry TOML
-    mid-edits) that a tree-built artifact would sweep into a lane's
+    mid-edits) that a live-tree-built artifact would sweep into a lane's
     registry-validation probes, failing them for reasons outside that lane's
     contract. In the multi-agent factory worktree the failure mode is sharper
-    still: a build can snapshot a torn peer edit, so the artifact corresponds to
-    no commit at all and the lane fails with what looks like a packaging
-    regression. Building from the HEAD archive keeps the proof bound to a
-    defined commit; on a clean checkout (CI) it is identical to the tree.
+    still: a build can straddle a peer's mid-edit, landing half of a torn
+    change and none of the other half. Every lane therefore builds from an
+    isolated copy of the enumerated tree rather than the live one, so a
+    concurrent edit to ``repo_root`` cannot land inside a build already in
+    flight.
     """
     work_dir.mkdir(parents=True, exist_ok=True)
-    archive = work_dir / "head.zip"
-    extract_root = work_dir / "head"
-    run_checked(
-        ["git", "archive", "--format=zip", "-o", str(archive), "HEAD"],
-        cwd=repo_root,
-        env=_git_env(repo_root),
-    )
-    with zipfile.ZipFile(archive) as bundle:
-        bundle.extractall(extract_root)
-    archive.unlink()
-    return extract_root
-
-
-def commit_defined_build_root(repo_root: Path, work_dir: Path) -> Path:
-    """Return a build root whose tracked content corresponds to HEAD, extracting only if needed.
-
-    Porcelain reports every tracked modification and every untracked file, so an
-    empty porcelain proves the tree's TRACKED content is HEAD's; extracting it
-    would copy roughly forty thousand files (measured at three minutes on the
-    Windows build host) to reproduce content already present. In the shared
-    factory worktree a peer sweep makes the tree diverge from every commit, and
-    that is exactly when a tree build can snapshot a torn edit, so there the
-    extraction is worth its cost.
-
-    What porcelain does NOT report is VCS-ignored state: bytecode caches and
-    registry transaction mutexes sit beside the sources of an otherwise clean
-    tree. They are not build inputs -- the wheel and sdist builds select files
-    through the same ignore rules -- so their presence cannot move an artifact,
-    and every inventory derived from a build root must read Git rather than the
-    filesystem for the same reason (see :func:`build_source_data_paths`).
-    """
-    dirty = run_checked(["git", "status", "--porcelain"], cwd=repo_root, env=_git_env(repo_root)).stdout.strip()
-    if not dirty:
-        return repo_root
-    print(
-        f"working tree carries {len(dirty.splitlines())} uncommitted path(s); "
-        "building from a pristine HEAD extract so the artifacts correspond to a commit",
-        flush=True,
-    )
-    return head_extract(repo_root, work_dir)
-
-
-def extract_source_commit(repo_root: Path, work_dir: Path, source_commit: str) -> Path:
-    """Extract one immutable source commit rather than resolving a moving HEAD twice.
-
-    Unlike :func:`head_extract` (bound to the ambient ``HEAD``), this pins the
-    extraction to an exact commit hash — the shape a cohort-bound proof needs
-    when the artifact under test (e.g. a release cohort) was built from a
-    commit that may no longer be the checkout's current ``HEAD``.
-    """
-    work_dir.mkdir(parents=True, exist_ok=True)
-    archive = work_dir / f"source-commit-{source_commit}.zip"
-    extract_root = work_dir / f"source-commit-{source_commit}"
-    run_checked(
-        ["git", "archive", "--format=zip", "-o", str(archive), source_commit],
-        cwd=repo_root,
-        env=_git_env(repo_root),
-    )
-    with zipfile.ZipFile(archive) as bundle:
-        bundle.extractall(extract_root)
-    archive.unlink()
-    return extract_root
-
-
-def _wsl_path_from_windows_gitdir(gitdir: str) -> Path | None:
-    """Translate a Windows gitdir pointer for WSL-mounted worktrees."""
-    if os.name == "nt":
-        return None
-    normalized = gitdir.replace("\\", "/")
-    match = re.fullmatch(r"([A-Za-z]):/(.+)", normalized)
-    if match is None:
-        return None
-    candidate = Path("/mnt") / match.group(1).lower() / match.group(2)
-    if not candidate.exists():
-        return None
-    return candidate
-
-
-def _git_env(repo_root: Path) -> dict[str, str] | None:
-    """Return environment overrides for Git when WSL reads a Windows worktree."""
-    dot_git = repo_root / ".git"
-    if not dot_git.is_file():
-        return None
-    gitdir_line = dot_git.read_text(encoding=_UTF_8).strip()
-    prefix = "gitdir: "
-    if not gitdir_line.startswith(prefix):
-        return None
-    translated = _wsl_path_from_windows_gitdir(gitdir_line.removeprefix(prefix).strip())
-    if translated is None:
-        return None
-    return {**os.environ, "GIT_DIR": str(translated), "GIT_WORK_TREE": str(repo_root)}
+    destination = work_dir / "source"
+    snapshot(repo_root, repository_files(repo_root), destination)
+    return destination
 
 
 def require_executable(name: str) -> str:
@@ -584,60 +496,35 @@ def _validated_source_data_inventory(source_root: Path, inventory: set[str], *, 
     if absent:
         raise SystemExit(
             f"{len(absent)} shipped-data files named by {origin} are absent from {source_root}: "
-            f"{_format_path_sample(absent)}. Reconcile these paths before packaging: restore the tracked files, "
-            "or remove them from git tracking if they were intentionally retired."
+            f"{_format_path_sample(absent)}. Reconcile these paths before packaging: restore the files, "
+            "or remove them from the repository if they were intentionally retired."
         )
     return inventory
 
 
 def tracked_source_data_paths(repo_root: Path) -> set[str]:
     """Return tracked shipped-data source paths relative to the repository root."""
-    result = run_checked(["git", "ls-files", *TRACKED_DATA_ROOTS], cwd=repo_root, env=_git_env(repo_root))
-    tracked = {line.strip().replace("\\", "/") for line in result.stdout.splitlines() if line.strip()}
-    tracked = _validated_source_data_inventory(repo_root, tracked, origin="git ls-files")
+    tracked = set(repository_files(repo_root, under=TRACKED_DATA_ROOTS))
+    tracked = _validated_source_data_inventory(repo_root, tracked, origin="the repository file enumeration")
     missing_allow_list = sorted(_RENTA_PDF_ALLOW_LIST - tracked)
     if missing_allow_list:
         raise SystemExit(f"tracked shipped data is missing Renta PDF allow-list files: {missing_allow_list!r}")
     return tracked
 
 
-def _is_own_git_root(source_root: Path) -> bool:
-    """Return whether Git governs this tree with the tree itself as the working-tree root.
-
-    A sealed extract landing INSIDE the repository (``var/packaging-smoke/...``)
-    still answers a Git query, but it answers it for the enclosing repository,
-    which tracks nothing at the extract's paths. Comparing the reported
-    top level against the tree itself is what separates the two cases.
-    """
-    result = run_command(["git", "rev-parse", "--show-toplevel"], cwd=source_root, environment=_git_env(source_root))
-    if result.returncode != 0:
-        return False
-    top_level = result.stdout.strip()
-    return bool(top_level) and Path(top_level).resolve() == source_root.resolve()
-
-
 def build_source_data_paths(source_root: Path) -> set[str]:
     """Return the shipped-data inventory a build from this source tree will carry.
 
-    The inventory is what Git tracks, never what the filesystem happens to hold.
-    A working tree also carries VCS-ignored artifacts beside the sources --
-    bytecode caches, registry transaction mutexes -- which the wheel build's
-    ignore-aware file selection sheds; counting them would demand payload the
-    wheel can never contain, so the expectation would pass or fail on whether a
-    peer's transient file existed when the walk ran. A ``git archive`` extract
-    has no repository to ask and needs none: it holds exactly one commit's
-    tracked content, so its own files ARE that inventory.
-
-    Both readings answer the same question, which is why an ignored artifact
-    appearing or disappearing beside the sources cannot move the answer.
+    The inventory is the enumerated tree, never what the filesystem happens to
+    hold beside it. A working tree also carries ignored artifacts beside the
+    sources -- bytecode caches, registry transaction mutexes -- which the same
+    ignore rules the wheel build's file selection uses already exclude, so
+    counting them would demand payload the wheel can never contain. A snapshot
+    build root (:func:`build_root_snapshot`) holds exactly the enumerated
+    files, so reading either one this way answers the same question.
     """
-    if _is_own_git_root(source_root):
-        return tracked_source_data_paths(source_root)
-    data_root = source_root / _SOURCE_DATA_PREFIX.removesuffix("/")
-    extracted = {
-        path.relative_to(source_root).as_posix() for path in scan_directory(data_root, recursive=True) if path.is_file()
-    }
-    return _validated_source_data_inventory(source_root, extracted, origin="the sealed source extract")
+    inventory = set(repository_files(source_root, under=TRACKED_DATA_ROOTS))
+    return _validated_source_data_inventory(source_root, inventory, origin="the repository file enumeration")
 
 
 def _configured_corpus_binary_suffixes(repo_root: Path) -> tuple[str, ...]:
@@ -725,9 +612,10 @@ def expected_wheel_data_paths_from_source_tree(source_root: Path) -> set[str]:
 
     Both the inventory and the split-ownership configuration come from
     ``source_root``, so the expectation describes the tree the wheel is actually
-    built from rather than an unrelated checkout. The inventory is Git-derived
-    (:func:`build_source_data_paths`), which is what keeps the result identical
-    whether that tree is a live working tree or a sealed HEAD extract.
+    built from rather than an unrelated checkout. The inventory is the
+    enumerated tree (:func:`build_source_data_paths`), which is what keeps the
+    result identical whether that tree is a live working tree or a snapshot
+    build root.
     """
     return _expected_wheel_data_paths(source_root, build_source_data_paths(source_root))
 
@@ -911,9 +799,9 @@ def build_wheel(repo_root: Path, work_dir: Path, uv: str, *, build_root: Path) -
     ``build_root`` is both the tree the wheel is built from and the authority
     for its expected shipped-data inventory: consulting ``repo_root`` for that
     inventory would let an unrelated checkout describe the payload of an
-    otherwise isolated artifact proof. A live working tree and a sealed HEAD
-    extract are both accepted, because the inventory is read from Git rather
-    than from the filesystem and so does not vary between them.
+    otherwise isolated artifact proof. A live working tree and a snapshot
+    build root are both accepted, because the inventory is the enumerated
+    tree and so does not vary between them.
     """
     expected_data_paths = expected_wheel_data_paths_from_source_tree(build_root)
     wheel_dir = work_dir / "wheel"
@@ -930,7 +818,8 @@ def build_companion_wheels(work_dir: Path, uv: str, *, build_root: Path) -> tupl
     """Build the two mandatory data companions for a complete local cohort.
 
     Built from ``build_root`` for the same reason as :func:`build_wheel`; pass
-    a :func:`head_extract` tree so the companions correspond to a commit.
+    a :func:`build_root_snapshot` tree so the companions correspond to one
+    fixed source content.
     """
     out_dir = work_dir / "companion-wheels"
     wheels: list[Path] = []
@@ -956,12 +845,12 @@ def build_companion_wheels(work_dir: Path, uv: str, *, build_root: Path) -> tupl
 def build_sdist(work_dir: Path, uv: str, *, build_root: Path) -> Path:
     """Build the Cadrumo source distribution into the smoke work directory.
 
-    Built from ``build_root`` so the sdist corresponds to a commit rather than
-    to whatever the shared worktree happened to hold; pass a
-    :func:`head_extract` tree. This is the lane that caught a torn peer edit
-    live, shipping an sdist whose ``application/aggregation`` import did not
-    resolve against its own ``_source_mesh`` and failing as if it were a
-    packaging regression.
+    Built from ``build_root`` so the sdist corresponds to one fixed source
+    content rather than to whatever the shared worktree happened to hold; pass
+    a :func:`build_root_snapshot` tree. This is the lane that caught a torn
+    peer edit live, shipping an sdist whose ``application/aggregation`` import
+    did not resolve against its own ``_source_mesh`` and failing as if it were
+    a packaging regression.
     """
     sdist_dir = work_dir / "sdist"
     sdist_dir.mkdir(parents=True, exist_ok=True)

@@ -268,7 +268,9 @@ def test_binary_rows_download_and_verify_one_cohort() -> None:
     build = document["jobs"]["build-python-cohort"]
     build_surface = _run_surface(build)
     assert build_surface.count("python -m dev.packaging.release_cohort build") == 1
-    assert "--expected-commit" in build_surface
+    # The cohort names its own content by digest; no step asks git for a commit.
+    assert "--expected-commit" not in build_surface
+    assert "git rev-parse" not in build_surface
     assert "sha256sum cadrumo-python-runtime-cohort.tar.gz >" in build_surface
     assert "python-runtime-cohort.tar.gz.sha256" in build_surface
     assert "python -m dev.packaging.release_cohort verify" in build_surface

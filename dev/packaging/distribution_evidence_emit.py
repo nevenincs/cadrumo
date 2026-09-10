@@ -165,12 +165,12 @@ def _assert_oracle_bound_to_cohort(
         )
     records = {record.name: record for record in cohort.manifest.artifacts}
     expected = {
-        "cohort_source_commit": cohort.manifest.source.commit,
+        "cohort_source_digest": cohort.manifest.source.source_digest,
         "cohort_manifest_sha256": records["python-cohort-manifest"].sha256,
         "cohort_root_wheel_sha256": records["cadrumo-wheel"].sha256,
     }
     observed = {
-        "cohort_source_commit": tax_evidence.cohort_source_commit,
+        "cohort_source_digest": tax_evidence.cohort_source_digest,
         "cohort_manifest_sha256": tax_evidence.cohort_manifest_sha256,
         "cohort_root_wheel_sha256": tax_evidence.cohort_root_wheel_sha256,
     }
@@ -205,13 +205,13 @@ def _assert_mcp_oracle_bound_to_cohort(*, cohort: LoadedReleaseCohort, mcp_evide
     """
     records = {record.name: record for record in cohort.manifest.artifacts}
     expected = {
-        "cohort_source_commit": cohort.manifest.source.commit,
+        "cohort_source_digest": cohort.manifest.source.source_digest,
         "cohort_manifest_sha256": records["python-cohort-manifest"].sha256,
         "cohort_root_wheel_sha256": records["cadrumo-wheel"].sha256,
         "cohort_harness_wheel_sha256": records["cadrumo-wheel"].sha256,
     }
     observed = {
-        "cohort_source_commit": mcp_evidence.cohort_source_commit,
+        "cohort_source_digest": mcp_evidence.cohort_source_digest,
         "cohort_manifest_sha256": mcp_evidence.cohort_manifest_sha256,
         "cohort_root_wheel_sha256": mcp_evidence.cohort_root_wheel_sha256,
         "cohort_harness_wheel_sha256": mcp_evidence.cohort_harness_wheel_sha256,
@@ -304,7 +304,7 @@ def build_installed_oracle_evidence(
         "requested_executable": tax_evidence.requested_executable,
         "resolved_executable": tax_evidence.resolved_executable,
         "version_output": tax_evidence.version_output,
-        "cohort_source_commit": tax_evidence.cohort_source_commit,
+        "cohort_source_digest": tax_evidence.cohort_source_digest,
         "cohort_manifest_sha256": tax_evidence.cohort_manifest_sha256,
         "cohort_root_wheel_sha256": tax_evidence.cohort_root_wheel_sha256,
         "executable_sha256": tax_evidence.executable_sha256,
@@ -455,7 +455,7 @@ def _tax_evidence_from_mapping(data: dict[str, Any]) -> InstalledTaxEvidence:
         requested_executable=data["requested_executable"],
         resolved_executable=data["resolved_executable"],
         version_output=data["version_output"],
-        cohort_source_commit=data["cohort_source_commit"],
+        cohort_source_digest=data["cohort_source_digest"],
         cohort_manifest_sha256=data["cohort_manifest_sha256"],
         cohort_root_wheel_sha256=data["cohort_root_wheel_sha256"],
         executable_sha256=data["executable_sha256"],
@@ -516,7 +516,7 @@ def _mcp_evidence_from_mapping(data: dict[str, Any]) -> InstalledMcpEvidence:
         calls=calls,
         invoked_cli_sha256=data["invoked_cli_sha256"],
         invoked_cli_sha256_by_command=dict(data["invoked_cli_sha256_by_command"]),
-        cohort_source_commit=data["cohort_source_commit"],
+        cohort_source_digest=data["cohort_source_digest"],
         cohort_manifest_sha256=data["cohort_manifest_sha256"],
         cohort_root_wheel_sha256=data["cohort_root_wheel_sha256"],
         cohort_harness_wheel_sha256=data["cohort_harness_wheel_sha256"],

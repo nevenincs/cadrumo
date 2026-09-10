@@ -13,13 +13,14 @@ test_evidence_scrub.py -- plus ``dev/release/tests/test_distribution_readiness.p
 ``_cohort``) that all built the same real on-disk cohort: every
 :data:`~dev.packaging.cohort_manifest.REQUIRED_ARTIFACT_KINDS` artifact, a real
 manifest, a real ``load_release_cohort`` read-back. They differed only in
-filler identity values (version, commit, digest bytes) that no caller asserts
-against -- confirmed by grepping each file for a second reference to its own
-filler before folding it into one shared default -- plus one non-deterministic
-``datetime.now(UTC)`` timestamp two of the four copies already pinned, and one
-genuinely meaningful parameter: the release/readiness cohort builder accepts a
-``payload_suffix`` so a test can construct two cohorts sharing a commit but
-carrying different artifact bytes (and so different digests), which its
+filler identity values (version, source digest, digest bytes) that no caller
+asserts against -- confirmed by grepping each file for a second reference to
+its own filler before folding it into one shared default -- plus one
+non-deterministic ``datetime.now(UTC)`` timestamp two of the four copies
+already pinned, and one genuinely meaningful parameter: the release/readiness
+cohort builder accepts a ``payload_suffix`` so a test can construct two
+cohorts sharing a source digest but carrying different artifact bytes (and so
+different digests), which its
 mismatched-evidence gate exercises. That parameter is the strictest variant of
 the four and is kept; the shared default keeps the artifact bytes unchanged
 for every caller that never varies it.
@@ -56,7 +57,7 @@ from ..cohort_manifest import (
 )
 
 DEFAULT_COHORT_VERSION = "0.2.1"
-DEFAULT_COHORT_COMMIT = "c" * 40
+DEFAULT_COHORT_SOURCE_DIGEST = "c" * 64
 DEFAULT_COHORT_BUILD_CONSTRAINTS_SHA256 = "d" * 64
 DEFAULT_COHORT_CREATED_AT = datetime(2026, 1, 1, tzinfo=UTC)
 
@@ -152,16 +153,17 @@ def release_cohort(
     root: Path,
     *,
     version: str = DEFAULT_COHORT_VERSION,
-    commit: str = DEFAULT_COHORT_COMMIT,
+    source_digest: str = DEFAULT_COHORT_SOURCE_DIGEST,
     build_constraints_sha256: str = DEFAULT_COHORT_BUILD_CONSTRAINTS_SHA256,
     created_at: datetime = DEFAULT_COHORT_CREATED_AT,
     payload_suffix: str = "",
 ) -> LoadedReleaseCohort:
     """Materialise a genuine release cohort with every required artifact kind.
 
-    ``payload_suffix`` varies each artifact's bytes without touching commit or
-    version identity, so two cohorts can share one commit/version yet carry
-    different digests -- the shape the digest-mismatch readiness gate needs.
+    ``payload_suffix`` varies each artifact's bytes without touching source or
+    version identity, so two cohorts can share one source digest/version yet
+    carry different digests -- the shape the digest-mismatch readiness gate
+    needs.
     """
     root.mkdir(parents=True)
     artifacts = []
@@ -179,7 +181,7 @@ def release_cohort(
     manifest = create_manifest(
         root=root,
         version=version,
-        source=SourceIdentity(commit=commit, tag=f"v{version}"),
+        source=SourceIdentity(source_digest=source_digest, tag=f"v{version}"),
         created_at=created_at,
         builder=BuildIdentity(
             implementation="dev.packaging.release_cohort",

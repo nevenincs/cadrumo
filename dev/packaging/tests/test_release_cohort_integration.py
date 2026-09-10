@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-import shutil
-import subprocess
 import uuid
 from pathlib import Path
 
 import pytest
 
 from ..._paths import REPO_ROOT
+from ...source_tree import repository_files, snapshot
 from ..build_scratch_reclaim import (
     RELEASE_COHORT_INTEGRATION_FAMILY,
     matching_family,
@@ -21,7 +20,7 @@ from ..release_cohort import build_release_cohort
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-#: Wall ceiling for the real double build. This test clones the source and
+#: Wall ceiling for the real double build. This test snapshots the source and
 #: builds the eleven-member cohort TWICE, entirely inside child processes, so
 #: it runs far past the repository's 300s default.
 #:
@@ -33,60 +32,44 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _REAL_DOUBLE_BUILD_TIMEOUT = 3600
 
 
-def _stable_source_clone(repo_root: Path, destination: Path) -> Path:
-    """Clone the working repository into a source whose tip cannot move.
+def _stable_source_snapshot(repo_root: Path, destination: Path) -> Path:
+    """Snapshot the working repository into a source whose content cannot move.
 
-    A cohort is always built from the tip of the branch it is told to build —
-    no commit is ever pinned or passed in, here or in production. That leaves
-    this reproducibility proof one requirement: both builds must see the *same*
-    tip. Against the working repository they do not, because this tree is shared
-    with concurrent agents and each build takes minutes, so a commit landing in
-    between silently changes the second build's source. Cloning once gives the
-    test a source nobody else commits to, so "build the tip twice" really does
-    build the same thing twice.
-
-    The clone is ``--no-checkout``: the builder reads this source's tip and
-    clones it again into its own clean tree, so materializing a second copy of
-    the (large) working tree would cost minutes and gigabytes per run for
-    nothing. Objects are hardlinked from the local source, keeping the clone
-    fast and near-free on disk. It must itself be a repository — a plain
-    directory under ``var/`` would let git resolve the tip from the enclosing
-    working tree and put the moving target straight back.
+    A cohort is always built from the enumerated content it is given — no
+    revision is ever pinned or passed in, here or in production. That leaves
+    this reproducibility proof one requirement: both builds must see the
+    *same* content. Against the working repository they do not, because this
+    tree is shared with concurrent agents and each build takes minutes, so an
+    edit landing in between silently changes the second build's source.
+    Snapshotting once gives the test a source nobody else edits, so "build the
+    same content twice" really does build the same thing twice.
     """
-    git = shutil.which("git")
-    if git is None:
-        raise RuntimeError("git is required to clone the release-cohort source")
-    subprocess.run(  # noqa: S603 - fixed git argv over a local path
-        [git, "-c", "core.longpaths=true", "clone", "--no-checkout", "--quiet", str(repo_root), str(destination)],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
+    snapshot(repo_root, repository_files(repo_root), destination)
     (destination / "var").mkdir(exist_ok=True)
     return destination
 
 
 @pytest.mark.timeout(_REAL_DOUBLE_BUILD_TIMEOUT)
 def test_real_clean_source_build_is_complete_and_reproducible() -> None:
-    """Build the real 12-member cohort twice from the branch tip and compare every digest."""
+    """Build the real 12-member cohort twice from the same content and compare every digest."""
     repo_root = REPO_ROOT
     var = (repo_root / "var").resolve(strict=True)
     # Named through the scratch registry rather than spelled here, so the
     # collection-time reclaim and this mint site cannot disagree about the
     # family, and so the name carries this process as its owner.
-    snapshot = var / var_scratch_name(RELEASE_COHORT_INTEGRATION_FAMILY, uuid.uuid4().hex)
+    snapshot_root = var / var_scratch_name(RELEASE_COHORT_INTEGRATION_FAMILY, uuid.uuid4().hex)
     try:
-        source = _stable_source_clone(repo_root, snapshot)
+        source = _stable_source_snapshot(repo_root, snapshot_root)
         outputs = (
             source / "var" / "first",
             source / "var" / "second",
         )
-        # Neither build is told which commit to use: each resolves the tip
-        # itself, exactly as a release does. Both must land on the same one.
+        # Neither build is told which content to use: each enumerates the
+        # source itself, exactly as a release does. Both must land on the same one.
         first = build_release_cohort(repo_root=source, output_dir=outputs[0])
         second = build_release_cohort(repo_root=source, output_dir=outputs[1])
 
-        assert first.manifest.source.commit == second.manifest.source.commit
+        assert first.manifest.source.source_digest == second.manifest.source.source_digest
         assert first.manifest.cohort_id == second.manifest.cohort_id
         assert first.manifest.source == second.manifest.source
         assert {record.name for record in first.manifest.artifacts} == set(
@@ -114,11 +97,11 @@ def test_real_clean_source_build_is_complete_and_reproducible() -> None:
     finally:
         # One removal covers both cohorts: they are built inside the snapshot.
         #
-        # NOT `shutil.rmtree(..., ignore_errors=True)`. The snapshot is a Git
-        # clone, whose object files are read-only, and Windows refuses to
-        # unlink a read-only file; `ignore_errors` swallows that refusal, so
-        # the block reported success while leaving the clone on disk. The
-        # shared reclaim clears the attribute and retries.
-        resolved = snapshot.resolve()
+        # NOT `shutil.rmtree(..., ignore_errors=True)`. A copied source tree
+        # can carry read-only members, and Windows refuses to unlink a
+        # read-only file; `ignore_errors` swallows that refusal, so the block
+        # reported success while leaving the copy on disk. The shared reclaim
+        # clears the attribute and retries.
+        resolved = snapshot_root.resolve()
         if resolved.parent == var and matching_family(resolved.name) is not None and resolved.exists():
             remove_tree(resolved)
