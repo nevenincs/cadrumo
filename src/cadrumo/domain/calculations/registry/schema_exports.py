@@ -474,6 +474,14 @@ class ExportFieldDefinition(RegistryModel):
     decimals: int | None = Field(default=None, ge=0)
     signed: bool
     sign_position: ExportSignPositionValue = None
+    required_for: Literal["natural_person"] | None = None
+    """A requirement the design states for one taxpayer legal form only.
+
+    Modelo 390 marks the sujeto pasivo nombre "OBLIGATORIO (persona fisica)":
+    required when the taxpayer is a natural person, and meaningless for an
+    entity. A layout cannot know the filer, so the condition is carried here
+    and evaluated at export against the filing's own taxpayer.
+    """
     value_policy: ExportValuePolicyValue = None
     allowed_values: tuple[str, ...] | None = None
     legal_refs: LegalRefs
@@ -516,6 +524,7 @@ class ExportFieldDefinition(RegistryModel):
     def _validate_field_kind(self) -> ExportFieldDefinition:
         _validate_field_semantic_payload(self)
         _validate_field_render_shape(self)
+        _validate_required_for(self)
         return self
 
     def wire_shape(self) -> tuple[str, str, str, bool, str | None]:
@@ -584,6 +593,26 @@ def _field_semantic_payloads(field: ExportFieldDefinition) -> dict[ExportSemanti
         ExportSemanticPayloadAxis.DRAFT_ATTRIBUTE: field.draft_attribute,
         ExportSemanticPayloadAxis.COMPUTED_KEY: field.computed_key,
     }
+
+
+def _validate_required_for(field: ExportFieldDefinition) -> None:
+    """Admit a legal-form requirement only where the export can evaluate it.
+
+    Only a producer-supplied header field is evaluated against the taxpayer at
+    render time; declaring the condition anywhere else would store a
+    requirement nothing enforces. An unconditionally required field needs no
+    condition, so declaring both is refused as contradictory.
+    """
+    if field.required_for is None:
+        return
+    if field.kind != CasillaFieldKind.HEADER:
+        raise RegistryValidationError(
+            f"export field {field.id!r} can declare required_for only on a header field, not {field.kind.value!r}",
+        )
+    if field.required:
+        raise RegistryValidationError(
+            f"export field {field.id!r} is required unconditionally and cannot also declare required_for",
+        )
 
 
 def _validate_field_semantic_payload(field: ExportFieldDefinition) -> None:

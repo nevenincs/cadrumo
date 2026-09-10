@@ -222,6 +222,7 @@ _FIELD_KEYS: Final[frozenset[str]] = frozenset(
         "decimals",
         "signed",
         "sign_position",
+        "required_for",
         "value_policy",
         "allowed_values",
         "legal_refs",
@@ -233,7 +234,7 @@ _FIELD_KEYS: Final[frozenset[str]] = frozenset(
 #: exactly the bytes it did before the key existed, and no stored manifest or
 #: loader digest has to be rewritten to admit it. An explicit ``null`` in a
 #: stored manifest is therefore non-canonical and refuses on load.
-_FIELD_KEYS_PRESENT_ONLY_WHEN_DECLARED: Final[tuple[str, ...]] = ("sign_position",)
+_FIELD_KEYS_PRESENT_ONLY_WHEN_DECLARED: Final[tuple[str, ...]] = ("sign_position", "required_for")
 _DISCRIMINATOR_KEYS: Final[frozenset[str]] = frozenset({"offset", "length", "requires"})
 _DICTIONARY_OVERRIDE_KEYS: Final[frozenset[str]] = frozenset({"field_id", "path", "reason"})
 

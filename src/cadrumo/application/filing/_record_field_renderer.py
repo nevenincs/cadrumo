@@ -277,9 +277,24 @@ def _header_field_value(field: ExportFieldDefinition, headers: Mapping[FilingPro
     if field.producer_key is None:
         raise FilingExportValidationError(f"export field {field.id!r} must declare producer_key")
     value = headers.get(field.producer_key)
-    if field.required and (value is None or (isinstance(value, str) and not value.strip())):
+    if _is_blank(value) and (field.required or _required_for_this_taxpayer(field, headers)):
         raise FilingExportValidationError(f"export producer {field.producer_key!r} is required")
     return value.strip() if isinstance(value, str) else value
+
+
+def _is_blank(value: object) -> bool:
+    return value is None or (isinstance(value, str) and not value.strip())
+
+
+def _required_for_this_taxpayer(field: ExportFieldDefinition, headers: Mapping[FilingProducerKey, object]) -> bool:
+    """Evaluate a legal-form requirement against the filing's own taxpayer.
+
+    The form is read from the identity facts, which carry an entity's legal name
+    or a natural person's names and never both. A taxpayer whose form cannot be
+    read is treated as required: the export cannot show the condition does not
+    apply, so a blank is refused rather than written.
+    """
+    return field.required_for is not None and _is_blank(headers.get(FilingProducerKey.TAXPAYER_LEGAL_NAME))
 
 
 def _envelope_closing_tag(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str:

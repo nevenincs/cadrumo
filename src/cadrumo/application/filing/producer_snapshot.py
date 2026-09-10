@@ -161,6 +161,18 @@ class TaxpayerIdentityFacts(BaseModel):
     surnames: _NonBlankName | None
     full_name: _NonBlankName | None
 
+    @model_validator(mode="after")
+    def _refuse_entity_and_person_names_together(self) -> TaxpayerIdentityFacts:
+        """An entity carries a legal name; a natural person carries given name and surnames.
+
+        The two are exclusive by meaning, and the export reads the taxpayer's
+        legal form from which of them is present. Holding both would let a
+        requirement stated for natural persons be judged against an entity.
+        """
+        if self.legal_name is not None and (self.given_name is not None or self.surnames is not None):
+            raise ValueError("taxpayer identity cannot carry both an entity legal name and personal names")
+        return self
+
 
 class DeclarationContactFacts(BaseModel):
     """The "persona con quien relacionarse" AEAT asks for on an informativa.
