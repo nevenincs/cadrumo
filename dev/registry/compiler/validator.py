@@ -66,17 +66,6 @@ from .validation_memoization import (
     MODELO_VALIDATION_CACHE,
     REGISTRY_VALIDATION_CACHE,
 )
-from cadrumo.domain.calculations.registry.corpus_catalogue import (
-    compile_record_design_manifest_catalogue,
-    verify_catalogue_identity_bindings,
-    verify_source_catalogue,
-)
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from .fact_validation import governed_fact_catalogue_failures, migrated_legal_parameter_fact_failures
-from cadrumo.domain.calculations.registry.legal import verify_legal_catalogue_grounding
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
-from cadrumo.domain.calculations.registry.schema_base import REGISTRY_SOURCE_GROUNDING_TIERS
-from .registry_scope import validate_registry_scope
 
 if TYPE_CHECKING:
     from cadrumo.domain.user_profile.schema import ProfileSchemaDefinition
@@ -101,6 +90,7 @@ class RegistryValidator:
         user_profile_schema: ProfileSchemaDefinition | None = None,
         source_evidence_fingerprint: SourceEvidenceFingerprint | None = None,
     ) -> None:
+        """Bind one compiler validation run to its exact catalogue inputs."""
         self._legal = catalogues.legal
         self._sources = catalogues.sources
         self._facts = catalogues.facts
