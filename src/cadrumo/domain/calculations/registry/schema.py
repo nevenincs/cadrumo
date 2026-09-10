@@ -146,6 +146,7 @@ from ....core.filing_year import FilingYear
 from .convenio import ConvenioAuthority
 from .facts.schema import GovernedFactCatalogue
 from .modelo_localization import require_modelo_localization, resolve_modelo_localization
+from .revision_predecessor_forest import validate_predecessor_forest
 from .schema_base import (
     GOVERNANCE_STAMP,
     MANIFEST_ONLY,
@@ -876,7 +877,11 @@ class ModeloRevision(RegistryModel):
     itself. Absent reads as ``None`` and is excluded from serialisation, so a
     revision that does not declare the key dumps exactly as it did before the
     key existed. A :class:`NoPredecessor` is the grounded statement that the
-    revision chains to no sibling at all, which absence cannot say.
+    revision chains to no sibling at all, which absence cannot say. Either
+    declaration is a claim about the whole revision, so it is manifest-only: a
+    section fragment declaring it is refused. The modelo validates the declared
+    edges together as a forest through
+    :func:`~.revision_predecessor_forest.validate_predecessor_forest`.
     """
 
     id: RevisionId
@@ -886,7 +891,10 @@ class ModeloRevision(RegistryModel):
     period_selector: PeriodSelector
     legal_refs: Annotated[LegalRefs, MANIFEST_ONLY]
     source_refs: SourceRefs
-    predecessor: DeclaredPredecessorField | None = Field(default=None, exclude_if=lambda value: value is None)
+    predecessor: Annotated[DeclaredPredecessorField | None, MANIFEST_ONLY] = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+    )
     # Required by validate_orden_aplicabilidad; kept default-empty so the
     # validator can report a grounded registry failure instead of a parse error.
     orden_aplicabilidad: Annotated[tuple[LegalRefId, ...], MANIFEST_ONLY] = ()
@@ -1170,13 +1178,19 @@ class ModeloDefinition(RegistryModel):
         for key, revision in self.revisions.items():
             if key != revision.id:
                 raise RegistryValidationError(f"revision key {key!r} does not match revision id {revision.id!r}")
-            predecessor = revision.predecessor
-            if isinstance(predecessor, DeclaredPredecessor) and predecessor.revision_id not in self.revisions:
-                raise RegistryValidationError(
-                    f"modelo {self.id!r} revision {key!r} declares predecessor "
-                    f"{predecessor.revision_id!r}, which is not a revision of this modelo; "
-                    f"declared revisions are {sorted(self.revisions)!r}",
-                )
+        declarations = {key: revision.predecessor for key, revision in self.revisions.items()}
+        validate_predecessor_forest(
+            self.id,
+            named={
+                key: declaration.revision_id
+                for key, declaration in declarations.items()
+                if isinstance(declaration, DeclaredPredecessor)
+            },
+            declared_roots=frozenset(
+                key for key, declaration in declarations.items() if isinstance(declaration, NoPredecessor)
+            ),
+            keyless=frozenset(key for key, declaration in declarations.items() if declaration is None),
+        )
         return self
 
 

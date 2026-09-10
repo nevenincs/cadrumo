@@ -40,11 +40,13 @@ _PARALLEL_SCHEME_MODELO = "369"
 
 
 def _casilla_fragment(revision_id: str) -> str:
+    """One casilla carrying the same lineage in every edition, so a successor's row supersedes its predecessor's."""
     return f"""
 [[revisions."{revision_id}".casillas]]
 id = "0001"
 number = "1"
 section = ["liquidacion"]
+continuidad_id = "casilla-0001"
 legal_refs = ["{_LEGAL_REF}"]
 source_refs = ["aeat-manual"]
 """.lstrip()

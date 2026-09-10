@@ -55,6 +55,7 @@ _FIELD_LITERALS: dict[str, str] = {
     "legal_refs": f'["{_LEGAL_REF}"]',
     "orden_aplicabilidad": f'["{_ORDEN_REF}"]',
     "valid_to": "2025-12-31",
+    "predecessor": '"2024"',
     "engineered_by": '"registry schema campaign"',
     "review_status": '"pending_review"',
     "reviewed_by": '"operator"',
@@ -214,6 +215,7 @@ def test_the_manifest_only_set_is_exactly_todays_marked_fields() -> None:
         "family_dispositions",
         "legal_refs",
         "orden_aplicabilidad",
+        "predecessor",
         "valid_to",
     }
 

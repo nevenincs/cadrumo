@@ -9,12 +9,14 @@ contract does not promise.
 from __future__ import annotations
 
 import os
+from collections import Counter
 from collections.abc import Mapping
+from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import cast
+from typing import Final, cast
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from ....core.directory_scan import (
     DirectoryEntryKind,
@@ -67,6 +69,7 @@ from .modelo_localization import (
     enroll_revision_localization,
     modelo_locale_key,
 )
+from .revision_predecessor_forest import validate_predecessor_forest
 from .schema import (
     REVISION_GOVERNANCE_FIELDS as _REVISION_GOVERNANCE_FIELDS,
 )
@@ -80,7 +83,14 @@ from .schema import (
     SupportedFilingYearsCatalogue,
 )
 from .schema_references import LegalParameter, LegalReference, SourceReference
+from .schema_surfaces import CasillaEvolutionKind
 from .validate_revision_identity import revision_reference_identity_failures
+
+_PREDECESSOR_FIELD: Final = "predecessor"
+_NO_PREDECESSOR_TABLE_KEY: Final = "none"
+_INHERITED_SECTION: Final = "casillas"
+_RETIREMENT_SECTION: Final = "casilla_continuidad_evolutions"
+_REVISION_ID_ADAPTER: Final = TypeAdapter(RevisionId)
 
 ModeloRevisionSource = _ModeloRevisionSource
 clear_fingerprint_cache = _clear_fingerprint_cache
@@ -125,9 +135,10 @@ def _build_modelo_definition_from_data(source_path: Path, data: Mapping[str, obj
         raise RegistryLoadError(f"{source_path}: [modelo] must be a table")
     modelo_id = modelo_table.get("id")
     modelo_id_for_context = modelo_id if isinstance(modelo_id, str) else source_path.as_posix()
-    raw_revisions = _as_toml_table(data.get("revisions"))
-    if not raw_revisions:
+    declared_revisions = _as_toml_table(data.get("revisions"))
+    if not declared_revisions:
         raise RegistryLoadError(f"{source_path}: missing [revisions.<id>] tables")
+    raw_revisions = _materialise_revisions(source_path, str(modelo_id_for_context), declared_revisions)
     revisions: dict[str, ModeloRevision] = {}
     for revision_id, raw_revision in raw_revisions.items():
         raw_revision_table = _as_toml_table(raw_revision)
@@ -161,6 +172,271 @@ def _build_modelo_definition_from_data(source_path: Path, data: Mapping[str, obj
         )
     except ValidationError as exc:
         raise RegistryLoadError(f"{source_path}: invalid modelo definition: {exc}") from exc
+
+
+@dataclass(frozen=True, slots=True)
+class _RawPredecessorDeclarations:
+    """Each edition's predecessor declaration, read from the raw revision tables."""
+
+    named: Mapping[str, str]
+    declared_roots: frozenset[str]
+    keyless: frozenset[str]
+
+
+def _raw_predecessor_declarations(raw_revisions: Mapping[str, object]) -> _RawPredecessorDeclarations | None:
+    """Project every edition's authored ``predecessor`` onto the three declaration states.
+
+    Returns ``None`` when any edition is not a table or spells its declaration
+    in a shape no state admits. Materialisation then does nothing, and typed
+    construction refuses the malformed edition with the declaration's own
+    error rather than one this projection would have to invent.
+    """
+    named: dict[str, str] = {}
+    declared_roots: set[str] = set()
+    keyless: set[str] = set()
+    for revision_id, raw_revision in raw_revisions.items():
+        table = _as_toml_table(raw_revision)
+        if table is None:
+            return None
+        declaration = table.get(_PREDECESSOR_FIELD)
+        if declaration is None:
+            keyless.add(revision_id)
+        elif isinstance(declaration, str) and _is_revision_id(declaration):
+            named[revision_id] = declaration
+        elif isinstance(declaration, Mapping) and set(declaration) == {_NO_PREDECESSOR_TABLE_KEY}:
+            declared_roots.add(revision_id)
+        else:
+            return None
+    return _RawPredecessorDeclarations(
+        named=named,
+        declared_roots=frozenset(declared_roots),
+        keyless=frozenset(keyless),
+    )
+
+
+def _is_revision_id(value: str) -> bool:
+    try:
+        _REVISION_ID_ADAPTER.validate_python(value)
+    except ValidationError:
+        return False
+    return True
+
+
+def _materialise_revisions(
+    source_path: Path,
+    modelo_id: str,
+    raw_revisions: Mapping[str, object],
+) -> Mapping[str, object]:
+    """Resolve every edition naming a predecessor into the full raw revision it stands for.
+
+    The output has the shape typed construction already consumes, one raw
+    table per edition in declaration order, so nothing downstream can tell a
+    materialised edition from one that states every row itself.
+
+    An edition is delta-authored only when its manifest names a predecessor.
+    Nothing here infers one: an edition omitting the key, or declaring that no
+    predecessor exists, is returned as the identical object it arrived as, and
+    a modelo none of whose editions names a predecessor is returned whole.
+
+    Inheritance covers the casilla family and nothing else. Every other family
+    is declared in full by every edition. The completeness manifest is excluded
+    deliberately, not by omission: its rows are casilla-shaped, but a manifest
+    is a derived assertion about its own edition's formula closure, and its
+    presence is a graded capability claim, so an inherited one would attest
+    support the successor never earned.
+
+    Within the casilla family, rows are matched on ``continuidad_id``:
+
+    - an inherited row is kept unchanged unless a stated row carries its
+      lineage, in which case the stated row replaces it in its position;
+    - a stated row carrying no inherited lineage is new and is appended after
+      the inherited rows, in stated order;
+    - an inherited row whose lineage the successor retires, through a
+      ``retired`` casilla evolution whose ``to_revision`` is the successor, is
+      dropped.
+
+    Refused, because each would otherwise resolve silently to a guess:
+
+    - a stated row whose id collides with an inherited row it does not
+      supersede, which is a repurpose nobody declared; two rows without lineage
+      sharing an id are refused the same way, since supersession has no key;
+    - two stated rows carrying one lineage, or a stated lineage that the
+      predecessor carries on more than one row;
+    - a stated row carrying a lineage the same edition retires.
+
+    The predecessor graph is checked as a forest first, so the recursion walks
+    a tree and a chain resolves its predecessor before the successor.
+
+    Where it stops: it does not judge whether a predecessor may be declared at
+    all for the edition's authority grade, it does not resolve formula or
+    binding references on an inherited row against the successor, and it adds
+    no locale identity; enrolment afterwards derives every row's keys from the
+    edition it now sits in.
+    """
+    declarations = _raw_predecessor_declarations(raw_revisions)
+    if declarations is None or not declarations.named:
+        return raw_revisions
+    try:
+        validate_predecessor_forest(
+            modelo_id,
+            named=declarations.named,
+            declared_roots=declarations.declared_roots,
+            keyless=declarations.keyless,
+        )
+    except RegistryValidationError as exc:
+        raise RegistryLoadError(f"{source_path}: invalid modelo definition: {exc}") from exc
+    resolved: dict[str, Mapping[str, object]] = {}
+    materialised: dict[str, object] = dict(raw_revisions)
+    for revision_id in declarations.named:
+        materialised[revision_id] = _materialise_revision(
+            source_path,
+            raw_revisions,
+            declarations.named,
+            revision_id,
+            resolved,
+        )
+    return materialised
+
+
+def _materialise_revision(
+    source_path: Path,
+    raw_revisions: Mapping[str, object],
+    named: Mapping[str, str],
+    revision_id: str,
+    resolved: dict[str, Mapping[str, object]],
+) -> Mapping[str, object]:
+    """Return one edition with its predecessor chain's casillas resolved into it."""
+    cached = resolved.get(revision_id)
+    if cached is not None:
+        return cached
+    table = _as_toml_table(raw_revisions[revision_id])
+    if table is None:
+        raise RegistryLoadError(f"{source_path}: revision {revision_id!r} must be a table")
+    predecessor_id = named.get(revision_id)
+    result: Mapping[str, object] = table
+    if predecessor_id is not None:
+        predecessor = _materialise_revision(source_path, raw_revisions, named, predecessor_id, resolved)
+        result = {
+            **table,
+            _INHERITED_SECTION: _inherit_casillas(
+                f"{source_path}: revision {revision_id!r} inheriting from {predecessor_id!r}",
+                revision_id=revision_id,
+                inherited=_raw_casilla_rows(source_path, predecessor_id, predecessor),
+                successor=table,
+            ),
+        }
+    resolved[revision_id] = result
+    return result
+
+
+def _raw_casilla_rows(source_path: Path, revision_id: str, table: Mapping[str, object]) -> tuple[object, ...]:
+    rows = as_toml_array(table.get(_INHERITED_SECTION, ()))
+    if rows is None:
+        raise RegistryLoadError(f"{source_path}: revision {revision_id!r} casillas must be an array")
+    return rows
+
+
+def _inherit_casillas(
+    context: str,
+    *,
+    revision_id: str,
+    inherited: tuple[object, ...],
+    successor: Mapping[str, object],
+) -> tuple[object, ...]:
+    """Merge the predecessor's materialised casillas with the successor's stated ones."""
+    stated = as_toml_array(successor.get(_INHERITED_SECTION, ()))
+    if stated is None:
+        raise RegistryLoadError(f"{context}: casillas must be an array")
+    retired = _retired_lineages(successor, revision_id)
+    superseders = _stated_rows_by_lineage(context, stated, retired)
+    inherited_lineage_counts = Counter(lineage for row in inherited if (lineage := _row_lineage(row)) is not None)
+    ambiguous = sorted(lineage for lineage in superseders if inherited_lineage_counts[lineage] > 1)
+    if ambiguous:
+        raise RegistryLoadError(
+            f"{context}: the predecessor carries lineage {ambiguous!r} on more than one row, so a stated row "
+            "carrying it cannot say which one it supersedes",
+        )
+    rows: list[object] = []
+    kept_lineage_by_id: dict[str, str | None] = {}
+    superseded: set[str] = set()
+    for row in inherited:
+        lineage = _row_lineage(row)
+        if lineage is not None and lineage in retired:
+            continue
+        if lineage is not None and lineage in superseders:
+            rows.append(superseders[lineage])
+            superseded.add(lineage)
+            continue
+        rows.append(row)
+        row_id = _row_id(row)
+        if row_id is not None:
+            kept_lineage_by_id[row_id] = lineage
+    for row in stated:
+        lineage = _row_lineage(row)
+        row_id = _row_id(row)
+        if row_id is not None and row_id in kept_lineage_by_id:
+            raise RegistryLoadError(
+                f"{context}: stated casilla {row_id!r} of lineage {_lineage_label(lineage)} collides with the "
+                f"inherited casilla {row_id!r} of lineage {_lineage_label(kept_lineage_by_id[row_id])}; a stated "
+                "row supersedes only the inherited row carrying its own lineage, so declare the repurpose by "
+                "keeping the lineage, or retire the inherited lineage",
+            )
+        if lineage is None or lineage not in superseded:
+            rows.append(row)
+    return tuple(rows)
+
+
+def _stated_rows_by_lineage(
+    context: str,
+    stated: tuple[object, ...],
+    retired: frozenset[str],
+) -> dict[str, object]:
+    by_lineage: dict[str, object] = {}
+    for row in stated:
+        lineage = _row_lineage(row)
+        if lineage is None:
+            continue
+        if lineage in retired:
+            raise RegistryLoadError(
+                f"{context}: states a casilla of lineage {lineage!r}, which the same edition retires",
+            )
+        if lineage in by_lineage:
+            raise RegistryLoadError(
+                f"{context}: states more than one casilla of lineage {lineage!r}, so neither can supersede "
+                "the inherited row",
+            )
+        by_lineage[lineage] = row
+    return by_lineage
+
+
+def _retired_lineages(successor: Mapping[str, object], revision_id: str) -> frozenset[str]:
+    """Return the lineages the successor withdraws through a ``retired`` evolution into itself."""
+    evolutions = as_toml_array(successor.get(_RETIREMENT_SECTION, ())) or ()
+    retired: set[str] = set()
+    for raw_evolution in evolutions:
+        evolution = _as_toml_table(raw_evolution)
+        if evolution is None or evolution.get("to_revision") != revision_id:
+            continue
+        lineage = evolution.get("continuidad_id")
+        if evolution.get("evolution_kind") == CasillaEvolutionKind.RETIRED and isinstance(lineage, str):
+            retired.add(lineage)
+    return frozenset(retired)
+
+
+def _row_lineage(row: object) -> str | None:
+    table = _as_toml_table(row)
+    lineage = None if table is None else table.get("continuidad_id")
+    return lineage if isinstance(lineage, str) else None
+
+
+def _row_id(row: object) -> str | None:
+    table = _as_toml_table(row)
+    row_id = None if table is None else table.get("id")
+    return row_id if isinstance(row_id, str) else None
+
+
+def _lineage_label(lineage: str | None) -> str:
+    return repr(lineage) if lineage is not None else "(none declared)"
 
 
 def _raise_on_ambiguous_revision_identity(

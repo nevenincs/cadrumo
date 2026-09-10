@@ -6,7 +6,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:1abd07233796246624381a5ce35dfb7a1ae1268f9565040cc898a963ddda3d97'
+body_hash: 'sha256:c61c6f73b33ef6d9c2bbfbf44c537e3ea2da478afa5ae02f132c6c7e3a2f98b2'
 related:
   - '[[2026-09-09-registry-edition-authoring-W01-P01-S01]]'
   - '[[2026-09-09-registry-edition-authoring-W01-P01-S02]]'
@@ -23,6 +23,8 @@ related:
   - '[[2026-09-09-registry-edition-authoring-W01-P02-S49]]'
   - '[[2026-09-09-registry-edition-authoring-W01-P02-S57]]'
   - '[[2026-09-09-registry-edition-authoring-W02-P03-S09]]'
+  - '[[2026-09-09-registry-edition-authoring-W02-P03-S10]]'
+  - '[[2026-09-09-registry-edition-authoring-W02-P03-S35]]'
   - '[[2026-09-09-registry-edition-authoring-W02-P03-S43]]'
   - '[[2026-09-09-registry-edition-authoring-W02-P03-S45]]'
   - '[[2026-09-09-registry-edition-authoring-W02-P03-S48]]'
@@ -62,6 +64,8 @@ Auto-generated index of all documents tagged with `#registry-edition-authoring`.
 - `2026-09-09-registry-edition-authoring-W01-P02-S08` - [M | opus-medium] Add the lineage totality gate, failing closed: a successor-edition row must carry lineage or declare itself new. A row carries lineage when its chain id is also carried by the edition immediately before it, or when it declares an origin (which S40's gate then enforces); an absence origin declares its kind of none; anything else is unresolved — including a row whose id only starts its chain in its own edition. Totality is a completeness property of the authoring corpus, NOT a load-time validity condition: the product must keep loading a registry whose lineage is partial, and one modelo will stay partial for a long campaign. So the RULE is a pure function in the registry package taking the exception set as a parameter, and the GATE that enforces it runs in the dev lane, fed from the seeding ledger, and fails the lane on any unlisted unresolved row. Unresolved rows pass only as per-row, classified ledger entries — never a modelo, prefix or count exemption. Modelos not yet examined are enumerated row by row as not-examined with their reason: the list is closed, so a new row added later is caught and an entry whose row gains lineage fails as stale, which a modelo-wide carve-out would never do. Proof: a planted row with neither is refused; a stale exception is refused; a row with a resolved id or an absence origin passes; the corpus passes with every unresolved row accounted for.
 - `2026-09-09-registry-edition-authoring-W01-P02-S40` - [M | opus-medium] Make the continuity gate READ the lineage origin marker and treat seeded and grounded chains differently. Writing the marker without a consumer leaves it decorative, and a seeded chain is inference written down rather than a statement — the gate must not accept one as evidence of the other. Proof: a seeded chain and a grounded chain with identical content produce different gate outcomes.
 - `2026-09-09-registry-edition-authoring-W02-P03-S09` - [M | opus-medium] Add the predecessor key to the edition schema. An edition is delta-authored only when it declares one; the loader never infers it from absent rows. Proof: an edition without the key loads as a full-copy edition unchanged.
+- `2026-09-09-registry-edition-authoring-W02-P03-S10` - [L | opus-medium] Build the materialiser between raw fragment assembly and typed construction, producing the same merged mapping typed construction already consumes. The construction signature and everything above it are untouched. Proof: consumers observe no change on an unmigrated corpus.
+- `2026-09-09-registry-edition-authoring-W02-P03-S35` - [M | opus-medium] Add the predecessor forest validator: every edition of a modelo declares a predecessor except exactly one, and the graph must be a single tree rooted at that one with no cycle, no unknown or self target, and every edition reachable. The unique root positively identifies a first edition, and a successor that omits its predecessor becomes a second root and is refused naming both. Mark the field manifest-only so a section fragment cannot declare it. Proof: a three-edition fixture whose third omits the key is refused as two roots; restoring it loads.
 - `2026-09-09-registry-edition-authoring-W02-P03-S48` - [S | opus-medium] Give the predecessor key an explicit value meaning no predecessor exists, distinct from the key being absent. One modelo has three editions sharing a single validity date whose own declarations each assert they have no earlier sibling; without an explicit value it would be forced into a false sequence, and with the key merely absent it would be indistinguishable from a forgotten declaration. Proof: that modelo loads with all three editions declared parallel, and the forest rule accepts it without inventing an order.
 
 ### plan

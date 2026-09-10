@@ -5,7 +5,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:52a889678d7b410b4084a583c27a91d4fa29d2dffe38b35db8b3363d07d8cf94'
+body_hash: 'sha256:58313d7e5f1cacb07e5435e8d948d67b4abb17a076af3e58efe6ebdcc2457783'
 related:
   - "[[2026-09-09-registry-edition-authoring-edition-restatement-measurement-research]]"
   - "[[2026-09-09-registry-edition-authoring-registry-mechanics-audit-research]]"
@@ -155,21 +155,24 @@ A full-copy edition is a valid edition: every row is stated and no predecessor i
 edition becomes delta-authored by declaring a `predecessor` in its manifest. **The loader never
 infers this.** Migration changes what is written, not what is accepted.
 
-**The predecessor graph is a forest with exactly one root per modelo.** Every edition declares a
-predecessor except one; the graph must be a single tree rooted at that one, with no cycle, no
-unknown or self target, and every edition reachable. The unique root *is* the positive
-identification of a first edition. A successor that omits its predecessor becomes a **second
+**The predecessor graph is a forest with at most one key-less root per modelo.** Once any edition
+of a modelo declares the key, every edition either names a predecessor, declares with grounding
+that none exists, or is the single edition omitting the key; the named edges form trees rooted at
+those editions, with no cycle, no unknown or self target, and every edition reachable. The unique
+key-less root *is* the positive identification of a first edition. A successor that omits its predecessor becomes a **second
 root**, and two roots is a refusal naming both — which is what closes the silent case, because a
 first edition and a delta with a forgotten key are otherwise shape-identical.
 
 This rule uses no temporal reasoning, which is why it handles the modelo whose three editions are
-parallel scheme variants sharing one validity date: all three declare the same predecessor, a
-legal fan-out that any ordering-based rule would have wrongly chained. Where a pair does not
+parallel scheme variants sharing one validity date: each declares, with grounding, that no
+predecessor exists, so all three are explicit roots of a parallel set; only key-less roots are
+capped at one, so the rule accepts them without inventing an order that any ordering-based rule
+would have wrongly imposed. Where a pair does not
 overlap, the declared predecessor must agree with the date ordering; overlapping editions are
 exempt, and that exemption is exactly the variant case.
 
-It also makes the minimality screen non-vacuous: with one root per modelo the denominator is every
-non-root edition, so a single-edition modelo reports not-applicable rather than clean.
+It also makes the minimality screen non-vacuous: the denominator is every edition that names a
+predecessor, so a single-edition modelo reports not-applicable rather than clean.
 
 **A predecessor may not be declared where the successor withholds by design.** An edition
 declaring a lower authority grade than its predecessor, or deliberately declaring only a header
