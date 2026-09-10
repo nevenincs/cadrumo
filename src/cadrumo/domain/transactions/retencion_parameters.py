@@ -113,6 +113,22 @@ _ART95_PARAMETER_IDS: Final[tuple[str, ...]] = (
 )
 
 
+def retencion_effective_date(*, value_date: date | None, booked_date: date | None) -> date:
+    """Return the settlement date that selects a transaction's withholding facts.
+
+    A bank's value date records when the payment became effective and therefore
+    takes precedence.  Some providers do not supply it; their booked date is
+    the recorded settlement coordinate.  No wall-clock fallback is lawful here:
+    a row with neither dated payment fact is unsupported and must not select a
+    rate from a different legal period.
+    """
+    if value_date is not None:
+        return value_date
+    if booked_date is not None:
+        return booked_date
+    raise TransactionValidationError("retención fact resolution requires a transaction value or booked date")
+
+
 def _resolved_scalar_parameter(
     parameter_id: str,
     *,
@@ -155,15 +171,15 @@ def _resolved_scalar_parameter(
 def _legal_refs_of(
     parameter_id: str,
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> tuple[str, ...]:
     """Return one resolved fact's legal references, refusing an ungrounded result."""
     return tuple(
         _resolved_scalar_parameter(
             parameter_id,
-            effective_date=effective_date or date.today(),
-            expected_unit="fraction" if parameter_id != _ADMINISTRADOR_INCN_UMBRAL_PARAM_ID else "eur",
+            effective_date=effective_date,
+            expected_unit="fraction" if parameter_id != _ADMINISTRADOR_INCN_UMBRAL_PARAM_ID else "EUR",
             authority=authority,
         ).legal_refs
     )
@@ -171,7 +187,7 @@ def _legal_refs_of(
 
 def load_retencion_actividades_rates(
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> RirpfArt95RetencionRates:
     """Return the RIRPF art. 95 retención rates from the registry catalogue.
@@ -184,7 +200,7 @@ def load_retencion_actividades_rates(
             carries no string value, or does not parse as a ``Decimal``, or if
             the registry parameter catalogue cannot be loaded.
     """
-    coordinate = effective_date or date.today()
+    coordinate = effective_date
     return RirpfArt95RetencionRates(
         general_rate=_decimal_fact(_GENERAL_PARAM_ID, coordinate, authority),
         inicio_actividad_rate=_decimal_fact(_INICIO_PARAM_ID, coordinate, authority),
@@ -197,7 +213,7 @@ def load_retencion_actividades_rates(
 
 def rirpf_art95_retencion_legal_refs(
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> tuple[str, ...]:
     """Return the registry legal references grounding the art. 95 rate set.
@@ -219,7 +235,7 @@ def rirpf_art95_retencion_legal_refs(
     return tuple(seen)
 
 
-def statutory_activity_retencion_rates() -> frozenset[Decimal]:
+def statutory_activity_retencion_rates(*, effective_date: date) -> frozenset[Decimal]:
     """Return every distinct retención rate RIRPF art. 95 fixes.
 
     The DISTINCT values, not one per apartado: art. 95.4.2.º and art. 95.5 both
@@ -232,7 +248,7 @@ def statutory_activity_retencion_rates() -> frozenset[Decimal]:
     Returns:
         The distinct art. 95 rates, currently 15 %, 7 %, 2 % and 1 %.
     """
-    rates = load_retencion_actividades_rates()
+    rates = load_retencion_actividades_rates(effective_date=effective_date)
     return frozenset(
         {
             rates.general_rate,
@@ -245,7 +261,7 @@ def statutory_activity_retencion_rates() -> frozenset[Decimal]:
     )
 
 
-def professional_activity_retencion_rates() -> frozenset[Decimal]:
+def professional_activity_retencion_rates(*, effective_date: date) -> frozenset[Decimal]:
     """Return the art. 95.1 rates, those an actividad PROFESIONAL retains at.
 
     Split out from the sectoral figures because a match on one of these is a
@@ -256,11 +272,11 @@ def professional_activity_retencion_rates() -> frozenset[Decimal]:
     Returns:
         The art. 95.1 general and inicio-de-actividades rates.
     """
-    rates = load_retencion_actividades_rates()
+    rates = load_retencion_actividades_rates(effective_date=effective_date)
     return frozenset({rates.general_rate, rates.inicio_actividad_rate})
 
 
-def maximum_supported_activity_retencion_rate() -> Decimal:
+def maximum_supported_activity_retencion_rate(*, effective_date: date) -> Decimal:
     """Return the upper bound the withheld-amount inference is capped at.
 
     The bound is the RIRPF art. 95.1 general rate: an inferred retención above
@@ -271,7 +287,7 @@ def maximum_supported_activity_retencion_rate() -> Decimal:
     Returns:
         The maximum retención rate the activity inference will accept.
     """
-    return load_retencion_actividades_rates().general_rate
+    return load_retencion_actividades_rates(effective_date=effective_date).general_rate
 
 
 class AdministradorRetencionRates(BaseModel):
@@ -314,7 +330,7 @@ _ADMINISTRADOR_PARAMETER_IDS: Final[tuple[str, ...]] = (
 
 def load_administrador_retencion_rates(
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> AdministradorRetencionRates:
     """Return the LIRPF art. 101.2 administrador retención rates from the registry.
@@ -327,7 +343,7 @@ def load_administrador_retencion_rates(
             carries no string value, or does not parse as a ``Decimal``, or if
             the registry parameter catalogue cannot be loaded.
     """
-    coordinate = effective_date or date.today()
+    coordinate = effective_date
     return AdministradorRetencionRates(
         general_rate=_decimal_fact(_ADMINISTRADOR_GENERAL_PARAM_ID, coordinate, authority),
         reduced_rate=_decimal_fact(_ADMINISTRADOR_REDUCIDA_PARAM_ID, coordinate, authority),
@@ -335,14 +351,14 @@ def load_administrador_retencion_rates(
             _ADMINISTRADOR_INCN_UMBRAL_PARAM_ID,
             coordinate,
             authority,
-            expected_unit="eur",
+            expected_unit="EUR",
         ),
     )
 
 
 def administrador_retencion_legal_refs(
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> tuple[str, ...]:
     """Return the registry legal references grounding the administrador rate set.
@@ -392,6 +408,7 @@ __all__ = [
     "load_retencion_actividades_rates",
     "maximum_supported_activity_retencion_rate",
     "professional_activity_retencion_rates",
+    "retencion_effective_date",
     "rirpf_art95_retencion_legal_refs",
     "statutory_activity_retencion_rates",
 ]

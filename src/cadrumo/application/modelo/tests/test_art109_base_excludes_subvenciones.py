@@ -161,7 +161,7 @@ def test_the_registry_declares_the_set_the_predicate_applies() -> None:
 
 def test_the_exempt_activity_set_is_the_classes_art_109_names() -> None:
     """Profesionales, agricolas, ganaderas, forestales -- and no empresario."""
-    exempt = tipo_actividad_code_set(_ART_109_EXEMPT)
+    exempt = tipo_actividad_code_set(_ART_109_EXEMPT, effective_date=_PERIOD.end_date)
 
     assert TipoActividad.A05_PROFESIONALES in exempt
     assert TipoActividad.B01_AGRICOLA in exempt
@@ -177,8 +177,8 @@ def test_the_exempt_activity_set_is_the_classes_art_109_names() -> None:
 
 def test_only_the_agrarian_apartados_measure_a_net_base() -> None:
     """Apartado 2 has no exclusion clause, so a profesional's base is not filtered."""
-    net_base = tipo_actividad_code_set(_ART_109_NET_BASE)
-    exempt = tipo_actividad_code_set(_ART_109_EXEMPT)
+    net_base = tipo_actividad_code_set(_ART_109_NET_BASE, effective_date=_PERIOD.end_date)
+    exempt = tipo_actividad_code_set(_ART_109_EXEMPT, effective_date=_PERIOD.end_date)
 
     assert net_base < exempt, "every net-base activity must also be an exempt activity"
     assert TipoActividad.A05_PROFESIONALES not in net_base, (

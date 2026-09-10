@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import re
 import tomllib
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -44,6 +45,7 @@ _REDUCIDA_PARAM_ID = "lirpf-art-101:retencion-administrador-reducida"
 _UMBRAL_PARAM_ID = "lirpf-art-101:retencion-administrador-incn-umbral-eur"
 _LIRPF_REF = "ley-35-2006:art-101"
 _RIRPF_REF = "rd-439-2007:art-80"
+_CURRENT_EFFECTIVE_DATE = date(2026, 4, 1)
 
 
 def _parameters_toml() -> dict[str, dict[str, object]]:
@@ -137,7 +139,7 @@ def test_both_cited_provisions_resolve_in_the_bundled_legal_catalogue() -> None:
 def test_loader_returns_the_registry_values_as_a_typed_record() -> None:
     """Third link: the typed record carries exactly the committed parameters."""
     parameters = _parameters_toml()
-    rates = load_administrador_retencion_rates()
+    rates = load_administrador_retencion_rates(effective_date=_CURRENT_EFFECTIVE_DATE)
 
     assert isinstance(rates, AdministradorRetencionRates)
     assert rates.general_rate == Decimal(str(parameters[_GENERAL_PARAM_ID]["value"]))
@@ -147,13 +149,13 @@ def test_loader_returns_the_registry_values_as_a_typed_record() -> None:
 
 def test_the_reduced_rate_is_strictly_below_the_general_rate() -> None:
     """A sanity ordering: the INCN-conditioned rate is the LOWER of the two."""
-    rates = load_administrador_retencion_rates()
+    rates = load_administrador_retencion_rates(effective_date=_CURRENT_EFFECTIVE_DATE)
     assert rates.reduced_rate < rates.general_rate
 
 
 def test_administrador_legal_refs_names_both_provisions() -> None:
     """Fourth link: the grounding function the advisory calls names both refs."""
-    refs = administrador_retencion_legal_refs()
+    refs = administrador_retencion_legal_refs(effective_date=_CURRENT_EFFECTIVE_DATE)
     assert _LIRPF_REF in refs
     assert _RIRPF_REF in refs
 

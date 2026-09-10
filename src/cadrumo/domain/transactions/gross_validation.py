@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 from typing import NoReturn
 
@@ -34,13 +35,14 @@ def _activity_withholding_is_supported(
     reconstituted: Decimal,
     irpf_category: str | None,
     direction: TransactionDirection,
+    effective_date: date,
 ) -> bool:
     """Refuse an activity row whose cash gap exceeds the supported rate."""
     if not has_activity_irpf_category(irpf_category, direction=direction):
         return True
     inferred_withholding = round_to_cents(reconstituted - expected)
     maximum_supported_withholding = round_to_cents(
-        taxable_base * maximum_supported_activity_retencion_rate(),
+        taxable_base * maximum_supported_activity_retencion_rate(effective_date=effective_date),
     )
     if inferred_withholding > maximum_supported_withholding:
         raise TransactionValidationError(
@@ -56,6 +58,7 @@ def _incoming_withholding_is_supported(
     reconstituted: Decimal,
     irpf_category: str | None,
     direction: TransactionDirection,
+    effective_date: date,
 ) -> bool:
     """Recognise an incoming non-work row settled net of withholding."""
     if (
@@ -70,6 +73,7 @@ def _incoming_withholding_is_supported(
         reconstituted=reconstituted,
         irpf_category=irpf_category,
         direction=direction,
+        effective_date=effective_date,
     )
 
 
@@ -81,6 +85,7 @@ def _outgoing_professional_withholding_is_supported(
     category_id: str | None,
     irpf_category: str | None,
     direction: TransactionDirection,
+    effective_date: date,
 ) -> bool:
     """Recognise an outgoing professional-service row settled net of withholding."""
     if (
@@ -96,6 +101,7 @@ def _outgoing_professional_withholding_is_supported(
         reconstituted=reconstituted,
         irpf_category=irpf_category,
         direction=direction,
+        effective_date=effective_date,
     )
 
 
@@ -158,6 +164,7 @@ def validate_gross_reconstitution(
     direction: TransactionDirection,
     category_id: str | None,
     irpf_category: str | None,
+    effective_date: date,
 ) -> None:
     """Validate the transaction's gross/tax-substrate identity.
 
@@ -183,6 +190,7 @@ def validate_gross_reconstitution(
         reconstituted=reconstituted,
         irpf_category=irpf_category,
         direction=direction,
+        effective_date=effective_date,
     ):
         return
     if _outgoing_professional_withholding_is_supported(
@@ -192,6 +200,7 @@ def validate_gross_reconstitution(
         category_id=category_id,
         irpf_category=irpf_category,
         direction=direction,
+        effective_date=effective_date,
     ):
         return
     if _outgoing_rent_withholding_is_supported(

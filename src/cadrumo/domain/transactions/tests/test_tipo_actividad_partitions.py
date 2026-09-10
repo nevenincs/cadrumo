@@ -40,7 +40,7 @@ def test_every_partition_is_declared_including_the_one_no_code_selects() -> None
     no codes keeps the gap where a reader looks for the mapping; dropping the
     entry would make the file read as a complete partition of art. 95.
     """
-    selectors = load_tipo_actividad_selectors()
+    selectors = load_tipo_actividad_selectors(effective_date=date(2026, 4, 1))
     engorde = "rirpf-art-95:selector-m036-actividades-ganaderas-engorde-porcino-avicultura"
 
     assert set(selectors) == set(_ART_95_SELECTORS)
@@ -50,14 +50,16 @@ def test_every_partition_is_declared_including_the_one_no_code_selects() -> None
 
 def test_no_code_selects_two_partitions() -> None:
     """A code selects at most one partition, so a rate lookup cannot be ambiguous."""
-    selected = [code for codes in load_tipo_actividad_selectors().values() for code in codes]
+    selected = [
+        code for codes in load_tipo_actividad_selectors(effective_date=date(2026, 4, 1)).values() for code in codes
+    ]
 
     assert len(selected) == len(set(selected))
 
 
 def test_every_selected_code_is_a_real_modelo_036_code() -> None:
     """Selectors draw from the closed code set, never a free-form token."""
-    for codes in load_tipo_actividad_selectors().values():
+    for codes in load_tipo_actividad_selectors(effective_date=date(2026, 4, 1)).values():
         assert all(isinstance(code, TipoActividad) for code in codes)
 
 

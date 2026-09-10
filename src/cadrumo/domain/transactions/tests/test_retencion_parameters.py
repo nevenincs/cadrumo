@@ -23,16 +23,19 @@ from __future__ import annotations
 
 import re
 import tomllib
+from datetime import date
 from decimal import Decimal
 
 import pytest
 
 from ....core.directory_scan import scan_directory
 from ....core.resources.bundled_data import bundled_path
+from ..errors import TransactionValidationError
 from ..retencion_parameters import (
     RirpfArt95RetencionRates,
     load_retencion_actividades_rates,
     maximum_supported_activity_retencion_rate,
+    retencion_effective_date,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -40,6 +43,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _GENERAL_PARAM_ID = "rirpf-art-95:retencion-actividades-profesionales-general"
 _INICIO_PARAM_ID = "rirpf-art-95:retencion-actividades-profesionales-inicio"
 _LEGAL_REF = "rd-439-2007:art-95"
+_CURRENT_EFFECTIVE_DATE = date(2026, 4, 1)
 
 
 def _parameters_toml() -> dict[str, dict[str, object]]:
@@ -112,7 +116,7 @@ def test_the_cited_provision_resolves_in_the_bundled_legal_catalogue() -> None:
 def test_loader_returns_the_registry_values_as_a_typed_record() -> None:
     """Third link: the typed record carries exactly the committed parameters."""
     parameters = _parameters_toml()
-    rates = load_retencion_actividades_rates()
+    rates = load_retencion_actividades_rates(effective_date=_CURRENT_EFFECTIVE_DATE)
 
     assert isinstance(rates, RirpfArt95RetencionRates)
     assert rates.general_rate == Decimal(str(parameters[_GENERAL_PARAM_ID]["value"]))
@@ -126,9 +130,32 @@ def test_the_inference_bound_is_the_general_rate() -> None:
     upper bound for a bounded inference that must not reject a legitimate 15 %
     withholding.
     """
-    rates = load_retencion_actividades_rates()
-    assert maximum_supported_activity_retencion_rate() == rates.general_rate
+    rates = load_retencion_actividades_rates(effective_date=_CURRENT_EFFECTIVE_DATE)
+    assert maximum_supported_activity_retencion_rate(effective_date=_CURRENT_EFFECTIVE_DATE) == rates.general_rate
     assert rates.inicio_actividad_rate < rates.general_rate
+
+
+def test_rate_selection_is_reproducible_across_the_2015_legal_change() -> None:
+    """The caller's date, not the wall clock, chooses the settled legal rate."""
+    before = load_retencion_actividades_rates(effective_date=date(2015, 7, 11))
+    after = load_retencion_actividades_rates(effective_date=date(2015, 7, 12))
+
+    assert before.general_rate == Decimal("0.18")
+    assert after.general_rate == Decimal("0.15")
+
+
+def test_unsupported_pre_source_date_refuses_instead_of_selecting_a_nearest_rate() -> None:
+    """An uncovered coordinate has no fallback variant."""
+    with pytest.raises(TransactionValidationError, match="failed to resolve retención fact"):
+        load_retencion_actividades_rates(effective_date=date(2007, 3, 31))
+
+
+def test_transaction_coordinate_prefers_value_date_and_refuses_when_absent() -> None:
+    """Settlement evidence is explicit; neither a book date nor the clock is invented."""
+    assert retencion_effective_date(value_date=date(2024, 2, 1), booked_date=date(2024, 2, 2)) == date(2024, 2, 1)
+    assert retencion_effective_date(value_date=None, booked_date=date(2024, 2, 2)) == date(2024, 2, 2)
+    with pytest.raises(TransactionValidationError, match="requires a transaction value or booked date"):
+        retencion_effective_date(value_date=None, booked_date=None)
 
 
 def test_no_feature_module_redeclares_the_retencion_rates_as_literals() -> None:

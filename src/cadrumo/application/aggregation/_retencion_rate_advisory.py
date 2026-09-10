@@ -121,6 +121,7 @@ is genuinely owed.
 from __future__ import annotations
 
 from collections.abc import Iterable
+from datetime import date
 from decimal import Decimal
 from enum import Enum, auto
 from functools import cache
@@ -209,29 +210,30 @@ def _conforms_to_fixed_rate(base: Decimal, amount: Decimal, rate: Decimal) -> bo
 
 
 @cache
-def _art95_refs() -> tuple[LegalRefId, ...]:
+def _art95_refs(*, effective_date: date) -> tuple[LegalRefId, ...]:
     """Return the art. 95 grounding, resolved once per process.
 
     Cached because every diagnostic in this module cites the same set, and the
     grounding is read from the registry: re-resolving it per observation would
     make a disclosure cost a registry load on a path that runs per row.
     """
-    return tuple(rirpf_art95_retencion_legal_refs())
+    return tuple(rirpf_art95_retencion_legal_refs(effective_date=effective_date))
 
 
-@cache
-def _administrador_refs() -> tuple[LegalRefId, ...]:
+def _administrador_refs(*, effective_date: date) -> tuple[LegalRefId, ...]:
     """Return the LIRPF art. 101.2 administrador grounding, resolved once per process.
 
     Same rationale as :func:`_art95_refs`: every administrador diagnostic in
     this module cites the same set, so resolving it once per process keeps a
     disclosure from costing a registry load per row.
     """
-    return tuple(administrador_retencion_legal_refs())
+    return tuple(administrador_retencion_legal_refs(effective_date=effective_date))
 
 
 def administrador_retencion_rate_advisory_observations(
     observations: Iterable[RetencionObservation],
+    *,
+    effective_date: date,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Return advisories for administrador rows inconsistent with art. 101.2.
 
@@ -247,6 +249,7 @@ def administrador_retencion_rate_advisory_observations(
 
     Args:
         observations: The per-perceptor retención rows feeding the calculation.
+        effective_date: Endpoint of the actual filing period whose legal rates apply.
 
     Returns:
         A tuple of non-blocking rate-mismatch diagnostics, in input order.
@@ -254,7 +257,7 @@ def administrador_retencion_rate_advisory_observations(
     treatment = work_income_retencion_treatment(RetencionScheme.WORK_INCOME_DIRECTOR)
     if treatment is None or not treatment.is_fixed_rate:
         return ()
-    rates = load_administrador_retencion_rates()
+    rates = load_administrador_retencion_rates(effective_date=effective_date)
     general_rate = rates.general_rate
     reduced_rate = rates.reduced_rate
     diagnostics: list[CalculationSourceDiagnostic] = []
@@ -287,7 +290,7 @@ def administrador_retencion_rate_advisory_observations(
                 # article for a human; this is the field a machine consumer
                 # routes on, and it moves with the registry instead of
                 # asserting what the law says from a literal in this layer.
-                legal_refs=_administrador_refs(),
+                legal_refs=_administrador_refs(effective_date=effective_date),
             ),
         )
     return tuple(diagnostics)
@@ -451,6 +454,7 @@ def _sectoral_rate_diagnostic(
     matched: frozenset[Decimal],
     sectoral_hint: bool | None,
     resolver_id: str | None,
+    effective_date: date,
 ) -> CalculationSourceDiagnostic:
     """Build the weaker advisory for a sectoral-only rate product."""
     return CalculationSourceDiagnostic(
@@ -464,7 +468,7 @@ def _sectoral_rate_diagnostic(
             matched=", ".join(str(rate) for rate in sorted(matched)),
             sectoral_hint=sectoral_hint,
         ),
-        legal_refs=_art95_refs(),
+        legal_refs=_art95_refs(effective_date=effective_date),
         remedy=(
             "Confirm with the payer whether this was retención or a fee, then record "
             "the true figure by classifying that transaction in the ledger."
@@ -478,6 +482,7 @@ def _unmatched_rate_diagnostic(
     base: Decimal,
     rendered_rates: str,
     resolver_id: str | None,
+    effective_date: date,
 ) -> CalculationSourceDiagnostic:
     """Build the strong advisory for a shortfall matching no grounded rate."""
     amount = observation.withheld_amount
@@ -492,7 +497,7 @@ def _unmatched_rate_diagnostic(
             f"shortfall may be a bank fee, a discount, or a disputed amount rather than tax "
             f"withheld on your behalf."
         ),
-        legal_refs=_art95_refs(),
+        legal_refs=_art95_refs(effective_date=effective_date),
         remedy=(
             "Claiming a pago a cuenta nobody withheld over-declares it. Confirm the shortfall "
             "with the payer, then record the true figure by classifying that transaction in "
@@ -556,12 +561,13 @@ def inferred_actividad_retencion_rate_advisory_observations(
     Returns:
         A tuple of non-blocking rate diagnostics, in input order.
     """
-    rates = statutory_activity_retencion_rates()
-    professional = professional_activity_retencion_rates()
-    rendered_rates = ", ".join(str(rate) for rate in sorted(rates))
     sectoral_hint = _UNRESOLVED_HINT
     diagnostics: list[CalculationSourceDiagnostic] = []
     for observation in observations:
+        effective_date = observation.filing_date
+        rates = statutory_activity_retencion_rates(effective_date=effective_date)
+        professional = professional_activity_retencion_rates(effective_date=effective_date)
+        rendered_rates = ", ".join(str(rate) for rate in sorted(rates))
         assessment = _inferred_rate_matches(observation, rates=rates, professional=professional)
         if assessment is None:
             continue
@@ -580,6 +586,7 @@ def inferred_actividad_retencion_rate_advisory_observations(
                     matched=matched,
                     sectoral_hint=sectoral_hint,
                     resolver_id=resolver_id,
+                    effective_date=effective_date,
                 ),
             )
             continue
@@ -589,6 +596,7 @@ def inferred_actividad_retencion_rate_advisory_observations(
                 base=base,
                 rendered_rates=rendered_rates,
                 resolver_id=resolver_id,
+                effective_date=effective_date,
             ),
         )
     return tuple(diagnostics)
