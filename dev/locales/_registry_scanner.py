@@ -23,7 +23,7 @@ from functools import cache
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.loader import load_registry_tree
 from cadrumo.domain.categories.registry import load_category_profiles
-from cadrumo.domain.user_profile.labels import profile_schema_locale_keys
+from cadrumo.domain.user_profile.labels import profile_field_label_key, profile_section_title_key
 from cadrumo.domain.user_profile.loader import load_user_profile_schema
 
 
@@ -56,7 +56,12 @@ def scan_profile_schema_keys() -> set[str]:
     Returns:
         The dotted section-title and field-label keys the schema declares.
     """
-    return profile_schema_locale_keys(load_user_profile_schema())
+    keys: set[str] = set()
+    for section in load_user_profile_schema().sections:
+        keys.add(profile_section_title_key(section.key))
+        for field in section.fields:
+            keys.add(profile_field_label_key(section.key, field.key))
+    return keys
 
 
 @cache
