@@ -11,7 +11,7 @@ related:
   - '[[2026-09-09-registry-generator-signal-coverage-research]]'
 modified: '2026-09-10'
 body_schema: body-v2
-body_hash: 'sha256:433897711446829841b0e4a48a61b1b4681d837fc5d5f847de57bf3d56bdedb4'
+body_hash: 'sha256:9f81601caf7e366b8582c4246fc6b6f4884abc808c776dbdaed5cf72bb08ee48'
 ---
 
 # `registry-generator` plan
@@ -185,7 +185,7 @@ Decodes official worked examples through the shipped codec and compares field by
 
 - [x] `W04.P13.S47` - Extend the existing external-oracle corpus enum rather than creating a second oracle surface; `src/cadrumo/core/external_oracle_corpus.py`.
 - [x] `W04.P13.S48` - Extend the existing grounding fold and conformance-vector mechanism to carry the new comparison; `src/cadrumo/domain/calculations/registry/external_grounding.py`.
-- [ ] `W04.P13.S70` - Confirm at least one official worked example carries a negative amount in a fixed-width slot. STILL BLOCKED on official evidence, now with the search recorded: no N-prefixed amount appears anywhere in the bundled corpus; AEAT's 'Disenos de registro - breve manual de uso' (v.2, 12/12/2022, sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/Ayudas/Disenyos_registro_Manual_uso.pdf) states the rule in text - 'N: numerico con signo ... Los datos numericos negativos llevaran una N en la primera posicion del campo' and 'precedidos del caracter N', zero-filled - but its only worked example, a modelo 111 2022 file, carries positive amounts alone. The manual is cited by the codec but not bundled; pinning it as a manual_pdf source would ground that citation and is a smaller, separate step; `src/cadrumo/_data/corpus/manual_oracles/`.; `src/cadrumo/_data/corpus/manual_oracles/`.
+- [x] `W04.P13.S70` - Ground the negative-amount wire form. Closed as satisfied by the normative text, not by a worked example: AEAT's 'Disenos de registro - breve manual de uso' (v.2, 12/12/2022) states that 'N: numerico con signo ... Los datos numericos negativos llevaran una N en la primera posicion del campo' and that negative numerics are 'precedidos del caracter N', zero-filled; the designs that subdivide a SIGNO position state their own rule, carried by sign_position. The codec implements exactly that text, and no check or test gates on a worked negative example; `src/cadrumo/domain/calculations/registry/fixed_width_codec.py`.; `src/cadrumo/_data/corpus/manual_oracles/`.
 - [x] `W04.P13.S49` - Satisfied by the shipped worked-example oracles: the corporate-tax and instalment tests compare computed values field by field against AEAT's printed liquidacion tables, with page locators into the bundled official manuals; `src/cadrumo/application/modelo/tests/`.
 - [x] `W04.P13.S50` - Confirm no expected value in the oracle originates in the generator; `src/cadrumo/domain/calculations/registry/tests/`.
 
