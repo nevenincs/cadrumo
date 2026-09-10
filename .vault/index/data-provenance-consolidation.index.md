@@ -6,7 +6,7 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:16694822b9551e5ace49e35ba55a3ed1f2182a48950d7f3a39bd03e4871923bc'
+body_hash: 'sha256:5a81e1ccdf2e6f5704928b2c91bb48ae1840f6b25bb55d831f2399f5906b75d6'
 related:
   - '[[2026-09-10-data-provenance-consolidation-W01-P01-S01]]'
   - '[[2026-09-10-data-provenance-consolidation-W01-P01-S02]]'
@@ -15,6 +15,7 @@ related:
   - '[[2026-09-10-data-provenance-consolidation-W01-P02-S05]]'
   - '[[2026-09-10-data-provenance-consolidation-W01-P02-S06]]'
   - '[[2026-09-10-data-provenance-consolidation-W02-P03-S07]]'
+  - '[[2026-09-10-data-provenance-consolidation-W02-P03-S08]]'
   - '[[2026-09-10-data-provenance-consolidation-adr]]'
   - '[[2026-09-10-data-provenance-consolidation-lane-inventory-research]]'
   - '[[2026-09-10-data-provenance-consolidation-live-lane-map-reference]]'
@@ -26,6 +27,7 @@ related:
   - '[[2026-09-10-data-provenance-consolidation-w01-p02-s05-defect-detector-review-audit]]'
   - '[[2026-09-10-data-provenance-consolidation-w01-p02-s06-integrity-detector-review-audit]]'
   - '[[2026-09-10-data-provenance-consolidation-w02-p03-s07-catalogue-binding-review-audit]]'
+  - '[[2026-09-10-data-provenance-consolidation-w02-p03-s08-origin-gate-review-audit]]'
 ---
 
 # `data-provenance-consolidation` feature index
@@ -47,6 +49,7 @@ Auto-generated index of all documents tagged with `#data-provenance-consolidatio
 - `2026-09-10-data-provenance-consolidation-w01-p02-s05-defect-detector-review-audit` - `data-provenance-consolidation` audit: `w01 p02 s05 defect detector review`
 - `2026-09-10-data-provenance-consolidation-w01-p02-s06-integrity-detector-review-audit` - `data-provenance-consolidation` audit: `w01 p02 s06 integrity detector review`
 - `2026-09-10-data-provenance-consolidation-w02-p03-s07-catalogue-binding-review-audit` - `data-provenance-consolidation` audit: `w02 p03 s07 catalogue binding review`
+- `2026-09-10-data-provenance-consolidation-w02-p03-s08-origin-gate-review-audit` - `data-provenance-consolidation` audit: `w02 p03 s08 origin gate review`
 
 ### exec
 
@@ -57,6 +60,7 @@ Auto-generated index of all documents tagged with `#data-provenance-consolidatio
 - `2026-09-10-data-provenance-consolidation-W01-P02-S05` - Prove conflicting identity, malformed data, orphaned targets, and unclassified files produce distinct diagnostics
 - `2026-09-10-data-provenance-consolidation-W01-P02-S06` - Prove changed derivative inputs and divergent registry source identity fail closed
 - `2026-09-10-data-provenance-consolidation-W02-P03-S07` - Bind catalogue verification to the artifact identity join while retaining registry semantic validation
+- `2026-09-10-data-provenance-consolidation-W02-P03-S08` - Replace three-way origin admission with catalog diagnostics for unknown and conflicting files
 
 ### plan
 
