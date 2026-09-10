@@ -19,6 +19,17 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 
 from cadrumo.core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS, BindingSourceKind
+from cadrumo.domain.calculations.registry.bindings_previous_filing import is_direct_previous_filing_binding
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.iva_wallet_relation_targets import (
+    IvaWalletRevisionRelationTarget,
+    iva_wallet_owned_relation_targets_for_revision,
+)
+from cadrumo.domain.calculations.registry.period_offset_math import apply_period_offset
+from cadrumo.domain.calculations.registry.relations import derive_offset_source_period
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
+
 from ._validate_previous_filing_sources import (
     validate_previous_filing_binding_closure as validate_previous_filing_binding_closure,
 )
@@ -31,16 +42,6 @@ from ._validate_relation_periods import (
     period_selectors_overlap as period_selectors_overlap,
 )
 from ._validate_source_casilla_ids import source_casilla_id_reference_failure
-from cadrumo.domain.calculations.registry.bindings_previous_filing import is_direct_previous_filing_binding
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.iva_wallet_relation_targets import (
-    IvaWalletRevisionRelationTarget,
-    iva_wallet_owned_relation_targets_for_revision,
-)
-from cadrumo.domain.calculations.registry.period_offset_math import apply_period_offset
-from cadrumo.domain.calculations.registry.relations import derive_offset_source_period
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
 
 
 def validate_relation_closure(

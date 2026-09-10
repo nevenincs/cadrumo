@@ -25,7 +25,7 @@ from dev.registry.maintenance_support import resolve_record_design_binary
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.hashing import hash_file
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry._validate import RegistryValidator
+from dev.registry.compiler.validator import RegistryValidator
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError, RegistryValidationError
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from dev.registry.conformance.tests._registry_schema_support import _committed_modelo

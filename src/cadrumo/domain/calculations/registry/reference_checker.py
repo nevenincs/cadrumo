@@ -11,8 +11,8 @@ from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
 from ....core.casilla_id import CasillaId
-from ._validate_revision_context import IdentifiedRecord, collect_export_field_ids
 from .ids import LegalRefId, SourceRefId
+from .revision_context import IdentifiedRecord, collect_export_field_ids
 from .schema import ModeloRevision
 
 if TYPE_CHECKING:

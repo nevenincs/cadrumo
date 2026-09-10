@@ -19,6 +19,21 @@ from collections.abc import Mapping
 from pathlib import Path
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
+from cadrumo.domain.calculations.registry.revision_context import (
+    RevisionValidationContext,
+    build_revision_validation_context,
+)
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_base import REGISTRY_SOURCE_GROUNDING_TIERS
+from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+from cadrumo.domain.calculations.registry.validate_revision_identity import (
+    emit_revision_payload_failures as _emit_revision_payload_failures,
+)
+from cadrumo.domain.calculations.registry.validate_revision_identity import (
+    revision_reference_identity_failures,
+)
+
 from ._validate_applicability_section import validate_applicability_section
 from ._validate_authority_grade import validate_authority_grade_section
 from ._validate_completeness import emit_completeness_gate_failures as _emit_completeness_gate_failures
@@ -44,7 +59,6 @@ from ._validate_record_sections import (
 )
 from ._validate_revision_closure import validate_revision_closure_sections as _validate_revision_closure_sections
 from ._validate_revision_closure import validate_revision_reference_surfaces as _validate_revision_reference_surfaces
-from cadrumo.domain.calculations.registry.revision_context import RevisionValidationContext, build_revision_validation_context
 from ._validate_revision_id_window_agreement import validate_revision_id_window_agreement
 from ._validate_surfaces import (
     validate_application_link_section,
@@ -54,16 +68,6 @@ from ._validate_surfaces import (
     validate_workbook_parity_section,
 )
 from ._validate_valid_from_ejercicio_convention import validate_valid_from_ejercicio_convention
-from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_base import REGISTRY_SOURCE_GROUNDING_TIERS
-from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
-from cadrumo.domain.calculations.registry.validate_revision_identity import (
-    emit_revision_payload_failures as _emit_revision_payload_failures,
-)
-from cadrumo.domain.calculations.registry.validate_revision_identity import (
-    revision_reference_identity_failures,
-)
 
 
 def _requires_workbook_parity_coverage(revision: ModeloRevision) -> bool:

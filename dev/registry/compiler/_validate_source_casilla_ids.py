@@ -16,7 +16,10 @@ See Also:
 from __future__ import annotations
 
 from cadrumo.core.casilla_id import CasillaId
-from cadrumo.domain.calculations.registry.casilla_membership import casilla_noncanonical_reference_targets, declared_casilla_ids
+from cadrumo.domain.calculations.registry.casilla_membership import (
+    casilla_noncanonical_reference_targets,
+    declared_casilla_ids,
+)
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 

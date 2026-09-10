@@ -22,11 +22,12 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from cadrumo.core.modelo import Modelo
-from ._validate_helpers import missing_refs
 from cadrumo.domain.calculations.registry.applicability import hydrate_applicability_rule
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
+
+from ._validate_helpers import missing_refs
 
 
 def validate_applicability_section(

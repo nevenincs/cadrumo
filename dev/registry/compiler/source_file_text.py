@@ -19,11 +19,11 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ....core.external_constants import UTF_8_ENCODING
-from ....core.resources.bundled_data import resolve_companion_binary
+from cadrumo.core.external_constants import UTF_8_ENCODING
+from cadrumo.core.resources.bundled_data import resolve_companion_binary
 
 if TYPE_CHECKING:
-    from .schema_references import SourceReference
+    from cadrumo.domain.calculations.registry.schema_references import SourceReference
 
 __all__ = ["read_source_file_text"]
 

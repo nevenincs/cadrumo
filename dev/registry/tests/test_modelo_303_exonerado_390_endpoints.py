@@ -10,7 +10,7 @@ from dev.registry.maintenance_support import resolve_record_design_binary
 
 from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry._validate import RegistryValidator
+from dev.registry.compiler.validator import RegistryValidator
 from cadrumo.domain.calculations.registry.loader import load_catalogue_file
 from cadrumo.domain.calculations.registry.record_design import extract_record_design
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind

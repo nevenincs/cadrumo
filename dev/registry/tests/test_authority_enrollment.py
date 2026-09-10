@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry._validate import RegistryValidator
+from dev.registry.compiler.validator import RegistryValidator
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference

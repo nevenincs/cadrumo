@@ -24,8 +24,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from cadrumo.core.aggregation import BindingSourceKind
-from ._validate_evidence import EvidenceValidator
-from ._validate_helpers import missing_refs
 from cadrumo.domain.calculations.registry.bindings_previous_filing import previous_filing_source_reference
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.schema import (
@@ -34,9 +32,15 @@ from cadrumo.domain.calculations.registry.schema import (
 )
 from cadrumo.domain.calculations.registry.schema_deadlines import filing_schedule_period_kind_mismatches
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
-from cadrumo.domain.calculations.registry.schema_revision_members import ConstructDefinition, DependencyClassificationDefinition
+from cadrumo.domain.calculations.registry.schema_revision_members import (
+    ConstructDefinition,
+    DependencyClassificationDefinition,
+)
 from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
 from cadrumo.domain.calculations.registry.validate_revision_identity import duplicates
+
+from ._validate_evidence import EvidenceValidator
+from ._validate_helpers import missing_refs
 
 
 def validate_relation_section(

@@ -36,7 +36,7 @@ from cadrumo.domain.calculations.registry._loader_internals import (
     _collect_registry_tree_fingerprints,
     _collect_registry_tree_fingerprints_uncached,
 )
-from cadrumo.domain.calculations.registry._verdict_cache import (
+from dev.registry.compiler.verdict_cache import (
     certify_registry_validation,
     compute_verdict_key,
     registry_validation_is_certified,

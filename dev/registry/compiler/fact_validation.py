@@ -7,13 +7,14 @@ from datetime import date, timedelta
 from itertools import pairwise
 from pathlib import Path
 
-from .....core.corpus_text import normalise_corpus_text
-from .._validate_evidence import EvidenceValidator
-from ..errors import RegistryValidationError
-from ..legal import verify_legal_reference_grounding
-from ..schema_base import DateAxis
-from ..schema_references import LegalReference, SourceReference
-from .schema import GovernedFact, GovernedFactCatalogue, GovernedFactVariant
+from cadrumo.core.corpus_text import normalise_corpus_text
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue, GovernedFactVariant
+from cadrumo.domain.calculations.registry.legal import verify_legal_reference_grounding
+from cadrumo.domain.calculations.registry.schema_base import DateAxis
+from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+
+from ._validate_evidence import EvidenceValidator
 
 __all__ = ["governed_fact_catalogue_failures", "migrated_legal_parameter_fact_failures"]
 

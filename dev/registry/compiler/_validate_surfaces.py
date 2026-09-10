@@ -10,6 +10,15 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Mapping
 
 from cadrumo.core.casilla_id import CasillaId
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.domain.calculations.registry.schema_verification import (
+    KNOWN_VERIFICATION_PREDICATE_OPERATORS,
+    VerificationExpectationDefinition,
+    verification_predicate_operator_name,
+)
+
 from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import missing_refs as _missing_refs
 from ._validate_official_source_guidance_content import deadline_window_content_failures
@@ -23,14 +32,6 @@ from ._validate_verification_predicates import (
     _deduccion_requires_adquisicion_before_predicate_failures,
     _profile_field_required_predicate_failures,
     _profile_flag_enabled_predicate_failures,
-)
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-from cadrumo.domain.calculations.registry.schema_verification import (
-    KNOWN_VERIFICATION_PREDICATE_OPERATORS,
-    VerificationExpectationDefinition,
-    verification_predicate_operator_name,
 )
 
 # Operators mixing casilla ids with literal tokens, so they cannot route through the

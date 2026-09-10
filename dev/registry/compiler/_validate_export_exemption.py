@@ -93,7 +93,10 @@ from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.export_exemption_reason import ExportExemptionReason
 from cadrumo.core.export_layout_format import ExportLayoutFormat
 from cadrumo.domain.calculations.registry.bindings import binding_source_casilla_ids, binding_source_modelo
-from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings, fixed_width_record_casilla_ids
+from cadrumo.domain.calculations.registry.export import (
+    derive_export_layouts_from_bindings,
+    fixed_width_record_casilla_ids,
+)
 from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
 from cadrumo.domain.calculations.registry.schema import (
     DataBindingDefinition,

@@ -70,8 +70,9 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Final
 
-from .source_file_text import read_source_file_text
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
+
+from .source_file_text import read_source_file_text
 
 #: The norm-text tree whose files are prose an author can under-transcribe. A
 #: layout artefact outside it is the layout itself and is not scanned.

@@ -21,7 +21,7 @@ import pytest
 from dev.registry.maintenance_support import stamp_bundled_registry_release
 
 from cadrumo.core.directory_scan import scan_directory
-from cadrumo.domain.calculations.registry._verdict_cache import (
+from dev.registry.compiler.verdict_cache import (
     VERDICT_OUTCOME_GREEN,
     read_verdict,
     shipped_verdict_location,

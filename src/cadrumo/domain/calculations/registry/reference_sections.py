@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ._validate_reference_checker import IdReferenceChecker
+from .reference_checker import IdReferenceChecker
 
 if TYPE_CHECKING:
     from .schema import ModeloRevision

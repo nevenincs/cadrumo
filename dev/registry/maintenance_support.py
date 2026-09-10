@@ -21,7 +21,7 @@ from cadrumo.core.period import RegistrySelectorPeriodCode
 from cadrumo.core.prose_elision import ElidedProse
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import authority as _authority
-from cadrumo.domain.calculations.registry._verdict_cache import (
+from dev.registry.compiler.verdict_cache import (
     VERDICT_OUTCOME_GREEN,
     RegistryValidationVerdict,
     compute_shipped_verdict_key,

@@ -42,7 +42,7 @@ from typing import Final
 
 import pytest
 
-from cadrumo.domain.calculations.registry._verdict_cache import _BUNDLED_VERDICT_FILENAME
+from dev.registry.compiler.verdict_cache import _BUNDLED_VERDICT_FILENAME
 from cadrumo.domain.calculations.registry.identity import REGISTRY_IDENTITY_STAMP_FILENAME
 
 from ..._paths import REPO_ROOT, UTF_8
