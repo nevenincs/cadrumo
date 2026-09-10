@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#registry-edition-authoring'
 date: '2026-09-09'
-modified: '2026-09-09'
+modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:246353a65b7a65fc284eaaffa1858805ef7c3562cd461a649922c845134c22fd'
+body_hash: 'sha256:212de3f6489836a75ba5db2e72cd3b9af359a2b322172829a56a91b632c1f6ad'
 related:
   - "[[2026-09-09-registry-edition-authoring-edition-restatement-measurement-research]]"
   - "[[2026-09-09-registry-edition-authoring-registry-mechanics-audit-research]]"
@@ -192,7 +192,10 @@ its current edition, 41 address a casilla on their own anchor sheet and 96 addre
 on the wrong sheet — a página-10 equity slot bound to a liquidación deduction box, whose number the
 design does print on that equity slot. There is no third category: not one legitimate cross-sheet
 binding exists in the revision, which is what makes the whole cross-sheet population the defect
-rather than a mixed set needing triage. The same shape the span rule
+rather than a mixed set needing triage. The 96 are not one repair either. In 33 the correct-sheet casilla is
+already declared and the field can be rebound to it; in the other 63 the correct-sheet casilla has
+never been declared, so there is nothing to rebind to until someone authors it. A binding defect and
+a declaration gap were hiding inside one count. The same shape the span rule
 guards against is already committed here on the wire, so the qualification is a correction to
 existing data and not only a rule for new work.
 
