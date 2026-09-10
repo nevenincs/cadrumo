@@ -2,8 +2,12 @@ modelo:
   schema:
     '117':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 117. Adóelőleg-levonások és -befizetések. Kollektív
+          befektetési formák részvényeinek és befektetési jegyeinek átruházásából
+          vagy visszaváltásából származó jövedelmek és vagyoni nyereségek.
+        title: Adóelőleg-levonások és -befizetések - kollektív befektetési formák
+          részvényeinek és befektetési jegyeinek átruházásából vagy visszaváltásából
+          származó jövedelmek
       revision:
         2019-y-siguientes:
           casilla:

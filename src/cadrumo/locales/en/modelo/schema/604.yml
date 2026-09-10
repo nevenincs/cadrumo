@@ -2,8 +2,8 @@ modelo:
   schema:
     '604':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 604. Financial Transactions Tax. Self-assessment.
+        title: Financial Transactions Tax - self-assessment
       revision:
         2021-2023:
           casilla:

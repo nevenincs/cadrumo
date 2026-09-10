@@ -2,8 +2,10 @@ modelo:
   schema:
     '341':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 341. Application for reimbursement of compensation under
+          the special regime for agriculture, livestock farming and fisheries.
+        title: Reimbursement of compensation under the VAT special regime for agriculture,
+          livestock farming and fisheries
       revision:
         2005-2015:
           casilla:

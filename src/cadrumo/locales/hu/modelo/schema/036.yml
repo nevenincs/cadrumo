@@ -2,8 +2,10 @@ modelo:
   schema:
     '036':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 036. Nyilvántartásba-vételi bevallás a vállalkozók,
+          szakemberek és adólevonásra kötelezettek nyilvántartásába való bejelentkezésről,
+          adatmódosításról és kijelentkezésről.
+        title: Vállalkozók, szakemberek és adólevonásra kötelezettek nyilvántartása
       revision:
         2025-02-03-y-siguientes:
           casilla:

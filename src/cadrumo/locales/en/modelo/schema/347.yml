@@ -2,8 +2,8 @@ modelo:
   schema:
     '347':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 347. Annual return of transactions with third parties.
+        title: Transactions with third parties (annual informative return)
       revision:
         2011-2024:
           casilla:

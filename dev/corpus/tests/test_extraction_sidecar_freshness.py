@@ -11,11 +11,11 @@ from typing import Final, cast
 import pytest
 
 from cadrumo.core.corpus_text import normalise_corpus_text
-from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
+from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.loader import load_shared_catalogues
 
-from ...docs.preprocess.normatives_html import HTML_EXTRACTOR_ID, build_outputs
+from ...docs.preprocess.normatives_html import HTML_EXTRACTOR_ID
 from ...docs.preprocess.schema import PreprocessOutput
 from ...docs.preprocess.sidecar import (
     EXTRACTED_JSON_SUFFIX,
@@ -23,6 +23,7 @@ from ...docs.preprocess.sidecar import (
     matches_origin_name,
 )
 from ..extract_manual_corpus_text import extract_raw_text
+from ..extract_corpus_sidecars import check_all as check_corpus_sidecars
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -160,44 +161,10 @@ def test_enrolled_corpus_html_trees_use_canonical_lf_bytes() -> None:
     assert not noncanonical, f"enrolled corpus HTML contains non-LF line endings: {sorted(noncanonical)!r}"
 
 
-#: Below this the normative-HTML comparison has stopped covering the corpus.
-#: Live: 470 of 476 sources carry sidecars. The loop below SKIPS a source that
-#: has none, so the ``sources`` floor alone passes a run that compared NOTHING:
-#: every sidecar could vanish and this gate would still report the extractor at
-#: parity. The floor belongs on the comparisons actually made, not on the
-#: sources walked.
-_MINIMUM_NORMATIVE_HTML_COMPARISONS = 400
-
-
-def test_normative_html_sidecars_equal_current_production_extraction() -> None:
-    """Committed normative records are exact outputs of the live extractor."""
-    html_root = _CORPUS_ROOT / "normatives" / "html"
-    sources = scan_directory(html_root, pattern="*.html")
-    failures: list[str] = []
-    compared = 0
-
-    for source in sources:
-        json_paths = [
-            path
-            for path in scan_directory(html_root, pattern=f"{source.name}*{EXTRACTED_JSON_SUFFIX}")
-            if matches_origin_name(path.name, source.name)
-        ]
-        if not json_paths:
-            continue
-        compared += 1
-        committed = [PreprocessOutput.model_validate_json(path.read_text(encoding="utf-8")) for path in json_paths]
-        expected = build_outputs(source, repo_root=_REPO_ROOT)
-        if committed != expected:
-            failures.append(source.relative_to(_REPO_ROOT).as_posix())
-
-    assert sources, "no normative HTML sources found"
-    assert compared >= _MINIMUM_NORMATIVE_HTML_COMPARISONS, (
-        f"only {compared} of {len(sources)} normative HTML source(s) had a sidecar to compare "
-        f"against the live extractor; below {_MINIMUM_NORMATIVE_HTML_COMPARISONS} the walk has stopped "
-        "covering the corpus and a clean result means nothing was compared, not that the "
-        "extractor is at parity"
-    )
-    assert not failures, f"normative HTML sidecars differ from the production extractor: {failures[:20]!r}"
+def test_enrolled_html_and_workbook_sidecars_match_the_owner_check() -> None:
+    """The producer-owned check proves complete enrolled derivative parity."""
+    failures = check_corpus_sidecars()
+    assert not failures, "enrolled corpus sidecar defects:\n" + "\n".join(failures)
 
 
 def test_committed_extraction_sidecars_match_current_sources() -> None:
@@ -378,85 +345,6 @@ def test_pdf_corpus_text_sidecars_equal_current_production_extraction() -> None:
 
     assert sidecars
     assert not failures, "PDF corpus text differs from production extraction:\n" + "\n".join(failures)
-
-
-#: Per-suffix floors over the record-design walk. This corpus is NOT one
-#: workbook kind: three extensions ship, and the legacy ``.xls`` reader is a
-#: different path through ``_workbook.build_workbook`` than the OOXML one that
-#: serves ``.xlsx``/``.xlsm``. Live: ``.xlsx`` 67, ``.xls`` 47, ``.xlsm`` 2.
-#:
-#: A floor over the UNION cannot see one extension leave the walk. Against 116
-#: workbooks a floor of 50 left 66 of slack -- more than ``.xls`` and ``.xlsm``
-#: put together (49). Narrow ``workbook_suffixes`` to the OOXML pair, or
-#: regress the membership test, and 49 workbooks stop being examined for
-#: sidecar pairing while the walked count reads 67 and this gate stays green.
-#:
-#: Nothing else pins that walk. The per-origin-kind floors in
-#: ``dev/docs/preprocess/tests/test_corpus_sidecar_freshness.py`` count
-#: SIDECARS, which a narrowed walk leaves untouched, and the record-design
-#: manifests are written by the sync script without a parity gate of their
-#: own. A family dropped from this loop is a family nothing checks for
-#: extraction sidecars at all.
-#:
-#: The floors are keyed independently of ``workbook_suffixes`` on purpose: a
-#: suffix removed from the walk still carries its floor, so it reds at zero
-#: rather than disappearing along with the check. Each sits near two thirds of
-#: its live figure, so ordinary corpus movement never fires the gate while a
-#: family losing most of itself always does. ``.xlsm`` has two members; one is
-#: the floor that still means present.
-_MINIMUM_WORKBOOKS_BY_SUFFIX: Final[dict[str, int]] = {
-    ".xls": 31,
-    ".xlsm": 1,
-    ".xlsx": 44,
-}
-
-
-def test_every_record_design_workbook_has_extraction_sidecars() -> None:
-    workbook_suffixes = {".xls", ".xlsm", ".xlsx"}
-    missing: list[str] = []
-    workbook_root = _CORPUS_ROOT / "aeat_official" / "disenos_registro"
-
-    assert workbook_root.is_dir(), (
-        f"the record-design corpus is not at {workbook_root}; a relocated root walks nothing "
-        "and this gate would report every workbook sidecar-complete"
-    )
-
-    examined: dict[str, int] = dict.fromkeys(_MINIMUM_WORKBOOKS_BY_SUFFIX, 0)
-    for source in scan_directory(workbook_root, recursive=True, select=DirectoryEntryKind.FILES):
-        suffix = source.suffix.lower()
-        if suffix not in workbook_suffixes:
-            continue
-        examined[suffix] = examined.get(suffix, 0) + 1
-        # Paired through the producer's own predicate rather than the bare
-        # glob prefix. A workbook's name is a prefix of its same-stem
-        # neighbour's (``design-xls.xls`` of ``design-xls.xlsx``), so a
-        # prefix match credits a workbook with a sidecar describing a
-        # different file and reports it complete once its own are gone.
-        json_sidecars = [
-            path
-            for path in scan_directory(source.parent, pattern=f"{source.name}*{EXTRACTED_JSON_SUFFIX}")
-            if matches_origin_name(path.name, source.name)
-        ]
-        if not json_sidecars or any(
-            not path.with_name(path.name.removesuffix(EXTRACTED_JSON_SUFFIX) + EXTRACTED_TEXT_SUFFIX).is_file()
-            for path in json_sidecars
-        ):
-            missing.append(source.relative_to(_REPO_ROOT).as_posix())
-
-    # The sibling freshness gates each guard their corpus; this one did not, so
-    # an empty walk read exactly like a complete one. Floors, not pinned counts:
-    # 116 workbooks ship today across the three suffixes.
-    starved = {
-        suffix: (examined[suffix], floor)
-        for suffix, floor in _MINIMUM_WORKBOOKS_BY_SUFFIX.items()
-        if examined[suffix] < floor
-    }
-    assert not starved, (
-        f"these record-design workbook families were walked below their floor {starved!r} "
-        f"(walked {sum(examined.values())} in total); an empty finding list says nothing "
-        "about whether a family the walk no longer reaches carries its extraction sidecars"
-    )
-    assert not missing, "record-design workbooks without extraction sidecars:\n" + "\n".join(missing)
 
 
 def test_supported_taxpayer_calendars_ship_pdf_corpus_text() -> None:

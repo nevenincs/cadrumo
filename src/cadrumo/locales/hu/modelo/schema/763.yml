@@ -2,8 +2,9 @@ modelo:
   schema:
     '763':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 763. Szerencsejáték-tevékenységek adója éves vagy többéves
+          tevékenységek esetén. Önbevallás.
+        title: Szerencsejáték-tevékenységek adója - önbevallás (éves/többéves)
       revision:
         2012-2t-3t:
           casilla:

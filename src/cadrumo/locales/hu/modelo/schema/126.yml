@@ -2,8 +2,10 @@ modelo:
   schema:
     '126':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 126. Adóelőleg-levonások és -befizetések. A pénzügyi
+          intézményeknél vezetett bármely számla ellenértékéből származó tőkejövedelmek.
+        title: Adóelőleg-levonások és -befizetések - pénzügyi intézményeknél vezetett
+          számlák tőkejövedelmei
       revision:
         2019-y-siguientes:
           casilla:

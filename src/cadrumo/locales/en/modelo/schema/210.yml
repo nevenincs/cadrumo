@@ -2,8 +2,9 @@ modelo:
   schema:
     '210':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 210. Non-Resident Income Tax. Non-residents without
+          a permanent establishment. Self-assessment.
+        title: IRNR self-assessment for non-residents without a permanent establishment
       revision:
         '2025':
           casilla:

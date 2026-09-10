@@ -8,10 +8,10 @@ servlet itself, fills the country-code + IVA-number form per declared
 NIF, scrapes the rendered validity verdict, and returns one
 observation per declared NIF.
 
-The contract mirrors :mod:`renta_web_open`: a sibling sede adapter exposing
-an async collection coroutine plus a synchronous wrapper that the registry
-oracle can call. Browser-session lifecycle, guarded navigation, form
-interaction, response parsing, and error mapping are implemented here.
+The contract is the sede adapter shape: an async collection coroutine plus a
+synchronous wrapper that a caller can drive. Browser-session lifecycle, guarded
+navigation, form interaction, response parsing, and error mapping are
+implemented here.
 
 The driver is intentionally read-only: the form mutates no AEAT-side
 state under any NIF, requires no clave-móvil session, and writes

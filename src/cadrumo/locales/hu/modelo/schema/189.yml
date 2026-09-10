@@ -2,8 +2,10 @@ modelo:
   schema:
     '189':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 189. Éves adatszolgáltatási bevallás értékpapírokról,
+          biztosításokról és járadékokról.
+        title: Éves adatszolgáltatási bevallás értékpapírokról, biztosításokról és
+          járadékokról
       revision:
         '2025':
           casilla:

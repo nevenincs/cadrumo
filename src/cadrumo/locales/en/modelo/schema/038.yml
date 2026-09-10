@@ -2,8 +2,10 @@ modelo:
   schema:
     038:
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 038. List of transactions carried out by entities registered
+          in public registers. Informative return.
+        title: Transactions of entities registered in public registers (monthly informative
+          return)
       revision:
         2024-desde-06:
           casilla:

@@ -2,8 +2,12 @@ modelo:
   schema:
     '190':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 190. Adatszolgáltatási bevallás. Adóelőleg-levonások
+          és -befizetések. Munkaviszonyból és gazdasági tevékenységből származó jövedelmek,
+          nyeremények, valamint egyes vagyoni nyereségek és jövedelem-hozzárendelések.
+          Éves összesítő.
+        title: Munkaviszonyból és gazdasági tevékenységből származó jövedelmek adóelőleg-levonásának
+          éves összesítője
       revision:
         '2024':
           casilla:

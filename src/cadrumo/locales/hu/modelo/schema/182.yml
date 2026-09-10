@@ -2,8 +2,11 @@ modelo:
   schema:
     '182':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 182. A magánszemélyek jövedelemadója, a külföldi illetőségűek
+          jövedelemadója és a társasági adó. A kapott adományok, ajándékok és hozzájárulások,
+          valamint a teljesített rendelkezések adatszolgáltatási bevallása.
+        title: Kapott adományok, ajándékok és hozzájárulások, valamint teljesített
+          rendelkezések (éves adatszolgáltatás)
       revision:
         '2025':
           casilla:

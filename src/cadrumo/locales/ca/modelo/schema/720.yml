@@ -2,8 +2,9 @@ modelo:
   schema:
     '720':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 720. Declaració informativa sobre béns i drets situats
+          a l'estranger.
+        title: Béns i drets situats a l'estranger (informativa anual)
       revision:
         2013-y-siguientes:
           casilla:

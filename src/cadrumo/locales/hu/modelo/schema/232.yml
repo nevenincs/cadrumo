@@ -10,8 +10,10 @@ modelo:
             help: null
             label: Az esedékesség éve
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 232. A kapcsolt felek közötti ügyletek, valamint az
+          adóparadicsomnak minősített országokkal vagy területekkel kapcsolatos ügyletek
+          és helyzetek adatszolgáltatási bevallása.
+        title: Kapcsolt felek közötti ügyletek és adóparadicsomok (éves adatszolgáltatás)
       revision:
         2016-2017:
           casilla:

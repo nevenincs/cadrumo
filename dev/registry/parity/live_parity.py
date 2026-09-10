@@ -6,10 +6,10 @@ verification of registry-rendered payloads against AEAT live surfaces.
 
 Two-fold hardening underpins the design:
 
-1. Local hardening � already in place via the registry's static
+1. Local hardening -- already in place via the registry's static
    conformance tests (record-design positions, casilla widths, byte
    roundtrips, formula closure).
-2. Live conformance � drive a synthetic, registry-rendered payload
+2. Live conformance -- drive a synthetic, registry-rendered payload
    through an AEAT-published verification surface that **must not** modify
    remote state (open simulators, file validators like TGVI online, VIES
    IVA-ID checkers, pre-filing validators, AEAT integration test services).
@@ -32,17 +32,18 @@ from typing import TYPE_CHECKING, Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, field_validator
 
-from ....core.casilla_id import CasillaId
-from ....core.logging import get_logger
-from ....core.models import STRICT_FROZEN_CONFIG
-from .errors import RegistryValidationError
-from .external_grounding import BUNDLED_ORACLE_EVIDENCE_LOCATOR_MAX_LENGTH
-from .ids import CrossReferenceId, OracleId
-from .remote_state_guard import (
+from cadrumo.core.casilla_id import CasillaId
+from cadrumo.core.logging import get_logger
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.ids import CrossReferenceId, OracleId
+from cadrumo.domain.calculations.registry.remote_state_guard import (
     RemoteOperation,
     RemoteStateGuardPolicy,
     assert_remote_operations_allowed,
 )
+
+from .external_grounding import BUNDLED_ORACLE_EVIDENCE_LOCATOR_MAX_LENGTH
 
 if TYPE_CHECKING:
     pass
@@ -217,7 +218,7 @@ class LiveParityOracle(Protocol):
         Returns the full, ordered set of HTTP requests, browser actions, or
         local computations the oracle intends to run for ``payload`` (the
         registry-rendered bytes to verify) and ``expected`` (the expected
-        response values, keyed by label or casilla � a casilla being a
+        response values, keyed by label or casilla -- a casilla being a
         numbered box on the form). The oracle must not perform any operation
         absent from this tuple; callers pre-flight each entry through the
         remote-state guard before any side-effecting code runs.
@@ -243,8 +244,8 @@ class LiveParityOracle(Protocol):
         Pre-flights every planned operation against ``policy`` (the
         fail-closed remote-state guard for this cross-reference), then drives
         the surface and compares its response to ``expected``. Never raises on
-        an AEAT-side divergence � a mismatch is data, surfaced as the verdict
-        � and never reports ``"match"`` if any planned operation was skipped
+        an AEAT-side divergence -- a mismatch is data, surfaced as the verdict
+        -- and never reports ``"match"`` if any planned operation was skipped
         or rewritten. A step the policy forbids yields a ``"blocked"`` verdict
         instead of a remote call.
 
@@ -285,15 +286,15 @@ class ReplayPayload(_ParityModel):
     Replay fixtures on disk are captured response artefacts and carry
     additional documented metadata that pre-dates the tightened schema:
 
-    * ``scenario_id`` � fixture-author label that identifies the
+    * ``scenario_id`` -- fixture-author label that identifies the
       operator scenario the payload was captured against;
-    * ``profile_overrides`` � per-fixture profile overrides used to
+    * ``profile_overrides`` -- per-fixture profile overrides used to
       drive the registry comparison;
-    * ``expected`` � captured human-readable labels paired with their
+    * ``expected`` -- captured human-readable labels paired with their
       expected values, retained only for audit readability;
-    * ``expected_by_casilla_id`` � registry-casilla-id-keyed expected
+    * ``expected_by_casilla_id`` -- registry-casilla-id-keyed expected
       values, used by the oracle's matcher;
-    * ``observed_by_casilla_id`` � registry-casilla-id-keyed observed
+    * ``observed_by_casilla_id`` -- registry-casilla-id-keyed observed
       values, used by the oracle's matcher.
 
     ``model_config`` inherits ``strict=True, frozen=True, extra="forbid"``

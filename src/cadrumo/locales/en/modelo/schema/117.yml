@@ -2,8 +2,11 @@ modelo:
   schema:
     '117':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 117. Withholdings and payments on account. Income or
+          capital gains obtained as a result of the transfer or redemption of shares
+          and units in collective investment undertakings.
+        title: Withholdings and payments on account - income or gains from the transfer
+          or redemption of shares and units in collective investment undertakings
       revision:
         2019-y-siguientes:
           casilla:

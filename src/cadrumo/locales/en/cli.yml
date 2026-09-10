@@ -3311,17 +3311,6 @@ cli:
       modelo_count: Modelo count
       modelos: Modelos
       observation_paths: Observation paths
-      replay_blocked_payload_count: Replay blocked capture count
-      replay_compared_field_count: Replay compared casilla count
-      replay_cross_reference_id: Replay cross reference
-      replay_guard_policy_id: Replay guard policy
-      replay_matched_payload_count: Replay matched capture count
-      replay_mismatched_payload_count: Replay mismatched capture count
-      replay_oracle_id: Replay oracle
-      replay_payload_count: Replay capture count
-      replay_registry_validated: Replay registry validated
-      replay_unverifiable_payload_count: Replay unverifiable capture count
-      replay_verdict: Replay parity verdict
       revision: Revision
       revision_count: Revision count
       row_count: Row count
@@ -3333,8 +3322,6 @@ cli:
       verified_invariant_families: Verified invariant families
       workbook_parity_ref_count: Workbook parity ref count
     observation_help: Encrypted filed-declaration observation manifest to verify
-    replay_parity_help: Replay the bundled AEAT Renta WEB Open captures through the
-      parity oracle, offline
     source_observation_help: Encrypted source observation manifest required by previous-filing
       bindings or relations
     verify_filed_state_help: Compare local registry calculation output against captured

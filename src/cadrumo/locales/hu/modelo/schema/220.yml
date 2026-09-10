@@ -2,8 +2,8 @@ modelo:
   schema:
     '220':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 220. Társasági adó. Adókonszolidációs rendszer. Bevallás.
+        title: IS éves önbevallás adókonszolidációs rendszerben (cégcsoportok)
       revision:
         '2024':
           casilla:

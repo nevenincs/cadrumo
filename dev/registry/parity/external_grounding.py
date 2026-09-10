@@ -1,20 +1,24 @@
 """Registry-wide external-oracle grounding fold.
 
-Enrollment � every computed casilla named in a ``verification_expectation`` �
+Development tooling. This fold is a quality signal over the registry tree,
+not a product capability, and it does not ship with the package.
+
+Enrollment -- every computed casilla named in a ``verification_expectation`` --
 is a ceiling. Verification POWER is the narrower count of casillas whose engine
 value is reconciled against an AEAT-authoritative expected value that the
-application did not itself compute. Two such corpora ship today, enumerated by
-:class:`~cadrumo.core.ExternalOracleCorpus`: the Renta WEB Open replay capture
-and the AEAT Manual practico worked-example oracles.
+application did not itself compute. Two such corpora exist today, enumerated
+by :class:`ExternalOracleCorpus`: the Renta WEB Open replay captures, which
+are repository-only development artefacts covering 2025 Modelo 100 alone,
+and the AEAT Manual practico worked-example oracles, which are packaged data.
 
 This module folds those corpora against the registry tree and emits both
 directions of the grounding honesty relation as typed findings:
 
 * an oracle figure exists for a casilla that is not ``input_kind=computed``, or
-  is computed but not enrolled in a verification contract � the evidence is
-  bundled but stranded, never consumed by the verify gate; and
+  is computed but not enrolled in a verification contract -- the evidence is
+  present but stranded, never consumed by the verify gate; and
 * a revision DECLARES ``externally_grounded_casilla_ids`` for a casilla that no
-  bundled oracle backs for an applicable filing year � a grounding claim with
+  oracle payload backs for an applicable filing year -- a grounding claim with
   no independent AEAT authority behind it.
 
 Both directions were previously computed inside a single pytest module and were
@@ -28,8 +32,8 @@ Coverage, not correctness
 
 :attr:`RevisionExternalGroundingRow.independent_check_coverage` and its
 registry-wide counterpart measure COVERAGE OF INDEPENDENT CHECKING. A low value
-means most of a revision's reconciliation is engine-only � the application
-agreeing with itself � not that the revision is wrong; a high value means more
+means most of a revision's reconciliation is engine-only -- the application
+agreeing with itself -- not that the revision is wrong; a high value means more
 of it is cross-checked against AEAT's own figures, not that it is correct. The
 numerator is the declared grounding intersected with the reconciled set, so the
 registry-wide signal is computed directly from canonical registry facts.
@@ -37,14 +41,14 @@ registry-wide signal is computed directly from canonical registry facts.
 Reading the corpora
 -------------------
 
-Every bundled payload is parsed through its corpus's own strict frozen model
+Every payload is parsed through its corpus's own strict frozen model
 (:class:`ManualWorkedExamplePayload`, :class:`RentaWebOpenReplayPayload`), never
 as an untyped mapping. That is what makes the ``source_kind`` token
 load-bearing: the manual corpus declares it, it hydrates to an
-:class:`~cadrumo.core.ExternalOracleCorpus` member, and it is cross-checked
+:class:`ExternalOracleCorpus` member, and it is cross-checked
 against the directory the file was found in. A payload declaring a corpus other
 than its directory's is refused by name rather than reclassified to whichever
-corpus owns the directory � a silent reclassification would put a provenance on
+corpus owns the directory -- a silent reclassification would put a provenance on
 ``evidence_corpora`` that the figures do not have.
 
 Reading the registry
@@ -69,15 +73,14 @@ from typing import Annotated
 
 from pydantic import BaseModel, BeforeValidator, Field, model_validator
 
-from ....core.casilla_id import CasillaId
-from ....core.external_oracle_corpus import ExternalOracleCorpus
-from ....core.filing_year import FilingYear
-from ....core.models import STRICT_FROZEN_CONFIG
-from ....core.period import RegistrySelectorPeriodCode
-from .errors import RegistryValidationError
-from .ids import ModeloId
+from cadrumo.core.casilla_id import CasillaId
+from cadrumo.core.filing_year import FilingYear
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
+from cadrumo.core.period import RegistrySelectorPeriodCode
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.ids import ModeloId
 
-#: Bundled data subtree holding each corpus, relative to the packaged data root.
+from .external_oracle_corpus import ExternalOracleCorpus
 
 
 def _coerce_external_oracle_corpus(value: object) -> object:
@@ -123,10 +126,10 @@ class ExternalGroundingModel(BaseModel):
 
 #: Bounds on a bundled oracle payload's ``raw_evidence_locator``, declared once.
 #:
-#: The generic :class:`~domain.calculations.registry._live_parity.ReplayPayload`
-#: that every
-#: checker-style driver decodes through is deliberately looser � it makes the
-#: locator optional and caps it at 512 � because not every replay surface
+#: The generic :class:`~dev.registry.parity.live_parity.ReplayPayload` that
+#: every
+#: checker-style driver decodes through is deliberately looser -- it makes the
+#: locator optional and caps it at 512 -- because not every replay surface
 #: carries bundled-corpus evidence. The Renta WEB Open corpus is read by BOTH
 #: contracts, so these bounds are exported and re-applied at the Renta driver
 #: rather than restated there: a capture that satisfies grounding must not fail
@@ -180,7 +183,7 @@ class BundledOraclePayload(ExternalGroundingModel):
     mapping, so every axis the fold consumes is validated once at the boundary
     and an undeclared key is refused rather than ignored.
 
-    Only the genuine intersection lives here � where the evidence came from,
+    Only the genuine intersection lives here -- where the evidence came from,
     and the figures themselves. The attribution axes are corpus-dependent and
     are declared by each corpus's own model, never narrowed from an optional
     base field: the manual worked-example payloads state their modelo, filing
@@ -200,7 +203,7 @@ class BundledOraclePayload(ExternalGroundingModel):
 class DeclaredScenarioInputs(ExternalGroundingModel):
     """The taxpayer facts a worked example is built FROM, declared beside its figures.
 
-    A worked-example payload used to pin only the OUTPUT � the locator and
+    A worked-example payload used to pin only the OUTPUT -- the locator and
     ``expected_by_casilla_id``. The facts that make the example *that* example
     lived solely in hand-written test fixtures, so a fixture could reach the
     manual's printed number from a scenario the manual never states, and pass
@@ -225,7 +228,7 @@ class DeclaredScenarioInputs(ExternalGroundingModel):
 
     ``corpus_locator`` addresses where the case's INPUTS are printed, which is
     not the same question as :attr:`BundledOraclePayload.raw_evidence_locator`
-    � that one addresses the FIGURE. ``locator_by_casilla_id`` refines it per
+    -- that one addresses the FIGURE. ``locator_by_casilla_id`` refines it per
     input, because a reviewer verifying one box against the manual needs the
     line that box came from, and an input assembled from several printed line
     items (two income rows folded into one registry box) has no single line the
@@ -235,7 +238,7 @@ class DeclaredScenarioInputs(ExternalGroundingModel):
         corpus_locator: Where the worked example states the facts below.
         by_casilla_id: The input value per casilla, as printed.
         locator_by_casilla_id: The line reference each input was read from.
-            Must cover exactly the same casillas as ``by_casilla_id`` � an
+            Must cover exactly the same casillas as ``by_casilla_id`` -- an
             input with no locator is unreviewable, and a locator with no input
             names a fact the scenario does not use.
     """
@@ -276,7 +279,7 @@ class ManualWorkedExamplePayload(BundledOraclePayload):
     practice: a payload that omits it must be enrolled, with a stated reason, in
     the un-migrated registry that
     :mod:`~domain.calculations.registry.tests.test_manual_oracle_declared_inputs`
-    reads. Optional-and-unenumerated would be the worse outcome � the contract
+    reads. Optional-and-unenumerated would be the worse outcome -- the contract
     would appear to cover inputs while most payloads quietly did not, which is
     harder to see than today's uniform absence.
     """
@@ -299,7 +302,7 @@ class RentaWebOpenReplayPayload(BundledOraclePayload):
     This corpus declares no ``source_kind``, modelo, or filing year: the corpus
     directory and the payload filename carry those axes. They are modelled as
     optional rather than absent so the corpus cross-check still binds a replay
-    that ever grows a token � an optional field is where a check quietly stops
+    that ever grows a token -- an optional field is where a check quietly stops
     applying. They are NOT given a value-bearing default, which would answer
     the cross-check with the very token it verifies.
     """
@@ -322,7 +325,7 @@ type OraclePayload = ManualWorkedExamplePayload | RentaWebOpenReplayPayload
 
 #: The grounding ``detail`` annotation: elides rather than refusing.
 #:
-#: Both carriers interpolate registry ids � modelo, revision, casilla, payload
-#: name � whose combined length is a property of the registry rather than of
+#: Both carriers interpolate registry ids -- modelo, revision, casilla, payload
+#: name -- whose combined length is a property of the registry rather than of
 #: the sentence. Refusing one would abort the honesty audit at the point it had
 #: a breach to report, which is the one moment it must not fail.

@@ -2,8 +2,10 @@ modelo:
   schema:
     '193':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 193. Declaració informativa. Retencions i ingressos
+          a compte sobre determinats rendiments del capital mobiliari i determinades
+          rendes. Resum anual.
+        title: Resum anual de retencions sobre capital mobiliari
       revision:
         '2024':
           casilla:

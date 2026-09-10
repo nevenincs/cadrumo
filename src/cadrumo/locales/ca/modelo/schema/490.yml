@@ -2,8 +2,8 @@ modelo:
   schema:
     '490':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 490. Impost sobre Determinats Serveis Digitals. Autoliquidació.
+        title: Impost sobre Determinats Serveis Digitals - autoliquidació
       revision:
         '2021':
           casilla:

@@ -2,8 +2,9 @@ modelo:
   schema:
     '270':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 270. Annual summary of withholdings and payments on
+          account. Special levy on prizes from certain lotteries and betting.
+        title: Annual summary of withholdings for the special levy on lottery prizes
       revision:
         2013-2022:
           casilla:

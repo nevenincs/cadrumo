@@ -2,8 +2,9 @@ modelo:
   schema:
     '720':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 720. Informative return on assets and rights located
+          abroad.
+        title: Assets and rights located abroad (annual informative return)
       revision:
         2013-y-siguientes:
           casilla:

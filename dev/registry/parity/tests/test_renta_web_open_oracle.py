@@ -9,25 +9,26 @@ from urllib.parse import urlparse
 import pytest
 from pydantic import ValidationError
 
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.config import Settings
-from .....tests.aeat_literal_fixtures import aeat_host
-from ..errors import RegistryValidationError
-from ..live_parity import ParityFieldComparison, ParityVerdictKind
-from ..remote_state_guard import (
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.config import Settings
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.remote_state_guard import (
     RemoteOperation,
     RemoteStateGuardPolicy,
     assert_remote_operation_allowed,
     remote_state_policy_from_cross_reference,
 )
+from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
+from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision
+from cadrumo.tests.aeat_literal_fixtures import aeat_host
+
+from ..live_parity import ParityFieldComparison, ParityVerdictKind
 from ..renta_web_open_oracle import (
     RentaWebOpenOracle,
     _overall_verdict,
     _parse_decimal_text,
     equivalent_renta_web_open_value,
 )
-from ..schema_base import EvidenceTier
-from ..schema_verification import LiveCrossReferenceDecision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

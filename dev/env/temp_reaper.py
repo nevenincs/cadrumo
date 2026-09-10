@@ -28,16 +28,15 @@ default and reclaimed only under an explicit ``--apply``, because automating a
 deletion decided by inference is a different risk from automating one decided
 by observation.
 
-Run ``python -m dev.env.temp_reaper`` for the report and
-``python -m dev.env.temp_reaper --apply`` to act on it.
+This module is a library. Its operator surface is ``just clean`` (report) and
+``just clean-apply`` (act), which drive :func:`report_temporary_storage` as one
+section of the wider reclamation report.
 """
 
 from __future__ import annotations
 
-import argparse
 import os
 import shutil
-import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -91,6 +90,15 @@ common; both going quiet together for three days is what abandonment looks
 like.
 """
 
+
+_LISTED_FLOOR = 1_000_000
+"""Bytes a reaped session must hold to earn its own report line.
+
+Purely presentational: everything above and below it is reaped identically.
+It exists because the reaped population is long-tailed -- most abandoned
+sessions wrote nothing -- and a screen of zero-byte lines hides the few that
+actually account for the space.
+"""
 
 SESSION_ID_VARIABLE = "CLAUDE_CODE_SESSION_ID"
 """Environment variable naming the session this process is running inside.
@@ -353,83 +361,136 @@ def _hours(value: float | None) -> str:
     return "not measured" if value is None else f"{value / 3600:6.1f}h"
 
 
-def _report(verdicts: list[SessionVerdict], *, applying: bool, stream: TextIO) -> tuple[int, int]:
-    """Print one line per session and return ``(reclaimable bytes, spared count)``."""
+def _report(
+    verdicts: list[SessionVerdict], *, applying: bool, stream: TextIO, verbose: bool = False
+) -> tuple[int, int]:
+    """Print the session verdicts and return ``(reclaimable bytes, spared count)``.
+
+    Reaped sessions are always listed, because those are the lines an operator
+    is being asked to sanction. Spared ones are summarised by reason unless
+    ``verbose`` asks for the inventory: this machine carries several hundred
+    sessions, and printing one line each buries every other section of the
+    report it now forms part of.
+    """
     reclaimable = 0
-    spared = 0
+    reaped: list[SessionVerdict] = []
+    spared: list[SessionVerdict] = []
     for verdict in sorted(verdicts, key=lambda item: -(item.total_bytes or 0)):
         if verdict.reclaimable:
             reclaimable += verdict.total_bytes or 0
+            reaped.append(verdict)
         else:
-            spared += 1
+            spared.append(verdict)
+
+    # Sorted by size above, so the tail is the sessions holding nothing. They
+    # are still reaped -- an empty abandoned scratchpad is still a directory --
+    # but naming each one costs a screen to report zero bytes.
+    listed = reaped if verbose else [verdict for verdict in reaped if (verdict.total_bytes or 0) >= _LISTED_FLOOR]
+    for verdict in listed:
         print(
-            f"  {'REAP ' if verdict.reclaimable else 'SPARE'} {verdict.session_id}"
+            f"  REAP  {verdict.session_id}"
             f"  scratchpad {_hours(verdict.scratchpad_idle_seconds)}"
             f"  transcript {_hours(verdict.transcript_idle_seconds)}"
-            f"  {_gigabytes(verdict.total_bytes)}  {verdict.reason}",
+            f"  {_gigabytes(verdict.total_bytes)}",
             file=stream,
         )
+    folded = len(reaped) - len(listed)
+    if folded:
+        print(f"  REAP  {folded} further abandoned sessions holding under 1 MB each", file=stream)
+    if verbose:
+        for verdict in spared:
+            print(f"  SPARE {verdict.session_id}  {verdict.reason}", file=stream)
+    else:
+        for reason in dict.fromkeys(verdict.reason for verdict in spared):
+            count = sum(1 for verdict in spared if verdict.reason == reason)
+            print(f"  SPARE {count:4d} sessions  {reason}", file=stream)
+
     verb = "reclaimed" if applying else "reclaimable"
-    print(f"  {verb}: {_gigabytes(reclaimable)}   spared: {spared} of {len(verdicts)} sessions", file=stream)
-    return reclaimable, spared
+    print(f"  {verb}: {_gigabytes(reclaimable)}   spared: {len(spared)} of {len(verdicts)} sessions", file=stream)
+    return reclaimable, len(spared)
 
 
-def main(argv: list[str] | None = None) -> int:
-    """Report temporary test/session data and reclaim abandoned scratchpads under ``--apply``."""
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument(
-        "--apply",
-        action="store_true",
-        help="remove the session scratchpads judged abandoned; without it nothing is deleted",
-    )
-    parser.add_argument(
-        "--idle-hours",
-        type=float,
-        default=IDLE_CEILING_SECONDS / 3600,
-        help="hours of silence on BOTH activity signals before a session is judged abandoned",
-    )
-    parser.add_argument(
-        "--measure-spared",
-        action="store_true",
-        help="walk spared sessions too, to report what sparing them is costing (slow: these trees are large)",
-    )
-    arguments = parser.parse_args(argv)
-    ceiling = arguments.idle_hours * 3600
+def report_temporary_storage(
+    stream: TextIO,
+    *,
+    apply: bool,
+    idle_hours: float = IDLE_CEILING_SECONDS / 3600,
+    measure_spared: bool = False,
+    verbose: bool = False,
+) -> int:
+    """Report all three temporary-storage families and return the bytes reclaimed.
+
+    The operator surface for this module is ``just clean``, which drives this
+    function as one section of a wider report. Keeping the section here rather
+    than in the caller keeps each family's rules with the module that reasons
+    about them: the liveness probes, the idle ceiling and the reasons the
+    verdicts carry are this file's subject, and a caller that re-derived any of
+    them would be a second opinion about who owns a scratch directory.
+
+    Args:
+        stream: Where the section is written.
+        apply: Whether to remove what the verdicts judge abandoned.
+        idle_hours: Silence required on BOTH session signals before reaping.
+        measure_spared: Walk spared sessions to report what sparing them costs.
+        verbose: List every spared session instead of summarising them by reason.
+
+    Returns:
+        Bytes reclaimed from the session scratchpads, or 0 when reporting only.
+    """
+    ceiling = idle_hours * 3600
 
     numbered_root = pytest_numbered_dir_root()
-    print(f"pytest numbered directories under {numbered_root}", file=sys.stdout)
-    removed, kept = reap_abandoned_numbered_dirs(numbered_root)
-    print(
-        f"  reclaimed {removed} abandoned, spared {kept} whose owner is running or unknown"
-        "  (this family is also reaped at every pytest session start)",
-        file=sys.stdout,
-    )
+    print(f"\npytest numbered directories under {numbered_root}", file=stream)
+    if apply:
+        removed, kept = reap_abandoned_numbered_dirs(numbered_root)
+        print(
+            f"  reclaimed {removed} abandoned, spared {kept} whose owner is running or unknown",
+            file=stream,
+        )
+    else:
+        # Report mode must not delete. This family's only entry point reaps as
+        # it counts, so there is no count to print without acting, and acting
+        # here would make the report's own promise false: it is reached from a
+        # command documented as deleting nothing until --apply. Nothing is lost
+        # by waiting, because every pytest session start already reaps it.
+        print(
+            "  reaped at every pytest session start; not counted here, because counting this"
+            " family means reaping it and a report deletes nothing",
+            file=stream,
+        )
 
     run_root = REPO_ROOT / ".logs" / "test-runs"
     run_verdicts = assess_run_directories(run_root)
-    print(f"\nRepository test runs under {run_root}", file=sys.stdout)
+    print(f"\nRepository test runs under {run_root}", file=stream)
     for verdict in run_verdicts:
-        print(f"  {'REAP ' if verdict.reclaimable else 'SPARE'} {verdict.directory.name}  {verdict.reason}")
-    if arguments.apply:
-        print(f"  removed {reclaim_run_directories(run_verdicts)} run directories", file=sys.stdout)
-    else:
-        print("  nothing was deleted; pass --apply to act on the REAP lines above", file=sys.stdout)
+        if verdict.reclaimable or verbose:
+            print(
+                f"  {'REAP ' if verdict.reclaimable else 'SPARE'} {verdict.directory.name}  {verdict.reason}",
+                file=stream,
+            )
+    kept_runs = [verdict for verdict in run_verdicts if not verdict.reclaimable]
+    if kept_runs and not verbose:
+        # One line for the retained population rather than one per directory.
+        # This tree holds a run per pytest invocation and reaches the high
+        # hundreds on a busy day; listing every retained run pushes the reaped
+        # ones -- the only lines an operator is being asked to sanction -- off
+        # the screen, which is the failure mode a report has instead of a bug.
+        for reason in dict.fromkeys(verdict.reason for verdict in kept_runs):
+            count = sum(1 for verdict in kept_runs if verdict.reason == reason)
+            print(f"  SPARE {count:4d} run directories  {reason}", file=stream)
+    if apply:
+        print(f"  removed {reclaim_run_directories(run_verdicts)} run directories", file=stream)
 
     session_root = claude_session_root()
-    print(f"\nClaude Code session scratchpads under {session_root}", file=sys.stdout)
+    print(f"\nClaude Code session scratchpads under {session_root}", file=stream)
     print(
-        f"  idle ceiling {arguments.idle_hours:.0f}h on both the scratchpad tree and the session transcript",
-        file=sys.stdout,
+        f"  idle ceiling {idle_hours:.0f}h on both the scratchpad tree and the session transcript",
+        file=stream,
     )
-    verdicts = assess_claude_sessions(session_root, ceiling=ceiling, measure_spared=arguments.measure_spared)
-    _report(verdicts, applying=arguments.apply, stream=sys.stdout)
-    if arguments.apply:
-        reclaimed = reclaim(verdicts)
-        print(f"  removed {_gigabytes(reclaimed)}", file=sys.stdout)
-    else:
-        print("  nothing was deleted; pass --apply to act on the REAP lines above", file=sys.stdout)
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
+    verdicts = assess_claude_sessions(session_root, ceiling=ceiling, measure_spared=measure_spared)
+    _report(verdicts, applying=apply, stream=stream, verbose=verbose)
+    if not apply:
+        return 0
+    reclaimed = reclaim(verdicts)
+    print(f"  removed {_gigabytes(reclaimed)}", file=stream)
+    return reclaimed

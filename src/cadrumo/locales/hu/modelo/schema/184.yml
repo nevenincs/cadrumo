@@ -2,8 +2,9 @@ modelo:
   schema:
     '184':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 184. A jövedelem-hozzárendelési rendszerbe tartozó szervezetek
+          éves adatszolgáltatási bevallása.
+        title: Jövedelem-hozzárendelési rendszerbe tartozó szervezetek (éves adatszolgáltatás)
       revision:
         '2015':
           casilla:

@@ -2,8 +2,10 @@ modelo:
   schema:
     '200':
       field:
-        official_name: null
-        title: null
+        official_name: Corporate Income Tax. Non-Resident Income Tax (permanent establishments
+          and income-attribution entities incorporated abroad with a presence in Spanish
+          territory). Return-settlement.
+        title: IS annual self-assessment
       revision:
         '2024':
           casilla:

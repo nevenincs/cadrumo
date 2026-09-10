@@ -2,8 +2,9 @@ modelo:
   schema:
     038:
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 038. Relació d'operacions realitzades per entitats inscrites
+          en registres públics. Declaració informativa.
+        title: Operacions d'entitats inscrites en registres públics (informativa mensual)
       revision:
         2024-desde-06:
           casilla:

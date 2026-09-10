@@ -82,8 +82,10 @@ modelo:
             help: null
             label: Nombre total de perceptors
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 180. Declaració informativa. Retencions i ingressos
+          a compte. Rendiments procedents de l'arrendament d'immobles urbans. Resum
+          anual.
+        title: Resum anual de retencions sobre arrendaments urbans
       revision:
         2019-2022:
           casilla:

@@ -2,8 +2,10 @@ modelo:
   schema:
     '200':
       field:
-        official_name: null
-        title: null
+        official_name: Társasági adó. A külföldi illetőségűek jövedelemadója (állandó
+          telephelyek, valamint külföldön alapított, spanyol területen jelenléttel
+          rendelkező, jövedelem-hozzárendelési rendszerbe tartozó szervezetek). Bevallás-elszámolás.
+        title: IS éves önbevallás
       revision:
         '2024':
           casilla:

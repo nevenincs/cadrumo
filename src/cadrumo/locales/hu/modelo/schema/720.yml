@@ -2,8 +2,9 @@ modelo:
   schema:
     '720':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 720. Adatszolgáltatási bevallás a külföldön található
+          vagyonról és jogokról.
+        title: Külföldön található vagyon és jogok (éves adatszolgáltatás)
       revision:
         2013-y-siguientes:
           casilla:

@@ -2,8 +2,9 @@ modelo:
   schema:
     '130':
       field:
-        official_name: null
-        title: null
+        official_name: A magánszemélyek jövedelemadója. Közvetlen megállapítás alá
+          tartozó gazdasági tevékenységek. Részletfizetés.
+        title: IRPF részletfizetés, közvetlen megállapítás
       revision:
         2019-y-siguientes:
           casilla:

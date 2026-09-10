@@ -2,8 +2,11 @@ modelo:
   schema:
     '128':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 128. Retencions i ingressos a compte. Rendes o rendiments
+          del capital mobiliari procedents d'operacions de capitalització i de contractes
+          d'assegurança de vida o invalidesa.
+        title: Retencions i ingressos a compte - rendes de capital mobiliari d'operacions
+          de capitalització i contractes d'assegurança
       revision:
         2019-y-siguientes:
           casilla:

@@ -2,8 +2,10 @@ modelo:
   schema:
     '200':
       field:
-        official_name: null
-        title: null
+        official_name: Impost sobre Societats. Impost sobre la Renda de no Residents
+          (establiments permanents i entitats en règim d'atribució de rendes constituïdes
+          a l'estranger amb presència en territori espanyol). Declaració-liquidació.
+        title: IS autoliquidació anual
       revision:
         '2024':
           casilla:

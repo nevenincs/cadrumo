@@ -18,9 +18,16 @@ hold for each one:
 
 All assertions are structural — they exercise operand refs, formula
 targets, relation ids, revision id, casilla counts, and binding
-presence. The calculation-arithmetic surface is verified by AEAT-
-published oracle data via the replay-parity layer, not by hand-
-computed Decimal literals.
+presence, not by hand-computed Decimal literals. The calculation-
+arithmetic surface these formulas produce is NOT externally verified:
+the bundled Renta WEB Open replay-parity captures record the
+autonomic minimo (casilla 0520) at differing figures per autonomous
+community, while the engine itself currently produces one figure for
+every community, and the replay-parity fold never drives the engine
+to compare against those captures — it only checks a capture file's
+own expected/observed fields against each other. Nothing in this
+module or the replay-parity layer confirms the engine agrees with
+AEAT on the autonomic chain today.
 """
 
 from __future__ import annotations

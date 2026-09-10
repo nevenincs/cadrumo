@@ -6,11 +6,12 @@ paths and surfaces a per-casilla parity verdict. All three paths start
 from the same :class:`RegistrySnapshot` so revision drift between them
 is impossible.
 
-1. **AEAT live oracle** (when a scenario file is provided) — the
-   authoritative reference. Pre-captured outputs from AEAT's own
-   simulator (Renta WEB Open, equivalent surfaces) stored under
-   `corpus/parity_replays/...`. This pins the local registry against
-   AEAT's truth.
+1. **AEAT live oracle** (when the caller supplies expected values) — the
+   authoritative reference. The harness holds no capture corpus of its own
+   and reads no bundled scenario file: the expected figures are passed in by
+   the caller, whatever their provenance. This pins the local registry
+   against AEAT's truth only to the extent the caller's figures came from
+   AEAT.
 2. **Local Decimal runtime** — `calculate_registry_snapshot` against
    the same registry snapshot. This is the "backend".
 3. **Sheets** — the engine-emitted workbook applied to the operator's

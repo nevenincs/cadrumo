@@ -142,9 +142,13 @@ def _verify_manual_structure(repo_root: Path, source: GeneratedArtifactSource) -
         return
     parts = source.corpus_path.split("/")
     try:
-        if parts[:2] != ["corpus", "manuals"] or len(parts) < 5:
+        # The prefix is already proven above; only the coordinate depth is open.
+        # A short path used to fall through this check silently, which is how a
+        # misfiled manual could claim to be verified without ever being loaded.
+        if len(parts) < 5:
             raise ValueError(
-                "a manual_pdf source must live at 'corpus/manuals/<manual_id>/<year>[/<part>]/source.pdf'",
+                "a practical-manual source must live at "
+                "'corpus/manuals/<manual_id>/<year>[/<part>]/source.pdf'",
             )
         manual_id_str, year_str, part_str = parts[2], parts[3], parts[4]
 

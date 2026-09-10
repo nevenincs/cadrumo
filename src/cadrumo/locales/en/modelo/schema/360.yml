@@ -2,8 +2,12 @@ modelo:
   schema:
     '360':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 360. Application for a refund of Value Added Tax incurred
+          by entrepreneurs or professionals established in the territory where the
+          tax applies, in respect of transactions carried out in the Community other
+          than those carried out in that territory.
+        title: VAT. Application for refund of VAT incurred in other Member States
+          (Eighth Directive)
       revision:
         2010-y-siguientes:
           casilla:

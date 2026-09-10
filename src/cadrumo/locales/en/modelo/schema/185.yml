@@ -2,8 +2,10 @@ modelo:
   schema:
     '185':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 185. Monthly informative return of contributions by
+          members and mutual-society members.
+        title: Monthly informative return of contributions by members and mutual-society
+          members
       revision:
         2003-2025:
           casilla:

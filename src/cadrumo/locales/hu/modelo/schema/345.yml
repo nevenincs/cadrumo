@@ -2,8 +2,11 @@ modelo:
   schema:
     '345':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 345. Adatszolgáltatási bevallás. Nyugdíjprogramok, nyugdíjpénztárak
+          és alternatív rendszerek. A résztvevők, befizetések és munkáltatói hozzájárulások
+          éves bevallása.
+        title: Nyugdíjprogramok és -pénztárak, résztvevők, befizetések és munkáltatói
+          hozzájárulások éves adatszolgáltatási bevallása
       revision:
         '2025':
           casilla:

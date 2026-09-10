@@ -2,8 +2,8 @@ modelo:
   schema:
     '347':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 347. Declaració anual d'operacions amb terceres persones.
+        title: Operacions amb terceres persones (informativa anual)
       revision:
         2011-2024:
           casilla:

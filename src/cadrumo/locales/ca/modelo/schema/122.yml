@@ -2,8 +2,11 @@ modelo:
   schema:
     '122':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 122. Impost sobre la Renda de les Persones Físiques.
+          Deduccions per família nombrosa o per persones amb discapacitat a càrrec.
+          Regularització del dret a la deducció per contribuents no obligats a presentar
+          declaració.
+        title: IRPF regularització de la deducció per família nombrosa / discapacitat
       revision:
         2017-y-siguientes:
           casilla:

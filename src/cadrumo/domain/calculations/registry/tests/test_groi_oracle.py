@@ -17,6 +17,7 @@ from urllib.parse import urlparse
 
 import pytest
 from dev.registry.maintenance_support import LiveParityCatalogue, OracleEnvironment
+from dev.registry.parity.live_parity import LiveParityOracle
 from pydantic import AnyUrl, ValidationError
 
 from .....core.config import Settings
@@ -28,7 +29,6 @@ from .....tests.groi_oracle import (
 )
 from ..checker_oracle_flow import CheckerObservation
 from ..errors import RegistryValidationError
-from ..live_parity import LiveParityOracle
 from ..remote_state_guard import (
     RemoteOperation,
     RemoteStateGuardPolicy,
@@ -220,7 +220,7 @@ def test_replay_payload_roundtrip_via_groi_driver() -> None:
     """ReplayPayload.model_validate accepts the canonical JSON shape and the
     driver's collect_observation round-trips the same envelope faithfully."""
 
-    from ..live_parity import ReplayPayload
+    from dev.registry.parity.live_parity import ReplayPayload
 
     raw = json.dumps(
         {
@@ -247,7 +247,7 @@ def test_replay_payload_roundtrip_via_groi_driver() -> None:
 def test_replay_payload_strict_rejects_extra_fields() -> None:
     """extra=forbid means unknown top-level keys raise ValidationError."""
 
-    from ..live_parity import ReplayPayload
+    from dev.registry.parity.live_parity import ReplayPayload
 
     with pytest.raises(ValidationError, match="Extra"):
         ReplayPayload.model_validate({"observed": {}, "unknown_field": "x"})
@@ -256,7 +256,7 @@ def test_replay_payload_strict_rejects_extra_fields() -> None:
 def test_replay_payload_strict_rejects_non_string_value_in_observed() -> None:
     """Mapping[str, str] under strict mode rejects integer values."""
 
-    from ..live_parity import ReplayPayload
+    from dev.registry.parity.live_parity import ReplayPayload
 
     with pytest.raises(ValidationError):
         ReplayPayload.model_validate({"observed": {"A28015865": 999}})

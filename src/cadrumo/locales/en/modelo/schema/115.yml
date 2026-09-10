@@ -2,8 +2,9 @@ modelo:
   schema:
     '115':
       field:
-        official_name: null
-        title: null
+        official_name: Withholdings and payments on account. Income arising from the
+          letting or subletting of urban property.
+        title: IRPF withholdings on urban property letting
       revision:
         2019-y-siguientes:
           casilla:

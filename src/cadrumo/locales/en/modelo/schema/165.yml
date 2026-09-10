@@ -2,8 +2,10 @@ modelo:
   schema:
     '165':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 165. Informative return of individual certificates issued
+          to shareholders or members of newly or recently created entities.
+        title: Certificates issued to shareholders of newly or recently created entities
+          (annual informative return)
       revision:
         2013-2015:
           casilla:

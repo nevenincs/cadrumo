@@ -2,8 +2,9 @@ modelo:
   schema:
     '840':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 840. Declaració de l'Impost sobre Activitats Econòmiques
+          (alta, variació, baixa).
+        title: Impost sobre Activitats Econòmiques (declaració censal)
       revision:
         2003-y-siguientes:
           casilla:

@@ -2,8 +2,9 @@ modelo:
   schema:
     '322':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 322. Impost sobre el Valor Afegit. Grup d'entitats.
+          Model individual. Autoliquidació mensual.
+        title: IVA. Grup d'entitats. Model individual. Autoliquidació mensual
       revision:
         2008-2022:
           casilla:

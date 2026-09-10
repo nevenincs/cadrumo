@@ -2,8 +2,9 @@ modelo:
   schema:
     '353':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 353. Hozzáadottérték-adó. Cégcsoport. Összesített nyomtatvány.
+          Havi önbevallás.
+        title: IVA. Cégcsoport. Összesített nyomtatvány. Havi önbevallás
       revision:
         2021-2025:
           casilla:

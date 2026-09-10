@@ -1442,8 +1442,8 @@ modelo:
             help: null
             label: Bevallás típusa
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 390. A hozzáadottérték-adó éves összesítő bevallása.
+        title: IVA. Éves összesítő bevallás
       revision:
         '2021':
           casilla:

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 from dev.registry.maintenance_support import LiveParityCatalogue, OracleEnvironment
+from dev.registry.parity.renta_web_open_oracle import RentaWebOpenOracle
 from pydantic import AnyUrl, ValidationError
 
 from .....core.resources.bundled_data import bundled_path
@@ -33,7 +34,6 @@ from ..remote_state_guard import (
     evaluate_remote_operation,
     remote_state_policy_from_cross_reference,
 )
-from ..renta_web_open_oracle import RentaWebOpenOracle
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..schema_base import EvidenceTier
 from ..schema_verification import LiveCrossReferenceDecision

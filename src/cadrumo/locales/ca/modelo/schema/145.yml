@@ -2,8 +2,11 @@ modelo:
   schema:
     '145':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 145. Impost sobre la Renda de les Persones Físiques.
+          Comunicació de dades del perceptor de rendes del treball al seu pagador
+          (article 88 del Reglament de l'IRPF).
+        title: IRPF. Retencions sobre rendiments del treball. Comunicació de dades
+          al pagador
       revision:
         2012-01-31-y-siguientes:
           casilla:

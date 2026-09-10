@@ -21,8 +21,10 @@ modelo:
             help: null
             label: Visszatartások és előlegfizetések (93.2.f cikk)
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 151. Az IRPF bevallása a spanyol területre kiküldött
+          munkavállalókra alkalmazandó különleges szabályozás alá tartozó adózók számára.
+        title: IRPF a kiküldött munkavállalókra vonatkozó különleges szabályozás (bevándorló
+          szakemberek, Beckham-törvény)
       revision:
         2015-2022:
           casilla:

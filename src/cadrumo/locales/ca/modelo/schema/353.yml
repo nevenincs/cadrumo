@@ -2,8 +2,9 @@ modelo:
   schema:
     '353':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 353. Impost sobre el Valor Afegit. Grup d'entitats.
+          Model agregat. Autoliquidació mensual.
+        title: IVA. Grup d'entitats. Model agregat. Autoliquidació mensual
       revision:
         2021-2025:
           casilla:

@@ -21,8 +21,10 @@ modelo:
             help: null
             label: Withholdings and advance payments (art. 93.2.f)
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 151. Personal Income Tax return for taxpayers under
+          the special regime applicable to workers posted to Spanish territory.
+        title: IRPF special regime for posted workers (inbound expatriates, "Beckham
+          law")
       revision:
         2015-2022:
           casilla:

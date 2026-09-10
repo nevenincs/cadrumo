@@ -8,7 +8,9 @@
 | `files/anexo-03-instrucciones-modelo-036.html` | 10007 | 2026-07-21 | AEAT Sede HTML — anexo 3 index |
 | `files/instrucciones-cumplimentacion-pagina-1.html` | 17271 | 2026-07-21 | AEAT Sede HTML — cumplimentación page 1 |
 | `files/presentacion-papel-modelo-036.html` | 31296 | 2026-07-21 | AEAT Sede HTML — paper presentation |
-| `files/Folleto_Censos.pdf` | 245570 | 2026-07-21 | AEAT PDF — folleto censos (+ extracted `.json` / `.md`) |
+| `files/Folleto_Censos.pdf` | 245570 | 2026-07-21 | AEAT PDF — folleto censos |
+| `files/Folleto_Censos.pdf.extracted.json` | — | 2026-07-21 | Extracted machine-readable text from the AEAT PDF |
+| `files/Folleto_Censos.pdf.extracted.md` | — | 2026-07-21 | Extracted Markdown text from the AEAT PDF |
 | `files/anexo-03-instrucciones-cumplimentacion-pagina-4.html` | 10967 | 2026-08-07 | AEAT Sede HTML — **carries the tipo-de-actividad code table** |
 | `files/capitulo-04-actividades-economicas-locales-actividad.html` | 13893 | 2026-08-07 | AEAT Sede HTML — same table, plus the epígrafe-IAE scope sentence |
 

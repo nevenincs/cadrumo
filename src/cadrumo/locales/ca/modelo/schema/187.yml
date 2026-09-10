@@ -2,8 +2,11 @@ modelo:
   schema:
     '187':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 187. Declaració informativa d'accions i participacions
+          representatives del capital o patrimoni de les institucions d'inversió col·lectiva
+          i resum anual de retencions i ingressos a compte de l'IRPF, l'IS i l'IRNR
+          en relació amb les rendes o guanys patrimonials obtinguts.
+        title: Accions i participacions d'IIC - resum anual
       revision:
         2022-y-siguientes:
           casilla:

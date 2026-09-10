@@ -2,8 +2,9 @@ modelo:
   schema:
     '322':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 322. Value Added Tax. Group of entities. Individual
+          form. Monthly self-assessment.
+        title: VAT. Group of entities. Individual form. Monthly self-assessment
       revision:
         2008-2022:
           casilla:

@@ -2,8 +2,11 @@ modelo:
   schema:
     '126':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 126. Retencions i ingressos a compte. Rendiments del
+          capital mobiliari derivats de la contraprestació de tota classe de comptes
+          en institucions financeres.
+        title: Retencions i ingressos a compte - rendiments del capital mobiliari
+          de comptes en institucions financeres
       revision:
         2019-y-siguientes:
           casilla:

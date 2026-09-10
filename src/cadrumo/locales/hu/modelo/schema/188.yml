@@ -2,8 +2,11 @@ modelo:
   schema:
     '188':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 188. Adóelőleg-levonások és -befizetések. Tőkésítési
+          műveletekből, valamint élet- vagy rokkantsági biztosítási szerződésekből
+          származó tőkejövedelmek. Éves összesítő.
+        title: Tőkésítési műveletek és életbiztosítások adóelőleg-levonása - éves
+          összesítő
       revision:
         2023-y-siguientes:
           casilla:

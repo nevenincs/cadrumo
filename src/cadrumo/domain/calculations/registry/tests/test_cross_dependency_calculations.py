@@ -25,8 +25,9 @@ worth having — it is what catches a broken fold, a dropped relation, a
 mis-declared binding selector, or a resolution that silently returns zero.
 
 WHERE A REAL ORACLE PLUGS IN: an AEAT-authoritative figure for these modelos
-belongs in the bundled oracle corpora (``corpus/manual_oracles/`` or
-``corpus/parity_replays/renta_web_open/``) keyed by
+belongs in the bundled oracle corpora (``corpus/manual_oracles/`` or, for the
+Renta WEB Open captures used by Modelo 100,
+``dev/registry/parity/parity_replays/renta_web_open/``) keyed by
 ``expected_by_casilla_id``, with the casilla declared in the revision's
 ``externally_grounded_casilla_ids``. That route is cross-checked in both
 directions by ``test_external_oracle_grounding_enrolled.py``. No modelo

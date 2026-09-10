@@ -2,8 +2,9 @@ modelo:
   schema:
     '136':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 136. IRPF és IRNR. Egyes lottó- és fogadási nyeremények
+          különadója. Önbevallás.
+        title: Egyes lottó- és fogadási nyeremények különadója. Önbevallás
       revision:
         '2026':
           casilla:

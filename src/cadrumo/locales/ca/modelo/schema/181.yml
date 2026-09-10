@@ -2,8 +2,10 @@ modelo:
   schema:
     '181':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 181. Declaració informativa de préstecs i crèdits, i
+          operacions financeres relacionades amb béns immobles.
+        title: Préstecs, crèdits i operacions financeres sobre immobles (informativa
+          anual)
       revision:
         2022-y-siguientes:
           casilla:

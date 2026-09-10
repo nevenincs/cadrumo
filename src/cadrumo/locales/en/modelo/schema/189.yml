@@ -2,8 +2,9 @@ modelo:
   schema:
     '189':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 189. Annual informative return on securities, insurance
+          and annuities.
+        title: Annual informative return on securities, insurance and annuities
       revision:
         '2025':
           casilla:

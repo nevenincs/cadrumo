@@ -2,8 +2,10 @@ modelo:
   schema:
     '296':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 296. A külföldi illetőségűek jövedelemadója. Állandó
+          telephellyel nem rendelkező külföldi illetőségűek. Az adóelőleg-levonások
+          és -befizetések éves bevallása.
+        title: IRNR adóelőleg-levonások és -befizetések éves összesítője
       revision:
         2024-y-siguientes:
           casilla:

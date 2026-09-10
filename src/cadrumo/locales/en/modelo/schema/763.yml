@@ -2,8 +2,9 @@ modelo:
   schema:
     '763':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 763. Gambling Activities Tax for annual or multi-year
+          activities. Self-assessment.
+        title: Gambling Activities Tax - self-assessment (annual/multi-year)
       revision:
         2012-2t-3t:
           casilla:

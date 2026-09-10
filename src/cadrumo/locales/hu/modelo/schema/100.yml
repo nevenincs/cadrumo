@@ -1826,8 +1826,8 @@ modelo:
             help: null
             label: null
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 100. A magánszemélyek jövedelemadójának (IRPF) bevallása.
+        title: IRPF éves bevallás
       revision:
         '2020':
           casilla:

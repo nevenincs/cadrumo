@@ -18,10 +18,10 @@ from dev.registry.maintenance_support import (
     OracleEnvironment,
     audit_oracle_bindings,
 )
+from dev.registry.parity.renta_web_open_oracle import RentaWebOpenOracle
 
 from .....tests.aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from .....tests.groi_oracle import GROI_ORACLE_ID, GroiOracle
-from ..renta_web_open_oracle import RentaWebOpenOracle
 from ..schema import ModeloDefinition
 from ._registry_schema_support import _committed_modelo
 

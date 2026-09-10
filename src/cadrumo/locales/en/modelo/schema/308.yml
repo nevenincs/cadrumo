@@ -2,8 +2,11 @@ modelo:
   schema:
     '308':
       field:
-        official_name: null
-        title: null
+        official_name: 'Modelo 308. Value Added Tax. Refund application: equivalence
+          surcharge, Article 30 bis of the VAT Regulations, Article 21.4 of the VAT
+          Act, and occasional taxable persons.'
+        title: VAT. Refund application (equivalence surcharge, Article 30 bis, occasional
+          taxable persons)
       revision:
         2009-2011-junio:
           casilla:

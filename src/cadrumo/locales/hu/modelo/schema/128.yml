@@ -2,8 +2,11 @@ modelo:
   schema:
     '128':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 128. Adóelőleg-levonások és -befizetések. Tőkésítési
+          műveletekből, valamint élet- vagy rokkantsági biztosítási szerződésekből
+          származó tőkejövedelmek.
+        title: Adóelőleg-levonások és -befizetések - tőkésítési műveletekből és biztosítási
+          szerződésekből származó tőkejövedelmek
       revision:
         2019-y-siguientes:
           casilla:

@@ -2,8 +2,10 @@ modelo:
   schema:
     '296':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 296. Impost sobre la Renda de no Residents. No residents
+          sense establiment permanent. Declaració anual de retencions i ingressos
+          a compte.
+        title: IRNR resum anual de retencions i ingressos a compte
       revision:
         2024-y-siguientes:
           casilla:

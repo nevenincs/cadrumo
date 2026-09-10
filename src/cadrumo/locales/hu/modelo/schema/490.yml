@@ -2,8 +2,8 @@ modelo:
   schema:
     '490':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 490. Egyes digitális szolgáltatások adója. Önbevallás.
+        title: Egyes digitális szolgáltatások adója - önbevallás
       revision:
         '2021':
           casilla:

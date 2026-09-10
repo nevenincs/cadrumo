@@ -2,8 +2,9 @@ modelo:
   schema:
     '111':
       field:
-        official_name: null
-        title: null
+        official_name: Personal Income Tax withholdings and payments on account. Employment
+          and business income, prizes and certain capital gains and income attributions.
+        title: IRPF withholdings and payments on account
       revision:
         2019-y-siguientes:
           casilla:

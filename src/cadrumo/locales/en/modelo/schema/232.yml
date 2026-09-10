@@ -10,8 +10,10 @@ modelo:
             help: null
             label: Accrual year
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 232. Informative return of related-party transactions
+          and of transactions and situations relating to countries or territories
+          classified as tax havens.
+        title: Related-party transactions and tax havens (annual informative return)
       revision:
         2016-2017:
           casilla:

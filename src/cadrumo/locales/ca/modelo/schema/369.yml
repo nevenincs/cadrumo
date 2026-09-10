@@ -2,8 +2,11 @@ modelo:
   schema:
     '369':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 369. Impost sobre el Valor Afegit. Autoliquidació dels
+          règims especials aplicables als subjectes passius que presten serveis a
+          persones que no tenen la condició de subjectes passius, que efectuen vendes
+          a distància de béns i certes entregues interiors de béns.
+        title: IVA. Autoliquidació dels règims especials OSS / IOSS
       revision:
         esquema-exterior:
           casilla:

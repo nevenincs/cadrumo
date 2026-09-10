@@ -22,16 +22,14 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_authority
+from dev.registry.parity.renta_web_open_replay_corpus import replay_corpus_directory
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 
-_REPLAY_DIR = bundled_path("corpus", "parity_replays", "renta_web_open")
-
 
 def _oracle_payloads() -> list[Path]:
-    return list(scan_directory(_REPLAY_DIR, pattern="modelo-100-*.json"))
+    return list(scan_directory(replay_corpus_directory(), pattern="modelo-100-*.json"))
 
 
 def _m100_computed_grounded_ids() -> dict[str, bool]:

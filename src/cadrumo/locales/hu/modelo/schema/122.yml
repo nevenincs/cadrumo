@@ -2,8 +2,10 @@ modelo:
   schema:
     '122':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 122. A magánszemélyek jövedelemadója. Nagycsaládos vagy
+          eltartott fogyatékos személy után járó kedvezmények. A kedvezményre való
+          jogosultság korrekciója a bevallás benyújtására nem kötelezett adózók esetében.
+        title: IRPF nagycsaládos / fogyatékossági kedvezmény korrekciója
       revision:
         2017-y-siguientes:
           casilla:

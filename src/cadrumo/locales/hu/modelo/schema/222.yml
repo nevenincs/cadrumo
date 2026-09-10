@@ -2,8 +2,8 @@ modelo:
   schema:
     '222':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 222. Társasági adó. Adókonszolidációs rendszer. Részletfizetés.
+        title: IS részletfizetés adókonszolidációs rendszerben (cégcsoportok)
       revision:
         2025-y-siguientes:
           casilla:

@@ -2,8 +2,9 @@ modelo:
   schema:
     '222':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 222. Corporate Income Tax. Tax consolidation regime.
+          Instalment payment.
+        title: IS instalment payment under the tax consolidation regime (groups)
       revision:
         2025-y-siguientes:
           casilla:

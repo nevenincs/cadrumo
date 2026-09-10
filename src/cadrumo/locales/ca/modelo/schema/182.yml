@@ -2,8 +2,12 @@ modelo:
   schema:
     '182':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 182. Impost sobre la Renda de les Persones Físiques,
+          Impost sobre la Renda de no Residents i Impost sobre Societats. Declaració
+          informativa de donatius, donacions i aportacions rebudes i disposicions
+          realitzades.
+        title: Donatius, donacions i aportacions rebudes i disposicions realitzades
+          (informativa anual)
       revision:
         '2025':
           casilla:

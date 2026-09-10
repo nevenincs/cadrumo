@@ -2,8 +2,10 @@ modelo:
   schema:
     '123':
       field:
-        official_name: null
-        title: null
+        official_name: Az IRPF, a társasági adó és az állandó telephellyel rendelkező
+          külföldi illetőségűek jövedelemadójának (IRNR) adóelőleg-levonásai és -befizetései.
+          Egyes tőkejövedelmek vagy egyes jövedelmek.
+        title: Tőkejövedelmek adóelőleg-levonása
       revision:
         2019-2023:
           casilla:

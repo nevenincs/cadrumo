@@ -10,8 +10,10 @@ modelo:
             help: null
             label: Exercici de meritació
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 232. Declaració informativa d'operacions vinculades
+          i d'operacions i situacions relacionades amb països o territoris qualificats
+          com a paradisos fiscals.
+        title: Operacions vinculades i paradisos fiscals (informativa anual)
       revision:
         2016-2017:
           casilla:

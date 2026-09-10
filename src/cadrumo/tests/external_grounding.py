@@ -6,10 +6,10 @@ from collections.abc import Iterable, Mapping, Sequence
 from typing import Annotated, Literal
 
 from dev.registry.maintenance_support import ExternalOracleInventory, UnattributedOraclePayload
+from dev.registry.parity.external_grounding import ExternalGroundingModel, ExternalOracleCorpus
 
 from ..core.casilla_id import CasillaId
 from ..core.prose_elision import ElidedProse
-from ..domain.calculations.registry.external_grounding import ExternalGroundingModel, ExternalOracleCorpus
 from ..domain.calculations.registry.ids import ModeloId, RevisionId
 from ..domain.calculations.registry.period_selector_match import selector_token_for_request
 from ..domain.calculations.registry.schema import ModeloDefinition, ModeloRevision

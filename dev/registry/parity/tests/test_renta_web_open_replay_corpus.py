@@ -5,9 +5,17 @@ the real bundled corpus. Nothing is mocked, and nothing reaches the network:
 the replay driver's only planned operation is a local parse, which the
 remote-state guard authorises before any comparison happens.
 
+Each capture file carries both an ``expected_by_casilla_id`` map and an
+``observed_by_casilla_id`` map, and the fold under test compares those two
+maps FROM THE SAME FILE against each other. It never drives the calculation
+engine, so a passing fold proves a capture file is internally self-consistent
+-- not that the engine's computed figures agree with AEAT's own. Do not read
+a passing result here as engine-vs-AEAT parity evidence.
+
 Four questions are asked, and they are deliberately different questions:
 
-* the bundled captures agree with the figures AEAT's simulator produced;
+* every bundled capture is internally self-consistent, i.e. its own recorded
+  ``expected`` and ``observed`` values match each other;
 * a perturbed capture is REPORTED as a mismatch rather than passed -- the
   detector-teeth proof, run against an isolated copy so the shipped corpus and
   the contributor's working tree are never touched;
@@ -15,7 +23,7 @@ Four questions are asked, and they are deliberately different questions:
   is neither the match nor the mismatch it would collapse into under a boolean;
 * a non-finite numeric token is refused as a match even against an identical
   string, because declaring ``"NaN"`` equal to ``"NaN"`` would certify a
-  corrupt magnitude as verified against AEAT.
+  corrupt magnitude as self-consistent.
 """
 
 from __future__ import annotations
@@ -34,7 +42,7 @@ from ..renta_web_open_replay_corpus import (
 )
 
 if TYPE_CHECKING:
-    from ..schema import ModeloDefinition, RegistryCatalogues
+    from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -85,10 +93,16 @@ def test_bundled_captures_cover_every_autonomous_community_variant() -> None:
     assert {path.stem for path in replay_corpus_payload_paths()} == _EXPECTED_CAPTURE_STEMS
 
 
-def test_bundled_replay_corpus_agrees_with_the_aeat_captured_figures(
+def test_bundled_replay_corpus_captures_are_internally_self_consistent(
     registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
 ) -> None:
-    """Every bundled capture replays to ``match`` through the shipped fold."""
+    """Every bundled capture's own ``expected`` and ``observed`` values agree.
+
+    This does NOT exercise the calculation engine and is NOT evidence that the
+    engine's computed figures agree with AEAT: both sides of the comparison
+    are read out of the same capture file. A ``match`` verdict here proves the
+    capture is self-consistent, nothing more.
+    """
     report = build_renta_web_open_replay_parity(_modelos(registry_tree), registry_validated=False)
 
     assert report.guard_policy_id == "modelo-100-renta-web-open-read-only"

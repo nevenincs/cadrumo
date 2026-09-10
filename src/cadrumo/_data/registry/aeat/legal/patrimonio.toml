@@ -114,6 +114,22 @@ applies_from = 2021-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G611.shtml"
 review_status = "pending_review"
 
+# The five Manual de Patrimonio captures below are a per-ejercicio series, not a
+# chain of amendments to one standing document: AEAT publishes each ejercicio's
+# manual at its own permanent `Sede/Ayuda/{YY}Manual/714.shtml` address, and the
+# manual for ejercicio YYYY governs that ejercicio only. Each therefore closes at
+# YYYY-12-31 -- the bound is read off the artefact's own ejercicio identity (URL
+# namespace plus in-document ejercicio), NOT chosen, and NOT derived from the
+# successor's start date. Left open-ended, the 2021 manual claimed concurrent
+# authority with all four successors, so a date-based "which manual governs
+# ejercicio P" resolution was ambiguous across the 10 manual-vs-manual pairs.
+#
+# `aeat-modelo-714-procedure` above stays deliberately open-ended and is NOT part
+# of this series: it is the live G611 procedural page, which carries no ejercicio
+# identity and so has no artefact-derived upper bound to read off. It therefore
+# still co-applies with each manual, which is correct -- a procedure page and an
+# ejercicio manual are different evidence roles, not competing revisions.
+
 [sources."aeat-manual-patrimonio-2021"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"
@@ -123,6 +139,7 @@ sha256 = "ac2ae837b409cbab6adcbdba85d2cfddfce6342d9d9f83c6d73542bbeba2abbb"
 bytes = 86623
 retrieved_at = 2026-08-18
 applies_from = 2021-01-01
+applies_to = 2021-12-31
 source_url = "https://sede.agenciatributaria.gob.es/Sede/Ayuda/21Manual/714.shtml"
 review_status = "pending_review"
 
@@ -135,6 +152,7 @@ sha256 = "5d7c45ffff018ea6d5e9c85a6a64adb25286ef9a1c08b083f1d62b7289c10f83"
 bytes = 86177
 retrieved_at = 2026-08-18
 applies_from = 2022-01-01
+applies_to = 2022-12-31
 source_url = "https://sede.agenciatributaria.gob.es/Sede/Ayuda/22Manual/714.shtml"
 review_status = "pending_review"
 
@@ -147,6 +165,7 @@ sha256 = "165eee503e59ecdbbe8c944586a04ca583e86d35a8d4bc714c8596c2b490368e"
 bytes = 86537
 retrieved_at = 2026-08-18
 applies_from = 2023-01-01
+applies_to = 2023-12-31
 source_url = "https://sede.agenciatributaria.gob.es/Sede/Ayuda/23Manual/714.shtml"
 review_status = "pending_review"
 
@@ -159,6 +178,7 @@ sha256 = "4976edaac65fe21ab63f384eeb7eae2e7f3f8844751a7cee8e36996a6d52fb3a"
 bytes = 87110
 retrieved_at = 2026-08-18
 applies_from = 2024-01-01
+applies_to = 2024-12-31
 source_url = "https://sede.agenciatributaria.gob.es/Sede/Ayuda/24Manual/714.shtml"
 review_status = "pending_review"
 
@@ -171,6 +191,7 @@ sha256 = "cb6f1190e5a4f25ecfeac2d6d23f7b76f5b687445456035e495bfc9e5805e839"
 bytes = 88532
 retrieved_at = 2026-08-18
 applies_from = 2025-01-01
+applies_to = 2025-12-31
 source_url = "https://sede.agenciatributaria.gob.es/Sede/Ayuda/25Manual/714.shtml"
 review_status = "pending_review"
 

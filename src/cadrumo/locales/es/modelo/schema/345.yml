@@ -2,9 +2,9 @@ modelo:
   schema:
     '345':
       field:
-        official_name: Modelo 345. Declaracion informativa. Planes, fondos de pensiones
-          y sistemas alternativos. Declaracion anual participes, aportaciones y contribuciones.
-        title: Declaracion informativa anual de planes y fondos de pensiones, participes,
+        official_name: Modelo 345. Declaración informativa. Planes, fondos de pensiones
+          y sistemas alternativos. Declaración anual partícipes, aportaciones y contribuciones.
+        title: Declaración informativa anual de planes y fondos de pensiones, partícipes,
           aportaciones y contribuciones
       revision:
         '2025':

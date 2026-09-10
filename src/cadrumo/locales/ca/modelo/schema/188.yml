@@ -2,8 +2,10 @@ modelo:
   schema:
     '188':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 188. Retencions i ingressos a compte. Rendes del capital
+          mobiliari d'operacions de capitalització i contractes d'assegurança de vida
+          o invalidesa. Resum anual.
+        title: Retencions de capitalització i assegurances de vida - resum anual
       revision:
         2023-y-siguientes:
           casilla:

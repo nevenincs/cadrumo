@@ -154,8 +154,10 @@ modelo:
             label: A LIS 40.3. cikke szerinti módszer - A számított időszak bevételeire
               vonatkozó forrásadó és előlegfizetés
       field:
-        official_name: null
-        title: null
+        official_name: Társasági adó. A külföldi illetőségűek jövedelemadója (állandó
+          telephelyek, valamint külföldön alapított, spanyol területen jelenléttel
+          rendelkező, jövedelem-hozzárendelési rendszerbe tartozó szervezetek). Részletfizetés.
+        title: IS részletfizetés
       revision:
         2019-2022:
           casilla:

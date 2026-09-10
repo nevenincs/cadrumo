@@ -2,8 +2,9 @@ modelo:
   schema:
     '036':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 036. Declaració censal d'alta, modificació i baixa en
+          el Cens d'empresaris, professionals i retenidors.
+        title: Cens d'empresaris, professionals i retenidors
       revision:
         2025-02-03-y-siguientes:
           casilla:

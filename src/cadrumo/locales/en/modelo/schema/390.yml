@@ -1449,8 +1449,8 @@ modelo:
             help: null
             label: Return type
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 390. Annual summary return for Value Added Tax.
+        title: VAT. Annual summary return
       revision:
         '2021':
           casilla:

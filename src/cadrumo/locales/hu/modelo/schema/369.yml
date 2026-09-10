@@ -2,8 +2,11 @@ modelo:
   schema:
     '369':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 369. Hozzáadottérték-adó. Az adóalanynak nem minősülő
+          személyek részére szolgáltatást nyújtó, termékek távértékesítését és egyes
+          belföldi termékértékesítéseket végző adóalanyokra alkalmazandó különleges
+          szabályozások önbevallása.
+        title: IVA. Az OSS / IOSS különleges szabályozások önbevallása
       revision:
         esquema-exterior:
           casilla:

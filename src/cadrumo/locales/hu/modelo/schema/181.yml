@@ -2,8 +2,10 @@ modelo:
   schema:
     '181':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 181. Hitelek és kölcsönök, valamint ingatlanokhoz kapcsolódó
+          pénzügyi ügyletek adatszolgáltatási bevallása.
+        title: Ingatlanokhoz kapcsolódó hitelek, kölcsönök és pénzügyi ügyletek (éves
+          adatszolgáltatás)
       revision:
         2022-y-siguientes:
           casilla:

@@ -17,9 +17,35 @@ def _graph() -> CommandSpecGraph:
     return CommandSpecGraph((*ROOT_COMMAND_SPECS, *REGISTRY_COMMAND_SPECS))
 
 
-def test_registry_specs_are_the_exact_fifteen_node_surface() -> None:
+#: Every command path the ``app registry`` family exposes, as the exact set.
+#:
+#: Enumerated rather than counted: a bare count cannot tell a removed command
+#: from a renamed one, and it says nothing about WHICH surface is exposed. This
+#: set fails loudly in both directions -- a command silently added to the
+#: product surface, and one silently dropped from it.
+_REGISTRY_COMMAND_PATHS: frozenset[tuple[str, ...]] = frozenset(
+    {
+        ("aeat", "app", "registry"),
+        ("aeat", "app", "registry", "citations"),
+        ("aeat", "app", "registry", "citations", "list"),
+        ("aeat", "app", "registry", "citations", "verify"),
+        ("aeat", "app", "registry", "citations", "view"),
+        ("aeat", "app", "registry", "diff-revisions"),
+        ("aeat", "app", "registry", "inspect"),
+        ("aeat", "app", "registry", "manuals"),
+        ("aeat", "app", "registry", "manuals", "list"),
+        ("aeat", "app", "registry", "manuals", "rules"),
+        ("aeat", "app", "registry", "manuals", "verify"),
+        ("aeat", "app", "registry", "manuals", "view"),
+        ("aeat", "app", "registry", "verify"),
+        ("aeat", "app", "registry", "verify-filed-state"),
+    },
+)
+
+
+def test_registry_specs_are_the_exact_declared_node_surface() -> None:
     nodes = [node for node in _graph().nodes() if node.path[1:3] == ("app", "registry")]
-    assert len(nodes) == 15
+    assert {tuple(node.path) for node in nodes} == _REGISTRY_COMMAND_PATHS
     assert {node.path[-1] for node in nodes if node.spec.kind == "group"} == {
         "registry",
         "citations",
@@ -43,4 +69,4 @@ def test_registry_runtime_preserves_nested_and_repeated_contracts() -> None:
     assert filed.exit_code == 0, filed.output
     assert "--source-observation" in filed.output and "--casilla" in filed.output
     assert manual.exit_code == 0, manual.output
-    assert "--manual <renta|iva>" in manual.output
+    assert "--manual <renta|iva|sociedades>" in manual.output

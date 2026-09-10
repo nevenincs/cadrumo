@@ -16,8 +16,8 @@ putting on the critical path of every unrelated session.
 It reclaims only what it can OBSERVE to be abandoned -- scratch whose name
 carries a process identifier that no longer resolves. Nothing here acts on age
 alone; ``var/`` holds trees an operator keeps on purpose, and reclaiming those
-is a decision made through ``python -m dev.packaging.build_scratch_reclaim
---apply`` rather than as a side effect of running a test.
+is a decision made through ``just clean-apply`` rather than as a side effect of
+running a test.
 """
 
 from __future__ import annotations

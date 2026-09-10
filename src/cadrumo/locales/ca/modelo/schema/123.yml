@@ -2,8 +2,10 @@ modelo:
   schema:
     '123':
       field:
-        official_name: null
-        title: null
+        official_name: Retencions i ingressos a compte de l'IRPF, l'Impost sobre Societats
+          i l'IRNR d'establiments permanents. Determinats rendiments del capital mobiliari
+          o determinades rendes.
+        title: Retencions sobre capital mobiliari
       revision:
         2019-2023:
           casilla:

@@ -2,8 +2,9 @@ modelo:
   schema:
     '184':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 184. Declaració informativa anual d'entitats en règim
+          d'atribució de rendes.
+        title: Entitats en règim d'atribució de rendes (informativa anual)
       revision:
         '2015':
           casilla:

@@ -2,8 +2,11 @@ modelo:
   schema:
     '308':
       field:
-        official_name: null
-        title: null
+        official_name: 'Modelo 308. Impost sobre el Valor Afegit. Sol·licitud de devolució:
+          recàrrec d''equivalència, article 30 bis del Reglament de l''IVA, article
+          21.4 de la Llei de l''IVA i subjectes passius ocasionals.'
+        title: IVA. Sol·licitud de devolució (recàrrec d'equivalència, article 30
+          bis, subjectes passius ocasionals)
       revision:
         2009-2011-junio:
           casilla:

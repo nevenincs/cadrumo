@@ -2,8 +2,9 @@ modelo:
   schema:
     '280':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 280. A hosszú távú megtakarítási programok éves adatszolgáltatási
+          bevallása.
+        title: A hosszú távú megtakarítási programok éves adatszolgáltatási bevallása
       revision:
         '2025':
           casilla:

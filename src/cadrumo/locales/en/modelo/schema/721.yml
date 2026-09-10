@@ -2,8 +2,9 @@ modelo:
   schema:
     '721':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 721. Informative return on virtual currencies located
+          abroad.
+        title: Virtual currencies located abroad (annual informative return)
       revision:
         '2023':
           casilla:

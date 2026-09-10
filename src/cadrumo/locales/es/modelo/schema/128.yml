@@ -3,10 +3,10 @@ modelo:
     '128':
       field:
         official_name: Modelo 128. Retenciones e ingresos a cuenta. Rentas o rendimientos
-          del capital mobiliario procedentes de operaciones de capitalizacion y de
+          del capital mobiliario procedentes de operaciones de capitalización y de
           contratos de seguro de vida o invalidez.
         title: Retenciones e ingresos a cuenta - rentas de capital mobiliario de operaciones
-          de capitalizacion y contratos de seguro
+          de capitalización y contratos de seguro
       revision:
         2019-y-siguientes:
           casilla:

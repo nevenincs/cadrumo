@@ -2,8 +2,10 @@ modelo:
   schema:
     '341':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 341. Sol·licitud de reintegrament de compensacions en
+          el règim especial de l'agricultura, la ramaderia i la pesca.
+        title: Reintegrament de compensacions del règim especial de l'agricultura,
+          la ramaderia i la pesca de l'IVA
       revision:
         2005-2015:
           casilla:

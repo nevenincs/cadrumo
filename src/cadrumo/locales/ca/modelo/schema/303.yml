@@ -648,8 +648,8 @@ modelo:
           field:
             title: null
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 303. Impost sobre el Valor Afegit. Autoliquidació.
+        title: IVA. Autoliquidació (trimestral)
       revision:
         '2022':
           casilla:
