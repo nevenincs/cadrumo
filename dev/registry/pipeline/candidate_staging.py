@@ -18,7 +18,6 @@ from typing import Final, Literal
 import rtoml
 
 from cadrumo.core.resources.bundled_data import bundled_path
-
 from cadrumo.domain.calculations.registry.loader import load_modelo_directory
 
 __all__ = [
@@ -117,7 +116,16 @@ def stage_continuity_metadata(
     *,
     revision: str,
 ) -> Path | None:
-    """Stage the transitive predecessor facts required by strict continuity."""
+    """Stage every sibling revision's facts as the witness the target validates against.
+
+    Candidate validation isolates the target revision on purpose, so any check
+    that reasons across a modelo's revisions needs those revisions supplied
+    separately. Strict continuity needs the target's predecessor chain; the
+    semantic-role singleton check needs every sibling, because a role declared
+    once per revision is a singleton only in a tree that holds one revision.
+    Staging all siblings answers both. A modelo with a single revision has no
+    siblings to stage, and there a singleton genuinely is one.
+    """
     definition = load_modelo_directory(source_modelo_root)
     selected = definition.revisions.get(revision)
     if selected is None:
@@ -140,14 +148,15 @@ def stage_continuity_metadata(
         predecessors.add(predecessor_id)
         pending.update(str(item.from_revision) for item in predecessor.casilla_continuidad_evolutions)
 
-    if not predecessors:
+    siblings = {str(item) for item in definition.revisions if str(item) != revision}
+    if not siblings:
         return None
     metadata_modelo_root = staging_root / "continuity-metadata" / str(definition.id)
     metadata_modelo_root.mkdir(parents=True)
     shutil.copy2(source_modelo_root / "manifest.toml", metadata_modelo_root / "manifest.toml")
-    for predecessor_id in sorted(predecessors):
-        source_revision_root = source_modelo_root / "revisions" / predecessor_id
-        target_revision_root = metadata_modelo_root / "revisions" / predecessor_id
+    for sibling_id in sorted(siblings):
+        source_revision_root = source_modelo_root / "revisions" / sibling_id
+        target_revision_root = metadata_modelo_root / "revisions" / sibling_id
         target_revision_root.mkdir(parents=True)
         shutil.copy2(source_revision_root / "revision.toml", target_revision_root / "revision.toml")
         for member in ("casillas", "casilla_continuidad_evolutions"):

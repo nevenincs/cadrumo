@@ -20,6 +20,7 @@ from ..pipeline._tree_publication import (
     GeneratedExportTreeTargetStateReceipt,
     _require_expected_target_state,
 )
+from ..pipeline._tree_validation import GeneratedExportTreeValidationContext
 from ..pipeline.candidate_staging import (
     retarget_bootstrap_construct_export_layout,
     stage_continuity_metadata,
@@ -34,13 +35,12 @@ from ..pipeline.cli import (
     _require_republication_eligibility,
     app,
 )
-from ..pipeline._tree_validation import GeneratedExportTreeValidationContext
 from ..pipeline.export_fragment_provenance import EXPORT_FRAGMENT_PROVENANCE_FILENAME, ExportFragmentTarget
 from ..pipeline.render_check import (
-    record_drift_dispositions,
     GeneratedExportBootstrapTransport,
     RenderComparison,
     RevisionRenderInputs,
+    record_drift_dispositions,
     revision_render_inputs,
 )
 from .test_generated_export_tree_validation import (
@@ -285,16 +285,37 @@ def test_every_bootstrap_target_still_names_a_tree_awaiting_publication() -> Non
     )
 
 
-def test_m390_continuity_witness_closes_the_full_predecessor_chain(tmp_path: Path) -> None:
-    """A 2025 target carries 2024, 2023, and 2022 continuity facts."""
-    metadata_root = stage_continuity_metadata(
-        bundled_path("registry", "aeat", "modelos", "390"),
-        tmp_path,
-        revision="2025",
-    )
+def test_m390_continuity_witness_carries_every_sibling_revision(tmp_path: Path) -> None:
+    """A 2025 target's witness holds every other revision, predecessor chain included.
+
+    The strict-continuity chain back from 2025 is 2024, 2023 and 2022. The
+    witness carries those and 2021 besides, because checks that reason across a
+    modelo's revisions -- the semantic-role singleton check among them -- need
+    every sibling, not only the ones continuity names. The target itself stays
+    out, so the witness cannot validate a stale copy of the candidate.
+    """
+    modelo_root = bundled_path("registry", "aeat", "modelos", "390")
+    metadata_root = stage_continuity_metadata(modelo_root, tmp_path, revision="2025")
 
     assert metadata_root is not None
-    assert {path.name for path in (metadata_root / "revisions").iterdir()} == {"2022", "2023", "2024"}
+    staged = {path.name for path in (metadata_root / "revisions").iterdir()}
+    siblings = {path.name for path in (modelo_root / "revisions").iterdir() if path.name != "2025"}
+    assert {"2022", "2023", "2024"} <= staged
+    assert staged == siblings
+    assert "2025" not in staged
+
+
+def test_a_single_revision_modelo_stages_no_witness(tmp_path: Path) -> None:
+    """With no sibling to supply, there is nothing to stage, and a singleton is real."""
+    registry_root = bundled_path("registry", "aeat", "modelos")
+    single = next(
+        root
+        for root in sorted(registry_root.iterdir())
+        if (root / "revisions").is_dir() and len([child for child in (root / "revisions").iterdir()]) == 1
+    )
+    (only_revision,) = [child.name for child in (single / "revisions").iterdir()]
+
+    assert stage_continuity_metadata(single, tmp_path, revision=only_revision) is None
 
 
 def _publication_context_for_target(
