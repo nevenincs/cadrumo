@@ -7,10 +7,10 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.record_design import (
+from ..compiler.record_design import (
     extract_record_design,
 )
-from cadrumo.domain.calculations.registry.record_design_pdf_rows import unnamed_position_candidate
+from ..compiler.record_design_pdf_rows import unnamed_position_candidate
 from cadrumo.domain.calculations.registry.record_design_schema import (
     RecordDesignSinglePositionCorrection,
 )

@@ -9,7 +9,7 @@ import pytest
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.domain.calculations.registry import record_design_workbook_headers as record_design_headers_module
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.record_design import (
+from ..compiler.record_design import (
     extract_record_design,
     extract_record_design_pdf,
 )
