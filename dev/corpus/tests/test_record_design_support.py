@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path, PurePosixPath
 
@@ -9,6 +10,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.artifact_catalogue import ArtifactRole
 
+from .. import sync_aeat_record_design_corpus as record_design_sync
 from ..sync_aeat_record_design_corpus import (
     _CORPUS,
     _EXTRACTION_SIDECAR_ARTEFACTS,
@@ -278,6 +280,7 @@ def test_the_shipped_root_census_agrees_with_the_shipped_manifests() -> None:
 def _corpus_fixture(tmp_path: Path) -> tuple[dict[str, _Manifest], _OffHostSources]:
     """A two-artefact corpus where each artefact resolves to one authority."""
     (tmp_path / "modelo_999" / "files").mkdir(parents=True)
+    (tmp_path / "modelo_999" / "files" / "01-design.pdf").write_bytes(b"%PDF-1.4")
     (tmp_path / "modelo_999" / "files" / "02-orden.pdf").write_bytes(b"%PDF-1.4")
     manifests: dict[str, _Manifest] = {
         "999": {
@@ -309,6 +312,66 @@ def _corpus_fixture(tmp_path: Path) -> tuple[dict[str, _Manifest], _OffHostSourc
         ],
     }
     return manifests, off_host
+
+
+def _configure_isolated_sync_check(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    manifests: dict[str, _Manifest],
+    off_host: _OffHostSources,
+) -> None:
+    """Route ``check`` through a complete temporary corpus without live data."""
+    for artifact in manifests["999"]["artefacts"]:
+        artifact["sha256"] = hashlib.sha256(
+            (tmp_path / "modelo_999" / artifact["stored_path"]).read_bytes()
+        ).hexdigest()
+    aggregate = _root_aggregate(manifests)
+    (tmp_path / "manifest.json").write_text(json.dumps(aggregate), encoding="utf-8")
+    monkeypatch.setattr(record_design_sync, "_CORPUS", tmp_path)
+    monkeypatch.setattr(record_design_sync, "_REQUIRED", ())
+    monkeypatch.setattr(record_design_sync, "_EXTRACTION_SIDECAR_ARTEFACTS", ())
+    monkeypatch.setattr(record_design_sync, "_load_manifests", lambda: manifests)
+    monkeypatch.setattr(record_design_sync, "_load_off_host_sources", lambda: off_host)
+    monkeypatch.setattr(
+        record_design_sync,
+        "_load_historical_exclusions",
+        lambda: {
+            "schema_version": 1,
+            "support_years": [2023, 2024, 2025, 2026],
+            "disposition": "outside-supported-window-or-superseded",
+            "source_pages": [record_design_sync._PAGES[key] for key in record_design_sync._HISTORICAL_PAGE_KEYS],
+            "urls": [],
+        },
+    )
+
+
+def test_catalog_backed_sync_rejects_an_unclassified_payload(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A payload outside every manifest fails the synchronizer's census check."""
+    manifests, _off_host = _corpus_fixture(tmp_path)
+    unclassified = tmp_path / "modelo_999" / "files" / "03-unclassified.pdf"
+    unclassified.write_bytes(b"%PDF-1.4")
+    _configure_isolated_sync_check(monkeypatch, tmp_path, manifests, _off_host)
+
+    with pytest.raises(SystemExit, match="corpus files carrying no manifest entry have changed") as failure:
+        record_design_sync.check()
+
+    assert "modelo_999/files/03-unclassified.pdf" in str(failure.value)
+
+
+def test_catalog_backed_sync_rejects_conflicting_acquisition_identity(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Two manifest origins cannot silently select a preferred acquisition identity."""
+    manifests, off_host = _corpus_fixture(tmp_path)
+    manifests["999"]["artefacts"].append(
+        _artefact("files/02-orden.pdf", "https://www.boe.es/boe/dias/2020/01/02/pdfs/X.pdf")
+    )
+    _configure_isolated_sync_check(monkeypatch, tmp_path, manifests, off_host)
+
+    with pytest.raises(SystemExit, match="artifact catalog conflicting_identity") as failure:
+        record_design_sync.check()
+
+    assert "modelo_999/files/02-orden.pdf" in str(failure.value)
 
 
 def test_an_artefact_with_no_declared_authority_is_refused(tmp_path: Path) -> None:

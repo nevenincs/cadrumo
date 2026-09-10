@@ -10,7 +10,7 @@ related:
   - '[[2026-09-10-data-provenance-consolidation-live-lane-map-reference]]'
 modified: '2026-09-10'
 body_schema: body-v2
-body_hash: 'sha256:53a5d3b155c81f50ed0a1ea229d28fbd2757a8612e0fe9cf4b6199897416afeb'
+body_hash: 'sha256:1f9d41bd5652529b1e02eb666972fe1476c269f0224014a5b014e1afba4fdf91'
 ---
 
 # `data-provenance-consolidation` plan
@@ -61,7 +61,7 @@ Route sync acquisition checks through the catalog while preserving byte and retr
 
 - [x] `W02.P04.S10` - Route manifest loading, payload classification, and acquisition diagnostics through the catalog; `dev/corpus/sync_aeat_record_design_corpus.py`.
 - [x] `W02.P04.S11` - Replace basename-only off-host assertion with exact catalog identity alignment fixtures; `dev/corpus/tests/test_record_design_support.py`.
-- [ ] `W02.P04.S12` - Prove catalog-backed sync rejects unclassified files and conflicting acquisition identity; `dev/corpus/tests/test_record_design_support.py`.
+- [x] `W02.P04.S12` - Prove catalog-backed sync rejects unclassified files and conflicting acquisition identity; `dev/corpus/tests/test_record_design_support.py`.
 
 ### Phase `W02.P05` - Derived-sidecar consumer
 
