@@ -43,9 +43,9 @@ the edition the row sits in:
   ``orden_aplicabilidad`` entries, top level and inside ``constraints``: an orden
   reissued with the edition re-cites the same content, and array order is not
   meaningful to any consumer.
-- ``formula``, ``binding`` and ``alternate_bindings`` are compared with the
-  edition's own revision identifier replaced by a placeholder wherever it sits as
-  a hyphen-bounded segment, because those identifiers embed the edition key.
+- ``formula``, ``binding`` and ``alternate_bindings`` are compared by lineage,
+  the edition's own revision identifier replaced by a placeholder wherever it
+  sits as a whole segment, because those identifiers embed the edition key.
 
 Every other field is compared exactly, including ``id``, ``number``,
 ``section``, ``semantic_role``, ``data_type`` and ``input_kind``, where the
@@ -68,8 +68,8 @@ Where it stops:
   used as declared.
 - Labels are not compared. Locale keys are edition-scoped and label text
   inherits through the locale catalogue, not through the row.
-- A formula or binding reference is compared by normalised identifier, not by
-  resolving it to the successor edition's declaration of the same lineage.
+- A formula or binding reference is compared by lineage, not by resolving it to
+  the successor edition's declaration of that lineage.
 
 The screen exits 0 whatever it finds. It reports; it does not gate.
 """
@@ -77,7 +77,6 @@ The screen exits 0 whatever it finds. It reports; it does not gate.
 from __future__ import annotations
 
 import collections
-import re
 import sys
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -85,6 +84,7 @@ from enum import StrEnum
 from typing import Final
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.identifier_lineage import identifier_lineage
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_overlap
 from cadrumo.domain.calculations.registry.schema import (
     DeclaredPredecessor,
@@ -156,7 +156,6 @@ class PredecessorBasis(StrEnum):
     UNDECIDABLE = "undecidable"
 
 
-_EDITION_PLACEHOLDER: Final = "<edition>"
 _IDENTIFIER_FIELDS: Final[tuple[str, ...]] = ("formula", "binding", "alternate_bindings")
 
 
@@ -218,11 +217,6 @@ def edition_predecessors(definition: ModeloDefinition) -> tuple[EditionPredecess
     return tuple(resolved)
 
 
-def _without_edition(identifier: str, revision_id: str) -> str:
-    pattern = rf"(?<![^-]){re.escape(revision_id)}(?![^-])"
-    return re.sub(pattern, _EDITION_PLACEHOLDER, identifier)
-
-
 def _legal_refs(values: object, own_ordenes: frozenset[str]) -> frozenset[str]:
     if not isinstance(values, tuple | list):
         return frozenset[str]()
@@ -247,9 +241,9 @@ def inheritable_value(casilla: CasillaDefinition, revision: ModeloRevision) -> d
     for name in _IDENTIFIER_FIELDS:
         current = value.get(name)
         if isinstance(current, str):
-            value[name] = _without_edition(current, revision_id)
+            value[name] = identifier_lineage(current, revision_id)
         elif isinstance(current, tuple):
-            value[name] = tuple(_without_edition(str(item), revision_id) for item in current)
+            value[name] = tuple(identifier_lineage(str(item), revision_id) for item in current)
     return value
 
 
