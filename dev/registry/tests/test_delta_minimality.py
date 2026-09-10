@@ -20,6 +20,7 @@ from ..analysis.corpus import bundled_modelo_ids
 from ..analysis.delta_minimality import (
     EDITION_LOCAL_FIELDS,
     LINEAGE_CLAIM_FIELDS,
+    MinimalityVerdict,
     RowJudgement,
     definition_findings,
     edition_predecessors,
@@ -333,7 +334,7 @@ def test_every_unlineaged_successor_row_in_the_corpus_is_reported_unchecked(
             )
     census = minimality_census(authority, modelo_ids)
     assert expected > 0
-    assert census.verdicts["unchecked_no_lineage"] == expected
+    assert census.verdicts[MinimalityVerdict.UNCHECKED_NO_LINEAGE] == expected
     assert census.rows_in_root_editions > 0
     assert census.root_editions > 0
 
