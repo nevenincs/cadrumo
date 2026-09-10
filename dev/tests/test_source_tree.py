@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from ..source_tree import content_digest, normalised_content, repository_files, snapshot
+from ..source_tree import content_digest, normalised_content, normalised_contents, repository_files, snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -142,3 +142,34 @@ def test_a_snapshot_copies_the_recorded_content_and_never_merges_into_an_existin
     assert repository_files(destination) == files
     with pytest.raises(FileExistsError):
         snapshot(source, files, destination)
+
+
+def test_a_caller_naming_only_part_of_the_tree_still_gets_the_root_rules(tmp_path: Path) -> None:
+    """Rules come from each path's ancestry, never from the list the caller happened to pass.
+
+    Naming only files under one directory must not drop the root
+    ``.gitattributes``: without it a byte-exact corpus file would be translated.
+    """
+    _write(tmp_path, ".gitattributes", "* text=auto eol=lf\ncorpus/** -text\n")
+    _write(tmp_path, "corpus/source.html", b"<p>\r\n")
+    _write(tmp_path, "src/module.py", b"a\r\n")
+    subset = repository_files(tmp_path, under=("corpus", "src"))
+
+    assert ".gitattributes" not in subset
+    assert dict(normalised_contents(tmp_path, subset)) == {"corpus/source.html": b"<p>\r\n", "src/module.py": b"a\n"}
+
+
+def test_under_applies_every_ancestor_rule_and_excludes_an_ignored_ancestor(tmp_path: Path) -> None:
+    _write(tmp_path, ".gitignore", "vendor/\n*.log\n")
+    _write(tmp_path, "pkg/.gitignore", "local/\n")
+    _write(tmp_path, "vendor/lib/code.py", "x")
+    _write(tmp_path, "pkg/local/secret.py", "x")
+    _write(tmp_path, "pkg/sub/debug.log", "x")
+    _write(tmp_path, "pkg/sub/kept.py", "x")
+
+    assert repository_files(tmp_path, under=("vendor/lib",)) == ()
+    assert repository_files(tmp_path, under=("pkg/local",)) == ()
+    assert repository_files(tmp_path, under=("pkg/sub",)) == ("pkg/sub/kept.py",)
+    assert repository_files(tmp_path, under=("pkg",)) == tuple(
+        path for path in repository_files(tmp_path) if path.startswith("pkg/")
+    )

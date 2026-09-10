@@ -27,7 +27,7 @@ from __future__ import annotations
 import hashlib
 import os
 import shutil
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, Literal
@@ -39,6 +39,7 @@ from ._paths import REPO_ROOT, UTF_8
 __all__ = [
     "content_digest",
     "normalised_content",
+    "normalised_contents",
     "repository_files",
     "snapshot",
 ]
@@ -133,23 +134,62 @@ def repository_files(root: Path = REPO_ROOT, *, under: Iterable[str] = ()) -> tu
             elif not _is_ignored(relative, is_directory=False, rules=scoped):
                 found.append(relative)
 
-    visit(root, "", ())
-    prefixes = tuple(prefix.strip("/") for prefix in under)
-    if prefixes:
-        found = [
-            relative
-            for relative in found
-            if any(relative == prefix or relative.startswith(f"{prefix}/") for prefix in prefixes)
-        ]
-    return tuple(sorted(found))
+    prefixes = tuple(dict.fromkeys(prefix.strip("/") for prefix in under))
+    if not prefixes:
+        visit(root, "", ())
+        return tuple(sorted(found))
+    for prefix in prefixes:
+        # Only the named subtree is walked, but every ancestor's rules still
+        # apply to it, and an ignored ancestor excludes it outright.
+        parts = prefix.split("/")
+        rules: tuple[_ScopedRules, ...] = ()
+        excluded = False
+        for depth, name in enumerate(parts):
+            base = "/".join(parts[:depth])
+            if name == _VCS_ENTRY:
+                excluded = True
+                break
+            own = _ignore_rules(root / base if base else root, base)
+            rules = (*rules, own) if own is not None else rules
+            candidate = root / "/".join(parts[: depth + 1])
+            is_last = depth == len(parts) - 1
+            is_directory = candidate.is_dir() and not candidate.is_symlink()
+            if _is_ignored("/".join(parts[: depth + 1]), is_directory=is_directory or not is_last, rules=rules):
+                excluded = True
+                break
+        if excluded:
+            continue
+        target = root / prefix
+        if target.is_dir() and not target.is_symlink():
+            visit(target, prefix, rules)
+        elif target.exists() or target.is_symlink():
+            found.append(prefix)
+    return tuple(sorted(dict.fromkeys(found)))
+
+
+def _governing_attribute_files(relative: str) -> tuple[str, ...]:
+    """Return the ``.gitattributes`` paths that can govern ``relative``, shallowest first.
+
+    Only a file in the path's own directory or one of its ancestors applies to
+    it, so these are the only candidates; none of them can sit in an ignored
+    directory, because the path itself would then be outside the repository.
+    """
+    parts = relative.split("/")[:-1]
+    return tuple("/".join((*parts[:depth], _ATTRIBUTES_FILE)) for depth in range(len(parts) + 1))
 
 
 def _attribute_rules(root: Path, files: Iterable[str]) -> tuple[_ScopedRules, ...]:
-    """Load every ``.gitattributes`` among ``files``, shallowest first."""
+    """Load every ``.gitattributes`` that governs any of ``files``, shallowest first.
+
+    The rules are found from each path's own ancestry, never from membership of
+    ``files``: a caller naming only part of the tree still has the root file's
+    rules applied, where reading only the listed files would silently translate
+    the line endings of byte-exact evidence.
+    """
+    governing = {candidate for relative in files for candidate in _governing_attribute_files(relative)}
+    existing = [candidate for candidate in governing if (root / candidate).is_file()]
     loaded: list[_ScopedRules] = []
-    for relative in sorted(files, key=lambda item: (item.count("/"), item)):
-        if Path(relative).name != _ATTRIBUTES_FILE:
-            continue
+    for relative in sorted(existing, key=lambda item: (item.count("/"), item)):
         base = relative.rpartition("/")[0]
         patterns: list[tuple[pathspec.GitIgnoreSpec, tuple[str, ...]]] = []
         for line in _read_lines(root / relative):
@@ -198,10 +238,25 @@ def _normalise(raw: bytes, *, text: _TextState, eol: _LineEnding) -> bytes:
 
 
 def normalised_content(root: Path, relative: str, *, attributes: Sequence[_ScopedRules] | None = None) -> bytes:
-    """Return one file's content after the repository's line-ending rules apply."""
-    rules = attributes if attributes is not None else _attribute_rules(root, repository_files(root))
+    """Return one file's content after the repository's line-ending rules apply.
+
+    A caller normalising many files passes ``attributes`` loaded once; without
+    it only the attribute files on this path's own ancestry are read.
+    """
+    rules = attributes if attributes is not None else _attribute_rules(root, (relative,))
     text, eol = _line_ending_policy(relative, rules)
     return _normalise((root / relative).read_bytes(), text=text, eol=eol)
+
+
+def normalised_contents(root: Path, files: Sequence[str]) -> Iterator[tuple[str, bytes]]:
+    """Yield ``(path, normalised content)`` for each of ``files``, reading the rules once.
+
+    The batch form of :func:`normalised_content`: a caller reading many files
+    pays for the attribute rules once instead of once per file.
+    """
+    rules = _attribute_rules(root, files)
+    for relative in files:
+        yield relative, normalised_content(root, relative, attributes=rules)
 
 
 def content_digest(root: Path, files: Sequence[str]) -> str:
