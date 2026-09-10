@@ -2,9 +2,9 @@ modelo:
   schema:
     '189':
       field:
-        official_name: Modelo 189. Declaracion informativa anual acerca de valores,
+        official_name: Modelo 189. Declaración informativa anual acerca de valores,
           seguros y rentas.
-        title: Declaracion informativa anual acerca de valores, seguros y rentas
+        title: Declaración informativa anual acerca de valores, seguros y rentas
       revision:
         '2025':
           casilla:

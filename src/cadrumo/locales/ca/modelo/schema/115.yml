@@ -2,8 +2,9 @@ modelo:
   schema:
     '115':
       field:
-        official_name: null
-        title: null
+        official_name: Retencions i ingressos a compte. Rendes o rendiments procedents
+          de l'arrendament o subarrendament d'immobles urbans.
+        title: IRPF retencions sobre arrendaments urbans
       revision:
         2019-y-siguientes:
           casilla:

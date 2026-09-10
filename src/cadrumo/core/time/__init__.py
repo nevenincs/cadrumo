@@ -9,7 +9,7 @@ that defines it.
   date-boundary reference-date defaults), :data:`~cadrumo.core.time.clock.MADRID_TZ`
   (Spain's peninsular civil timezone), and the replay/test-scoped
   :func:`~cadrumo.core.time.clock.frozen_clock` seam with its
-  :func:`~cadrumo.core.time.clock.clock_is_frozen` predicate.
+  :func:`~cadrumo.core.time.clock.frozen_clock` context manager.
 * :mod:`cadrumo.core.time.utc` — :func:`~cadrumo.core.time.utc.parse_iso_datetime`
   (policy-neutral ISO-8601 parsing), :func:`~cadrumo.core.time.utc.coerce_utc_aware`,
   :func:`~cadrumo.core.time.utc.validate_utc_aware`, and the

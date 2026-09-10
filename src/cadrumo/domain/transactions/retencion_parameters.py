@@ -17,14 +17,11 @@ metadata, and Python consumers read them from here rather than from a bare
 ``Decimal(...)`` literal, where neither the figure nor its legal basis was
 auditable.
 
-The loaders follow the idiom of
-:mod:`domain.iva.recargo_equivalencia`: the registry parameter catalogue is
-read through the cycle-safe ``load_legal_parameters_only`` entry point rather
-than by a direct ``tomllib`` load, and the result is a frozen pydantic record.
-The reads are memoised because the withheld-amount inference that consumes the
-art. 95 maximum-rate bound runs per transaction on the ledger hot path, and the
-administrador rate set is read once per statutory-rate advisory pass over a
-Modelo 111 catalogue.
+The loaders resolve typed scalar facts through ``ValidatedRegistryAuthority``
+at an explicit filing-period coordinate, then project only the values needed
+by their frozen pydantic records. The authority owns validation, fingerprinting
+and lifecycle identity; this module keeps neither a legal-parameter parser nor
+a local value cache.
 
 What the art. 95 rates are *for*: :attr:`RirpfArt95RetencionRates.general_rate`
 is the upper bound on a **bounded inference**, not a rate the system ever
@@ -45,18 +42,18 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
-from functools import lru_cache
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, cast
 
 from pydantic import BaseModel, Field
 
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.resources.bundled_data import bundled_path
 from .errors import TransactionValidationError
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from ..calculations.registry.authority import ValidatedRegistryAuthority
+    from ..calculations.registry.facts.resolution import ResolvedScalarFact
 
 
 class RirpfArt95RetencionRates(BaseModel):
@@ -116,31 +113,67 @@ _ART95_PARAMETER_IDS: Final[tuple[str, ...]] = (
 )
 
 
-def _legal_refs_of(parameter_id: str) -> tuple[str, ...]:
-    """Return one registry parameter's declared legal references.
-
-    Deferred import for the reason the rate loader states: the registry import
-    path reaches back into the domain packages this module belongs to.
-    """
+def _resolved_scalar_parameter(
+    parameter_id: str,
+    *,
+    effective_date: date,
+    expected_unit: str,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> ResolvedScalarFact:
+    """Resolve one rate fact with the authority evidence required by its consumer."""
     from ..calculations.registry.errors import RegistryError
-    from ..calculations.registry.loader import load_legal_parameters_only
+    from ..calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
+    from ..calculations.registry.schema_base import DateAxis
 
+    if authority is None:
+        from ..calculations.registry.authority import bundled_authority
+
+        authority = bundled_authority()
     try:
-        parameters = load_legal_parameters_only(bundled_path("registry", "aeat"))
-    except RegistryError:
-        # The grounding is a disclosure rather than a calculation input, so a
-        # registry that cannot load costs the refs and not the advisory: an
-        # operator told nothing at all about a suspect retencion is worse off
-        # than one told without the article.
-        return ()
-    parameter = parameters.get(parameter_id)
-    if parameter is None:
-        return ()
-    return tuple(parameter.legal_refs)
+        resolved = authority.resolve_governed_fact(
+            ScalarFactQuery(
+                fact_id=parameter_id,
+                date_axis=DateAxis.FILING_PERIOD,
+                effective_date=effective_date,
+            )
+        )
+    except RegistryError as exc:
+        raise TransactionValidationError(
+            f"failed to resolve retención fact {parameter_id!r}: {exc}",
+        ) from exc
+    if not isinstance(resolved, ResolvedScalarFact):
+        raise TransactionValidationError(f"retención fact {parameter_id!r} did not resolve to a scalar")
+    if resolved.payload.unit != expected_unit:
+        raise TransactionValidationError(
+            f"retención fact {parameter_id!r} carries unit {resolved.payload.unit!r}, expected {expected_unit!r}",
+        )
+    if not resolved.legal_refs:
+        raise TransactionValidationError(f"retención fact {parameter_id!r} has no legal references")
+    return cast("ResolvedScalarFact", resolved)
 
 
-@lru_cache(maxsize=1)
-def load_retencion_actividades_rates() -> RirpfArt95RetencionRates:
+def _legal_refs_of(
+    parameter_id: str,
+    *,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> tuple[str, ...]:
+    """Return one resolved fact's legal references, refusing an ungrounded result."""
+    return tuple(
+        _resolved_scalar_parameter(
+            parameter_id,
+            effective_date=effective_date or date.today(),
+            expected_unit="fraction" if parameter_id != _ADMINISTRADOR_INCN_UMBRAL_PARAM_ID else "eur",
+            authority=authority,
+        ).legal_refs
+    )
+
+
+def load_retencion_actividades_rates(
+    *,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> RirpfArt95RetencionRates:
     """Return the RIRPF art. 95 retención rates from the registry catalogue.
 
     Returns:
@@ -151,29 +184,22 @@ def load_retencion_actividades_rates() -> RirpfArt95RetencionRates:
             carries no string value, or does not parse as a ``Decimal``, or if
             the registry parameter catalogue cannot be loaded.
     """
-    # Imported inside the function for the same reason the recargo loader does:
-    # the full registry import path reaches back into the domain packages this
-    # module belongs to, and a module-level import would close that cycle.
-    from ..calculations.registry.errors import RegistryError
-    from ..calculations.registry.loader import load_legal_parameters_only
-
-    try:
-        parameters = load_legal_parameters_only(bundled_path("registry", "aeat"))
-    except RegistryError as exc:
-        raise TransactionValidationError(
-            f"failed to load the RIRPF art. 95 retención parameters: {exc}",
-        ) from exc
+    coordinate = effective_date or date.today()
     return RirpfArt95RetencionRates(
-        general_rate=_decimal_parameter(parameters, _GENERAL_PARAM_ID),
-        inicio_actividad_rate=_decimal_parameter(parameters, _INICIO_PARAM_ID),
-        agricola_ganadera_rate=_decimal_parameter(parameters, _AGRICOLA_GANADERA_PARAM_ID),
-        ganadera_engorde_rate=_decimal_parameter(parameters, _GANADERA_ENGORDE_PARAM_ID),
-        forestal_rate=_decimal_parameter(parameters, _FORESTAL_PARAM_ID),
-        estimacion_objetiva_rate=_decimal_parameter(parameters, _ESTIMACION_OBJETIVA_PARAM_ID),
+        general_rate=_decimal_fact(_GENERAL_PARAM_ID, coordinate, authority),
+        inicio_actividad_rate=_decimal_fact(_INICIO_PARAM_ID, coordinate, authority),
+        agricola_ganadera_rate=_decimal_fact(_AGRICOLA_GANADERA_PARAM_ID, coordinate, authority),
+        ganadera_engorde_rate=_decimal_fact(_GANADERA_ENGORDE_PARAM_ID, coordinate, authority),
+        forestal_rate=_decimal_fact(_FORESTAL_PARAM_ID, coordinate, authority),
+        estimacion_objetiva_rate=_decimal_fact(_ESTIMACION_OBJETIVA_PARAM_ID, coordinate, authority),
     )
 
 
-def rirpf_art95_retencion_legal_refs() -> tuple[str, ...]:
+def rirpf_art95_retencion_legal_refs(
+    *,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> tuple[str, ...]:
     """Return the registry legal references grounding the art. 95 rate set.
 
     Read off the parameters this module already resolves rather than restated
@@ -187,7 +213,7 @@ def rirpf_art95_retencion_legal_refs() -> tuple[str, ...]:
     """
     seen: list[str] = []
     for parameter_id in _ART95_PARAMETER_IDS:
-        for reference in _legal_refs_of(parameter_id):
+        for reference in _legal_refs_of(parameter_id, effective_date=effective_date, authority=authority):
             if reference not in seen:
                 seen.append(reference)
     return tuple(seen)
@@ -286,8 +312,11 @@ _ADMINISTRADOR_PARAMETER_IDS: Final[tuple[str, ...]] = (
 )
 
 
-@lru_cache(maxsize=1)
-def load_administrador_retencion_rates() -> AdministradorRetencionRates:
+def load_administrador_retencion_rates(
+    *,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> AdministradorRetencionRates:
     """Return the LIRPF art. 101.2 administrador retención rates from the registry.
 
     Returns:
@@ -298,27 +327,24 @@ def load_administrador_retencion_rates() -> AdministradorRetencionRates:
             carries no string value, or does not parse as a ``Decimal``, or if
             the registry parameter catalogue cannot be loaded.
     """
-    # Imported inside the function for the same reason the sibling art. 95
-    # loader does: the full registry import path reaches back into the domain
-    # packages this module belongs to, and a module-level import would close
-    # that cycle.
-    from ..calculations.registry.errors import RegistryError
-    from ..calculations.registry.loader import load_legal_parameters_only
-
-    try:
-        parameters = load_legal_parameters_only(bundled_path("registry", "aeat"))
-    except RegistryError as exc:
-        raise TransactionValidationError(
-            f"failed to load the LIRPF art. 101.2 administrador retención parameters: {exc}",
-        ) from exc
+    coordinate = effective_date or date.today()
     return AdministradorRetencionRates(
-        general_rate=_decimal_parameter(parameters, _ADMINISTRADOR_GENERAL_PARAM_ID),
-        reduced_rate=_decimal_parameter(parameters, _ADMINISTRADOR_REDUCIDA_PARAM_ID),
-        reduced_incn_threshold_eur=_decimal_parameter(parameters, _ADMINISTRADOR_INCN_UMBRAL_PARAM_ID),
+        general_rate=_decimal_fact(_ADMINISTRADOR_GENERAL_PARAM_ID, coordinate, authority),
+        reduced_rate=_decimal_fact(_ADMINISTRADOR_REDUCIDA_PARAM_ID, coordinate, authority),
+        reduced_incn_threshold_eur=_decimal_fact(
+            _ADMINISTRADOR_INCN_UMBRAL_PARAM_ID,
+            coordinate,
+            authority,
+            expected_unit="eur",
+        ),
     )
 
 
-def administrador_retencion_legal_refs() -> tuple[str, ...]:
+def administrador_retencion_legal_refs(
+    *,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> tuple[str, ...]:
     """Return the registry legal references grounding the administrador rate set.
 
     Read off the parameters this module already resolves rather than restated
@@ -333,31 +359,29 @@ def administrador_retencion_legal_refs() -> tuple[str, ...]:
     """
     seen: list[str] = []
     for parameter_id in _ADMINISTRADOR_PARAMETER_IDS:
-        for reference in _legal_refs_of(parameter_id):
+        for reference in _legal_refs_of(parameter_id, effective_date=effective_date, authority=authority):
             if reference not in seen:
                 seen.append(reference)
     return tuple(seen)
 
 
-def _decimal_parameter(parameters: Mapping[str, object], parameter_id: str) -> Decimal:
-    """Read one registry parameter as a ``Decimal``, shared by every rate family in this module."""
-    try:
-        parameter = parameters[parameter_id]
-    except KeyError as exc:
-        raise TransactionValidationError(
-            f"the legal-parameter catalogue is missing retención parameter {parameter_id!r}",
-        ) from exc
-    value = getattr(parameter, "value", None)
-    if not isinstance(value, str):
-        raise TransactionValidationError(
-            f"retención parameter {parameter_id!r} has no string value",
-        )
-    try:
-        return Decimal(value)
-    except ArithmeticError as exc:
-        raise TransactionValidationError(
-            f"retención parameter {parameter_id!r} value {value!r} is not a Decimal",
-        ) from exc
+def _decimal_fact(
+    parameter_id: str,
+    effective_date: date,
+    authority: ValidatedRegistryAuthority | None,
+    *,
+    expected_unit: str = "fraction",
+) -> Decimal:
+    """Return a Decimal only from a resolved scalar fact with the expected unit."""
+    value = _resolved_scalar_parameter(
+        parameter_id,
+        effective_date=effective_date,
+        expected_unit=expected_unit,
+        authority=authority,
+    ).payload.value
+    if not isinstance(value, Decimal):
+        raise TransactionValidationError(f"retención fact {parameter_id!r} has non-Decimal value {value!r}")
+    return value
 
 
 __all__ = [

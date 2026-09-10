@@ -25,7 +25,6 @@ from collections.abc import Mapping
 from datetime import date
 from decimal import ROUND_CEILING, ROUND_HALF_UP, Decimal
 from enum import StrEnum
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -509,7 +508,6 @@ def read_parameter(
     parameter_id: str,
     *,
     date_context: Mapping[str, date],
-    registry_root: Path | None = None,
 ) -> Decimal:
     """Read a registry parameter through :class:`ValidatedRegistryAuthority`.
 
@@ -518,27 +516,16 @@ def read_parameter(
     :class:`~domain.calculations.registry.ModeloRevision`, and delegates the
     dated value lookup to :func:`resolve_parameter`.
 
-    The default registry root takes the identical path as an explicit one, and
-    neither may be memoised here. Every argument this function could be keyed on
-    -- a modelo id, a revision id, a parameter id, a root path -- is an argument
-    of a registry READ, and none of them moves when the registry itself moves, so
-    any memo at this level outlives the tree its value was compiled from.
-    :meth:`ValidatedRegistryAuthority.load` is the bound: it re-collects the
-    complete registry, treaty, supplementary-orden and source-evidence
-    fingerprints on every call and keys its own cache on them, so repeat reads of
-    an unchanged tree resolve to the same compiled authority while an edited tree
-    resolves to a new one.
+    Values are always read from the immutable bundled authority. The helper has
+    no registry-root override, cache, or raw-tree loading path.
     """
-    from ....core.resources.bundled_data import bundled_path
-    from .authority import ValidatedRegistryAuthority
+    from .authority import bundled_authority
 
-    source_root = bundled_path()
-    root = bundled_path("registry", "aeat") if registry_root is None else registry_root
-    authority = ValidatedRegistryAuthority.load(root, source_root=source_root)
+    authority = bundled_authority()
     try:
         modelo_match = authority.modelo(modelo_id)
     except RegistrySnapshotError as exc:
-        raise RegistryValidationError(f"modelo {modelo_id!r} not registered in {root}") from exc
+        raise RegistryValidationError(f"modelo {modelo_id!r} is not registered in the bundled authority") from exc
     revision = modelo_match.revisions.get(revision_id)
     if revision is None:
         raise RegistryValidationError(f"modelo {modelo_id!r} has no revision {revision_id!r}")

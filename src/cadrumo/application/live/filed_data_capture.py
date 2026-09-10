@@ -10,10 +10,8 @@ calculation observations, and attempt to stamp matching current
 :class:`~ExternalEvidence`.
 
 Source capture resolves a law-determined
-:class:`~cadrumo.domain.calculations.registry.ModeloRevision` (via
-:func:`~cadrumo.domain.calculations.registry.load_registry_tree` and
-:func:`~cadrumo.domain.calculations.registry.select_revision`, never a filing-grade
-:class:`~cadrumo.domain.calculations.registry.ValidatedRegistryAuthority`) before
+:class:`~cadrumo.domain.calculations.registry.ModeloRevision` through the bundled
+validated registry authority before
 asking the Sede adapter which prior declarations a target filing needs, so
 cross-period inputs remain registry-authored rather than adapter-inferred. The
 module never creates a remote submission or mutates AEAT state; filing-record
@@ -70,17 +68,14 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.register_scoping_signal import RegisterScopingSignal
-from ...core.resources.bundled_data import bundled_path
 from ...core.sync_surface import SyncSurface
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
-from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.schema import (
     ModeloDefinition,
     ModeloRevision,
 )
-from ...domain.calculations.registry.temporal import select_revision
 from ...domain.calculations.registry.verification_tolerance import verification_tolerance_or_exact
 from ..operations.events import OperationLogSeverity
 from ..operations.owner import OperationEventEmitter
@@ -1222,27 +1217,19 @@ async def capture_source_filed_data(
     year: int,
     period: Period,
     output_root: Path,
-    registry_root: Path | None = None,
-    source_root: Path | None = None,
 ) -> SourceFiledDataCaptureReport:
     """Capture source observations and return a :class:`SourceFiledDataCaptureReport`.
 
-    Reads the target revision structurally (:func:`load_registry_tree` +
-    :func:`select_revision`) rather than through
-    :class:`~cadrumo.domain.calculations.registry.ValidatedRegistryAuthority`:
-    this capture only ever needs the revision's declared casilla/binding
-    structure, never a filing-grade admission. ``source_root`` is accepted for
-    caller-signature compatibility but is unused here -- the structural read
-    resolves no evidence catalogue and never needed it.
+    The source relationships are selected from the immutable bundled authority.
+    Caller-controlled registry and source roots are deliberately not accepted:
+    live evidence capture must use the same validated legal snapshot as filing.
     """
     session, settings = await active_verified_session()
-    modelos, _catalogues = load_registry_tree(registry_root or bundled_path("registry", "aeat"))
-    modelo_definition = next(candidate for candidate in modelos if candidate.id == modelo)
-    revision = select_revision(
-        modelo_definition,
+    revision = bundled_authority().snapshot(
+        modelo,
         filing_year=year,
         period=period.registry_token,
-    )
+    ).revision
     store = FiledDeclaracionObservationStore(output_root)
     accumulator = _CaptureAccumulator()
     seen: set[tuple[str, int, str, str]] = set()

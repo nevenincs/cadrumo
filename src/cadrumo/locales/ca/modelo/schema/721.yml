@@ -2,8 +2,9 @@ modelo:
   schema:
     '721':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 721. Declaració informativa sobre monedes virtuals situades
+          a l'estranger.
+        title: Monedes virtuals situades a l'estranger (informativa anual)
       revision:
         '2023':
           casilla:

@@ -29,7 +29,7 @@ jobs:
   # on the second build host and were both offline on 2026-08-05. Without this,
   # dispatching the lane queues silently. See dev/ci/runner_queue_watchdog.py.
   runner-queue-watchdog:
-    name: Cadrumo / runner queue watchdog
+    name: "Check: Runner queue (Linux)"
     # Ungated, matching the off-lane jobs it watches: the acquisition matrix
     # now has no dependencies, so its job records exist from the start of the
     # run and the bounded watch window cannot open before they are created.
@@ -53,7 +53,7 @@ jobs:
         run: python3 -m dev.ci.runner_queue_watchdog
 
   cadrumo-homebrew-acquisition:
-    name: Cadrumo / ${{ matrix.label }} / Homebrew source install
+    name: "Test: Channel acquisition (${{ matrix.label }})"
     strategy:
       fail-fast: false
       # Machine-aware load (.github/ci-control-plane.md): TWO of the three legs live on

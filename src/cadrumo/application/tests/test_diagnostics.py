@@ -31,13 +31,11 @@ from ..diagnostic_models import (
     ConfigRepairReport,
     DiagnosticCheck,
     DiagnosticFinding,
-    RegistryVersionSummary,
     SecureObjectIntegrityReport,
     ensure_models_rebuilt,
 )
 from ..diagnostics import (
     _profile_check,
-    _registry_cross_domain_integrity_check,
     build_config_repair_report,
     preview_quarantine_unreadable_secure_objects,
     quarantine_unreadable_secure_objects,
@@ -263,14 +261,11 @@ def test_profile_readiness_reports_the_lock_rather_than_no_profile_configured(tm
     assert verdict.action.action_id == "operator.profile.login"
 
 
-def test_config_repair_report_contains_registry_and_setup_checks(config_repair_report: ConfigRepairReport) -> None:
+def test_config_repair_report_contains_setup_checks(config_repair_report: ConfigRepairReport) -> None:
     report = config_repair_report
     assert report.package_name == "cadrumo"
-    assert report.registry.available is True
-    assert report.registry.modelo_count > 0
     assert {check.name for check in report.checks} >= {
         "environment.python",
-        "registry.load",
         "secure_state.load",
         "profile.readiness",
         "auth.readiness",
@@ -285,7 +280,6 @@ def test_render_config_repair_text_is_operator_readable(config_repair_report: Co
     from ...core.i18n import tr
 
     assert f"{tr('cli.diagnostics.repair.overall_label')}\t" in rendered
-    assert "registry.load" in rendered
     assert f"{tr('cli.diagnostics.repair.logs_label')}\t" in rendered
 
 
@@ -735,38 +729,35 @@ def test_importing_diagnostics_does_not_pull_the_browser_or_registry_subtree() -
 def test_build_cli_version_report_fast_path_needs_no_model_rebuild() -> None:
     """The ``--version`` model is fully defined without the deferred rebuild.
 
-    ``build_cli_version_report(with_registry=False)`` is the fast-path
-    call. It returns a ``CliVersionReport``, which must carry no field
+    ``build_cli_version_report()`` returns a ``CliVersionReport`` with no field
     typed by a lazily imported name — otherwise the version path would
     have to pay the heavy ``ensure_models_rebuilt`` import cost.
     """
 
     from ..diagnostics import build_cli_version_report, render_cli_version_text
 
-    report = build_cli_version_report(with_registry=False)
+    report = build_cli_version_report()
     assert report.package_name == "cadrumo"
     assert report.package_version
     # Renders without raising — the model is fully defined.
     assert isinstance(render_cli_version_text(report), str)
 
 
-def _internal_registry_repair_report() -> ConfigRepairReport:
+def _internal_repair_report() -> ConfigRepairReport:
     """Build a repair report carrying one internal-audience failing row.
 
     Used by the operator-vs-internal wording tests below; constructs the
-    report directly so the test does not depend on the local secure
-    backend or registry corruption.
+    report directly so the test does not depend on the local secure backend.
     """
 
     ensure_models_rebuilt()
-    registry = RegistryVersionSummary(available=True, registry_root="/x", modelo_count=1, casilla_count=2)
     checks = (
         DiagnosticCheck(
-            name="registry.integrity",
+            name="application.internal",
             status="fail",
-            summary="Registry integrity failed",
-            detail="casilla 9999 missing from revision 100-2025",
-            precondition_verdict=_terminal_diagnostic_verdict("diagnostics.registry.integrity.valid"),
+            summary="Internal application fault",
+            detail="A packaged application component is unavailable",
+            precondition_verdict=_terminal_diagnostic_verdict("diagnostics.application.internal.available"),
             audience="internal",
         ),
         DiagnosticCheck(
@@ -783,7 +774,6 @@ def _internal_registry_repair_report() -> ConfigRepairReport:
         package_version="0.1.0",
         python_version="3.13.11",
         log_file="cadrumo.log",
-        registry=registry,
         setup=None,
         secure_objects=SecureObjectIntegrityReport(),
         checks=checks,
@@ -887,14 +877,12 @@ def test_render_config_repair_text_lists_specific_findings() -> None:
         next_action=_UNRENDERED_NEXT_ACTION,
     )
     check = _profile_check(report)
-    registry = RegistryVersionSummary(available=True, registry_root="/x", modelo_count=1, casilla_count=2)
     repair_report = ConfigRepairReport(
         overall="warn",
         package_name="cadrumo",
         package_version="0.1.0",
         python_version="3.13.11",
         log_file="cadrumo.log",
-        registry=registry,
         setup=None,
         secure_objects=SecureObjectIntegrityReport(),
         checks=(check,),
@@ -915,41 +903,22 @@ def test_render_config_repair_text_lists_specific_findings() -> None:
 def test_render_config_repair_text_marks_internal_problems_distinctly() -> None:
     """Internal application defects must read differently from operator gaps.
 
-    A persona saw an internal registry-integrity ``fail`` and believed
-    their own profile was invalid. The renderer tags an
+    A persona saw an internal repair ``fail`` and believed their own profile
+    was invalid. The renderer tags an
     ``audience='internal'`` row so a taxpayer is not alarmed into
     thinking they forgot a field; operator-fixable rows carry no tag.
     """
 
     from ...core.i18n import tr
 
-    rendered = render_config_repair_text(_internal_registry_repair_report())
+    rendered = render_config_repair_text(_internal_repair_report())
     internal_label = tr("cli.diagnostics.repair.audience_internal")
 
-    registry_line = next(line for line in rendered.splitlines() if line.startswith("fail\tregistry.integrity"))
+    internal_line = next(line for line in rendered.splitlines() if line.startswith("fail\tapplication.internal"))
     auth_line = next(line for line in rendered.splitlines() if line.startswith("warn\tauth.readiness"))
 
-    assert internal_label in registry_line
+    assert internal_label in internal_line
     assert internal_label not in auth_line
-
-
-def test_config_repair_report_marks_registry_integrity_internal() -> None:
-    """The live ``registry.integrity`` check is classified as internal.
-
-    When the bundled registry is healthy the row is ``ok`` and
-    operator-facing; the audience field exists so that, on a real
-    registry-integrity defect, the renderer can word it as an internal
-    problem rather than a profile gap.
-    """
-
-    from ...core.resources.bundled_data import bundled_path
-
-    check = _registry_cross_domain_integrity_check(bundled_path("registry", "aeat"))
-    # Healthy registry → ok + operator audience. A failing registry would
-    # carry audience='internal'; that branch is pinned by the renderer
-    # test above against a constructed report.
-    assert check.name == "registry.integrity"
-    assert check.audience in {"operator", "internal"}
 
 
 # ---------------------------------------------------------------------------
@@ -1059,35 +1028,3 @@ def test_missing_active_bucket_session_classifier_terminates_on_a_cyclic_chain()
     second.__context__ = first
 
     assert _is_missing_active_bucket_session(first) is False
-
-
-_REGISTRY_SUMMARY_COUNT_FIELDS = ("modelo_count", "revision_count", "casilla_count", "formula_count")
-
-
-def test_registry_version_summary_rejects_a_negative_count() -> None:
-    """Every summary tally is a ``len()`` over loaded registry data.
-
-    ``build_registry_version_summary`` fills these from ``len(modelos)``,
-    ``len(revisions)`` and sums of ``len(revision.casillas)`` /
-    ``len(revision.formulas)``, so a negative is incoherent. The bound lives on
-    the canonical summary rather than on the CLI repair payload, so the version
-    surface and any other consumer inherit the same refusal.
-    """
-    for field_name in _REGISTRY_SUMMARY_COUNT_FIELDS:
-        with pytest.raises(ValidationError, match=field_name):
-            RegistryVersionSummary(available=True, registry_root="/x", **{field_name: -1})  # ty: ignore[invalid-argument-type]  # reason: the negative count IS the refusal under test
-
-
-def test_registry_version_summary_defaults_to_zero_counts_when_unavailable() -> None:
-    """The unavailable branch reports zeroes, and ``ge=0`` must permit them.
-
-    ``build_registry_version_summary`` returns this shape when the authority
-    fails to load, so a bound rejecting zero would turn a reported failure into
-    an unhandled one.
-    """
-    summary = RegistryVersionSummary(available=False, registry_root="/x", error="RegistryLoadError: boom")
-
-    assert summary.modelo_count == 0
-    assert summary.revision_count == 0
-    assert summary.casilla_count == 0
-    assert summary.formula_count == 0

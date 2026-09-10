@@ -6,6 +6,7 @@ from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import TypedDict
 
 import pytest
 
@@ -56,6 +57,12 @@ from ..resume import (
     resume_modelo_workflow,
 )
 from ..run_models import WorkflowObligationFacts, WorkflowResult, WorkflowStage, WorkflowStep
+
+
+class _ResumeTargetKwargs(TypedDict, total=False):
+    target: str
+    modelo: str
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -604,7 +611,7 @@ def test_find_unique_run_for_period_refuses_multiple_matches_with_candidate_guid
     ),
 )
 def test_unified_resume_target_refuses_invalid_or_incomplete_addresses(
-    kwargs: dict[str, object],
+    kwargs: _ResumeTargetKwargs,
     message: str,
 ) -> None:
     with pytest.raises(WorkflowError) as raised:

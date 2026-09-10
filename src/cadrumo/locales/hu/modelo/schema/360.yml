@@ -2,8 +2,12 @@ modelo:
   schema:
     '360':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 360. Az adó alkalmazási területén letelepedett vállalkozók
+          vagy szakemberek által felszámított hozzáadottérték-adó visszatérítésére
+          vonatkozó kérelem a Közösségben végzett, az e területen végzetteken kívüli
+          ügyletek után.
+        title: IVA. Más tagállamokban felszámított IVA visszatérítésére vonatkozó
+          kérelem (8. irányelv)
       revision:
         2010-y-siguientes:
           casilla:

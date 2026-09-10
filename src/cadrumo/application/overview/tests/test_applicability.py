@@ -38,7 +38,6 @@ from ....domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
     derive_tax_route,
-    has_applicability_rule,
     iter_modelo_applicability_rules,
     taxpayer_model_is_declared,
 )
@@ -225,7 +224,8 @@ def _an_unruled_modelo() -> str:
     rationale, not any particular modelo, so the subject is selected from what
     the engine actually reports and cannot go stale the same way.
     """
-    unruled = sorted(modelo.value for modelo in Modelo if not has_applicability_rule(modelo.value))
+    ruled = {rule.modelo for rule in iter_modelo_applicability_rules()}
+    unruled = sorted(modelo.value for modelo in Modelo if modelo.value not in ruled)
     assert unruled, (
         "every modelo now carries an applicability rule, so the un-ruled rationale is "
         "unreachable and these two tests should be retired along with it"

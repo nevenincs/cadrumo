@@ -2,8 +2,9 @@ modelo:
   schema:
     '220':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 220. Corporate Income Tax. Tax consolidation regime.
+          Return.
+        title: IS annual self-assessment under the tax consolidation regime (groups)
       revision:
         '2024':
           casilla:

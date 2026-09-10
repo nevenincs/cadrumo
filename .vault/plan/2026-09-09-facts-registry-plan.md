@@ -10,9 +10,9 @@ related:
   - '[[2026-09-09-facts-registry-schema-persistence-research]]'
   - '[[2026-09-09-facts-registry-authority-plumbing-research]]'
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
-modified: '2026-09-09'
+modified: '2026-09-10'
 body_schema: body-v2
-body_hash: 'sha256:5e4a93920af88611111e78d9fc1ee6f6e0cf97741efe0bdf8fd3691a5b99ae78'
+body_hash: 'sha256:169991ee420e086ebde77467a6fe281d96f9fc0c85bb493c220c6205bf2dfd87'
 ---
 
 # `facts-registry` plan
@@ -96,12 +96,12 @@ Adapt category profiles and legally governed calendar or deadline data into auth
 - [x] `W02.P06.S16` - Register statutory category profiles and dated caps; `src/cadrumo/domain/categories/registry.py`.
 - [x] `W02.P06.S17` - Register classified legal calendar and deadline facts; `src/cadrumo/domain/deadlines`.
 
-### Phase `W02.P07` - Enroll treaty and authorisation providers
+### Phase `W02.P07` - Enroll treaty providers and classify authorisation vocabulary
 
-Adapt convenio overrides and apoderamientos catalogues into authority-managed providers.
+Adapt convenio overrides through the authority and retain bootstrap apoderamientos vocabulary outside governed facts until authoritative temporal evidence exists.
 
 - [x] `W02.P07.S18` - Register convenio overrides as a typed provider adapter; `src/cadrumo/domain/calculations/registry/convenio.py`.
-- [x] `W02.P07.S19` - Register confirmed apoderamientos legal-taxonomy facts; `src/cadrumo/domain/auth/apoderamientos/catalogue.py`.
+- [x] `W02.P07.S19` - Classify apoderamientos as bootstrap product vocabulary outside governed facts pending authoritative temporal evidence; `src/cadrumo/domain/auth/apoderamientos/catalogue.py`.
 
 ### Phase `W02.P08` - Enroll scalar and revision-backed facts
 
@@ -146,20 +146,35 @@ Rewire invoice rate interpretation, IVA calculations, recargo lookup, inventory 
 - [x] `W03.P12.S27` - Rewire invoice slot percentage interpretation; `src/cadrumo/domain/invoices/enums.py`.
 - [x] `W03.P12.S51` - Rewire extraction recargo aggregation and inventory defaults; `src/cadrumo/application/ledger and src/cadrumo/application/aggregation and src/cadrumo/domain/contribuyente/inventory`.
 
-### Phase `W03.P13` - Migrate treaty authorization and deadline consumers
+### Phase `W03.P13` - Migrate treaty and deadline consumers; classify unresolved legal lanes
 
-Rewire convenio, apoderamientos, notification deadlines, amendment regimes, foreign-asset rules, and related mappings.
+Rewire treaty and deadline consumers, retain apoderamientos as non-governed vocabulary, replace unbounded legal-parameter projections with source-grounded temporal variants, and only then migrate residual direct legal-parameter paths before the consumer boundary.
 
-- [x] `W03.P13.S52` - Rewire treaty and authorization consumers; `src/cadrumo/domain/calculations/registry/_formula_runtime_irnr.py and src/cadrumo/entrypoints/cli/config_payloads.py`.
-- [x] `W03.P13.S53` - Rewire deadline notification amendment and foreign-asset facts; `src/cadrumo/domain/deadlines and src/cadrumo/core`.
+- [x] `W03.P13.S52` - Rewire treaty consumers while retaining apoderamientos as classified non-governed product vocabulary; `src/cadrumo/domain/calculations/registry/_formula_runtime_irnr.py and src/cadrumo/entrypoints/cli/config_payloads.py`.
+- [x] `W03.P13.S53` - Rewire deadline and notification consumers while retaining unclassified amendment and foreign-asset projections pending evidence; `src/cadrumo/domain/deadlines and src/cadrumo/core`.
+- [x] `W03.P13.S70` - Capture and author the bounded administrator-retention fact slice from BOE redactions; `dev/corpus and src/cadrumo/_data/corpus/normatives/html and src/cadrumo/_data/registry/aeat/facts`.
+- [x] `W03.P13.S68` - Capture hash-pinned BOE article 95 redactions and author source-cited temporal withholding-rate facts under the governed authority; `dev/corpus and src/cadrumo/_data/corpus/normatives/html and src/cadrumo/_data/registry/aeat/facts and src/cadrumo/_data/registry/aeat/legal and src/cadrumo/domain/calculations/registry/facts/legal_parameters.py`.
+- [x] `W03.P13.S74` - Capture the official M036 activity-code mapping, author source-cited article-95 activity-selector facts, and remove their legacy adapter definitions; `dev/corpus and src/cadrumo/_data/corpus and src/cadrumo/_data/registry/aeat/facts and src/cadrumo/_data/registry/aeat/legal and src/cadrumo/domain/calculations/registry/facts/legal_parameters.py`.
+- [ ] `W03.P13.S71` - Capture hash-pinned BOE articles 109 and 110 redactions, author source-cited temporal selectors by legal applicability, and rewire Modelo 131 to its form-specific authority; `dev/corpus and src/cadrumo/_data/corpus/normatives/html and src/cadrumo/_data/registry/aeat/facts and src/cadrumo/_data/registry/aeat/legal and src/cadrumo/domain/calculations/registry/facts/legal_parameters.py and src/cadrumo/application/modelo`.
+- [ ] `W03.P13.S72` - Capture hash-pinned BOE article 161 redactions and author source-cited temporal equivalence-surcharge facts under the governed authority; `dev/corpus and src/cadrumo/_data/corpus/normatives/html and src/cadrumo/_data/registry/aeat/facts and src/cadrumo/_data/registry/aeat/legal and src/cadrumo/domain/calculations/registry/facts/legal_parameters.py`.
+- [ ] `W03.P13.S73` - Capture hash-pinned BOE article 31 and transitional-provision redactions and author source-cited temporal objective-estimation exclusion facts under the governed authority; `dev/corpus and src/cadrumo/_data/corpus/normatives/html and src/cadrumo/_data/registry/aeat/facts and src/cadrumo/_data/registry/aeat/legal and src/cadrumo/domain/calculations/registry/facts/legal_parameters.py`.
+- [ ] `W03.P13.S64` - Migrate remaining legal-parameter consumers only after their facts carry source-grounded temporal applicability; `src/cadrumo/application/modelo/_objective_estimation_advisory.py, src/cadrumo/domain/transactions, and src/cadrumo/domain/calculations/registry/facts/legal_parameters.py`.
+- [ ] `W03.P13.S75` - Delete the retired legal-parameter fact adapter and migrated fact definitions after canonical facts replace every live resolver and consumer; `src/cadrumo/domain/calculations/registry/facts/legal_parameters.py and src/cadrumo/_data/registry/aeat/legal and src/cadrumo/domain and src/cadrumo/application`.
+- [ ] `W03.P13.S66` - Replace generic fact selectors with provider-owned validated applicability coordinates before consumer-boundary verification; `src/cadrumo/domain/calculations/registry/facts and src/cadrumo/domain/calculations/registry`.
+- [ ] `W03.P13.S69` - Enforce and prove legal-parameter fact temporal coverage, date-axis selection, provenance, and refusal outside source-grounded windows; `src/cadrumo/domain/calculations/registry/facts/tests and src/cadrumo/domain/calculations/registry/facts/validation.py`.
 
 ### Phase `W03.P14` - Verify consumer boundary
 
-Exercise cross-domain resolution and provenance after all consumer migrations converge.
+Exercise the real authority path for M347/modelo thresholds, renta and family
+windows, IVA and recargo temporal/exclusion cases, treaty overrides, and
+deadline facts. The handoff also proves that governed-value consumers no
+longer import the retained operational configuration as a legal-value store,
+and reruns the previously deferred treaty-focused test.
 
-- [ ] `W03.P14.S28` - Verify cross-domain parity temporal selection and provenance at the Wave 3 handoff; `src/cadrumo`.
+- [ ] `W03.P14.S28` - Verify authority-level exact resolution, temporal selection, provenance, consumer parity, and absence of governed-value legacy imports; `src/cadrumo and dev/registry`.
 - [ ] `W03.P14.S54` - Run canonical strict production type checking at the Wave 3 handoff; `justfile check-types and dev/quality/types.py`.
 - [ ] `W03.P14.S55` - Run both dead-code audits and add exact findings to the retirement ledger; `dev/audit/dead_code.py and dev/audit/unreachable_code.py`.
+- [ ] `W03.P14.S67` - Add an authority-level cross-domain fact gate that verifies corpus grounding, resolution, parity, and unsupported applicability refusal; `src/cadrumo/domain/calculations/registry/tests and dev/registry/analysis`.
 
 ## Wave `W04` - Normalize facts and delete legacy authority paths
 
@@ -179,6 +194,7 @@ Remove migrated legal declarations and local interpretations while preserving un
 - [ ] `W04.P16.S31` - Delete migrated statutory declarations but retain technical configuration; `src/cadrumo/core/external_constants.py`.
 - [ ] `W04.P16.S32` - Delete numeric IVA interpretation but retain persisted enum tokens; `src/cadrumo/domain/invoices/enums.py`.
 - [ ] `W04.P16.S33` - Delete superseded regulatory mappings and fallback policies; `src/cadrumo`.
+- [ ] `W04.P16.S65` - Delete the statutory Python-fact adapter and duplicate declarations after normalized fact fragments replace both lanes; `src/cadrumo/domain/calculations/registry/facts/statutory_constants.py and src/cadrumo/core/external_constants.py`.
 
 ### Phase `W04.P17` - Delete bespoke loaders caches and data paths
 
@@ -236,9 +252,9 @@ Waves are ordered handoffs. Within Wave 1, contracts, retirement discovery,
 and quality-tooling design can proceed in parallel; provider-authority wiring
 depends on the contract surface but need not wait for the completed retirement
 ledger. Within Wave 2, IVA/recargo, categories/calendars,
-treaties/authorisations, and scalar/revision-backed providers are parallel once
+treaties/authorisation classification, and scalar/revision-backed providers are parallel once
 the Wave 1 authority contract lands. Within Wave 3, declaration/aggregation,
-renta/family, IVA/invoices, and treaty/authorisation/deadline migrations are
+renta/family, IVA/invoices, and treaty/deadline migrations are
 parallel and converge only for the boundary verification. Within Wave 4,
 normalised authoring can proceed beside deletion preparation, but physical
 deletion and blocking negative gates require the relevant migration closure

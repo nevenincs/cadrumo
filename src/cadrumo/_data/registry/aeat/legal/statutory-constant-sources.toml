@@ -50,6 +50,228 @@ applies_from = 2007-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 review_status = "agent_reviewed"
 
+# Exact BOE open-data redactions of LIRPF art. 101, retained separately so a
+# governed administrator-retention fact can name the wording that applies to
+# its own window.  The raw API response is deliberately sliced to one unique
+# <version id_norma / fecha_vigencia> element by fetch_article_redaction; the
+# generic consolidated document above remains unsuitable for this chronology.
+
+[sources."boe-lirpf-art-101-administrator-2015-01-01"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2006-20764-a101-redaction-20150101.xml"
+sha256 = "4b8f5b2be9800903182f7006d184815c72ce2757a6971153ab903e290608e6e7"
+bytes = 13830
+retrieved_at = 2026-09-10
+published_at = 2014-11-28
+applies_from = 2015-01-01
+applies_to = 2015-07-11
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2006-20764/texto/bloque/a101"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-lirpf-art-101-administrator-2015-07-12"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2006-20764-a101-redaction-20150712.xml"
+sha256 = "b89e0e8d6f335ba57505bf0c01ace942835bd62deff39f1147d69986d3ad88a1"
+bytes = 13363
+retrieved_at = 2026-09-10
+published_at = 2015-07-11
+applies_from = 2015-07-12
+applies_to = 2018-07-04
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2006-20764/texto/bloque/a101"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-lirpf-art-101-administrator-2018-07-05"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2006-20764-a101-redaction-20180705.xml"
+sha256 = "2b062700efd74dd566ee2fb6079bbcfe827101357c64eac2589c5638ecc45b68"
+bytes = 13105
+retrieved_at = 2026-09-10
+published_at = 2018-07-04
+applies_from = 2018-07-05
+applies_to = 2018-12-28
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2006-20764/texto/bloque/a101"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-lirpf-art-101-administrator-2018-12-29"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2006-20764-a101-redaction-20181229.xml"
+sha256 = "2e41124b76d0c8c297a2766eb050ee6007eb1c756f12dde55f91566d56758795"
+bytes = 13480
+retrieved_at = 2026-09-10
+published_at = 2018-12-29
+applies_from = 2018-12-29
+applies_to = 2020-12-31
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2006-20764/texto/bloque/a101"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-lirpf-art-101-administrator-2021-01-01"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2006-20764-a101-redaction-20210101.xml"
+sha256 = "a24b1dbb77a3fc4eb36ef385e01e1685db4bb999555a1a569433a4048865ef10"
+bytes = 14161
+retrieved_at = 2026-09-10
+published_at = 2020-12-31
+applies_from = 2021-01-01
+applies_to = 2022-12-31
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2006-20764/texto/bloque/a101"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-lirpf-art-101-administrator-2023-01-01"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2006-20764-a101-redaction-20230101.xml"
+sha256 = "ac3514fd4cce0e9136c5afccd2b740390d153b925d1cf09cd4d64a0f94f52c36"
+bytes = 15663
+retrieved_at = 2026-09-10
+published_at = 2022-12-24
+applies_from = 2023-01-01
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2006-20764/texto/bloque/a101"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+# Exact BOE open-data redactions of RIRPF art. 95.  Each record names one
+# immutable <version> element and its inclusive legal window: those boundaries
+# are the endpoint's fecha_vigencia values, not intervals inferred from rates.
+
+[sources."boe-rirpf-art-95-2007-04-01"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2007-6820-a95-redaction-20070401.xml"
+sha256 = "fcf5930dff8609e29fd3d5888342a03b49bb7fedc8e2f71cb3ad0f87f7b52204"
+bytes = 14968
+retrieved_at = 2026-09-10
+published_at = 2007-03-31
+applies_from = 2007-04-01
+applies_to = 2014-12-31
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2007-6820/texto/bloque/a95"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-rirpf-art-95-2015-01-01"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2007-6820-a95-redaction-20150101.xml"
+sha256 = "c706fc6018be3971fe3a76840cbe0231eb317c00b17413d3269687b0520c143e"
+bytes = 15585
+retrieved_at = 2026-09-10
+published_at = 2014-12-06
+applies_from = 2015-01-01
+applies_to = 2015-07-11
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2007-6820/texto/bloque/a95"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-rirpf-art-95-2015-07-12"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2007-6820-a95-redaction-20150712.xml"
+sha256 = "4c978b49de98ececb29e8282eb3476e732dae4aaf08ba61920a7be7906c3dd1c"
+bytes = 15592
+retrieved_at = 2026-09-10
+published_at = 2015-07-11
+applies_from = 2015-07-12
+applies_to = 2018-12-22
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2007-6820/texto/bloque/a95"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-rirpf-art-95-2018-12-23"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2007-6820-a95-redaction-20181223.xml"
+sha256 = "7c1a0dd072120d694e840f51937324483640f9ca1c538669a13a073b96f4db83"
+bytes = 15780
+retrieved_at = 2026-09-10
+published_at = 2018-12-22
+applies_from = 2018-12-23
+applies_to = 2023-01-25
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2007-6820/texto/bloque/a95"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-rirpf-art-95-2023-01-26"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2007-6820-a95-redaction-20230126.xml"
+sha256 = "9f2d83ef7b9b2617b77bd28b1db76701d7c73de0e70e3ea41a53e597856c4acb"
+bytes = 17434
+retrieved_at = 2026-09-10
+published_at = 2023-01-25
+applies_from = 2023-01-26
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2007-6820/texto/bloque/a95"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+# Exact BOE open-data redactions for the three payment-fraction selector facts.
+# The fact variants begin only when the separately captured AEAT M036 table
+# identifies its activity codes; the older BOE text is retained as the legal
+# authority, not misrepresented as proof of that later vocabulary.
+
+[sources."boe-rirpf-art-109-2007-04-01"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2007-6820-art-109-redaction-20070401.xml"
+sha256 = "ca201b3eb296e5af063ff5bb1ff9944fc9e14f0cf84053cb29c002245397d2c9"
+bytes = 1994
+retrieved_at = 2026-09-10
+published_at = 2007-03-31
+applies_from = 2007-04-01
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2007-6820/texto/bloque/a109"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-rirpf-art-110-2018-12-23"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2007-6820-art-110-redaction-20181223.xml"
+sha256 = "2d2f769c57987b8a14fa8ed861ef921a0345a1d8b898d3342f0c9de87ba5405c"
+bytes = 11554
+retrieved_at = 2026-09-10
+published_at = 2018-12-22
+applies_from = 2018-12-23
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2007-6820/texto/bloque/a110"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+# Official AEAT guidance gives the exact Modelo 036 activity-code table.  It
+# is intentionally a bounded source: its verified 2026-03-26 update marker
+# supports this vocabulary from that date, but says nothing about older form
+# revisions.
+[sources."aeat-m036-activity-code-table-2026-03-26"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_036/files/capitulo-04-actividades-economicas-locales-actividad.html"
+sha256 = "a1c9cb40b1dbe78150421d5dd4575e1e12b0bae91c919bcabb60b5b8f012be39"
+bytes = 13893
+retrieved_at = 2026-09-10
+applies_from = 2026-03-26
+source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/guia-practica-cumplimentacion-modelo-censal-036/capitulo-04-actividades-economicas-locales/cumplimentacion-declaracion-actividades-economicas-locales/actividad.html"
+review_status = "agent_reviewed"
+
 [sources."boe-lis-art-40-statutory-facts"]
 evidence_tier = "legal_authority"
 authority = "boe"

@@ -2,8 +2,13 @@ modelo:
   schema:
     '194':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 194. A magánszemélyek jövedelemadója, a társasági adó
+          és a külföldi illetőségűek jövedelemadója (állandó telephelyek). Tőkejövedelmekre,
+          valamint idegen tőke bevonását és felhasználását megtestesítő bármely eszköz
+          átruházásából, amortizációjából, visszaváltásából, cseréjéből vagy átalakításából
+          származó jövedelmekre vonatkozó adóelőleg-levonások és -befizetések. Éves
+          összesítő.
+        title: Tőkejövedelmek és eszközátruházások adóelőleg-levonása - éves összesítő
       revision:
         '2019':
           casilla:

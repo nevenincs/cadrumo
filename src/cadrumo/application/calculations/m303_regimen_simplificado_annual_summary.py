@@ -18,10 +18,8 @@ from ...core.decimal.constants import ZERO
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.modelo import Modelo
 from ...core.period import Period
-from ...core.resources.bundled_data import bundled_path
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.m303_regimen_simplificado_annual_summary_bindings import (
     m303_regimen_simplificado_annual_summary_requirement,
 )
@@ -332,8 +330,7 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
             )
         m303 = evidence.m303
         result = m303.regimen_simplificado.calculation_result
-        modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-        modelo = next(candidate for candidate in modelos if candidate.id == Modelo.M303.value)
+        modelo = next(candidate for candidate in bundled_authority().modelos if candidate.id == Modelo.M303.value)
         source_revision_at_coordinate = select_revision(
             modelo,
             filing_year=source.filing_year,

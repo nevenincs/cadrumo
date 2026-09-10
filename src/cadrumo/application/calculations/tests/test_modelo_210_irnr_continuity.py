@@ -27,8 +27,8 @@ This module is the cross-year behavior coverage for Modelo 210.
 It drives the REAL primary engine (real registry authority, real
 calculate_registry_snapshot, real formula evaluation — no mocks) for two
 distinct renta years (2025, 2026), recording each through the
-:class:`cross-year observation` and cross-checking via
-:func:`the cross-year behavior assertion`.
+``cross-year observation`` and cross-checking via
+``the cross-year behavior assertion``.
 
 Grounding (non-tautological): the expected tipo_gravamen (0.24) is declared in
 the GB/general convenio row, whose allocation authority is UK treaty art. 6 and
@@ -395,9 +395,9 @@ def test_modelo_210_irnr_continuity_enrolls_two_renta_years(tmp_path: Path) -> N
 
     Drives the REAL M210 primary engine for both annual groupings (real
     registry authority, real formula evaluation — no mocks). Records each
-    year through :class:`cross-year observation` (calculation mode, evidenced
+    year through ``cross-year observation`` (calculation mode, evidenced
     by _produced casilla count) and cross-checks via
-    :func:`the cross-year behavior assertion`.
+    ``the cross-year behavior assertion``.
 
     Load-bearing assertions:
     - tipo_gravamen = 0.24 in both years (treaty-rate determinism).

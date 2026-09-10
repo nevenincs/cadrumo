@@ -13,6 +13,7 @@ live in a separate live test module to keep the unit suite fast.
 
 from __future__ import annotations
 
+from pathlib import Path
 from urllib.parse import urlsplit
 
 import pytest
@@ -162,7 +163,15 @@ def test_verdict_parser_recognises_invalid_response_for_malformed_input() -> Non
 
 
 def test_verdict_parser_recognises_no_consta_response() -> None:
-    """AEAT phrasing for valid-format but unregistered NIF: 'NO CONSTA'."""
+    """AEAT phrasing for valid-format but unregistered NIF: 'NO CONSTA'.
+
+    NOT captured evidence. This body text is RECONSTRUCTED from the
+    ``valid`` capture's sentence frame, not observed live -- no committed
+    sample exercises the unregistered case. It is a declared coverage gap
+    (see PROVENANCE.md 'Known coverage gaps'); closing it needs an
+    authenticated re-probe. Treat this as a parser smoke test, not as
+    grounding for AEAT's actual unregistered-NIF phrasing.
+    """
 
     body_text = "A FECHA 07-05-2026 NO CONSTA OPERADOR INTRACOMUNITARIO CON EL NÚMERO DE IVA ESB99999999"
     assert extract_marker_verdict(body_text, positive_markers=_POSITIVE_MARKERS) == "invalid"
@@ -199,17 +208,45 @@ from ......core.resources.bundled_data import bundled_path
 _GROI_RESPONSE_SAMPLES_DIR = bundled_path("corpus", "aeat_official", "groi_response_samples")
 
 
+_GROI_SAMPLE_VERDICT_PREFIXES = frozenset({"valid", "invalid", "unknown"})
+
+
 def _discover_groi_response_samples() -> list[tuple[str, str]]:
-    """Yield (expected_verdict, fixture_path_str) for every .txt sample on disk."""
+    """Yield (expected_verdict, fixture_path_str) for every .txt sample on disk.
+
+    Raises rather than returning an empty or filtered list. Collection-time
+    silence is the failure mode this corpus exists to prevent: a missing
+    directory or a misnamed file would otherwise parametrise to zero cases,
+    and the suite would report green while asserting nothing about the
+    parser that gates live modelo 349 ROI checks.
+    """
+
+    if not _GROI_RESPONSE_SAMPLES_DIR.is_dir():
+        raise AssertionError(
+            f"GROI response-sample corpus missing at {_GROI_RESPONSE_SAMPLES_DIR}; "
+            "the verdict parser has no external authority without it",
+        )
 
     samples: list[tuple[str, str]] = []
-    if not _GROI_RESPONSE_SAMPLES_DIR.is_dir():
-        return samples
+    misnamed: list[str] = []
     for path in scan_directory(_GROI_RESPONSE_SAMPLES_DIR, pattern="*.txt"):
         prefix = path.stem.split("_", 1)[0]
-        if prefix not in {"valid", "invalid", "unknown"}:
+        if prefix not in _GROI_SAMPLE_VERDICT_PREFIXES:
+            misnamed.append(path.name)
             continue
         samples.append((prefix, str(path)))
+
+    if misnamed:
+        raise AssertionError(
+            f"GROI response samples violate the '{{verdict}}_{{descriptor}}.txt' naming contract: "
+            f"{sorted(misnamed)!r}; expected a prefix in {sorted(_GROI_SAMPLE_VERDICT_PREFIXES)!r}. "
+            "A misnamed sample is never asserted against -- rename it or remove it.",
+        )
+    if not samples:
+        raise AssertionError(
+            f"no GROI response samples discovered under {_GROI_RESPONSE_SAMPLES_DIR}; "
+            "the parametrised parser regression would silently assert nothing",
+        )
     return samples
 
 
@@ -217,10 +254,38 @@ def _discover_groi_response_samples() -> list[tuple[str, str]]:
 def test_groi_response_samples_parse_to_expected_verdict(expected_verdict: str, fixture_path: str) -> None:
     """Verbatim live-AEAT responses parse to the verdict their filename declares."""
 
-    from pathlib import Path
-
     body_text = Path(fixture_path).read_text(encoding="utf-8")
     assert extract_marker_verdict(body_text, positive_markers=_POSITIVE_MARKERS) == expected_verdict
+
+
+def test_groi_response_samples_carry_provenance_entries() -> None:
+    """Every committed sample MUST be documented in PROVENANCE.md.
+
+    A sample added without a provenance row loses its capture date, source
+    endpoint, and hash -- the audit trail that makes it evidence rather than
+    an anonymous fixture. Mirrors the corpus-wide provenance gate at
+    ``src/cadrumo/_data/corpus/tests/test_corpus_provenance.py``, which is
+    scoped to the instructions corpus and does not reach this directory.
+    """
+
+    provenance = _GROI_RESPONSE_SAMPLES_DIR / "PROVENANCE.md"
+    assert provenance.is_file(), f"PROVENANCE.md missing at {provenance}"
+
+    body = provenance.read_text(encoding="utf-8")
+    assert "## Source" in body, "PROVENANCE.md missing '## Source' section"
+    assert "## Corpus capture date" in body, "PROVENANCE.md missing corpus capture date"
+    assert "## Known coverage gaps" in body, (
+        "PROVENANCE.md missing the coverage-gap declaration; uncaptured verdict "
+        "classes must stay visible rather than reading as complete coverage"
+    )
+
+    undocumented = [
+        name for _, path_str in _discover_groi_response_samples() if (name := Path(path_str).name) not in body
+    ]
+    assert not undocumented, (
+        f"GROI samples not listed in PROVENANCE.md: {sorted(undocumented)!r}; "
+        "add a row to the Documents table before landing"
+    )
 
 
 def test_groi_read_guard_admits_sibling_load_balancer_host() -> None:

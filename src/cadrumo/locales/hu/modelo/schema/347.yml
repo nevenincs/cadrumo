@@ -2,8 +2,9 @@ modelo:
   schema:
     '347':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 347. A harmadik személyekkel folytatott ügyletek éves
+          bevallása.
+        title: Harmadik személyekkel folytatott ügyletek (éves adatszolgáltatás)
       revision:
         2011-2024:
           casilla:

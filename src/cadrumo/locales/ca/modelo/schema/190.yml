@@ -2,8 +2,10 @@ modelo:
   schema:
     '190':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 190. Declaració informativa. Retencions i ingressos
+          a compte. Rendiments del treball i d'activitats econòmiques, premis i determinats
+          guanys patrimonials i imputacions de rendes. Resum anual.
+        title: Resum anual de retencions del treball i d'activitats
       revision:
         '2024':
           casilla:

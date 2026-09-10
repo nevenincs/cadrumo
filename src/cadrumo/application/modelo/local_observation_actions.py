@@ -34,8 +34,8 @@ from pydantic import BaseModel, ValidationError
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...core.resources.bundled_data import bundled_path
 from ...core.time.clock import now as _utc_now
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import (
     CasillaObservation,
     RegistryModeloObservation,
@@ -51,7 +51,6 @@ from ...domain.calculations.registry.errors import (
     RegistryValidationError,
 )
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.temporal import select_revision
 from ..calculations.observations_repository import (
@@ -161,8 +160,7 @@ def record_operator_local_observation[CasillaKey](
 
 def _load_revision(*, modelo: str, filing_year: int, period: Period) -> ModeloRevision:
     try:
-        modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-        modelo_definition = next(candidate for candidate in modelos if candidate.id == modelo)
+        modelo_definition = next(candidate for candidate in bundled_authority().modelos if candidate.id == modelo)
         return select_revision(
             modelo_definition,
             filing_year=filing_year,

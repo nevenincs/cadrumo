@@ -457,8 +457,7 @@ def test_registry_snapshot_unresolved_finding_is_locale_neutral() -> None:
         "modelo.work.verify.registry_snapshot.available",
         "modelo.work.verify.registry_snapshot.unavailable",
     )
-    assert failure.verdict.action is not None
-    assert failure.verdict.action.action_id == "operator.registry.verify"
+    assert failure.verdict.action is None
 
 
 # ---------------------------------------------------------------------------

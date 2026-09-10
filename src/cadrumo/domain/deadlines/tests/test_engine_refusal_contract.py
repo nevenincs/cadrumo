@@ -40,7 +40,6 @@ _PINNED_ERROR_NAMES = ("NoDeadlineWindowsError", "ScheduleComputationError")
 #: anchor a rename would empty the AST sweep and let it pass vacuously.
 _EXPECTED_RAISING_FUNCTIONS = frozenset(
     {
-        "DeadlineEngine.__init__",
         "DeadlineEngine.compute",
         "DeadlineEngine.explain",
         "DeadlineEngine._deadline_windows",
@@ -71,14 +70,6 @@ def _profile() -> TaxpayerProfile:
     )
 
 
-def _write_unloadable_registry(root: Path) -> Path:
-    """Materialise a real registry tree whose modelo manifest cannot be parsed."""
-    modelo_root = root / "modelos" / "130"
-    modelo_root.mkdir(parents=True)
-    (modelo_root / "manifest.toml").write_text("[modelo\nid = ", encoding="utf-8")
-    return root
-
-
 class TestMessageKeysMatchTheRegistry:
     """The stated keys are the classes' own registered keys."""
 
@@ -87,7 +78,6 @@ class TestMessageKeysMatchTheRegistry:
 
     def test_schedule_computation_key_is_the_registered_key(self) -> None:
         assert ScheduleComputationError.code.message_key == _SCHEDULE_COMPUTATION_MESSAGE_KEY
-
 
 class TestRefusalsCarryNoAuthoredSentence:
     """Every reachable refusal renders as its key, never as English."""
@@ -105,15 +95,6 @@ class TestRefusalsCarryNoAuthoredSentence:
 
         assert str(excinfo.value) == "errors.error.error_deadlines_missing_windows"
         assert excinfo.value.context == {"modelo": "999", "filing_year": 1999}
-
-    def test_unparseable_registry_renders_the_key(self, tmp_path: Path) -> None:
-        with pytest.raises(ScheduleComputationError) as excinfo:
-            DeadlineEngine(registry_root=_write_unloadable_registry(tmp_path))
-
-        assert str(excinfo.value) == "errors.error.error_deadlines_schedule_computation"
-        assert excinfo.value.context is not None
-        assert excinfo.value.context["registry_stage"] == "load"
-        assert excinfo.value.__cause__ is not None
 
     def test_unresolvable_profile_condition_renders_the_key(self) -> None:
         condition = ProfilePredicateDefinition(

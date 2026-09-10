@@ -2,8 +2,10 @@ modelo:
   schema:
     '341':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 341. Kompenzációk visszatérítésére vonatkozó kérelem
+          a mezőgazdasági, állattenyésztési és halászati különleges szabályozás keretében.
+        title: Az IVA mezőgazdasági, állattenyésztési és halászati különleges szabályozása
+          szerinti kompenzációk visszatérítése
       revision:
         2005-2015:
           casilla:

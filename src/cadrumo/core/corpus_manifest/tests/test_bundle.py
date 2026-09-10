@@ -2,7 +2,7 @@
 
 Exercises the offline-installable checksummed-zip surface
 (:func:`build_corpus_bundle`, :func:`verify_corpus_bundle`,
-:func:`assert_corpus_bundle_verifies`) end to end against a real
+:func:`verify_corpus_bundle`) end to end against a real
 filesystem and a real zip archive: build a small bundle, verify it
 clean, then corrupt/remove/add a member and confirm the verifier names
 the exact affected file in every case. No calculation tautologies are
@@ -164,7 +164,7 @@ def test_verify_corpus_bundle_flags_unexpected_extra_file(tmp_path: Path) -> Non
 def test_verify_corpus_bundle_raises_tamper_error_when_manifest_digest_mismatches(tmp_path: Path) -> None:
     """Mutating the embedded manifest's recorded ``manifest_sha256`` (without
     recomputing it) must trip the self-attesting digest check, exactly as
-    :func:`load_corpus_manifest` does for the on-disk sidecar form."""
+    ``load_corpus_manifest`` does for the on-disk sidecar form."""
     _corpus_root, bundle_path = _build_bundle(tmp_path)
 
     with zipfile.ZipFile(bundle_path, "r") as archive:
@@ -209,7 +209,7 @@ def test_build_corpus_bundle_overwrites_existing_output_atomically(tmp_path: Pat
     """A pre-existing file at the output path is replaced only on a
     successful build, never partially overwritten -- proving the
     temp-file-then-rename write is exercised for the bundle path too,
-    matching :func:`save_corpus_manifest`'s atomicity guarantee."""
+    matching :func:`build_corpus_manifest`'s atomicity guarantee."""
     corpus_root = tmp_path / "corpus"
     _seed_corpus(corpus_root)
     output_path = tmp_path / "bundle.zip"

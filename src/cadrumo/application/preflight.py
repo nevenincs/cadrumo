@@ -3,8 +3,8 @@
 This module is the read-only doctor surface for the health dimensions that sit
 *beside* the external-dependency probes in :mod:`application.provisioning`:
 per-auth-provider certificate / Cl@ve Móvil configuration health, secure-storage
-and bundled-corpus reachability, key configuration sanity, registry referential
-integrity, and portal-registry assembly health.
+and bundled-corpus reachability, key configuration sanity, and portal-registry
+assembly health.
 Each probe answers one health question and returns a
 typed :class:`PreflightCheck` — it never raises; a broken dimension is report
 data (an ``error`` severity row with typed facts and a precondition verdict), not an exception
@@ -14,11 +14,7 @@ The certificate / Cl@ve Móvil rows reuse
 :func:`~application.auth.probe_provider_configuration` (the pure-local
 per-provider probe that opens the ``.p12`` and classifies expiry via
 :func:`~adapters.outbound.aeat.auth.evaluate_loaded_certificate_health`, or
-classifies the configured DNI/NIE). The registry row reuses the same
-referential-integrity gate the registry runs at snapshot build
-(``check_all_id_references``) by driving
-:meth:`~domain.calculations.registry.ValidatedRegistryAuthority.snapshot`
-over every bundled revision. ``aeat config check`` renders these rows through
+classifies the configured DNI/NIE). ``aeat config check`` renders these rows through
 :class:`~entrypoints.cli.config._check_payloads.CheckPreflightPayload`
 beside the capability posture and dependency probes.
 """
@@ -30,7 +26,7 @@ import sys
 from collections.abc import Mapping
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING, Final
+from typing import Final
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -50,17 +46,12 @@ from ..core.paths import (
 from .auth.probes import ProviderProbeResult
 from .operator_actions.models import ActionReference, ConditionEvidence, PreconditionVerdict
 
-if TYPE_CHECKING:
-    from ..domain.calculations.registry.authority import ValidatedRegistryAuthority
-
-
 __all__ = [
     "HealthSeverity",
     "PreflightCheck",
     "grade_provider_probe_result",
     "probe_auth_providers",
     "probe_portal_registry_health",
-    "probe_registry_referential_integrity",
     "probe_storage_corpus_env",
     "run_preflight_checks",
 ]
@@ -89,7 +80,6 @@ class PreflightCondition(StrEnum):
     STORAGE_ROOT_WRITABLE = "preflight.storage.root_writable"
     CORPUS_PRESENT = "preflight.corpus.present"
     WINDOWS_PATH_FITS = "preflight.storage.windows_path_fits"
-    REGISTRY_REFERENCES_VALID = "preflight.registry.references_valid"
     PORTAL_REGISTRY_HEALTHY = "preflight.portal.registry_healthy"
 
 
@@ -98,7 +88,7 @@ class PreflightCheck(BaseModel):
 
     ``check`` is the stable row id shown by ``aeat config check`` (e.g.
     ``auth-provider:certificate``, ``storage:local-root``,
-    ``corpus:normatives``, ``registry:referential-integrity``).
+    ``corpus:normatives``).
     ``healthy`` is the boolean verdict and ``severity`` grades it. ``facts``
     carries only locale-neutral observations. An unhealthy row owns one typed
     precondition verdict; a healthy row owns none.
@@ -500,113 +490,6 @@ def _probe_windows_long_path_support(settings: Settings, *, object_path_suffix_l
     )
 
 
-# ── #98 — registry referential integrity ─────────────────────────────────────
-
-
-def probe_registry_referential_integrity() -> PreflightCheck:
-    """Run the registry referential-integrity gate over every bundled revision.
-
-    Drives the same ``check_all_id_references`` existence gate the
-    registry runs at snapshot build (casilla / formula / binding / legal
-    / source ID references) by building a snapshot for every revision of
-    every bundled modelo through
-    :meth:`~domain.calculations.registry.ValidatedRegistryAuthority.snapshot`.
-    A dangling reference surfaces as a
-    :class:`~domain.calculations.registry.RegistryValidationError`,
-    which is caught and reported as an ``error`` row naming the count of
-    failing revisions — the probe never raises.
-
-    Returns:
-        A single :class:`PreflightCheck` row for the registry-integrity dimension.
-    """
-    from ..domain.calculations.registry.authority import bundled_authority
-    from ..domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-
-    try:
-        authority = bundled_authority()
-    except (RegistryValidationError, RegistrySnapshotError, CadrumoError) as exc:
-        facts = {"registry_loaded": False, "error_type": type(exc).__name__}
-        return _failed_check(
-            check="registry:referential-integrity",
-            severity=HealthSeverity.ERROR,
-            condition=PreflightCondition.REGISTRY_REFERENCES_VALID,
-            facts=facts,
-        )
-
-    return _probe_registry_authority(authority)
-
-
-def _probe_registry_authority(authority: ValidatedRegistryAuthority) -> PreflightCheck:
-    """Validate one loaded authority through the production snapshot path."""
-    from collections import Counter
-
-    from ..domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-
-    revisions_checked = 0
-    failure_count = 0
-    grade_counts: Counter[str] = Counter()
-    for modelo in authority.modelos:
-        for revision in modelo.revisions.values():
-            filing_year, period = _representative_filing_context(revision)
-            if filing_year is None or period is None:
-                continue
-            revisions_checked += 1
-            requested_grade = revision.effective_authority_grade
-            grade_counts[requested_grade.value] += 1
-            try:
-                authority.snapshot(
-                    modelo.id,
-                    filing_year=filing_year,
-                    period=period,
-                    revision_id=revision.id,
-                    grade=requested_grade,
-                )
-            except (RegistryValidationError, RegistrySnapshotError):
-                failure_count += 1
-
-    if failure_count:
-        facts: dict[str, str | int | bool] = {
-            "revisions_checked": revisions_checked,
-            "failure_count": failure_count,
-        }
-        facts.update({f"grade_{grade}_count": count for grade, count in sorted(grade_counts.items())})
-        return _failed_check(
-            check="registry:referential-integrity",
-            severity=HealthSeverity.ERROR,
-            condition=PreflightCondition.REGISTRY_REFERENCES_VALID,
-            facts=facts,
-        )
-    return _healthy_check(
-        check="registry:referential-integrity",
-        severity=HealthSeverity.OK,
-        facts={
-            "revisions_checked": revisions_checked,
-            "failure_count": 0,
-            **{f"grade_{grade}_count": count for grade, count in sorted(grade_counts.items())},
-        },
-    )
-
-
-def _representative_filing_context(revision: object) -> tuple[int | None, str | None]:
-    """Derive one buildable ``(filing_year, period)`` for ``revision``.
-
-    Mirrors the registry test harness: the first declared year (or the
-    open-ended ``year_from``) paired with the first declared period. A
-    revision that declares no period is skipped (returns ``(None, None)``)
-    rather than guessed.
-    """
-    selector = getattr(revision, "period_selector", None)
-    if selector is None:
-        return None, None
-    years = getattr(selector, "years", ()) or ()
-    raw_filing_year = years[0] if years else getattr(selector, "year_from", None)
-    filing_year = raw_filing_year if isinstance(raw_filing_year, int) else None
-    periods = getattr(selector, "periods", ()) or ()
-    raw_period = periods[0] if periods else None
-    period = raw_period if isinstance(raw_period, str) else None
-    return filing_year, period
-
-
 # ── Portal-registry health ────────────────────────────────────────────
 
 
@@ -651,8 +534,7 @@ def run_preflight_checks(
     """Run every workstation-preflight probe and return the typed :class:`PreflightCheck` rows.
 
     Concatenates the per-auth-provider certificate / Cl@ve Móvil health
-    rows, the secure-storage / bundled-corpus / configuration rows,
-    the registry referential-integrity row, and the
+    rows, the secure-storage / bundled-corpus / configuration rows, and the
     portal-registry health / recorded-drift row. Every probe catches
     its own failures and reports them as ``error`` rows, so the aggregate
     never raises. The portal-drift row runs with the offline default (no
@@ -662,6 +544,5 @@ def run_preflight_checks(
     return (
         *probe_auth_providers(settings=resolved),
         *probe_storage_corpus_env(settings=resolved, object_path_suffix_length=object_path_suffix_length),
-        probe_registry_referential_integrity(),
         probe_portal_registry_health(),
     )

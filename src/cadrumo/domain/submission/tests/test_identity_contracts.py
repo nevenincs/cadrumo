@@ -100,7 +100,7 @@ def test_canonical_modelo_identity_survives_encrypted_storage(tmp_path: Path) ->
     ids=("free-text", "blank", "uppercase-hex", "fifteen-chars", "seventeen-chars"),
 )
 def test_submission_id_must_be_the_derived_content_coordinate(malformed_submission_id: str) -> None:
-    """The stored identity must be a value ``make_submission_id`` could have produced."""
+    """The stored identity must match the ``SubmissionId`` digest form."""
     with pytest.raises(ValidationError):
         _filing(submission_id=malformed_submission_id, attempt_id=f"{malformed_submission_id}.1")
 

@@ -2,8 +2,9 @@ modelo:
   schema:
     038:
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 038. A közhitelű nyilvántartásba bejegyzett szervezetek
+          által végzett ügyletek kimutatása. Adatszolgáltatási bevallás.
+        title: Közhitelű nyilvántartásba bejegyzett szervezetek ügyletei (havi adatszolgáltatás)
       revision:
         2024-desde-06:
           casilla:

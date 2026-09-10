@@ -262,8 +262,6 @@ adapters:
         en una pàgina de modificació; aquest lector mai no modifica les dades censals.
       censal_no_dispatch: El selector d'accés de l'AEAT no ha obert la pàgina censal
         en un servidor operatiu; torna a autenticar-te i prova-ho de nou.
-      cotejo_nav_failed: La navegació a la pàgina de cotejo d'AEAT ha fallat; la sessió
-        pot haver caducat. Executeu 'aeat config auth test' i torneu-ho a intentar.
       ejercicio_unavailable: El registre de declaracions d'AEAT no ofereix l'exercici
         sol·licitat per a aquest model.
       empty_identity_nif: El NIF d'identitat de la sessió AEAT és buit; no es pot

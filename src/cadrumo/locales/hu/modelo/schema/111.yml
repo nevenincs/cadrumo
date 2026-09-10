@@ -2,8 +2,10 @@ modelo:
   schema:
     '111':
       field:
-        official_name: null
-        title: null
+        official_name: Az IRPF adóelőleg-levonásai és -befizetései. Munkaviszonyból
+          és gazdasági tevékenységből származó jövedelmek, nyeremények, valamint egyes
+          vagyoni nyereségek és jövedelem-hozzárendelések.
+        title: IRPF adóelőleg-levonások és -befizetések
       revision:
         2019-y-siguientes:
           casilla:

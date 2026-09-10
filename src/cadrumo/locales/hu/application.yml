@@ -158,17 +158,9 @@ application:
           tartalmaznia kell a következőt: %{requirements}.'
         provider_close_failed: Az AEAT böngészőmunkamenetet nem sikerült biztonságosan
           bezárni; az AEAT adatok olvasása előtt hitelesítsen újra.
-        sede_rejected: Az AEAT munkamenetet az AEAT Sede nem fogadja el; futtassa
-          a `aeat config auth test` parancsot az AEAT adatok olvasása előtt.
-        session_expired: Az AEAT munkamenet lejárt; futtassa a `aeat config auth test`
-          parancsot az AEAT adatok olvasása előtt.
         session_identity_profile_mismatch: Az AEAT munkamenet azonossága nem egyezik
           az aktív profil adóazonosítójával; törölje a hitelesítési munkameneteket,
           és hitelesítse az egyező profilt.
-        state_missing: Az AEAT munkamenet állapota hiányzik; futtassa a `aeat config
-          auth test` parancsot az AEAT adatok olvasása előtt.
-        verify_failed: Az AEAT munkamenetet nem sikerült ellenőrizni; futtassa a `aeat
-          config auth test` parancsot az AEAT adatok olvasása előtt.
   calculations:
     binding_prefill:
       errors:
@@ -470,7 +462,6 @@ application:
         unknown: '%{reason}'
     runtime:
       errors:
-        active_profile_load_failed: 'Az aktív bevallási profil nem tölthető be: %{reason}.'
         ambiguous_casilla_schema: 'Belső hiba: a futásidejű casilla-séma nem egyértelmű
           (duplikált casilla.id értékek vagy függő képlethivatkozások).'
         blank_modelo_selection: A kért modellválasztás nem tartalmazhat üres modellazonosítókat.
@@ -518,8 +509,6 @@ application:
         a válaszokból a(z) {page_key} kötelező kérdésnél.
       submit_blocked: 'A(z) {flow_id} folyamat nem küldhető be: {blocking_count} blokkoló
         megállapítás és {required_remaining} kötelező kérdés van még nyitva.'
-      unknown_repeating_group: A(z) {flow_id} folyamat nem deklarál {group_id} nevű
-        ismétlődő csoportot.
       validator_id_blank: Egy folyamat-ellenőrzőt nem üres azonosítóval kell regisztrálni.
       validator_id_duplicate: Már van regisztrált folyamat-ellenőrző {validator_id}
         azonosítóval.
@@ -1266,6 +1255,13 @@ application:
         ehhez: {manual_key}.'
       no_revision_for_diff_year: 'A(z) {modelo} nyilvántartás egyetlen revíziója sem
         fedi le a(z) {filing_year} adóévet. Deklarált revíziók: {available_revisions}.'
+    manuals:
+      coverage:
+        available: Helyben elérhető
+        recheck_aeat_publication: Ellenőrizze újra az AEAT hivatalos kézikönyvtárát,
+          és a közzétételkor szerezze be az éves PDF-et.
+        unacquired: A hivatalos kézikönyv megjelent; helyi beszerzésre vár
+        unpublished: Az AEAT még nem tette közzé
   storage:
     calc_sheets:
       engine:
@@ -1378,13 +1374,8 @@ application:
       repository_classification_mismatch: A(z) %{namespace} biztonságos objektum névtér
         a(z) %{expected} érzékenységhez van regisztrálva, de a tárolt rekord besorolása
         %{classification}.
-      repository_profile_bucket_mismatch: A(z) %{profile_id} profil nem tartozik a(z)
-        %{bucket_id} tárolóhoz; egy profiltároló pontosan egy profilazonosítót tartalmaz.
-      repository_profile_snapshot_missing: Az aktív bucketben nem található profil-pillanatkép.
       repository_profile_snapshot_version_unsupported: A profil-pillanatkép sémaverzióját
         ez az alkalmazás nem támogatja.
-      unsupported_bundle_schema_version: A csomag sémaverziója nem támogatott ebben
-        az alkalmazásverzióban.
     notices:
       censo_divergences_open: '{count} profil- vagy tanúsítványadat továbbra is eltér
         a Certificado de Situación Censal tanúsítványtól és megoldatlan: {axes}.'

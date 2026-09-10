@@ -1,0 +1,21 @@
+[fact]
+fact_id = "rd-439-2007-art-109:selector-m036-actividades-base-neta-de-subvenciones"
+family = "entity_set"
+
+[[fact.variants]]
+variant_id = "rd-439-2007-art-109:selector-m036-actividades-base-neta-de-subvenciones:2026-03-26"
+date_axis = "filing_period"
+valid_from = 2026-03-26
+legal_refs = ["rd-439-2007:art-109", "orden-eha-1274-2007:art-1"]
+source_refs = ["aeat-m036-activity-code-table-2026-03-26", "boe-rirpf-art-109-2007-04-01"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-m036-activity-code-table-2026-03-26"
+required_text = ["Ganadería independiente", "Actividad agrícola", "Actividad ganadera dependiente", "Actividad forestal"]
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-art-109-2007-04-01"
+required_text = ["actividades agrícolas o ganaderas", "actividades forestales", "con excepción de las subvenciones corrientes y de capital y de las indemnizaciones"]
+[fact.variants.payload]
+kind = "entity_set"
+entities = ["A02", "B01", "B02", "B03"]

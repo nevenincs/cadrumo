@@ -2,8 +2,8 @@ modelo:
   schema:
     '490':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 490. Tax on Certain Digital Services. Self-assessment.
+        title: Tax on Certain Digital Services - self-assessment
       revision:
         '2021':
           casilla:

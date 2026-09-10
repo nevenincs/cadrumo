@@ -21,14 +21,14 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from datetime import date
 from decimal import Decimal, InvalidOperation
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from ...core.decimal.coercion import coerce_decimal_strict
 from ...core.modelo import Modelo
-from ...core.resources.bundled_data import bundled_path
-from ...domain.calculations.registry.loader import load_legal_parameters_only
+from ...domain.calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
+from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.deadlines.models import IrpfEstimationRegime, TaxpayerProfile
 from ...domain.modelos.errors import ModeloValidationError
 from ...domain.modelos.verification_report import (
@@ -38,8 +38,8 @@ from ...domain.modelos.verification_report import (
 )
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
     from ...domain.calculations.registry.ids import SourceRefId
-    from ...domain.calculations.registry.schema_references import LegalParameter
     from ...domain.modelos.work_unit import WorkUnit
 
 _SETTLED_YEAR_MIN = 2016
@@ -75,6 +75,7 @@ def _objective_estimation_exclusion_advisory_findings(
     *,
     work_unit: WorkUnit,
     profile: TaxpayerProfile,
+    authority: ValidatedRegistryAuthority | None = None,
 ) -> tuple[ModeloVerificationFinding, ...]:
     """Return warnings for objective-estimation exclusion excesses.
 
@@ -89,6 +90,8 @@ def _objective_estimation_exclusion_advisory_findings(
             whether the settled official-source advisory applies.
         profile: The :class:`TaxpayerProfile` providing the IRPF estimation
             regime and objective-estimation prior-year volume facts.
+        authority: Optional validated authority for resolving each threshold at
+            the filing-period coordinate.
 
     Returns:
         A tuple of :class:`ModeloVerificationFinding` warnings, one per exceeded
@@ -115,14 +118,17 @@ def _objective_estimation_exclusion_advisory_findings(
     if all(raw_value is None for *_prefix, raw_value in declared_values):
         return ()
 
-    parameters = load_legal_parameters_only(bundled_path("registry", "aeat"))
     findings: list[ModeloVerificationFinding] = []
     for profile_field, parameter_id, raw_value in declared_values:
         if raw_value is None:
             continue
         declared = _as_decimal(raw_value, profile_field)
-        parameter = _require_parameter(parameters, parameter_id)
-        threshold = _as_decimal(parameter.value, parameter_id)
+        threshold_fact = _resolve_objective_estimation_threshold(
+            parameter_id=parameter_id,
+            filing_year=work_unit.filing_year,
+            authority=authority,
+        )
+        threshold = _as_decimal(threshold_fact.payload.value, parameter_id)
         if declared <= threshold:
             continue
         findings.append(
@@ -138,8 +144,12 @@ def _objective_estimation_exclusion_advisory_findings(
                     "declared": declared,
                     "threshold": threshold,
                 },
-                legal_refs=parameter.legal_refs,
-                source_refs=_scope_source_refs(work_unit.filing_year),
+                legal_refs=threshold_fact.legal_refs,
+                source_refs=tuple(
+                    dict.fromkeys(
+                        (*threshold_fact.source_refs, *_scope_source_refs(work_unit.filing_year))
+                    )
+                ),
             ),
         )
     return tuple(findings)
@@ -149,14 +159,43 @@ def _uses_objective_estimation(profile: TaxpayerProfile) -> bool:
     return profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA
 
 
-def _require_parameter(parameters: Mapping[str, LegalParameter], parameter_id: str) -> LegalParameter:
-    parameter = parameters.get(parameter_id)
-    if parameter is None:
+def _resolve_objective_estimation_threshold(
+    *,
+    parameter_id: str,
+    filing_year: int,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> ResolvedScalarFact:
+    """Resolve an advisory threshold at the filing-year coordinate with legal provenance."""
+    from ...domain.calculations.registry.errors import RegistryError
+
+    if authority is None:
+        from ...domain.calculations.registry.authority import bundled_authority
+
+        authority = bundled_authority()
+    try:
+        resolved = authority.resolve_governed_fact(
+            ScalarFactQuery(
+                fact_id=parameter_id,
+                date_axis=DateAxis.FILING_PERIOD,
+                effective_date=date(filing_year, 12, 31),
+            )
+        )
+    except RegistryError as exc:
         raise ModeloValidationError(
             translated_message="errors.error.error_modelos_validation",
-            context={"parameter_id": parameter_id, "parameter_present": False},
+            context={"parameter_id": parameter_id, "filing_year": filing_year, "fact_resolved": False},
+        ) from exc
+    if not isinstance(resolved, ResolvedScalarFact):
+        raise ModeloValidationError(
+            translated_message="errors.error.error_modelos_validation",
+            context={"parameter_id": parameter_id, "filing_year": filing_year, "fact_scalar": False},
         )
-    return parameter
+    if not resolved.legal_refs:
+        raise ModeloValidationError(
+            translated_message="errors.error.error_modelos_validation",
+            context={"parameter_id": parameter_id, "filing_year": filing_year, "fact_legal_refs": False},
+        )
+    return cast("ResolvedScalarFact", resolved)
 
 
 def _scope_source_refs(filing_year: int) -> tuple[SourceRefId, ...]:

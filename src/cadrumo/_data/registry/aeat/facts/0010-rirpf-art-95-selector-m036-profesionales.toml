@@ -1,0 +1,21 @@
+[fact]
+fact_id = "rirpf-art-95:selector-m036-actividades-profesionales"
+family = "entity_set"
+
+[[fact.variants]]
+variant_id = "rirpf-art-95:selector-m036-actividades-profesionales:2026-03-26"
+date_axis = "filing_period"
+valid_from = 2026-03-26
+legal_refs = ["rd-439-2007:art-95", "orden-eha-1274-2007:art-1"]
+source_refs = ["aeat-m036-activity-code-table-2026-03-26", "boe-rirpf-art-95-2023-01-26"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-m036-activity-code-table-2026-03-26"
+required_text = ["A04", "Actividades profesionales de carácter artístico o deportivo", "A05", "Resto de actividades profesionales"]
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-art-95-2023-01-26"
+required_text = ["actividades incluidas en las Secciones Segunda y Tercera"]
+[fact.variants.payload]
+kind = "entity_set"
+entities = ["A04", "A05"]

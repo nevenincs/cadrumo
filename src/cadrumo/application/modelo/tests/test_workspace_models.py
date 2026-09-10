@@ -16,7 +16,6 @@ from ....core.period import Period
 from ....core.revision_review import RevisionReviewStatus
 from ....core.schema_family_disposition import RegistrySchemaFamilyDisposition
 from ....domain.modelos.calculation_revision import CalculationSourceRef
-from ...registry.closure import RegistryClosureLimb, RegistryClosureOwnerDisposition, RegistryClosureRefusal
 from ..workspace_models import (
     ModeloWorkspaceBaselineV1,
     ModeloWorkspaceBoundedFacetV1,
@@ -171,31 +170,10 @@ def _readiness(target: ModeloWorkspaceResolvedTargetV1) -> ModeloWorkspaceReadin
     )
 
 
-def _closure_limb(target: ModeloWorkspaceResolvedTargetV1) -> RegistryClosureLimb:
-    return RegistryClosureLimb(
-        modelo=str(target.modelo),
-        revision=target.law_selected_revision_id,
-        name="temporal_coverage",
-        outcome="unmeasured",
-        refusal=RegistryClosureRefusal(
-            reason="unmeasured",
-            detail="the production closure owner has not measured this revision",
-            disposition=RegistryClosureOwnerDisposition(
-                limb="temporal_coverage",
-                state="deferred",
-                owner="registry-closure",
-                work_item="registry-closure-port",
-                reconsideration_condition="the owner publishes a stamped closure result",
-            ),
-        ),
-    )
-
-
 def _static_projection(
     *,
     target: ModeloWorkspaceResolvedTargetV1 | None = None,
     readiness: ModeloWorkspaceReadinessV1 | None = None,
-    registry_closure_limbs: tuple[RegistryClosureLimb, ...] | None = None,
     capabilities: tuple[ModeloWorkspaceCapabilityV1, ...] | None = None,
 ) -> ModeloWorkspaceProjectionV1:
     resolved_target = _target() if target is None else target
@@ -221,9 +199,6 @@ def _static_projection(
             disposition=ModeloWorkspaceCapabilityDisposition.UNMEASURED,
         ),
         readiness=_readiness(resolved_target) if readiness is None else readiness,
-        registry_closure_limbs=(
-            (_closure_limb(resolved_target),) if registry_closure_limbs is None else registry_closure_limbs
-        ),
         capabilities=_capabilities(resolved_target) if capabilities is None else capabilities,
     )
 
@@ -470,12 +445,11 @@ def test_workspace_safe_fact_value_rejects_unbounded_text() -> None:
         )
 
 
-def test_workspace_projection_preserves_canonical_readiness_closure_and_capability_coordinates() -> None:
+def test_workspace_projection_preserves_canonical_readiness_and_capability_coordinates() -> None:
     projection = _static_projection()
 
     assert projection.readiness is not None
     assert projection.readiness.per_operation_requirements_assessed is False
-    assert projection.registry_closure_limbs[0].name == "temporal_coverage"
     assert all(capability.target == projection.target for capability in projection.capabilities)
     mismatched_target = _target(revision_id="2024-y-siguientes")
     mismatched_capabilities = (
@@ -489,8 +463,6 @@ def test_workspace_projection_preserves_canonical_readiness_closure_and_capabili
         _static_projection(capabilities=mismatched_capabilities)
     with pytest.raises(ValidationError, match="readiness must retain"):
         _static_projection(readiness=_readiness(mismatched_target))
-    with pytest.raises(ValidationError, match="registry closure limbs must retain"):
-        _static_projection(registry_closure_limbs=(_closure_limb(mismatched_target),))
 
 
 def test_workspace_rejects_unbounded_localized_text_cursor_and_capability_revision_drift() -> None:

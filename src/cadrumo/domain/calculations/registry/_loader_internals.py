@@ -85,6 +85,7 @@ from .schema import (
     ModeloDefinition,
     ModeloRevision,
     RegistryCatalogues,
+    SociedadesAnnualManualCoverageCatalogue,
     SupportedFilingYearsCatalogue,
 )
 from .schema_references import LegalParameter, LegalReference, SourceReference
@@ -1294,11 +1295,23 @@ def _load_catalogue_file_cached(
             supported_filing_years = SupportedFilingYearsCatalogue.model_validate(raw_supported_filing_years)
         except ValidationError as exc:
             raise RegistryLoadError(f"{source_path}: invalid supported_filing_years catalogue: {exc}") from exc
+    sociedades_annual_manual_coverage = None
+    raw_sociedades_annual_manual_coverage = data.get("sociedades_annual_manual_coverage")
+    if raw_sociedades_annual_manual_coverage is not None:
+        try:
+            sociedades_annual_manual_coverage = SociedadesAnnualManualCoverageCatalogue.model_validate(
+                raw_sociedades_annual_manual_coverage,
+            )
+        except ValidationError as exc:
+            raise RegistryLoadError(
+                f"{source_path}: invalid sociedades_annual_manual_coverage catalogue: {exc}",
+            ) from exc
     return RegistryCatalogues(
         legal=legal,
         sources=sources,
         parameters=parameters,
         supported_filing_years=supported_filing_years,
+        sociedades_annual_manual_coverage=sociedades_annual_manual_coverage,
     )
 
 

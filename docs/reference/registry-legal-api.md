@@ -40,9 +40,8 @@ calculation resolver is enrolled for the encrypted `InventoryLedger`, so it
 remains a standalone business register.
 
 Use the generated [application command reference](../cli/app.rst) to look up
-registry inspection, modelo description, formula, verification-report, and
-audit surfaces. Use the {doc}`glossary </_generated/glossary>` for taxpayer-facing
-definitions.
+modelo calculation, description, verification-report, and audit surfaces. Use
+the {doc}`glossary </_generated/glossary>` for taxpayer-facing definitions.
 
 ## Python public API lookup
 

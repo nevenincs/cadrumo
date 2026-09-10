@@ -2,8 +2,10 @@ modelo:
   schema:
     '165':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 165. Declaració informativa de certificacions individuals
+          emeses als socis o partícips d'entitats de nova o recent creació.
+        title: Certificacions a socis d'entitats de nova o recent creació (informativa
+          anual)
       revision:
         2013-2015:
           casilla:

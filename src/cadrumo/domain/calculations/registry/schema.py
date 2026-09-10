@@ -63,7 +63,7 @@ from .ids import (
 from .m303_orden_projection_models import M303AnnualOrdenAuthority
 from .period_selector_match import selector_period_matches_request
 from .schema_input_kind import InputKind
-from .schema_references import RegistrySnapshotRef
+from .schema_references import RegistryExternalLink, RegistrySnapshotRef
 from .schema_rounding import RegistryRoundingCode as RegistryRoundingCode
 from .schema_rounding import RegistryRoundingCodeValue
 from .schema_scalars import (
@@ -140,6 +140,9 @@ __all__ = [
     "NoPredecessor",
     "RegistryCatalogues",
     "RegistrySnapshot",
+    "SociedadesAnnualManualCoverageCatalogue",
+    "SociedadesAnnualManualCoverageDisposition",
+    "SociedadesAnnualManualCoverageStatus",
     "SupportedFilingYearsCatalogue",
 ]
 
@@ -1292,6 +1295,80 @@ class SupportedFilingYearsCatalogue(RegistryModel):
         return value
 
 
+class SociedadesAnnualManualCoverageStatus(StrEnum):
+    """The independently auditable availability state of one annual manual."""
+
+    AVAILABLE = "available"
+    UNACQUIRED = "unacquired"
+    UNPUBLISHED = "unpublished"
+
+
+SociedadesAnnualManualCoverageStatusField = Annotated[
+    SociedadesAnnualManualCoverageStatus,
+    BeforeValidator(coerce_enum_member(SociedadesAnnualManualCoverageStatus)),
+]
+"""Registry token hydrated into a Sociedades annual-manual coverage status."""
+
+
+class SociedadesAnnualManualCoverageDisposition(RegistryModel):
+    """One exact-year outcome for the annual Sociedades manual corpus.
+
+    This is documentary availability only. It is intentionally separate from
+    Modelo 200 revision selection and filing capability.
+    """
+
+    year: int = Field(ge=2000, le=2099)
+    status: SociedadesAnnualManualCoverageStatusField
+    source_ref: SourceRefId | None = None
+    official_locator: RegistryExternalLink
+    observed_at: date
+    acquisition_condition_key: str | None = Field(default=None, min_length=1)
+
+    @model_validator(mode="after")
+    def _validate_disposition(self) -> SociedadesAnnualManualCoverageDisposition:
+        if self.status is SociedadesAnnualManualCoverageStatus.AVAILABLE:
+            if self.source_ref is None:
+                raise RegistryValidationError("available Sociedades manual coverage requires source_ref")
+            if self.acquisition_condition_key is not None:
+                raise RegistryValidationError(
+                    "available Sociedades manual coverage must not declare acquisition_condition_key",
+                )
+        elif self.status is SociedadesAnnualManualCoverageStatus.UNACQUIRED:
+            if self.source_ref is not None:
+                raise RegistryValidationError("unacquired Sociedades manual coverage must not declare source_ref")
+            if self.acquisition_condition_key is None:
+                raise RegistryValidationError(
+                    "unacquired Sociedades manual coverage requires acquisition_condition_key",
+                )
+        else:
+            if self.source_ref is not None:
+                raise RegistryValidationError("unpublished Sociedades manual coverage must not declare source_ref")
+            if self.acquisition_condition_key is None:
+                raise RegistryValidationError(
+                    "unpublished Sociedades manual coverage requires acquisition_condition_key",
+                )
+        return self
+
+
+class SociedadesAnnualManualCoverageCatalogue(RegistryModel):
+    """One declarative coverage ledger for annual Sociedades manuals."""
+
+    dispositions: tuple[SociedadesAnnualManualCoverageDisposition, ...] = Field(min_length=1)
+
+    @field_validator("dispositions")
+    @classmethod
+    def _years_are_unique_and_ordered(
+        cls,
+        value: tuple[SociedadesAnnualManualCoverageDisposition, ...],
+    ) -> tuple[SociedadesAnnualManualCoverageDisposition, ...]:
+        years = tuple(disposition.year for disposition in value)
+        if tuple(sorted(set(years))) != years:
+            raise RegistryValidationError(
+                "Sociedades annual manual coverage years must be unique and in ascending order",
+            )
+        return value
+
+
 class RegistryCatalogues(RegistryModel):
     """Collect the registry-wide legal, source, fact, parameter, and support catalogues."""
 
@@ -1304,6 +1381,7 @@ class RegistryCatalogues(RegistryModel):
         default_factory=dict[Modelo, M303AnnualOrdenAuthority],
     )
     supported_filing_years: SupportedFilingYearsCatalogue | None = None
+    sociedades_annual_manual_coverage: SociedadesAnnualManualCoverageCatalogue | None = None
 
 
 class RegistrySnapshot(RegistryModel):

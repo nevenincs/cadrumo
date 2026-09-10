@@ -2,8 +2,10 @@ modelo:
   schema:
     '122':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 122. Personal Income Tax. Deductions for large families
+          or for dependants with disabilities. Adjustment of the entitlement to the
+          deduction by taxpayers not required to file a return.
+        title: IRPF adjustment of the large-family / disability deduction
       revision:
         2017-y-siguientes:
           casilla:

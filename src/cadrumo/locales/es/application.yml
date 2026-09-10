@@ -167,17 +167,9 @@ application:
           que el perfil activo incluya %{requirements}.
         provider_close_failed: No se pudo cerrar de forma segura la sesión del navegador
           AEAT; repite la autenticación antes de leer datos AEAT.
-        sede_rejected: La sesión AEAT no es aceptada por la Sede; ejecuta `aeat config
-          auth test` antes de leer datos AEAT.
-        session_expired: La sesión AEAT ha caducado; ejecuta `aeat config auth test`
-          antes de leer datos AEAT.
         session_identity_profile_mismatch: La identidad de la sesión AEAT no coincide
           con la identidad fiscal del perfil activo; borra las sesiones de autenticación
           y autentica el perfil que coincida antes de las lecturas AEAT en directo.
-        state_missing: Falta el estado de la sesión AEAT; ejecuta `aeat config auth
-          test` antes de leer datos AEAT.
-        verify_failed: No se ha podido verificar la sesión AEAT; ejecuta `aeat config
-          auth test` antes de leer datos AEAT.
   calculations:
     binding_prefill:
       errors:
@@ -487,8 +479,6 @@ application:
         unknown: '%{reason}'
     runtime:
       errors:
-        active_profile_load_failed: 'No se pudo cargar el perfil activo de presentación:
-          %{reason}.'
         ambiguous_casilla_schema: 'Error interno: el esquema de casillas en tiempo
           de ejecución es ambiguo (ids de casilla.id duplicados o referencias de fórmula
           colgantes).'
@@ -540,8 +530,6 @@ application:
         la pregunta obligatoria {page_key}, tras {consumed_count} respuestas.
       submit_blocked: 'El flujo {flow_id} no se puede enviar: quedan {blocking_count}
         hallazgos bloqueantes y {required_remaining} preguntas obligatorias sin responder.'
-      unknown_repeating_group: El flujo {flow_id} no declara ningún grupo repetible
-        llamado {group_id}.
       validator_id_blank: Un validador de flujo debe registrarse con un identificador
         no vacío.
       validator_id_duplicate: Ya hay un validador de flujo registrado con el identificador
@@ -1322,6 +1310,13 @@ application:
         extraida para {manual_key}.
       no_revision_for_diff_year: 'Ninguna revisión del registro de {modelo} cubre
         el ejercicio {filing_year}. Revisiones declaradas: {available_revisions}.'
+    manuals:
+      coverage:
+        available: Disponible localmente
+        recheck_aeat_publication: Vuelva a comprobar el archivo oficial de manuales
+          de la AEAT y adquiera el PDF anual cuando se publique.
+        unacquired: Manual oficial publicado; pendiente de adquisición local
+        unpublished: AEAT aún no lo ha publicado
   storage:
     calc_sheets:
       engine:
@@ -1438,15 +1433,8 @@ application:
       repository_classification_mismatch: El espacio de nombres de objeto seguro %{namespace}
         está registrado con sensibilidad %{expected}, pero la clasificación del registro
         almacenado es %{classification}.
-      repository_profile_bucket_mismatch: El perfil %{profile_id} no pertenece al
-        bucket %{bucket_id}; un bucket de perfil contiene exactamente una identidad
-        de perfil.
-      repository_profile_snapshot_missing: No se encontró la instantánea de perfil
-        en el bucket activo.
       repository_profile_snapshot_version_unsupported: La versión del esquema de la
         instantánea de perfil es más reciente de lo que admite esta aplicación.
-      unsupported_bundle_schema_version: La versión del esquema del paquete no es
-        compatible con esta versión de la aplicación.
     notices:
       censo_divergences_open: '{count} dato(s) del perfil o del certificado siguen
         difiriendo del Certificado de Situación Censal y quedan sin resolver: {axes}.'

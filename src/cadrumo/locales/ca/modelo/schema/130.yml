@@ -2,8 +2,9 @@ modelo:
   schema:
     '130':
       field:
-        official_name: null
-        title: null
+        official_name: Impost sobre la Renda de les Persones Físiques. Activitats
+          econòmiques en estimació directa. Pagament fraccionat.
+        title: IRPF pagament fraccionat estimació directa
       revision:
         2019-y-siguientes:
           casilla:

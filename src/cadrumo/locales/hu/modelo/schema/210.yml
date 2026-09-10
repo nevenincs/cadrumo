@@ -2,8 +2,10 @@ modelo:
   schema:
     '210':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 210. A külföldi illetőségűek jövedelemadója. Állandó
+          telephellyel nem rendelkező külföldi illetőségűek. Önbevallás.
+        title: IRNR önbevallás állandó telephellyel nem rendelkező külföldi illetőségűek
+          számára
       revision:
         '2025':
           casilla:

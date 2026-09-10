@@ -53,10 +53,7 @@ def test_representative_leaves_are_files() -> None:
 def test_representative_subtrees_are_directories() -> None:
     """Top-level subtree containers resolve to real directories."""
 
-    cases: tuple[tuple[str, ...], ...] = (
-        ("corpus", "parity_replays", "renta_web_open"),
-        ("registry", "aeat", "topics"),
-    )
+    cases: tuple[tuple[str, ...], ...] = (("registry", "aeat", "topics"),)
 
     for parts in cases:
         node = packaged_data(*parts)

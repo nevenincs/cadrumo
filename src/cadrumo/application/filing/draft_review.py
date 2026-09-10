@@ -139,7 +139,7 @@ class ModeloApprovalStaleReason(StrEnum):
     REVIEW_CHECKSUM_MISMATCH = "SUMA_VERIFICACION_REVISION_NO_COINCIDE"
 
 
-_STALE_REASON_TRANSLATION_KEYS: Final[dict[ModeloApprovalStaleReason, str]] = {
+_STALE_REASON_LOCALE_KEYS: Final[dict[ModeloApprovalStaleReason, str]] = {
     ModeloApprovalStaleReason.REVIEW_CHECKSUM_MISMATCH: (
         "application.filing.review.stale_reasons.review_checksum_mismatch"
     ),
@@ -605,7 +605,7 @@ def describe_stale_reason(reason: ModeloApprovalStaleReason) -> str:
     Returns:
         A localized phrase suitable for inline UI display.
     """
-    translation_key = _STALE_REASON_TRANSLATION_KEYS.get(reason)
+    translation_key = _STALE_REASON_LOCALE_KEYS.get(reason)
     if translation_key is not None:
         return tr(translation_key)
     return tr("application.filing.review.stale_reasons.unknown", reason=reason.value.lower().replace("_", " "))

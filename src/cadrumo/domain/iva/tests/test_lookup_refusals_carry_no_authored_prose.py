@@ -104,18 +104,19 @@ def test_unmatched_tier_refusal_carries_no_authored_sentence() -> None:
 def test_every_lookup_refusal_key_is_distinct() -> None:
     """A copy-paste must not collapse two conditions onto one key.
 
-    Six conditions, six keys. Two of them deliberately reuse the registered
+    Three conditions, three keys. Two of them deliberately reuse the registered
     :class:`~cadrumo.core.errors.ErrorCode` message keys for their classes,
     which is correct where the class has exactly one operator meaning; the
-    remaining four needed their own because their classes carry several.
+    remaining one needed its own because its class carries several.
+
+    The ``cite_requires_catalogue_or_date``, ``category_has_no_legal_basis``
+    and ``citation_legal_reference_absent`` conditions were raised by the
+    citation renderer, which is retired; their keys left the catalogue with it.
     """
     keys = (
         "errors.iva.rate_member_state_unregistered",
         "errors.error.error_financial_iva_rate_not_found",
-        "errors.iva.cite_requires_catalogue_or_date",
         "errors.error.error_financial_iva_category_not_found",
-        "errors.iva.category_has_no_legal_basis",
-        "errors.iva.citation_legal_reference_absent",
     )
     assert len(set(keys)) == len(keys)
 
@@ -125,10 +126,7 @@ def test_every_lookup_refusal_key_is_distinct() -> None:
     (
         "errors.iva.rate_member_state_unregistered",
         "errors.error.error_financial_iva_rate_not_found",
-        "errors.iva.cite_requires_catalogue_or_date",
         "errors.error.error_financial_iva_category_not_found",
-        "errors.iva.category_has_no_legal_basis",
-        "errors.iva.citation_legal_reference_absent",
     ),
 )
 def test_every_lookup_refusal_key_resolves_to_real_text(key: str) -> None:

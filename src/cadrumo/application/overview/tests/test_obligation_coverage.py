@@ -26,7 +26,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.modelo import OUT_OF_SCOPE_OBLIGATIONS, UNMODELED_OBLIGATIONS, Modelo
-from ....domain.calculations.registry.applicability import has_applicability_rule
+from ....domain.calculations.registry.applicability import iter_modelo_applicability_rules
 from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.deadlines.models import (
     IrpfEstimationRegime,
@@ -211,8 +211,9 @@ def test_out_of_scope_cannot_silence_a_positively_decidable_obligation() -> None
     out-of-scope escape hatch. This gate makes misuse of the hatch a hard failure
     rather than a silent under-scoping.
     """
+    ruled = {rule.modelo for rule in iter_modelo_applicability_rules()}
     for modelo in OUT_OF_SCOPE_OBLIGATIONS:
-        assert not has_applicability_rule(str(modelo)), (
+        assert str(modelo) not in ruled, (
             f"out-of-scope modelo {modelo} has a seed applicability rule; "
             "resolve it through applicability instead of silencing it"
         )

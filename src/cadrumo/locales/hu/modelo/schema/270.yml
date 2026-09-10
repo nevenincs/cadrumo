@@ -2,8 +2,10 @@ modelo:
   schema:
     '270':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 270. Az adóelőleg-levonások és -befizetések éves összesítője.
+          Egyes lottó- és fogadási nyeremények különadója.
+        title: A lottónyeremények különadójára vonatkozó adóelőleg-levonások éves
+          összesítője
       revision:
         2013-2022:
           casilla:

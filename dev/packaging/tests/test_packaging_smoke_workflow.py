@@ -63,13 +63,13 @@ def _prohibited_aeat_product_forms(surface: str) -> tuple[str, ...]:
 # the Ubuntu leg (release-asset transport, not Actions artifact storage).
 _PORTABLE_LEGS: dict[str, dict[str, object]] = {
     "cadrumo-packaging-smoke-windows": {
-        "name": "Cadrumo / Windows / Python 3.13 / wheel artifacts",
+        "name": "Test: Distribution artifacts (Windows)",
         "runs_on": ["self-hosted", "Windows", "X64"],
         "cohort_asset": "cadrumo-python-cohort-windows.tar.gz",
         "evidence_asset": "packaging-smoke-evidence-windows.tar.gz",
     },
     "cadrumo-packaging-smoke-macos": {
-        "name": "Cadrumo / macOS / Python 3.13 / wheel artifacts",
+        "name": "Test: Distribution artifacts (macOS)",
         "runs_on": ["self-hosted", "macOS", "ARM64"],
         "cohort_asset": "cadrumo-python-cohort-macos.tar.gz",
         "evidence_asset": "packaging-smoke-evidence-macos.tar.gz",
@@ -201,7 +201,7 @@ def test_workflow_runs_canonical_cadrumo_packaging_gates() -> None:
     }
 
     job = document["jobs"]["cadrumo-packaging-smoke"]
-    assert job["name"] == "Cadrumo / Ubuntu / Python 3.13 / wheel artifacts"
+    assert job["name"] == "Test: Distribution artifacts (Linux)"
     assert job["runs-on"] == ["self-hosted", "Linux", "X64"]
     commands = _run_command_lines(job)
     # The Ubuntu leg captures the aggregate's exit status (`|| status=$?`) so the
@@ -308,7 +308,7 @@ def test_workflow_evidence_and_product_identity_follow_the_binding_tuple() -> No
     "surface",
     (
         "aeat --version",
-        "uv run --no-sync aeat app registry verify",
+        "uv run --no-sync aeat --format json config repair",
         "echo 'AEAT is the Spanish tax authority'",
         "pip install cadrumo && aeat --version",
     ),
@@ -323,7 +323,7 @@ def test_binding_cli_and_authority_forms_are_allowed(surface: str) -> None:
     "surface",
     (
         "echo preflight\ncadrumo --version",
-        "uv run --frozen cadrumo app registry verify",
+        "uv run --frozen cadrumo --format json config repair",
         "env MODE=ci cadrumo --version",
         "MODE=ci cadrumo --version",
         "echo preflight && cadrumo --version",

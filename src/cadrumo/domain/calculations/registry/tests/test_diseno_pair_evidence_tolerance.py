@@ -1,6 +1,6 @@
 """An empty Dise�o pair set is no evidence, and that premise is checked rather than assumed.
 
-:func:`derive_calculation_completeness_casillas` refuses a casilla pinned to a
+``derive_calculation_completeness_casillas`` refuses a casilla pinned to a
 segmento the AEAT Dise�o does not carry it under. That refusal is suppressed
 when the design yields NO ``(sheet, number)`` pairs at all, because refusing
 from an empty set asserts absence out of ignorance.

@@ -13,37 +13,23 @@ not inferences, cited to the apartado that fixes them.
 from __future__ import annotations
 
 from datetime import date
-from typing import Final
 
 import pytest
 
 from ....core.tipos_actividad import TipoActividad
+from ...calculations.registry.facts.resolution import ResolvedEntitySetFact
+from ...calculations.registry.facts.schema import EntitySetFactPayload, FactOwnership
+from ...calculations.registry.schema_base import DateAxis
 from ..errors import TransactionValidationError
 from ..tipo_actividad_partitions import (
     _ART_95_SELECTORS,
-    _code_set,
+    _typed_code_set,
     load_tipo_actividad_selectors,
     resolve_tipo_actividad_selector,
+    tipo_actividad_code_set,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-_SELECTOR_UNIT: Final[str] = "m036-tipo-actividad-code-set"
-
-
-class _ParameterLike:
-    """A parameter-shaped value object for exercising the pure parser.
-
-    Not a mock of the registry: the parser reads ``unit`` and ``value`` off
-    whatever it is handed, and these tests feed it malformed inputs the committed
-    registry must never contain. The registry-backed path is covered separately by
-    every other test in this module.
-    """
-
-    def __init__(self, *, unit: str, value: object) -> None:
-        self.unit = unit
-        self.value = value
-
 
 def test_every_partition_is_declared_including_the_one_no_code_selects() -> None:
     """All four art. 95 partitions are present; the engorde carve-out is empty.
@@ -88,31 +74,63 @@ def test_art_95_selector_resolution_retains_typed_fact_provenance() -> None:
     assert selector.authority_digest
 
 
-def test_parser_refuses_a_token_that_is_not_a_modelo_036_code() -> None:
+@pytest.mark.parametrize(
+    ("parameter_id", "expected_ref"),
+    (
+        (
+            "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrario-objetiva",
+            "rd-439-2007:art-110",
+        ),
+        (
+            "rd-439-2007-art-109:selector-m036-actividades-exencion-pago-fraccionado",
+            "rd-439-2007:art-109",
+        ),
+        (
+            "rd-439-2007-art-109:selector-m036-actividades-base-neta-de-subvenciones",
+            "rd-439-2007:art-109",
+        ),
+    ),
+)
+def test_non_art_95_activity_selectors_resolve_through_the_same_fact_authority(
+    parameter_id: str,
+    expected_ref: str,
+) -> None:
+    selector = resolve_tipo_actividad_selector(parameter_id, effective_date=date(2025, 12, 31))
+
+    assert expected_ref in selector.legal_refs
+    assert selector.authority_digest
+    assert tipo_actividad_code_set(parameter_id, effective_date=date(2025, 12, 31)) == frozenset(
+        TipoActividad(token) for token in selector.payload.entities
+    )
+
+
+def test_typed_code_set_refuses_a_token_that_is_not_a_modelo_036_code() -> None:
     """A selector naming an unknown code is refused, and the message lists the set."""
+    selector = ResolvedEntitySetFact(
+        fact_id="rirpf-art-95:selector-m036-actividades-profesionales",
+        variant_id="rirpf-art-95:selector-m036-actividades-profesionales.current",
+        date_axis=DateAxis.FILING_PERIOD,
+        effective_date=date(2025, 12, 31),
+        valid_from=date.min,
+        payload=EntitySetFactPayload(entities=frozenset({"A04", "Z99"})),
+        legal_refs=("rd-439-2007:art-95",),
+        review_status="agent_reviewed",
+        ownership=FactOwnership.GENERATED,
+        authority_digest="a" * 64,
+    )
     with pytest.raises(TransactionValidationError, match="'Z99'") as raised:
-        _code_set({"p": _ParameterLike(unit=_SELECTOR_UNIT, value="A04,Z99")}, "p")
+        _typed_code_set(selector)
 
     # The refusal must name the accepted set, not just the offending token.
     assert "A04" in str(raised.value)
     assert "B05" in str(raised.value)
 
 
-def test_parser_refuses_a_parameter_carrying_the_wrong_unit() -> None:
-    """A rate parameter read as a selector is refused rather than parsed as codes.
-
-    The selector parameters live beside the rate parameters in the same file, so
-    the unit is what stops ``0.15`` being read as a code list.
-    """
-    with pytest.raises(TransactionValidationError, match="carries unit"):
-        _code_set({"p": _ParameterLike(unit="fraction", value="0.15")}, "p")
-
-
-def test_parser_refuses_an_absent_parameter() -> None:
+def test_selector_resolution_refuses_an_unenrolled_parameter() -> None:
     """A missing selector is a loud refusal, never a silently empty partition.
 
     This is the positive control for the empty-set assertion above: an empty set
     has to mean "declared with no codes", so absence must NOT also produce one.
     """
-    with pytest.raises(TransactionValidationError, match="is absent"):
-        _code_set({}, "rirpf-art-95:selector-m036-actividades-profesionales")
+    with pytest.raises(TransactionValidationError, match="no typed governed"):
+        tipo_actividad_code_set("rirpf-art-95:selector-missing", effective_date=date(2025, 12, 31))

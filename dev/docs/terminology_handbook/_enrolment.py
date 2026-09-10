@@ -174,7 +174,7 @@ def _walk_periods() -> Iterator[EnrolmentCandidate]:
 
 
 def _walk_topics() -> Iterator[EnrolmentCandidate]:
-    from cadrumo.core.topics.catalogue import load_topic_catalogue
+    from .topics import load_topic_catalogue
 
     catalogue = load_topic_catalogue()
     for topic in sorted(catalogue.topics, key=lambda item: item.slug):

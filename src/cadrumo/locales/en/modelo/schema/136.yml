@@ -2,8 +2,9 @@ modelo:
   schema:
     '136':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 136. Personal Income Tax and Non-Resident Income Tax.
+          Special levy on prizes from certain lotteries and betting. Self-assessment.
+        title: Special levy on prizes from certain lotteries and betting. Self-assessment
       revision:
         '2026':
           casilla:

@@ -2,8 +2,9 @@ modelo:
   schema:
     '036':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 036. Census declaration of registration, amendment and
+          deregistration in the Register of entrepreneurs, professionals and withholders.
+        title: Register of entrepreneurs, professionals and withholders
       revision:
         2025-02-03-y-siguientes:
           casilla:

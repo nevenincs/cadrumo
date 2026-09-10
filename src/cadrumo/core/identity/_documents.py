@@ -83,7 +83,7 @@ class IdentityError(CadrumoError, ValueError):
     """Raised when a candidate string is not a valid Spanish identity document.
 
     Bound to the registered error code ``INTEGRITY_IDENTITY_DOCUMENT``
-    in :data:`cadrumo.core.errors.ERROR_REGISTRY`. Carries a human-readable
+    in :data:`~core.errors.error_codes.ALL_DECLARED_ERROR_CODES`. Carries a human-readable
     diagnostic that names the failing shape (``NIF``, ``NIE``, ``CIF``)
     and, where relevant, the expected vs observed check character.
 

@@ -2,8 +2,10 @@ modelo:
   schema:
     '193':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 193. Adatszolgáltatási bevallás. Egyes tőkejövedelmekre
+          és egyes jövedelmekre vonatkozó adóelőleg-levonások és -befizetések. Éves
+          összesítő.
+        title: Tőkejövedelmek adóelőleg-levonásának éves összesítője
       revision:
         '2024':
           casilla:

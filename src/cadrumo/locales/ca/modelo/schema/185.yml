@@ -2,8 +2,9 @@ modelo:
   schema:
     '185':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 185. Declaració informativa mensual de cotitzacions
+          d'afiliats i mutualistes.
+        title: Declaració informativa mensual de cotitzacions d'afiliats i mutualistes
       revision:
         2003-2025:
           casilla:

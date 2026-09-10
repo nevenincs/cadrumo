@@ -45,11 +45,10 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date
-from functools import lru_cache
 from typing import TYPE_CHECKING, Final, cast
 
-from ...core.resources.bundled_data import bundled_path
 from ...core.tipos_actividad import TipoActividad
 from ..calculations.registry.facts.resolution import EntitySetFactQuery, ResolvedEntitySetFact
 from ..calculations.registry.schema_base import DateAxis
@@ -57,7 +56,6 @@ from ..deadlines.models import IrpfActivityKind
 from .errors import TransactionValidationError
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
     from ..calculations.registry.authority import ValidatedRegistryAuthority
 
 __all__ = [
@@ -84,60 +82,31 @@ _ART_95_SELECTORS: Final[Mapping[str, IrpfActivityKind]] = {
     "rirpf-art-95:selector-m036-actividades-ganaderas-engorde-porcino-avicultura": IrpfActivityKind.SECTORIAL,
 }
 
-_EXPECTED_UNIT: Final[str] = "m036-tipo-actividad-code-set"
-
-
-def _code_set(parameters: Mapping[str, object], parameter_id: str) -> frozenset[TipoActividad]:
-    """Parse one selector parameter into its typed code set.
-
-    Raises:
-        TransactionValidationError: If the parameter is absent, carries the wrong
-            unit, or names a token that is not a Modelo 036 activity code.
-    """
-    parameter = parameters.get(parameter_id)
-    if parameter is None:
-        raise TransactionValidationError(
-            f"registry parameter {parameter_id!r} is absent; the Modelo 036 activity "
-            "selectors must be declared in the legal catalogue",
-        )
-    unit = getattr(parameter, "unit", None)
-    if unit != _EXPECTED_UNIT:
-        raise TransactionValidationError(
-            f"registry parameter {parameter_id!r} carries unit {unit!r}, expected {_EXPECTED_UNIT!r}",
-        )
-    raw = getattr(parameter, "value", None)
-    if not isinstance(raw, str):
-        raise TransactionValidationError(
-            f"registry parameter {parameter_id!r} carries no string value",
-        )
-    tokens = [token.strip() for token in raw.split(",") if token.strip()]
-    codes: set[TipoActividad] = set()
-    for token in tokens:
-        try:
-            codes.add(TipoActividad(token))
-        except ValueError as exc:
-            raise TransactionValidationError(
-                f"registry parameter {parameter_id!r} names {token!r}, which is not a "
-                f"Modelo 036 activity code; accepted: {', '.join(sorted(t.value for t in TipoActividad))}",
-            ) from exc
-    return frozenset(codes)
+_GOVERNED_ACTIVITY_SELECTOR_IDS: Final[frozenset[str]] = frozenset(
+    {
+        *_ART_95_SELECTORS,
+        "rd-439-2007-art-109:selector-m036-actividades-base-neta-de-subvenciones",
+        "rd-439-2007-art-109:selector-m036-actividades-exencion-pago-fraccionado",
+        "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrario-objetiva",
+    }
+)
 
 
 def resolve_tipo_actividad_selector(
     parameter_id: str,
     *,
     effective_date: date,
-    authority: "ValidatedRegistryAuthority | None" = None,
+    authority: ValidatedRegistryAuthority | None = None,
 ) -> ResolvedEntitySetFact:
-    """Resolve a migrated art. 95 selector through the canonical fact authority.
+    """Resolve one legally grounded Modelo 036 selector through fact authority.
 
     The result deliberately retains the fact's legal references, exact temporal
     coordinate, and authority digest for a caller that must explain why an
     activity was classified into this arm.
     """
-    if parameter_id not in _ART_95_SELECTORS:
+    if parameter_id not in _GOVERNED_ACTIVITY_SELECTOR_IDS:
         raise TransactionValidationError(
-            f"registry parameter {parameter_id!r} has no typed Modelo 036 activity-selector fact",
+            f"registry parameter {parameter_id!r} has no typed governed Modelo 036 activity-selector fact",
         )
     if authority is None:
         from ..calculations.registry.authority import bundled_authority
@@ -180,7 +149,7 @@ def tipo_actividad_code_set(
     parameter_id: str,
     *,
     effective_date: date | None = None,
-    authority: "ValidatedRegistryAuthority | None" = None,
+    authority: ValidatedRegistryAuthority | None = None,
 ) -> frozenset[TipoActividad]:
     """Return the Modelo 036 codes a registry selector parameter declares.
 
@@ -191,6 +160,8 @@ def tipo_actividad_code_set(
 
     Args:
         parameter_id: The registry parameter to read.
+        effective_date: Filing-period coordinate for the exact fact variant.
+        authority: Optional validated authority used for fact resolution.
 
     Returns:
         The declared codes, empty when the parameter declares none.
@@ -199,38 +170,15 @@ def tipo_actividad_code_set(
         TransactionValidationError: If the parameter is absent, carries the wrong
             unit, names a non-code token, or the catalogue cannot be loaded.
     """
-    if parameter_id in _ART_95_SELECTORS:
-        return _typed_code_set(
-            resolve_tipo_actividad_selector(
-                parameter_id,
-                effective_date=effective_date or date.today(),
-                authority=authority,
-            ),
-        )
-    return _code_set(_legal_parameters(), parameter_id)
+    return _typed_code_set(
+        resolve_tipo_actividad_selector(
+            parameter_id,
+            effective_date=effective_date or date.today(),
+            authority=authority,
+        ),
+    )
 
 
-def _legal_parameters() -> Mapping[str, object]:
-    """Load the registry parameter catalogue, translating its failure.
-
-    Raises:
-        TransactionValidationError: If the catalogue cannot be loaded.
-    """
-    # Imported inside the function for the reason the retención-rate loader gives:
-    # the registry import path reaches back into the domain packages this module
-    # belongs to, and a module-level import would close that cycle.
-    from ..calculations.registry.errors import RegistryError
-    from ..calculations.registry.loader import load_legal_parameters_only
-
-    try:
-        return load_legal_parameters_only(bundled_path("registry", "aeat"))
-    except RegistryError as exc:
-        raise TransactionValidationError(
-            f"failed to load the registry parameter catalogue: {exc}",
-        ) from exc
-
-
-@lru_cache(maxsize=1)
 def load_tipo_actividad_selectors() -> Mapping[str, frozenset[TipoActividad]]:
     """Return the codes each art. 95 selector parameter declares.
 

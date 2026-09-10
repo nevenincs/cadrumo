@@ -15,12 +15,21 @@ corrupt and fails the same byte-integrity gate as any other missing source.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Mapping
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Final
 
 from ....core.hashing import hash_file
 from ....core.resources.bundled_data import resolve_companion_binary
+from .artifact_catalogue import (
+    ArtifactCatalogue,
+    ArtifactIdentity,
+    ArtifactRole,
+    compile_artifact_catalogue,
+    record_design_manifest_identities,
+    registry_source_identity,
+)
 from .errors import RegistryValidationError
 from .legal import _PROVISION_SUFFIXED_FILENAME
 from .schema_base import RegistrySourceKind
@@ -129,31 +138,42 @@ def _verify_manual_structure(repo_root: Path, source: GeneratedArtifactSource) -
     Only meaningful when the manual PDF is present under the source tree (the
     full-checkout / dev path); a companion-resolved manual is proven by its
     byte-exact hash instead.
+
+    ``corpus/manuals/<manual_id>/<year>[/<part>]/source.pdf`` is the ONE home for
+    practical manuals consumed by the structured manual loader. Other ``manual_pdf``
+    sources are evidence PDFs in a different corpus family (for example, EU IVA
+    rate studies or AEAT instruction artefacts) and do not carry the practical-
+    manual structure contract. The Sociedades practical manuals were moved into
+    the canonical tree so they now receive the same check as their IVA and Renta
+    peers.
     """
-    if not (source.kind is RegistrySourceKind.MANUAL_PDF and "corpus/manuals" in source.corpus_path):
+    if source.kind is not RegistrySourceKind.MANUAL_PDF or not source.corpus_path.startswith("corpus/manuals/"):
         return
     parts = source.corpus_path.split("/")
     try:
-        idx = parts.index("manuals")
-        if idx >= 0 and idx + 3 < len(parts):
-            manual_id_str = parts[idx + 1]
-            year_str = parts[idx + 2]
-            part_str = parts[idx + 3]
+        # The prefix is already proven above; only the coordinate depth is open.
+        # A short path used to fall through this check silently, which is how a
+        # misfiled manual could claim to be verified without ever being loaded.
+        if len(parts) < 5:
+            raise ValueError(
+                "a practical-manual source must live at 'corpus/manuals/<manual_id>/<year>[/<part>]/source.pdf'",
+            )
+        manual_id_str, year_str, part_str = parts[2], parts[3], parts[4]
 
-            from ....core.config import Settings
-            from ...manuals.loader import load_manual
-            from ...manuals.schema import ManualId, ManualPart
+        from ....core.config import Settings
+        from ...manuals.loader import load_manual
+        from ...manuals.schema import ManualId, ManualPart
 
-            manual_id = ManualId(manual_id_str)
-            year = int(year_str)
-            part = ManualPart.SINGLE if part_str == "source.pdf" else ManualPart(part_str)
+        manual_id = ManualId(manual_id_str)
+        year = int(year_str)
+        part = ManualPart.SINGLE if part_str == "source.pdf" else ManualPart(part_str)
 
-            manuals_dir = repo_root / "corpus" / "manuals"
-            if not manuals_dir.is_dir():
-                manuals_dir = repo_root / "src" / "cadrumo" / "_data" / "corpus" / "manuals"
+        manuals_dir = repo_root / "corpus" / "manuals"
+        if not manuals_dir.is_dir():
+            manuals_dir = repo_root / "src" / "cadrumo" / "_data" / "corpus" / "manuals"
 
-            settings = Settings(aeat_manuals_root=manuals_dir)
-            load_manual(manual_id=manual_id, year=year, part=part, settings=settings)
+        settings = Settings(aeat_manuals_root=manuals_dir)
+        load_manual(manual_id=manual_id, year=year, part=part, settings=settings)
     except Exception as exc:
         raise RegistryValidationError(
             f"source {source.id!r} manual structure check failed for path {source.corpus_path!r}: {exc}",
@@ -170,11 +190,160 @@ def _resolve_corpus_path(root: Path, source: GeneratedArtifactSource) -> Path:
     return direct
 
 
-def verify_source_catalogue(root: Path, sources: Mapping[str, SourceReference]) -> None:
+def verify_catalogue_identity_bindings(
+    catalogue: ArtifactCatalogue,
+    sources: Mapping[str, SourceReference],
+) -> None:
+    """Require each registry source to exactly join an official catalog identity.
+
+    The artifact catalog is deliberately a read-only identity projection, not
+    registry authority.  This join therefore checks only the shared immutable
+    acquisition fields.  It neither interprets source kind, evidence tier, or
+    applicability nor publishes an authority snapshot; those registry
+    semantics remain the responsibility of the established validator.
+
+    Callers may pass a catalogue covering a wider corpus than ``sources``.  A
+    source without an exact catalog payload identity, including one with the
+    same path but a divergent URL, digest, or size, fails closed and names the
+    registry source whose binding needs correction.  Publisher and retrieval
+    date deliberately remain source-specific acquisition claims: a manifest's
+    corpus-wide retrieval timestamp and its human publisher label are not the
+    registry's typed authority/review semantics, so treating either as a
+    binding mismatch would manufacture a false gap for an otherwise identical
+    official payload.
+    """
+    failures: list[str] = []
+    failures.extend(
+        f"artifact catalog diagnostic {diagnostic.kind.value} for {diagnostic.path!s}: {diagnostic.message}"
+        for diagnostic in catalogue.diagnostics
+    )
+    for source in sources.values():
+        registry_identity = registry_source_identity(source)
+        catalog_identity = catalogue.identities.get(registry_identity.path)
+        catalog_role = catalogue.roles.get(registry_identity.path)
+        if (
+            catalog_identity is None
+            or catalog_role is not ArtifactRole.OFFICIAL_ARTIFACT
+            or not _same_payload_identity(catalog_identity, registry_identity)
+        ):
+            failures.append(
+                f"source {source.id!r} does not exactly bind an official artifact catalog identity "
+                f"for {source.corpus_path!r}"
+            )
+    if failures:
+        raise RegistryValidationError("; ".join(sorted(failures)))
+
+
+def compile_record_design_manifest_catalogue(
+    root: Path,
+    sources: Mapping[str, SourceReference],
+) -> tuple[ArtifactCatalogue, Mapping[str, SourceReference]] | None:
+    """Compile independent record-design manifest identities for registry joins.
+
+    Per-model manifests are acquisition declarations made outside the registry.
+    They are therefore the only inputs to this compilation; registry records
+    are supplied separately as binding projections.  The bounded path set is
+    exactly the record-design payloads named by the registry, so unrelated
+    manifest rows remain the acquisition consumer's responsibility.
+
+    ``None`` is meaningful: a registry with no record-design sources has no
+    such acquisition projection to join, rather than a fabricated catalog made
+    from its own source records.
+    """
+    record_design_sources = {
+        source_id: source
+        for source_id, source in sources.items()
+        if _record_design_manifest_path(source.corpus_path) is not None
+    }
+    if not record_design_sources:
+        return None
+
+    bundle_root = _bundle_root(root)
+    manifest_paths = {
+        manifest_path
+        for source in record_design_sources.values()
+        if (manifest_path := _record_design_manifest_path(source.corpus_path)) is not None
+    }
+    identities: list[ArtifactIdentity] = []
+    for manifest_path in sorted(manifest_paths):
+        path = bundle_root.joinpath(*manifest_path.parts)
+        try:
+            raw_manifest = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as error:
+            raise RegistryValidationError(
+                f"record-design manifest {manifest_path.as_posix()!r} is unavailable: {error}"
+            ) from error
+        if not isinstance(raw_manifest, Mapping):
+            raise RegistryValidationError(
+                f"record-design manifest {manifest_path.as_posix()!r} must be a JSON object",
+            )
+        try:
+            identities.extend(record_design_manifest_identities(raw_manifest, manifest_path=manifest_path.as_posix()))
+        except (TypeError, ValueError) as error:
+            raise RegistryValidationError(
+                f"record-design manifest {manifest_path.as_posix()!r} has invalid acquisition identity: {error}",
+            ) from error
+
+    registry_identities = tuple(registry_source_identity(source) for source in record_design_sources.values())
+    known_paths = tuple(identity.path for identity in registry_identities)
+    known_set = set(known_paths)
+    catalogue = compile_artifact_catalogue(
+        known_paths=known_paths,
+        official_identities=tuple(identity for identity in identities if identity.path in known_set),
+    )
+    return catalogue, record_design_sources
+
+
+def _bundle_root(root: Path) -> Path:
+    """Resolve the installed bundled-data root without probing arbitrary trees."""
+    direct = root / "corpus"
+    if direct.is_dir():
+        return root
+    packaged = root / "src" / "cadrumo" / "_data"
+    if (packaged / "corpus").is_dir():
+        return packaged
+    return root
+
+
+def _record_design_manifest_path(corpus_path: str) -> PurePosixPath | None:
+    """Return the exact per-model manifest for a record-design corpus path."""
+    parts = Path(corpus_path).parts
+    prefix = ("corpus", "aeat_official", "disenos_registro")
+    if len(parts) < len(prefix) + 2 or parts[: len(prefix)] != prefix:
+        return None
+    modelo_dir = parts[len(prefix)]
+    if not modelo_dir.startswith("modelo_"):
+        return None
+    return PurePosixPath(*prefix, modelo_dir, "manifest.json")
+
+
+def _same_payload_identity(catalog_identity: ArtifactIdentity, registry_identity: ArtifactIdentity) -> bool:
+    """Return whether two typed identities name the same immutable payload.
+
+    Kept private to this verifier because it defines a registry-to-catalogue
+    join, not universal ``ArtifactIdentity`` equality.  Full identity records
+    retain acquisition context for their own adapters; the registry controls
+    its source authority, review, and retrieval context separately.
+    """
+    return (
+        catalog_identity.path == registry_identity.path
+        and catalog_identity.sha256 == registry_identity.sha256
+        and catalog_identity.bytes == registry_identity.bytes
+        and catalog_identity.source_url == registry_identity.source_url
+    )
+
+
+def verify_source_catalogue(
+    root: Path,
+    sources: Mapping[str, SourceReference],
+) -> None:
     """Verify every source reference in a source catalogue mapping.
 
     Every source is byte-exact hash-enforced. Missing mandatory-companion data
-    is an installation-integrity failure, not an advisory path.
+    is an installation-integrity failure, not an advisory path.  Artifact
+    identity joins are intentionally a separate operation: their independent
+    manifest input must not be mistaken for the filesystem verifier's source
+    authority.
     """
     verified: set[tuple[Path, int, str]] = set()
     for source in sources.values():

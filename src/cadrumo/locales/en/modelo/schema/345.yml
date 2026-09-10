@@ -2,8 +2,11 @@ modelo:
   schema:
     '345':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 345. Informative return. Pension plans, pension funds
+          and alternative systems. Annual return of participants, contributions and
+          employer contributions.
+        title: Annual informative return of pension plans and funds, participants,
+          contributions and employer contributions
       revision:
         '2025':
           casilla:

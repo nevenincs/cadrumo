@@ -49,7 +49,7 @@ SubmissionId = Annotated[
 ]
 """Content-derived identity of one filing submission.
 
-The lowercase 16-character SHA-256 prefix :func:`make_submission_id` returns for
+The lowercase 16-character SHA-256 prefix derived for
 a ``(draft_id, attempt_ordinal)`` pair. Declaring the shape here keeps the
 producer and the persisted record on one contract, so a record cannot carry an
 identifier no derivation could have produced.
@@ -197,7 +197,7 @@ class ModeloPresentado(BaseModel):
     Attributes:
         submission_id: Stable SHA-256-derived hex digest of
             ``f"{draft_id}:{attempt_ordinal}"``. See
-            :func:`make_submission_id`.
+            the :data:`SubmissionId` digest form.
         draft_id: The upstream draft identifier.
         modelo: The AEAT modelo identifier.
         period: The :class:`~cadrumo.core.Period` covered, serialised as

@@ -171,8 +171,6 @@ aggregation:
         taxonómiával.
   source_mesh:
     errors:
-      ambiguous_source_disposition: 'Belső hiba: a(z) {source_kind} binding forrástípus
-        egynél több forrásháló-diszpozíció állapotban van, vagy egyikben sem.'
       annual_summary_handoff_duplicate: 'Egynél több feloldó adta meg a 303-as modell
         éves összesítőjének változatlan átadását (első: {first_resolver}; második:
         {second_resolver}).'
@@ -447,9 +445,6 @@ categories:
       label: Utazási közlekedési költség
       notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1, egyéb külső
         szolgáltatások).
-component:
-  log:
-    empty: Még nincs naplóbejegyzés.
 core:
   profile:
     errors:
@@ -769,8 +764,6 @@ review:
   operator:
     errors:
       item_not_found: A felülvizsgálati elem nem található.
-      reserved_kind: A felülvizsgálati típus fenntartott, és nem kibocsátott felülvizsgálati
-        elem.
       unknown_kind: 'Ismeretlen felülvizsgálati elemtípus. Elfogadott --kind értékek:
         %{accepted_kinds}.'
   transaction:
@@ -1273,6 +1266,7 @@ tui:
       filed: Benyújtás helyben rögzítve
       renamed: Bevallás átnevezve
       superseded: Benyújtás helyben felváltva
+      verification_refused: Ellenőrzés elutasítva
       verified: Ellenőrzés elkészült
     overview:
       areas: Bevallási területek

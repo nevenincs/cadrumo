@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import cast
 
 import pytest
+from pathspec import PathSpec
 
 from cadrumo.core.directory_scan import iter_directory, scan_directory
 
@@ -39,6 +40,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.docs, pytest.mark.hex_core]
 
 _REPO_ROOT = REPO_ROOT
 _RULE_FILE = _REPO_ROOT / ".vaultragpreprocess.toml"
+_IGNORE_FILE = _REPO_ROOT / ".vaultragignore"
 _CORPUS = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus"
 _HOOK_COMMAND = "python -m dev.docs.preprocess.hook {path}"
 #: The upstream ``.vaultragpreprocess.toml`` schema major the rule file
@@ -165,6 +167,37 @@ def test_every_rule_pattern_matches_committed_sources() -> None:
             )
         else:
             assert _smallest(f"*{suffix}").is_file(), pattern
+
+
+def test_manual_runtime_sidecars_are_excluded_without_excluding_pdf_hook_sources() -> None:
+    """One manual's runtime derivative is ignored while its PDF remains hook-fed.
+
+    The runtime JSON is a shipped, hash-validated evidence payload, not a
+    development-index source.  The corresponding PDF must remain admitted so
+    the hook supplies its extracted text under the authoritative source path.
+    """
+    ignore_lines = _IGNORE_FILE.read_text(encoding="utf-8").splitlines()
+    ignore_spec = PathSpec.from_lines("gitignore", ignore_lines)
+    manual_root = _CORPUS / "manuals"
+    sources = sorted(
+        scan_directory(manual_root, pattern="*.pdf", recursive=True),
+        key=lambda path: path.stat().st_size,
+    )
+    assert sources, "no committed manual PDF is available to prove the hook path"
+    source = sources[0]
+    source_path = source.relative_to(_REPO_ROOT).as_posix()
+    sidecar_path = (
+        "src/cadrumo/_data/manual_corpus_text/" + source.relative_to(_CORPUS).as_posix() + ".corpus_text.json"
+    )
+
+    assert ignore_spec.match_file(sidecar_path), sidecar_path
+    assert not ignore_spec.match_file(source_path), source_path
+
+    rules = tomllib.loads(_RULE_FILE.read_text(encoding="utf-8"))["rule"]
+    pdf_patterns = [cast(str, rule["pattern"]) for rule in rules if Path(cast(str, rule["pattern"])).suffix == ".pdf"]
+    assert pdf_patterns == ["src/cadrumo/_data/corpus/**/*.pdf"]
+    hook_spec = PathSpec.from_lines("gitignore", pdf_patterns)
+    assert hook_spec.match_file(source_path), source_path
 
 
 def test_terminology_concept_rule_emits_the_source_path_and_kind() -> None:

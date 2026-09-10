@@ -12,6 +12,7 @@ related:
   - "[[2026-08-14-registry-corpus-structure-hardening-audit]]"
   - '[[2026-08-15-registry-temporal-coverage-acquisition-worklist-research]]'
   - '[[2026-09-07-registry-temporal-coverage-enrolment-versus-declared-projection-research]]'
+  - '[[2026-09-10-registry-temporal-coverage-corpus-tier-enforcement-research]]'
 ---
 # `registry-temporal-coverage` adr: `filing-grade legal review and year-scoped registry authority` | (**status:** `accepted`)
 

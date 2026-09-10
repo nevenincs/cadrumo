@@ -36,8 +36,8 @@ on:
 # A superseded trigger for an older push may cancel: the newest push runs its
 # own trigger and the dispatched campaign covers the newest main tip anyway.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: packaging-campaign-${{ github.ref }}${{ github.ref == 'refs/heads/main' && format('-{0}', github.sha) || '' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
   actions: write
@@ -45,7 +45,7 @@ permissions:
 
 jobs:
   dispatch-full-campaign:
-    name: Cadrumo / dispatch full packaging campaign
+    name: "Build: Packaging campaign dispatch (Linux)"
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 5
     steps:

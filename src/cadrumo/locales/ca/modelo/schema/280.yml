@@ -2,8 +2,9 @@ modelo:
   schema:
     '280':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 280. Declaració informativa anual de Plans d'Estalvi
+          a Llarg Termini.
+        title: Declaració informativa anual de Plans d'Estalvi a Llarg Termini
       revision:
         '2025':
           casilla:

@@ -27,8 +27,8 @@ renta years: it computes a credit-producing 4T of year N, records it as a
 filed observation, then resolves and computes 1T of year N+1 and asserts
 its casilla 110 auto-resolves to year N's carried saldo with no manual
 re-entry. Both calculated years are recorded through the
-:class:`cross-year observation` and cross-checked against the authorization
-manifest via :func:`the cross-year behavior assertion`.
+``cross-year observation`` and cross-checked against the authorization
+manifest via ``the cross-year behavior assertion``.
 
 Grounding (non-tautological): the year-N 4T saldo is _produced by the
 engine from the credit scenario (deducible > devengada), never
@@ -448,7 +448,7 @@ def test_modelo_303_compensacion_carry_enrolls_two_renta_years(tmp_path: Path) -
     """End-to-end enrollment: 4T/N credit -> 1T/N+1 casilla 110 across two renta years.
 
     Drives the REAL 303 backend for both renta years, records each through the
-    :class:`cross-year observation` (calculation mode, evidence = _produced-value
+    ``cross-year observation`` (calculation mode, evidence = _produced-value
     count from a real engine run), and cross-checks the recorded distinct-year
     set against the cross-year claim claim. The load-bearing wiring
     assertion is that year N+1's 1T casilla 110 equals year N's 4T persisted

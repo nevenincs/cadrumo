@@ -2,8 +2,9 @@ modelo:
   schema:
     '280':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 280. Annual informative return of Long-Term Savings
+          Plans.
+        title: Annual informative return of Long-Term Savings Plans
       revision:
         '2025':
           casilla:

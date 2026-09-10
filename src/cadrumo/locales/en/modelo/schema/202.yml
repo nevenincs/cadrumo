@@ -149,8 +149,10 @@ modelo:
             label: Method under art. 40.3 LIS - Withholdings and payments on account
               on income for the computed period
       field:
-        official_name: null
-        title: null
+        official_name: Corporate Income Tax. Non-Resident Income Tax (permanent establishments
+          and income-attribution entities incorporated abroad with a presence in Spanish
+          territory). Instalment payment.
+        title: IS instalment payment
       revision:
         2019-2022:
           casilla:

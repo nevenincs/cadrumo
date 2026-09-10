@@ -50,18 +50,523 @@
     {
       "argv": [
         "aeat",
+        "--format",
+        "json",
         "config",
-        "repair",
-        "integrity",
-        "registry"
+        "repair"
       ],
       "captures": [],
-      "envelope": null,
-      "envelope_source": null,
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "config.repair",
+        "notices": [],
+        "result": {
+          "checks": [
+            {
+              "audience": "operator",
+              "detail": null,
+              "findings": [],
+              "name": "environment.python",
+              "precondition_action": null,
+              "status": "ok",
+              "summary": "3.13.11"
+            },
+            {
+              "audience": "operator",
+              "detail": null,
+              "findings": [],
+              "name": "package.version",
+              "precondition_action": null,
+              "status": "ok",
+              "summary": "0.5.1"
+            },
+            {
+              "audience": "operator",
+              "detail": null,
+              "findings": [],
+              "name": "logging.file",
+              "precondition_action": null,
+              "status": "ok",
+              "summary": "<sandbox-storage-root>/logs/cadrumo.log"
+            },
+            {
+              "audience": "operator",
+              "detail": null,
+              "findings": [],
+              "name": "secure_state.load",
+              "precondition_action": null,
+              "status": "ok",
+              "summary": "Workflow state store is readable."
+            },
+            {
+              "audience": "operator",
+              "detail": null,
+              "findings": [],
+              "name": "profile.storage",
+              "precondition_action": null,
+              "status": "ok",
+              "summary": "active_profile=docs-sequence-sandbox source=env_override status=ready"
+            },
+            {
+              "audience": "operator",
+              "detail": null,
+              "findings": [
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "preferences.output_language — Output language"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "taxpayer_type.legal_entity_form — Legal entity form"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "identity.legal_name — Legal name"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "taxpayer_type.fiscal_residency — Fiscal residency"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "taxpayer_type.country_of_fiscal_residence — Country of fiscal residence"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "taxpayer_type.representante_fiscal_nif — Representante fiscal nif"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "taxpayer_type.representante_fiscal_nombre — Representante fiscal nombre"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "tax_residence.ccaa — Ccaa"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "contact.postcode — Postcode"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "taxpayer_type.irpf_income_categories — Irpf income categories"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "taxpayer_type.declaration_roles — Declaration roles"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "censo.activity_start_date — Activity start date"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "taxpayer_type.incn_prior_12_months — Incn prior 12 months"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "taxpayer_type.new_entity_first_two_profit_periods — New entity first two profit periods"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "taxpayer_type.ley_49_2002_special_regime_option_declared — Ley 49 2002 special regime option declared"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "taxpayer_type.ley_49_2002_special_regime_option_date — Ley 49 2002 special regime option date"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "taxpayer_type.ley_49_2002_special_regime_renunciation_declared — Ley 49 2002 special regime renunciation declared"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "taxpayer_type.ley_49_2002_special_regime_renunciation_date — Ley 49 2002 special regime renunciation date"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "iva.roi_enrolled — Roi enrolled"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "iva.oss_enrolled — Oss enrolled"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "iva.group_member_enrolled — Group member enrolled"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "iva.group_dominant_entity_enrolled — Group dominant entity enrolled"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "iva.sii_enrolled — Sii enrolled"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "iva.intracommunity_operations_exceed_50000_eur — Intracommunity operations exceed 50000 eur"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "censo.large_company — Large company"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "censo.public_administration_budget_gt_6000000 — Public administration budget gt 6000000"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "renta_filing.declaration_type — Declaration type"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "renta_taxpayer.sex — Sex"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "renta_taxpayer.marital_status — Marital status"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "renta_family.situacion_familiar — Situacion familiar"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "renta_taxpayer.marriage_date — Marriage date"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "renta_taxpayer.birth_date — Birth date"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "renta_taxpayer.disability_grade — Disability grade"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "renta_taxpayer.death_date — Death date"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "renta_spouse.tax_id — Tax id"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "renta_spouse.name — Name"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "renta_spouse.surnames — Surnames"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "renta_spouse.birth_date — Birth date"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "renta_spouse.sex — Sex"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "renta_spouse.disability_grade — Disability grade"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "renta_spouse.non_resident_irpf — Non resident irpf"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "renta_spouse.eu_eea_resident — Eu eea resident"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "renta_spouse.eu_eea_country — Eu eea country"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "renta_family.descendants_eu_eea_deduction — Descendants eu eea deduction"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "renta_family.minor_children_in_unit — Minor children in unit"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "withholding.has_employees — Has employees"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "withholding.pays_professionals_with_retencion — Pays professionals with retencion"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "irpf.art109_activity_income_withholding_ge_70pct — Art109 activity income withholding ge 70pct"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "withholding.pays_rent_with_retencion — Pays rent with retencion"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "withholding.pays_capital_income_with_retencion — Pays capital income with retencion"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "withholding.modelo_111_no_retenciones_periods — Modelo 111 no retenciones periods"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "irpf.estimation_regime — Estimation regime"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "irpf.objective_estimation_modulos_iae_epigraph — Objective estimation modulos iae epigraph"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "irpf.objective_estimation_modulos_module_1_units — Objective estimation modulos module 1 units"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "irpf.objective_estimation_modulos_module_2_units — Objective estimation modulos module 2 units"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "irpf.objective_estimation_modulos_module_3_units — Objective estimation modulos module 3 units"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "irpf.objective_estimation_modulos_module_4_units — Objective estimation modulos module 4 units"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "irpf.objective_estimation_modulos_module_5_units — Objective estimation modulos module 5 units"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "irpf.objective_estimation_modulos_module_6_units — Objective estimation modulos module 6 units"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "irpf.objective_estimation_modulos_module_7_units — Objective estimation modulos module 7 units"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "irpf.special_regime — Special regime"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "irpf.special_regime_start_date — Special regime start date"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "iva.does_intracomunitario — Does intracomunitario"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "obligations.third_party_transactions_above_347_threshold — Third party transactions above 347 threshold"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "obligations.bienes_extranjero_above_threshold — Bienes extranjero above threshold"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "obligations.monedas_virtuales_extranjero_above_threshold — Monedas virtuales extranjero above threshold"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "capabilities.llm_vision — Llm vision"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "capabilities.google_export — Google export"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "identity.notes — Notes"
+                }
+              ],
+              "name": "profile.readiness",
+              "precondition_action": null,
+              "status": "ok",
+              "summary": "12/81 profile keys set."
+            },
+            {
+              "audience": "operator",
+              "detail": null,
+              "findings": [],
+              "name": "auth.readiness",
+              "precondition_action": {
+                "action": {
+                  "action_id": "operator.auth.configure",
+                  "cli_path": [
+                    "config",
+                    "auth",
+                    "configure"
+                  ],
+                  "target_command_key": "config.auth.configure"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "file",
+                    "source": null,
+                    "source_evidence_id": null,
+                    "source_key": null,
+                    "status": "missing",
+                    "value": null
+                  },
+                  {
+                    "argument_name": "provider",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "provider",
+                    "status": "resolved",
+                    "value": "certificate"
+                  }
+                ],
+                "conditionality": "requires_arguments",
+                "evidence": [
+                  {
+                    "condition_id": "diagnostics.auth.provider.configured",
+                    "evidence_id": "diagnostics.auth.provider.observation",
+                    "provenance": "runtime_observation",
+                    "values": {
+                      "configured": false
+                    }
+                  }
+                ],
+                "failed_condition_id": "diagnostics.auth.provider.configured",
+                "missing_argument_names": [
+                  "file"
+                ],
+                "no_recovery_outcome": null
+              },
+              "status": "warn",
+              "summary": "Authentication is not configured"
+            },
+            {
+              "audience": "operator",
+              "detail": null,
+              "findings": [],
+              "name": "secure_objects.integrity",
+              "precondition_action": null,
+              "status": "ok",
+              "summary": "2 readable secure-object namespace(s): 2."
+            }
+          ],
+          "log_file": "<sandbox-storage-root>/logs/cadrumo.log",
+          "overall": "warn",
+          "package_name": "cadrumo",
+          "package_version": "0.5.1",
+          "python_version": "3.13.11",
+          "secure_objects": {
+            "namespaces": [
+              {
+                "namespace": "cadrumo.application.user_profile.value",
+                "readable": 1,
+                "unreadable": 0
+              },
+              {
+                "namespace": "cadrumo.domain.buckets.event_history",
+                "readable": 1,
+                "unreadable": 0
+              }
+            ],
+            "readable_total": 2,
+            "unreadable_total": 0
+          },
+          "setup": {
+            "active_profile": "docs-sequence-sandbox",
+            "auth_provider": "",
+            "enrolment_ready": true,
+            "identity_ready": true,
+            "login_ready": false,
+            "missing_enrolment": [],
+            "missing_required": [],
+            "profile_present_keys": 12,
+            "profile_ready": true,
+            "profile_total_keys": 81
+          }
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "ok\tTrue\nissues\t0\n"
+      "text": null
     },
     {
       "argv": [

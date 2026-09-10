@@ -2,8 +2,12 @@ modelo:
   schema:
     '187':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 187. Informative return of shares and units representing
+          the capital or assets of collective investment undertakings, and annual
+          summary of withholdings and payments on account for Personal Income Tax,
+          Corporate Income Tax and Non-Resident Income Tax in relation to the income
+          or capital gains obtained.
+        title: Shares and units in collective investment undertakings - annual summary
       revision:
         2022-y-siguientes:
           casilla:

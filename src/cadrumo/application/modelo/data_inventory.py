@@ -34,7 +34,7 @@ from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.i18n import output_language
 from ...core.period import Period
-from ...core.resources.bundled_data import bundled_path
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.ids import (
     BindingId,
@@ -42,7 +42,6 @@ from ...domain.calculations.registry.ids import (
     RevisionId,
     SourceRefId,
 )
-from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.profile_grounding import binding_profile_keys
 from ...domain.calculations.registry.schema import DataBindingDefinition
 from ...domain.calculations.registry.schema_input_kind import InputKind
@@ -228,8 +227,7 @@ def data_inventory_checklist(
     Returns:
         A :class:`DataInventoryChecklist`.
     """
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo_definition = next(candidate for candidate in modelos if candidate.id == modelo)
+    modelo_definition = next(candidate for candidate in bundled_authority().modelos if candidate.id == modelo)
     revision = select_revision(modelo_definition, filing_year=filing_year, period=period.registry_token)
     bindings_by_id = {binding.id: binding for binding in revision.bindings}
     buckets = _collect_inventory_buckets(revision, bindings_by_id)

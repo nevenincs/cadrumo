@@ -1433,8 +1433,9 @@ modelo:
             help: null
             label: Tipus de declaració
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 390. Declaració-resum anual de l'Impost sobre el Valor
+          Afegit.
+        title: IVA. Declaració-resum anual
       revision:
         '2021':
           casilla:

@@ -31,7 +31,6 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.money.rounding import round_to_cents
 from ...core.period import Period
-from ...core.resources.bundled_data import bundled_path
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.errors import (
@@ -47,7 +46,6 @@ from ...domain.calculations.registry.ids import (
     RevisionId,
     SourceRefId,
 )
-from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.runtime_graph import (
     enum_consumed_binding_ids,
     revision_date_binding_ids,
@@ -830,8 +828,7 @@ def _comparison_static_revisions(
     period_b: str,
 ) -> tuple[ModeloRevision, ModeloRevision]:
     """Resolve both law-version revisions in the historical comparison order."""
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo_definition = next(candidate for candidate in modelos if candidate.id == modelo)
+    modelo_definition = next(candidate for candidate in bundled_authority().modelos if candidate.id == modelo)
     rev_b_static = select_revision(modelo_definition, filing_year=year_b, period=period_b)
     rev_a_static = select_revision(modelo_definition, filing_year=year_a, period=period_a)
     return rev_a_static, rev_b_static

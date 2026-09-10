@@ -2,8 +2,9 @@ modelo:
   schema:
     '270':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 270. Resum anual de retencions i ingressos a compte.
+          Gravamen especial sobre els premis de determinades loteries i apostes.
+        title: Resum anual de retencions del gravamen especial sobre premis de loteries
       revision:
         2013-2022:
           casilla:

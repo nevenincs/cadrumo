@@ -54,7 +54,11 @@ from ._validation_memoization import (
     MODELO_VALIDATION_CACHE,
     REGISTRY_VALIDATION_CACHE,
 )
-from .corpus_catalogue import verify_source_catalogue
+from .corpus_catalogue import (
+    compile_record_design_manifest_catalogue,
+    verify_catalogue_identity_bindings,
+    verify_source_catalogue,
+)
 from .errors import RegistryValidationError
 from .facts.validation import governed_fact_catalogue_failures
 from .legal import verify_legal_catalogue_grounding
@@ -178,12 +182,7 @@ class RegistryValidator:
         source_root_key = self._source_root_key()
         cache_key = (id(self._legal), id(self._sources), id(self._facts), source_root_key, self._source_evidence_key())
         cached = CATALOGUE_FAILURE_CACHE.get(cache_key)
-        if (
-            cached is not None
-            and cached[0] is self._legal
-            and cached[1] is self._sources
-            and cached[2] is self._facts
-        ):
+        if cached is not None and cached[0] is self._legal and cached[1] is self._sources and cached[2] is self._facts:
             self._catalogue_failures = cached[3]
             return self._catalogue_failures
 
@@ -197,7 +196,14 @@ class RegistryValidator:
             failures.append(str(exc))
         if self._source_root is not None:
             try:
-                verify_source_catalogue(self._source_root, self._sources)
+                manifest_catalogue = compile_record_design_manifest_catalogue(self._source_root, self._sources)
+                if manifest_catalogue is not None:
+                    catalogue, record_design_sources = manifest_catalogue
+                    verify_catalogue_identity_bindings(catalogue, record_design_sources)
+                verify_source_catalogue(
+                    self._source_root,
+                    self._sources,
+                )
             except RegistryValidationError as exc:
                 failures.append(str(exc))
         # Deliberately NOT behind the source-root guard above: epoch uniqueness is a

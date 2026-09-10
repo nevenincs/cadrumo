@@ -29,7 +29,7 @@ from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
 from ....tests.profile_capsule import forge_colliding_capsule_label
 from ....tests.user_profile import register_cli_profile
 from .._common import cli_policy_refusal_projection
-from ..errors import CliRefusedBoundaryError, error_boundary_under_test
+from ..errors import CliRefusedBoundaryError, suspend_error_boundary
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -182,7 +182,7 @@ def test_env_override_ambiguous_label_refuses_cleanly_not_traceback() -> None:
 
     with (
         override_settings(cadrumo_active_profile=_LABEL),
-        error_boundary_under_test(),
+        suspend_error_boundary(),
         pytest.raises(CliRefusedBoundaryError) as raised,
     ):
         cadrumo_click_command().main(
@@ -217,7 +217,7 @@ def test_profile_flag_ambiguous_label_refuses_with_dedicated_key() -> None:
     assert _DEDICATED_AMBIGUITY_FRAGMENT in combined, combined
     assert _GENERIC_UNKNOWN_FRAGMENT not in combined, combined
 
-    with error_boundary_under_test(), pytest.raises(CliRefusedBoundaryError) as raised:
+    with suspend_error_boundary(), pytest.raises(CliRefusedBoundaryError) as raised:
         cadrumo_click_command().main(
             args=["--profile", _LABEL, "app", "ledger", "list"],
             prog_name="aeat",

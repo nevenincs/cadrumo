@@ -2,8 +2,11 @@ modelo:
   schema:
     '128':
       field:
-        official_name: null
-        title: null
+        official_name: Modelo 128. Withholdings and payments on account. Income from
+          movable capital arising from capitalisation transactions and life or disability
+          insurance contracts.
+        title: Withholdings and payments on account - income from movable capital
+          from capitalisation transactions and insurance contracts
       revision:
         2019-y-siguientes:
           casilla:

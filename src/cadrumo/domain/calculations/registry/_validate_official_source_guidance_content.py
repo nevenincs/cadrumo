@@ -15,13 +15,20 @@ carry guidance prose" probe runs into the same wall for a different reason:
 the tier backs FOUR structurally different claims (a filing deadline, a
 verification expectation, an application-link surface, an applicability
 predicate), a bare-law source like the LIRPF (``ley-35-2006.html``) is cited
-by many unrelated modelos without ever needing to spell out which one, and a
-correctly-cited amending article need not literally restate the numeral of
-the modelo it amends (Orden HAC/1526/2024's own article 1 modifies "los
-articulos 14, 15 y 16" of an earlier order without ever writing "037" -- the
-modelo it suppresses -- so a naive "the source must name its own modelo
-number" check mis-fires on the CORRECT citation and would have been a third
-instance of the same failure class).
+by many unrelated modelos without ever needing to spell out which one, and an
+amending article routinely operates on the ARTICLE numbers of an earlier
+order without ever restating the modelo numeral at stake (Orden
+HAC/1526/2024's own article 1 suppresses "los articulos 14, 15 y 16" of Orden
+EHA/1274/2007 without writing "037" anywhere). A naive "the source must name
+its own modelo number" check would therefore refuse a structurally sound
+citation, and would have been a third instance of the same failure class.
+
+That argument establishes only that naming the modelo cannot be made
+MANDATORY; it does not make a source that omits it the best available
+citation. Which document to cite is a per-source judgement, decided on
+whether the text performs the act being claimed -- see the suppression bullet
+below, where that exact article-1 excerpt turned out to be the weaker of two
+available sources for precisely this reason.
 
 What survived calibration is two independently testable, single-purpose
 sub-checks, each scoped to exactly the claim the site is honestly making --
@@ -33,12 +40,25 @@ land its own dispositive-content check after the broad version failed twice:
   claim is testable directly: the text must carry a suppression-establishing
   stem (``suprim*``, ``derog*``, or an equivalent "queda sin efecto" /
   "deja de" turn of phrase). The population is exhaustive and currently one
-  source: ``boe-modelo-037-historical-suppression``, which points at Orden
-  HAC/1526/2024's ``disposicion final unica`` (its entry-into-force clause,
-  "se aplica ... a los modelos 030 y 036 ...") rather than the order's
-  article 1 (the amendment that actually retires modelo 037's active
-  surfaces) -- a source about WHEN the order took effect, cited as though it
-  were the source that says WHAT was suppressed.
+  source: ``boe-modelo-037-historical-suppression``, which points at the
+  verbatim BOE-A-2025-410 full text under
+  ``corpus/aeat_official/historical_retired_modelos/modelo_037/``. That file
+  carries the order's own operative sentence about the MODELO -- "esta orden
+  suprime el modelo 037 de Declaracion censal simplificada" -- so the claim
+  is backed by the text that actually performs the suppression.
+
+  Two earlier bindings for this same source did not clear that bar and are
+  worth recording, because both satisfied a tier check while mis-citing.
+  It first pointed at the order's ``disposicion final unica`` (the
+  entry-into-force clause, "se aplica ... a los modelos 030 y 036 ...") -- a
+  source about WHEN the order took effect, cited as though it said WHAT was
+  suppressed. It was then repointed at a hand-authored, accent-stripped
+  article-1 excerpt whose only suppression sentence is "Se suprimen los
+  articulos 14, 15 y 16" -- the articles of the amended Orden EHA/1274/2007,
+  not the modelo. That passed this very check on vocabulary alone while never
+  asserting the modelo's suppression, which is precisely the failure mode
+  the stem probe cannot catch on its own: the vocabulary gate proves a
+  document discusses suppression, never that it suppresses the thing cited.
 
 * :func:`deadline_window_content_failures` -- a ``deadline_window`` asserts
   official guidance for WHEN a filing is due. Unlike the other three sites,

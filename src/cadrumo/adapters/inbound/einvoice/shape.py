@@ -22,7 +22,13 @@ from ....core.errors.hierarchy import CoreValidationError
 from ....core.image_media_type import detect_image_media_type
 from .xml import EInvoiceXmlParseError, parse_hardened_xml
 
-__all__ = ["EMBEDDED_XML_SUFFIXES", "iter_pdf_embedded_files", "probe_document_shape"]
+__all__ = [
+    "EMBEDDED_XML_SUFFIXES",
+    "SII_PAYLOAD_ELEMENTS",
+    "VERIFACTU_PAYLOAD_ELEMENTS",
+    "iter_pdf_embedded_files",
+    "probe_document_shape",
+]
 
 _PDF_MAGIC = b"%PDF-"
 
@@ -85,7 +91,7 @@ _FACTURAE_ROOTS = frozenset({"Facturae"})
 # in the wild -- the gisce SII captures are SOAP-wrapped while the josemmo
 # VERI*FACTU records are bare -- so a root-only test recognises half of them
 # and reports the rest as UNKNOWN.
-_SII_PAYLOAD_ELEMENTS = frozenset(
+SII_PAYLOAD_ELEMENTS = frozenset(
     {
         "SuministroLRFacturasEmitidas",
         "SuministroLRFacturasRecibidas",
@@ -112,15 +118,25 @@ All seventeen, not only the two this reader claims. Recognising the SHAPE is
 separate from supporting the FAMILY: a document we decline to read must still
 be identified, so the refusal can name what it is instead of reporting
 unrecognised bytes.
+
+Spelled out rather than parsed, because the probe runs on a hot path and must
+not touch the filesystem. It is not unattested: every name is held to the
+global ``xs:element`` declarations of the bundled
+``corpus/aeat_official/einvoice_record_schemas/sii/SuministroLR.xsd`` by
+``tests/test_aeat_payload_elements_match_schemas.py``, so a re-bundled AEAT
+revision fails a gate instead of leaving a real record reported as UNKNOWN.
 """
 
-_VERIFACTU_PAYLOAD_ELEMENTS = frozenset(
+VERIFACTU_PAYLOAD_ELEMENTS = frozenset(
     {"RegFactuSistemaFacturacion", "RegistroAlta", "RegistroAnulacion"},
 )
 """The VERI*FACTU envelope plus the two bare record elements.
 
 The bare forms are listed because real captures ship a lone ``RegistroAlta``
-or ``RegistroAnulacion`` with no envelope around it.
+or ``RegistroAnulacion`` with no envelope around it. AEAT declares them in
+the base-types schema and the envelope in ``SuministroLR.xsd``, so the same
+gate that guards the SII set checks this one against the UNION of both
+bundled VERI*FACTU schemas.
 """
 
 
@@ -169,9 +185,9 @@ def _aeat_record_batch_shape(root: Element) -> DocumentShape | None:
     """
     for node in root.iter():
         local = _local_name(node.tag)
-        if local in _SII_PAYLOAD_ELEMENTS:
+        if local in SII_PAYLOAD_ELEMENTS:
             return DocumentShape.XML_AEAT_SII
-        if local in _VERIFACTU_PAYLOAD_ELEMENTS:
+        if local in VERIFACTU_PAYLOAD_ELEMENTS:
             return DocumentShape.XML_AEAT_VERIFACTU
     return None
 

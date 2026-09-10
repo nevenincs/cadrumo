@@ -18,7 +18,6 @@ from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ..registry.closure import RegistryClosureLimb
 from ..state_projection import ProjectionModeloReadiness
 from .work_addressing import ModeloWorkResolution, ModeloWorkSelectionMode, ModeloWorkSelectorRequest
 from .work_review import ModeloWorkReview
@@ -51,7 +50,6 @@ class ModeloWorkspaceContributorKindV1(StrEnum):
     BOUNDED_REVIEW = "bounded_review"
     CALCULATION = "calculation"
     READINESS = "readiness"
-    CLOSURE = "closure"
     LOCALE_CATALOGUE = "locale_catalogue"
     FIELD_MANIFEST = "field_manifest"
 
@@ -237,7 +235,7 @@ def _producer_contract_digest(contract: ModeloWorkspaceProducerContractV1) -> Co
 #
 # Every envelope below is a THIN adapter only: it exists because
 # ModeloWorkspaceAtomicProjectionPortV1 binds ProjectionT to BaseModel, and a
-# native capture can return a bare tuple (READINESS, CLOSURE) or a dataclass
+# native capture can return a bare tuple (READINESS) or a dataclass
 # (LOCALE_CATALOGUE) that a single fixed schema fingerprint cannot describe on
 # its own. Placed here rather than beside each native owner: every envelope
 # needs modelo_workspace_projection_schema_fingerprint, defined in this
@@ -293,12 +291,6 @@ class ModeloWorkspaceReadinessProjectionV1(_WorkspaceProducerModel):
     """The complete readiness report set, exactly as the sole producer built it."""
 
     reports: tuple[ProjectionModeloReadiness, ...]
-
-
-class ModeloWorkspaceClosureProjectionV1(_WorkspaceProducerModel):
-    """Every filing-export closure limb, unmodified."""
-
-    limbs: tuple[RegistryClosureLimb, ...]
 
 
 class ModeloWorkspaceLocaleCatalogueProjectionV1(_WorkspaceProducerModel):
@@ -373,14 +365,6 @@ MODELO_WORKSPACE_READINESS_PRODUCER_CONTRACT_V1 = _declared_contract(
     discriminator="modelo_readiness",
     projection_contract_version=1,
     projection_type=ModeloWorkspaceReadinessProjectionV1,
-)
-MODELO_WORKSPACE_CLOSURE_PRODUCER_CONTRACT_V1 = _declared_contract(
-    contributor_kind=ModeloWorkspaceContributorKindV1.CLOSURE,
-    owner="application.registry",
-    producer="registry_closure",
-    discriminator="registry_closure",
-    projection_contract_version=1,
-    projection_type=ModeloWorkspaceClosureProjectionV1,
 )
 MODELO_WORKSPACE_LOCALE_CATALOGUE_PRODUCER_CONTRACT_V1 = _declared_contract(
     contributor_kind=ModeloWorkspaceContributorKindV1.LOCALE_CATALOGUE,
@@ -639,13 +623,11 @@ def _current_stamp_and_epoch(
 __all__ = [
     "MODELO_WORKSPACE_BOUNDED_REVIEW_PRODUCER_CONTRACT_V1",
     "MODELO_WORKSPACE_CALCULATION_PRODUCER_CONTRACT_V1",
-    "MODELO_WORKSPACE_CLOSURE_PRODUCER_CONTRACT_V1",
     "MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1",
     "MODELO_WORKSPACE_LOCALE_CATALOGUE_PRODUCER_CONTRACT_V1",
     "MODELO_WORKSPACE_READINESS_PRODUCER_CONTRACT_V1",
     "MODELO_WORKSPACE_REGISTRY_PRODUCER_CONTRACT_V1",
     "MODELO_WORKSPACE_WORK_PRODUCER_CONTRACT_V1",
-    "ModeloWorkspaceClosureProjectionV1",
     "ModeloWorkspaceContributingProjectionV1",
     "ModeloWorkspaceContributorKindV1",
     "ModeloWorkspaceEpochKindV1",

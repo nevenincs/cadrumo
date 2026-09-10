@@ -2113,14 +2113,14 @@ article = "29"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-9969#a29"
 published_at = 2002-05-24
 effective_from = 2002-05-24
-review_status = "operator_reviewed"
-reviewed_at = 2026-06-01
-reviewed_by = "operator"
-notes = "Articulo 29 de la Ley 12/2002 (Concierto Económico con la Comunidad Autónoma del País Vasco): distribución territorial de la recaudación del Impuesto sobre el Valor Añadido entre el Estado y la Administración de la Comunidad Autónoma del País Vasco proporcional al volumen de operaciones en cada territorio, con liquidación provisional anual y regularización en la declaración anual de IVA."
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-10
+reviewed_by = "agent-authored from the BOE consolidated text of BOE-A-2002-9969 art. 29, redaction in force BOE-A-2022-2051; operator to re-stamp"
+notes = "Articulo 29 de la Ley 12/2002 (Concierto Económico con la Comunidad Autónoma del País Vasco), titulado «Gestión e inspección del Impuesto»: el resultado de las liquidaciones del IVA se imputa a las Administraciones competentes en proporción al volumen de contraprestaciones realizadas en cada territorio; las proporciones aplicadas durante el año son provisionales y se calculan sobre las operaciones del año precedente, y en la última declaración-liquidación del año natural el sujeto pasivo fija las definitivas y regulariza los períodos anteriores."
 required_text = [
-    "distribución territorial de la recaudación del Impuesto sobre el Valor Añadido",
-    "proporciones que resulten de las operaciones",
-    "regularización correspondiente en la declaración anual de IVA",
+    "se imputará a las Administraciones competentes en proporción al volumen de las contraprestaciones",
+    "Las proporciones provisionalmente aplicables durante cada año natural serán las determinadas en función de las operaciones del año precedente",
+    "calculará las proporciones definitivas según las operaciones realizadas en dicho período",
 ]
 
 [legal."ley-37-1992:art-94"]
