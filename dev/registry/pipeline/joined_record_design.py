@@ -181,8 +181,9 @@ def design_view(joined_field: JoinedRecordDesignField) -> RecordDesignIntermedia
 
     A field filling a declared part of a cell sees the part's offset, length,
     type and verbatim statement; every other field sees its parser row
-    unchanged. The renderer and the render-profile eligibility both read this,
-    so a part is never judged by the text of the cell it divides.
+    unchanged. Every consumer that derives a field or decides which fields need a
+    reviewed representation reads this one view, so a part is never judged by
+    the text of the cell it divides.
     """
     part = joined_field.semantic_entry.part
     if part is None:

@@ -57,7 +57,7 @@ from ..pipeline.export_fragment_provenance import (
     load_export_fragment_provenance_manifest,
 )
 from ..pipeline.generated_tree_dispositions import record_drift_dispositions, render_refusal_dispositions
-from ..pipeline.joined_record_design import JoinedRecordDesign, join_record_design_semantics
+from ..pipeline.joined_record_design import JoinedRecordDesign, design_view, join_record_design_semantics
 from ..pipeline.record_design_intermediate import load_record_design_intermediate
 from ..pipeline.render_check import compare_revision_against_committed, parsed_tree_file
 from ..pipeline.render_profile import (
@@ -766,17 +766,22 @@ def test_every_official_anchor_reaches_exactly_one_generated_field(tree: _Genera
     _semantic_map, _profile, joined, _evidence, _transport = _authorities(tree)
 
     official_anchors = [
+        (field.record_identity, field.offset) for record in joined.records for field in record.parser_sheet.fields
+    ]
+    assert len(official_anchors) == len(set(official_anchors)), f"{tree}: official anchors are not unique"
+    covered_anchors = {
         (field.parser_field.record_identity, field.parser_field.offset)
         for record in joined.records
         for field in record.fields
-    ]
-    assert len(official_anchors) == len(set(official_anchors)), f"{tree}: official anchors are not unique"
-    mapped_anchors = [
-        (entry.anchor.record_identity, field.parser_field.offset)
+    }
+    assert covered_anchors == set(official_anchors), (
+        f"{tree}: semantic entries do not cover exactly the official design anchors"
+    )
+    # A cell whose own text divides it reaches one field per declared part; every
+    # slot, whole cell or part, reaches exactly one field.
+    slots = [
+        (field.parser_field.record_identity, design_view(field).offset)
         for record in joined.records
         for field in record.fields
-        for entry in (field.semantic_entry,)
     ]
-    assert sorted(mapped_anchors) == sorted(official_anchors), (
-        f"{tree}: semantic entries do not biject the official design anchors"
-    )
+    assert len(slots) == len(set(slots)), f"{tree}: a design slot reaches more than one generated field"
