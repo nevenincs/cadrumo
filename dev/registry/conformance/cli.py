@@ -70,8 +70,8 @@ from typing import Annotated
 import typer
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.legal import verify_legal_catalogue
+from dev.registry.compiler.authority import compile_validated_authority
 
 from ._stamp import StampableReviewStatus, StampError, bundled_registry_root, stamp_revision
 from .authorities import canonical_live_registry_closure_authorities
@@ -173,19 +173,19 @@ def integrity(
     """
     resolved_registry_root = registry_root or bundled_path("registry", "aeat")
     resolved_source_root = source_root or bundled_path()
-    authority = ValidatedRegistryAuthority.load(resolved_registry_root, source_root=resolved_source_root)
+    authority = compile_validated_authority(resolved_registry_root, resolved_source_root)
     verify_legal_catalogue(authority.catalogues.legal, source_root=resolved_source_root)
     revision_count = sum(len(modelo.revisions) for modelo in authority.modelos)
     if as_json:
         typer.echo(
             json.dumps(
                 {
-                "registry_root": str(resolved_registry_root),
-                "source_root": str(resolved_source_root),
-                "status": "passed",
-                "modelo_count": len(authority.modelos),
-                "revision_count": revision_count,
-                "legal_reference_count": len(authority.catalogues.legal),
+                    "registry_root": str(resolved_registry_root),
+                    "source_root": str(resolved_source_root),
+                    "status": "passed",
+                    "modelo_count": len(authority.modelos),
+                    "revision_count": revision_count,
+                    "legal_reference_count": len(authority.catalogues.legal),
                 },
                 indent=2,
             )

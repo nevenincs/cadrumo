@@ -6,8 +6,8 @@ import ast
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..._paths import REPO_ROOT
 
@@ -79,8 +79,8 @@ def _function_definitions(tree: ast.AST) -> set[str]:
 
 def test_m303_midyear_designs_are_canonically_selected_without_a_snapshot() -> None:
     """Static inspection follows temporal selection yet retains no filing context."""
-    early = bundled_authority().inspect_revision("303", filing_year=2024, period="2T")
-    late = bundled_authority().inspect_revision("303", filing_year=2024, period="3T")
+    early = compiled_bundled_authority().inspect_revision("303", filing_year=2024, period="2T")
+    late = compiled_bundled_authority().inspect_revision("303", filing_year=2024, period="3T")
 
     assert isinstance(early, RegistryRevisionInspection)
     assert early.revision_id == "2024-hasta-08-y-2t"
@@ -101,7 +101,7 @@ def test_m038_inspection_retains_exact_model_law_and_construct_evidence() -> Non
     by that move. This test asserted the pre-move values and had therefore never
     passed since; four of its seven assertions were stale together.
     """
-    inspection = bundled_authority().inspect_revision("038", filing_year=2025, period="01")
+    inspection = compiled_bundled_authority().inspect_revision("038", filing_year=2025, period="01")
 
     assert inspection.revision_id == "2025-y-siguientes"
     assert inspection.legal_ref_ids == frozenset(

@@ -10,7 +10,6 @@ from pydantic import ValidationError
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from dev.registry.compiler.fact_providers import FACT_PROVIDER_REGISTRATIONS
 from cadrumo.domain.calculations.registry.facts.resolution import (
     MappingFactQuery,
     ResolvedMappingFact,
@@ -28,8 +27,9 @@ from cadrumo.domain.iva.rates import (
     IVA_RATE_PROVIDER_ID,
     iva_rate_record_from_fact,
 )
-from dev.registry.compiler.iva import compile_iva_rate_facts, load_iva_rate_table_for_publication
 from cadrumo.domain.iva.schema import EUMemberState, IvaRateKind
+from dev.registry.compiler.fact_providers import FACT_PROVIDER_REGISTRATIONS
+from dev.registry.compiler.iva import compile_iva_rate_facts, load_iva_rate_table_for_publication
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

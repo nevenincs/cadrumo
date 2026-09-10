@@ -181,7 +181,7 @@ def test_load_refusal_never_carries_the_reviewer_identity(tmp_path: Path, review
 
     A shipped-shaped revision.toml declaring ``agent_reviewed`` with a reviewer
     but no date fails to load at all -- ``_assert_revision_is_compiled`` wraps
-    whatever :func:`~cadrumo.domain.calculations.registry.loader.load_modelo_directory`
+    whatever :func:`~dev.registry.compiler.loader.load_modelo_directory`
     raises, and that ``RegistryError`` itself embeds the SAME pydantic
     ``ValidationError`` one layer down.
 

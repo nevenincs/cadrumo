@@ -16,16 +16,16 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from dev.registry.conformance.coverage import build_model_law_coverage_ledger
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.conformance.coverage import build_model_law_coverage_ledger
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 @pytest.fixture(scope="module")
 def authority():
-    return bundled_authority()
+    return compiled_bundled_authority()
 
 
 @pytest.mark.parametrize(

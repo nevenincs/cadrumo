@@ -28,9 +28,9 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compile_validated_authority
 
 from .....core.resources.bundled_data import bundled_path
-from ..authority import ValidatedRegistryAuthority
 from ..record_design import extract_record_design
 from ..record_design_schema import RecordDesignSheet
 from ..schema import ModeloRevision, RegistryCatalogues
@@ -49,7 +49,7 @@ def _revisions_with_records():
 
 
 def _shipped(revision_id: str):
-    authority = ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
+    authority = compile_validated_authority(bundled_path("registry", "aeat"), bundled_path())
     snapshot = authority.snapshot("390", filing_year=int(revision_id), period="0A")
     assert snapshot.revision.id == revision_id, (
         f"390 filing year {revision_id} resolves to revision {snapshot.revision.id!r}; "

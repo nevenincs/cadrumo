@@ -18,7 +18,6 @@ from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.period import Period
 from cadrumo.core.time.clock import now
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import (
     RegistrySnapshotError,
     RegistryValidationError,
@@ -28,6 +27,7 @@ from cadrumo.domain.calculations.registry.ids import (
     WorkbookOutputId,
 )
 from cadrumo.domain.calculations.registry.period_selector_match import selector_period_matches_request
+from dev.registry.compiler.authority import compile_validated_authority
 
 from ._workbook_parity import (
     SyntheticInputSet,
@@ -258,7 +258,7 @@ def _snapshot_for_scenario(
     registry_root: Path,
     source_root: Path,
 ):
-    authority = ValidatedRegistryAuthority.load(registry_root, source_root=source_root)
+    authority = compile_validated_authority(registry_root, source_root)
     try:
         return authority.snapshot(
             scenario.modelo,

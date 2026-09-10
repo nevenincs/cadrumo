@@ -15,6 +15,7 @@ from cadrumo.domain.calculations.registry.record_design import (
     extract_record_design_pdf,
 )
 from cadrumo.domain.calculations.registry.record_design_pdf_orchestration import extract_record_design_pdf_stream
+
 from ._record_design_support import (
     _RECORD_DESIGN_ROOT,
     _committed_registry_tree,

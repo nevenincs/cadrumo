@@ -7,6 +7,7 @@ from decimal import Decimal
 
 import pytest
 from dev.registry.compiler.convenio import load_convenio_authority
+from dev.registry.compiler.loader import load_catalogue_file, load_modelo_directory
 
 from .....core.irnr import ConvenioOverrideKind, TipoRentaIrnr
 from .....core.resources.bundled_data import bundled_path
@@ -15,7 +16,6 @@ from .....tests.registry_snapshot import build_snapshot
 from .._validate import RegistryValidator
 from ..errors import NoRevisionForPeriodError
 from ..legal import verify_legal_catalogue
-from ..loader import load_catalogue_file, load_modelo_directory
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..temporal import select_revision
 from ._registry_schema_support import _committed_modelo

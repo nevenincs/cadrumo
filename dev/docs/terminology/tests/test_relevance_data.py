@@ -34,7 +34,7 @@ from typing import TypedDict
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ...._paths import REPO_ROOT
 from ...terminology_handbook.loader import load_terminology_handbook
@@ -137,7 +137,7 @@ def test_every_mapping_query_is_shippable_vocabulary(relevance: SweepResult) -> 
 def build_surfaces() -> _BuildSurfaces:
     """The current build's resolvable surfaces, for the target-resolves gate."""
     handbook = load_terminology_handbook()
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     # Concept anchors: project the same approved cards that feed the search
     # surface. Sphinx derives the anchor from the glossary headword, not from
     # the concept id (for example, ``AEAT`` -> ``term-AEAT``).

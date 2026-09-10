@@ -47,13 +47,13 @@ from cadrumo.domain.calculations.registry.identity import (
     RegistryIdentityOrigin,
     compute_walked_tree_digest,
 )
-from cadrumo.domain.calculations.registry.loader import _load_registry_tree_cached, load_registry_tree
 from cadrumo.domain.calculations.registry.loader_cache import is_bundled_registry_root
 from cadrumo.domain.calculations.registry.loader_fingerprints import (
     _registry_fingerprint_cache,
     clear_fingerprint_cache,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from dev.registry.compiler.loader import _load_registry_tree_cached, load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -132,9 +132,9 @@ def _modelo_text(number: str) -> str:
 _SUPPORTED_FILING_YEARS_TEXT = (
     "[supported_filing_years]\nyears = [2025]\n\n"
     "[sociedades_annual_manual_coverage]\n"
-    "dispositions = [{ year = 2025, status = \"unpublished\", "
-    "official_locator = \"https://example.com/manuals\", observed_at = 2026-09-10, "
-    "acquisition_condition_key = \"application.registry.manuals.coverage.recheck_aeat_publication\" }]\n"
+    'dispositions = [{ year = 2025, status = "unpublished", '
+    'official_locator = "https://example.com/manuals", observed_at = 2026-09-10, '
+    'acquisition_condition_key = "application.registry.manuals.coverage.recheck_aeat_publication" }]\n'
 )
 
 

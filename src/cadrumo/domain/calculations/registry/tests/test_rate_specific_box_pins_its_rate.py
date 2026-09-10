@@ -66,6 +66,7 @@ import re
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compile_validated_authority
 
 from .....core.directory_scan import scan_directory
 from .....core.resources.bundled_data import bundled_path
@@ -88,7 +89,7 @@ _RATE_KEYED_ROW = re.compile(r"Tipo\s+[\d,]+\s*%.*?" + _CASILLA_TAG_RE.pattern)
 
 
 def _authority() -> ValidatedRegistryAuthority:
-    return ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
+    return compile_validated_authority(bundled_path("registry", "aeat"), bundled_path())
 
 
 def _design_files(modelo_id: str) -> tuple[Path, ...]:

@@ -23,11 +23,11 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.edition_materialisation import materialise_edition
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
-from cadrumo.domain.calculations.registry.loader import load_modelo_directory
 from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor
+from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.compiler.loader import load_modelo_directory
 
 from ..analysis.delta_minimality import MinimalityVerdict, judge_definition
 from ..pipeline._export_tree import _render_toml_bytes
@@ -122,7 +122,7 @@ def _cite_successor_design_on_inherited_rows(registry_root: Path) -> None:
 def _prepared(work: Path, target_root: Path) -> _PreparedInvocation:
     modelo_root = target_root / "modelos" / _MODELO
     inputs = revision_render_inputs(
-        bundled_authority(),
+        compiled_bundled_authority(),
         modelo=_MODELO,
         revision=_REVISION,
         source_ref=_SOURCE_REF,
@@ -270,7 +270,7 @@ def test_an_absent_tree_on_a_delta_target_publishes_and_derives_the_full_copys_r
     export_prefix = f"revisions/{_REVISION}/export/"
     assert {path: data for path, data in after.items() if not path.startswith(export_prefix)} == declarations_before
     published = load_modelo_directory(modelo_root).revisions[_REVISION]
-    full_copy = bundled_authority().modelo(_MODELO).revisions[_REVISION]
+    full_copy = compiled_bundled_authority().modelo(_MODELO).revisions[_REVISION]
     assert {str(c.id): c.export_refs for c in published.casillas} == {
         str(c.id): c.export_refs for c in full_copy.casillas
     }

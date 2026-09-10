@@ -28,13 +28,13 @@ from cadrumo.domain.calculations.registry import formula_runtime_ops
 from cadrumo.domain.calculations.registry._loader_internals import _collect_registry_tree_fingerprints_uncached
 from cadrumo.domain.calculations.registry._source_evidence_fingerprint import collect_source_evidence_fingerprints
 from cadrumo.domain.calculations.registry._verdict_cache import certify_registry_validation, compute_verdict_key
-from dev.registry.compiler.convenio import collect_convenio_fingerprints
 from cadrumo.domain.calculations.registry.formula_runtime_ops import read_parameter
 from cadrumo.domain.calculations.registry.identity import compute_walked_tree_digest
 from cadrumo.domain.calculations.registry.loader_cache import _bundled_registry_root
 from cadrumo.domain.calculations.registry.loader_fingerprints import clear_fingerprint_cache
 from cadrumo.domain.calculations.registry.m303_orden_manifest import collect_m303_annual_orden_fingerprints
 from cadrumo.tests.attribute_scope import scoped_attribute
+from dev.registry.compiler.convenio import collect_convenio_fingerprints
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -77,9 +77,9 @@ valid_to = 2025-12-31
 _SUPPORTED_FILING_YEARS_TEXT = (
     "[supported_filing_years]\nyears = [2025]\n\n"
     "[sociedades_annual_manual_coverage]\n"
-    "dispositions = [{ year = 2025, status = \"unpublished\", "
-    "official_locator = \"https://example.com/manuals\", observed_at = 2026-09-10, "
-    "acquisition_condition_key = \"application.registry.manuals.coverage.recheck_aeat_publication\" }]\n"
+    'dispositions = [{ year = 2025, status = "unpublished", '
+    'official_locator = "https://example.com/manuals", observed_at = 2026-09-10, '
+    'acquisition_condition_key = "application.registry.manuals.coverage.recheck_aeat_publication" }]\n'
 )
 
 

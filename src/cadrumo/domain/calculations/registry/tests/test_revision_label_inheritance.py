@@ -24,11 +24,11 @@ from pathlib import Path
 from typing import NamedTuple
 
 import pytest
+from dev.registry.compiler.loader import load_modelo_directory
 
 from .....core.i18n import MissingTranslationError, lookup_translation
 from ..authority import bundled_authority
 from ..errors import RegistryLoadError
-from ..loader import load_modelo_directory
 from ..modelo_localization import (
     ModeloLocalizationFieldKind,
     casilla_continuity_locale_key,

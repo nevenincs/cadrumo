@@ -226,7 +226,7 @@ def load_registry_diagnostic_classification(
     The returned capability deliberately is not a registry authority.  It can
     only classify independently validated revision facts into diagnostic
     residue; filing, export, and calculation callers must load a validated
-    authority through :meth:`ValidatedRegistryAuthority.load`.
+    authority through :func:`dev.registry.compiler.authority.compile_validated_authority`.
     """
     from cadrumo.domain.calculations.registry.authority import (
         canonical_authority_root_pair,

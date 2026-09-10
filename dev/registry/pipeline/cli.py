@@ -21,7 +21,6 @@ import typer
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.i18n.render import locale_map, override_locales_root
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.edition_materialisation import MaterialisedEdition, materialise_edition
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.modelo_localization import (
@@ -29,6 +28,7 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
     casilla_occurrence_locale_key,
 )
 from dev.locales.manager import LocaleManager, discover_locale_codes
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ._export_tree import RenderedExportTree, _render_toml_bytes, render_complete_export_tree
 from ._tree_check import CheckedGeneratedExportTree, GeneratedExportTreeCheckContext, check_generated_export_tree
@@ -52,7 +52,6 @@ from .render_check import (
     RenderComparison,
     RevisionRenderInputs,
     compare_export_tree_roots,
-    record_drift_dispositions,
     revision_render_inputs,
 )
 from .source_defects import source_defects_for
@@ -125,7 +124,7 @@ def _bootstrap_target(invocation: _Invocation, *, source_sha256: str) -> Generat
 
 def _prepare(invocation: _Invocation, root: Path) -> _PreparedInvocation:
     """Stage one narrow candidate and derive its render inputs from authority."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     target_root = bundled_path("registry", "aeat")
     target_export_root = target_root / "modelos" / invocation.modelo / "revisions" / invocation.revision / "export"
     source = next(

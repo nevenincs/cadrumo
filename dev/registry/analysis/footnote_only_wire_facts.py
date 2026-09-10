@@ -102,12 +102,14 @@ from __future__ import annotations
 
 import collections
 import sys
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Mapping, Protocol
+from typing import Protocol
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..pipeline.record_design_intermediate import (
     RecordDesignIntermediateField,
@@ -542,7 +544,7 @@ def main() -> int:
     """Print one greppable row per finding and a closing census; always exit 0."""
     from .corpus import bundled_modelo_ids
 
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     findings = screen_authority(authority, bundled_modelo_ids())
     tally: collections.Counter[str] = collections.Counter(item.kind for item in findings)
     for item in findings:

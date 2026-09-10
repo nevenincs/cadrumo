@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.loader import load_registry_tree
+from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.compiler.loader import load_registry_tree
 
 from ..pipeline._export_tree import render_complete_export_tree
 from ..pipeline.record_design_intermediate import (
@@ -213,7 +213,7 @@ def test_m390_2023_reuses_522_anchors_and_pins_the_exact_page_2_relayout() -> No
 
 def test_m390_2023_profile_and_map_render_all_numbered_anchors_from_the_exact_source(tmp_path: Path) -> None:
     inputs = revision_render_inputs(
-        bundled_authority(),
+        compiled_bundled_authority(),
         modelo="390",
         revision="2023",
         source_ref=_SOURCE_REF,

@@ -30,10 +30,11 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.record_design import extract_record_design
 from cadrumo.domain.calculations.registry.record_design_pdf_visual import extract_pdf_text_lines
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 __all__ = [
     "UndeclaredSignPosition",
@@ -177,7 +178,7 @@ def screen_authority(authority: ValidatedRegistryAuthority) -> tuple[UndeclaredS
 
 def main() -> int:
     """Print one greppable row per undeclared sign position."""
-    for item in screen_authority(bundled_authority()):
+    for item in screen_authority(compiled_bundled_authority()):
         print(f"{item.subject} {item.record_id} {item.field_id} @{item.offset}")
     return 0
 

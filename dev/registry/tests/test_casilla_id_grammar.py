@@ -10,7 +10,8 @@ import dataclasses
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..analysis.casilla_id_grammar import GRAMMARS, classify_casilla_id, screen_authority
 
@@ -19,7 +20,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 @pytest.fixture(scope="module")
 def authority() -> ValidatedRegistryAuthority:
-    return bundled_authority()
+    return compiled_bundled_authority()
 
 
 @pytest.mark.parametrize(

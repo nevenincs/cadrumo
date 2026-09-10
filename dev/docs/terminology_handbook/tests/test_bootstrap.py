@@ -13,7 +13,7 @@ import pytest
 
 from cadrumo.core.concept_lifecycle import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .._curation import audit_handbook
 from .._enrolment import collect_enrolment_candidates
@@ -27,7 +27,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 def test_bootstrapped_tree_passes_every_validation_gate() -> None:
     handbook = load_bundled_terminology_handbook()
-    legal_ids = frozenset(bundled_authority().catalogues.legal)
+    legal_ids = frozenset(compiled_bundled_authority().catalogues.legal)
     for validate in default_handbook_validators(legal_ids):
         validate(handbook)
     assert len(handbook.concepts) >= 95
@@ -52,7 +52,7 @@ def test_prorrata_carries_four_languages_and_resolving_legal_refs() -> None:
         OutputLanguage.CA,
         OutputLanguage.HU,
     }
-    legal_ids = frozenset(bundled_authority().catalogues.legal)
+    legal_ids = frozenset(compiled_bundled_authority().catalogues.legal)
     assert prorrata.legal_refs
     for ref in prorrata.legal_refs:
         assert ref in legal_ids, ref
@@ -60,7 +60,7 @@ def test_prorrata_carries_four_languages_and_resolving_legal_refs() -> None:
 
 def test_every_migrated_legal_ref_resolves_in_the_catalogue() -> None:
     handbook = load_bundled_terminology_handbook()
-    legal_ids = frozenset(bundled_authority().catalogues.legal)
+    legal_ids = frozenset(compiled_bundled_authority().catalogues.legal)
     for concept in handbook.concepts:
         for ref in concept.legal_refs:
             assert ref in legal_ids, f"{concept.concept_id}: {ref}"

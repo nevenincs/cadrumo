@@ -24,15 +24,12 @@ from cadrumo.core.schema_family_disposition import (
     UNRESOLVED_SCHEMA_FAMILY_DISPOSITIONS,
     RegistrySchemaFamilyDisposition,
 )
-from dev.registry.conformance.coverage import REQUIRED_COVERAGE_TIERS
-from cadrumo.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.calculations.registry._schema_family_coverage import (
     RevisionCoverageManifest,
     SchemaFamilyCoverageRow,
     build_revision_coverage_manifest,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
-from cadrumo.domain.calculations.registry.loader import load_modelo_directory
 from cadrumo.domain.calculations.registry.schema import (
     REVISION_MANIFEST_ONLY_FIELDS,
     REVISION_SCHEMA_FAMILY_FIELDS,
@@ -43,6 +40,10 @@ from cadrumo.domain.calculations.registry.schema_base import (
     RegistryModel,
 )
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.tests.registry_tree import bundled_registry_tree
+from dev.registry.compiler.loader import load_modelo_directory
+from dev.registry.conformance.coverage import REQUIRED_COVERAGE_TIERS
+
 from ._loader_directory_mode_support import _load_revision as _shared_load_revision
 from ._loader_directory_mode_support import _write_modelo as _shared_write_modelo
 from ._schema_family_support import schema_family_enrollment_failures

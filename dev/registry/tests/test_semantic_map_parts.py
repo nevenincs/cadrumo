@@ -10,8 +10,8 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..pipeline._semantic_map_validation import validate_declared_parts
 from ..pipeline.joined_record_design import JoinedRecordDesignField, design_view
@@ -23,7 +23,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 @pytest.fixture(scope="module")
 def m347_split_cell() -> tuple[tuple[JoinedRecordDesignField, ...], tuple[SemanticMapEntry, ...]]:
-    inputs = revision_render_inputs(bundled_authority(), modelo="347", revision="2025-y-siguientes")
+    inputs = revision_render_inputs(compiled_bundled_authority(), modelo="347", revision="2025-y-siguientes")
     parted = tuple(field for field in inputs.joined.fields if field.semantic_entry.part is not None)
     return parted, tuple(field.semantic_entry for field in parted)
 

@@ -32,7 +32,7 @@ The five resolution rules (by source path):
   resolved against the projected CLI records.
 
 The registry lookup goes through ``ValidatedRegistryAuthority`` /
-``bundled_authority()`` (never a raw TOML re-parse, per
+``compiled_bundled_authority()`` (never a raw TOML re-parse, per
 ``aeat-registry-authority-flow``). Legal hits use the generated legal-reference
 projection for their site-relative target while carrying the BOE permalink as
 typed provenance (``aeat-calculation-grounding``).
@@ -49,10 +49,8 @@ from typing import TYPE_CHECKING, Final
 from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.domain.calculations.registry.authority import (
-    ValidatedRegistryAuthority,
-    bundled_authority,
-)
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..._paths import REPO_ROOT, UTF_8
 from .casilla_projection import project_casilla_search_records
@@ -297,7 +295,7 @@ class TargetResolver:
                 filtering; when omitted, the projection is materialised here
                 for backwards-compatible standalone resolver construction.
         """
-        self._authority = authority if authority is not None else bundled_authority()
+        self._authority = authority if authority is not None else compiled_bundled_authority()
         records, _stats = project_casilla_search_records(self._authority)
         # Index casilla records by modelo for the casilla / diseno rules.
         self._casillas_by_modelo: dict[str, tuple[SearchRecord, ...]] = {}

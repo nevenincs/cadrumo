@@ -30,8 +30,8 @@ from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_semantics import ExportComputedKey
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
-from cadrumo.domain.calculations.registry.loader import load_registry_tree
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
+from dev.registry.compiler.loader import load_registry_tree
 
 from ..analysis.m303_semantic_census import (
     M303_SEMANTIC_CENSUS_EXPECTATIONS,

@@ -208,7 +208,6 @@ from cadrumo.core.revision_review import RevisionReviewStatus
 from cadrumo.core.toml import to_str_keyed_dict
 from cadrumo.core.type_guards import is_object_mapping
 from cadrumo.domain.calculations.registry.errors import RegistryError
-from cadrumo.domain.calculations.registry.loader import load_modelo_directory
 from cadrumo.domain.calculations.registry.schema import (
     REVISION_GOVERNANCE_FIELDS,
     DeclaredPredecessor,
@@ -216,6 +215,7 @@ from cadrumo.domain.calculations.registry.schema import (
     NoPredecessor,
 )
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+from dev.registry.compiler.loader import load_modelo_directory
 
 from .manager import reset_conformance_cache
 

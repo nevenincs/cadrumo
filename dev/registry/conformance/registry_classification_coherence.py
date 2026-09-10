@@ -75,9 +75,9 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.tax_domain import TaxDomain
 from cadrumo.domain.calculations.registry._validate_revision_rules import validate_informative_class_invariant
 from cadrumo.domain.calculations.registry.ids import ModeloId
-from dev.registry.compiler.loader import load_registry_tree
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_base import CalculationClass, CalculationClassField
+from dev.registry.compiler.loader import load_registry_tree
 
 #: The ``calculation_class`` value naming the informative enforcement posture.
 

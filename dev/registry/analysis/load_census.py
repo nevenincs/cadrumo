@@ -78,8 +78,8 @@ REGISTRY_DIR: Final[Path] = SOURCE_ROOT / "cadrumo" / "domain" / "calculations" 
 
 #: The sanctioned way to load the registry: the validated authority, plus the
 #: package namespace itself, which is inert and owns nothing.
-#: ``ValidatedRegistryAuthority.load`` is the only production load entry point
-#: the authority-flow rule admits.
+#: ``compiled_bundled_authority()`` is the only production load entry point the
+#: authority-flow rule admits.
 LOAD_ENTRY_POINTS: Final[tuple[str, ...]] = (
     REGISTRY_PACKAGE,
     f"{REGISTRY_PACKAGE}.authority",
@@ -742,9 +742,7 @@ def module_for(filename):
 
 def main():
     from cadrumo.core.resources.bundled_data import bundled_path
-    from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 
-    root = bundled_path("registry", "aeat")
     source_root = bundled_path()
     executed = set()
 
@@ -754,14 +752,14 @@ def main():
 
     prelude = {regime!r} == "inspection_snapshot"
     if prelude:
-        authority = ValidatedRegistryAuthority.load(root, source_root=source_root)
+        authority = compiled_bundled_authority()
 
     TOOL.use_tool_id(TOOL_ID, "load-census")
     TOOL.register_callback(TOOL_ID, TOOL.events.PY_START, on_start)
     TOOL.set_events(TOOL_ID, TOOL.events.PY_START)
     try:
         if not prelude:
-            authority = ValidatedRegistryAuthority.load(root, source_root=source_root)
+            authority = compiled_bundled_authority()
 {snapshot_block}
     finally:
         TOOL.set_events(TOOL_ID, 0)

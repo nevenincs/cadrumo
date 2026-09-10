@@ -64,9 +64,10 @@ import sys
 from dataclasses import dataclass
 
 from cadrumo.core.casilla_id import CasillaId
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.maintenance_support import resolved_export_endpoints, resolved_export_fields
 
 from .corpus import bundled_modelo_ids
@@ -314,7 +315,7 @@ def screen_authority(
 
 def main() -> int:
     """Print one greppable row per finding and a closing census; always exit 0."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     findings = screen_authority(authority, bundled_modelo_ids())
     by_kind: collections.Counter[str] = collections.Counter(finding.kind for finding in findings)
     by_modelo: collections.Counter[str] = collections.Counter(

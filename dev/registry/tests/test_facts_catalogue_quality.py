@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from dev.registry.compiler.fact_providers import FactProviderRegistration
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFact
+from dev.registry.compiler.fact_providers import FactProviderRegistration
 
 from ..analysis.facts_catalogue_quality import (
     FactQualityKind,
@@ -72,18 +72,25 @@ def test_complete_legal_only_and_source_only_provenance_lanes_are_accepted() -> 
         "legal-only",
         _variant("legal", date(2025, 1, 1), source_refs=(), citation_refs=()),
     )
-    source_only_variant = _fact("source-only", _variant("source", date(2025, 1, 1))).variants[0].model_copy(
-        update={"legal_refs": ()},
+    source_only_variant = (
+        _fact("source-only", _variant("source", date(2025, 1, 1)))
+        .variants[0]
+        .model_copy(
+            update={"legal_refs": ()},
+        )
     )
     source_only = _fact("source-only", _variant("source", date(2025, 1, 1))).model_copy(
         update={"variants": (source_only_variant,)},
     )
 
-    assert facts_catalogue_findings(
-        (provider,),
-        {"authored": (legal_only, source_only)},
-        ("facts",),
-    ) == ()
+    assert (
+        facts_catalogue_findings(
+            (provider,),
+            {"authored": (legal_only, source_only)},
+            ("facts",),
+        )
+        == ()
+    )
 
 
 def test_neither_partial_and_mismatched_provenance_lanes_are_rejected() -> None:
@@ -92,9 +99,7 @@ def test_neither_partial_and_mismatched_provenance_lanes_are_rejected() -> None:
     variant = base.variants[0]
     neither = base.model_copy(
         update={
-            "variants": (
-                variant.model_copy(update={"legal_refs": (), "source_refs": (), "source_citations": ()}),
-            ),
+            "variants": (variant.model_copy(update={"legal_refs": (), "source_refs": (), "source_citations": ()}),),
         },
     )
     partial = _fact(

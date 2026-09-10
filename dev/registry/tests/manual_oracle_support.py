@@ -15,10 +15,9 @@ from __future__ import annotations
 from decimal import Decimal
 from pathlib import Path
 
-from dev.registry.parity.external_grounding import ManualWorkedExamplePayload
-
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
+from dev.registry.parity.external_grounding import ManualWorkedExamplePayload
 
 __all__ = ["oracle_declared_figures", "read_manual_worked_example"]
 

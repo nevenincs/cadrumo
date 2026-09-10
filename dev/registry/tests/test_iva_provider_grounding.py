@@ -7,9 +7,9 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.facts.validation import governed_fact_catalogue_failures
-from dev.registry.compiler.loader import load_shared_catalogues
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
 from dev.registry.compiler.iva import compile_iva_rate_facts, compile_iva_recargo_facts
+from dev.registry.compiler.loader import load_shared_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -41,7 +41,7 @@ def test_iva_and_recargo_provider_facts_are_grounded_by_registry_evidence() -> N
 
 
 def test_iva_provider_validation_rejects_source_citation_text_not_in_evidence() -> None:
-    fact, = compile_iva_rate_facts(bundled_path("registry", "aeat"))
+    (fact,) = compile_iva_rate_facts(bundled_path("registry", "aeat"))
     foreign_index = next(index for index, variant in enumerate(fact.variants) if variant.source_citations)
     foreign = fact.variants[foreign_index]
     broken_citations = tuple(
@@ -58,7 +58,7 @@ def test_iva_provider_validation_rejects_source_citation_text_not_in_evidence() 
 
 
 def test_recargo_provider_validation_rejects_legal_text_not_in_anchored_corpus() -> None:
-    fact, = compile_iva_recargo_facts(bundled_path("registry", "aeat"))
+    (fact,) = compile_iva_recargo_facts(bundled_path("registry", "aeat"))
     catalogue = GovernedFactCatalogue(facts={fact.fact_id: fact})
     shared = load_shared_catalogues(bundled_path("registry", "aeat"))
     ref_id = "ley-37-1992:art-161"

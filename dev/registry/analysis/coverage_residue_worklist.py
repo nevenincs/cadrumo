@@ -27,6 +27,8 @@ from __future__ import annotations
 from collections import defaultdict
 from dataclasses import dataclass
 
+from dev.registry.compiler.authority import compiled_bundled_authority
+
 
 @dataclass(frozen=True, slots=True, order=True)
 class ResidueCell:
@@ -45,12 +47,10 @@ def collect_residue() -> tuple[ResidueCell, ...]:
     Returns:
         The residue, sorted so two runs over an unchanged corpus are identical.
     """
-    from cadrumo.domain.calculations.registry.authority import bundled_authority
-
     from ..supported_filing_years import audit_supported_filing_years
     from ..temporal_coverage import compose_temporal_coverage
 
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     authority.validate_registry()
     report = compose_temporal_coverage(authority=authority)
 

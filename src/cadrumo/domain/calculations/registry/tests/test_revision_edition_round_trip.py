@@ -129,6 +129,7 @@ from pathlib import Path, PurePosixPath
 from typing import Final
 
 import pytest
+from dev.registry.compiler.authority import compile_validated_authority
 
 from .....application.filing.draft_construction import build_draft
 from .....application.filing.export import export_draft
@@ -154,7 +155,7 @@ from .....core.result_disposition import ResultDisposition
 from .....domain.filing.protocols import ModeloInputs
 from .....domain.submission.models import ModeloDraftStatus
 from .....tests.inventory import REPO_ROOT
-from ..authority import ValidatedRegistryAuthority, bundled_authority
+from ..authority import bundled_authority
 from ..errors import RegistryError
 from ..modelo_localization import (
     ModeloLocalizationFieldKind,
@@ -363,7 +364,7 @@ def _refused(kind: RoundTripFindingKind, exc: RegistryError) -> RoundTripReport:
 
 
 def _load_modelo(registry_root: Path, modelo_id: str) -> ModeloDefinition:
-    return ValidatedRegistryAuthority.load(registry_root, source_root=bundled_path()).modelo(modelo_id)
+    return compile_validated_authority(registry_root, bundled_path()).modelo(modelo_id)
 
 
 def _delta_authored(modelo: ModeloDefinition) -> tuple[str, ...]:

@@ -37,8 +37,9 @@ import sys
 from dataclasses import dataclass
 from typing import Final
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .corpus import bundled_modelo_ids
 from .provenance_consistency import ProvenanceRefKind, citing_children
@@ -121,7 +122,7 @@ def screen_authority(
 
 def main() -> int:
     """Print one greppable row per finding and a closing census; always exit 0."""
-    findings = screen_authority(bundled_authority(), bundled_modelo_ids())
+    findings = screen_authority(compiled_bundled_authority(), bundled_modelo_ids())
     for item in findings:
         sys.stdout.write(
             f"manifest_uncited modelo={item.modelo} revision={item.revision} "

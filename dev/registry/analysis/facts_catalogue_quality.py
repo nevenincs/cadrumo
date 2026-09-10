@@ -17,12 +17,12 @@ from pathlib import Path, PurePosixPath
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactVariant
 from dev.registry.compiler.fact_providers import (
     FACT_PROVIDER_REGISTRATIONS,
     FactProviderRegistration,
     validate_fact_provider_registrations,
 )
-from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactVariant
 
 __all__ = [
     "FactQualityFinding",
@@ -226,11 +226,7 @@ def live_facts_catalogue_findings(
                     detail=f"compile failed: {type(error).__name__}: {error}",
                 )
             )
-    governed_directories = tuple(
-        directory
-        for registration in frozen
-        for directory in registration.owned_directories
-    )
+    governed_directories = tuple(directory for registration in frozen for directory in registration.owned_directories)
     return tuple(
         sorted(
             {

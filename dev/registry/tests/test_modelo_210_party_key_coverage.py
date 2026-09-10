@@ -16,7 +16,7 @@ import pytest
 
 from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.loader import load_catalogue_file
+from dev.registry.compiler.loader import load_catalogue_file
 
 from ..pipeline.record_design_intermediate import load_record_design_intermediate
 

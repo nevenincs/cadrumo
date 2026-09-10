@@ -6,17 +6,9 @@ import json
 from urllib.parse import urlparse
 
 import pytest
-from dev.registry.maintenance_support import LiveParityCatalogue, OracleEnvironment
-from dev.registry.parity.live_parity import LiveParityOracle
 from pydantic import ValidationError
 
 from cadrumo.core.config import Settings
-from cadrumo.tests.aeat_literal_fixtures import aeat_host
-from .aeat_nif_iva_oracle import (
-    ORACLE_ID,
-    AeatNifIvaCheckerOracle,
-    register_default,
-)
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.remote_state_guard import (
     RemoteOperation,
@@ -24,7 +16,16 @@ from cadrumo.domain.calculations.registry.remote_state_guard import (
     assert_remote_operation_allowed,
 )
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
+from cadrumo.tests.aeat_literal_fixtures import aeat_host
+from dev.registry.maintenance_support import LiveParityCatalogue, OracleEnvironment
+from dev.registry.parity.live_parity import LiveParityOracle
+
 from ._remote_guard_support import AEAT_WRITE_FORBIDDEN_ACTIONS
+from .aeat_nif_iva_oracle import (
+    ORACLE_ID,
+    AeatNifIvaCheckerOracle,
+    register_default,
+)
 from .checker_replay_driver import CheckerReplayDriver
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -250,8 +251,9 @@ def test_replay_payload_strict_rejects_non_string_value_in_observed_nif_iva() ->
 
 def test_the_oracle_module_keeps_a_public_locally_defined_surface() -> None:
     """Every exported oracle symbol is defined here, and the package binds none."""
-    from . import aeat_nif_iva_oracle
     from dev import registry as registry_namespace
+
+    from . import aeat_nif_iva_oracle
 
     assert aeat_nif_iva_oracle.__all__
     for name in aeat_nif_iva_oracle.__all__:

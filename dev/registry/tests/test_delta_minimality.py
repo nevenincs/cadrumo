@@ -12,9 +12,10 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor, ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..analysis.corpus import bundled_modelo_ids
 from ..analysis.delta_minimality import (
@@ -44,7 +45,7 @@ _SUCCESSOR = "2025"
 
 @pytest.fixture(scope="module")
 def authority() -> ValidatedRegistryAuthority:
-    return bundled_authority()
+    return compiled_bundled_authority()
 
 
 @pytest.fixture(scope="module")

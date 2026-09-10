@@ -8,8 +8,8 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryValidationError
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
 
 from ..temporal_coverage import (
@@ -23,7 +23,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_temporal_coverage_reselects_every_registered_revision_and_checks_its_declared_grade() -> None:
-    full_authority = bundled_authority()
+    full_authority = compiled_bundled_authority()
     full_authority.validate_registry()
     authority = replace(
         full_authority,

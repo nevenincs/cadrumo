@@ -18,7 +18,6 @@ import shutil
 from pathlib import Path
 
 import pytest
-from dev.registry.maintenance_support import stamp_bundled_registry_release
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.domain.calculations.registry._verdict_cache import (
@@ -31,6 +30,7 @@ from cadrumo.domain.calculations.registry.identity import (
     registry_identity_stamp_location,
 )
 from cadrumo.domain.calculations.registry.loader_fingerprints import clear_fingerprint_cache
+from dev.registry.maintenance_support import stamp_bundled_registry_release
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -11,8 +11,8 @@ from typer.testing import CliRunner
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..pipeline._export_tree import render_complete_export_tree
 from ..pipeline._tree_publication import (
@@ -437,7 +437,7 @@ def test_absent_tree_is_validated_then_published_through_the_canonical_authoriti
 
 def test_modelo_200_calculation_grade_does_not_widen_its_runtime_filing_authority() -> None:
     """Bootstrap publication can validate static output without promoting Modelo 200."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
 
     calculation = authority.snapshot(
         "200",
@@ -460,7 +460,7 @@ def test_modelo_200_calculation_grade_does_not_widen_its_runtime_filing_authorit
 
 def test_modelo_200_bootstrap_assembly_reaches_the_real_join_and_renderer(tmp_path: Path) -> None:
     """An unpublished revision is assembled from its selected official design, not a missing layout."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     source = next(item for ref, item in authority.catalogues.sources.items() if str(ref) == "aeat-dr-200-2025")
     inputs = revision_render_inputs(
         authority,

@@ -13,13 +13,13 @@ from pathlib import Path
 from typing import Annotated
 
 import pytest
+from dev.registry.compiler.loader import load_modelo_directory
 
 from .....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
 from .....tests.registry_tree import bundled_registry_tree
 from .. import _loader_internals as _loader
 from .._schema_governance import REVISION_REVIEW_DATE_CEILING, REVISION_REVIEW_DATE_FLOOR
 from ..errors import RegistryLoadError
-from ..loader import load_modelo_directory
 from ..schema import REVISION_GOVERNANCE_FIELDS, ModeloRevision
 from ..schema_base import GOVERNANCE_STAMP, governance_stamp_fields
 from ._loader_directory_mode_support import _load_revision as _shared_load_revision

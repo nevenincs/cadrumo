@@ -18,10 +18,10 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.loader import load_modelo_directory
 
 from .....tests.registry_tree import bundled_registry_tree
 from ..errors import RegistryLoadError, RegistryValidationError
-from ..loader import load_modelo_directory
 from ..revision_predecessor_forest import validate_predecessor_forest
 from ..schema import DeclaredPredecessor, ModeloDefinition, NoPredecessor
 from ._loader_directory_mode_support import _write_standard_manifest

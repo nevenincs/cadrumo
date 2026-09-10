@@ -15,7 +15,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.maintenance_support import load_modelo_path
 
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.application.aggregation import (
@@ -37,6 +36,7 @@ from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.modelos.row_models import Modelo349ClaveOperacion, Modelo349OperadorRow
 from cadrumo.tests.secure_sql import isolated_runtime_profile
+from dev.registry.maintenance_support import load_modelo_path
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

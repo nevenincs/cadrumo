@@ -100,7 +100,6 @@ from cadrumo.application.user_profile.censal_operation import (
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.operations import OperationEffect, OperationLifecycle
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.deadlines.models import ObligationStatus
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -137,6 +136,7 @@ from cadrumo.entrypoints.tui.navigation import (
 )
 from cadrumo.entrypoints.tui.operations.controller import OperationController
 from cadrumo.entrypoints.tui.operations.modal import OperationModal
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 _BUCKET: Final[str] = "00000000-0000-4000-8000-000000000001"
 _AT: Final[datetime] = datetime(2026, 9, 3, 10, tzinfo=UTC)
@@ -406,7 +406,7 @@ def _declaration_catalogues(
         return WorkUnitCatalogue(), CalculationRevisionCatalogue(), ModeloRecordCatalogue(), ()
     period = Period.from_year_and_code(2026, "1T")
     casilla = validated_casilla_id("01")
-    registry_snapshot_ref = bundled_authority().snapshot("130", filing_year=2026, period="1T").snapshot_ref
+    registry_snapshot_ref = compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T").snapshot_ref
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET,
         modelo=ModeloCode("130"),

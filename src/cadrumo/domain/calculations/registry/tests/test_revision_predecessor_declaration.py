@@ -18,11 +18,11 @@ import json
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.loader import load_modelo_directory
 from pydantic import TypeAdapter
 
 from .....tests.registry_tree import bundled_registry_tree
 from ..errors import RegistryLoadError
-from ..loader import load_modelo_directory
 from ..schema import DeclaredPredecessor, DeclaredPredecessorField, NoPredecessor
 from ._loader_directory_mode_support import _write_modelo as _shared_write_modelo
 
