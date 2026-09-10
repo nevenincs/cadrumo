@@ -1,26 +1,29 @@
-"""A review claim is never written onto an edition whose compiled rows its file does not state.
+"""A delta edition's review stamp states the predecessor it was reviewed against.
 
 An edition naming a predecessor inherits the predecessor's casilla rows at load,
-so a reviewer reading its file signs a delta. The governance stamp names a
-reviewer and a date and nothing about what was reviewed, so the writer refuses a
-review claim there instead of writing one that reads as covering the whole
-compiled edition. Every case runs against a copy of a real modelo driven through
-the real loader, with the predecessor declaration as the only planted change.
+so a reviewer reading its file signs a delta. The stamp writer records that
+scope as ``reviewed_against``, filled from the compiled predecessor and never
+from the caller, and the schema refuses a reviewed delta edition whose scope is
+missing or names another edition. Every case runs against a copy of modelo 232
+driven through the real loader and the real writer.
 """
 
 from __future__ import annotations
 
+import inspect
+import re
 import shutil
+import tomllib
 from datetime import date
 from pathlib import Path
 
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.loader import load_modelo_directory
-from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor
 
-from .._stamp import StampError, stamp_revision
+from .._stamp import GOVERNANCE_KEYS, StampError, stamp_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -28,21 +31,12 @@ _MODELO = "232"
 _BASE = "2016-2017"
 _DELTA = "2018-y-siguientes"
 _REVIEW_DATE = date(2026, 9, 10)
+_REVIEW_LINE = re.compile(r"^(review_status|reviewed_by|reviewed_at) = .*\n", re.MULTILINE)
 
 
-def _registry(tmp_path: Path, *, delta: bool) -> Path:
-    """Copy modelo 232 into an isolated tree, optionally declaring the later edition a delta."""
+def _copy(tmp_path: Path) -> Path:
     registry_root = tmp_path / "registry" / "aeat"
-    modelo_dir = registry_root / "modelos" / _MODELO
-    shutil.copytree(bundled_path("registry", "aeat", "modelos", _MODELO), modelo_dir)
-    if delta:
-        manifest = modelo_dir / "revisions" / _DELTA / "revision.toml"
-        header = f'[revisions."{_DELTA}"]\n'
-        text = manifest.read_bytes().decode("utf-8")
-        assert header in text, "sanity: the planted declaration needs the canonical header"
-        manifest.write_bytes(text.replace(header, f'{header}predecessor = "{_BASE}"\n', 1).encode("utf-8"))
-        compiled = load_modelo_directory(modelo_dir).revisions[_DELTA]
-        assert isinstance(compiled.predecessor, DeclaredPredecessor), "sanity: the plant must compile as a delta"
+    shutil.copytree(bundled_path("registry", "aeat", "modelos", _MODELO), registry_root / "modelos" / _MODELO)
     return registry_root
 
 
@@ -50,8 +44,35 @@ def _manifest(registry_root: Path, revision: str) -> Path:
     return registry_root / "modelos" / _MODELO / "revisions" / revision / "revision.toml"
 
 
-def _review(registry_root: Path, revision: str) -> None:
-    stamp_revision(
+def _edit_manifest(registry_root: Path, revision: str, *, add: str = "", drop_review: bool = False) -> None:
+    manifest = _manifest(registry_root, revision)
+    header = f'[revisions."{revision}"]\n'
+    text = manifest.read_bytes().decode("utf-8")
+    assert header in text, "sanity: the edit needs the canonical header"
+    if drop_review:
+        text, dropped = _REVIEW_LINE.subn("", text)
+        assert dropped == 3, "sanity: the shipped review claim is three single-line scalars"
+    manifest.write_bytes(text.replace(header, header + add, 1).encode("utf-8"))
+
+
+def _migrated(tmp_path: Path) -> Path:
+    """Modelo 232 with its later edition declared a delta and its pre-migration review cleared."""
+    registry_root = _copy(tmp_path)
+    _edit_manifest(registry_root, _DELTA, add=f'predecessor = "{_BASE}"\n', drop_review=True)
+    return registry_root
+
+
+def _load(registry_root: Path):
+    return load_modelo_directory(registry_root / "modelos" / _MODELO)
+
+
+def _declared_stamp(registry_root: Path, revision: str) -> dict[str, object]:
+    table = tomllib.loads(_manifest(registry_root, revision).read_text("utf-8"))["revisions"][revision]
+    return {key: table[key] for key in GOVERNANCE_KEYS if key in table}
+
+
+def _review(registry_root: Path, revision: str):
+    return stamp_revision(
         _MODELO,
         revision,
         review_status="agent_reviewed",
@@ -61,51 +82,75 @@ def _review(registry_root: Path, revision: str) -> None:
     )
 
 
-def test_a_review_claim_on_a_delta_edition_is_refused_and_nothing_is_written(tmp_path: Path) -> None:
-    registry_root = _registry(tmp_path, delta=True)
-    manifest = _manifest(registry_root, _DELTA)
-    before = manifest.read_bytes()
+def test_a_reviewed_delta_edition_stamp_names_the_predecessor_it_covers(tmp_path: Path) -> None:
+    """The stamp alone tells a reviewed delta from an unreviewed one, and says what it covers."""
+    registry_root = _migrated(tmp_path)
+    unreviewed = _declared_stamp(registry_root, _DELTA)
 
-    with pytest.raises(StampError) as refusal:
-        _review(registry_root, _DELTA)
+    result = _review(registry_root, _DELTA)
+    reviewed = _declared_stamp(registry_root, _DELTA)
 
-    message = str(refusal.value)
-    assert f"predecessor {_BASE!r}" in message
-    assert "inherited" in message
-    assert manifest.read_bytes() == before
-
-
-def test_the_same_review_is_written_when_the_edition_states_every_row(tmp_path: Path) -> None:
-    """The control, and the teeth: without the predecessor declaration the identical call succeeds."""
-    registry_root = _registry(tmp_path, delta=False)
-
-    _review(registry_root, _DELTA)
-
-    compiled = load_modelo_directory(registry_root / "modelos" / _MODELO).revisions[_DELTA]
-    assert compiled.reviewed_by == "agent:scope-probe"
-    assert compiled.reviewed_at == _REVIEW_DATE
+    assert "reviewed_against" not in unreviewed
+    assert unreviewed.get("review_status", "pending_review") == "pending_review"
+    assert reviewed["review_status"] == "agent_reviewed"
+    assert reviewed["reviewed_against"] == _BASE
+    assert result.written["reviewed_against"] == f'"{_BASE}"'
+    assert _load(registry_root).revisions[_DELTA].reviewed_against == _BASE
 
 
-def test_the_predecessor_itself_stays_reviewable(tmp_path: Path) -> None:
-    """The refusal is about inheriting, not about being named as a predecessor."""
-    registry_root = _registry(tmp_path, delta=True)
+def test_an_edition_stating_every_row_is_reviewed_without_a_scope(tmp_path: Path) -> None:
+    """The control: the writer adds a scope only where the compiled edition inherits."""
+    registry_root = _migrated(tmp_path)
 
     _review(registry_root, _BASE)
 
-    assert load_modelo_directory(registry_root / "modelos" / _MODELO).revisions[_BASE].reviewed_by == (
-        "agent:scope-probe"
-    )
+    assert "reviewed_against" not in _declared_stamp(registry_root, _BASE)
+    assert _load(registry_root).revisions[_BASE].reviewed_against is None
 
 
-def test_a_delta_edition_can_be_returned_to_pending_and_have_its_author_recorded(tmp_path: Path) -> None:
-    """Clearing a claim asserts less, and authorship claims no coverage, so both stay writable."""
-    registry_root = _registry(tmp_path, delta=True)
+def test_returning_a_delta_edition_to_pending_drops_its_scope(tmp_path: Path) -> None:
+    registry_root = _migrated(tmp_path)
+    _review(registry_root, _DELTA)
 
-    stamp_revision(_MODELO, _DELTA, engineered_by="agent:author", registry_root=registry_root)
     result = stamp_revision(_MODELO, _DELTA, review_status="pending_review", registry_root=registry_root)
 
-    compiled = load_modelo_directory(registry_root / "modelos" / _MODELO).revisions[_DELTA]
-    assert compiled.engineered_by == "agent:author"
-    assert compiled.review_status.value == "pending_review"
-    assert compiled.reviewed_by is None
-    assert set(result.removed) == {"reviewed_by", "reviewed_at"}
+    assert "reviewed_against" in result.removed
+    assert "reviewed_against" not in _declared_stamp(registry_root, _DELTA)
+
+
+def test_the_scope_is_never_caller_input() -> None:
+    """The writer takes no scope argument, so a caller cannot name an edition the reviewer did not read against."""
+    assert "reviewed_against" not in inspect.signature(stamp_revision).parameters
+
+
+def test_the_shipped_pre_migration_stamp_is_refused_once_the_edition_inherits(tmp_path: Path) -> None:
+    """Migrating 232 without re-review leaves an unscoped claim, which no longer loads or stamps."""
+    registry_root = _copy(tmp_path)
+    assert _declared_stamp(registry_root, _DELTA)["review_status"] == "agent_reviewed", "sanity: shipped claim"
+    assert _load(registry_root).revisions[_DELTA].reviewed_against is None
+
+    _edit_manifest(registry_root, _DELTA, add=f'predecessor = "{_BASE}"\n')
+
+    with pytest.raises(RegistryError, match="omits reviewed_against"):
+        _load(registry_root)
+    with pytest.raises(StampError, match="omits reviewed_against"):
+        stamp_revision(_MODELO, _DELTA, engineered_by="agent:author", registry_root=registry_root)
+
+
+def test_a_scope_naming_another_edition_is_refused(tmp_path: Path) -> None:
+    registry_root = _migrated(tmp_path)
+    _review(registry_root, _DELTA)
+    manifest = _manifest(registry_root, _DELTA)
+    text = manifest.read_bytes().decode("utf-8")
+    manifest.write_bytes(text.replace(f'reviewed_against = "{_BASE}"', 'reviewed_against = "2015"').encode("utf-8"))
+
+    with pytest.raises(RegistryError, match="reviewed_against='2015'"):
+        _load(registry_root)
+
+
+def test_a_scope_on_an_edition_that_names_no_predecessor_is_refused(tmp_path: Path) -> None:
+    registry_root = _copy(tmp_path)
+    _edit_manifest(registry_root, _BASE, add=f'reviewed_against = "{_BASE}"\n')
+
+    with pytest.raises(RegistryError, match="names no predecessor"):
+        _load(registry_root)

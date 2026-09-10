@@ -5,7 +5,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:526982b1f0e43023546d008fc07e1399c13925308d134b6100cc09db06c1c1ae'
+body_hash: 'sha256:a9cc1c521052003ccfe8ff32dd29bd685e6f7953b246a3afd939a00320a0f6b2'
 related:
   - "[[2026-09-09-registry-edition-authoring-edition-restatement-measurement-research]]"
   - "[[2026-09-09-registry-edition-authoring-registry-mechanics-audit-research]]"
@@ -401,9 +401,12 @@ A review stamp on an edition that names a predecessor covers the rows the editio
 against the predecessor it names, and says so on the stamp; inherited rows are covered by the stamp
 of the edition that states them. Defining review over the materialised edition was rejected: a
 successor's stamp would go stale whenever its predecessor changed with nothing in the successor
-moving, and review would re-read the restatement this decision removes from authoring. Until the
-stamp carries a field naming the predecessor it was reviewed against, the stamp writer refuses a
-review claim on a delta edition, and that field lands before the first reviewed edition migrates.
+moving, and review would re-read the restatement this decision removes from authoring. The stamp
+names that predecessor in `reviewed_against`, filled by the writer from the compiled record, and a
+review claim on a delta edition whose scope does not name its declared predecessor is refused. A
+migration proven exact by the round-trip gate may carry a full-copy review forward by stating that
+scope, because the reviewer saw every row the delta now inherits. Materialising a reviewed delta
+into a full copy withdraws its review, because the full copy states rows its reviewer never read.
 
 ## Naming
 

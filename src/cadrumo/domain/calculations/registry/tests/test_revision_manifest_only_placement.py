@@ -60,6 +60,7 @@ _FIELD_LITERALS: dict[str, str] = {
     "review_status": '"pending_review"',
     "reviewed_by": '"operator"',
     "reviewed_at": "2026-07-27",
+    "reviewed_against": '"2024"',
     # An inline table, because this field is a Mapping of declarations rather
     # than a scalar: the refusal must fire on WHERE the field is declared, so the
     # value has to be well-formed enough to reach the placement check.

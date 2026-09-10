@@ -22,6 +22,16 @@ from ._loader_internals import (
 from ._toml_helpers import as_toml_table
 from .errors import RegistryLoadError
 from .loader_cache import validate_modelo_directory_source
+from .schema import REVISION_GOVERNANCE_FIELDS
+
+_REVIEW_STATUS_FIELD = "review_status"
+_PENDING_REVIEW = "pending_review"
+
+#: The governance keys that make up a review CLAIM. Authorship is the one stamp
+#: field that says nothing about coverage; every other governance field,
+#: including any added later, is withdrawn with the claim rather than carried
+#: onto a full copy it never covered.
+_REVIEW_CLAIM_FIELDS = REVISION_GOVERNANCE_FIELDS - {"engineered_by"}
 
 
 @dataclass(frozen=True, slots=True)
@@ -40,6 +50,17 @@ class MaterialisedEdition:
     under its origin edition's key; tooling that writes the edition out as a
     full copy needs the origins to carry those labels with it. It is ``None``
     when the edition inherits nothing.
+
+    A review stamp does not survive materialisation. A delta edition's review
+    covers the rows it states, judged against the predecessor it names; the full
+    copy names no predecessor and states every row, including the ones that
+    reviewer never read, so the claim cannot move onto it. The table therefore
+    declares ``review_status = "pending_review"`` and none of the reviewer, date
+    or scope keys, and ``withdrawn_review_status`` records the status the
+    edition declared so a caller can report what was set aside. Authorship is
+    kept: who built the rows is unchanged by where they are written. An edition
+    that states every row keeps its stamp, because its table is its review's
+    whole scope.
     """
 
     modelo_id: str
@@ -47,6 +68,7 @@ class MaterialisedEdition:
     table: Mapping[str, object]
     inherits_from: str | None
     label_origins: tuple[str | None, ...] | None
+    withdrawn_review_status: str | None = None
 
 
 def materialise_edition(modelo_directory: Path, revision_id: str) -> MaterialisedEdition:
@@ -90,10 +112,18 @@ def materialise_edition(modelo_directory: Path, revision_id: str) -> Materialise
             inherits_from=None,
             label_origins=None,
         )
+    declared_status = materialised.get(_REVIEW_STATUS_FIELD, _PENDING_REVIEW)
+    table = {
+        key: value
+        for key, value in materialised.items()
+        if key != _PREDECESSOR_FIELD and key not in _REVIEW_CLAIM_FIELDS
+    }
+    table[_REVIEW_STATUS_FIELD] = _PENDING_REVIEW
     return MaterialisedEdition(
         modelo_id=modelo_id,
         revision_id=revision_id,
-        table={key: value for key, value in materialised.items() if key != _PREDECESSOR_FIELD},
+        table=table,
         inherits_from=predecessor,
         label_origins=resolution.label_origins.get(revision_id),
+        withdrawn_review_status=None if declared_status == _PENDING_REVIEW else str(declared_status),
     )

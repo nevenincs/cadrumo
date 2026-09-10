@@ -55,7 +55,11 @@ Where the gate stops
   whose editions names one is refused as stale. A modelo with neither is
   unmigrated and has nothing to accept.
 - The ``predecessor`` declaration is excluded from equality: it is the one
-  field a migration must change. Everything else in the edition is compared.
+  field a migration must change. So is ``reviewed_against``, which a migration
+  adds to carry a reviewed edition's claim forward: the full-copy review saw
+  every row the materialised edition now inherits, which is what this gate
+  proves, and the schema holds the scope equal to the declared predecessor.
+  Everything else in the edition is compared.
 - Shared catalogues are taken from the live tree on both sides, so a change to
   the legal, source, or category catalogues is outside this comparison. The
   locale catalogue is likewise the live one: labels are compared as the live
@@ -212,7 +216,7 @@ _MIGRATIONS: Final[Mapping[str, PreMigrationBaseline | AcceptedMigration]] = dic
 
 _BUNDLED_REGISTRY: Final = bundled_path("registry", "aeat")
 _MODELOS_DIR: Final = "modelos"
-_EXCLUDED_FROM_EQUALITY: Final = frozenset({"predecessor"})
+_EXCLUDED_FROM_EQUALITY: Final = frozenset({"predecessor", "reviewed_against"})
 _COMMIT_ID = re.compile(r"^[0-9a-f]{7,64}$")
 _GIT_TIMEOUT_SECONDS: Final = 120
 #: Variables that would point git at a repository other than the one named.
@@ -801,7 +805,9 @@ def _declare_forest(modelo_dir: Path, named: Mapping[str, str]) -> None:
     for edition_dir in editions[1:]:
         predecessor = named.get(edition_dir.name)
         if predecessor is not None:
-            _declare_predecessor(edition_dir, f'predecessor = "{predecessor}"\n')
+            reviewed = _manifest(edition_dir).get("review_status", "pending_review") != "pending_review"
+            scope = f'reviewed_against = "{predecessor}"\n' if reviewed else ""
+            _declare_predecessor(edition_dir, f'predecessor = "{predecessor}"\n{scope}')
             continue
         manifest = _manifest(edition_dir)
         legal_refs, source_refs = manifest["legal_refs"], manifest["source_refs"]

@@ -39,6 +39,7 @@ from ....core.tax_domain import TaxDomain
 from ._schema_governance import (
     validate_attribution_names_somebody,
     validate_governance_stamp_coherence,
+    validate_review_scope,
     validate_reviewed_at_within_horizon,
 )
 from ._toml_helpers import as_toml_table as _as_toml_table
@@ -840,8 +841,14 @@ class ModeloRevision(RegistryModel):
     Ordenes that approve or amend the form for its applicability window.
 
     The governance stamp — ``engineered_by``, ``review_status``, ``reviewed_by``,
-    ``reviewed_at`` — is the revision's *declared* provenance, optional and
-    fail-closed to :attr:`RevisionReviewStatus.PENDING_REVIEW` on absence. Its
+    ``reviewed_at``, ``reviewed_against`` — is the revision's *declared*
+    provenance, optional and fail-closed to
+    :attr:`RevisionReviewStatus.PENDING_REVIEW` on absence. ``reviewed_against``
+    is the review's scope on an edition that names a predecessor: the predecessor
+    the stated rows were reviewed against, required on a reviewed delta edition
+    and refused everywhere else. Like ``predecessor`` it is excluded from
+    serialisation when absent, so a revision without it dumps exactly as it did
+    before the key existed. Its
     rules and the reasoning behind them live in :mod:`.._schema_governance`,
     which the validators below delegate to.
 
@@ -930,6 +937,10 @@ class ModeloRevision(RegistryModel):
     review_status: Annotated[RevisionReviewStatusField, GOVERNANCE_STAMP] = RevisionReviewStatus.PENDING_REVIEW
     reviewed_by: Annotated[str | None, GOVERNANCE_STAMP] = None
     reviewed_at: Annotated[date | None, GOVERNANCE_STAMP] = None
+    reviewed_against: Annotated[RevisionId | None, GOVERNANCE_STAMP] = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+    )
 
     @field_validator("engineered_by", "reviewed_by")
     @classmethod
@@ -1092,6 +1103,17 @@ class ModeloRevision(RegistryModel):
             review_status=self.review_status,
             reviewed_by=self.reviewed_by,
             reviewed_at=self.reviewed_at,
+        )
+        return self
+
+    @model_validator(mode="after")
+    def _validate_review_scope(self) -> ModeloRevision:
+        """Bind a delta edition's review claim to the predecessor it was reviewed against."""
+        validate_review_scope(
+            revision_id=self.id,
+            review_status=self.review_status,
+            predecessor_id=self.predecessor.revision_id if isinstance(self.predecessor, DeclaredPredecessor) else None,
+            reviewed_against=self.reviewed_against,
         )
         return self
 
