@@ -37,9 +37,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ....core.casilla_id import CasillaId
-from ._cross_revision_divergence import ordered_revisions, revisions_overlap
 from .casilla_lineage import CasillaLineageOrigin
 from .ids import RevisionId
+from .revision_order import ordered_revisions, revisions_overlap
 from .schema import ModeloDefinition, ModeloRevision
 from .schema_surfaces import CasillaDefinition
 

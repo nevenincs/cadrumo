@@ -17,11 +17,11 @@ from ....core.casilla_id import CasillaId
 from ._cross_revision_divergence import (
     CrossRevisionCasillaDivergence,
     iter_cross_revision_casilla_divergences,
-    revisions_overlap,
 )
 from ._validate_cross_revision_evolution import strict_continuity_evolution_failures
 from ._validate_cross_revision_lineage_origin import role_exempt_occurrences
 from .ids import RevisionId
+from .revision_order import revisions_overlap
 from .schema import ModeloDefinition, ModeloRevision
 from .schema_surfaces import CasillaDefinition
 
