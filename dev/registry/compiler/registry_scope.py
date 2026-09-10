@@ -120,7 +120,7 @@ def _validate_dependency_classification_source_modelos(
 
 def _validate_binding_selector_shapes(modelos: Iterable[ModeloDefinition]) -> tuple[str, ...]:
     """Validate binding selector discriminators at registry-tree scope."""
-    from .bindings import validate_binding_selector_shape
+    from cadrumo.domain.calculations.registry.bindings import validate_binding_selector_shape
 
     failures: list[str] = []
     for modelo in modelos:

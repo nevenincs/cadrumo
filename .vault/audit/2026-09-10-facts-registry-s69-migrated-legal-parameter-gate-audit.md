@@ -20,7 +20,11 @@ Audited S69's cross-slice closure gate for facts replacing the retired legal-par
 
 ## Findings
 
-No CRITICAL, HIGH, MEDIUM, or LOW finding was identified in the S69 gate itself. The gate establishes presence of all migrated identities, filing-period selection, cited source-backed temporal coverage, real change-boundary resolution, and refusal before grounded windows. Its mutation probe detects both deletion of a migrated fact and substitution of a non-filing date axis.
+The gate establishes presence of all migrated identities, filing-period selection, cited source-backed temporal coverage, real change-boundary resolution, and refusal before grounded windows. Its mutation probes detect deletion of a migrated fact, substitution of a non-filing date axis, and an internal temporal gap.
+
+### canonical-validator-wiring | high | Initial S69 wiring did not survive the compiler relocation
+
+The initial S69 implementation called the gate through the retiring source-tree validator, which was being relocated. Remediated: `dev.registry.compiler.validator.RegistryValidator` now invokes the gate in its catalogue-validation branch, and a real compiler test supplies compiled facts with one retired-slice identity removed and receives the exact missing-fact diagnostic through that branch. No legacy source-validator import or compatibility path was restored.
 
 ### s69-migrated-legal-parameter-gate | high | The new closure gate is test-only and never reaches registry validation
 
@@ -28,8 +32,8 @@ No CRITICAL, HIGH, MEDIUM, or LOW finding was identified in the S69 gate itself.
 
 ### concurrent-relocation-collection-block | medium | General pytest collection cannot currently load the registry fixture graph
 
-The normal combined pytest command fails before test collection because the concurrent compiler relocation removed `registry._source_evidence_fingerprint` while `registry._validate` still imports it. The S69 suite passed under the scoped dev-registry collector, which executes the canonical compiler and resolver but does not load the unrelated registry fixture graph. This is not evidence that the whole repository suite passes.
+The normal public `RegistryValidator.validate_registry()` path reaches the S69 catalogue-validation branch but cannot complete its downstream registry-scope pass because the concurrent compiler relocation leaves `registry_scope` importing missing `dev.registry.compiler.bindings`. The S69 suite passed under the scoped dev-registry collector, exercising the canonical compiler, resolver, and validator catalogue branch. This is not evidence that the whole repository suite passes.
 
 ## Recommendations
 
-Re-run the ordinary focused pytest command after the compiler-relocation import boundary is restored, then conduct the required independent code review before checking S69. Do not relax the gate or introduce a compatibility import to work around the relocation.
+Repair the relocated `registry_scope` binding import, then run the public validator path and conduct the required independent code review before checking S69. Do not relax the gate or introduce a compatibility import to work around the relocation.

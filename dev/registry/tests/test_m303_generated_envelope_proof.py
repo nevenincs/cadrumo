@@ -41,7 +41,6 @@ from cadrumo.core.prorrata_register import (
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from dev.registry.compiler.supplementary_orden import compile_supplementary_ordenes
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
@@ -65,6 +64,7 @@ from cadrumo.domain.prorrata_register.register import (
 from cadrumo.tests.registry_snapshot import build_snapshot
 from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.compiler.loader import load_modelo_directory, load_registry_tree
+from dev.registry.compiler.supplementary_orden import compile_supplementary_ordenes
 
 from ..pipeline._export_tree import render_complete_export_tree
 from ..pipeline._tree_check import GeneratedExportTreeCheckContext, check_generated_export_tree

@@ -9,11 +9,11 @@ import pytest
 
 from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.core.resources.bundled_data import bundled_path
-from dev.registry.compiler.validator import RegistryValidator
 from cadrumo.domain.calculations.registry.record_design import extract_record_design
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.tests.registry_snapshot import build_snapshot
 from dev.registry.compiler.loader import load_catalogue_file
+from dev.registry.compiler.validator import RegistryValidator
 from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 from dev.registry.maintenance_support import resolve_record_design_binary
 
