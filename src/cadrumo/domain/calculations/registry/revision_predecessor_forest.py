@@ -28,10 +28,12 @@ Where it stops:
   edition is its own key-less root and the modelo loads unchanged. A forgotten
   key there is invisible to this rule, because nothing distinguishes it from a
   full-copy edition until a sibling opts into declaring.
-- The rule reads declarations only. It does not check that a declared
-  predecessor agrees with the editions' validity dates, that the successor's
-  authority grade permits inheriting, or that a no-predecessor claim's
-  references resolve against the legal and source catalogues.
+- The rule reads declarations only. Whether a declared predecessor agrees with
+  the editions' validity dates is judged by
+  :func:`~.revision_predecessor_date_agreement.validate_predecessor_date_agreement`.
+  This rule does not check that the successor's authority grade permits
+  inheriting, or that a no-predecessor claim's references resolve against the
+  legal and source catalogues.
 - A newly authored successor that declares its predecessor correctly but
   inherits a row its author meant to drop passes this rule; only an authored
   retirement or a comparison against the official form can say otherwise.

@@ -146,6 +146,7 @@ from ....core.filing_year import FilingYear
 from .convenio import ConvenioAuthority
 from .facts.schema import GovernedFactCatalogue
 from .modelo_localization import require_modelo_localization, resolve_modelo_localization
+from .revision_predecessor_date_agreement import EditionWindow, validate_predecessor_date_agreement
 from .revision_predecessor_forest import validate_predecessor_forest
 from .schema_base import (
     GOVERNANCE_STAMP,
@@ -881,7 +882,9 @@ class ModeloRevision(RegistryModel):
     declaration is a claim about the whole revision, so it is manifest-only: a
     section fragment declaring it is refused. The modelo validates the declared
     edges together as a forest through
-    :func:`~.revision_predecessor_forest.validate_predecessor_forest`.
+    :func:`~.revision_predecessor_forest.validate_predecessor_forest`, and
+    each edge against the editions' validity dates through
+    :func:`~.revision_predecessor_date_agreement.validate_predecessor_date_agreement`.
     """
 
     id: RevisionId
@@ -1179,17 +1182,30 @@ class ModeloDefinition(RegistryModel):
             if key != revision.id:
                 raise RegistryValidationError(f"revision key {key!r} does not match revision id {revision.id!r}")
         declarations = {key: revision.predecessor for key, revision in self.revisions.items()}
+        named = {
+            key: declaration.revision_id
+            for key, declaration in declarations.items()
+            if isinstance(declaration, DeclaredPredecessor)
+        }
         validate_predecessor_forest(
             self.id,
-            named={
-                key: declaration.revision_id
-                for key, declaration in declarations.items()
-                if isinstance(declaration, DeclaredPredecessor)
-            },
+            named=named,
             declared_roots=frozenset(
                 key for key, declaration in declarations.items() if isinstance(declaration, NoPredecessor)
             ),
             keyless=frozenset(key for key, declaration in declarations.items() if declaration is None),
+        )
+        validate_predecessor_date_agreement(
+            self.id,
+            named=named,
+            windows={
+                key: EditionWindow(
+                    valid_from=revision.valid_from,
+                    valid_to=revision.valid_to,
+                    period_selector=revision.period_selector,
+                )
+                for key, revision in self.revisions.items()
+            },
         )
         return self
 

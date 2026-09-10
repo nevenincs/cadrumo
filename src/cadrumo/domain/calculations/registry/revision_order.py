@@ -9,28 +9,10 @@ primitives.
 
 from __future__ import annotations
 
+from .period_selector_overlap import period_selectors_overlap
 from .schema import ModeloDefinition, ModeloRevision
-from .schema_references import PeriodSelector
 
 __all__ = ("ordered_revisions", "revisions_overlap")
-
-
-def _period_selector_year_bounds(selector: PeriodSelector) -> tuple[int, int | None]:
-    if selector.years:
-        return min(selector.years), max(selector.years)
-    if selector.year_from is None:
-        return 0, None
-    return selector.year_from, selector.year_to
-
-
-def _period_selectors_overlap(left: PeriodSelector, right: PeriodSelector) -> bool:
-    left_start, left_end = _period_selector_year_bounds(left)
-    right_start, right_end = _period_selector_year_bounds(right)
-    if left_end is not None and left_end < right_start:
-        return False
-    if right_end is not None and right_end < left_start:
-        return False
-    return bool(set(left.periods).intersection(right.periods))
 
 
 def revisions_overlap(left: ModeloRevision, right: ModeloRevision) -> bool:
@@ -54,7 +36,7 @@ def revisions_overlap(left: ModeloRevision, right: ModeloRevision) -> bool:
     present again"), so a permanent ``True`` would silently disable all
     three, with nothing downstream to catch the loss.
     """
-    return _period_selectors_overlap(left.period_selector, right.period_selector)
+    return period_selectors_overlap(left.period_selector, right.period_selector)
 
 
 def ordered_revisions(modelo: ModeloDefinition) -> tuple[ModeloRevision, ...]:

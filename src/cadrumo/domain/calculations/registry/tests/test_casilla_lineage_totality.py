@@ -7,6 +7,7 @@ green, and over-reaching the rule turns the control red.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date
 
 import pytest
@@ -58,7 +59,13 @@ def _row(
     return CasillaDefinition.model_validate(payload)
 
 
-def _modelo(*editions: list[CasillaDefinition], last_declares_no_predecessor: bool = False) -> ModeloDefinition:
+def _modelo(
+    *editions: list[CasillaDefinition],
+    last_declares_no_predecessor: bool = False,
+    names: Mapping[str, str] | None = None,
+) -> ModeloDefinition:
+    """Build editions from 2023 onward; ``names`` maps an edition id to the predecessor it names."""
+    named = names or {}
     revisions: dict[str, ModeloRevision] = {}
     for offset, casillas in enumerate(editions):
         year = 2023 + offset
@@ -73,6 +80,8 @@ def _modelo(*editions: list[CasillaDefinition], last_declares_no_predecessor: bo
         }
         if last_declares_no_predecessor and offset == len(editions) - 1:
             payload["predecessor"] = _NO_PREDECESSOR
+        if str(year) in named:
+            payload["predecessor"] = named[str(year)]
         revisions[str(year)] = ModeloRevision.model_validate(payload)
     return ModeloDefinition.model_validate(
         {
@@ -148,6 +157,23 @@ def test_an_edition_declaring_no_predecessor_is_not_judged() -> None:
 def test_only_the_adjacent_predecessor_edition_resolves_an_id() -> None:
     modelo = _modelo(_PREDECESSOR, [_row("08")], [_row("09", chain="base")])
     assert unresolved_successor_rows(modelo) == (_key("2024", "08"), _key("2025", "09"))
+
+
+_SILENT_MIDDLE = [_row("07", chain="mid", origin=CasillaLineageOrigin.PREDECESSOR_EDITION_SILENT)]
+_JUDGED = [_row("08", chain="base"), _row("09", chain="mid")]
+
+
+def test_a_named_non_adjacent_predecessor_is_the_edition_rows_are_judged_against() -> None:
+    """2025 names 2023 across 2024: ``base`` resolves there and ``mid``, carried only by 2024, does not.
+
+    The adjacent control names 2024 and gets the opposite answer, so a rule
+    that ignored the named edge and paired adjacent editions would report
+    ``08`` in place of ``09`` for the non-adjacent edge.
+    """
+    non_adjacent = _modelo(_PREDECESSOR, _SILENT_MIDDLE, _JUDGED, names={"2024": "2023", "2025": "2023"})
+    adjacent = _modelo(_PREDECESSOR, _SILENT_MIDDLE, _JUDGED, names={"2024": "2023", "2025": "2024"})
+    assert unresolved_successor_rows(non_adjacent) == (_key("2025", "09"),)
+    assert unresolved_successor_rows(adjacent) == (_key("2025", "08"),)
 
 
 def test_an_exception_keyed_to_the_unresolved_row_covers_it() -> None:

@@ -1,11 +1,14 @@
 """Lineage totality: every successor-edition casilla row says how it stands.
 
 A successor-edition row is a casilla of an edition that has a predecessor
-edition: any edition after the first in validity order, unless the edition
-declares :class:`~.schema.NoPredecessor`. Such a row is RESOLVED when it either
+edition. An edition naming a :class:`~.schema.DeclaredPredecessor` has the
+edition it names, wherever that sits in validity order. An edition declaring
+:class:`~.schema.NoPredecessor` has none. An edition omitting the key has the
+adjacent earlier edition in validity order, and the first edition has none.
+Such a row is RESOLVED when it either
 
-- carries lineage: its ``continuidad_id`` is also carried by a row of the
-  adjacent predecessor edition, or it declares a continuation origin
+- carries lineage: its ``continuidad_id`` is also carried by a row of its
+  edition's predecessor edition, or it declares a continuation origin
   (``seeded`` or ``grounded``); or
 - declares its kind of none: an absence origin (``new_on_form``,
   ``predecessor_edition_silent`` or ``not_on_form``).
@@ -35,9 +38,14 @@ Where this rule stops:
   review question;
 - an unmarked row whose id resolves is not held to any seeding predicate, and
   a predecessor edition carrying that id on several rows still resolves it;
-- only the adjacent predecessor edition in validity order is consulted, even
-  when the two editions share a validity window. A named
-  :class:`~.schema.DeclaredPredecessor` is not read;
+- exactly one predecessor edition is consulted per edition. A named edge is
+  followed one step, not up its chain, so an id carried only by the named
+  edition's own predecessor does not resolve. An edition omitting the key is
+  judged against the adjacent earlier edition even when the two share a
+  validity window, and even when that edition is a key-less root of a modelo
+  whose other editions declare the key;
+- whether the named edition is a legal predecessor is not judged here: the
+  forest and date-agreement rules own that, and ran when the modelo loaded;
 - the first edition, and any edition declaring no predecessor, is not judged;
 - exceptions are matched by key alone. Their classification and reason belong
   to whoever keeps the exception set, and are not read here.
@@ -47,10 +55,9 @@ from __future__ import annotations
 
 from collections.abc import Collection, Iterable
 from dataclasses import dataclass
-from itertools import pairwise
 
 from .revision_order import ordered_revisions
-from .schema import ModeloDefinition, ModeloRevision, NoPredecessor
+from .schema import DeclaredPredecessor, ModeloDefinition, ModeloRevision, NoPredecessor
 
 __all__ = (
     "CasillaRowKey",
@@ -85,8 +92,10 @@ class LineageTotalityReport:
 def unresolved_successor_rows(modelo: ModeloDefinition) -> tuple[CasillaRowKey, ...]:
     """Return the successor-edition rows that neither carry lineage nor declare a none."""
     unresolved: list[CasillaRowKey] = []
-    for predecessor, revision in pairwise(ordered_revisions(modelo)):
-        if isinstance(revision.predecessor, NoPredecessor):
+    ordered = ordered_revisions(modelo)
+    for index, revision in enumerate(ordered):
+        predecessor = _judging_predecessor(modelo, ordered, index)
+        if predecessor is None:
             continue
         carried = _carried_chains(predecessor)
         for casilla in revision.casillas:
@@ -109,6 +118,26 @@ def lineage_totality(
         uncovered=tuple(sorted(unresolved - excepted)),
         stale=tuple(sorted(excepted - unresolved)),
     )
+
+
+def _judging_predecessor(
+    modelo: ModeloDefinition,
+    ordered: tuple[ModeloRevision, ...],
+    index: int,
+) -> ModeloRevision | None:
+    """Return the edition a revision's rows are judged against, or ``None`` when it is not judged.
+
+    A named predecessor is resolved by id; the modelo's forest validation has
+    already refused a name that is not one of its editions.
+    """
+    revision = ordered[index]
+    match revision.predecessor:
+        case NoPredecessor():
+            return None
+        case DeclaredPredecessor(revision_id=predecessor_id):
+            return modelo.revisions[predecessor_id]
+        case None:
+            return ordered[index - 1] if index > 0 else None
 
 
 def _carried_chains(revision: ModeloRevision) -> frozenset[str]:
