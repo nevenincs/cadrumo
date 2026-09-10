@@ -425,7 +425,10 @@ class TestNoteGovernedAmountAdjudication:
         for declaration in declarations:
             assert declaration.source_sha256 == self._M390_2025_SHA
             assert declaration.published_content == self._POINTER
-            assert (declaration.integer_digits, declaration.decimal_digits) == (15, 2)
+            # The design types these slots N: N plus fourteen integer digits and
+            # two decimals, the signed seventeen-position representation.
+            assert declaration.signed is True
+            assert (declaration.integer_digits, declaration.decimal_digits) == (14, 2)
             # The note states two things, and both are recorded: the run's
             # representation, and the value it mandates.
             assert declaration.mandated_values == ("0",)
@@ -491,19 +494,23 @@ class TestNoteGovernedAmountAdjudication:
         with pytest.raises(ValidationError, match="non-empty and unique"):
             self._declaration(mandated_values=())
 
-    def test_a_signed_run_cannot_declare_a_mandated_value(self) -> None:
-        """``money`` declares no scale on the field and carries no reviewed domain.
+    def test_a_signed_run_keeps_its_mandated_value_through_to_the_layout(self) -> None:
+        """A design can type a slot signed and mandate its value; neither is traded for the other."""
+        declaration = self._declaration(
+            sign_policy="n-prefix-negative-blank-nonnegative",
+            integer_digits=14,
+            mandated_values=("0",),
+        )
 
-        Admitting one here would let a mandate be declared and then dropped on
-        the way to the layout, which is the failure mode this whole declaration
-        exists to prevent.
-        """
-        with pytest.raises(ValidationError, match="carries no value domain"):
-            self._declaration(
-                sign_policy="n-prefix-negative-blank-nonnegative",
-                integer_digits=14,
-                mandated_values=("0",),
-            )
+        derived = _numeric_derivation(
+            self._joined_amount_field(),
+            export_record_id="modelo-390-page-02",
+            note_governed_amounts=(declaration,),
+        )
+
+        assert derived.field.signed is True
+        assert str(derived.field.data_type) == "money"
+        assert derived.field.allowed_values == ("0",)
 
     def test_an_unadjudicated_pointer_keeps_the_reading_it_always_had(self) -> None:
         """The correction is opt-in per design; it never re-scales a document nobody read."""
@@ -721,24 +728,22 @@ class TestModelo200NoteGovernedAmounts:
         with pytest.raises(ValidationError, match="fixes 2 decimals"):
             NoteGovernedAmountDeclaration.model_validate({**signed.model_dump(), "decimal_digits": 4})
 
-    def test_the_sign_is_declared_per_run_and_never_inferred_from_the_aeat_type(self) -> None:
-        """Modelo 390 pairs Tipo 'N' with an UNSIGNED fifteen-digit representation.
+    def test_both_designs_n_typed_runs_share_one_signed_representation(self) -> None:
+        """Modelo 200 and modelo 390 mean the same wire form by Tipo 'N' on a width-17 amount.
 
-        Both designs print 'N' in the Tipo column on width-17 amount rows, and
-        they mean different wire forms by it: modelo 200's own DP200001!A121
-        spells 'N + 14' beside the unsigned '15', while modelo 390's 2025 rows
-        carry sibling Contenido cells reading '15 enteros 2 decimales', which
-        fills all seventeen bytes and leaves no room for a marker. A rule
-        mapping the type to a sign would be right for one and wrong for the
-        other, so this holds the two live declarations apart.
+        Modelo 200's DP200001!A121 spells it 'N + 14' beside the unsigned '15'.
+        Modelo 390's '15 enteros 2 decimales' states the non-negative capacity
+        of the same slot, because the N displaces the leading digit instead of
+        claiming a byte. Both runs are declared signed, fourteen and two, and
+        fill the same seventeen bytes.
         """
         m200 = next(item for item in note_governed_amounts_for("aeat-dr-200-2025") if item.sheet == "DP200014B")
         m390 = next(iter(note_governed_amounts_for("aeat-dr-390-2025")))
 
         assert m200.signed is True
         assert (m200.integer_digits, m200.decimal_digits) == (14, 2)
-        assert m390.signed is False
-        assert (m390.integer_digits, m390.decimal_digits) == (15, 2)
+        assert m390.signed is True
+        assert (m390.integer_digits, m390.decimal_digits) == (14, 2)
         assert m200.wire_length == m390.wire_length == _WIDTH_17
 
     def test_the_declared_scale_cannot_contradict_the_slots_own_width(self) -> None:
@@ -850,8 +855,8 @@ class TestNoteGovernedAmountsReachTheRenderer:
         }
         for derivation in adjudicated:
             assert derivation.parser_field.content == "Nota 2"
-            assert str(derivation.field.data_type) == "decimal"
-            assert derivation.field.decimals == 2
+            assert str(derivation.field.data_type) == "money"
+            assert derivation.field.signed is True
             # The note mandates a value as well as implying a scale, and both
             # halves reach the layout: every one of the eighty slots is closed
             # to the quantity zero.

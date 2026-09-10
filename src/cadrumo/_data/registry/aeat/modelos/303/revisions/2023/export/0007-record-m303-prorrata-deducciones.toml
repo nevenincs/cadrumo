@@ -5,7 +5,7 @@ id = 'generated-modelo-303-2023-fichero'
 id = 'm303-prorrata-deducciones'
 record_type = 'prorrata-deducciones'
 order = 4
-encoding = "iso-8859-1"
+encoding = 'iso-8859-1'
 line_ending = 'crlf'
 required = true
 
@@ -106,12 +106,11 @@ id = 'm303-2023.dp30305.f007'
 offset = 16
 length = 17
 kind = 'projection'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'rd-1624-1992:art-71',
     'orden-eha-3786-2008:art-1',
@@ -129,12 +128,11 @@ id = 'm303-2023.dp30305.f008'
 offset = 33
 length = 17
 kind = 'projection'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'rd-1624-1992:art-71',
     'orden-eha-3786-2008:art-1',
@@ -219,12 +217,11 @@ id = 'm303-2023.dp30305.f012'
 offset = 59
 length = 17
 kind = 'projection'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'rd-1624-1992:art-71',
     'orden-eha-3786-2008:art-1',
@@ -242,12 +239,11 @@ id = 'm303-2023.dp30305.f013'
 offset = 76
 length = 17
 kind = 'projection'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'rd-1624-1992:art-71',
     'orden-eha-3786-2008:art-1',
@@ -332,12 +328,11 @@ id = 'm303-2023.dp30305.f017'
 offset = 102
 length = 17
 kind = 'projection'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'rd-1624-1992:art-71',
     'orden-eha-3786-2008:art-1',
@@ -355,12 +350,11 @@ id = 'm303-2023.dp30305.f018'
 offset = 119
 length = 17
 kind = 'projection'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'rd-1624-1992:art-71',
     'orden-eha-3786-2008:art-1',
@@ -445,12 +439,11 @@ id = 'm303-2023.dp30305.f022'
 offset = 145
 length = 17
 kind = 'projection'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'rd-1624-1992:art-71',
     'orden-eha-3786-2008:art-1',
@@ -468,12 +461,11 @@ id = 'm303-2023.dp30305.f023'
 offset = 162
 length = 17
 kind = 'projection'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'rd-1624-1992:art-71',
     'orden-eha-3786-2008:art-1',
@@ -558,12 +550,11 @@ id = 'm303-2023.dp30305.f027'
 offset = 188
 length = 17
 kind = 'projection'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'rd-1624-1992:art-71',
     'orden-eha-3786-2008:art-1',
@@ -581,12 +572,11 @@ id = 'm303-2023.dp30305.f028'
 offset = 205
 length = 17
 kind = 'projection'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'rd-1624-1992:art-71',
     'orden-eha-3786-2008:art-1',
@@ -971,12 +961,11 @@ id = 'm303-2023.dp30305.f045'
 offset = 466
 length = 17
 kind = 'projection'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'rd-1624-1992:art-71',
     'orden-eha-3786-2008:art-1',
@@ -994,12 +983,11 @@ id = 'm303-2023.dp30305.f046'
 offset = 483
 length = 17
 kind = 'projection'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'rd-1624-1992:art-71',
     'orden-eha-3786-2008:art-1',
@@ -1017,12 +1005,11 @@ id = 'm303-2023.dp30305.f047'
 offset = 500
 length = 17
 kind = 'projection'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'rd-1624-1992:art-71',
     'orden-eha-3786-2008:art-1',
@@ -1040,12 +1027,11 @@ id = 'm303-2023.dp30305.f048'
 offset = 517
 length = 17
 kind = 'projection'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'rd-1624-1992:art-71',
     'orden-eha-3786-2008:art-1',
@@ -1379,5 +1365,27 @@ projection_kind = 'm303_differentiated_deduction'
 slot = 2
 field = 'reagp_cuota'
 casilla_id = '731'
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'm303-2023.dp30305.f063'
+offset = 772
+length = 17
+kind = 'projection'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+legal_refs = [
+    'rd-1624-1992:art-71',
+    'orden-eha-3786-2008:art-1',
+]
+source_refs = ['aeat-dr-303-2023']
+
+[revisions.2023.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_differentiated_deduction'
+slot = 2
+field = 'rectification_base'
+casilla_id = '732'
 
 [revisions.2023.export_layouts.records.row_field_casilla_ids]

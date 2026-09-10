@@ -55,8 +55,10 @@ from .export_fragment_provenance import (
     ExportFieldDerivationCode,
     ExportFragmentProvenanceManifest,
     ExportFragmentTarget,
+    attach_field_verdicts,
     emit_export_fragment_provenance_manifest,
 )
+from .generated_tree_dispositions import type_column_rulings_for
 from .joined_record_design import JoinedRecordDesign, JoinedRecordDesignField, JoinedRecordDesignRecord
 from .render_profile import (
     RenderProfile,
@@ -458,6 +460,15 @@ def render_complete_export_tree(
         source_defects=source_defects,
         note_governed_amounts=note_governed_amounts,
         applicability_notes=applicability_notes,
+    )
+    # Every emitted field is attested against its official row: agreeing, or
+    # adjudicated by a type-column ruling pinned to these exact design bytes. A
+    # divergence nothing rules on refuses here, before any file is written.
+    derivations = list(
+        attach_field_verdicts(
+            tuple(derivations),
+            type_column_rulings_for(str(joined.source.source_ref), joined.source.source_sha256),
+        ),
     )
     _validate_generated_projection_bijection(tuple(derivations), joined.projection_endpoints)
     filing_envelope = (
@@ -1086,10 +1097,9 @@ def _numeric_derivation(
                 signed=signed,
                 export_record_id=export_record_id,
                 decimals=None if signed else adjudicated.decimal_digits,
-                # A note that mandates a value closes the slot's domain, and the
-                # schema carries that on the unsigned scaled shape only -- which
-                # is exactly what the declaration validator already refuses a
-                # signed run for, so no signed adjudication can arrive with one.
+                # A note that mandates a value closes the slot's domain. The
+                # schema carries it on the unsigned scaled shape and on signed
+                # money alike, so a signed run keeps its mandate.
                 allowed_values=adjudicated.mandated_values,
                 derivation_code="numeric-note-governed-amount-v1",
             )
@@ -1485,6 +1495,7 @@ def _schema_field(
                 "date_format": date_format,
                 "decimals": decimals,
                 "signed": signed,
+                "required_for": _qualified_requirement(parser_field.validation),
                 "value_policy": value_policy,
                 "allowed_values": allowed_values,
                 "legal_refs": semantic_entry.legal_refs,
@@ -1496,14 +1507,45 @@ def _schema_field(
     )
 
 
-#: The one requirement wording this project has adjudicated, written as the
-#: designs write it once punctuation and case are set aside.
-_STATED_REQUIREMENT: Final[str] = "obligatorio"
+#: The requirement wordings this project has adjudicated as unconditional,
+#: written as the designs write them once punctuation and case are set aside.
+#:
+#: ``obligatorio pi`` is modelo 303's "Tipo Declaracion" cell. "PI" is not a
+#: condition on the requirement: it is the label under which the same design's
+#: Nota 1 lists the admitted declaration types ("PI: El tipo de declaracion puede
+#: ser: C ... D ... G ... I ... N ... V ..."), so the cell states a requirement
+#: and points at its value list. Read as a qualifier, it shipped the one field
+#: every 303 filing must carry as not required.
+_UNCONDITIONAL_REQUIREMENTS: Final[frozenset[str]] = frozenset({"obligatorio", "obligatorio pi"})
+
+#: The qualified requirement wordings this project has adjudicated, mapped to
+#: the taxpayer legal form they name. Modelo 390's sujeto pasivo nombre reads
+#: "OBLIGATORIO (persona fisica)": required for a natural person, meaningless for
+#: an entity, so it is carried as ``required_for`` and evaluated per filing.
+_QUALIFIED_REQUIREMENTS: Final[dict[str, Literal["natural_person"]]] = {
+    "obligatorio (persona fisica)": "natural_person",
+}
 
 #: Trailing punctuation a design may put after the requirement word. It ends a
 #: sentence; it does not qualify the requirement, and reading it as though it
 #: did is what silently downgraded twelve stated requirements in modelo 390.
 _REQUIREMENT_SENTENCE_PUNCTUATION: Final[str] = ".:;"
+
+
+def _qualified_requirement(validation: str | None) -> Literal["natural_person"] | None:
+    """Return the taxpayer legal form a qualified requirement names, or ``None``.
+
+    Accents are set aside because the designs spell the same qualifier both
+    ways. A field carrying one is not required unconditionally; the schema
+    admits the condition on a producer-supplied header field only, so a
+    qualified wording on any other field refuses at generation instead of
+    being dropped.
+    """
+    if validation is None:
+        return None
+    folded = unicodedata.normalize("NFKD", validation.strip().rstrip(_REQUIREMENT_SENTENCE_PUNCTUATION).strip())
+    ascii_only = "".join(character for character in folded if not unicodedata.combining(character))
+    return _QUALIFIED_REQUIREMENTS.get(ascii_only.casefold())
 
 
 def _is_required(validation: str | None) -> bool:
@@ -1513,8 +1555,10 @@ def _is_required(validation: str | None) -> bool:
     cell makes no requirement claim. A cell stating the bare requirement word,
     which a design may end as a sentence, states an unconditional requirement.
     A cell stating a QUALIFIED requirement -- modelo 390's
-    ``OBLIGATORIO (persona fisica)``, modelo 303's ``Obligatorio PI`` -- is
-    neither, and this function's boolean result cannot carry it.
+    ``OBLIGATORIO (persona fisica)`` -- is neither, and this function's boolean
+    result cannot carry it; ``_qualified_requirement`` reads it instead. Modelo
+    303's ``Obligatorio PI`` looks qualified and is not; see
+    ``_UNCONDITIONAL_REQUIREMENTS``.
 
     Only the first two are repaired here. The comparison used to demand exact
     equality with the bare word, so ``OBLIGATORIO.`` fell through to ``False``
@@ -1522,17 +1566,15 @@ def _is_required(validation: str | None) -> bool:
     full stop. Trailing sentence punctuation is now set aside before the
     comparison.
 
-    The ten qualified cells are NOT repaired and remain declared as unrequired.
-    Carrying their wording needs a new export field, and the export schema is
-    closed by a canonical-JSON round trip over every shipped manifest, so a new
-    key cannot be added without a coordinated migration through the bootstrap
-    transport. That migration is real work with its own decision to make, and
-    guessing a boolean for those ten in the meantime would restate the very
-    defect this function exists to remove.
+    A qualified cell stays unrequired here: its requirement holds only for a
+    taxpayer of one legal form, which a layout cannot know, so it is carried as
+    a condition the export evaluates against the filing's own taxpayer.
     """
     if validation is None:
         return False
-    return validation.strip().rstrip(_REQUIREMENT_SENTENCE_PUNCTUATION).strip().casefold() == _STATED_REQUIREMENT
+    return (
+        validation.strip().rstrip(_REQUIREMENT_SENTENCE_PUNCTUATION).strip().casefold() in _UNCONDITIONAL_REQUIREMENTS
+    )
 
 
 def _render_tree_files(

@@ -14,8 +14,6 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pytest
-
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from pydantic import ValidationError
 
 from cadrumo.application.aggregation import IvaDifferentiatedDeductionContribution
@@ -45,6 +43,7 @@ from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry._supplementary_orden import compile_supplementary_ordenes
 from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.loader import load_modelo_directory, load_registry_tree
 from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
@@ -457,7 +456,7 @@ def test_m303_2026_publication_is_twice_reproducible_and_check_mode_is_non_mutat
         # demand the defect back. The row is consulted rather than the subject
         # hard-coded, so this reverts to a strict equality claim the moment the
         # revision is republished and its row retires.
-        from ..pipeline.render_check import record_drift_dispositions
+        from ..pipeline.generated_tree_dispositions import record_drift_dispositions
 
         drifting = {item.subject for item in record_drift_dispositions()}
         subject = f"{tree.modelo}/{tree.revision}"

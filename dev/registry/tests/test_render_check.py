@@ -14,12 +14,8 @@ from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 
-from ..pipeline.render_check import (
-    compare_revision_against_committed,
-    disposition_ledger_from_path,
-    record_drift_dispositions,
-    revision_render_inputs,
-)
+from ..pipeline.generated_tree_dispositions import disposition_ledger_from_path, record_drift_dispositions
+from ..pipeline.render_check import compare_revision_against_committed, revision_render_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

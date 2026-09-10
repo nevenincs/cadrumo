@@ -36,11 +36,11 @@ from ..pipeline.cli import (
     app,
 )
 from ..pipeline.export_fragment_provenance import EXPORT_FRAGMENT_PROVENANCE_FILENAME, ExportFragmentTarget
+from ..pipeline.generated_tree_dispositions import record_drift_dispositions
 from ..pipeline.render_check import (
     GeneratedExportBootstrapTransport,
     RenderComparison,
     RevisionRenderInputs,
-    record_drift_dispositions,
     revision_render_inputs,
 )
 from .test_generated_export_tree_validation import (

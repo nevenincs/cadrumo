@@ -136,6 +136,7 @@ required = false
 padding = 'right_space'
 justification = 'left'
 signed = false
+required_for = 'natural_person'
 legal_refs = ['orden-eha-3111-2009:art-1']
 source_refs = ['aeat-dr-390-2024']
 

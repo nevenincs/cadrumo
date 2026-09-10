@@ -39,12 +39,12 @@ from .candidate_staging import (
     stage_generated_export_candidate,
 )
 from .export_fragment_provenance import SHA256_PATTERN, ExportFragmentTarget
+from .generated_tree_dispositions import record_drift_dispositions
 from .render_check import (
     GeneratedExportBootstrapTransport,
     RenderComparison,
     RevisionRenderInputs,
     compare_export_tree_roots,
-    record_drift_dispositions,
     revision_render_inputs,
 )
 from .source_defects import source_defects_for

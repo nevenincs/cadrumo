@@ -56,14 +56,10 @@ from ..pipeline.export_fragment_provenance import (
     export_fragment_provenance_path,
     load_export_fragment_provenance_manifest,
 )
+from ..pipeline.generated_tree_dispositions import record_drift_dispositions, render_refusal_dispositions
 from ..pipeline.joined_record_design import JoinedRecordDesign, join_record_design_semantics
 from ..pipeline.record_design_intermediate import load_record_design_intermediate
-from ..pipeline.render_check import (
-    compare_revision_against_committed,
-    parsed_tree_file,
-    record_drift_dispositions,
-    render_refusal_dispositions,
-)
+from ..pipeline.render_check import compare_revision_against_committed, parsed_tree_file
 from ..pipeline.render_profile import (
     RenderProfile,
     RenderProfileSourceEvidence,
@@ -180,78 +176,6 @@ _REPRODUCTION_PENDING = {
         ),
         check_mode_refusal="cannot satisfy the requested 'filing' snapshot authority",
     ),
-    "m303-2022": _ReproductionPendingPin(
-        source_ref="aeat-dr-303-2022",
-        source_sha256="6648f6b319579e49cd5bfdaae69e7451db75767e7f19da0b90383b25b79b3f60",
-        reason=(
-            "the committed attestation predates current record serialization, while attempted republication is "
-            "refused because generated DP30305 fields lack matching casilla export_refs in isolated validation"
-        ),
-        reconsideration_condition=(
-            "Reconsider when every generated field is declared by its owning casilla and the tree can be republished."
-        ),
-        check_mode_refusal="export provenance output-file digests do not match generated tree",
-    ),
-    "m303-2023": _ReproductionPendingPin(
-        source_ref="aeat-dr-303-2023",
-        source_sha256="72e463cb29984f535c9f56917d788ff0641965f116aeab47da5f76a59eecfbe4",
-        reason=(
-            "the committed attestation predates current record serialization, while attempted republication is "
-            "refused because generated DP30305 fields lack matching casilla export_refs in isolated validation"
-        ),
-        reconsideration_condition=(
-            "Reconsider when every generated field is declared by its owning casilla and the tree can be republished."
-        ),
-        check_mode_refusal="export provenance output-file digests do not match generated tree",
-    ),
-    "m303-2024-desde-09-y-3t": _ReproductionPendingPin(
-        source_ref="aeat-dr-303-2024-late",
-        source_sha256="2095dd633413f4aed28053bc88402461d80865f454156c01ebc4a2ab68cb76a8",
-        reason=(
-            "the committed attestation predates current record serialization, while attempted republication is "
-            "refused because generated DP30305 fields lack matching casilla export_refs in isolated validation"
-        ),
-        reconsideration_condition=(
-            "Reconsider when every generated field is declared by its owning casilla and the tree can be republished."
-        ),
-        check_mode_refusal="export provenance output-file digests do not match generated tree",
-    ),
-    "m303-2024-hasta-08-y-2t": _ReproductionPendingPin(
-        source_ref="aeat-dr-303-2024-early",
-        source_sha256="8b1f74b58b9293e60f9ea6fa3cc352a35ca3fe7d09a6705f122585e7f7da65b9",
-        reason=(
-            "the committed attestation predates current record serialization, while attempted republication is "
-            "refused because generated DP30305 fields lack matching casilla export_refs in isolated validation"
-        ),
-        reconsideration_condition=(
-            "Reconsider when every generated field is declared by its owning casilla and the tree can be republished."
-        ),
-        check_mode_refusal="export provenance output-file digests do not match generated tree",
-    ),
-    "m303-2025": _ReproductionPendingPin(
-        source_ref="aeat-dr-303-2025",
-        source_sha256="6c3d7eeb714e0deb52f91d7e8dbadeb83f16c1d32d25f9e871756f3ddf0117e6",
-        reason=(
-            "the committed attestation predates current record serialization, while attempted republication is "
-            "refused because generated DP30305 fields lack matching casilla export_refs in isolated validation"
-        ),
-        reconsideration_condition=(
-            "Reconsider when every generated field is declared by its owning casilla and the tree can be republished."
-        ),
-        check_mode_refusal="export provenance output-file digests do not match generated tree",
-    ),
-    "m303-2026-y-siguientes": _ReproductionPendingPin(
-        source_ref="aeat-dr-303-2026",
-        source_sha256="0be8b156da2250c6b11f6253e0165221ed2e549ec4c65a562021bec6b9b8489b",
-        reason=(
-            "the committed attestation predates current record serialization, while attempted republication is "
-            "refused because generated DP30305 fields lack matching casilla export_refs in isolated validation"
-        ),
-        reconsideration_condition=(
-            "Reconsider when every generated field is declared by its owning casilla and the tree can be republished."
-        ),
-        check_mode_refusal="export provenance output-file digests do not match generated tree",
-    ),
 }
 
 
@@ -307,9 +231,7 @@ def _supporting_modelos(tree: _GeneratedTree) -> frozenset[str]:
     """
     referenced = _referenced_modelos(bundled_path("registry", "aeat", "modelos", tree.modelo))
     depended_on = referenced - {tree.modelo}
-    return frozenset(
-        modelo for modelo in depended_on if bundled_path("registry", "aeat", "modelos", modelo).is_dir()
-    )
+    return frozenset(modelo for modelo in depended_on if bundled_path("registry", "aeat", "modelos", modelo).is_dir())
 
 
 def _referenced_modelos(modelo_root: Path) -> frozenset[str]:

@@ -23,14 +23,13 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator
-from pathlib import Path
 from typing import NamedTuple
 
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 
-from ..pipeline.render_check import record_drift_dispositions, type_column_contradiction_dispositions
+from ..pipeline.generated_tree_dispositions import record_drift_dispositions, type_column_contradiction_dispositions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -132,9 +131,7 @@ def test_no_unexplained_shipped_field_contradicts_the_official_type_column() -> 
         item.subject for item in type_column_contradiction_dispositions()
     }
 
-    unexplained = [
-        line for line in _sign_disagreements(_shipped_derivations()) if line.split()[0] not in explained
-    ]
+    unexplained = [line for line in _sign_disagreements(_shipped_derivations()) if line.split()[0] not in explained]
 
     report = "\n".join(unexplained[:40])
     assert not unexplained, (
@@ -158,9 +155,7 @@ def test_an_explained_revision_still_has_its_divergence_measured() -> None:
     rather than standing as a permanent exemption.
     """
     contradictions = type_column_contradiction_dispositions()
-    explained = {item.subject for item in record_drift_dispositions()} | {
-        item.subject for item in contradictions
-    }
+    explained = {item.subject for item in record_drift_dispositions()} | {item.subject for item in contradictions}
 
     disagreements = _sign_disagreements(_shipped_derivations())
 
@@ -170,8 +165,7 @@ def test_an_explained_revision_still_has_its_divergence_measured() -> None:
     for row in contradictions:
         live = [line for line in disagreements if line.split()[0] == row.subject]
         assert len(live) == row.field_count, (
-            f"{row.subject}: row declares {row.field_count} contradicting field(s), "
-            f"the corpus reports {len(live)}"
+            f"{row.subject}: row declares {row.field_count} contradicting field(s), the corpus reports {len(live)}"
         )
         assert all(f"[{row.derivation_code}]" in line for line in live), (
             f"{row.subject}: a contradicting field renders through a derivation the row does not name"
