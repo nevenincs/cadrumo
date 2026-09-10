@@ -102,6 +102,17 @@ the caller say which act they are performing. It fires only on a CHANGE of
 reviewer against a declared date: restating the same reviewer inherits a date
 that is still that reviewer's own, and a first review has nothing to inherit.
 
+A review claim on a delta edition is refused
+--------------------------------------------
+
+An edition that names a predecessor compiles with casilla rows it inherits and
+does not state, so a reviewer reading its file signs off on a delta while the
+compiled edition carries rows they never saw. The four scalars say who and
+when, never what, so a claim written there would read as covering the whole
+compiled edition. Until the stamp can state its own scope, this writer refuses
+to put a review claim on such an edition; clearing one and recording authorship
+stay writable.
+
 Why the stamp is manifest-only
 ------------------------------
 
@@ -196,7 +207,11 @@ from cadrumo.core.toml import to_str_keyed_dict
 from cadrumo.core.type_guards import is_object_mapping
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.loader import load_modelo_directory
-from cadrumo.domain.calculations.registry.schema import REVISION_GOVERNANCE_FIELDS, ModeloRevision
+from cadrumo.domain.calculations.registry.schema import (
+    REVISION_GOVERNANCE_FIELDS,
+    DeclaredPredecessor,
+    ModeloRevision,
+)
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 
 from .manager import reset_conformance_cache
@@ -474,7 +489,9 @@ def stamp_revision(
             an authorship claim was supplied together with its clearing, an
             identity names nobody, a reviewer identity reads as an
             already-qualified attribution, the revision is not a compiled record in the
-            tree, the resulting stamp is one the schema refuses, or the written
+            tree, the resulting stamp is one the schema refuses, the revision
+            names a predecessor and the write would leave a review claim on it
+            (see :func:`_assert_review_scope_is_statable`), or the written
             tree no longer loads. In the last case the manifest is restored to
             its previous bytes before the error is raised.
     """
@@ -519,6 +536,12 @@ def stamp_revision(
         reviewed_at=reviewed_at,
     )
     _assert_schema_accepts(revision, resolved)
+    _assert_review_scope_is_statable(
+        compiled,
+        manifest=manifest,
+        resolved_status=resolved.review_status,
+        requested=(review_status, reviewed_by, reviewed_at),
+    )
 
     rendered = resolved.rendered()
     dropped = declared.declared_keys() - resolved.declared_keys()
@@ -654,6 +677,69 @@ def _assert_review_axis_is_writable(
         "reviewer identity and date that are underivable by construction, so nothing could restore "
         "them. Both advancing and clearing that claim are edits to the manifest, made by the same hand "
         "that made the claim. engineered_by is unaffected and remains writable.",
+    )
+
+
+def _assert_review_scope_is_statable(
+    compiled: ModeloRevision,
+    *,
+    manifest: Path,
+    resolved_status: str | None,
+    requested: tuple[object, ...],
+) -> None:
+    """Refuse a review claim on an edition whose compiled rows its file does not state.
+
+    An edition naming a predecessor is materialised at load: the predecessor's
+    casilla rows are inherited into it, so the compiled edition carries rows the
+    declaring file never shows. A reviewer reads that file. The four governance
+    scalars name who reviewed and when, and nothing about WHAT was reviewed, so
+    written onto such an edition they read as a signoff over the whole compiled
+    edition while the reviewer saw only the rows it states. The scalars stay
+    literally true and their scope shrinks underneath them, and nothing on the
+    record says so.
+
+    A review of a delta edition covers the rows the edition states, judged
+    against the predecessor it names; the inherited rows are attested by the
+    stamp of the edition that states them. That scope has to be written on the
+    stamp itself, beside the claim, because a scope a reader reconstructs from
+    the predecessor key is exactly the inference the stamp exists to replace:
+    the key can be added after the review, or re-pointed, without touching a
+    single governance line. The stamp has no field that states a scope, so this
+    writer refuses the claim rather than write one that cannot say what it covers.
+
+    Narrow on purpose. It fires only when the request touches the review axis
+    AND the resolved status still claims a review. Returning a delta edition to
+    ``pending_review`` asserts less than before and stays writable, and so does
+    ``engineered_by``, because authorship makes no claim about coverage. An
+    edition that states every row itself, including one declaring that it has no
+    predecessor, is unaffected: its file is its compiled edition.
+
+    Args:
+        compiled: The compiled revision, read for its predecessor declaration.
+        manifest: The manifest being stamped, named in the refusal.
+        resolved_status: The review status the write would leave declared.
+        requested: The review-axis argument values, in
+            :data:`_REVIEW_AXIS_ARGUMENTS` order.
+
+    Raises:
+        StampError: The edition names a predecessor and the write would leave a
+            review claim on it.
+    """
+    predecessor = compiled.predecessor
+    if not isinstance(predecessor, DeclaredPredecessor):
+        return
+    if all(value is None for value in requested):
+        return
+    if resolved_status in (None, RevisionReviewStatus.PENDING_REVIEW.value):
+        return
+    raise StampError(
+        f"refusing to record review_status {resolved_status!r} on revision {compiled.id!r}: {manifest} names "
+        f"predecessor {predecessor.revision_id!r}, so the compiled edition carries casilla rows inherited from "
+        "it that this file does not state. The governance stamp names a reviewer and a date and nothing "
+        "about what was reviewed, so it would read as a signoff over rows the reviewer never saw. A review "
+        "of a delta edition covers the rows it states, judged against the predecessor it names, and the "
+        "stamp cannot yet say so. Returning the revision to 'pending_review' and recording engineered_by "
+        "remain writable.",
     )
 
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:58313d7e5f1cacb07e5435e8d948d67b4abb17a076af3e58efe6ebdcc2457783'
+body_hash: 'sha256:a3625a330aa126fa1ba144679e7432aebb84a0c8c021812ce847bb7466beae33'
 related:
   - "[[2026-09-09-registry-edition-authoring-edition-restatement-measurement-research]]"
   - "[[2026-09-09-registry-edition-authoring-registry-mechanics-audit-research]]"
@@ -396,6 +396,14 @@ presence gets less capable the more of this work succeeds, and its greenness tra
 progress rather than correctness. A gate must therefore distinguish UNCHECKED from ABSENT, and take
 its eligibility from what an edition declares about itself rather than from what artefact happens
 to sit beside it.
+
+A review stamp on an edition that names a predecessor covers the rows the edition states, reviewed
+against the predecessor it names, and says so on the stamp; inherited rows are covered by the stamp
+of the edition that states them. Defining review over the materialised edition was rejected: a
+successor's stamp would go stale whenever its predecessor changed with nothing in the successor
+moving, and review would re-read the restatement this decision removes from authoring. Until the
+stamp carries a field naming the predecessor it was reviewed against, the stamp writer refuses a
+review claim on a delta edition, and that field lands before the first reviewed edition migrates.
 
 ## Naming
 
