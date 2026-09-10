@@ -21,7 +21,7 @@ from cadrumo.core.period import RegistrySelectorPeriodCode
 from cadrumo.core.prose_elision import ElidedProse
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import authority as _authority
-from cadrumo.domain.calculations.registry._verdict_cache import (
+from dev.registry.compiler.verdict_cache import (
     VERDICT_OUTCOME_GREEN,
     RegistryValidationVerdict,
     compute_shipped_verdict_key,
@@ -37,7 +37,7 @@ from cadrumo.domain.calculations.registry.authority import (
     _guard_authority_process,
 )
 from cadrumo.domain.calculations.registry.condition_mode import ConditionModeField
-from cadrumo.domain.calculations.registry.corpus_catalogue import (
+from .compiler.corpus_catalogue import (
     GeneratedArtifactSource,
     RegistrySourceKind,
     RegistryValidationError,
@@ -51,7 +51,7 @@ from cadrumo.domain.calculations.registry.export import (
     ResolvedExportEndpointPath,
     derive_export_layouts_from_bindings,
 )
-from cadrumo.domain.calculations.registry.identity import (
+from dev.registry.compiler.identity import (
     _LOGGER,
     REGISTRY_IDENTITY_SCHEMA_VERSION,
     FingerprintTuples,
@@ -59,13 +59,13 @@ from cadrumo.domain.calculations.registry.identity import (
     registry_identity_stamp_location,
 )
 from cadrumo.domain.calculations.registry.ids import CrossReferenceId, OracleId
-from cadrumo.domain.calculations.registry.m303_orden_census_artefact import (
+from dev.registry.compiler.m303_orden_census_artefact import (
     EXTRACTOR_VERSION,
     M303_ORDEN_CENSUS_SCHEMA_VERSION,
     M303AnnualOrdenCensusArtefact,
     M303AnnualOrdenSourceCensus,
 )
-from cadrumo.domain.calculations.registry.m303_orden_manifest import (
+from dev.registry.compiler.m303_orden_manifest import (
     UTF_8_ENCODING,
     M303AnnualOrdenGeneratedManifest,
     SourceReference,
@@ -129,7 +129,7 @@ def reset_registry_caches(
     package exposes the whole reset rather than its parts.
     """
     _guard_authority_process()
-    from cadrumo.domain.calculations.registry.loader_fingerprints import clear_fingerprint_cache
+    from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
     from dev.registry.compiler.loader import _load_registry_tree_cached
 
     lifecycle_observer.registry_cache_reset_requested()

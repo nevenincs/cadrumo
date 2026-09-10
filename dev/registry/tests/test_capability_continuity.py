@@ -17,7 +17,8 @@ import dataclasses
 import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..analysis.capability_continuity import (
     GRADE_LADDER,
@@ -97,7 +98,7 @@ def test_a_capability_lost_while_the_grade_holds_is_a_regression() -> None:
     it carried must be reported, and only those, each as a loss at the same
     grade.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     assert modelo_findings(authority, modelo_id=_ENVELOPE_MODELO) == (), "the constructed loss must be the only one"
     revision = authority.modelo(_ENVELOPE_MODELO).revisions[_ENVELOPE_REVISION]
     layout = revision.export_layouts[0]
@@ -128,7 +129,7 @@ def test_a_capability_lost_with_the_grade_is_not_called_a_regression() -> None:
     reporting it beside a real regression would put an oversight and an
     intention under one name.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     predecessor = authority.modelo(_ENVELOPE_MODELO).revisions[_ENVELOPE_PREDECESSOR]
     assert declared_capabilities(predecessor) >= _LAYOUT_BORNE, "the predecessor must declare what the stub loses"
     assert modelo_findings(authority, modelo_id=_ENVELOPE_MODELO) == (), "the constructed loss must be the only one"
@@ -149,7 +150,7 @@ def test_both_conditions_occur_and_the_screen_separates_them() -> None:
     deadline window dropped while the grade holds. The screen must report each
     under its own kind and nothing else across both modelos.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     for modelo_id in (_ENVELOPE_MODELO, _DEADLINE_MODELO):
         assert modelo_findings(authority, modelo_id=modelo_id) == (), f"modelo {modelo_id} must start clean"
 
@@ -187,7 +188,7 @@ def test_capabilities_are_directional_and_exclude_counts() -> None:
     Counting anything would report every revision that trimmed a field, burying
     the cases where something stopped being expressible at all.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     revision = authority.modelo("322").revisions["2024-2025"]
     declared = declared_capabilities(revision)
     assert declared, "the fixture revision declares nothing, so this proves nothing"

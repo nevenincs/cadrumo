@@ -6,7 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..analysis.temporal_enrollment_census import (
     LiteralEnrollmentAudit,
@@ -31,7 +32,7 @@ _EXPECTED = frozenset(
 
 @pytest.fixture(scope="module")
 def authority() -> ValidatedRegistryAuthority:
-    return bundled_authority()
+    return compiled_bundled_authority()
 
 
 def _audit(

@@ -9,8 +9,9 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.maintenance_support import resolved_export_endpoints
 
 from ..analysis.wire_type_compatibility import transitions_for_revision
@@ -20,7 +21,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 @pytest.fixture(scope="module")
 def authority() -> ValidatedRegistryAuthority:
-    return bundled_authority()
+    return compiled_bundled_authority()
 
 
 @pytest.fixture(scope="module")

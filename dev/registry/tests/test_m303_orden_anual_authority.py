@@ -13,10 +13,9 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry._m303_orden_source import extract_m303_annual_orden_source
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from dev.registry.compiler._m303_orden_source import extract_m303_annual_orden_source
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
-from cadrumo.domain.calculations.registry.m303_orden_manifest import load_m303_annual_orden_authority
+from dev.registry.compiler.m303_orden_manifest import load_m303_annual_orden_authority
 from cadrumo.domain.calculations.registry.m303_orden_projection_models import M303AnnualOrdenProjection
 from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
@@ -24,6 +23,7 @@ from cadrumo.domain.iva.regimen_simplificado_rows import (
     M303RegimenSimplificadoScope,
     M303RegimenSimplificadoScopeDecision,
 )
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.maintenance_support import check_m303_annual_orden_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -334,7 +334,7 @@ def test_pinned_boe_orden_compiler_refuses_duplicate_semantic_table_anchor(
 
 def test_resolved_annual_orden_snapshot_refuses_reference_coordinate_drift() -> None:
     """A reference cannot retain its Orden id while changing source provenance."""
-    registry_snapshot = bundled_authority().snapshot("303", filing_year=2025, period="4T")
+    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2025, period="4T")
     resolved = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(
@@ -351,7 +351,7 @@ def test_resolved_annual_orden_snapshot_refuses_reference_coordinate_drift() -> 
 
 def test_resolved_annual_orden_snapshot_carries_source_derived_identity_and_minimum_quota() -> None:
     """The bundled authority, not a test fixture, supplies row identity and minimum quota."""
-    registry_snapshot = bundled_authority().snapshot("303", filing_year=2026, period="4T")
+    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="4T")
     resolved = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(
@@ -441,7 +441,7 @@ def test_annual_orden_projection_refuses_missing_or_duplicate_iae_discriminators
 
 def test_2022_snapshot_carries_lorca_authority_and_crosswalk_refusal_with_exact_sources() -> None:
     """The 2022 snapshot keeps the available reduction separate from the unavailable crosswalk."""
-    registry_snapshot = bundled_authority().snapshot("303", filing_year=2022, period="4T")
+    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2022, period="4T")
     resolved = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(
@@ -473,7 +473,7 @@ def test_2022_snapshot_carries_lorca_authority_and_crosswalk_refusal_with_exact_
 
 def test_2022_snapshot_refuses_lorca_authority_with_a_drifted_source_reference() -> None:
     """The available Lorca rate cannot survive without its exact BOE source identity."""
-    registry_snapshot = bundled_authority().snapshot("303", filing_year=2022, period="4T")
+    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2022, period="4T")
     resolved = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(
@@ -490,7 +490,7 @@ def test_2022_snapshot_refuses_lorca_authority_with_a_drifted_source_reference()
 
 def test_2022_snapshot_refuses_a_stripped_lorca_authority_from_the_real_envelope() -> None:
     """The exact 2022 public snapshot is incomplete when its available reduction is removed."""
-    registry_snapshot = bundled_authority().snapshot("303", filing_year=2022, period="4T")
+    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2022, period="4T")
     resolved = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(
@@ -510,11 +510,11 @@ def test_2025_snapshot_refuses_an_injected_lorca_authority_from_the_real_2022_en
         scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
     )
     resolved_2022 = resolve_m303_regimen_simplificado_snapshot(
-        registry_snapshot=bundled_authority().snapshot("303", filing_year=2022, period="4T"),
+        registry_snapshot=compiled_bundled_authority().snapshot("303", filing_year=2022, period="4T"),
         scope_decision=scope_decision,
     )
     resolved_2025 = resolve_m303_regimen_simplificado_snapshot(
-        registry_snapshot=bundled_authority().snapshot("303", filing_year=2025, period="4T"),
+        registry_snapshot=compiled_bundled_authority().snapshot("303", filing_year=2025, period="4T"),
         scope_decision=scope_decision,
     )
     payload = resolved_2025.orden.model_dump(mode="python")
@@ -528,7 +528,7 @@ def test_2025_snapshot_refuses_an_injected_lorca_authority_from_the_real_2022_en
 
 def test_2022_snapshot_refuses_coordinated_lorca_parent_and_child_source_drift() -> None:
     """A coordinated parent/child rewrite cannot replace the HFP/1335 Lorca authority."""
-    registry_snapshot = bundled_authority().snapshot("303", filing_year=2022, period="4T")
+    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2022, period="4T")
     resolved = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(
@@ -553,14 +553,14 @@ def test_2022_snapshot_refuses_coordinated_lorca_parent_and_child_source_drift()
 
 def test_2022_snapshot_refuses_coordinated_record_design_parent_and_child_drift() -> None:
     """The crosswalk refusal cannot move with a substituted record-design envelope."""
-    registry_snapshot = bundled_authority().snapshot("303", filing_year=2022, period="4T")
+    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2022, period="4T")
     resolved = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(
             scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
         ),
     )
-    other_snapshot = bundled_authority().snapshot("303", filing_year=2023, period="4T")
+    other_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2023, period="4T")
     other_resolved = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=other_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(
@@ -580,7 +580,7 @@ def test_2022_snapshot_refuses_coordinated_record_design_parent_and_child_drift(
 
 def test_snapshot_refuses_cross_envelope_filing_year_and_record_design_drift() -> None:
     """The public snapshot retains one filing-year/revision/record-design coordinate."""
-    registry_snapshot = bundled_authority().snapshot("303", filing_year=2025, period="4T")
+    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2025, period="4T")
     resolved = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(

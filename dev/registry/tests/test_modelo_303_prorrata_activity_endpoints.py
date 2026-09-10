@@ -7,7 +7,6 @@ from collections import Counter
 from decimal import Decimal
 
 import pytest
-from cadrumo.domain.calculations.registry.loader import load_catalogue_file
 
 from cadrumo.core.estado_casilla_oficial import EstadoCasillaOficial
 from cadrumo.core.filing_projection_ref import (
@@ -18,7 +17,6 @@ from cadrumo.core.i18n import tr
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.prorrata_register import ProrrataActivityRowType, ProrrataRegisterRegime
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry._validate import RegistryValidator
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export import clasificar_casillas_oficiales
 from cadrumo.domain.calculations.registry.formula_initial_values import initial_value_casilla_ids, initial_values
@@ -27,6 +25,8 @@ from cadrumo.domain.calculations.registry.record_design import extract_record_de
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.prorrata_register.register import ProrrataActivityRow, ProrrataRegister, ProrrataRegisterEntry
 from cadrumo.tests.registry_snapshot import build_snapshot
+from dev.registry.compiler.loader import load_catalogue_file
+from dev.registry.compiler.validator import RegistryValidator
 from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 from dev.registry.maintenance_support import resolve_record_design_binary
 

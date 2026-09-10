@@ -30,6 +30,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.loader import load_registry_tree
 
 from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....iva.deduction_facts import IvaDeductionClassificationProvenance
@@ -40,7 +41,6 @@ from ..ledger_iva_bindings import (
     iva_ledger_selector,
     resolve_ledger_iva_aggregation_binding_values,
 )
-from ..loader import load_registry_tree
 from ._gate_support import fragment_declaring
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

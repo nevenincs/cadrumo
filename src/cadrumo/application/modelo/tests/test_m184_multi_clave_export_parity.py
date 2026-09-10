@@ -16,6 +16,7 @@ from decimal import Decimal
 from typing import TypedDict, Unpack
 
 import pytest
+from dev.registry.compiler.loader import load_registry_tree
 from pydantic import ValidationError
 
 from ....core.casilla_id import CasillaId
@@ -25,7 +26,6 @@ from ....domain.calculations.registry.detail_record_bindings import (
 )
 from ....domain.calculations.registry.export import derive_export_layouts_from_bindings
 from ....domain.calculations.registry.ids import BindingId
-from ....domain.calculations.registry.loader import load_registry_tree
 from ....domain.calculations.registry.schema_exports import ExportRecordDefinition
 from ....domain.modelos.row_models import Modelo184MemberRow
 from ...filing.record_renderer import _record_render_rows

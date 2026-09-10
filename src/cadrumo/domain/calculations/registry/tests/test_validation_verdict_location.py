@@ -17,7 +17,7 @@ import pytest
 from ..... import __version__
 from .....core.config import override_settings
 from .....core.resources.bundled_data import bundled_path
-from .._verdict_cache import (
+from dev.registry.compiler.verdict_cache import (
     VERDICT_OUTCOME_GREEN,
     RegistryValidationVerdict,
     bundled_verdict_path,

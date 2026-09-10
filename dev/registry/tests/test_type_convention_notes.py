@@ -11,7 +11,8 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..analysis.type_convention_notes import KINDS, revision_findings, screen_authority, types_named_in
 
@@ -22,7 +23,7 @@ _NUMERIC_RULE = "Los campos numéricos (Num) deberán estar alineados a la derec
 
 @pytest.fixture(scope="module")
 def authority() -> ValidatedRegistryAuthority:
-    return bundled_authority()
+    return compiled_bundled_authority()
 
 
 def test_a_note_naming_a_type_the_design_uses_is_selected() -> None:

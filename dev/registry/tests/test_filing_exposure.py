@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..analysis.corpus import bundled_modelo_ids
 from ..analysis.filing_exposure import ConditionExposure, condition_exposure, filing_grade_revisions
@@ -62,7 +62,7 @@ def test_the_live_report_separates_the_three_populations() -> None:
     means nothing. Held as presence rather than by figure: every count here
     moves when a screen is added or a revision changes grade.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo_ids = bundled_modelo_ids()
     exposures = condition_exposure(authority, modelo_ids)
     # A floor, not an existence check. The three claims below are all
@@ -100,7 +100,7 @@ def test_every_filing_finding_names_a_revision_declaring_filing_grade() -> None:
     Asserted by rebuilding the filing set independently and checking that no
     condition claims more filing findings than it has findings at all.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo_ids = bundled_modelo_ids()
     filing = filing_grade_revisions(authority, modelo_ids)
     assert filing, "no revision declares filing grade, so this proves nothing"
@@ -120,7 +120,7 @@ def test_a_census_entry_point_is_visible_beside_its_runner_count() -> None:
     reader's signal. The first version of this report carried only the first and
     overstated that screen by a factor of nearly five hundred.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo_ids = bundled_modelo_ids()
     exposures = condition_exposure(authority, modelo_ids)
     by_screen = {item.screen: item for item in exposures if item.screen == "wire_type_compatibility"}
@@ -147,7 +147,7 @@ def test_the_report_reads_the_declared_shape_rather_than_inferring_it() -> None:
     declared.update({entry.name: entry.entry_returns for entry in CORPUS_SCREENS})
     assert "census" in declared.values(), "no screen declares a census, so this proves nothing"
 
-    for item in condition_exposure(bundled_authority(), bundled_modelo_ids()):
+    for item in condition_exposure(compiled_bundled_authority(), bundled_modelo_ids()):
         assert item.entry_returns == declared[item.screen]
 
 
@@ -158,7 +158,7 @@ def test_a_census_is_not_added_to_the_filing_defect_total() -> None:
     Summing them into the filing-exposure figure is the error the declaration
     exists to prevent, and it inflated that figure by eleven thousand.
     """
-    exposures = condition_exposure(bundled_authority(), bundled_modelo_ids())
+    exposures = condition_exposure(compiled_bundled_authority(), bundled_modelo_ids())
     census = [item for item in exposures if item.entry_returns == "census"]
     findings = [item for item in exposures if item.entry_returns == "findings"]
     assert census and findings, "both shapes must occur or this proves nothing"
@@ -188,7 +188,7 @@ def test_revision_pressure_names_the_conditions_rather_than_only_counting_them()
     """
     from ..analysis.filing_exposure import revision_pressure
 
-    ranked = revision_pressure(bundled_authority(), bundled_modelo_ids())
+    ranked = revision_pressure(compiled_bundled_authority(), bundled_modelo_ids())
     assert ranked, "no fileable revision carries a condition, so this proves nothing"
     assert ranked[0].count >= ranked[-1].count
     for item in ranked:
@@ -200,7 +200,7 @@ def test_revision_pressure_ranks_only_revisions_that_can_be_filed() -> None:
     """The ranking exists to order repair of filings, so it holds nothing else."""
     from ..analysis.filing_exposure import filing_grade_revisions, revision_pressure
 
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo_ids = bundled_modelo_ids()
     filing = filing_grade_revisions(authority, modelo_ids)
     ranked = revision_pressure(authority, modelo_ids)
@@ -221,6 +221,6 @@ def test_revision_pressure_excludes_census_screens() -> None:
 
     census = {entry.name for entry in (*SCREENS, *CORPUS_SCREENS) if entry.entry_returns == "census"}
     assert census, "no screen declares a census, so this proves nothing"
-    ranked = revision_pressure(bundled_authority(), bundled_modelo_ids())
+    ranked = revision_pressure(compiled_bundled_authority(), bundled_modelo_ids())
     named = {kind.split(".", 1)[0] for item in ranked for kind in item.conditions}
     assert not (named & census)

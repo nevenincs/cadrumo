@@ -42,8 +42,9 @@ from enum import StrEnum
 from pathlib import Path
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.record_design import extract_record_design
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 __all__ = [
     "Alignment",
@@ -211,7 +212,7 @@ def screen_authority(
 
 def main() -> int:
     """Print the alignment census and every contradiction, one greppable row each."""
-    alignments, contradictions = screen_authority(bundled_authority())
+    alignments, contradictions = screen_authority(compiled_bundled_authority())
     for outcome in Alignment:
         print(f"{outcome.value:10s} {sum(1 for item in alignments if item.alignment is outcome)}")
     for item in alignments:

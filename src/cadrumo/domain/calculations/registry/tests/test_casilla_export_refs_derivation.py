@@ -13,9 +13,9 @@ from pathlib import Path
 from typing import Final
 
 import pytest
+from dev.registry.compiler.loader import load_modelo_directory
 
 from ..errors import RegistryLoadError
-from ..loader import load_modelo_directory
 from ..schema import ModeloRevision
 from ._loader_directory_mode_support import _write_standard_manifest
 

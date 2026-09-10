@@ -121,32 +121,6 @@ legacy_facade = "modelo parameter files remain canonical and unmoved"
 provenance_source = "compiled modelo revision parameters; identity inherited from modelos"
 remaining_conditions = ["migrate duplicate consumers", "never duplicate or delete modelo parameter files"]
 
-[[contracts]]
-provider_id = "global-legal-parameters"
-family = "scalar"
-denominator_source = "src/cadrumo/domain/calculations/registry/facts/legal_parameters.py:_SCALAR_PARAMETER_IDS"
-query_type = "ScalarFactQuery"
-required_selectors = []
-temporal_axis = "filing_period"
-consumer_step = "W03.P11.S50,W03.P13.S53"
-consumer_files = ["src/cadrumo/domain/transactions", "src/cadrumo/domain/modelos"]
-legacy_facade = "typed transaction and modelo facades remain"
-provenance_source = "legal/*.toml LegalParameter declarations"
-remaining_conditions = ["rewire last load_legal_parameters_only callers", "retire adapter after last caller"]
-
-[[contracts]]
-provider_id = "global-legal-parameters"
-family = "entity_set"
-denominator_source = "src/cadrumo/domain/calculations/registry/facts/legal_parameters.py:_ENTITY_SET_PARAMETER_IDS"
-query_type = "EntitySetFactQuery"
-required_selectors = []
-temporal_axis = "filing_period"
-consumer_step = "W03.P10.S49"
-consumer_files = ["src/cadrumo/domain/transactions/tipo_actividad_partitions.py"]
-legacy_facade = "activity classification facade remains"
-provenance_source = "legal/*.toml entity-set LegalParameter declarations"
-remaining_conditions = ["remove local string splitting after migration", "retire legal-parameter adapter after last caller"]
-
 [[non_enrollments]]
 identity = "apoderamientos-scopes"
 source = "src/cadrumo/domain/auth/apoderamientos/catalogue.py"

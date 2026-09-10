@@ -65,8 +65,9 @@ from dataclasses import dataclass
 from typing import Final, Protocol
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..pipeline.render_check import revision_render_inputs
 from .footnote_only_wire_facts import OUTSTANDING_KINDS
@@ -397,7 +398,7 @@ def main() -> int:
     """Print one greppable row per field and a closing census; always exit 0."""
     from .corpus import bundled_modelo_ids
 
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     findings = screen_authority(authority, bundled_modelo_ids())
     tally: collections.Counter[str] = collections.Counter(item.kind for item in findings)
     for item in findings:

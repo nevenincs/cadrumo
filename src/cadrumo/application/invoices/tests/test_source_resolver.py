@@ -9,6 +9,7 @@ from types import SimpleNamespace
 from typing import Any
 
 import pytest
+from dev.registry.compiler.loader import load_modelo_directory
 
 from ....adapters.outbound.fx.ecb_provider import ECB_RATE_SOURCE_ID
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -29,7 +30,6 @@ from ....domain.calculations.registry._m347_threshold import (
     resolve_m347_counterparty_annual_threshold,
 )
 from ....domain.calculations.registry.errors import RegistryValidationError
-from ....domain.calculations.registry.loader import load_modelo_directory
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine

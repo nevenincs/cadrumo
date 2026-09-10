@@ -44,13 +44,13 @@ import time
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.loader import _load_registry_tree_cached, load_registry_tree
 
 from .....core.config import override_settings
 from .....core.directory_scan import scan_directory
 from .....core.resources.bundled_data import bundled_path
 from .....tests.env_scope import scoped_env_var
 from .._loader_internals import _collect_registry_tree_fingerprints
-from ..loader import _load_registry_tree_cached, load_registry_tree
 from ..loader_cache import is_bundled_registry_root, registry_disk_cache_enabled
 from ..loader_fingerprints import _registry_fingerprint_cache, clear_fingerprint_cache
 from ._loader_cache_support import REGISTRY_DISK_CACHE_DIR_ENV_VAR
@@ -110,7 +110,7 @@ def test_registry_disk_cache_enabled_without_pytest_markers() -> None:
             sys.executable,
             "-c",
             (
-                "from cadrumo.domain.calculations.registry.loader import registry_disk_cache_enabled; "
+                "from cadrumo.domain.calculations.registry.loader_cache import registry_disk_cache_enabled; "
                 "print(registry_disk_cache_enabled())"
             ),
         ],
@@ -297,7 +297,7 @@ def test_bundled_root_disk_cache_is_shared_across_processes(
                 sys.executable,
                 "-c",
                 (
-                    "from cadrumo.domain.calculations.registry.loader import load_registry_tree\n"
+                    "from dev.registry.compiler.loader import load_registry_tree\n"
                     "from cadrumo.core.resources import bundled_path\n"
                     "root = bundled_path('registry', 'aeat').resolve()\n"
                     "modelos, _ = load_registry_tree(root)\n"
@@ -393,7 +393,7 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
         "import pytest\n"
         "\n"
         "from cadrumo.core.resources import bundled_path\n"
-        "from cadrumo.domain.calculations.registry.loader import load_registry_tree\n"
+        "from dev.registry.compiler.loader import load_registry_tree\n"
         "\n"
         "pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]\n"
         "\n"

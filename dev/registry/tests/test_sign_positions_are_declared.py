@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..analysis.sign_position_coverage import (
     design_sign_positions,
@@ -24,7 +24,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_no_money_field_starts_on_an_undeclared_design_sign_position() -> None:
-    undeclared = screen_authority(bundled_authority())
+    undeclared = screen_authority(compiled_bundled_authority())
 
     assert not undeclared, "money fields on a design SIGNO position without sign_position:\n" + "\n".join(
         f"{item.subject} {item.field_id} @{item.offset}" for item in undeclared
@@ -33,7 +33,7 @@ def test_no_money_field_starts_on_an_undeclared_design_sign_position() -> None:
 
 def test_every_pinned_design_of_an_exporting_revision_is_read() -> None:
     """A design the screen cannot read would pass its revision on unseen evidence."""
-    assert unreadable_designs(bundled_authority()) == ()
+    assert unreadable_designs(compiled_bundled_authority()) == ()
 
 
 def test_every_declared_sign_position_is_printed_by_its_own_design() -> None:
@@ -42,7 +42,7 @@ def test_every_declared_sign_position_is_printed_by_its_own_design() -> None:
     It also shows the empty result above means covered, not unseen: every
     declared field is found at a position the screen reads from the design.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     declared = 0
     ungrounded: list[str] = []
     for modelo in authority.modelos:

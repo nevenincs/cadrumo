@@ -107,7 +107,7 @@ from typing import Final
 from cadrumo.core.authority_grade import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.edition_materialisation import materialise_edition
+from dev.registry.compiler.edition_materialisation import materialise_edition
 from cadrumo.domain.calculations.registry.identifier_lineage import identifier_lineage
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_overlap
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
@@ -119,6 +119,7 @@ from cadrumo.domain.calculations.registry.tests.test_revision_edition_round_trip
     edition_round_trip_report,
     merge_order,
 )
+from dev.registry.compiler.authority import compile_validated_authority
 
 from .analysis.delta_minimality import restatement_differences
 
@@ -1175,7 +1176,7 @@ def _is_fixed_point(works: Sequence[_EditionWork]) -> bool:
 
 
 def _load(registry_root: Path, modelo_id: str) -> ModeloDefinition:
-    return ValidatedRegistryAuthority.load(registry_root, source_root=bundled_path()).modelo(modelo_id)
+    return compile_validated_authority(registry_root, bundled_path()).modelo(modelo_id)
 
 
 def _inside(path: Path, root: Path) -> bool:

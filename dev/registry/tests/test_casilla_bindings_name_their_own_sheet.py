@@ -21,7 +21,7 @@ from collections.abc import Iterable
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..pipeline.render_check import revision_render_inputs
 
@@ -55,7 +55,7 @@ def wrong_sheet_bindings(
 
 
 def _generated_bindings() -> dict[str, tuple[list[str], list[str]]]:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     found: dict[str, tuple[list[str], list[str]]] = {}
     for modelo in sorted(authority.modelos, key=lambda item: str(item.id)):
         for revision in sorted(modelo.revisions.values(), key=lambda item: str(item.id)):

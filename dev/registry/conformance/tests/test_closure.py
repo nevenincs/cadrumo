@@ -11,7 +11,7 @@ from pydantic import ValidationError
 from typer.testing import CliRunner
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.conformance.closure_models import (
     RegistryClosureEvidence,
     RegistryClosureFilingChannelRefusal,
@@ -260,7 +260,7 @@ def _assert_stdout_is_only_closure_report_lines(stdout: str) -> None:
 
 def test_cli_live_mode_uses_canonical_loaders_but_blocks_without_durable_filing_proof() -> None:
     """Live canonical loading explicitly refuses unavailable encrypted replay."""
-    canonical_report = load_registry_closure_report(as_of=_AS_OF, registry_authority=bundled_authority())
+    canonical_report = load_registry_closure_report(as_of=_AS_OF, registry_authority=compiled_bundled_authority())
 
     result = CliRunner().invoke(app, ["closure", "--check"])
 
@@ -320,7 +320,7 @@ def test_actual_cli_ignores_exact_hostile_authority_context() -> None:
     """
     filing = _HostileFilingExportAuthority()
     hostile = RegistryClosureAuthorities(
-        registry=bundled_authority(),
+        registry=compiled_bundled_authority(),
         filing_export=filing,
     )
 

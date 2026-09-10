@@ -8,8 +8,9 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..analysis.casilla_lineage_seed import (
     LineagePlan,
@@ -164,7 +165,7 @@ def test_a_differing_value_already_present_is_never_overwritten() -> None:
 
 @pytest.fixture(scope="module")
 def authority() -> ValidatedRegistryAuthority:
-    return bundled_authority()
+    return compiled_bundled_authority()
 
 
 def test_the_contradiction_check_catches_a_planted_absence_on_a_live_chain(

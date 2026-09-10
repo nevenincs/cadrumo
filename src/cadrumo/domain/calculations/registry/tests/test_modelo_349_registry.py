@@ -17,11 +17,11 @@ from .....tests.registry_snapshot import build_snapshot
 from ...export_field_kind import CasillaFieldKind
 from .._validate import RegistryValidator
 from ..authority import bundled_authority
-from ..corpus_catalogue import verify_source_file
+from dev.registry.compiler.corpus_catalogue import verify_source_file
 from ..export import derive_export_layouts_from_bindings, resolve_export_layout
 from ..export_parse import parse_export_payload
 from ..fixed_width_codec import ExportEncoding
-from ..legal import verify_legal_catalogue
+from dev.registry.compiler.legal_grounding import verify_legal_catalogue
 from ..schema import RegistrySnapshot
 from ..schema_exports import ExportFieldDefinition
 from ..schema_input_kind import InputKind

@@ -266,7 +266,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.VALIDATION_VERDICT_CACHE,
         "cache/registry-verdict",
-        consumer_module="domain/calculations/registry/_verdict_cache.py",
+        consumer_module="dev/registry/compiler/verdict_cache.py",
         settings_field="cadrumo_validation_verdict_cache_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.CACHE,

@@ -18,13 +18,14 @@ from cadrumo.adapters.persistence.storage.errors import PersistenceError, Secret
 from cadrumo.application.filing.runtime import RegistrySchemaAccessor
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.static_inspection import (
     RegistryRevisionInspection,
     StaticGeneratedArtifactInspection,
 )
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
 
 from .. import filing_export_proof
@@ -347,7 +348,7 @@ def test_static_projection_preserves_every_strict_disposition_and_fails_closed_o
     forbids. This asserts the stronger property: no strict disposition is lost,
     and the only extra degraded residues are exactly the strict success set.
     """
-    registry = bundled_authority()
+    registry = compiled_bundled_authority()
     classification = load_registry_diagnostic_classification(
         bundled_path("registry", "aeat"),
         source_root=bundled_path(),
@@ -403,7 +404,7 @@ def test_static_projection_preserves_every_strict_disposition_and_fails_closed_o
 def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel() -> None:
     """Every public candidate retains its exact refusal residue."""
     try:
-        registry = bundled_authority()
+        registry = compiled_bundled_authority()
     except RegistryValidationError as strict_error:
         classification = load_registry_diagnostic_classification(
             bundled_path("registry", "aeat"),

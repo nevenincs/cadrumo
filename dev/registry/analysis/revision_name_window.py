@@ -69,8 +69,9 @@ import re
 import sys
 from dataclasses import dataclass
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .corpus import bundled_modelo_ids
 
@@ -225,7 +226,7 @@ def screen_authority(
 
 def main() -> int:
     """Print one greppable row per finding and a closing census; always exit 0."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     findings = screen_authority(authority, bundled_modelo_ids())
     census: dict[str, int] = {}
     for finding in findings:

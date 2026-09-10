@@ -219,7 +219,7 @@ def test_scaffolded_tree_is_refused_by_the_directory_mode_loader(tmp_path: Path)
     visible here rather than passing under a docstring that no longer
     describes what fires.
     """
-    from cadrumo.domain.calculations.registry.loader import load_modelo_directory
+    from dev.registry.compiler.loader import load_modelo_directory
 
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
     manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)

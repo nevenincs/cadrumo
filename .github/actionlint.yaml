@@ -12,10 +12,7 @@
 # absent. Adding a runner with a new label means declaring it here, which is what
 # makes the typo detectable.
 self-hosted-runner:
-  labels:
-    # Carried by the Windows runner that owns the Scoop bucket publication path.
-    # Labels are additive and this fleet has one Windows runner, so the label
-    # selects that runner for the Scoop lane; it does not keep other Windows
-    # lanes off it. Isolating the publication path needs a second runner, not a
-    # second label.
-    - windows-scoop
+  # None today. The fleet standard allows only OS/arch plus the capabilities
+  # gpu, cuda, build and dev-runner; declare one here only when a workflow
+  # selects it.
+  labels: []

@@ -37,10 +37,10 @@ from __future__ import annotations
 from collections.abc import Callable, Collection
 
 import pytest
+from dev.registry.compiler.loader import load_catalogue_file
 
 from ....core.directory_scan import scan_directory
 from ....core.resources.bundled_data import bundled_path
-from ...calculations.registry.loader import load_catalogue_file
 from ..catalogue import iva_catalogue_years
 from ..place_of_supply import place_of_supply_years
 

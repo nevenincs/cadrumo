@@ -27,9 +27,10 @@ from datetime import date
 from decimal import Decimal
 from functools import cache
 
+from dev.registry.compiler.loader import load_registry_tree
+
 from ....core.resources.bundled_data import bundled_path
 from ...calculations.registry.formula_runtime_ops import resolve_parameter
-from ...calculations.registry.loader import load_registry_tree
 from ...calculations.registry.static_inspection import RegistryRevisionInspection
 from ...calculations.registry.temporal import select_revision
 from ..family_types import MinimoDescendientesThresholds

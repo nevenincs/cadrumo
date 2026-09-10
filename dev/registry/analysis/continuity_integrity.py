@@ -36,8 +36,9 @@ import collections
 import sys
 from dataclasses import dataclass
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .casilla_id_grammar import classify_casilla_id
 from .corpus import bundled_modelo_ids
@@ -169,7 +170,7 @@ def continuity_census(authority: ValidatedRegistryAuthority, modelo_ids: tuple[s
 
 def main() -> int:
     """Print one greppable row per finding and a closing census; always exit 0."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo_ids = bundled_modelo_ids()
     findings = screen_authority(authority, modelo_ids)
     census = continuity_census(authority, modelo_ids)

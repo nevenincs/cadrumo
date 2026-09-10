@@ -42,7 +42,7 @@ import tomllib
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .._paths import REPO_ROOT
 from ..quality.unread_inputs import report_unread
@@ -140,7 +140,7 @@ def _routed() -> tuple[list[tuple[str, str, str, str, str]], int]:
     )
     offenders: list[tuple[str, str, str, str, str]] = []
     resolved = 0
-    for modelo in bundled_authority().modelos:
+    for modelo in compiled_bundled_authority().modelos:
         for revision_id, revision in modelo.revisions.items():
             for casilla in revision.casillas:
                 for ref in list(getattr(casilla, "export_refs", []) or []):
@@ -178,7 +178,7 @@ def test_value_bearing_kinds_are_not_swept_up() -> None:
     """
     kinds = _entry_kinds()
     routed_kinds = set()
-    for modelo in bundled_authority().modelos:
+    for modelo in compiled_bundled_authority().modelos:
         for revision in modelo.revisions.values():
             for casilla in revision.casillas:
                 for ref in list(getattr(casilla, "export_refs", []) or []):

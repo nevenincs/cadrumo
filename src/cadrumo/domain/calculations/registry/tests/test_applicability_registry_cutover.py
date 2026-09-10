@@ -26,12 +26,12 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compile_validated_authority
 
 from .....core.modelo import Modelo
 from .....domain.contribuyente.entity_type import EntityType
 from .....domain.deadlines.models import FiscalResidency, IVARegime, TaxpayerProfile
 from ..applicability import ApplicabilityVerdict, ModeloApplicabilityRule, resolve_applicability_rule_from_authority
-from ..authority import ValidatedRegistryAuthority
 from ._loader_directory_mode_support import write_extracted_corpus_sidecar, write_fragmented_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -205,7 +205,7 @@ def test_registry_resolved_rule_matches_the_literal_it_transcribes_per_profile(t
     ``ModeloApplicability`` results the application actually consumes.
     """
     _write_scratch_tree(tmp_path, applicable_reason="applies")
-    authority = ValidatedRegistryAuthority.load(tmp_path / "registry" / "aeat", source_root=tmp_path)
+    authority = compile_validated_authority(tmp_path / "registry" / "aeat", tmp_path)
 
     registry_rule = resolve_applicability_rule_from_authority(authority, Modelo.M100)
     literal_rule = _literal_equivalent_rule()
@@ -243,7 +243,7 @@ def test_a_fresh_authority_sees_a_mutated_applicability_rule(tmp_path: Path) -> 
     _write_scratch_tree(tmp_path, applicable_reason="applies (original)")
     registry_root = tmp_path / "registry" / "aeat"
 
-    original_authority = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
+    original_authority = compile_validated_authority(registry_root, tmp_path)
     original_rule = resolve_applicability_rule_from_authority(original_authority, Modelo.M100)
     assert original_rule.applicable_reason == "applies (original)"
 
@@ -256,7 +256,7 @@ def test_a_fresh_authority_sees_a_mutated_applicability_rule(tmp_path: Path) -> 
         encoding="utf-8",
     )
 
-    mutated_authority = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
+    mutated_authority = compile_validated_authority(registry_root, tmp_path)
     assert mutated_authority is not original_authority, (
         "the fingerprint-keyed authority cache must key a new instance on the mutated content, or this proof is vacuous"
     )

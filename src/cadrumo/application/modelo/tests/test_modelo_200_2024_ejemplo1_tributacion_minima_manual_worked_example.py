@@ -125,6 +125,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compile_validated_authority
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -135,7 +136,7 @@ from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....core.resources.bundled_data import bundled_path
-from ....domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.tests.manual_oracle_support import oracle_declared_figures
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -424,7 +425,7 @@ def test_m200_2024_manual_grounding_is_enrolled_and_raises_independently_grounde
     and validated data, never hand-computed or asserted from a synthetic
     fixture.
     """
-    authority = ValidatedRegistryAuthority.load(_REGISTRY_ROOT, source_root=_SOURCE_ROOT)
+    authority = compile_validated_authority(_REGISTRY_ROOT, _SOURCE_ROOT)
     snapshot = authority.snapshot(
         _M200,
         filing_year=_FILING_YEAR,

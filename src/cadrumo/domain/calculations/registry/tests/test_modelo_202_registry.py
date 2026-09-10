@@ -13,7 +13,7 @@ from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_snapshot import build_snapshot
 from .._validate import RegistryValidator
 from ..formula_runtime import _evaluate_expression
-from ..legal import verify_legal_catalogue
+from dev.registry.compiler.legal_grounding import verify_legal_catalogue
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..schema_formula import FormulaExpression
 from ._registry_schema_support import _committed_modelo

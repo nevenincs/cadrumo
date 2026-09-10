@@ -41,8 +41,8 @@ from .python_cohort import assert_installed_cohort, load_python_cohort
 
 _COHORT_PROBE = """
 from importlib.metadata import requires, version
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 
 root_version = version("cadrumo")
 expected = {
@@ -58,7 +58,7 @@ for distribution in ("cadrumo-data-manuals", "cadrumo-data-official"):
     if observed != root_version:
         raise SystemExit(f"{distribution} version {observed!r} != root version {root_version!r}")
 
-authority = bundled_authority()
+authority = compiled_bundled_authority()
 authority.validate_registry()
 print(f"three-wheel-cohort-ok: {root_version}")
 """

@@ -34,8 +34,8 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor, ModeloDefinition, ModeloRevision
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 __all__ = [
     "GENERATION_MANIFEST_NAME",
@@ -151,7 +151,9 @@ def type_column_coverage(
 
 def main() -> int:
     """Print the coverage census and every revision no instrument reads."""
-    rows = type_column_coverage(bundled_authority().modelos, modelos_root=bundled_path("registry", "aeat", "modelos"))
+    rows = type_column_coverage(
+        compiled_bundled_authority().modelos, modelos_root=bundled_path("registry", "aeat", "modelos")
+    )
     for state in TypeColumnCoverage:
         print(f"{state.value:22s} {sum(1 for row in rows if row.coverage is state)}")
     for row in rows:

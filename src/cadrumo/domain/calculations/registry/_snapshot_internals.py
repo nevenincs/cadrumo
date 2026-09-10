@@ -14,8 +14,8 @@ from typing import Protocol
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
-from ._validate_orden_aplicabilidad import RevisionLegalApplicabilityWindow, validate_orden_aplicabilidad
-from ._validate_revision_context import records_by_id
+from .orden_applicability import RevisionLegalApplicabilityWindow, validate_orden_aplicabilidad
+from .revision_context import records_by_id
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
 from .export import derive_export_layouts_from_bindings
 from .ids import RevisionId
@@ -27,7 +27,7 @@ from .schema_references import LegalReference, SourceReference, governed_period_
 from .schema_surfaces import CasillaDefinition
 from .temporal import select_revision
 from .validate_cross_domain_snapshot import REQUIRED_CROSS_DOMAIN_CHECK_IDENTITIES
-from .validate_references import check_all_id_references
+from .reference_checks import check_all_id_references
 from .validate_revision_identity import revision_reference_identity_failures
 
 

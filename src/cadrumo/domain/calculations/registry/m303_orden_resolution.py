@@ -8,11 +8,11 @@ from typing import TYPE_CHECKING
 from ....core.modelo import Modelo
 from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScopeDecision
 from ....domain.period import period_end_date
-from ._supplementary_orden import supplementary_orden_authority
 from .errors import RegistryValidationError
 from .ids import SourceRefId
 from .m303_orden_projection_models import (
     ActividadOrdenAnualRef,
+    M303AnnualOrdenAuthority,
     M303AnnualOrdenProjection,
     M303AnnualOrdenSnapshot,
     M303RegimenSimplificadoSnapshot,
@@ -80,9 +80,8 @@ def _select_m303_annual_orden_projection(registry_snapshot: RegistrySnapshot) ->
     """Select the internal projection consumed only by the canonical resolver."""
     if registry_snapshot.modelo.id != Modelo.M303:
         raise RegistryValidationError("annual Orden projection selector requires a Modelo 303 registry snapshot")
-    return supplementary_orden_authority(
-        registry_snapshot.supplementary_ordenes,
-        Modelo.M303,
+    return registry_snapshot.supplementary_ordenes.get(
+        Modelo.M303, M303AnnualOrdenAuthority.empty()
     ).require_projection(
         ejercicio=registry_snapshot.filing_year,
         registry_revision_id=registry_snapshot.revision.id,

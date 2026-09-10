@@ -12,7 +12,7 @@ from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_snapshot import build_snapshot
 from .._validate import RegistryValidator
 from ..formula_runtime import calculate_registry_snapshot
-from ..legal import verify_legal_catalogue
+from dev.registry.compiler.legal_grounding import verify_legal_catalogue
 from ..relations import relation_source_requirements
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..schema_input_kind import InputKind

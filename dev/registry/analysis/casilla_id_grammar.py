@@ -41,7 +41,8 @@ import re
 import sys
 from dataclasses import dataclass
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .corpus import bundled_modelo_ids
 
@@ -126,7 +127,7 @@ def screen_authority(
 
 def main() -> int:
     """Print one row per modelo, then a corpus-wide census; always exit 0."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     uses = screen_authority(authority, bundled_modelo_ids())
     corpus: collections.Counter[str] = collections.Counter()
     mixing = 0

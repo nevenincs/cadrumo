@@ -174,9 +174,8 @@ What counts as "assumed" is measured, not guessed. Parsing the `run:` blocks of
 every workflow shows `uv`, `just`, and `node` are each installed by a pinned
 setup action, while **`gh` is invoked by four workflows and installed by none**
 (`packaging-campaign-trigger`, `packaging-homebrew`, `packaging-scoop` and
-`release-please`). `packaging-scoop` requests the `windows-scoop` label that no
-runner carries, so that lane never schedules and `scoop` is deliberately not
-probed.
+`release-please`). `scoop` is not probed here: `packaging-scoop` verifies its
+own Scoop profile in its preflight.
 
 **`.path` beats `.env`, and that is how `gh` went missing on macOS.** The runner
 root can hold both files. `.env` sets the service environment; `.path` sets the

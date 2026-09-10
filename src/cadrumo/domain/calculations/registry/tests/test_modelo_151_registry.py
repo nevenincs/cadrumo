@@ -6,7 +6,7 @@ import pytest
 
 from .....core.resources.bundled_data import bundled_path
 from .._validate import RegistryValidator
-from ..legal import verify_legal_catalogue
+from dev.registry.compiler.legal_grounding import verify_legal_catalogue
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ._registry_schema_support import _committed_modelo
 

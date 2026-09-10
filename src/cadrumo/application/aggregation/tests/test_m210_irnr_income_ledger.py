@@ -7,6 +7,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.loader import load_modelo_directory
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -15,7 +16,6 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....core.irnr import M210GrossIncomeSourceMode, M210PayerMode
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.calculations.registry.loader import load_modelo_directory
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.row_models import Modelo210AgrupacionRentaRow
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection

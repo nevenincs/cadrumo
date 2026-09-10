@@ -26,7 +26,7 @@ from pydantic import BaseModel
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.resources.bundled_data import bundled_path
-from ...domain.calculations.registry.edition_materialisation import MaterialisedEdition, materialise_edition
+from dev.registry.compiler.edition_materialisation import MaterialisedEdition, materialise_edition
 from ...domain.calculations.registry.errors import RegistryLoadError
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.loader_cache import ModeloSource, discover_modelo_sources

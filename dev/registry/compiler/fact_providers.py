@@ -11,8 +11,8 @@ from typing import Protocol
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
-from cadrumo.domain.calculations.registry.loader_cache import toml_file_fingerprint
-from cadrumo.domain.calculations.registry.loader_fingerprints import RegistryPathFingerprints
+from .loader_cache import toml_file_fingerprint
+from .loader_fingerprints import RegistryPathFingerprints
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from dev.registry.compiler.fact_loader import is_governed_fact_filename, load_governed_facts
 
@@ -275,6 +275,8 @@ def _holiday_calendar_provider_registration() -> FactProviderRegistration:
     from cadrumo.domain.deadlines.festivos import (
         HOLIDAY_CALENDAR_PROVIDER_DIRECTORY,
         HOLIDAY_CALENDAR_PROVIDER_ID,
+    )
+    from dev.registry.compiler.holidays import (
         collect_holiday_calendar_fact_fingerprints,
         compile_holiday_calendar_facts,
         reset_holiday_calendar_fact_provider,
@@ -311,6 +313,8 @@ def _category_profile_provider_registration() -> FactProviderRegistration:
     from cadrumo.domain.categories.registry import (
         CATEGORY_FACT_PROVIDER_DIRECTORY,
         CATEGORY_FACT_PROVIDER_ID,
+    )
+    from dev.registry.compiler.categories import (
         collect_category_profile_fact_fingerprints,
         compile_category_profile_facts,
         reset_category_profile_fact_provider,

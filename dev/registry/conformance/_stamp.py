@@ -200,7 +200,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-from cadrumo.domain.calculations.registry.loader import load_modelo_directory
+from dev.registry.compiler.loader import load_modelo_directory
 from pydantic import ValidationError as PydanticValidationError
 
 from cadrumo.core.external_constants import UTF_8_ENCODING
@@ -216,6 +216,7 @@ from cadrumo.domain.calculations.registry.schema import (
     NoPredecessor,
 )
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+from dev.registry.compiler.loader import load_modelo_directory
 
 from .manager import reset_conformance_cache
 

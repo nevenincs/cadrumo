@@ -24,10 +24,10 @@ from collections.abc import Iterable
 from datetime import date
 
 import pytest
+from dev.registry.compiler.loader import load_registry_tree
 
 from ....core.resources.bundled_data import bundled_path
 from ....core.validity_window import ValidityWindow
-from ...calculations.registry.loader import load_registry_tree
 from ...calculations.registry.schema_references import LegalReference
 from ..catalogue import bundled_iva_catalogue
 from ..place_of_supply import load_place_of_supply_table

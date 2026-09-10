@@ -22,9 +22,9 @@ def registry_authority() -> ValidatedRegistryAuthority:
 def registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
     """Compile-only registry tree, independent of ``registry_authority``.
 
-    ``registry_authority`` (``ValidatedRegistryAuthority.load`` via
-    ``resources()``) eagerly validates every modelo in the tree before it
-    returns, so one modelo missing filing capability breaks every caller
+    ``registry_authority`` (``bundled_authority()``) exists only once every
+    modelo in the tree validated for publication, so one modelo missing
+    filing capability breaks every caller
     regardless of which modelo, or which grade of question, it actually
     asks. ``registry_snapshot`` below only ever needs ONE modelo's compiled
     definition plus the shared catalogues, so it loads independently of the

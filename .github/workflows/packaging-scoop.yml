@@ -2,9 +2,12 @@
 # The clean acquisition runs NATIVELY, in the Scoop profile of a dedicated
 # non-admin runner user. Runs on the self-hosted fleet ONLY (operator mandate
 # 2026-07-21: no hosted/cloud runners, ever — expense control is absolute) and
-# schedules only onto the `windows-scoop`-labelled runner, so the fleet's one
-# Docker daemon stays permanently in Linux-container mode and the standing
-# Linux runners are never torn down for a container-mode switch.
+# schedules onto the fleet's one self-hosted Windows runner by its platform
+# labels alone, so the fleet's one Docker daemon stays permanently in
+# Linux-container mode and the standing Linux runners are never torn down for a
+# container-mode switch. The fleet standard allows only OS/arch plus the
+# capabilities {gpu, cuda, build, dev-runner} as labels; a repo/tool label such
+# as the former `windows-scoop` is refused by the fleet audit.
 #
 # Scoop is a user-scope, no-admin package manager: a real acquisition needs a
 # normal Windows user profile, PowerShell, and network, not a container, so
@@ -38,12 +41,9 @@ permissions:
   contents: read
 
 jobs:
-  # This lane requests `windows-scoop`, which NO runner on the fleet carries —
-  # it has never been schedulable, and restoring the Windows runner will not
-  # make it so, because that registration carries only the platform triple. The
-  # label is correct and stays (the acquisition ADR requires a dedicated
-  # non-admin runner user); what changes is that dispatching it now fails in
-  # minutes with the missing label named, instead of queueing for 24 hours.
+  # If no online runner can serve the lane (the fleet's one Windows runner is
+  # down or de-registered), dispatching it fails in minutes with the missing
+  # selector named, instead of queueing for 24 hours.
   runner-queue-watchdog:
     name: "Check: Runner queue (Linux)"
     runs-on: [self-hosted, Linux, X64]
@@ -67,7 +67,7 @@ jobs:
 
   cadrumo-scoop-acquisition:
     name: "Test: Channel acquisition (Windows)"
-    runs-on: [self-hosted, Windows, X64, windows-scoop]
+    runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 90
     permissions:
       actions: read

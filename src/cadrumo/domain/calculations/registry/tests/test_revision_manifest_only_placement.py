@@ -19,11 +19,11 @@ from pathlib import Path
 from typing import Annotated
 
 import pytest
+from dev.registry.compiler.loader import load_modelo_directory
 
 from .....tests.registry_tree import bundled_registry_tree
 from .. import _loader_internals as _loader
 from ..errors import RegistryLoadError
-from ..loader import load_modelo_directory
 from ..schema import (
     REVISION_GOVERNANCE_FIELDS,
     REVISION_MANIFEST_ONLY_FIELDS,

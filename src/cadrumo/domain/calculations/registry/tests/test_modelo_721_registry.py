@@ -10,9 +10,9 @@ import pytest
 
 from .....core.resources.bundled_data import bundled_path
 from .....tests import REPO_ROOT
-from ..corpus_catalogue import verify_source_file
+from dev.registry.compiler.corpus_catalogue import verify_source_file
 from ..errors import NoRevisionForPeriodError, RegistryValidationError
-from ..legal import verify_legal_catalogue
+from dev.registry.compiler.legal_grounding import verify_legal_catalogue
 from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from ..temporal import select_revision
 from ._registry_schema_support import _committed_modelo

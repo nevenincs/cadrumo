@@ -17,10 +17,10 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.directory_scan import iter_directory
 from cadrumo.core.link_safety import is_link_like
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.identity import resolve_registry_identity
+from dev.registry.compiler.identity import resolve_registry_identity
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
-from cadrumo.domain.calculations.registry.validate_registry_scope import validate_registry_scope
+from dev.registry.compiler.registry_scope import validate_registry_scope
 from cadrumo.tests.registry_snapshot import build_snapshot
 from dev.registry.compiler.authority import compile_validated_authority
 from dev.registry.compiler.loader import collect_registry_tree_fingerprints, load_modelo_directory, load_registry_tree

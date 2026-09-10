@@ -17,7 +17,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.casilla_legal_citation_period import (
     CasillaCitationKey,
     CitationPeriodRefusal,
@@ -26,6 +25,7 @@ from cadrumo.domain.calculations.registry.casilla_legal_citation_period import (
 )
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..analysis.corpus import bundled_modelo_ids
 from ..analysis.legal_citation_period_ledger import (
@@ -41,13 +41,13 @@ _SHOWN = 20
 
 @pytest.fixture(scope="module")
 def corpus() -> tuple[ModeloDefinition, ...]:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     return tuple(authority.modelo(modelo_id) for modelo_id in bundled_modelo_ids())
 
 
 @pytest.fixture(scope="module")
 def legal() -> Mapping[str, LegalReference]:
-    return bundled_authority().catalogues.legal
+    return compiled_bundled_authority().catalogues.legal
 
 
 @pytest.fixture(scope="module")

@@ -29,8 +29,8 @@ from cadrumo.domain.calculations.registry.facts.schema import (
     MappingFactPayload,
     ScalarFactPayload,
 )
-from cadrumo.domain.calculations.registry.loader_cache import toml_file_fingerprint
-from cadrumo.domain.calculations.registry.loader_fingerprints import RegistryPathFingerprints
+from .loader_cache import toml_file_fingerprint
+from .loader_fingerprints import RegistryPathFingerprints
 from cadrumo.domain.calculations.registry.schema_base import DateAxis, SourceCitation
 from cadrumo.domain.categories.errors import CategoryValidationError
 from cadrumo.domain.categories.profile import CategoryProfile, IvaDeductibilityHint

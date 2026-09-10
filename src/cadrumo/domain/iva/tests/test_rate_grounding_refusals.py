@@ -185,7 +185,7 @@ def test_a_source_verified_on_an_earlier_row_still_grounds_a_later_row() -> None
     either silently fails to hold this test passes while proving nothing: the
     source must really verify, and row one must really populate the memo.
     """
-    from ...calculations.registry.loader import load_registry_tree
+    from dev.registry.compiler.loader import load_registry_tree
 
     source_root = bundled_path()
     _, catalogues = load_registry_tree(source_root / "registry" / "aeat")

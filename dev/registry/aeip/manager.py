@@ -42,12 +42,13 @@ from dataclasses import dataclass, field
 from itertools import pairwise
 from pathlib import Path
 
-from cadrumo.domain.calculations.registry.loader import load_modelo_directory
+from dev.registry.compiler.loader import load_modelo_directory
 from pydantic import TypeAdapter, ValidationError
 
 from cadrumo.core.i18n import MissingTranslationError
 from cadrumo.core.identity import ContinuidadId
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from dev.registry.compiler.loader import load_modelo_directory
 
 from .adjudications import AdjudicationSet
 

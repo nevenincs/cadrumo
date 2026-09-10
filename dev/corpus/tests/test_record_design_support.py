@@ -27,6 +27,7 @@ from ..sync_aeat_record_design_corpus import (
     _authority_failures,
     _load_manifests,
     _Manifest,
+    _payload_paths,
     _record_design_catalogue,
     _root_aggregate,
     check,
@@ -277,6 +278,42 @@ def test_the_shipped_root_census_agrees_with_the_shipped_manifests() -> None:
 
     for field, expected in _root_aggregate(_load_manifests()).items():
         assert root[field] == expected, f"root manifest {field} disagrees with the per-modelo manifests"
+
+
+def test_shipped_record_design_catalogue_classifies_its_full_sync_payload_boundary() -> None:
+    """Every sync-owned payload has one role, except the explicit tracked debt.
+
+    This is deliberately the record-design synchronizer's boundary, not a
+    traversal of all bundled ``_data``.  Its payload walk includes manifested
+    official files and the two named sheet-text derivatives, while project
+    declarations remain owned by their separate declaration contracts.
+    """
+    catalogue, failures = _record_design_catalogue(_load_manifests(), _CORPUS)
+    payload_paths = set(_payload_paths(_CORPUS))
+    explicit_debt = {PurePosixPath(path) for path in _UNATTESTED_CORPUS_FILES}
+
+    assert failures == []
+    assert catalogue is not None
+    assert {
+        diagnostic.path
+        for diagnostic in catalogue.diagnostics
+        if diagnostic.kind is ArtifactDiagnosticKind.UNKNOWN_FILE
+    } == explicit_debt
+    assert all(diagnostic.kind is ArtifactDiagnosticKind.UNKNOWN_FILE for diagnostic in catalogue.diagnostics)
+    assert set(catalogue.roles) | explicit_debt == payload_paths
+    assert set(catalogue.roles).isdisjoint(explicit_debt)
+    assert set(catalogue.roles.values()) <= {
+        ArtifactRole.OFFICIAL_ARTIFACT,
+        ArtifactRole.DERIVED_ARTIFACT,
+    }
+    assert {path for path, role in catalogue.roles.items() if role is ArtifactRole.OFFICIAL_ARTIFACT} == set(
+        catalogue.identities
+    )
+    assert {derivative.path for derivative in _EXTRACTION_SIDECAR_DERIVATIONS} <= set(catalogue.roles)
+    assert all(
+        catalogue.roles[derivative.path] is ArtifactRole.DERIVED_ARTIFACT
+        for derivative in _EXTRACTION_SIDECAR_DERIVATIONS
+    )
 
 
 def _corpus_fixture(tmp_path: Path) -> dict[str, _Manifest]:

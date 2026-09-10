@@ -26,7 +26,8 @@ from pathlib import Path
 from typing import Final, Literal
 
 from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .capability_continuity import screen_authority as capability_continuity_screen
 from .casilla_id_grammar import screen_authority as grammar_screen
@@ -411,7 +412,7 @@ def run_corpus_screens() -> tuple[tuple[str, int, str], ...]:
 
 def main() -> int:
     """Print one census row per screen and a closing total; always exit 0."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo_ids = tuple(sorted(str(code) for code in registry_modelo_codes()))
     results = run_screens(authority, modelo_ids)
     for name, count, meaning in results:

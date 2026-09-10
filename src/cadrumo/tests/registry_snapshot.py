@@ -10,9 +10,10 @@ from __future__ import annotations
 from datetime import date
 from pathlib import Path
 
+from dev.registry.compiler.validator import RegistryValidator
+
 from ..core.authority_grade import RegistryAuthorityGrade
 from ..domain.calculations.registry._snapshot_internals import _build_validated_snapshot
-from ..domain.calculations.registry._validate import RegistryValidator
 from ..domain.calculations.registry.ids import RevisionId
 from ..domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 

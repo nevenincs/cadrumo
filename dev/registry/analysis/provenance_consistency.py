@@ -33,8 +33,9 @@ import sys
 from dataclasses import dataclass
 from typing import Literal, Protocol
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema import SCHEMA_FAMILY, ModeloRevision
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.maintenance_support import resolved_export_endpoints
 
 from .corpus import bundled_modelo_ids
@@ -272,14 +273,14 @@ def outside_reference_scope(
 
 def main() -> int:
     """Print one greppable row per outside reference and a per-kind summary; always exit 0."""
-    findings = screen_authority(bundled_authority(), bundled_modelo_ids())
+    findings = screen_authority(compiled_bundled_authority(), bundled_modelo_ids())
     index = outside_reference_index(findings)
     for (modelo, revision, ref_kind, reference), sites in sorted(index.items()):
         sys.stdout.write(
             f"provenance_outside_manifest modelo={modelo} revision={revision} "
             f"ref_kind={ref_kind} outside={reference} citing_children={sites}\n",
         )
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     scopes = outside_reference_scope(
         index, {modelo: len(authority.modelo(modelo).revisions) for modelo in bundled_modelo_ids()}
     )

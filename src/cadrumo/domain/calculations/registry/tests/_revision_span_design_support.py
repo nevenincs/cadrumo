@@ -6,6 +6,8 @@ import re
 from functools import cache, lru_cache
 from pathlib import Path
 
+from dev.registry.compiler.authority import compile_validated_authority
+
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from .....core.external_constants import PDF_EXTENSION as _PDF_EXTENSION
@@ -105,7 +107,7 @@ _CONSTANT_EJERCICIO_REVERSED = re.compile(
 
 
 def _authority() -> ValidatedRegistryAuthority:
-    return ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
+    return compile_validated_authority(bundled_path("registry", "aeat"), bundled_path())
 
 
 def _design_dir(modelo_id: str) -> Path:

@@ -21,12 +21,12 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.loader import load_modelo_source
 
 from .....core.resources.bundled_data import bundled_path
 from ..errors import RegistryValidationError
 from ..export_value_policy import ExportValuePolicy
 from ..fixed_width_codec import render_fixed_width_export_field
-from ..loader import load_modelo_source
 from ..loader_cache import discover_modelo_sources
 from ..schema_exports import ExportFieldDefinition
 

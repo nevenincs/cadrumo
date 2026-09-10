@@ -9,8 +9,8 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.tests.registry_snapshot import build_snapshot
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.conformance.coverage import (
     ConstructEvidenceLedger,
     ConstructEvidenceRow,
@@ -25,7 +25,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def test_construct_evidence_audit_enumerates_every_declared_construct_and_selector() -> None:
     """The evidence ledger has one exact row for each real revision declaration."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelos = authority.modelos
     audit = audit_registry_construct_evidence(authority)
 

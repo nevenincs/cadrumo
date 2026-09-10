@@ -42,29 +42,14 @@ from collections.abc import Iterable
 from datetime import date, timedelta
 from enum import StrEnum
 from functools import lru_cache
-from pathlib import Path
 from typing import TYPE_CHECKING, Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, StringConstraints, ValidationError
+from pydantic import BaseModel, Field, NonNegativeInt, StringConstraints
 
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.resources.bundled_data import bundled_path
-from ...core.revision_review import RevisionReviewStatus
-from ...core.toml import read_toml
 from ..calculations.registry.facts.resolution import EventFactQuery, ResolvedEventFact
-from ..calculations.registry.facts.schema import (
-    EventFactPayload,
-    FactOwnership,
-    FactSelector,
-    GovernedFact,
-    GovernedFactFamily,
-    GovernedFactVariant,
-    NamedFactValue,
-)
-from ..calculations.registry.loader_cache import toml_file_fingerprint
-from ..calculations.registry.loader_fingerprints import RegistryPathFingerprints
-from ..calculations.registry.schema_base import DateAxis, SourceCitation
+from ..calculations.registry.schema_base import DateAxis
 from .errors import DeadlineValidationError
 
 HOLIDAY_CALENDAR_PROVIDER_ID = "legal-holiday-calendars"
@@ -169,62 +154,6 @@ class HolidayCalendar(BaseModel):
     ccaa: tuple[Holiday, ...] = Field(default_factory=tuple)
 
 
-#: The authoring-boundary config for the festivos TOML rows below.
-#:
-#: Frozen and closed like every other model here, but NOT strict, because these
-#: three rows are the hydration boundary: registry TOML is authored free-form
-#: and this is where its scalars become typed. A ``ccaa_code`` arrives from the
-#: parser as the string ``"ES-MD"``, and strict mode refuses to make it a
-#: :class:`CalendarCCAA` -- so the model that exists to coerce was refusing to.
-#:
-#: It failed closed and then failed quiet. Every bundled calendar raised on load,
-#: :func:`shift_deadline` raised for every input, and its one caller catches that
-#: error and falls back to the unshifted date with a DEBUG log. The AEAT
-#: business-day rule was inert for every year shipped, and nothing said so.
-#:
-#: :class:`Holiday` and :class:`HolidayCalendar` -- the records these rows are
-#: projected onto -- stay strict, which is where strictness belongs.
-_TOML_ROW_CONFIG: ConfigDict = ConfigDict(frozen=True, extra="forbid", validate_default=True)
-
-
-class _NationalHolidayRow(BaseModel):
-    """One ``[[national]]`` row as authored in a festivos TOML file."""
-
-    model_config = _TOML_ROW_CONFIG
-
-    date: date
-    name: _NonEmptyShortString
-
-
-class _CcaaHolidayRow(BaseModel):
-    """One ``[[ccaa]]`` row as authored in a festivos TOML file."""
-
-    model_config = _TOML_ROW_CONFIG
-
-    date: date
-    ccaa_code: CalendarCCAA
-    name: _NonEmptyShortString
-
-
-class _HolidayCalendarToml(BaseModel):
-    """Typed shape of a parsed ``festivos-{year}.toml`` document.
-
-    Validating the loosely-typed :func:`read_toml` result through this
-    boundary model lifts the TOML rows into typed records (coercing the
-    native TOML scalars into the ``date`` and :class:`CalendarCCAA` field
-    types) before they are projected onto the immutable :class:`Holiday`
-    / :class:`HolidayCalendar` domain records, which stay strict.
-    """
-
-    model_config = _TOML_ROW_CONFIG
-
-    year: Annotated[int, Field(ge=2000, le=2100)]
-    boe_ref: _NonEmptyShortString
-    boe_url: str | None = None
-    national: list[_NationalHolidayRow] = Field(default_factory=list)
-    ccaa: list[_CcaaHolidayRow] = Field(default_factory=list)
-
-
 class DeadlineShift(BaseModel):
     """Outcome of applying the AEAT deadline-shift rule to one close date.
 
@@ -272,14 +201,6 @@ MODELOS_WITHOUT_SHIFT: tuple[str, ...] = (Modelo.M369,)
 # ---------------------------------------------------------------------------
 
 
-_CALENDARS_DIR = bundled_path("registry", "aeat", "calendars")
-
-
-def _calendar_path(year: int) -> Path:
-    return _CALENDARS_DIR / f"festivos-{year}.toml"
-
-
-@lru_cache(maxsize=64)
 def load_holiday_calendar(year: int) -> HolidayCalendar:
     """Return the published calendar from the installed authority artifact.
 
@@ -293,109 +214,6 @@ def load_holiday_calendar(year: int) -> HolidayCalendar:
 
 
 @lru_cache(maxsize=64)
-def _load_holiday_calendar_path(year: int, path: Path) -> HolidayCalendar:
-    """Load one exact calendar path for legacy and provider callers."""
-    if not path.exists():
-        raise DeadlineValidationError(f"holiday calendar for year {year} not registered (expected file: {path.name})")
-    raw = read_toml(path, error_factory=DeadlineValidationError)
-
-    declared_year = raw.get("year")
-    if declared_year != year:
-        raise DeadlineValidationError(
-            f"holiday calendar year mismatch: filename declares {year} but TOML declares {declared_year!r}",
-        )
-
-    try:
-        parsed = _HolidayCalendarToml.model_validate(raw)
-        national_entries = tuple(
-            Holiday(
-                holiday_date=entry.date,
-                jurisdiction=HolidayJurisdiction.NATIONAL,
-                ccaa_code=None,
-                name=entry.name,
-            )
-            for entry in parsed.national
-        )
-        ccaa_entries = tuple(
-            Holiday(
-                holiday_date=entry.date,
-                jurisdiction=HolidayJurisdiction.CCAA,
-                ccaa_code=entry.ccaa_code,
-                name=entry.name,
-            )
-            for entry in parsed.ccaa
-        )
-        return HolidayCalendar(
-            year=year,
-            boe_ref=parsed.boe_ref,
-            boe_url=parsed.boe_url,
-            national=national_entries,
-            ccaa=ccaa_entries,
-        )
-    except (KeyError, TypeError, ValueError, ValidationError) as exc:
-        raise DeadlineValidationError(f"{path}: invalid holiday calendar row: {exc}") from exc
-
-
-def compile_holiday_calendar_facts(registry_root: Path) -> tuple[GovernedFact, ...]:
-    """Project BOE-identified calendars while excluding ungrounded bootstrap years."""
-    calendar_root = registry_root.resolve() / HOLIDAY_CALENDAR_PROVIDER_DIRECTORY
-    holiday_variants: list[GovernedFactVariant] = []
-    publication_variants: list[GovernedFactVariant] = []
-    for path in sorted(calendar_root.glob("festivos-*.toml"), key=lambda candidate: candidate.name):
-        year_token = path.stem.removeprefix("festivos-")
-        if not year_token.isdigit():
-            continue
-        calendar = _load_holiday_calendar_path(int(year_token), path.resolve())
-        if calendar.boe_url is None:
-            continue
-        publication_variants.append(_holiday_calendar_publication_variant(calendar))
-        holiday_variants.extend(
-            _holiday_fact_variant(calendar, holiday) for holiday in (*calendar.national, *calendar.ccaa)
-        )
-    if not publication_variants:
-        return ()
-    facts = [
-        GovernedFact(
-            fact_id=HOLIDAY_CALENDAR_PUBLICATION_EVENT_FACT_ID,
-            family=GovernedFactFamily.EVENT,
-            variants=tuple(publication_variants),
-        ),
-    ]
-    if holiday_variants:
-        facts.append(
-            GovernedFact(
-                fact_id=HOLIDAY_EVENT_FACT_ID,
-                family=GovernedFactFamily.EVENT,
-                variants=tuple(holiday_variants),
-            )
-        )
-    return tuple(facts)
-
-
-def _holiday_calendar_publication_variant(calendar: HolidayCalendar) -> GovernedFactVariant:
-    """State that an entire calendar year, including clear dates, is published."""
-    source_ref = f"aeat-calendario-contribuyente-{calendar.year}"
-    return GovernedFactVariant(
-        variant_id=f"holiday-calendar-publication:{calendar.year}",
-        date_axis=DateAxis.SUBMISSION_DATE,
-        valid_from=date(calendar.year, 1, 1),
-        valid_to=date(calendar.year, 12, 31),
-        payload=EventFactPayload(
-            event_date=date(calendar.year, 1, 1),
-            event_code="holiday_calendar_published",
-            outputs=(
-                NamedFactValue(name="boe_ref", value=calendar.boe_ref),
-                NamedFactValue(name="boe_url", value=calendar.boe_url or ""),
-            ),
-        ),
-        legal_refs=(_HOLIDAY_SHIFT_LEGAL_REF,),
-        source_refs=(source_ref,),
-        source_citations=(SourceCitation(source_ref=source_ref, required_text=("Calendario del contribuyente",)),),
-        review_status=RevisionReviewStatus.PENDING_REVIEW,
-        ownership=FactOwnership.GENERATED,
-    )
-
-
 def holiday_calendar_from_authority(
     year: int,
     *,
@@ -463,49 +281,6 @@ def holiday_calendar_from_authority(
         else:
             ccaa.append(holiday)
     return HolidayCalendar(year=year, boe_ref=boe_ref, boe_url=boe_url, national=tuple(national), ccaa=tuple(ccaa))
-
-
-def collect_holiday_calendar_fact_fingerprints(registry_root: Path) -> RegistryPathFingerprints:
-    """Fingerprint every calendar, including excluded bootstrap declarations."""
-    calendar_root = registry_root.resolve() / HOLIDAY_CALENDAR_PROVIDER_DIRECTORY
-    return tuple(toml_file_fingerprint(path.resolve()) for path in sorted(calendar_root.glob("*.toml")))
-
-
-def reset_holiday_calendar_fact_provider() -> None:
-    """Clear both public and provider calendar caches on authority reset."""
-    load_holiday_calendar.cache_clear()
-    _load_holiday_calendar_path.cache_clear()
-
-
-def _holiday_fact_variant(calendar: HolidayCalendar, holiday: Holiday) -> GovernedFactVariant:
-    selectors = [FactSelector(name="jurisdiction", value=holiday.jurisdiction.value)]
-    if holiday.ccaa_code is not None:
-        selectors.append(FactSelector(name="ccaa_code", value=holiday.ccaa_code.value))
-    source_ref = f"aeat-calendario-contribuyente-{calendar.year}"
-    return GovernedFactVariant(
-        variant_id=(
-            f"{holiday.holiday_date.isoformat()}:{holiday.jurisdiction.value}:"
-            f"{holiday.ccaa_code.value.lower() if holiday.ccaa_code is not None else 'es'}"
-        ),
-        selectors=tuple(selectors),
-        date_axis=DateAxis.SUBMISSION_DATE,
-        valid_from=holiday.holiday_date,
-        valid_to=holiday.holiday_date,
-        payload=EventFactPayload(
-            event_date=holiday.holiday_date,
-            event_code="public_holiday",
-            outputs=(
-                NamedFactValue(name="name", value=holiday.name),
-                NamedFactValue(name="boe_ref", value=calendar.boe_ref),
-                NamedFactValue(name="boe_url", value=calendar.boe_url or ""),
-            ),
-        ),
-        legal_refs=(_HOLIDAY_SHIFT_LEGAL_REF,),
-        source_refs=(source_ref,),
-        source_citations=(SourceCitation(source_ref=source_ref, required_text=("Calendario del contribuyente",)),),
-        review_status=RevisionReviewStatus.PENDING_REVIEW,
-        ownership=FactOwnership.GENERATED,
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -717,12 +492,9 @@ __all__ = (
     "Holiday",
     "HolidayCalendar",
     "HolidayJurisdiction",
-    "collect_holiday_calendar_fact_fingerprints",
-    "compile_holiday_calendar_facts",
     "holiday_calendar_from_authority",
     "is_business_day",
     "load_holiday_calendar",
     "next_business_day",
-    "reset_holiday_calendar_fact_provider",
     "shift_deadline",
 )

@@ -35,8 +35,9 @@ import sys
 from dataclasses import dataclass
 
 from cadrumo.core.casilla_id import CasillaId
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.maintenance_support import resolved_export_endpoints
 
 from .corpus import bundled_modelo_ids
@@ -103,7 +104,7 @@ def screen_authority(
 
 def main() -> int:
     """Print one row per distinct transition with its count; always exit 0."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     observed = screen_authority(authority, bundled_modelo_ids())
     pairs = collections.Counter((item.casilla_type, item.wire_type) for item in observed)
     divergent = sum(count for (source, target), count in pairs.items() if source != target)

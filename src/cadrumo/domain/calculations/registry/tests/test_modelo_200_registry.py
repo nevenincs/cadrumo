@@ -22,7 +22,7 @@ from .....tests.registry_snapshot import build_snapshot
 from .._validate import RegistryValidator
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
-from ..legal import verify_legal_catalogue
+from dev.registry.compiler.legal_grounding import verify_legal_catalogue
 from ..runtime_graph import expression_casilla_refs
 from ..schema_input_kind import InputKind
 from ._registry_schema_support import _committed_modelo

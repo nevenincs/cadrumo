@@ -21,10 +21,10 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.loader import load_registry_tree
 
 from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.export import derive_export_layouts_from_bindings
-from ....domain.calculations.registry.loader import load_registry_tree
 from ....domain.calculations.registry.schema_exports import ExportRecordDefinition
 from ..record_renderer import _record_render_rows
 

@@ -99,7 +99,7 @@ from pydantic_core.core_schema import SerializerFunctionWrapHandler
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n import lookup_translation_entry
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.maintenance_support import (
     ExternalOracleInventory,
     UnattributedOraclePayload,
@@ -692,7 +692,7 @@ def _read_locale_coverage() -> tuple[LocaleCoverageIndex, tuple[str, ...]]:
     index: dict[tuple[str, str], tuple[_SharedModeloLocaleCoverageRecord, ...]] = {}
     unavailable: list[str] = []
     try:
-        modelos = bundled_authority().modelos
+        modelos = compiled_bundled_authority().modelos
     except Exception:
         return index, ("<bundled-registry>",)
     for modelo in modelos:
@@ -791,7 +791,7 @@ def build_annual_coordinate_matrix() -> ConformanceCoordinateMatrix:
         RegistrySnapshotError: If the accepted coordinate cannot be resolved by
             the validated registry authority.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     coordinate_items: list[ConformanceCoordinate] = []
     for modelo, filing_year, period in _PROVISIONAL_ANNUAL_COORDINATE_SPECS:
         inspection = authority.inspect_revision(modelo, filing_year=filing_year, period=period)

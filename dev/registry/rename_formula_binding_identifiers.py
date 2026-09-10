@@ -114,7 +114,7 @@ _RENAMED_FAMILIES: tuple[str, ...] = ("formulas", "bindings")
 
 # Families the loader merges by id across fragment files rather than simply
 # concatenating; mirrors _REVISION_SPECIAL_MERGE_FIELDS in
-# cadrumo.domain.calculations.registry._loader_revision_fragments.
+# dev.registry.compiler._loader_revision_fragments.
 _MERGE_BY_ID_DIRS: frozenset[str] = frozenset({"export_layouts", "constructs"})
 
 

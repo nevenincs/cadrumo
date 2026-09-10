@@ -20,13 +20,13 @@ import shutil
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.loader import load_modelo_directory
 
 from .....core.authority_grade import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
 from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from ..errors import RegistryLoadError
-from ..loader import load_modelo_directory
 from ..schema import (
     REVISION_GOVERNANCE_FIELDS,
     REVISION_MANIFEST_ONLY_FIELDS,

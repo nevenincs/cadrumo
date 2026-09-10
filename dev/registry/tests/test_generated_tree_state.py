@@ -11,7 +11,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..analysis import generated_tree_state as _generated_tree_state_module
 from ..analysis.generated_tree_state import STATES, classify_comparison, tree_states
@@ -86,7 +86,7 @@ def test_a_comparison_failure_is_excluded_not_reported_reproducible(
     same discipline the sibling analysis screens already apply to their own
     inapplicable revisions.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo_id, revision_id = next(
         (str(modelo.id), str(revision_id))
         for modelo in authority.modelos

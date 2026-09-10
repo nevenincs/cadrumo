@@ -17,11 +17,11 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler.loader import load_shared_catalogues
 
 from ....core.concepto_ingreso import INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE, ConceptoIngreso
 from ....core.resources.bundled_data import bundled_path
 from ....core.tipos_actividad import TipoActividad
-from ...calculations.registry.loader import load_legal_parameters_only
 from ..tipo_actividad_partitions import tipo_actividad_code_set
 from ..volumen_ingresos import counts_toward_volumen_de_ingresos
 
@@ -87,7 +87,7 @@ def test_the_registry_exclusion_set_agrees_with_the_typed_one() -> None:
     following the enum while the ``legal_refs`` described something else -- grounding
     that had quietly stopped describing the code.
     """
-    parameter = load_legal_parameters_only(bundled_path("registry", "aeat"))[_EXCLUDED_PARAM]
+    parameter = load_shared_catalogues(bundled_path("registry", "aeat")).parameters[_EXCLUDED_PARAM]
     declared = frozenset(ConceptoIngreso(token.strip()) for token in parameter.value.split(",") if token.strip())
 
     assert declared == INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE

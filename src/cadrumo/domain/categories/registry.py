@@ -1,54 +1,18 @@
-"""Read-only spending-category profile registry.
-
-The corpus is ONE undated file. The proportionality rules do not vary by filing
-year; the evidence does, so each citation declares the closed span it is asserted
-over and the resolvable years are derived from those spans rather than from a
-filename.
-
-:func:`load_category_profiles` reads the committed TOML into an immutable mapping
-from :class:`SpendingCategory` to :class:`CategoryProfile` carrying every
-citation. :func:`resolve_category_profiles` projects that corpus onto one filing
-year, keeping only the citations asserted over it, and refuses a year the corpus
-cannot ground. The refusal is deliberate and unchanged from the year-named shape
-this replaced: there is no adjacent-year fallback and no widening, because a
-profile answered from another year's evidence is a rule the operator cannot
-trace.
-"""
+"""Artifact-backed spending-category profile registry."""
 
 from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import date
-from decimal import Decimal
-from functools import lru_cache
-from pathlib import Path
 from types import MappingProxyType
-from typing import TYPE_CHECKING, cast
-
-from pydantic import ValidationError
+from typing import TYPE_CHECKING
 
 from ...core.citation_grounding import CitationGrounding
-from ...core.decimal.coercion import coerce_decimal
 from ...core.i18n import Translatable as tr
-from ...core.revision_review import RevisionReviewStatus
-from ...core.toml import read_toml
-from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
-from ...core.validity_window import ValidityWindow, years_covered_by_any, years_covered_by_every_group
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact, ScalarFactQuery
-from ..calculations.registry.facts.schema import (
-    FactOwnership,
-    FactSelector,
-    GovernedFact,
-    GovernedFactFamily,
-    GovernedFactVariant,
-    MappingFactEntry,
-    MappingFactPayload,
-    ScalarFactPayload,
-)
-from ..calculations.registry.loader_cache import toml_file_fingerprint
-from ..calculations.registry.loader_fingerprints import RegistryPathFingerprints
-from ..calculations.registry.schema_base import DateAxis, SourceCitation
+from ..calculations.registry.facts.schema import FactSelector
+from ..calculations.registry.schema_base import DateAxis
 from .errors import CategoryValidationError
 from .profile import CategoryProfile, IvaDeductibilityHint
 from .proportionality import (
@@ -56,148 +20,46 @@ from .proportionality import (
     CategoryCitationSource,
     ProportionalityKind,
     ProportionalityRule,
-    StatutoryCapAmount,
-    StatutoryCapPeriod,
-    StatutoryCapVariant,
     parse_http_url,
 )
 from .spending_category import SpendingCategory
 
 if TYPE_CHECKING:
     from ..calculations.registry.authority import ValidatedRegistryAuthority
-
 CATEGORY_PROFILE_FACT_ID = "categories.profile"
 CATEGORY_STATUTORY_CAP_FACT_ID = "categories.statutory-cap"
 CATEGORY_FACT_PROVIDER_ID = "category-profiles"
 CATEGORY_FACT_PROVIDER_DIRECTORY = "categories"
-_CATEGORY_CITATION_SOURCE_REFS = {
-    CategoryCitationSource.LEY_IRPF: "lirpf-cuota-chain-authority",
-    CategoryCitationSource.REGLAMENTO_IRPF: "boe-rirpf-category-profile-authority",
-}
 
 
-def load_category_profiles(path: Path | None = None) -> Mapping[SpendingCategory, CategoryProfile]:
-    """Load the committed spending-category profile corpus.
-
-    Args:
-        path: The corpus file. Defaults to the bundled one, resolved through the
-            ``bundled_path`` boundary that is the single resolution surface.
-
-    Returns:
-        Mapping from :class:`SpendingCategory` to :class:`CategoryProfile`,
-        carrying every citation regardless of the span it is asserted over.
-
-    Raises:
-        CategoryValidationError: When the file is unreadable, malformed, carries
-            a duplicate category, or omits a declared spending category.
-    """
-    if path is not None:
-        raise CategoryValidationError("category source paths are available only to development publication tooling")
+def load_category_profiles() -> Mapping[SpendingCategory, CategoryProfile]:
     years = category_profile_years()
     if not years:
         raise CategoryValidationError("installed authority has no complete category profile coverage")
     return resolve_category_profiles(max(years))
 
 
-@lru_cache(maxsize=8)
-def _load_category_profiles_cached(
-    path: str,
-    byte_count: int,
-    modified_ns: int,
-) -> Mapping[SpendingCategory, CategoryProfile]:
-    del byte_count, modified_ns
-    target = Path(path)
-    payload = read_toml(target, error_factory=CategoryValidationError)
-
-    raw_profiles = payload.get("profiles")
-    if not isinstance(raw_profiles, list) or not raw_profiles:
-        raise CategoryValidationError(f"{target}: missing [[profiles]] entries")
-
-    profiles: dict[SpendingCategory, CategoryProfile] = {}
-    for index, raw_profile in enumerate(OBJECT_TUPLE_ADAPTER.validate_python(raw_profiles), start=1):
-        if not isinstance(raw_profile, Mapping):
-            raise CategoryValidationError(f"{target}: profiles[{index}] must be a table")
-        try:
-            profile = _parse_profile(STR_KEYED_MAPPING_ADAPTER.validate_python(raw_profile))
-        except (ValidationError, ValueError) as exc:
-            raise CategoryValidationError(f"{target}: invalid profiles[{index}]: {exc}") from exc
-        if profile.category in profiles:
-            raise CategoryValidationError(f"{target}: duplicate spending category {profile.category.value!r}")
-        profiles[profile.category] = profile
-
-    missing = sorted(category.value for category in set(SpendingCategory) - set(profiles))
-    if missing:
-        raise CategoryValidationError(f"{target}: category profile registry missing categories: {missing}")
-    return MappingProxyType(profiles)
-
-
-def category_profile_years(path: Path | None = None) -> frozenset[int]:
-    """Return every filing year the corpus can be resolved for.
-
-    A year counts only when EVERY profile can be grounded for it: at least one
-    citation asserted over the year AND, where the rule's cap is one the law
-    re-fixes each ejercicio, a scheduled amount for that year. One profile whose
-    evidence stops earlier stops the corpus, because the loader refuses a partial
-    registry anyway -- reporting the year as covered and then failing to assemble
-    it would be the same lie in two places.
-
-    Returns:
-        The derived set of resolvable filing years.
-    """
-    if path is not None:
-        raise CategoryValidationError("category source paths are available only to development publication tooling")
+def category_profile_years() -> frozenset[int]:
     from ..calculations.registry.authority import bundled_authority
 
     fact = bundled_authority().catalogues.facts.facts.get(CATEGORY_PROFILE_FACT_ID)
     if fact is None:
         return frozenset()
-    by_category: dict[str, set[int]] = {}
+    grouped: dict[str, set[int]] = {}
     for variant in fact.variants:
-        category = next((selector.value for selector in variant.selectors if selector.name == "category"), None)
-        if category is None or variant.valid_to is None:
-            continue
-        by_category.setdefault(category, set()).update(range(variant.valid_from.year, variant.valid_to.year + 1))
-    return frozenset.intersection(*by_category.values()) if by_category else frozenset()
-
-
-def _grounding_windows(profile: CategoryProfile) -> tuple[ValidityWindow, ...]:
-    """Return the spans over which ``profile`` is grounded end to end.
-
-    A citation window says the evidence covers a year. For a cap the law
-    re-fixes each ejercicio, the evidence is not enough on its own: without an
-    amount for that year the rule cannot be applied at all. Intersecting the two
-    keeps the corpus from claiming a year it can cite but cannot compute.
-    """
-    rule = profile.proportionality
-    citation_years = years_covered_by_any(citation.window for citation in rule.citations)
-    if not rule.statutory_cap_schedule:
-        return tuple(citation.window for citation in rule.citations)
-    scheduled_years = years_covered_by_any(amount.window for amount in rule.statutory_cap_schedule)
-    both = sorted(citation_years & scheduled_years)
-    return tuple(ValidityWindow(valid_from=date(year, 1, 1), valid_to=date(year, 12, 31)) for year in both)
+        category = next((s.value for s in variant.selectors if s.name == "category"), None)
+        if category is not None and variant.valid_to is not None:
+            grouped.setdefault(category, set()).update(range(variant.valid_from.year, variant.valid_to.year + 1))
+    return frozenset.intersection(*grouped.values()) if grouped else frozenset()
 
 
 def resolve_category_profiles(year: int) -> Mapping[SpendingCategory, CategoryProfile]:
-    """Return the category profile registry as grounded for ``year``.
-
-    Every profile is projected onto ``year``: citations asserted over another
-    span are dropped, so what the caller receives cites only evidence that
-    actually speaks to the year asked for.
-
-    Returns:
-        Mapping from :class:`SpendingCategory` to :class:`CategoryProfile` for
-        ``year``.
-
-    Raises:
-        CategoryValidationError: When the corpus grounds no such year. There is
-            no fallback to an adjacent year.
-    """
     from ..calculations.registry.authority import bundled_authority
 
     authority = bundled_authority()
     profiles: dict[SpendingCategory, CategoryProfile] = {}
     for category in SpendingCategory:
-        resolved = authority.resolve_governed_fact(
+        fact = authority.resolve_governed_fact(
             MappingFactQuery(
                 fact_id=CATEGORY_PROFILE_FACT_ID,
                 date_axis=DateAxis.FILING_PERIOD,
@@ -205,19 +67,15 @@ def resolve_category_profiles(year: int) -> Mapping[SpendingCategory, CategoryPr
                 selectors=(FactSelector(name="category", value=category.value),),
             )
         )
-        if not isinstance(resolved, ResolvedMappingFact):
+        if not isinstance(fact, ResolvedMappingFact):
             raise CategoryValidationError("category profile authority returned a non-mapping fact")
-        profiles[category] = _profile_from_authority_fact(resolved, authority=authority, year=year)
+        profiles[category] = _profile_from_authority_fact(fact, authority=authority, year=year)
     return MappingProxyType(profiles)
 
 
 def _profile_from_authority_fact(
-    resolved: ResolvedMappingFact,
-    *,
-    authority: ValidatedRegistryAuthority,
-    year: int,
+    resolved: ResolvedMappingFact, *, authority: ValidatedRegistryAuthority, year: int
 ) -> CategoryProfile:
-    """Hydrate the public category model from one signed, dated fact."""
     values = {str(entry.key): entry.value for entry in resolved.payload.entries}
     citations: list[CategoryCitation] = []
     index = 0
@@ -241,22 +99,21 @@ def _profile_from_authority_fact(
     cap = None
     if values.get("proportionality_kind") == ProportionalityKind.STATUTORY_CAP.value:
         try:
-            cap_resolved = authority.resolve_governed_fact(  # type: ignore[attr-defined]
+            cap = authority.resolve_governed_fact(
                 ScalarFactQuery(
                     fact_id=CATEGORY_STATUTORY_CAP_FACT_ID,
                     date_axis=DateAxis.FILING_PERIOD,
                     effective_date=date(year, 12, 31),
                     selectors=(FactSelector(name="category", value=resolved.matched_selectors[0].value),),
                 )
-            )
-            cap = cap_resolved.payload.value
+            ).payload.value
         except RegistryValidationError as exc:
             if "statutory_cap_eur" not in values:
                 raise CategoryValidationError(
                     f"category authority has no dated statutory cap for {resolved.matched_selectors[0].value}/{year}"
                 ) from exc
             cap = values["statutory_cap_eur"]
-    rule_data: dict[str, object] = {
+    rule = {
         "kind": values["proportionality_kind"],
         "notes": tr(str(values["notes"])),
         "citations": tuple(citations),
@@ -270,347 +127,9 @@ def _profile_from_authority_fact(
     return CategoryProfile(
         category=SpendingCategory(resolved.matched_selectors[0].value),
         display_label=tr(str(values["display_label"])),
-        proportionality=ProportionalityRule.model_validate(rule_data),
+        proportionality=ProportionalityRule.model_validate(rule),
         iva_hint=IvaDeductibilityHint(str(values["iva_hint"])) if "iva_hint" in values else None,
     )
-
-
-def compile_category_profile_facts(registry_root: Path) -> tuple[GovernedFact, ...]:
-    """Project the retained category corpus into typed governed facts."""
-    target = registry_root.resolve() / CATEGORY_FACT_PROVIDER_DIRECTORY / "profiles.toml"
-    resolved = target.resolve()
-    try:
-        stat = resolved.stat()
-    except OSError as exc:
-        raise CategoryValidationError(f"{resolved}: cannot stat category profile registry: {exc}") from exc
-    profiles = _load_category_profiles_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
-    years = sorted(years_covered_by_every_group(_grounding_windows(profile) for profile in profiles.values()))
-    profile_variants = tuple(
-        _category_profile_fact_variant(profile, year) for profile in profiles.values() for year in years
-    )
-    cap_variants = tuple(
-        _category_cap_fact_variant(profile, amount)
-        for profile in profiles.values()
-        for amount in profile.proportionality.statutory_cap_schedule
-    )
-    facts = [
-        GovernedFact(
-            fact_id=CATEGORY_PROFILE_FACT_ID,
-            family=GovernedFactFamily.MAPPING,
-            variants=profile_variants,
-        ),
-    ]
-    if cap_variants:
-        facts.append(
-            GovernedFact(
-                fact_id=CATEGORY_STATUTORY_CAP_FACT_ID,
-                family=GovernedFactFamily.SCALAR,
-                variants=cap_variants,
-            ),
-        )
-    return tuple(facts)
-
-
-def collect_category_profile_fact_fingerprints(registry_root: Path) -> RegistryPathFingerprints:
-    """Fingerprint the retained category corpus for authority identity.
-
-    An absent corpus contributes NO fingerprint rather than raising. A partial
-    registry - the isolated candidate a generated tree is validated against, or a
-    minimal tree a fixture builds - carries only what its subject needs, and
-    demanding this file turned its absence into a load failure reported far from
-    its cause, as a fingerprint error naming a path nobody asked for.
-
-    Contributing nothing is also the correct identity: there is no content to
-    invalidate on. If the corpus later appears, the fingerprint set changes and
-    the cache invalidates exactly as it should.
-    """
-    target = registry_root.resolve() / CATEGORY_FACT_PROVIDER_DIRECTORY / "profiles.toml"
-    if not target.is_file():
-        return ()
-    return (toml_file_fingerprint(target),)
-
-
-def reset_category_profile_fact_provider() -> None:
-    """Clear every category-provider cache as one authority reset hook."""
-    _load_category_profiles_cached.cache_clear()
-    _resolve_category_profiles_cached.cache_clear()
-
-
-def _category_profile_fact_variant(profile: CategoryProfile, year: int) -> GovernedFactVariant:
-    citations = tuple(citation for citation in profile.proportionality.citations if citation.window.covers_year(year))
-    authority_citations = tuple(
-        citation for citation in citations if citation.source in _CATEGORY_CITATION_SOURCE_REFS and citation.quote
-    )
-    return GovernedFactVariant(
-        variant_id=f"{CATEGORY_PROFILE_FACT_ID}:{profile.category.value}:{year}",
-        selectors=(FactSelector(name="category", value=profile.category.value),),
-        date_axis=DateAxis.FILING_PERIOD,
-        valid_from=date(year, 1, 1),
-        valid_to=date(year, 12, 31),
-        payload=MappingFactPayload(entries=_profile_fact_entries(profile, citations)),
-        legal_refs=_citation_legal_refs(authority_citations),
-        source_refs=tuple(dict.fromkeys(_citation_source_ref(citation) for citation in authority_citations)),
-        source_citations=_source_citations(authority_citations),
-        review_status=RevisionReviewStatus.AGENT_REVIEWED,
-        ownership=FactOwnership.GENERATED,
-    )
-
-
-def _category_cap_fact_variant(profile: CategoryProfile, amount: StatutoryCapAmount) -> GovernedFactVariant:
-    citations = tuple(
-        citation
-        for citation in profile.proportionality.citations
-        if citation.window.valid_from <= amount.window.valid_from and citation.window.valid_to >= amount.window.valid_to
-    )
-    authority_citations = tuple(
-        citation for citation in citations if citation.source in _CATEGORY_CITATION_SOURCE_REFS and citation.quote
-    )
-    return GovernedFactVariant(
-        variant_id=f"{CATEGORY_STATUTORY_CAP_FACT_ID}:{profile.category.value}:{amount.window.valid_from.year}",
-        selectors=(FactSelector(name="category", value=profile.category.value),),
-        date_axis=DateAxis.FILING_PERIOD,
-        valid_from=amount.window.valid_from,
-        valid_to=amount.window.valid_to,
-        payload=ScalarFactPayload(value=amount.value, unit="eur"),
-        legal_refs=_citation_legal_refs(authority_citations),
-        source_refs=tuple(dict.fromkeys(_citation_source_ref(citation) for citation in authority_citations)),
-        source_citations=_source_citations(authority_citations),
-        review_status=RevisionReviewStatus.AGENT_REVIEWED,
-        ownership=FactOwnership.GENERATED,
-    )
-
-
-def _profile_fact_entries(
-    profile: CategoryProfile,
-    citations: tuple[CategoryCitation, ...],
-) -> tuple[MappingFactEntry, ...]:
-    rule = profile.proportionality
-    values: list[tuple[str, str | Decimal | date]] = [
-        ("display_label", str(profile.display_label)),
-        ("proportionality_kind", rule.kind.value),
-        ("notes", str(rule.notes)),
-    ]
-    if profile.iva_hint is not None:
-        values.append(("iva_hint", profile.iva_hint.value))
-    for name in (
-        "fixed_pct",
-        "default_ratio",
-        "statutory_multiplier",
-        "statutory_cap_eur_per_day",
-        "statutory_cap_eur",
-    ):
-        value = getattr(rule, name)
-        if value is not None:
-            values.append((name, value))
-    if rule.statutory_cap_period is not None:
-        values.append(("statutory_cap_period", rule.statutory_cap_period.value))
-    for variant in rule.statutory_cap_variants:
-        values.append((f"statutory_cap_variant.{variant.id}.label", str(variant.label)))
-        if variant.statutory_cap_eur_per_day is not None:
-            values.append((f"statutory_cap_variant.{variant.id}.eur_per_day", variant.statutory_cap_eur_per_day))
-        if variant.statutory_cap_eur is not None:
-            values.append((f"statutory_cap_variant.{variant.id}.eur", variant.statutory_cap_eur))
-    for index, citation in enumerate(citations):
-        prefix = f"citation.{index}"
-        values.extend(
-            (
-                (f"{prefix}.source", citation.source.value),
-                (f"{prefix}.reference", citation.reference),
-                (f"{prefix}.locator", citation.locator),
-                (f"{prefix}.url", str(citation.url)),
-                (f"{prefix}.grounding", citation.grounding.value),
-                (f"{prefix}.valid_from", citation.valid_from),
-                (f"{prefix}.valid_to", citation.valid_to),
-            ),
-        )
-        if citation.quote:
-            values.append((f"{prefix}.quote", citation.quote))
-        if citation.grounding_reason:
-            values.append((f"{prefix}.grounding_reason", citation.grounding_reason))
-        if citation.legal_ref is not None:
-            values.append((f"{prefix}.legal_ref", citation.legal_ref))
-    return tuple(MappingFactEntry(key=key, value=value) for key, value in values)
-
-
-def _citation_source_ref(citation: CategoryCitation) -> str:
-    return _CATEGORY_CITATION_SOURCE_REFS[citation.source]
-
-
-def _source_citations(citations: tuple[CategoryCitation, ...]) -> tuple[SourceCitation, ...]:
-    required_by_source: dict[str, list[str]] = {}
-    for citation in citations:
-        required_by_source.setdefault(_citation_source_ref(citation), []).append(citation.quote)
-    return tuple(
-        SourceCitation(source_ref=source_ref, required_text=tuple(dict.fromkeys(required_text)))
-        for source_ref, required_text in required_by_source.items()
-    )
-
-
-def _citation_legal_refs(citations: tuple[CategoryCitation, ...]) -> tuple[str, ...]:
-    return tuple(dict.fromkeys(citation.legal_ref for citation in citations if citation.legal_ref is not None))
-
-
-@lru_cache(maxsize=16)
-def _resolve_category_profiles_cached(
-    year: int,
-    covered: tuple[int, ...],
-) -> Mapping[SpendingCategory, CategoryProfile]:
-    if year not in covered:
-        raise CategoryValidationError(
-            f"no category profile registry grounded for year={year}; "
-            f"the corpus grounds {list(covered)}. Ground the year against BOE or AEAT and add its "
-            "citations -- never widen an existing citation's window to admit it.",
-        )
-    projected: dict[SpendingCategory, CategoryProfile] = {}
-    for category, profile in load_category_profiles().items():
-        rule = profile.proportionality
-        update: dict[str, object] = {
-            "citations": tuple(citation for citation in rule.citations if citation.window.covers_year(year)),
-        }
-        if rule.statutory_cap_schedule:
-            # The year's amount is materialised onto the flat field and the
-            # schedule dropped, so every consumer keeps reading one cap and
-            # cannot pick the wrong year's by reaching past the resolver.
-            update["statutory_cap_eur"] = rule.cap_amount_for_year(year)
-            update["statutory_cap_schedule"] = ()
-        projected[category] = profile.model_copy(
-            update={"proportionality": rule.model_copy(update=update)},
-        )
-    return MappingProxyType(projected)
-
-
-def _parse_profile(raw_profile: object) -> CategoryProfile:
-    if not isinstance(raw_profile, dict):
-        raise CategoryValidationError("profile entry must be a table")
-    # CAST-RATIONALE-TOML-INVARIANT-DICT:
-    data = STR_KEYED_MAPPING_ADAPTER.validate_python(raw_profile)
-    category = SpendingCategory(str(data.get("category")))
-    # CAST-RATIONALE-CATEGORY-PROPORTIONALITY-RAW: data.get() is loosely typed
-    # by the mapping adapter; the isinstance check immediately below is the
-    # real runtime validation of this value's shape.
-    # nosemgrep: no-cast-in-domain-application
-    raw_rule = cast("dict[str, object] | None", data.get("proportionality"))
-    if not isinstance(raw_rule, dict):
-        raise CategoryValidationError(f"profile {category.value!r} must declare [profiles.proportionality]")
-    raw_iva_hint = data.get("iva_hint")
-    return CategoryProfile.model_validate(
-        {
-            "category": category,
-            "display_label": tr(str(data.get("display_label"))),
-            "proportionality": _parse_rule(raw_rule),
-            "iva_hint": (IvaDeductibilityHint(str(raw_iva_hint)) if raw_iva_hint is not None else None),
-        },
-    )
-
-
-def _parse_rule(raw_rule: object) -> ProportionalityRule:
-    if not isinstance(raw_rule, dict):
-        raise CategoryValidationError("proportionality rule must be a table")
-    data = STR_KEYED_MAPPING_ADAPTER.validate_python(raw_rule)
-    raw_variants = data.get("statutory_cap_variants", ())
-    if not isinstance(raw_variants, list | tuple):
-        raise CategoryValidationError("statutory_cap_variants must be a list")
-    raw_citations = data.get("citations", ())
-    if not isinstance(raw_citations, list | tuple):
-        raise CategoryValidationError("citations must be a list")
-    raw_schedule = data.get("statutory_cap_schedule", ())
-    if not isinstance(raw_schedule, list | tuple):
-        raise CategoryValidationError("statutory_cap_schedule must be a list")
-    return ProportionalityRule.model_validate(
-        {
-            "kind": ProportionalityKind(str(data.get("kind"))),
-            "fixed_pct": _decimal_or_none(data.get("fixed_pct")),
-            "default_ratio": _decimal_or_none(data.get("default_ratio")),
-            "statutory_multiplier": _decimal_or_none(data.get("statutory_multiplier")),
-            "statutory_cap_eur_per_day": _decimal_or_none(data.get("statutory_cap_eur_per_day")),
-            "statutory_cap_eur": _decimal_or_none(data.get("statutory_cap_eur")),
-            "statutory_cap_period": _cap_period_or_none(data.get("statutory_cap_period")),
-            "statutory_cap_variants": tuple(
-                _parse_cap_variant(raw_variant) for raw_variant in OBJECT_TUPLE_ADAPTER.validate_python(raw_variants)
-            ),
-            "statutory_cap_schedule": tuple(
-                _parse_cap_amount(raw_amount) for raw_amount in OBJECT_TUPLE_ADAPTER.validate_python(raw_schedule)
-            ),
-            "citations": tuple(
-                _parse_citation(raw_citation) for raw_citation in OBJECT_TUPLE_ADAPTER.validate_python(raw_citations)
-            ),
-            "notes": tr(str(data.get("notes"))),
-        },
-    )
-
-
-def _parse_cap_amount(raw_amount: object) -> StatutoryCapAmount:
-    """Hydrate one dated statutory-cap row."""
-    if not isinstance(raw_amount, dict):
-        raise CategoryValidationError("statutory_cap_schedule entries must be tables")
-    data = STR_KEYED_MAPPING_ADAPTER.validate_python(raw_amount)
-    return StatutoryCapAmount.model_validate(
-        {
-            "value": _decimal_or_none(data.get("value")),
-            "valid_from": data.get("valid_from"),
-            "valid_to": data.get("valid_to"),
-        },
-    )
-
-
-def _parse_cap_variant(raw_variant: object) -> StatutoryCapVariant:
-    if not isinstance(raw_variant, dict):
-        raise CategoryValidationError("statutory_cap_variants entries must be tables")
-    data = STR_KEYED_MAPPING_ADAPTER.validate_python(raw_variant)
-    return StatutoryCapVariant.model_validate(
-        {
-            "id": data.get("id"),
-            "label": tr(str(data.get("label"))),
-            "statutory_cap_eur_per_day": _decimal_or_none(data.get("statutory_cap_eur_per_day")),
-            "statutory_cap_eur": _decimal_or_none(data.get("statutory_cap_eur")),
-        },
-    )
-
-
-def _parse_citation(raw_citation: object) -> CategoryCitation:
-    if not isinstance(raw_citation, dict):
-        raise CategoryValidationError("citations entries must be tables")
-    data = STR_KEYED_MAPPING_ADAPTER.validate_python(raw_citation)
-    url = data.get("url")
-    if not isinstance(url, str):
-        raise CategoryValidationError("citation url must be a string")
-    return CategoryCitation.model_validate(
-        {
-            "source": CategoryCitationSource(str(data.get("source"))),
-            "reference": data.get("reference"),
-            "locator": data.get("locator"),
-            "url": parse_http_url(url),
-            # Read as plain text, never through ``tr``. Resolving it here is how
-            # the defect survived: the loader turned every locale key into the
-            # fallback word "Quote" before the validator saw it, so a check for
-            # non-empty text passed for all eighty-three ungrounded citations.
-            "quote": str(data.get("quote") or ""),
-            "grounding": CitationGrounding(str(data.get("grounding") or "verified")),
-            "grounding_reason": str(data.get("grounding_reason") or ""),
-            "legal_ref": data.get("legal_ref"),
-            "valid_from": data.get("valid_from"),
-            "valid_to": data.get("valid_to"),
-        },
-    )
-
-
-def _decimal_or_none(value: object) -> Decimal | None:
-    if value is None:
-        return None
-    if isinstance(value, Decimal):
-        return value
-    if isinstance(value, bool | float):
-        raise CategoryValidationError("decimal profile values must not be booleans or floats")
-    coerced = coerce_decimal(value)
-    if coerced is None:
-        raise CategoryValidationError(f"decimal profile value {value!r} could not be parsed")
-    return coerced
-
-
-def _cap_period_or_none(value: object) -> StatutoryCapPeriod | None:
-    if value is None:
-        return None
-    return StatutoryCapPeriod(str(value))
 
 
 __all__ = [
@@ -619,9 +138,6 @@ __all__ = [
     "CATEGORY_PROFILE_FACT_ID",
     "CATEGORY_STATUTORY_CAP_FACT_ID",
     "category_profile_years",
-    "collect_category_profile_fact_fingerprints",
-    "compile_category_profile_facts",
     "load_category_profiles",
-    "reset_category_profile_fact_provider",
     "resolve_category_profiles",
 ]

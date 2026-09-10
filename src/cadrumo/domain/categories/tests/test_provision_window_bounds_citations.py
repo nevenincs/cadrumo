@@ -22,10 +22,10 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler.loader import load_registry_tree
 
 from ....core.resources.bundled_data import bundled_path
 from ....core.validity_window import ValidityWindow
-from ...calculations.registry.loader import load_registry_tree
 from ...calculations.registry.schema_references import LegalReference
 from ..proportionality import (
     ANNUAL_EDITION_CITATION_SOURCES,

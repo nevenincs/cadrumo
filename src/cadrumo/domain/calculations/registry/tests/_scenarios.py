@@ -13,13 +13,13 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Literal
 
+from dev.registry.compiler.authority import compile_validated_authority
 from pydantic import BaseModel, Field, model_validator
 
 from .....core.aggregation import BindingSourceKind
 from .....core.casilla_id import CasillaId
 from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.period import Period
-from ..authority import ValidatedRegistryAuthority
 from ..errors import RegistrySnapshotError, RegistryValidationError
 from ..formula_runtime import RegistryCalculationEntry, RegistryCalculationResult, calculate_registry_snapshot
 from ..ids import BindingId, LegalRefId, RelationId, SourceRefId
@@ -245,7 +245,7 @@ def run_registry_calculation_scenario(
     Returns:
         A :class:`RegistryScenarioRunReport` with per-casilla comparison results.
     """
-    authority = ValidatedRegistryAuthority.load(registry_root, source_root=source_root)
+    authority = compile_validated_authority(registry_root, source_root)
     try:
         authority.modelo(scenario.modelo)
     except RegistrySnapshotError as exc:

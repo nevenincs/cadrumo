@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..analysis.hand_authored_type_column import (
     Alignment,
@@ -81,7 +81,7 @@ _UNCHECKED_PER_REVISION: dict[str, dict[str, int]] = {
 
 @pytest.fixture(scope="module")
 def screened():
-    return screen_authority(bundled_authority())
+    return screen_authority(compiled_bundled_authority())
 
 
 def test_no_aligned_hand_authored_field_contradicts_its_type_column(screened) -> None:
@@ -116,7 +116,7 @@ def test_unaligned_records_are_exactly_the_declared_ones(screened) -> None:
 
 
 def _planted_revision(tmp_path: Path, modelo: str, revision: str) -> Path:
-    for candidate_modelo, candidate_revision, root in hand_authored_revisions(bundled_authority()):
+    for candidate_modelo, candidate_revision, root in hand_authored_revisions(compiled_bundled_authority()):
         if (candidate_modelo, candidate_revision) == (modelo, revision):
             planted = tmp_path / "revision"
             shutil.copytree(root / "export_layouts", planted / "export_layouts")
@@ -126,7 +126,7 @@ def _planted_revision(tmp_path: Path, modelo: str, revision: str) -> Path:
 
 def test_a_planted_unsigned_field_is_reported_by_name(tmp_path: Path) -> None:
     """Unsigning one aligned N field is caught as exactly that field, and nothing else."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     planted = _planted_revision(tmp_path, "490", "2021")
     layout = next(
         path
@@ -149,7 +149,7 @@ def test_a_planted_unsigned_field_is_reported_by_name(tmp_path: Path) -> None:
 
 def test_a_record_that_fits_no_sheet_is_unchecked_not_passed(tmp_path: Path) -> None:
     """A record whose geometry matches no design sheet is reported, never compared as if it had."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     planted = _planted_revision(tmp_path, "490", "2021")
     layout = sorted((planted / "export_layouts").glob("*.toml"))[0]
     text = layout.read_text("utf-8")

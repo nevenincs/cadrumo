@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..analysis.corpus import bundled_modelo_ids
 from ..analysis.manifest_uncited_references import (
@@ -32,7 +32,7 @@ def test_a_manifest_reference_no_child_cites_is_reported() -> None:
     grounding, and neither contains the other. Screening only the children
     reported half a disagreement for as long as the sibling screen existed.
     """
-    found = uncited_screen(bundled_authority(), bundled_modelo_ids())
+    found = uncited_screen(compiled_bundled_authority(), bundled_modelo_ids())
     assert found, "the condition lost its live population"
     assert {item.ref_kind for item in found} == {"legal", "source"}
     assert {item.kind for item in found} == set(KINDS)
@@ -47,7 +47,7 @@ def test_a_manifest_whose_references_are_all_cited_reports_nothing() -> None:
     reference rather than the uncited ones would bury the finding under the
     majority that is fine.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     clean = [
         (modelo, revision)
         for modelo in bundled_modelo_ids()
@@ -66,7 +66,7 @@ def test_this_screen_and_its_sibling_report_disjoint_populations() -> None:
     would let a manifest reference look cited by a child that never declares it
     and would hide exactly the disagreement being measured.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo_ids = bundled_modelo_ids()
     cited_outside = {
         (item.modelo, item.revision, item.ref_kind, reference)
@@ -90,12 +90,11 @@ def test_a_reference_only_a_deadline_window_cites_is_not_uncited() -> None:
     hundred and four findings that were the screen's own blind spot rather than
     the corpus's state.
     """
-    from cadrumo.domain.calculations.registry.authority import bundled_authority
 
     from ..analysis.corpus import bundled_modelo_ids
     from ..analysis.manifest_uncited_references import screen_authority as uncited
 
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     reported = {(item.modelo, item.revision, item.reference) for item in uncited(authority, bundled_modelo_ids())}
     checked = 0
     for modelo in bundled_modelo_ids():

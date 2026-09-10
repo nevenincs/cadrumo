@@ -7,7 +7,6 @@ from datetime import date as _prov_date
 from decimal import Decimal
 
 import pytest
-from cadrumo.domain.calculations.registry.loader import load_catalogue_file
 
 from cadrumo.application.aggregation import (
     IvaDifferentiatedDeductionContribution,
@@ -32,7 +31,6 @@ from cadrumo.domain.bienes_inversion.register import (
     RegistroRegularizacionRow,
 )
 from cadrumo.domain.bienes_inversion.regularizacion_parameters import BienesInversionParameterProvenance
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from cadrumo.domain.calculations.registry.m303_differentiated_deduction_projection import (
@@ -46,6 +44,8 @@ from cadrumo.domain.iva.prorrata import InputClassification
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from cadrumo.domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
 from cadrumo.tests.registry_snapshot import build_snapshot
+from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.compiler.loader import load_catalogue_file
 from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 from dev.registry.maintenance_support import resolve_record_design_binary
 
@@ -83,7 +83,7 @@ def _revision():
 
 
 def _prior_m303_snapshot_ref():
-    return bundled_authority().snapshot("303", filing_year=2025, period="4T").snapshot_ref
+    return compiled_bundled_authority().snapshot("303", filing_year=2025, period="4T").snapshot_ref
 
 
 def _projection_refs() -> tuple[M303DifferentiatedDeductionProjectionRef, ...]:

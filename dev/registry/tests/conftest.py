@@ -2,7 +2,7 @@
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 
 @pytest.fixture(scope="session")
@@ -16,12 +16,12 @@ def registry_authority():
     to this directory -- collection here errored on the missing name instead of
     running the check. Same object, same session scope.
     """
-    return bundled_authority()
+    return compiled_bundled_authority()
 
 
 @pytest.fixture
 def m200_inspection_snapshot():
-    return bundled_authority().inspect_revision("200", filing_year=2025, period="0A")
+    return compiled_bundled_authority().inspect_revision("200", filing_year=2025, period="0A")
 
 
 @pytest.fixture
@@ -32,4 +32,4 @@ def m130_inspection_snapshot():
     checks a map against them as a bijection, so a synthetic map can no longer
     be validated against it except to test that very bijection.
     """
-    return bundled_authority().inspect_revision("130", filing_year=2026, period="1T")
+    return compiled_bundled_authority().inspect_revision("130", filing_year=2026, period="1T")

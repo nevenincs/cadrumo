@@ -9,6 +9,7 @@ from hashlib import sha256
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.loader import load_modelo_directory
 
 from ....core.filing_projection_ref import (
     M303RegimenSimplificadoActivityField,
@@ -31,7 +32,6 @@ from ....domain.bienes_inversion.regularizacion_parameters import (
 )
 from ....domain.calculations.export_field_kind import CasillaFieldKind
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.calculations.registry.loader import load_modelo_directory
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.record_design import extract_record_design
 from ....domain.calculations.registry.schema import RegistrySnapshot

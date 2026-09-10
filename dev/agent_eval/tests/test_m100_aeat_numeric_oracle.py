@@ -22,7 +22,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.parity.renta_web_open_replay_corpus import replay_corpus_directory
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
@@ -33,7 +33,7 @@ def _oracle_payloads() -> list[Path]:
 
 
 def _m100_computed_grounded_ids() -> dict[str, bool]:
-    rev = bundled_authority().snapshot("100", filing_year=2025, period="0A").revision
+    rev = compiled_bundled_authority().snapshot("100", filing_year=2025, period="0A").revision
     casillas = list(rev.casillas.values()) if isinstance(rev.casillas, dict) else list(rev.casillas)
     result: dict[str, bool] = {}
     for casilla in casillas:

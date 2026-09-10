@@ -11,10 +11,10 @@ missing record, and an undeclared skip still is.
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.loader import load_catalogue_file
 
 from .....core.resources.bundled_data import bundled_path
 from ..errors import RegistryValidationError
-from ..loader import load_catalogue_file
 from ..record_design import extract_record_design
 from ..record_design_schema import (
     RecordDesignExtraction,

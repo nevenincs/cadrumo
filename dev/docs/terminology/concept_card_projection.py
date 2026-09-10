@@ -44,6 +44,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.core.concept_lifecycle import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..terminology_handbook.enums import ConceptDomain, TermStatus
 from ..terminology_handbook.loader import TerminologyHandbook, load_terminology_handbook
@@ -307,6 +308,5 @@ def _load_validated_handbook() -> TerminologyHandbook:
 
 
 def _bundled_legal_catalogue() -> object:
-    from cadrumo.domain.calculations.registry.authority import bundled_authority
 
-    return bundled_authority().catalogues.legal
+    return compiled_bundled_authority().catalogues.legal

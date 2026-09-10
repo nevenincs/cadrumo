@@ -14,10 +14,9 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
     resolve_governed_fact,
 )
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
-from cadrumo.domain.calculations.registry.facts.validation import governed_fact_catalogue_failures
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from dev.registry.compiler.fact_loader import load_governed_facts
-from dev.registry.compiler.legal_parameters import compile_legal_parameter_facts
+from dev.registry.compiler.fact_validation import governed_fact_catalogue_failures
 from dev.registry.compiler.loader import load_shared_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -67,13 +66,6 @@ def test_article_95_activity_selectors_resolve_only_from_the_grounded_m036_table
     assert resolved.payload.entities == entities
     assert resolved.variant_id.endswith(_FIRST_GROUNDED_DATE.isoformat())
     assert resolved.source_refs == (_M036_TABLE_SOURCE, _ARTICLE_95_SOURCE)
-
-
-def test_article_95_activity_selectors_are_not_projected_by_the_legal_parameter_adapter() -> None:
-    adapter_ids = {fact.fact_id for fact in compile_legal_parameter_facts(bundled_path("registry", "aeat"))}
-
-    assert not _SELECTOR_IDS & adapter_ids
-
 
 def test_article_95_activity_selectors_refuse_before_the_first_citable_m036_table() -> None:
     with pytest.raises(RegistryValidationError, match="has no variant for the exact query context"):

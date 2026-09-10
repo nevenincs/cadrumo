@@ -14,9 +14,9 @@ from datetime import date
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.loader import load_modelo_directory
 
 from ..errors import RegistryLoadError, RegistryValidationError
-from ..loader import load_modelo_directory
 from ..revision_predecessor_date_agreement import EditionWindow, validate_predecessor_date_agreement
 from ..schema import DeclaredPredecessor
 from ..schema_references import PeriodSelector

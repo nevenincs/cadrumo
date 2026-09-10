@@ -16,13 +16,13 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.casilla_lineage_totality import (
     CasillaRowKey,
     lineage_totality,
     unresolved_successor_rows,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..analysis.casilla_lineage_ledger import LedgerRefusal, load_ledger_refusals
 from ..analysis.corpus import bundled_modelo_ids
@@ -34,7 +34,7 @@ _SHOWN = 20
 
 @pytest.fixture(scope="module")
 def corpus() -> tuple[ModeloDefinition, ...]:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     return tuple(authority.modelo(modelo_id) for modelo_id in bundled_modelo_ids())
 
 

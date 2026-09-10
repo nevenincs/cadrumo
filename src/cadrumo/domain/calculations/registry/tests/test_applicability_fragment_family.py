@@ -12,12 +12,12 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.loader import load_modelo_directory
 
 from .....core.modelo import Modelo
 from .._validate_applicability_section import validate_applicability_section
 from ..applicability import ModeloApplicabilityRule, hydrate_applicability_rule
 from ..errors import RegistryLoadError, RegistryValidationError
-from ..loader import load_modelo_directory
 from ..schema import ModeloRevision
 from ..schema_base import schema_family_fields
 from ..schema_revision_members import ApplicabilityRuleDefinition

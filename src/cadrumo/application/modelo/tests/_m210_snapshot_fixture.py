@@ -1,9 +1,9 @@
 """Canonical Modelo 210 Convenio registry snapshot fixture."""
 
 import pytest
+from dev.registry.compiler.loader import load_registry_tree
 
 from ....core.resources.bundled_data import bundled_path
-from ....domain.calculations.registry.loader import load_registry_tree
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....tests.registry_snapshot import build_snapshot
 

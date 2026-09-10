@@ -59,7 +59,8 @@ import sys
 from dataclasses import dataclass
 from typing import Final
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .corpus import bundled_modelo_ids
 from .screens import screen_findings
@@ -240,7 +241,7 @@ def overlapping_conditions(
 
 def main() -> int:
     """Print one row per coinciding pair, largest population first; always exit 0."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     populations = condition_populations(authority, bundled_modelo_ids())
     relations = overlapping_conditions(populations)
     for item in relations:

@@ -8,12 +8,15 @@ import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.ed25519_signing import Ed25519KeypairHex, generate_ed25519_keypair_hex
+from .....core.hashing import sha256_hex
 from .. import authority as authority_module
 from ..authority import bundled_authority
 from ..authority_artifact import (
     AuthorityArtifact,
     AuthorityArtifactIntegrityError,
     AuthorityArtifactUnavailableError,
+    AuthorityEvidenceProjection,
+    PublishedLegalEvidence,
     write_authority_artifact,
 )
 from ..corpus_provenance import NormativeCorpusProvenance
@@ -79,6 +82,38 @@ def test_runtime_uses_a_signed_publication_and_isolates_later_consumers(
     assert capture.projection.modelo.id == "130"
     capture.require_current(first.read_current_coordinate())
     assert "consumer-injected" not in later.catalogues.legal
+
+
+def test_runtime_answers_a_citation_from_signed_evidence_without_a_corpus_root(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The runtime evidence API reads the artifact projection, not package corpus files."""
+    artifact_path, keys = _stage_runtime_publication(tmp_path)
+    citation_text = "validated published provision"
+    write_authority_artifact(
+        artifact_path,
+        AuthorityArtifact(
+            modelos=(_minimal_modelo(_minimal_revision()),),
+            catalogues=_minimal_catalogues(),
+            identity_digest=_IDENTITY_DIGEST,
+            evidence=AuthorityEvidenceProjection(
+                legal=(
+                    PublishedLegalEvidence(
+                        legal_reference_id="test:art-1",
+                        anchored_text=citation_text,
+                        text_sha256=sha256_hex(citation_text.encode("utf-8")),
+                    ),
+                )
+            ),
+        ),
+        signing_private_key_hex=keys.private_key_hex,
+    )
+    _use_staged_package(monkeypatch, tmp_path, keys)
+
+    authority = bundled_authority()
+    authority.source_root = tmp_path / "absent-corpus"
+
+    assert authority.legal_quotation_is_grounded("test:art-1", "published provision")
 
 
 def test_runtime_keeps_real_bundled_citation_inspection_after_artifact_loading(

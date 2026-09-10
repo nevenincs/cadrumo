@@ -22,9 +22,9 @@ resolves with no symlink indirection — a brew reached through a relocated pref
 passes ``test -x`` and ``--version`` and then fails ``brew link`` at the very end
 of a real install, after building every resource.
 
-Deliberately NOT checked: ``scoop``. ``packaging-scoop`` requests the
-``windows-scoop`` label, which no runner on the fleet carries, so that lane never
-schedules. Probing for it would report a failure that cannot affect any run.
+Not checked here: ``scoop``. ``packaging-scoop`` verifies its own Scoop profile
+in its preflight, in the dedicated non-admin lane user's profile, which is not
+the profile this probe runs under.
 """
 
 from __future__ import annotations

@@ -8,6 +8,7 @@ from functools import cache
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.loader import load_registry_tree
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
@@ -16,7 +17,6 @@ from .....tests.aeat_literal_fixtures import aeat_url, configured_path
 from .....tests.registry_snapshot import build_snapshot
 from .._validate import RegistryValidator
 from ..errors import RegistryValidationError
-from ..loader import load_registry_tree
 from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
 
 _DECLARATIONS_LISTING_URL = aeat_url("www6", configured_path("sede_paths", "declarations_listing"))

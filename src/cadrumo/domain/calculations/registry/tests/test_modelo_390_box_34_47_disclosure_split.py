@@ -34,8 +34,8 @@ import shutil
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.loader import load_registry_tree
 
-from ..loader import load_registry_tree
 from ..schema import ModeloRevision
 from ._gate_support import fragment_declaring
 

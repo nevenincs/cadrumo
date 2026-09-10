@@ -50,6 +50,7 @@ import re
 from typing import Final
 
 import pytest
+from dev.registry.compiler.authority import compile_validated_authority
 
 from .....core.resources.bundled_data import bundled_path
 from ..authority import ValidatedRegistryAuthority
@@ -106,7 +107,7 @@ _KNOWN_PAIRINGS: Final[frozenset[tuple[str, str, str]]] = frozenset(
 
 
 def _authority() -> ValidatedRegistryAuthority:
-    return ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
+    return compile_validated_authority(bundled_path("registry", "aeat"), bundled_path())
 
 
 def _is_box_number(number: str | None) -> bool:

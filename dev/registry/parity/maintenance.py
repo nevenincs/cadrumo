@@ -9,10 +9,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from cadrumo.domain.calculations.registry.loader import load_registry_tree
+from dev.registry.compiler.loader import load_registry_tree
 from pydantic import BaseModel, ConfigDict
 
 from cadrumo.core.external_constants import UTF_8_ENCODING
+from dev.registry.compiler.loader import load_registry_tree
 from dev.registry.maintenance_support import (
     CrossReferenceApplicabilityDeclaracion,
     LiveParityCatalogue,

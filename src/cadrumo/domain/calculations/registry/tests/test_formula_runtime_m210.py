@@ -7,6 +7,7 @@ from decimal import Decimal
 
 import pytest
 from dev.registry.compiler.convenio import load_convenio_authority
+from dev.registry.compiler.loader import load_registry_tree
 
 from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_snapshot import build_snapshot
@@ -15,7 +16,6 @@ from .._formula_runtime_irnr import _irnr_resolve_tipo_gravamen_args
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
 from ..formula_runtime_ops import RegistryUnresolvedOutcomeReason, resolve_keyed_bracket
-from ..loader import load_registry_tree
 from ..schema import RegistrySnapshot
 from ..schema_formula import FormulaExpression
 

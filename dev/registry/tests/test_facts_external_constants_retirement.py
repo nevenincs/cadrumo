@@ -102,47 +102,6 @@ def test_every_direct_production_import_is_in_the_retirement_census() -> None:
     assert actual == expected
 
 
-def test_legal_parameter_adapter_callers_and_destinations_match_live_source() -> None:
-    ledger = tomllib.loads(_LEDGER.read_text(encoding="utf-8"))
-    (adapter,) = ledger["legal_parameter_adapters"]
-    callers = adapter["callers"]
-    assert adapter["symbol"] == "load_legal_parameters_only"
-    assert len(callers) == 6
-    assert adapter["disposition"] == "delete_after_last_caller"
-    assert "load_shared_catalogues" in adapter["retained_symbols"]
-
-    expected_callers = {(item["path"], item["symbol"]) for item in callers}
-    actual_callers: set[tuple[str, str]] = set()
-    for path in _production_python_files():
-        text = path.read_text(encoding="utf-8")
-        if "load_legal_parameters_only" not in text:
-            continue
-        tree = ast.parse(text)
-        parents = {child: node for node in ast.walk(tree) for child in ast.iter_child_nodes(node)}
-        for node in ast.walk(tree):
-            if not (
-                isinstance(node, ast.Call)
-                and isinstance(node.func, ast.Name)
-                and node.func.id == "load_legal_parameters_only"
-            ):
-                continue
-            owner: ast.AST = node
-            while owner in parents and not isinstance(owner, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                owner = parents[owner]
-            assert isinstance(owner, (ast.FunctionDef, ast.AsyncFunctionDef))
-            actual_callers.add((path.relative_to(_ROOT).as_posix(), owner.name))
-    assert actual_callers == expected_callers
-
-    destination_ids = {fact_id for caller in callers for fact_id in caller["destination_fact_ids"]}
-    assert len(destination_ids) == 21
-    for caller in callers:
-        assert caller["destination_family"] in {"scalar", "mapping", "entity_set"}
-        assert caller["dependencies"][-1] == "W04.P17.S34"
-        authority_text = (_ROOT / caller["authority_path"]).read_text(encoding="utf-8")
-        for fact_id in caller["destination_fact_ids"]:
-            assert f'[parameters."{fact_id}"]' in authority_text
-
-
 def test_retained_facades_and_technical_configuration_boundary_match_source() -> None:
     ledger = tomllib.loads(_LEDGER.read_text(encoding="utf-8"))
     boundary = ledger["preservation_boundary"]

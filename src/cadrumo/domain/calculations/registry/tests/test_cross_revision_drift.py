@@ -17,6 +17,7 @@ from datetime import date
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.loader import load_modelo_directory
 
 from .....core.resources.bundled_data import bundled_path
 from .._validate import RegistryValidator
@@ -25,7 +26,6 @@ from .._validate_cross_revision import (
     declared_cross_revision_continuity_semantic_linkage_failures,
 )
 from ..ids import LegalRefId
-from ..loader import load_modelo_directory
 from ..modelo_localization import ModeloLocalizationFieldKind, casilla_occurrence_locale_key
 from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from ..schema_references import PeriodSelector

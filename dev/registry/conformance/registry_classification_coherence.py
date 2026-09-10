@@ -73,7 +73,7 @@ from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.prose_elision import PROSE_ELISION_MARKER, elide_to_cap
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.tax_domain import TaxDomain
-from cadrumo.domain.calculations.registry._validate_revision_rules import validate_informative_class_invariant
+from dev.registry.compiler._validate_revision_rules import validate_informative_class_invariant
 from cadrumo.domain.calculations.registry.ids import ModeloId
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_base import CalculationClass, CalculationClassField

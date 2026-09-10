@@ -10,7 +10,7 @@ import pytest
 from cadrumo.core.external_constants import PDF_EXTENSION, XLS_EXTENSION, XLSM_EXTENSION, XLSX_EXTENSION
 from cadrumo.core.record_design_epoch import RECORD_DESIGN_EPOCH_RE
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.corpus_catalogue import verify_source_file
+from ..compiler.corpus_catalogue import verify_source_file
 from cadrumo.tests import REPO_ROOT
 
 from ._catalogue_verification_support import _catalogues, _registry_tree

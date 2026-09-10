@@ -26,7 +26,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.identity import (
+from dev.registry.compiler.identity import (
     REGISTRY_IDENTITY_STAMP_FILENAME,
     compute_walked_tree_digest,
     registry_identity_stamp_location,
