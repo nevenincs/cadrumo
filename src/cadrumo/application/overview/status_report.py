@@ -9,15 +9,15 @@ package root re-exports nothing.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from decimal import Decimal, InvalidOperation
 from datetime import date
+from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
 
 from ...core.decimal.coercion import coerce_decimal_strict as _coerce_decimal_strict
 from ...core.logging import get_logger as _get_logger
 from ...core.modelo import Modelo as _Modelo
-from ...domain.deadlines.models import evaluate_multiple_pagadores_obligation as _evaluate_multiple_pagadores_obligation
 from ...domain.deadlines.fact_context import DeadlineFactResolutionContext as _DeadlineFactResolutionContext
+from ...domain.deadlines.models import evaluate_multiple_pagadores_obligation as _evaluate_multiple_pagadores_obligation
 from .calendar_models import (
     OverviewStatusReport,
 )

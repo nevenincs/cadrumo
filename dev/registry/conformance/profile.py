@@ -114,6 +114,7 @@ from cadrumo.domain.calculations.registry.export import (
     derive_export_layouts_from_bindings as _derive_export_layouts_from_bindings,
 )
 from cadrumo.domain.calculations.registry.export_parse import xml_dictionary_entries as _xml_dictionary_entries
+from dev.registry.compiler.identity import resolve_registry_identity as _resolve_registry_identity
 from cadrumo.domain.calculations.registry.ids import BindingId as _BindingId
 from cadrumo.domain.calculations.registry.ids import FormulaId as _FormulaId
 from cadrumo.domain.calculations.registry.ids import LegalRefId as _LegalRefId

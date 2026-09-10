@@ -138,7 +138,7 @@ def _write_year_ambiguous_registry(
     (legal_dir / "supported-filing-years.toml").write_text(
         "[supported_filing_years]\nyears = [2025, 2026]\n\n"
         "[sociedades_annual_manual_coverage]\n"
-        "dispositions = [{ year = 2025, status = \"unpublished\", official_locator = \"https://example.com/manuals\", observed_at = 2026-09-10, acquisition_condition_key = \"application.registry.manuals.coverage.recheck_aeat_publication\" }, { year = 2026, status = \"unpublished\", official_locator = \"https://example.com/manuals\", observed_at = 2026-09-10, acquisition_condition_key = \"application.registry.manuals.coverage.recheck_aeat_publication\" }]\n",
+        'dispositions = [{ year = 2025, status = "unpublished", official_locator = "https://example.com/manuals", observed_at = 2026-09-10, acquisition_condition_key = "application.registry.manuals.coverage.recheck_aeat_publication" }, { year = 2026, status = "unpublished", official_locator = "https://example.com/manuals", observed_at = 2026-09-10, acquisition_condition_key = "application.registry.manuals.coverage.recheck_aeat_publication" }]\n',
         encoding="utf-8",
     )
     corpus_file = tmp_path / "corpus" / "test" / "test-source-001.pdf"

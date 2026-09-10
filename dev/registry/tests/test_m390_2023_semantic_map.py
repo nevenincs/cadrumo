@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.loader import load_registry_tree
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from dev.registry.compiler.authority import compiled_bundled_authority

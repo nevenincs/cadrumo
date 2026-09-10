@@ -656,9 +656,7 @@ class RentaFamilyProfile(BaseModel):
         The raw (unweighted) eligible count; ``madrid_nacimiento_adopcion_weighted_count``
         applies the per-descendant prorrateo the registry cuantía is multiplied by.
         """
-        return sum(
-            1 for d in self.descendientes if d.is_nacimiento_adopcion_eligible(filing_year, context=context)
-        )
+        return sum(1 for d in self.descendientes if d.is_nacimiento_adopcion_eligible(filing_year, context=context))
 
     def madrid_nacimiento_adopcion_weighted_count(
         self, filing_year: int, *, context: FamilyFactResolutionContext

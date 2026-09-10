@@ -54,10 +54,7 @@ def test_authority_exposes_validated_legal_corpus_provenance(
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
     """The authority returns the canonical classifier's result after registry validation."""
-    assert (
-        registry_authority.legal_corpus_provenance("rd-1065-2007:art-9")
-        is NormativeCorpusProvenance.BOE_ATTESTED
-    )
+    assert registry_authority.legal_corpus_provenance("rd-1065-2007:art-9") is NormativeCorpusProvenance.BOE_ATTESTED
 
 
 def test_authority_snapshot_runs_real_modelo_calculation(registry_authority: ValidatedRegistryAuthority) -> None:

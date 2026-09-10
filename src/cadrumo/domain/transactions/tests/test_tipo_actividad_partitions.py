@@ -31,6 +31,7 @@ from ..tipo_actividad_partitions import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+
 def test_every_partition_is_declared_including_the_one_no_code_selects() -> None:
     """All four art. 95 partitions are present; the engorde carve-out is empty.
 

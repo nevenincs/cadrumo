@@ -405,7 +405,9 @@ class TestValidateM347Threshold:
             Modelo347ContraparteRow(nif="12345678A", importe_Q1=Decimal("2000")),
             Modelo347ContraparteRow(nif="12345678A", importe_Q3=Decimal("2000")),
         )
-        validate_m347_threshold(rows, effective_date=_M347_EFFECTIVE_DATE)  # per-NIF total 4000 > 3005.06, must not raise
+        validate_m347_threshold(
+            rows, effective_date=_M347_EFFECTIVE_DATE
+        )  # per-NIF total 4000 > 3005.06, must not raise
 
     def test_same_nif_split_across_rows_aggregate_below_threshold_rejected(self) -> None:
         """Same-NIF rows whose AGGREGATE is at/below the threshold are rejected,

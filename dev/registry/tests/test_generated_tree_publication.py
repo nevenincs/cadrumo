@@ -10,6 +10,7 @@ from shutil import rmtree
 from typing import Literal
 
 import pytest
+from dev.registry.compiler.loader import load_modelo_directory
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from dev.registry.compiler.loader import load_registry_tree
 from pydantic import BaseModel, ConfigDict
 
 from cadrumo.core.external_constants import UTF_8_ENCODING

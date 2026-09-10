@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Annotated
 
 import pytest
+from dev.registry.compiler.loader import load_modelo_directory
 from pydantic import BaseModel, ValidationError
 
 from cadrumo.core.schema_family_disposition import (

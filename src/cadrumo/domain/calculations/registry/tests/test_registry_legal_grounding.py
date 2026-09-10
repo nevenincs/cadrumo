@@ -106,8 +106,7 @@ def test_every_committed_normative_legal_reference_satisfies_provenance_contract
 
     assert not authored, f"authored normative corpus cited as legal authority: {sorted(authored)!r}"
     assert not unreviewed_presumptive, (
-        "BOE-presumptive normative corpus cited without a reviewed per-file record: "
-        f"{sorted(unreviewed_presumptive)!r}"
+        f"BOE-presumptive normative corpus cited without a reviewed per-file record: {sorted(unreviewed_presumptive)!r}"
     )
 
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.loader import load_catalogue_file
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from dev.registry.compiler.loader import load_catalogue_file

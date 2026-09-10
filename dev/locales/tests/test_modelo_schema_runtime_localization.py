@@ -19,6 +19,7 @@ from collections.abc import Callable, Iterable
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.loader import load_registry_tree
 
 import cadrumo.domain.calculations.registry.modelo_localization as modelo_localization
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES

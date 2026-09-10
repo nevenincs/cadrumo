@@ -327,10 +327,7 @@ def resolve_iva_rate_slot(percentage: Decimal | None, on_date: date) -> IvaRate:
     matches = tuple(rate for resolved, rate in resolved_rates if resolved * Decimal("100") == percentage)
     if len(matches) == 1:
         return matches[0]
-    accepted = ", ".join(
-        format(resolved * Decimal("100"), "f")
-        for resolved, _ in resolved_rates
-    )
+    accepted = ", ".join(format(resolved * Decimal("100"), "f") for resolved, _ in resolved_rates)
     raise IvaRateNotFoundError(
         "IVA percentage has no unique persisted rate slot at the supplied devengo date",
         context={"iva_rate": format(percentage, "f"), "on_date": on_date.isoformat(), "accepted": accepted},

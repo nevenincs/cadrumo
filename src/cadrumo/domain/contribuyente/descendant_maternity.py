@@ -45,9 +45,7 @@ class DescendantMaternityMixin(DescendantRecordBase):
         """
         return len(self._maternidad_eligible_months(filing_year, context=context))
 
-    def _maternidad_eligible_months(
-        self, filing_year: int, *, context: FamilyFactResolutionContext
-    ) -> frozenset[int]:
+    def _maternidad_eligible_months(self, filing_year: int, *, context: FamilyFactResolutionContext) -> frozenset[int]:
         """The Art. 81.1 eligible months: both limbs, clipped to the entry anchor."""
         months = self._maternidad_edad_months(filing_year, context=context) | self._maternidad_entry_window_months(
             filing_year, context=context

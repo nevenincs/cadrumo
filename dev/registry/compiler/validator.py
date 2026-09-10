@@ -66,7 +66,6 @@ from .validation_memoization import (
     MODELO_VALIDATION_CACHE,
     REGISTRY_VALIDATION_CACHE,
 )
-
 if TYPE_CHECKING:
     from cadrumo.domain.user_profile.schema import ProfileSchemaDefinition
 

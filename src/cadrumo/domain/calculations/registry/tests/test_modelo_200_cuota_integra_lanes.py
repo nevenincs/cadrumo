@@ -440,7 +440,9 @@ def test_modelo_202_modality_is_art_40_2_optional_at_or_below_threshold() -> Non
     threshold — equality alone does not exceed it.
     """
     below = derive_modelo_202_modality(_legal_entity_profile(Decimal("500000")), effective_date=date(2025, 12, 31))
-    at_threshold = derive_modelo_202_modality(_legal_entity_profile(Decimal("6000000")), effective_date=date(2025, 12, 31))
+    at_threshold = derive_modelo_202_modality(
+        _legal_entity_profile(Decimal("6000000")), effective_date=date(2025, 12, 31)
+    )
     assert below.modality is Modelo202Modality.ART_40_2_OPTIONAL
     assert at_threshold.modality is Modelo202Modality.ART_40_2_OPTIONAL
     assert "ley-27-2014:art-40" in below.legal_refs

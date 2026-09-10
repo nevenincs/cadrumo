@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Final, cast
 
 import pytest
+from dev.registry.compiler.loader import load_shared_catalogues
 
 from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.directory_scan import scan_directory

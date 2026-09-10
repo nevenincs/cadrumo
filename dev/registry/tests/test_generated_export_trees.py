@@ -28,6 +28,10 @@ from pathlib import Path
 from typing import Final, override
 
 import pytest
+from dev.registry.compiler.loader import (
+    load_modelo_directory,
+    load_registry_tree,
+)
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import (

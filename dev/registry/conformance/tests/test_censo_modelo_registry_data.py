@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.loader import load_modelo_directory
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict

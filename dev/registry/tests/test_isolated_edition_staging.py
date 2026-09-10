@@ -17,6 +17,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from dev.registry.compiler.loader import load_modelo_directory
 
 from cadrumo.core.i18n.render import override_locales_root
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError

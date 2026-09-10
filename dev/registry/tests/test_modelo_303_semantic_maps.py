@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Final, Literal
 
 import pytest
+from dev.registry.compiler.loader import load_registry_tree
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError

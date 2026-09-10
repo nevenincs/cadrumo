@@ -10,6 +10,7 @@ from typing import TypedDict, get_args, override
 
 import pytest
 import rtoml
+from dev.registry.compiler.loader import load_modelo_directory
 
 from cadrumo.core.directory_scan import (
     scan_directory,
