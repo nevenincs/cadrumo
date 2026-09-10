@@ -6,7 +6,7 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:c0516c04dc1c6fdc8bf91033db246888c850794781ffc414c20d3ee4d0f18164'
+body_hash: 'sha256:f70217891bad790bea4dd1ab36091fa561181ab05621e27376347210d9c47042'
 related:
   - '[[2026-09-10-data-provenance-consolidation-W01-P01-S01]]'
   - '[[2026-09-10-data-provenance-consolidation-W01-P01-S02]]'
@@ -22,6 +22,7 @@ related:
   - '[[2026-09-10-data-provenance-consolidation-W02-P04-S12]]'
   - '[[2026-09-10-data-provenance-consolidation-W02-P05-S13]]'
   - '[[2026-09-10-data-provenance-consolidation-W02-P05-S14]]'
+  - '[[2026-09-10-data-provenance-consolidation-W02-P05-S15]]'
   - '[[2026-09-10-data-provenance-consolidation-adr]]'
   - '[[2026-09-10-data-provenance-consolidation-lane-inventory-research]]'
   - '[[2026-09-10-data-provenance-consolidation-live-lane-map-reference]]'
@@ -40,6 +41,7 @@ related:
   - '[[2026-09-10-data-provenance-consolidation-w02-p04-s12-sync-rejection-review-audit]]'
   - '[[2026-09-10-data-provenance-consolidation-w02-p05-s13-sidecar-owner-review-audit]]'
   - '[[2026-09-10-data-provenance-consolidation-w02-p05-s14-docs-freshness-review-audit]]'
+  - '[[2026-09-10-data-provenance-consolidation-w02-p05-s15-corpus-sidecar-review-audit]]'
 ---
 
 # `data-provenance-consolidation` feature index
@@ -68,6 +70,7 @@ Auto-generated index of all documents tagged with `#data-provenance-consolidatio
 - `2026-09-10-data-provenance-consolidation-w02-p04-s12-sync-rejection-review-audit` - `data-provenance-consolidation` audit: `w02 p04 s12 sync rejection review`
 - `2026-09-10-data-provenance-consolidation-w02-p05-s13-sidecar-owner-review-audit` - `data-provenance-consolidation` audit: `w02 p05 s13 sidecar owner review`
 - `2026-09-10-data-provenance-consolidation-w02-p05-s14-docs-freshness-review-audit` - `data-provenance-consolidation` audit: `w02 p05 s14 docs freshness review`
+- `2026-09-10-data-provenance-consolidation-w02-p05-s15-corpus-sidecar-review-audit` - `data-provenance-consolidation` audit: `w02 p05 s15 corpus sidecar review`
 
 ### exec
 
@@ -85,6 +88,7 @@ Auto-generated index of all documents tagged with `#data-provenance-consolidatio
 - `2026-09-10-data-provenance-consolidation-W02-P04-S12` - Prove catalog-backed sync rejects unclassified files and conflicting acquisition identity
 - `2026-09-10-data-provenance-consolidation-W02-P05-S13` - Extract shared generic sidecar hash, schema, locality, and digest validation into the sidecar owner
 - `2026-09-10-data-provenance-consolidation-W02-P05-S14` - Migrate documentation-preprocessor freshness tests to the shared generic validator
+- `2026-09-10-data-provenance-consolidation-W02-P05-S15` - Migrate corpus-sidecar freshness checks to shared validation and catalog derivation
 
 ### plan
 
