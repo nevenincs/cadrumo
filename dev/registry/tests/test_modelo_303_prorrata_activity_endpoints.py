@@ -17,7 +17,7 @@ from cadrumo.core.i18n import tr
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.prorrata_register import ProrrataActivityRowType, ProrrataRegisterRegime
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry._validate import RegistryValidator
+from dev.registry.compiler.validator import RegistryValidator
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export import clasificar_casillas_oficiales
 from cadrumo.domain.calculations.registry.formula_initial_values import initial_value_casilla_ids, initial_values

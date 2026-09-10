@@ -11,11 +11,12 @@ from __future__ import annotations
 from collections import defaultdict
 from itertools import pairwise
 
-from ._validate_cross_revision_contiguity import strict_continuity_chain_contiguity_failures
 from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_overlap
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaContinuidadEvolutionDefinition
+
+from ._validate_cross_revision_contiguity import strict_continuity_chain_contiguity_failures
 
 
 def strict_continuity_evolution_failures(modelo: ModeloDefinition) -> tuple[str, ...]:

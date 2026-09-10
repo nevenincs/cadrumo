@@ -16,13 +16,14 @@ from collections.abc import Iterable, Mapping
 
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.i18n import MissingTranslationError
+from cadrumo.domain.calculations.registry.ids import RevisionId
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
 from . import _validate_semantic_role_typos as _semantic_role_typos
 from ._validate_semantic_role_required import (
     collect_casillas_by_semantic_role as collect_casillas_by_semantic_role,
 )
-from cadrumo.domain.calculations.registry.ids import RevisionId
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 __all__ = [
     "semantic_role_cardinality_failures",

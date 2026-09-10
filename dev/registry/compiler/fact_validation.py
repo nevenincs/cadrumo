@@ -9,10 +9,10 @@ from pathlib import Path
 
 from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue, GovernedFactVariant
 from cadrumo.domain.calculations.registry.legal import verify_legal_reference_grounding
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
-from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue, GovernedFactVariant
 
 from ._validate_evidence import EvidenceValidator
 

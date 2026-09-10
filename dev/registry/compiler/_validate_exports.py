@@ -39,12 +39,6 @@ from cadrumo.core.aggregation import BindingAggregationOp
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.filing_projection_ref import FilingProjectionRef
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from ._validate_evidence import EvidenceValidator
-from ._validate_export_field_widths import validate_draft_field_slot_width
-from ._validate_helpers import missing_refs as _missing_refs
-from ._validate_projection_endpoints import (
-    validate_projection_endpoint_declarations as _validate_projection_endpoint_declarations,
-)
 from cadrumo.domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from cadrumo.domain.calculations.registry.binding_selector_utils import (
     BindingExportSelector,
@@ -66,6 +60,13 @@ from cadrumo.domain.calculations.registry.schema_exports import (
 )
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
+from ._validate_evidence import EvidenceValidator
+from ._validate_export_field_widths import validate_draft_field_slot_width
+from ._validate_helpers import missing_refs as _missing_refs
+from ._validate_projection_endpoints import (
+    validate_projection_endpoint_declarations as _validate_projection_endpoint_declarations,
+)
 
 
 def validate_export_layout_section(

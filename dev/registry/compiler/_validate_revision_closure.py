@@ -24,19 +24,20 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from cadrumo.domain.calculations.registry.orden_applicability import orden_aplicabilidad_hard_failures
+from cadrumo.domain.calculations.registry.revision_context import RevisionValidationContext
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+
 from ._validate_application_links import validate_application_link_closure
 from ._validate_constructs import validate_construct_closure
 from ._validate_evidence import EvidenceValidator
 from ._validate_formulas import validate_formula_dag
 from ._validate_helpers import missing_refs as _missing_refs
-from cadrumo.domain.calculations.registry.orden_applicability import orden_aplicabilidad_hard_failures
-from cadrumo.domain.calculations.registry.revision_context import RevisionValidationContext
 from ._validate_revision_rules import (
     validate_bracket_table_temporal_coverage,
     validate_reconciliation_total_closure,
 )
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 
 _REVISION_REFERENCE_SOURCE_TIERS = ("official_source_guidance", "layout_authority")
 

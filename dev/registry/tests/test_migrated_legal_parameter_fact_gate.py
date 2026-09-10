@@ -17,10 +17,11 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
     resolve_governed_fact,
 )
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
-from dev.registry.compiler.facts_validation import migrated_legal_parameter_fact_failures
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from dev.registry.compiler.fact_providers import compile_registered_fact_providers
+from dev.registry.compiler.fact_validation import migrated_legal_parameter_fact_failures
 from dev.registry.compiler.loader import load_shared_catalogues
+from dev.registry.compiler.validator import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -31,6 +32,12 @@ def _registry_root():
 
 def _catalogue() -> GovernedFactCatalogue:
     return compile_registered_fact_providers(_registry_root())
+
+
+def _compiler_catalogues() -> RegistryCatalogues:
+    root = _registry_root()
+    catalogues = load_shared_catalogues(root)
+    return catalogues.model_copy(update={"facts": compile_registered_fact_providers(root)})
 
 
 def _resolve_scalar(fact_id: str, effective_date: date) -> ResolvedScalarFact:
@@ -105,6 +112,22 @@ def test_gate_detects_a_gap_in_source_grounded_temporal_coverage() -> None:
     )
 
     assert any("has a gap in its source-grounded temporal coverage" in failure for failure in failures)
+
+
+def test_canonical_compiler_validator_reports_a_missing_migrated_fact() -> None:
+    catalogues = _compiler_catalogues()
+    missing = GovernedFactCatalogue(
+        facts={
+            fact_id: fact
+            for fact_id, fact in catalogues.facts.items()
+            if fact_id != "liva-art-161:recargo-rate-general"
+        }
+    )
+    malformed_catalogues = catalogues.model_copy(update={"facts": missing})
+
+    failures = RegistryValidator(malformed_catalogues, source_root=bundled_path())._validate_catalogues()
+
+    assert "migrated legal-parameter fact 'liva-art-161:recargo-rate-general' is not authored" in failures
 
 
 def test_real_resolution_tracks_known_legal_change_boundaries() -> None:

@@ -19,8 +19,6 @@ from collections.abc import Mapping
 from graphlib import CycleError
 
 from cadrumo.core.casilla_id import CasillaId
-from ._validate_evidence import EvidenceValidator
-from ._validate_helpers import missing_refs
 from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
 from cadrumo.domain.calculations.registry.runtime_graph import formula_evaluation_order
 from cadrumo.domain.calculations.registry.schema import FormulaDefinition, ModeloRevision
@@ -29,6 +27,9 @@ from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 from cadrumo.domain.calculations.registry.validate_revision_identity import duplicates
+
+from ._validate_evidence import EvidenceValidator
+from ._validate_helpers import missing_refs
 
 
 def validate_formula_section(

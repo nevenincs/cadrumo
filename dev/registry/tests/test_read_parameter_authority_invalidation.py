@@ -28,6 +28,7 @@ from cadrumo.domain.calculations.registry import formula_runtime_ops
 from dev.registry.compiler._loader_internals import _collect_registry_tree_fingerprints_uncached
 from dev.registry.compiler.source_evidence_fingerprint import collect_source_evidence_fingerprints
 from dev.registry.compiler.verdict_cache import certify_registry_validation, compute_verdict_key
+from dev.registry.compiler.convenio import collect_convenio_fingerprints
 from cadrumo.domain.calculations.registry.formula_runtime_ops import read_parameter
 from dev.registry.compiler.identity import compute_walked_tree_digest
 from dev.registry.compiler.loader_cache import _bundled_registry_root

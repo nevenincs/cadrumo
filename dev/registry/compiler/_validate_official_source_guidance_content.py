@@ -86,11 +86,12 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Final
 
-from .source_file_text import read_source_file_text
-from ._validate_evidence import EvidenceValidator
 from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind
 from cadrumo.domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
+
+from ._validate_evidence import EvidenceValidator
+from .source_file_text import read_source_file_text
 
 #: A suppression notice must itself say something was suppressed or repealed.
 #: Deliberately stem-based (not "suprimido"/"derogado" as exact forms) so it

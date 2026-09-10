@@ -43,7 +43,6 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_location
 from cadrumo.core.toml import freeze_toml, read_toml
-from cadrumo.domain.calculations.registry._cache_policy import BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS
 from cadrumo.domain.calculations.registry._toml_helpers import as_toml_table as _as_toml_table
 from cadrumo.domain.calculations.registry.errors import (
     RegistryFailureClassification,
@@ -60,6 +59,8 @@ from cadrumo.domain.calculations.registry.ids import RevisionId
 # itself stays deliberately un-derived so the pytest branch below can keep
 # selecting on it being unset.
 _REGISTRY_DISK_CACHE_RELATIVE_PATH = storage_location(StorageCategory.REGISTRY_DISK_CACHE).relative_path()
+
+BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS = 10.0
 
 # The bundled tree is the only tree whose fingerprints are cached at all, and
 # its window is bounded rather than process-lifetime: under an editable install

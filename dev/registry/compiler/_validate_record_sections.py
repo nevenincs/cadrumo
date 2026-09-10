@@ -21,6 +21,18 @@ from collections.abc import Mapping
 from pathlib import Path
 
 from cadrumo.core.casilla_id import CasillaId
+from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
+from cadrumo.domain.calculations.registry.bindings import validate_binding_selector_shape
+from cadrumo.domain.calculations.registry.ids import BindingId
+from cadrumo.domain.calculations.registry.m303_regimen_simplificado_annual_summary_bindings import (
+    validate_m303_regimen_simplificado_annual_summary_revision,
+)
+from cadrumo.domain.calculations.registry.manual_input_selector import is_layout_binding_selector
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, FormulaDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_base import REGISTRY_SOURCE_GROUNDING_TIERS
+from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
 from ._validate_evidence import EvidenceValidator
 from ._validate_extraction_profiles import (
     validate_bbox_anchor_consistency,
@@ -33,17 +45,6 @@ from ._validate_extraction_profiles import (
 from ._validate_helpers import missing_refs
 from ._validate_parameter_temporal import validate_non_filing_axis_admission
 from ._validate_revision_rules import validate_dated_values
-from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
-from cadrumo.domain.calculations.registry.bindings import validate_binding_selector_shape
-from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.m303_regimen_simplificado_annual_summary_bindings import (
-    validate_m303_regimen_simplificado_annual_summary_revision,
-)
-from cadrumo.domain.calculations.registry.manual_input_selector import is_layout_binding_selector
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, FormulaDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_base import REGISTRY_SOURCE_GROUNDING_TIERS
-from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 
 def _validate_casilla_grounding(

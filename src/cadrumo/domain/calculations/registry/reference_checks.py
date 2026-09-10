@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from .errors import RegistryValidationError
+from .ids import BindingId
 from .reference_checker import IdReferenceChecker as _IdReferenceChecker
 from .reference_sections import (
     check_binding_selector_shapes,
@@ -16,8 +18,6 @@ from .reference_sections import (
     check_dependency_classification_refs,
     check_export_layout_refs,
 )
-from .errors import RegistryValidationError
-from .ids import BindingId
 from .schema import ModeloRevision
 from .schema_input_kind import InputKind
 from .validate_cross_domain_snapshot import (

@@ -21,10 +21,11 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 
 from cadrumo.core.aggregation import BindingSourceKind
-from ._validate_source_casilla_ids import source_casilla_id_reference_failure
 from cadrumo.domain.calculations.registry.bindings_previous_filing import previous_filing_source_reference
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloDefinition
+
+from ._validate_source_casilla_ids import source_casilla_id_reference_failure
 
 
 def validate_previous_filing_binding_closure(

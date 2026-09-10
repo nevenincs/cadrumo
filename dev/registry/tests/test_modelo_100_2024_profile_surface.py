@@ -11,7 +11,7 @@ from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry import bindings as _bindings
-from cadrumo.domain.calculations.registry._validate import RegistryValidator
+from dev.registry.compiler.validator import RegistryValidator
 from cadrumo.domain.calculations.registry.bindings import ProfileSelector, selector_model_for_source
 from cadrumo.domain.calculations.registry.schema import RegistryCatalogues, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind

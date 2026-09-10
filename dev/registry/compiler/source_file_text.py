@@ -23,7 +23,7 @@ from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.resources.bundled_data import resolve_companion_binary
 
 if TYPE_CHECKING:
-    from .schema_references import SourceReference
+    from cadrumo.domain.calculations.registry.schema_references import SourceReference
 
 __all__ = ["read_source_file_text"]
 

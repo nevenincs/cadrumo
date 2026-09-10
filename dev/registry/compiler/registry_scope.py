@@ -8,6 +8,9 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.validate_revision_identity import duplicates as _duplicates
+
 from . import _validate_cross_revision as cross_revision_validation
 from ._validate_cross_revision import (
     cross_revision_casilla_consistency_failures as _validate_cross_revision_casilla_consistency,
@@ -32,8 +35,6 @@ from ._validate_semantic_roles import (
 from ._validate_semantic_roles import (
     semantic_role_typo_twin_failures as _validate_semantic_role_typo_twins,
 )
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition
-from cadrumo.domain.calculations.registry.validate_revision_identity import duplicates as _duplicates
 
 
 def validate_registry_scope(modelos: Iterable[ModeloDefinition]) -> tuple[str, ...]:
