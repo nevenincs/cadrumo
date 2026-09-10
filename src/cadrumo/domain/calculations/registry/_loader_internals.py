@@ -18,6 +18,7 @@ from typing import Final, cast
 
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
+from ....core.authority_grade import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
 from ....core.directory_scan import (
     DirectoryEntryKind,
     scan_directory,
@@ -89,6 +90,7 @@ from .schema_surfaces import CasillaEvolutionKind
 from .validate_revision_identity import revision_reference_identity_failures
 
 _PREDECESSOR_FIELD: Final = "predecessor"
+_AUTHORITY_GRADE_FIELD: Final = "authority_grade"
 _NO_PREDECESSOR_TABLE_KEY: Final = "none"
 _INHERITED_SECTION: Final = "casillas"
 _RETIREMENT_SECTION: Final = "casilla_continuidad_evolutions"
@@ -300,10 +302,11 @@ def _materialise_revisions(
     - a stated row carrying a lineage the same edition retires.
 
     The predecessor graph is checked as a forest first, so the recursion walks
-    a tree and a chain resolves its predecessor before the successor.
+    a tree and a chain resolves its predecessor before the successor. Every
+    edge is then refused where the successor declares a lower authority grade
+    than its predecessor, before anything is inherited.
 
-    Where it stops: it does not judge whether a predecessor may be declared at
-    all for the edition's authority grade, and it does not resolve formula or
+    Where it stops: it does not resolve formula or
     binding references on an inherited row against the successor. It adds no
     locale identity to the rows either; enrolment afterwards derives every
     row's keys from the edition it now sits in, and the label origins returned
@@ -321,6 +324,7 @@ def _materialise_revisions(
         )
     except RegistryValidationError as exc:
         raise RegistryLoadError(f"{source_path}: invalid modelo definition: {exc}") from exc
+    _refuse_predecessor_above_successor_grade(source_path, raw_revisions, declarations.named)
     resolved: dict[str, _MaterialisedRevision] = {}
     materialised: dict[str, object] = dict(raw_revisions)
     label_origins: dict[str, _LabelOrigins] = {}
@@ -336,6 +340,61 @@ def _materialise_revisions(
         if revision.label_origins is not None:
             label_origins[revision_id] = revision.label_origins
     return _MaterialisedRevisions(revisions=materialised, label_origins=label_origins)
+
+
+def _refuse_predecessor_above_successor_grade(
+    source_path: Path,
+    raw_revisions: Mapping[str, object],
+    named: Mapping[str, str],
+) -> None:
+    """Refuse a declared predecessor whose authority grade outranks its successor's.
+
+    A successor declaring a lower grade than its predecessor withholds by
+    design: it deliberately claims less than the edition before it. Inheriting
+    there would carry the predecessor's rows into an edition that chose not to
+    state them, turning an honest deferral into a complete-looking edition, so
+    such a successor must stay full-copy. The minimality screen cannot see this,
+    because a sparse successor's stated rows match nothing inherited.
+
+    The comparison reads the declared ``authority_grade`` of both editions, never
+    their row counts. An undeclared grade reads as
+    :data:`~cadrumo.core.authority_grade.UNDECLARED_REGISTRY_AUTHORITY_GRADE`, the
+    floor, so an ungraded successor of a graded predecessor above that floor is
+    refused. A token that names no grade is left to typed construction, which
+    refuses the edition with the grade field's own error.
+
+    Where it stops: an edition declaring only a header while refusing to state
+    figures it cannot ground is refused only when that refusal also lowers its
+    declared grade. Nothing in the schema declares header-only withholding at an
+    equal grade, and this check does not infer it from how many rows an edition
+    carries.
+    """
+    ladder = tuple(RegistryAuthorityGrade)
+    for successor_id, predecessor_id in named.items():
+        successor_grade = _declared_authority_grade(raw_revisions.get(successor_id))
+        predecessor_grade = _declared_authority_grade(raw_revisions.get(predecessor_id))
+        if successor_grade is None or predecessor_grade is None:
+            continue
+        if ladder.index(successor_grade) >= ladder.index(predecessor_grade):
+            continue
+        raise RegistryLoadError(
+            f"{source_path}: revision {successor_id!r} declares predecessor {predecessor_id!r}, but its authority "
+            f"grade {successor_grade.value!r} is lower than the predecessor's {predecessor_grade.value!r}; an "
+            "edition withholding by design must state every row itself, so remove the predecessor declaration"
+        )
+
+
+def _declared_authority_grade(raw_revision: object) -> RegistryAuthorityGrade | None:
+    """Return the edition's authority grade, the floor when undeclared, ``None`` when unreadable."""
+    table = _as_toml_table(raw_revision)
+    if table is None:
+        return None
+    token = table.get(_AUTHORITY_GRADE_FIELD)
+    if token is None:
+        return UNDECLARED_REGISTRY_AUTHORITY_GRADE
+    if not isinstance(token, str) or token not in RegistryAuthorityGrade:
+        return None
+    return RegistryAuthorityGrade(token)
 
 
 def _materialise_revision(
