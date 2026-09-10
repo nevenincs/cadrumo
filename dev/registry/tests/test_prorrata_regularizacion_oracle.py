@@ -40,8 +40,8 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.parity.external_grounding import ManualWorkedExamplePayload
 
+from cadrumo.application.calculations.prorrata_regularizacion import project_prorrata_regularizacion_feed
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.money.rounding import round_to_cents
 from cadrumo.domain.calculations.registry.authority import bundled_authority
@@ -53,11 +53,11 @@ from cadrumo.domain.iva.prorrata import (
     RegularizacionProrrataDireccion,
     compute_prorrata_general,
 )
+from dev.registry.parity.external_grounding import ManualWorkedExamplePayload
 from dev.registry.tests.manual_oracle_support import (
     oracle_declared_figures,
     read_manual_worked_example,
 )
-from cadrumo.application.calculations.prorrata_regularizacion import project_prorrata_regularizacion_feed
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -210,9 +210,7 @@ def test_m303_prorrata_regularizacion_reproduces_aeat_manual_oracle() -> None:
     assert projection.modelo_303_casilla_44_id == _CASILLA_44_ID
     assert projection.modelo_303_casilla_44_value == _MANUAL_CASILLA_44_REGULARIZACION
 
-    fourth_quarter_deductible = round_to_cents(
-        _FOURTH_QUARTER_INPUT_IVA * definitive_percentage / Decimal("100")
-    )
+    fourth_quarter_deductible = round_to_cents(_FOURTH_QUARTER_INPUT_IVA * definitive_percentage / Decimal("100"))
     regularizacion_value = projection.modelo_303_casilla_44_value
     definitive_deduction = result.deduccion_definitiva
     assert regularizacion_value is not None

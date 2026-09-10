@@ -33,14 +33,17 @@ from ..pipeline.cli import publish_authority_candidate_workflow
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_CATALOGUE = """\
+_CATALOGUE = (
+    """\
 [supported_filing_years]
 years = [2025]
 
 [sociedades_annual_manual_coverage]
-""" + (
-    'dispositions = [{ year = 2025, status = "unpublished", official_locator = "https://example.com/manuals", observed_at = 2026-09-10, acquisition_condition_key = "application.registry.manuals.coverage.recheck" }]\n'  # noqa: E501
-) + """
+"""
+    + (
+        'dispositions = [{ year = 2025, status = "unpublished", official_locator = "https://example.com/manuals", observed_at = 2026-09-10, acquisition_condition_key = "application.registry.manuals.coverage.recheck" }]\n'  # noqa: E501
+    )
+    + """
 
 [legal."test-ley-001:art-1"]
 evidence_tier = "legal_authority"
@@ -76,6 +79,7 @@ retrieved_at = 2025-01-01
 source_url = "https://example.com/test-source-002"
 review_status = "pending_review"
 """
+)
 
 _MANIFEST = """\
 [modelo]

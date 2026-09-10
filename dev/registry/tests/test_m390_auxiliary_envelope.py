@@ -6,6 +6,7 @@ import ast
 import inspect
 
 import pytest
+from cadrumo.domain.calculations.registry.loader import load_catalogue_file
 from pydantic import ValidationError
 
 from cadrumo.core.period import Period
@@ -13,7 +14,6 @@ from cadrumo.core.product_identity import AeatProductSoftwareEvidence, AeatProdu
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.loader import load_catalogue_file
 
 from ..pipeline import _m390_auxiliary_envelope
 from ..pipeline._m390_auxiliary_envelope import (

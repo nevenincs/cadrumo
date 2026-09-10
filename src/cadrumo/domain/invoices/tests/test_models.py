@@ -548,8 +548,6 @@ def test_catalogue_iteration_yields_invoices() -> None:
     assert len(catalogue) == 2
 
 
-
-
 @pytest.mark.parametrize(
     "field",
     (

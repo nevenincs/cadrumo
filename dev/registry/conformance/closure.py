@@ -19,13 +19,6 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, Field, computed_field, model_validator
 
-from .closure_models import (
-    RegistryClosureFilingChannelRefusal,
-    RegistryClosureLimb,
-    RegistryClosureLimbName,
-    RegistryClosureOwnerDisposition,
-    RegistryClosureRefusalReason,
-)
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.domain.calculations.registry.authority import (
@@ -38,6 +31,13 @@ from ..temporal_coverage import (
     TemporalCoverageReport,
     TemporalRevisionCoverageSummary,
     compose_temporal_coverage,
+)
+from .closure_models import (
+    RegistryClosureFilingChannelRefusal,
+    RegistryClosureLimb,
+    RegistryClosureLimbName,
+    RegistryClosureOwnerDisposition,
+    RegistryClosureRefusalReason,
 )
 from .filing_export_coverage import (
     FilingExportCoverageReport,

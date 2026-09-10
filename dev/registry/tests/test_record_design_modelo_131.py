@@ -8,6 +8,7 @@ import pytest
 
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.export import resolve_export_layout
+
 from ._record_design_support import (
     _MODELO_131_CURRENT,
     _MODELO_131_WORKBOOK_ROOT,

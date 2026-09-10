@@ -94,6 +94,7 @@ _DISPOSITIVE_KINDS = frozenset(
     },
 )
 
+
 @dataclass(frozen=True, slots=True)
 class _PresumptiveNormativeCorpusException:
     """The review record that admits one markup-only normative corpus file."""
@@ -184,6 +185,7 @@ def _validate_legal_corpus_provenance(reference: LegalReference, source_root: Pa
                 f"at {corpus_path!r}, which has no reviewed per-file exception; re-acquire "
                 "BOE-attested evidence or add a bounded reviewed exception.",
             )
+
 
 #: Calibrated against what :func:`_legal_corpus_text` actually RETURNS, not
 #: against the raw bundled HTML: ``normalise_corpus_text`` lowercases and

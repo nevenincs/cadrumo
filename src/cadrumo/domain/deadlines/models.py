@@ -875,10 +875,7 @@ def evaluate_multiple_pagadores_obligation(
     """
     if pagadores_count is None or secondary_income is None:
         return False
-    if not (
-        pagadores_count >= 2
-        and secondary_income > facts.decimal("lirpf-multiple-pagadores-secondary-threshold")
-    ):
+    if not (pagadores_count >= 2 and secondary_income > facts.decimal("lirpf-multiple-pagadores-secondary-threshold")):
         return False
     if total_work_income is None:
         return True

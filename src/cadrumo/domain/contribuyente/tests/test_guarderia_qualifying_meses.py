@@ -125,7 +125,9 @@ class TestAgeEligibleMonthsIsTotalNotJustCorrectWhereItIsCalled:
         for birth in (date(2022, 3, 1), date(2022, 12, 31), date(_YEAR, 6, 15), date(_YEAR, 1, 1)):
             child = _child(birth, annual=1000)
             assert child.age_at_year_end(_YEAR) < 3
-            assert child.guarderia_qualifying_meses(_YEAR, context=_CONTEXT) == child.age_eligible_guarderia_meses(_YEAR, context=_CONTEXT)
+            assert child.guarderia_qualifying_meses(_YEAR, context=_CONTEXT) == child.age_eligible_guarderia_meses(
+                _YEAR, context=_CONTEXT
+            )
 
 
 class TestTurningThreePeriod:
@@ -190,7 +192,9 @@ class TestMonthSelectionAgreesWithTheSpendMethod:
         """
         child = _child(birth, mensual="1-12:100")
 
-        assert (child.guarderia_qualifying_meses(_YEAR, context=_CONTEXT) == 0) == (child.guarderia_contributing_spend(_YEAR, context=_CONTEXT) == 0)
+        assert (child.guarderia_qualifying_meses(_YEAR, context=_CONTEXT) == 0) == (
+            child.guarderia_contributing_spend(_YEAR, context=_CONTEXT) == 0
+        )
 
     def test_the_turning_three_methods_select_the_same_declared_entries(self) -> None:
         """Both methods read the SAME declared entries, checked by construction.

@@ -1225,11 +1225,15 @@ async def capture_source_filed_data(
     live evidence capture must use the same validated legal snapshot as filing.
     """
     session, settings = await active_verified_session()
-    revision = bundled_authority().snapshot(
-        modelo,
-        filing_year=year,
-        period=period.registry_token,
-    ).revision
+    revision = (
+        bundled_authority()
+        .snapshot(
+            modelo,
+            filing_year=year,
+            period=period.registry_token,
+        )
+        .revision
+    )
     store = FiledDeclaracionObservationStore(output_root)
     accumulator = _CaptureAccumulator()
     seen: set[tuple[str, int, str, str]] = set()

@@ -207,7 +207,7 @@ def test_a_declared_retencion_is_never_screened_by_the_rate_advisory() -> None:
     assert observations[0].taxable_base_amount == Decimal("1000.00")
     assert not any(
         _conforms_to_fixed_rate(Decimal("1000.00"), observations[0].withheld_amount, rate)
-        for rate in statutory_activity_retencion_rates()
+        for rate in statutory_activity_retencion_rates(effective_date=_QUARTER.end_date)
     ), "the figure must match no statutory rate, or the silence below proves nothing"
 
     assert inferred_actividad_retencion_rate_advisory_observations(observations) == ()

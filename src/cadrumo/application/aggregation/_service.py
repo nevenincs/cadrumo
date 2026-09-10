@@ -72,6 +72,7 @@ AggregationErrorCodes: tuple[str, ...] = (
     "ERROR_FINANCIAL_AGGREGATION_VALIDATION",
 )
 
+
 class PerModeloAggregationContributorContract(BaseModel):
     """Backend-owned contract for one aggregation provider family."""
 
@@ -269,7 +270,7 @@ class PerModeloAggregationResult(BaseModel):
         return self
 
 
-def _counterpart_binding(binding: "DataBindingDefinition") -> bool:
+def _counterpart_binding(binding: DataBindingDefinition) -> bool:
     """Return whether a canonical invoice binding declares the M349 counterpart shape."""
     if binding.source is BindingSourceKind.M347_THIRD_PARTY_OPERATION:
         return True
@@ -279,7 +280,7 @@ def _counterpart_binding(binding: "DataBindingDefinition") -> bool:
     return grouping in {"operator_clave", "operator_clave_period"}
 
 
-def _provider_for_modelo_definition(modelo: "ModeloDefinition") -> PerModeloAggregationContributor | None:
+def _provider_for_modelo_definition(modelo: ModeloDefinition) -> PerModeloAggregationContributor | None:
     """Classify a modelo from its registered aggregation implementation and binding sources."""
     bindings = tuple(binding for revision in modelo.revisions.values() for binding in revision.bindings)
     providers: set[PerModeloAggregationContributor] = set()

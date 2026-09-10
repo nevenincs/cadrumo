@@ -93,6 +93,8 @@ def _family_fact_context(snapshot: RegistrySnapshot) -> FamilyFactResolutionCont
         filing_period=coordinate,
         devengo_date=coordinate,
     )
+
+
 # Marital-status token sets, derived from the enum rather than restated.
 #
 # Every predicate below reads ``renta_taxpayer.marital_status``, which the
@@ -256,10 +258,14 @@ def _inject_derived_family_facts(
     The two are different populations and always were; only one of them was
     misnamed.
     """
-    context = context if context is not None else FamilyFactResolutionContext(
-        authority=bundled_authority(),
-        filing_period=date(filing_year, 12, 31),
-        devengo_date=date(filing_year, 12, 31),
+    context = (
+        context
+        if context is not None
+        else FamilyFactResolutionContext(
+            authority=bundled_authority(),
+            filing_period=date(filing_year, 12, 31),
+            devengo_date=date(filing_year, 12, 31),
+        )
     )
     guarderia_key = f"renta_family.descendientes_guarderia_{filing_year}"
     gastos_key = f"renta_family.gastos_guarderia_reales_{filing_year}"
@@ -492,9 +498,7 @@ def _resolve_maternidad_meses_from_fact_index(
     """
     declares_meses = _fact_index_declares_maternidad_months(fact_index)
     try:
-        cotizaciones_ceiling_retired_year = context.integer(
-            "lirpf-art-81-contribution-ceiling-retired-effective-year"
-        )
+        cotizaciones_ceiling_retired_year = context.integer("lirpf-art-81-contribution-ceiling-retired-effective-year")
     except RegistryValidationError:
         # The retired-ceiling fact begins with the amendment that removed it.
         # An earlier filing coordinate cannot establish that later legal fact,
@@ -522,9 +526,7 @@ def _resolve_maternidad_meses_from_fact_index(
     # resolver used to build it inline while `meses_maternidad_por_descendiente`
     # computed the same thing with no production caller -- two authorities for
     # one answer, which is how the guarderia half once drifted from its record.
-    pairs = profile.meses_maternidad_por_descendiente(
-        snapshot.filing_year, thresholds=thresholds, context=context
-    )
+    pairs = profile.meses_maternidad_por_descendiente(snapshot.filing_year, thresholds=thresholds, context=context)
     return _maternidad_resolved_resolution(
         profile,
         pairs,
@@ -1006,10 +1008,14 @@ def madrid_nacimiento_adopcion_candidate_weighted_count(
     indeterminate (conjunta/married) unit that should not silently resolve to
     zero.
     """
-    context = context if context is not None else FamilyFactResolutionContext(
-        authority=bundled_authority(),
-        filing_period=date(filing_year, 12, 31),
-        devengo_date=date(filing_year, 12, 31),
+    context = (
+        context
+        if context is not None
+        else FamilyFactResolutionContext(
+            authority=bundled_authority(),
+            filing_period=date(filing_year, 12, 31),
+            devengo_date=date(filing_year, 12, 31),
+        )
     )
     descendant_facts = {
         key: str(value) for key, value in fact_index.items() if key.startswith("renta_family.descendiente.")
@@ -1052,10 +1058,14 @@ def inject_derived_autonomic_deduccion_facts(
     """
     if filing_year != MADRID_AUTONOMIC_DEDUCCION_FILING_YEAR:
         return
-    context = context if context is not None else FamilyFactResolutionContext(
-        authority=bundled_authority(),
-        filing_period=date(filing_year, 12, 31),
-        devengo_date=date(filing_year, 12, 31),
+    context = (
+        context
+        if context is not None
+        else FamilyFactResolutionContext(
+            authority=bundled_authority(),
+            filing_period=date(filing_year, 12, 31),
+            devengo_date=date(filing_year, 12, 31),
+        )
     )
 
     # Always supply a neutral 0 default so the casilla-1039 formula's two profile
@@ -1072,9 +1082,7 @@ def inject_derived_autonomic_deduccion_facts(
     if is_indeterminate_unidad_familiar(fact_index):
         return
 
-    weighted_count = madrid_nacimiento_adopcion_candidate_weighted_count(
-        fact_index, filing_year, context=context
-    )
+    weighted_count = madrid_nacimiento_adopcion_candidate_weighted_count(fact_index, filing_year, context=context)
     if weighted_count <= 0:
         return
 

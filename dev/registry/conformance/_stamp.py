@@ -200,6 +200,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
+from cadrumo.domain.calculations.registry.loader import load_modelo_directory
 from pydantic import ValidationError as PydanticValidationError
 
 from cadrumo.core.external_constants import UTF_8_ENCODING
@@ -208,7 +209,6 @@ from cadrumo.core.revision_review import RevisionReviewStatus
 from cadrumo.core.toml import to_str_keyed_dict
 from cadrumo.core.type_guards import is_object_mapping
 from cadrumo.domain.calculations.registry.errors import RegistryError
-from cadrumo.domain.calculations.registry.loader import load_modelo_directory
 from cadrumo.domain.calculations.registry.schema import (
     REVISION_GOVERNANCE_FIELDS,
     DeclaredPredecessor,

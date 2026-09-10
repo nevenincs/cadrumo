@@ -527,9 +527,7 @@ _TARGET_CASILLA_M131_AGRARIO: CasillaId = validated_casilla_id(
     surface="_TARGET_CASILLA_M131_AGRARIO",
 )
 
-_M131_AGRARIO_ACTIVITY_SELECTOR: Final[str] = (
-    "modelo-131:selector-m036-volumen-ingresos-agrario"
-)
+_M131_AGRARIO_ACTIVITY_SELECTOR: Final[str] = "modelo-131:selector-m036-volumen-ingresos-agrario"
 
 
 def _m131_agrarian_activity_codes(*, effective_date: date) -> frozenset[TipoActividad]:

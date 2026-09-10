@@ -10,6 +10,9 @@ to diagnose the mismatch from the message alone.
 from __future__ import annotations
 
 import pytest
+
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 from dev.registry.maintenance_support import (
     LiveParityCatalogue,
     OracleEnvironment,
@@ -18,8 +21,6 @@ from dev.registry.maintenance_support import (
 )
 
 from .aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition
-from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

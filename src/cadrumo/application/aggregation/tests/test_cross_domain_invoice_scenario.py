@@ -99,7 +99,7 @@ def test_the_scenario_figures_satisfy_the_canonical_invoice_identity() -> None:
     assert Decimal("1210.00") == _TOTAL
     assert Decimal("1060.00") == _CASH
     assert (_BASE * Decimal("0.21")).quantize(Decimal("0.01")) == _CUOTA
-    statutory_retencion_rate = load_retencion_actividades_rates().general_rate
+    statutory_retencion_rate = load_retencion_actividades_rates(effective_date=_VALUE_DATE).general_rate
     assert (_BASE * statutory_retencion_rate).quantize(Decimal("0.01")) == _RETENCION
 
 

@@ -10,11 +10,12 @@ canonical content the validator allows.
 from __future__ import annotations
 
 import pytest
-from dev.registry.maintenance_support import _COMPATIBLE_SURFACE_PAIRS
 from pydantic import ValidationError
 
-from cadrumo.tests.aeat_literal_fixtures import aeat_host
 from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision
+from cadrumo.tests.aeat_literal_fixtures import aeat_host
+from dev.registry.maintenance_support import _COMPATIBLE_SURFACE_PAIRS
+
 from ._remote_guard_support import AEAT_WRITE_FORBIDDEN_ACTIONS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

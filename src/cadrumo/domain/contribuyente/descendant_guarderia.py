@@ -70,9 +70,7 @@ class DescendantGuarderiaMixin(DescendantMaternityMixin):
             return 0
         return len(self._guarderia_art_81_1_months(filing_year, context=context))
 
-    def _guarderia_art_81_1_months(
-        self, filing_year: int, *, context: FamilyFactResolutionContext
-    ) -> frozenset[int]:
+    def _guarderia_art_81_1_months(self, filing_year: int, *, context: FamilyFactResolutionContext) -> frozenset[int]:
         """The Art. 81.1 months, clipped to the increment's own requirement window."""
         return frozenset(self.meses_madre_trabajo) & self._guarderia_requirement_months(filing_year, context=context)
 
@@ -149,9 +147,8 @@ class DescendantGuarderiaMixin(DescendantMaternityMixin):
         present in that method's contributing pairs, exactly as
         :meth:`meses_maternidad_por_descendiente` does.
         """
-        return (
-            self.alta_posterior_nacimiento_mes is not None
-            and filing_year >= context.integer("lirpf-art-81-maternity-post-birth-enrollment-effective-year")
+        return self.alta_posterior_nacimiento_mes is not None and filing_year >= context.integer(
+            "lirpf-art-81-maternity-post-birth-enrollment-effective-year"
         )
 
     def guarderia_contributing_spend(self, filing_year: int, *, context: FamilyFactResolutionContext) -> int:

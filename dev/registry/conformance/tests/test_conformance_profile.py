@@ -23,7 +23,6 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from dev.registry.maintenance_support import load_bundled_external_oracle_inventory
 
 from cadrumo.core.export_layout_format import ExportLayoutFormat
 from cadrumo.core.modelo import NON_REGISTRY_MODELOS, Modelo
@@ -31,11 +30,12 @@ from cadrumo.core.revision_review import RevisionReviewStatus
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.export_parse import xml_dictionary_entries
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.tests.registry_tree import bundled_registry_tree
+from dev.registry.conformance.errors import RegistryApplicationInputError
 from dev.registry.conformance.external_grounding import (
     RegistryExternalGroundingAudit,
     build_external_grounding_audit,
 )
-from dev.registry.conformance.registry_classification_coherence import build_classification_coherence_audit
 from dev.registry.conformance.profile import (
     AnnualCasillaPopulationComparison,
     RegistryConformanceProfile,
@@ -43,8 +43,9 @@ from dev.registry.conformance.profile import (
     compare_annual_casilla_population,
     compare_annual_casilla_population_for_revision,
 )
-from cadrumo.tests.registry_tree import bundled_registry_tree
-from dev.registry.conformance.errors import RegistryApplicationInputError
+from dev.registry.conformance.registry_classification_coherence import build_classification_coherence_audit
+from dev.registry.maintenance_support import load_bundled_external_oracle_inventory
+
 from ._conformance_profile_fixtures import degraded_profile, validated_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

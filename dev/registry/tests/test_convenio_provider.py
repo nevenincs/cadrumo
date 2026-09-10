@@ -7,17 +7,18 @@ from decimal import Decimal
 
 import pytest
 
-from ......core.irnr import ConvenioOverrideKind, TipoRentaIrnr
-from ......core.resources.bundled_data import bundled_path
-from ...authority import ValidatedRegistryAuthority
-from ...convenio import (
-    CONVENIO_OVERRIDE_FACT_ID,
-    compile_convenio_facts,
-    load_convenio_authority,
+from cadrumo.core.irnr import ConvenioOverrideKind, TipoRentaIrnr
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.convenio import CONVENIO_OVERRIDE_FACT_ID
+from cadrumo.domain.calculations.registry.facts.resolution import (
+    OverrideFactQuery,
+    ResolvedOverrideFact,
+    resolve_governed_fact,
 )
-from ...schema_base import DateAxis
-from ..resolution import OverrideFactQuery, ResolvedOverrideFact, resolve_governed_fact
-from ..schema import FactSelector, GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.facts.schema import FactSelector, GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.schema_base import DateAxis
+from dev.registry.compiler.convenio import compile_convenio_facts, load_convenio_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

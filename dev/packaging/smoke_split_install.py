@@ -34,7 +34,6 @@ from .lane_verification_core import (
     relative_manifest_path,
     resolve_work_dir,
     run_checked,
-    venv_cadrumo_path,
     venv_python_path,
     write_smoke_manifest,
 )

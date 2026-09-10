@@ -15,7 +15,6 @@ from cadrumo.domain.calculations.registry.schema_surfaces import (
     CasillaContinuidadEvolutionDefinition,
     CasillaDefinition,
 )
-from ._record_design_support import _committed_registry_tree
 from cadrumo.domain.calculations.registry.tests._referential_integrity_support import (
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,
@@ -35,6 +34,8 @@ from cadrumo.domain.calculations.registry.tests._referential_integrity_support i
     single_segment_casilla,
     snapshot_for_revision,
 )
+
+from ._record_design_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_NUMERIC_CASILLA_01")

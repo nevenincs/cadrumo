@@ -43,7 +43,6 @@ from decimal import Decimal
 from functools import lru_cache
 
 import pytest
-from dev.registry.maintenance_support import load_modelo_path
 
 from cadrumo.application.modelo._verification_predicates import evaluate_advisory_predicate_fires
 from cadrumo.application.modelo.verification_actions import evaluate_verification_predicates
@@ -53,6 +52,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
+from dev.registry.maintenance_support import load_modelo_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

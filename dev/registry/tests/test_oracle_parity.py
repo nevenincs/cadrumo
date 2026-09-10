@@ -5,6 +5,15 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 import pytest
+from pydantic import AnyUrl, ValidationError
+
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
+from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
+from cadrumo.tests.aeat_literal_fixtures import (
+    aeat_host,
+    aeat_url,
+)
 from dev.registry.maintenance_support import LiveParityCatalogue, OracleEnvironment
 from dev.registry.parity.live_parity import (
     OracleSurfaceKind,
@@ -15,15 +24,6 @@ from dev.registry.parity.live_parity import (
     decode_replay_json_payload,
 )
 from dev.registry.parity.renta_web_open_oracle import RentaWebOpenOracle
-from pydantic import AnyUrl, ValidationError
-
-from cadrumo.tests.aeat_literal_fixtures import (
-    aeat_host,
-    aeat_url,
-)
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
-from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
 from dev.registry.tests.aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from dev.registry.tests.groi_oracle import GROI_ORACLE_ID, GroiOracle
 

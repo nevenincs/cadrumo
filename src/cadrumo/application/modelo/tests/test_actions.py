@@ -542,9 +542,7 @@ def test_art20_reduccion_advisory_silent_for_declared_or_ineligible_values(
     No false positive when: RNT is at/above the ceiling (reduction is genuinely zero),
     the reducción is already declared, or RNT is zero.
     """
-    assert _art20_reduccion_advisory_finding(
-        _art20_revision(), casilla_values, context=_MODELO_FACT_CONTEXT
-    ) is None
+    assert _art20_reduccion_advisory_finding(_art20_revision(), casilla_values, context=_MODELO_FACT_CONTEXT) is None
 
 
 def test_art20_reduccion_advisory_silent_when_roles_absent() -> None:

@@ -11,12 +11,12 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.facts.modelo_projections import ModeloParameterFact
-from cadrumo.domain.calculations.registry.facts.providers import (
+from cadrumo.domain.calculations.registry.facts.schema import FactSelector
+from dev.registry.compiler.fact_providers import (
     FACT_PROVIDER_REGISTRATIONS,
     compile_registered_fact_providers,
 )
-from cadrumo.domain.calculations.registry.facts.schema import FactSelector
-from cadrumo.domain.calculations.registry.facts.statutory_constants import compile_statutory_constant_facts
+from dev.registry.compiler.statutory_constants import compile_statutory_constant_facts
 
 _ROOT = Path(__file__).resolve().parents[3]
 _MANIFEST = _ROOT / "dev/registry/analysis/facts_wave2_provider_handoff.toml"
@@ -73,9 +73,7 @@ def test_handoff_targets_live_wave3_steps_files_and_wave1_ledgers() -> None:
     external = tomllib.loads(
         (_ROOT / manifest["external_constants_ledger"]).read_text(encoding="utf-8"),
     )
-    external_fact_ids = {
-        row["destination_id"] for row in external["classifications"] if row["kind"] == "governed_fact"
-    }
+    external_fact_ids = {row["destination_id"] for row in external["classifications"] if row["kind"] == "governed_fact"}
     statutory_fact_ids = {fact.fact_id for fact in compile_statutory_constant_facts(bundled_path("registry", "aeat"))}
     assert statutory_fact_ids == external_fact_ids - {"iva-general-rate"}
 

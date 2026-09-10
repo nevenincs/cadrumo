@@ -12,6 +12,9 @@ pairs using the concrete oracle adapters registered in production.
 from __future__ import annotations
 
 import pytest
+
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 from dev.registry.maintenance_support import (
     _COMPATIBLE_SURFACE_PAIRS,
     LiveParityCatalogue,
@@ -22,8 +25,6 @@ from dev.registry.parity.renta_web_open_oracle import RentaWebOpenOracle
 
 from .aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from .groi_oracle import GROI_ORACLE_ID, GroiOracle
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition
-from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -90,7 +90,9 @@ class TestCompiledEnumerationsComeFromTheRegistry:
     def test_retencion_rates_equal_the_rirpf_art_95_parameters_as_percentages(self) -> None:
         compiled = build_invoice_extraction_prompt(period=_ANNUAL_2026)
 
-        expected = sorted(rate * Decimal("100") for rate in statutory_activity_retencion_rates())
+        expected = sorted(
+            rate * Decimal("100") for rate in statutory_activity_retencion_rates(effective_date=_ANNUAL_2026.end_date)
+        )
 
         assert list(compiled.retencion_rate_pcts) == expected
 

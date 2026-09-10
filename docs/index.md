@@ -184,6 +184,7 @@ Reconcile a filing <how-to/reconcile>
 :caption: Help
 
 Troubleshooting <how-to/troubleshooting>
+Publish runtime authority <how-to/publish-runtime-authority>
 Disclaimer <disclaimer>
 ```
 

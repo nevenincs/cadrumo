@@ -13,10 +13,10 @@ import shutil
 from pathlib import Path
 
 import pytest
+from cadrumo.domain.calculations.registry.loader import load_modelo_directory
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.loader import load_modelo_directory
 
 from ..analysis.hand_authored_type_column import hand_authored_revisions
 from ..analysis.type_column_coverage import (

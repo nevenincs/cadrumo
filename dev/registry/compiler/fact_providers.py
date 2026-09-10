@@ -8,20 +8,13 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Protocol
 
-from .....core.directory_scan import DirectoryEntryKind, scan_directory
-from ....categories.registry import (
-    CATEGORY_FACT_PROVIDER_DIRECTORY,
-    CATEGORY_FACT_PROVIDER_ID,
-    collect_category_profile_fact_fingerprints,
-    compile_category_profile_facts,
-    reset_category_profile_fact_provider,
-)
-from ..errors import RegistryValidationError
-from ..loader_cache import toml_file_fingerprint
-from ..loader_fingerprints import RegistryPathFingerprints
-from ..schema import ModeloDefinition
-from .loader import is_governed_fact_filename, load_governed_facts
-from .schema import GovernedFact, GovernedFactCatalogue
+from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.loader_cache import toml_file_fingerprint
+from cadrumo.domain.calculations.registry.loader_fingerprints import RegistryPathFingerprints
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from dev.registry.compiler.fact_loader import is_governed_fact_filename, load_governed_facts
 
 __all__ = [
     "FACT_PROVIDER_REGISTRATIONS",
@@ -229,13 +222,13 @@ def _reset_no_direct_provider() -> None:
 
 
 def _compile_convenio_provider(registry_root: Path) -> tuple[GovernedFact, ...]:
-    from ..convenio import compile_convenio_facts
+    from dev.registry.compiler.convenio import compile_convenio_facts
 
     return compile_convenio_facts(registry_root)
 
 
 def _collect_convenio_provider_fingerprints(registry_root: Path) -> RegistryPathFingerprints:
-    from ..convenio import collect_convenio_fingerprints
+    from dev.registry.compiler.convenio import collect_convenio_fingerprints
 
     return collect_convenio_fingerprints(registry_root)
 
@@ -245,15 +238,13 @@ def _reset_convenio_provider() -> None:
 
 
 def _iva_rate_provider_registration() -> FactProviderRegistration:
-    from ....iva.rates import (
-        IVA_RATE_PROVIDER_ID,
+    from cadrumo.domain.iva.rates import IVA_RATE_PROVIDER_ID
+    from dev.registry.compiler.iva import (
         collect_iva_rate_fact_fingerprints,
-        compile_iva_rate_facts,
-        reset_iva_rate_fact_provider,
-    )
-    from ....iva.recargo_equivalencia import (
         collect_iva_recargo_fact_fingerprints,
+        compile_iva_rate_facts,
         compile_iva_recargo_facts,
+        reset_iva_rate_fact_provider,
         reset_iva_recargo_fact_provider,
     )
 
@@ -281,7 +272,7 @@ def _iva_rate_provider_registration() -> FactProviderRegistration:
 
 
 def _holiday_calendar_provider_registration() -> FactProviderRegistration:
-    from ....deadlines.festivos import (
+    from cadrumo.domain.deadlines.festivos import (
         HOLIDAY_CALENDAR_PROVIDER_DIRECTORY,
         HOLIDAY_CALENDAR_PROVIDER_ID,
         collect_holiday_calendar_fact_fingerprints,
@@ -299,7 +290,7 @@ def _holiday_calendar_provider_registration() -> FactProviderRegistration:
 
 
 def _statutory_constant_provider_registration() -> FactProviderRegistration:
-    from .statutory_constants import (
+    from dev.registry.compiler.statutory_constants import (
         STATUTORY_CONSTANTS_PROVIDER_DIRECTORY,
         STATUTORY_CONSTANTS_PROVIDER_ID,
         collect_statutory_constant_fingerprints,
@@ -316,26 +307,26 @@ def _statutory_constant_provider_registration() -> FactProviderRegistration:
     )
 
 
-def _legal_parameter_provider_registration() -> FactProviderRegistration:
-    from .legal_parameters import (
-        LEGAL_PARAMETER_PROVIDER_DIRECTORY,
-        LEGAL_PARAMETER_PROVIDER_ID,
-        collect_legal_parameter_fact_fingerprints,
-        compile_legal_parameter_facts,
-        reset_legal_parameter_fact_provider,
+def _category_profile_provider_registration() -> FactProviderRegistration:
+    from cadrumo.domain.categories.registry import (
+        CATEGORY_FACT_PROVIDER_DIRECTORY,
+        CATEGORY_FACT_PROVIDER_ID,
+        collect_category_profile_fact_fingerprints,
+        compile_category_profile_facts,
+        reset_category_profile_fact_provider,
     )
 
     return FactProviderRegistration(
-        provider_id=LEGAL_PARAMETER_PROVIDER_ID,
-        owned_directories=(LEGAL_PARAMETER_PROVIDER_DIRECTORY,),
-        compile=compile_legal_parameter_facts,
-        collect_fingerprints=collect_legal_parameter_fact_fingerprints,
-        reset=reset_legal_parameter_fact_provider,
+        provider_id=CATEGORY_FACT_PROVIDER_ID,
+        owned_directories=(CATEGORY_FACT_PROVIDER_DIRECTORY,),
+        compile=compile_category_profile_facts,
+        collect_fingerprints=collect_category_profile_fact_fingerprints,
+        reset=reset_category_profile_fact_provider,
     )
 
 
 def _modelo_parameter_projection_registration() -> FactProviderRegistration:
-    from .modelo_projections import (
+    from cadrumo.domain.calculations.registry.facts.modelo_projections import (
         MODELO_PARAMETER_PROJECTION_PROVIDER_ID,
         compile_modelo_parameter_projection_facts,
     )
@@ -360,13 +351,7 @@ FACT_PROVIDER_REGISTRATIONS = validate_fact_provider_registrations(
             collect_fingerprints=_collect_authored_fact_fingerprints,
             reset=_reset_authored_fact_provider,
         ),
-        FactProviderRegistration(
-            provider_id=CATEGORY_FACT_PROVIDER_ID,
-            owned_directories=(CATEGORY_FACT_PROVIDER_DIRECTORY,),
-            compile=compile_category_profile_facts,
-            collect_fingerprints=collect_category_profile_fact_fingerprints,
-            reset=reset_category_profile_fact_provider,
-        ),
+        _category_profile_provider_registration(),
         FactProviderRegistration(
             provider_id="convenio-overrides",
             owned_directories=("treaties",),
@@ -378,7 +363,6 @@ FACT_PROVIDER_REGISTRATIONS = validate_fact_provider_registrations(
         _holiday_calendar_provider_registration(),
         _statutory_constant_provider_registration(),
         _modelo_parameter_projection_registration(),
-        _legal_parameter_provider_registration(),
     ),
 )
 """The sole canonical declaration of governed-fact providers and ownership."""

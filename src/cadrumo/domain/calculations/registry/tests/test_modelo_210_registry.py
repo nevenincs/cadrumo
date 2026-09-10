@@ -6,13 +6,13 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.convenio import load_convenio_authority
 
 from .....core.irnr import ConvenioOverrideKind, TipoRentaIrnr
 from .....core.resources.bundled_data import bundled_path
 from .....core.result_disposition import ResultDisposition
 from .....tests.registry_snapshot import build_snapshot
 from .._validate import RegistryValidator
-from ..convenio import load_convenio_authority
 from ..errors import NoRevisionForPeriodError
 from ..legal import verify_legal_catalogue
 from ..loader import load_catalogue_file, load_modelo_directory

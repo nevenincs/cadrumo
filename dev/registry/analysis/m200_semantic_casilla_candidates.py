@@ -16,11 +16,11 @@ from enum import StrEnum
 from pathlib import Path
 
 import rtoml
+from cadrumo.domain.calculations.registry.loader import load_catalogue_file, load_modelo_directory
 
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from cadrumo.domain.calculations.registry.loader import load_catalogue_file, load_modelo_directory
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from ..pipeline.record_design_intermediate import (

@@ -24,6 +24,9 @@ from __future__ import annotations
 from collections.abc import Iterator
 
 import pytest
+
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from dev.registry.conformance.tests._registry_schema_support import _committed_registry_tree
 from dev.registry.maintenance_support import (
     CrossReferenceApplicabilityDeclaracion,
     LiveParityCatalogue,
@@ -32,11 +35,8 @@ from dev.registry.maintenance_support import (
     collect_orphan_oracle_ids,
 )
 from dev.registry.parity.renta_web_open_oracle import RentaWebOpenOracle
-
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from dev.registry.tests.aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from dev.registry.tests.groi_oracle import GROI_ORACLE_ID, GroiOracle
-from dev.registry.conformance.tests._registry_schema_support import _committed_registry_tree
 
 # INTENTIONAL: unit because the audit helpers are pure and exercise the real oracle
 # catalogue with no I/O and no AEAT contact.

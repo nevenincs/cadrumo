@@ -6,15 +6,6 @@ from abc import abstractmethod
 from collections.abc import Mapping
 from typing import Protocol
 
-from dev.registry.parity.live_parity import (
-    OracleSurfaceKind,
-    ParityFieldComparison,
-    ParityResult,
-    ParityVerdict,
-    ParityVerdictKind,
-    assert_oracle_operations_allowed,
-    decode_replay_json_payload,
-)
 from pydantic import AnyUrl, BaseModel
 
 from cadrumo.core.identity import tax_id_identity_token
@@ -26,6 +17,15 @@ from cadrumo.domain.calculations.registry.checker_oracle_flow import (
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import OracleId
 from cadrumo.domain.calculations.registry.remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
+from dev.registry.parity.live_parity import (
+    OracleSurfaceKind,
+    ParityFieldComparison,
+    ParityResult,
+    ParityVerdict,
+    ParityVerdictKind,
+    assert_oracle_operations_allowed,
+    decode_replay_json_payload,
+)
 
 
 class CheckerOracle:

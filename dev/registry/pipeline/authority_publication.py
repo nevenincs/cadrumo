@@ -19,7 +19,6 @@ from cadrumo.domain.calculations.registry._source_evidence_fingerprint import (
 from cadrumo.domain.calculations.registry.authority_artifact import AuthorityArtifact, write_authority_artifact
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.identity import resolve_registry_identity
-
 from dev.registry.compiler.authority import canonical_authoring_root_pair, compile_validated_authority
 from dev.registry.compiler.loader import collect_registry_tree_fingerprints
 

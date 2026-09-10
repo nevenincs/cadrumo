@@ -49,7 +49,6 @@ from datetime import date
 from enum import StrEnum
 from typing import Annotated, Literal
 
-from dev.registry.maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
 from pydantic import BeforeValidator, Field, PrivateAttr, computed_field, model_validator
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
@@ -62,7 +61,13 @@ from cadrumo.domain.calculations.registry._schema_family_coverage import (
 from cadrumo.domain.calculations.registry._snapshot_internals import check_snapshot_filing_review_tier
 from cadrumo.domain.calculations.registry.authority import RegistryCoverageFacts, ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError, RegistryValidationError
-from cadrumo.domain.calculations.registry.ids import BindingId, CrossReferenceId, LegalRefId, SourceRefId, WorkbookParityRefId
+from cadrumo.domain.calculations.registry.ids import (
+    BindingId,
+    CrossReferenceId,
+    LegalRefId,
+    SourceRefId,
+    WorkbookParityRefId,
+)
 from cadrumo.domain.calculations.registry.schema import (
     DataBindingDefinition,
     FormulaDefinition,
@@ -76,6 +81,7 @@ from cadrumo.domain.calculations.registry.schema_references import SourceReferen
 from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
 from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision, WorkbookParityReference
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
+from dev.registry.maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
 
 CoverageGateStatus = Literal["satisfied", "gap"]
 

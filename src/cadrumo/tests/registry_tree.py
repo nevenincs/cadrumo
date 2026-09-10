@@ -5,8 +5,9 @@ from __future__ import annotations
 from functools import cache
 from typing import TYPE_CHECKING
 
-from ..core.resources.bundled_data import bundled_path
 from dev.registry.compiler.loader import load_registry_tree
+
+from ..core.resources.bundled_data import bundled_path
 
 if TYPE_CHECKING:
     from ..domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues

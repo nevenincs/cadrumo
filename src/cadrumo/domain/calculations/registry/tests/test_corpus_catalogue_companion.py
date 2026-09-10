@@ -124,10 +124,7 @@ def test_changed_provenance_shaped_normative_source_still_fails_hash_validation(
         }
     )
     verify_source_file(tmp_path, source)
-    assert (
-        classify_normative_corpus_provenance(tmp_path, corpus_path)
-        is NormativeCorpusProvenance.BOE_ATTESTED
-    )
+    assert classify_normative_corpus_provenance(tmp_path, corpus_path) is NormativeCorpusProvenance.BOE_ATTESTED
     target.write_bytes(b"<!-- Official BOE consolidated source excerpt -->\n<p>changed!</p>\n")
 
     with pytest.raises(RegistryValidationError, match="sha256 mismatch"):

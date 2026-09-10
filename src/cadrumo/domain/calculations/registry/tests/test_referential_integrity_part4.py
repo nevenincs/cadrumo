@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id

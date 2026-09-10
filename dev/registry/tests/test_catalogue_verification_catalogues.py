@@ -9,6 +9,7 @@ from cadrumo.domain.calculations.registry._validate import RegistryValidator
 from cadrumo.domain.calculations.registry.corpus_catalogue import verify_source_catalogue
 from cadrumo.domain.calculations.registry.legal import verify_legal_catalogue_grounding
 from cadrumo.tests import REPO_ROOT
+
 from ._catalogue_verification_support import _registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

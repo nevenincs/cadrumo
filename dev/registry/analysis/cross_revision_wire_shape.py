@@ -26,10 +26,10 @@ The screen exits 0 whatever it finds. It reports; it does not gate.
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-import re
 from typing import Final
 
 from cadrumo.core.resources.bundled_data import bundled_path

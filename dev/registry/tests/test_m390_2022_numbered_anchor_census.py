@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import pytest
+from cadrumo.domain.calculations.registry.loader import load_catalogue_file
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.loader import load_catalogue_file
 
 from ..analysis.m390_2022_anchor_census import (
     M390_2022_NUMBERED_ANCHOR_COUNT,

@@ -27,6 +27,7 @@ from pathlib import Path
 from typing import Final
 
 import pytest
+from cadrumo.domain.calculations.registry.loader import load_registry_tree
 from pydantic import ValidationError
 
 from cadrumo.core.filing_producer_key import FilingProducerKey
@@ -37,7 +38,6 @@ from cadrumo.domain.calculations.registry.fixed_width_codec import (
     parse_fixed_width_export_field,
     render_fixed_width_export_field,
 )
-from cadrumo.domain.calculations.registry.loader import load_registry_tree
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
 from ..pipeline._export_tree import (

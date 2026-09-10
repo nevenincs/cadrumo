@@ -16,17 +16,19 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....core.irnr import ConvenioOverrideKind, TipoRentaIrnr
-from .....core.resources.bundled_data import bundled_path
-from ..convenio import (
+from cadrumo.core.irnr import ConvenioOverrideKind, TipoRentaIrnr
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.convenio import (
     ConvenioAuthority,
     ConvenioOverrideRow,
     ConvenioTreaty,
+)
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
+from dev.registry.compiler.convenio import (
     collect_convenio_fingerprints,
     load_convenio_authority,
     validate_convenio_legal_refs,
 )
-from ..errors import RegistryLoadError, RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
