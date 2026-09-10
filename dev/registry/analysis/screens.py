@@ -31,7 +31,11 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from .capability_continuity import screen_authority as capability_continuity_screen
 from .casilla_id_grammar import screen_authority as grammar_screen
 from .continuity_integrity import screen_authority as continuity_screen
+from .cross_revision_wire_shape import screen_authority as cross_revision_wire_shape_screen
+from .delta_minimality import screen_authority as delta_minimality_screen
+from .export_derivation_attestation import screen_authority as export_attestation_screen
 from .export_ref_symmetry import screen_authority as export_ref_screen
+from .fabricated_required_ness import screen_authority as fabricated_required_screen
 from .footnote_only_wire_facts import screen_authority as footnote_only_screen
 from .grade_earned import screen_authority as grade_screen
 from .manifest_uncited_references import screen_authority as manifest_uncited_screen
@@ -46,9 +50,6 @@ from .rule_grounding_coverage import screen_authority as rule_grounding_screen
 from .temporal_site_agreement import screen_authority as temporal_site_screen
 from .type_convention_notes import screen_authority as type_convention_screen
 from .unnumbered_note_scope import screen_corpus as unnumbered_note_scope_screen
-from .cross_revision_wire_shape import screen_authority as cross_revision_wire_shape_screen
-from .export_derivation_attestation import screen_authority as export_attestation_screen
-from .fabricated_required_ness import screen_authority as fabricated_required_screen
 from .unresolvable_note_pointers import screen_authority as unresolvable_note_pointer_screen
 from .wire_type_compatibility import screen_authority as wire_type_screen
 
@@ -242,6 +243,11 @@ SCREENS: tuple[ScreenEntry, ...] = (
     ),
     ScreenEntry(
         "continuity_integrity", continuity_screen, "modelos with no continuity, and chains that do not hold together"
+    ),
+    ScreenEntry(
+        "delta_minimality",
+        delta_minimality_screen,
+        "successor casilla rows stated identically to the row they would inherit, plus rows it cannot judge",
     ),
     ScreenEntry(
         "monetary_scale",

@@ -16,7 +16,10 @@ from typing import Annotated, Final, Literal
 from pydantic import (
     BaseModel,
     BeforeValidator,
+    Discriminator,
     Field,
+    SerializerFunctionWrapHandler,
+    Tag,
     ValidationInfo,
     field_serializer,
     field_validator,
@@ -133,6 +136,7 @@ __all__ = [
     "FormulaDefinition",
     "ModeloDefinition",
     "ModeloRevision",
+    "NoPredecessor",
     "RegistryCatalogues",
     "RegistrySnapshot",
     "SupportedFilingYearsCatalogue",
@@ -727,9 +731,10 @@ class DeclaredPredecessor(RegistryModel):
     to exactly that string. The wrapper exists so the declaration is a type
     rather than a string: the revision id vocabulary admits any lowercase token,
     so no reserved string could later mean "no predecessor exists" without
-    colliding with a legal revision id. A distinct declaration kind can join this
-    one on the same field instead, and a consumer matching on the declaration's
-    type keeps reading an absent key, a predecessor, and any later kind apart.
+    colliding with a legal revision id. :class:`NoPredecessor` is the distinct
+    declaration kind sharing the field, and a consumer matching on the
+    declaration's type reads an absent key, a predecessor, and an explicit
+    no-predecessor apart.
     """
 
     revision_id: RevisionId
@@ -739,21 +744,86 @@ class DeclaredPredecessor(RegistryModel):
         return self.revision_id
 
 
-def _hydrate_declared_predecessor(value: object) -> object:
-    """Accept the one authored spelling of a predecessor: a revision id string.
+_NO_PREDECESSOR_KEY: Final = "none"
+_DECLARED_PREDECESSOR_TAG: Final = "revision"
+_PREDECESSOR_KIND_REFUSAL: Final = (
+    "predecessor must be the revision id of a sibling edition, or a single 'none' table "
+    "grounding why no earlier sibling edition exists"
+)
 
-    A table spelling such as ``{ revision_id = "2024" }`` is refused rather than
-    accepted as an equivalent, so the declaration has a single canonical form.
+
+class NoPredecessor(RegistryModel):
+    """A revision's explicit, grounded claim that no earlier sibling edition exists.
+
+    Distinct from the key being absent: an absent key is a full-copy revision
+    that says nothing about its siblings, and is shape-identical to a successor
+    whose author forgot the key. This declaration is the positive statement that
+    the revision chains to nothing, so it carries the same burden as any other
+    substantive claim — a reason somebody wrote and the references it stands on.
+
+    Authored as a ``none`` table under the key::
+
+        [revisions."esquema-union".predecessor.none]
+        reason = "..."
+        legal_refs = ["..."]
+        source_refs = ["..."]
+
+    and serialised back to exactly that nesting.
     """
-    if isinstance(value, DeclaredPredecessor):
-        return value
+
+    reason: str = Field(min_length=1, max_length=1024)
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
+
+    @model_serializer(mode="wrap")
+    def _serialise_as_authored(self, handler: SerializerFunctionWrapHandler) -> dict[str, object]:
+        return {_NO_PREDECESSOR_KEY: handler(self)}
+
+
+def _predecessor_declaration_kind(value: object) -> str | None:
+    """Name the declaration kind an authored ``predecessor`` value spells, if any.
+
+    Dispatch reads the raw authored shape, so a table is the no-predecessor kind
+    only when its single key is ``none``. Every other shape — including a table
+    spelling of a revision id — names no kind and is refused.
+    """
+    if isinstance(value, DeclaredPredecessor | str):
+        return _DECLARED_PREDECESSOR_TAG
+    if isinstance(value, NoPredecessor):
+        return _NO_PREDECESSOR_KEY
+    if isinstance(value, Mapping) and set(value) == {_NO_PREDECESSOR_KEY}:
+        return _NO_PREDECESSOR_KEY
+    return None
+
+
+def _hydrate_declared_predecessor(value: object) -> object:
+    """Hydrate the one authored spelling of a predecessor: a revision id string."""
     if isinstance(value, str):
         return {"revision_id": value}
-    raise ValueError(f"predecessor must be the revision id of a sibling edition, got {type(value).__name__}")
+    return value
 
 
-DeclaredPredecessorField = Annotated[DeclaredPredecessor, BeforeValidator(_hydrate_declared_predecessor)]
-"""Registry token hydrated into a :class:`DeclaredPredecessor`."""
+def _hydrate_no_predecessor(value: object) -> object:
+    """Unwrap the authored ``none`` table into the declaration it carries."""
+    if isinstance(value, Mapping):
+        return value[_NO_PREDECESSOR_KEY]
+    return value
+
+
+DeclaredPredecessorField = Annotated[
+    Annotated[
+        DeclaredPredecessor,
+        BeforeValidator(_hydrate_declared_predecessor),
+        Tag(_DECLARED_PREDECESSOR_TAG),
+    ]
+    | Annotated[NoPredecessor, BeforeValidator(_hydrate_no_predecessor), Tag(_NO_PREDECESSOR_KEY)],
+    Discriminator(
+        _predecessor_declaration_kind,
+        custom_error_type="predecessor_kind",
+        custom_error_message=_PREDECESSOR_KIND_REFUSAL,
+    ),
+]
+"""Registry token hydrated into a :class:`DeclaredPredecessor` or a :class:`NoPredecessor`."""
 
 
 class ModeloRevision(RegistryModel):
@@ -805,7 +875,8 @@ class ModeloRevision(RegistryModel):
     out, so a revision without the key is a full-copy revision stating every row
     itself. Absent reads as ``None`` and is excluded from serialisation, so a
     revision that does not declare the key dumps exactly as it did before the
-    key existed.
+    key existed. A :class:`NoPredecessor` is the grounded statement that the
+    revision chains to no sibling at all, which absence cannot say.
     """
 
     id: RevisionId
