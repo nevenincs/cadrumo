@@ -1,4 +1,4 @@
-"""Orchestration for TTL-backed registry fingerprint cache keys."""
+"""Development-only orchestration for mutable registry fingerprint cache keys."""
 
 from __future__ import annotations
 
@@ -7,7 +7,8 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Protocol
 
-from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryLoadError
+from cadrumo.domain.calculations.registry.errors import RegistryFailureClassification, RegistryFailureCondition, RegistryLoadError
+
 from .loader_cache import toml_file_fingerprint
 
 type RegistryPathFingerprint = tuple[str, int, int, str]

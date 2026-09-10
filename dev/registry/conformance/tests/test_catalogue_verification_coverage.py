@@ -19,7 +19,7 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.corpus_catalogue import verify_source_file
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError, RegistryValidationError
 from cadrumo.domain.calculations.registry.legal import verify_legal_catalogue_grounding
-from cadrumo.domain.calculations.registry.loader_fingerprints import clear_fingerprint_cache
+from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
 from cadrumo.domain.calculations.registry.schema import filing_period_from_scope
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
 from cadrumo.domain.calculations.registry.schema_references import SourceReference

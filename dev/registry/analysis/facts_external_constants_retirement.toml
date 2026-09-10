@@ -52,13 +52,13 @@ condition = "provider owns raw parsing, statutory caps, grounding, temporal reso
 path = "src/cadrumo/domain/transactions/retencion_parameters.py"
 symbols = ["RirpfArt95RetencionRates", "AdministradorRetencionRates", "load_retencion_actividades_rates", "load_administrador_retencion_rates", "rirpf_art95_retencion_legal_refs", "administrador_retencion_legal_refs", "statutory_activity_retencion_rates"]
 rationale = "typed transaction-rate projections and legal-reference disclosures remain domain contracts"
-condition = "facts authority supplies typed values and provenance; LegalParameter.value parsing and load_legal_parameters_only calls retire"
+condition = "facts authority supplies typed values and provenance; raw LegalParameter.value parsing retires"
 
 [[preservation_boundary.domain_facades]]
 path = "src/cadrumo/domain/transactions/tipo_actividad_partitions.py"
 symbols = ["irpf_activity_kind_for", "load_tipo_actividad_selectors", "tipo_actividad_code_set"]
 rationale = "typed Modelo 036 activity classification remains transaction-domain behavior"
-condition = "facts authority supplies entity sets and provenance; local string splitting and load_legal_parameters_only calls retire"
+condition = "facts authority supplies entity sets and provenance; local string splitting retires"
 
 # One classification row exists for every declaration row below. Empty
 # counterparts mean the Python declaration is the only current value authority.
@@ -737,67 +737,3 @@ symbol = "DEHU_RECHAZO_TACITO_DIAS_NATURALES"
 family = "scalar"
 migration_step = "W03.P13.S53"
 consumers = [{ path = "src/cadrumo/core/notificacion_estado_servicio.py", symbol = "resolve_notificacion_estado_servicio" }]
-
-[[legal_parameter_adapters]]
-symbol = "load_legal_parameters_only"
-source_path = "src/cadrumo/domain/calculations/registry/loader.py"
-classification = "temporary_legal_parameter_adapter"
-disposition = "delete_after_last_caller"
-deletion_step = "W04.P17.S34"
-retained_symbols = ["load_shared_catalogues", "load_catalogue_file", "RegistryCatalogues.parameters", "LegalParameter"]
-retained_authority_path = "src/cadrumo/_data/registry/aeat/legal"
-closure = "all 21 parameter ids resolve through authority providers with provenance; all six call sites stop importing the adapter and parsing LegalParameter.value; no production import remains; then delete only load_legal_parameters_only"
-
-[[legal_parameter_adapters.callers]]
-path = "src/cadrumo/domain/iva/recargo_equivalencia.py"
-symbol = "_load_rates"
-destination_family = "mapping"
-destination_fact_ids = ["liva-art-161:recargo-rate-general", "liva-art-161:recargo-rate-reducido", "liva-art-161:recargo-rate-super-reducido", "liva-art-161:recargo-rate-tabaco"]
-authority_path = "src/cadrumo/_data/registry/aeat/legal/iva-recargo-equivalencia.toml"
-dependencies = ["W02.P05.S14", "W03.P12.S26", "W04.P17.S34"]
-consumer_disposition = "retain_typed_recargo_facade_rewire_resolution"
-
-[[legal_parameter_adapters.callers]]
-path = "src/cadrumo/domain/transactions/retencion_parameters.py"
-symbol = "_legal_refs_of"
-destination_family = "scalar"
-destination_fact_ids = ["rirpf-art-95:retencion-actividades-profesionales-general", "rirpf-art-95:retencion-actividades-profesionales-inicio", "rirpf-art-95:retencion-actividades-agricolas-ganaderas-general", "rirpf-art-95:retencion-actividades-ganaderas-engorde-porcino-avicultura", "rirpf-art-95:retencion-actividades-forestales", "rirpf-art-95:retencion-actividades-estimacion-objetiva"]
-authority_path = "src/cadrumo/_data/registry/aeat/legal/irpf-retencion-actividades.toml"
-dependencies = ["W02.P08.S21", "W03.P12.S51", "W04.P17.S34"]
-consumer_disposition = "retain_legal_reference_facade_rewire_provenance"
-
-[[legal_parameter_adapters.callers]]
-path = "src/cadrumo/domain/transactions/retencion_parameters.py"
-symbol = "load_retencion_actividades_rates"
-destination_family = "scalar"
-destination_fact_ids = ["rirpf-art-95:retencion-actividades-profesionales-general", "rirpf-art-95:retencion-actividades-profesionales-inicio", "rirpf-art-95:retencion-actividades-agricolas-ganaderas-general", "rirpf-art-95:retencion-actividades-ganaderas-engorde-porcino-avicultura", "rirpf-art-95:retencion-actividades-forestales", "rirpf-art-95:retencion-actividades-estimacion-objetiva"]
-authority_path = "src/cadrumo/_data/registry/aeat/legal/irpf-retencion-actividades.toml"
-dependencies = ["W02.P08.S21", "W03.P12.S51", "W04.P17.S34"]
-consumer_disposition = "retain_typed_rate_facade_rewire_resolution"
-
-[[legal_parameter_adapters.callers]]
-path = "src/cadrumo/domain/transactions/retencion_parameters.py"
-symbol = "load_administrador_retencion_rates"
-destination_family = "scalar"
-destination_fact_ids = ["lirpf-art-101:retencion-administrador-general", "lirpf-art-101:retencion-administrador-reducida", "lirpf-art-101:retencion-administrador-incn-umbral-eur"]
-authority_path = "src/cadrumo/_data/registry/aeat/legal/irpf-retencion-administradores.toml"
-dependencies = ["W02.P08.S21", "W03.P12.S51", "W04.P17.S34"]
-consumer_disposition = "retain_typed_rate_facade_rewire_resolution"
-
-[[legal_parameter_adapters.callers]]
-path = "src/cadrumo/domain/transactions/tipo_actividad_partitions.py"
-symbol = "_legal_parameters"
-destination_family = "entity_set"
-destination_fact_ids = ["rirpf-art-95:selector-m036-actividades-profesionales", "rirpf-art-95:selector-m036-actividades-agricolas-ganaderas", "rirpf-art-95:selector-m036-actividades-forestales", "rirpf-art-95:selector-m036-actividades-ganaderas-engorde-porcino-avicultura"]
-authority_path = "src/cadrumo/_data/registry/aeat/legal/irpf-retencion-actividades.toml"
-dependencies = ["W02.P08.S21", "W03.P12.S51", "W04.P17.S34"]
-consumer_disposition = "retain_typed_activity_classifier_rewire_resolution"
-
-[[legal_parameter_adapters.callers]]
-path = "src/cadrumo/application/modelo/_objective_estimation_advisory.py"
-symbol = "_objective_estimation_exclusion_advisory_findings"
-destination_family = "scalar"
-destination_fact_ids = ["lirpf-dt-32:eo-exclusion-rendimientos-conjunto-eur", "lirpf-dt-32:eo-exclusion-rendimientos-factura-eur", "lirpf-art-31:eo-exclusion-rendimientos-agricolas-ganaderos-forestales-eur", "lirpf-dt-32:eo-exclusion-compras-eur"]
-authority_path = "src/cadrumo/_data/registry/aeat/legal/irpf-estimacion-objetiva.toml"
-dependencies = ["W02.P08.S21", "W03.P11.S50", "W04.P17.S34"]
-consumer_disposition = "retain_advisory_rewire_resolution_and_provenance"

@@ -1,4 +1,4 @@
-"""Registry loader cache predicates.
+"""Development-only mutable-registry compiler cache predicates.
 
 This module centralizes the small policy decisions that keep registry loading
 fast without hiding live TOML edits. Bundled registry roots receive a short
@@ -32,20 +32,20 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from ....core.config import load_settings
-from ....core.directory_scan import (
+from cadrumo.core.config import load_settings
+from cadrumo.core.directory_scan import (
     DirectoryEntryKind,
     iter_directory,
     scan_directory,
 )
-from ....core.hashing import blake2b_hex
-from ....core.resources.bundled_data import bundled_path
-from ....core.storage_taxonomy import StorageCategory
-from ....core.storage_taxonomy_locations import storage_location
-from ....core.toml import freeze_toml, read_toml
-from ._toml_helpers import as_toml_table as _as_toml_table
-from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryLoadError
-from .ids import RevisionId
+from cadrumo.core.hashing import blake2b_hex
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_location
+from cadrumo.core.toml import freeze_toml, read_toml
+from cadrumo.domain.calculations.registry._toml_helpers import as_toml_table as _as_toml_table
+from cadrumo.domain.calculations.registry.errors import RegistryFailureClassification, RegistryFailureCondition, RegistryLoadError
+from cadrumo.domain.calculations.registry.ids import RevisionId
 
 """Environment variable backing :attr:`~core.config.Settings.cadrumo_registry_disk_cache_dir`."""
 

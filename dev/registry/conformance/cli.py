@@ -74,7 +74,6 @@ from cadrumo.domain.calculations.registry.legal import verify_legal_catalogue
 from dev.registry.compiler.authority import compile_validated_authority
 
 from ._stamp import StampableReviewStatus, StampError, bundled_registry_root, stamp_revision
-from .authorities import canonical_live_registry_closure_authorities
 from .closure import (
     RegistryClosureReport,
     check_registry_closure_release,
@@ -234,6 +233,12 @@ def closure(
     if offline:
         report = load_registry_closure_report()
     else:
+        # Closure alone needs filing-proof composition. Keeping this import at
+        # the command boundary lets the integrity gate compile mutable source
+        # inputs without importing product runtime dependencies, which are
+        # deliberately artifact-backed.
+        from .authorities import canonical_live_registry_closure_authorities
+
         repository_root = Path(__file__).resolve().parents[3]
         authorities = canonical_live_registry_closure_authorities(repository_root)
         report = load_registry_closure_report(

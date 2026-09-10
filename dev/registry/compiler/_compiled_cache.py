@@ -1,4 +1,4 @@
-"""Strict-validated, fingerprint-keyed compiled-registry cache.
+"""Development-only, fingerprint-keyed mutable-registry compiler cache.
 
 Persists the compiled ``(modelos, catalogues)`` set so a warm process skips the
 17,276-file TOML parse (measured cold compile 8.2 s versus a warm cache load of
@@ -50,14 +50,15 @@ from typing import Final, NamedTuple, TypeGuard
 
 from pydantic import BaseModel, TypeAdapter
 
-from ....core.aggregation import BindingSourceKind
-from ....core.atomic_write import atomic_write_best_effort_bytes
-from ....core.directory_scan import iter_directory, scan_directory
-from ....core.hashing import sha256_hex
-from ....core.paths import select_filesystem_retention_survivors
-from .bindings import selector_model_for_source
+from cadrumo.core.aggregation import BindingSourceKind
+from cadrumo.core.atomic_write import atomic_write_best_effort_bytes
+from cadrumo.core.directory_scan import iter_directory, scan_directory
+from cadrumo.core.hashing import sha256_hex
+from cadrumo.core.paths import select_filesystem_retention_survivors
+from cadrumo.domain.calculations.registry.bindings import selector_model_for_source
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+
 from .loader_cache import registry_disk_cache_dir, registry_disk_cache_max_entries
-from .schema import ModeloDefinition, RegistryCatalogues
 
 CompiledRegistryPayload = tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]
 """The compiled registry payload: every :class:`ModeloDefinition` plus the shared catalogues."""

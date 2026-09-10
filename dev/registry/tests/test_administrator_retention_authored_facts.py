@@ -18,7 +18,6 @@ from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalo
 from cadrumo.domain.calculations.registry.facts.validation import governed_fact_catalogue_failures
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from dev.registry.compiler.fact_loader import load_governed_facts
-from dev.registry.compiler.legal_parameters import compile_legal_parameter_facts
 from dev.registry.compiler.loader import load_shared_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -53,12 +52,10 @@ def _resolve(fact_id: str, effective_date: date) -> ResolvedScalarFact:
     return resolved
 
 
-def test_administrator_facts_are_authored_once_and_not_projected_by_the_legal_adapter() -> None:
+def test_administrator_facts_are_authored_once() -> None:
     authored_ids = set(_catalogue().facts)
-    adapter_ids = {fact.fact_id for fact in compile_legal_parameter_facts(bundled_path("registry", "aeat"))}
 
     assert authored_ids == _FACT_IDS
-    assert not authored_ids & adapter_ids
 
 
 @pytest.mark.parametrize(

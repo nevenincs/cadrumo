@@ -23,7 +23,6 @@ _WAVE2_PROVIDER_IDS = (
     "legal-holiday-calendars",
     "statutory-constants",
     "modelo-parameter-projections",
-    "global-legal-parameters",
 )
 
 

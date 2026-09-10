@@ -1,4 +1,4 @@
-"""Registry TOML loading internals.
+"""Development-only mutable-registry TOML compiler internals.
 
 The loading contract lives in :mod:`loader`; the fragment merge, the numbered-
 fragment grammar, the directory walk and the memoised load paths are here, so a
@@ -18,14 +18,14 @@ from typing import Final, cast
 
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
-from ....core.authority_grade import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
-from ....core.directory_scan import (
+from cadrumo.core.authority_grade import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
+from cadrumo.core.directory_scan import (
     DirectoryEntryKind,
     scan_directory,
 )
-from ....core.filing_producer_key import FilingProducerKey
-from ....core.filing_projection_ref import compile_filing_projection_ref
-from ....core.toml import freeze_toml, read_toml
+from cadrumo.core.filing_producer_key import FilingProducerKey
+from cadrumo.core.filing_projection_ref import compile_filing_projection_ref
+from cadrumo.core.toml import freeze_toml, read_toml
 from ._loader_revision_fragments import (
     REVISION_SECTION_FIELDS as _REVISION_SECTION_FIELDS,
 )
@@ -38,17 +38,17 @@ from ._loader_revision_fragments import (
 from ._loader_revision_fragments import (
     reject_local_catalogues as _reject_local_catalogues,
 )
-from ._toml_helpers import as_toml_table as _as_toml_table
-from .errors import (
+from cadrumo.domain.calculations.registry._toml_helpers import as_toml_table as _as_toml_table
+from cadrumo.domain.calculations.registry.errors import (
     RegistryFailureClassification,
     RegistryFailureCondition,
     RegistryLoadError,
     RegistryValidationError,
 )
-from .export_field_casilla import derive_casilla_export_refs
-from .export_semantics import ExportComputedKey, ExportDraftAttribute
-from .identifier_lineage import identifier_lineage
-from .ids import RevisionId
+from cadrumo.domain.calculations.registry.export_field_casilla import derive_casilla_export_refs
+from cadrumo.domain.calculations.registry.export_semantics import ExportComputedKey, ExportDraftAttribute
+from cadrumo.domain.calculations.registry.identifier_lineage import identifier_lineage
+from cadrumo.domain.calculations.registry.ids import RevisionId
 from .loader_cache import (
     BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS,
     is_bundled_registry_root,
@@ -67,30 +67,30 @@ from .loader_fingerprints import (
 from .loader_fingerprints import (
     refresh_toml_fingerprint_after_load_error as _refresh_toml_fingerprint_after_load_error,
 )
-from .modelo_localization import (
+from cadrumo.domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
     as_toml_array,
     casilla_occurrence_locale_key,
     enroll_revision_localization,
     modelo_locale_key,
 )
-from .revision_predecessor_forest import validate_predecessor_forest
-from .schema import (
+from cadrumo.domain.calculations.registry.revision_predecessor_forest import validate_predecessor_forest
+from cadrumo.domain.calculations.registry.schema import (
     REVISION_GOVERNANCE_FIELDS as _REVISION_GOVERNANCE_FIELDS,
 )
-from .schema import (
+from cadrumo.domain.calculations.registry.schema import (
     REVISION_MANIFEST_ONLY_FIELDS as _REVISION_MANIFEST_ONLY_FIELDS,
 )
-from .schema import (
+from cadrumo.domain.calculations.registry.schema import (
     ModeloDefinition,
     ModeloRevision,
     RegistryCatalogues,
     SociedadesAnnualManualCoverageCatalogue,
     SupportedFilingYearsCatalogue,
 )
-from .schema_references import LegalParameter, LegalReference, SourceReference
-from .schema_surfaces import CasillaDefinition, CasillaEvolutionKind
-from .validate_revision_identity import revision_reference_identity_failures
+from cadrumo.domain.calculations.registry.schema_references import LegalParameter, LegalReference, SourceReference
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition, CasillaEvolutionKind
+from cadrumo.domain.calculations.registry.validate_revision_identity import revision_reference_identity_failures
 
 _PREDECESSOR_FIELD: Final = "predecessor"
 _AUTHORITY_GRADE_FIELD: Final = "authority_grade"

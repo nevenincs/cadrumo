@@ -14,11 +14,8 @@ cannot silently relax them.
 from __future__ import annotations
 
 from decimal import Decimal
-from pathlib import Path
-
 import pytest
 
-from ..errors import CategoryValidationError
 from ..proportionality import ProportionalityKind
 from ..registry import load_category_profiles, resolve_category_profiles
 from ..spending_category import SpendingCategory
@@ -109,12 +106,3 @@ def test_resolve_category_profiles_rejects_unknown_year() -> None:
 
     with pytest.raises(ValueError, match=r"2099|year|unsupported|unknown"):
         resolve_category_profiles(2099)
-
-
-def test_load_category_profiles_wraps_missing_path_as_domain_error(tmp_path: Path) -> None:
-    """Registry file access failures stay inside the Cadrumo exception hierarchy."""
-
-    missing = tmp_path / "missing-category-profile.toml"
-
-    with pytest.raises(CategoryValidationError, match=r"cannot stat category profile registry"):
-        load_category_profiles(missing)

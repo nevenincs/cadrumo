@@ -1,4 +1,4 @@
-"""Fragmented revision loading and merge rules.
+"""Development-only fragmented revision compiler and merge rules.
 
 This module owns the grammar for a directory-mode revision: the manifest is
 kept separate from section fragments, and repeated table ids are merged only
@@ -15,12 +15,12 @@ from typing import get_args, get_origin
 
 from pydantic import BaseModel
 
-from ....core.toml import freeze_toml, read_toml
-from ._toml_helpers import as_toml_table as _as_toml_table
-from .errors import RegistryLoadError
-from .ids import RevisionId
-from .modelo_localization import as_toml_array
-from .schema import REVISION_GOVERNANCE_FIELDS, REVISION_MANIFEST_ONLY_FIELDS, ModeloRevision
+from cadrumo.core.toml import freeze_toml, read_toml
+from cadrumo.domain.calculations.registry._toml_helpers import as_toml_table as _as_toml_table
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.ids import RevisionId
+from cadrumo.domain.calculations.registry.modelo_localization import as_toml_array
+from cadrumo.domain.calculations.registry.schema import REVISION_GOVERNANCE_FIELDS, REVISION_MANIFEST_ONLY_FIELDS, ModeloRevision
 
 _REVISION_EXPORT_LAYOUTS = "export_layouts"
 _REVISION_CONSTRUCTS = "constructs"

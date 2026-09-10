@@ -1,4 +1,4 @@
-"""The complete raw revision table one edition of a directory-mode modelo stands for.
+"""Development-only materialisation of raw directory-mode modelo editions.
 
 An edition that names a predecessor states only the casillas that are new or
 that differ; the loader resolves the rest from the predecessor chain. Tooling
@@ -19,10 +19,11 @@ from ._loader_internals import (
     _load_modelo_revisions,
     _materialise_revisions,
 )
-from ._toml_helpers import as_toml_table
-from .errors import RegistryLoadError
+from cadrumo.domain.calculations.registry._toml_helpers import as_toml_table
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.schema import REVISION_GOVERNANCE_FIELDS
+
 from .loader_cache import validate_modelo_directory_source
-from .schema import REVISION_GOVERNANCE_FIELDS
 
 _REVIEW_STATUS_FIELD = "review_status"
 _PENDING_REVIEW = "pending_review"

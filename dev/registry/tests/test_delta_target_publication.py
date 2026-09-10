@@ -23,7 +23,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.edition_materialisation import materialise_edition
+from dev.registry.compiler.edition_materialisation import materialise_edition
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor
 from dev.registry.compiler.authority import compiled_bundled_authority

@@ -885,9 +885,8 @@ def _resolve_registry_applicability_rule(
     here), so a module-level import of :func:`~._authority.bundled_authority`
     would close a real cycle. Resolving on first call, long after both
     modules have finished importing, is the same discipline
-    :func:`~._loader.load_legal_parameters_only`'s own cycle-safe entry point
-    already documents -- module-body evaluation is the hazard, first-call
-    resolution is not.
+    used by the shared-catalogue compiler -- module-body evaluation is the
+    hazard, first-call resolution is not.
 
     No local cache sits in front of this call: :func:`~._authority.bundled_authority`
     is itself fingerprint-bounded, so calling it here costs one

@@ -12,11 +12,11 @@ from functools import lru_cache
 from pathlib import Path
 
 from cadrumo.core.directory_scan import scan_directory
-from cadrumo.domain.calculations.registry._compiled_cache import (
+from ._compiled_cache import (
     load_compiled_registry_cache,
     store_compiled_registry_cache,
 )
-from cadrumo.domain.calculations.registry._loader_internals import (
+from ._loader_internals import (
     _collect_modelo_directory_fingerprints,
     _collect_registry_tree_fingerprints,
     _load_catalogue_file_cached,
@@ -30,19 +30,19 @@ from cadrumo.domain.calculations.registry._loader_internals import (
     load_modelo_file,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
-from cadrumo.domain.calculations.registry.identity import (
+from .identity import (
     RegistryIdentity,
     resolve_registry_identity,
     stamped_cache_key_tuples,
 )
-from cadrumo.domain.calculations.registry.loader_cache import (
+from .loader_cache import (
     ModeloSource,
     discover_modelo_sources,
     is_bundled_registry_root,
     registry_disk_cache_enabled,
     validate_modelo_directory_source,
 )
-from cadrumo.domain.calculations.registry.loader_fingerprints import (
+from .loader_fingerprints import (
     refresh_toml_fingerprint_after_load_error as _refresh_toml_fingerprint_after_load_error,
 )
 from cadrumo.domain.calculations.registry.schema import (
@@ -89,11 +89,6 @@ def load_catalogue_file(path: Path) -> RegistryCatalogues:
         if refreshed == fingerprint:
             raise
         return _load_catalogue_file_cached(str(resolved), refreshed[1], refreshed[2], refreshed[3])
-
-
-def load_legal_parameters_only(root: Path) -> Mapping[str, LegalParameter]:
-    """Compile only mutable legal parameters for authoring-time checks."""
-    return load_shared_catalogues(root).parameters
 
 
 def load_shared_catalogues(root: Path) -> RegistryCatalogues:
