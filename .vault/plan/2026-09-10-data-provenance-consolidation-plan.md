@@ -10,7 +10,7 @@ related:
   - '[[2026-09-10-data-provenance-consolidation-live-lane-map-reference]]'
 modified: '2026-09-10'
 body_schema: body-v2
-body_hash: 'sha256:4064afecc553161e6d7a2eb13f1001974c66c67ee1b6b92055ff494f798f910a'
+body_hash: 'sha256:c7a88212d55078e01b8121f7b13e4a3d19779b7afb7e8e5e12f9c120ad9dbd20'
 ---
 
 # `data-provenance-consolidation` plan
@@ -100,7 +100,7 @@ Prove the shipped tree and all distinct quality contracts remain enforced after 
 
 Exercise each consumer-owned catalog boundary and all retained distinct quality contracts against real data.
 
-- [ ] `W04.P08.S23` - Verify each production consumer-owned evidence boundary has exhaustive exactly-once catalog classification; `dev/corpus/tests/ and dev/registry/tests/`.
+- [x] `W04.P08.S23` - Verify each production consumer-owned evidence boundary has exhaustive exactly-once catalog classification; `dev/corpus/tests/ and dev/registry/tests/`.
 - [ ] `W04.P08.S24` - Verify the authority publish workflow rejects a divergent record-design source binding while preserving the prior artifact; `dev/registry/tests/test_authority_publication.py`.
 - [x] `W04.P08.S25` - Verify record-design sync reproducibility and catalog-backed coverage without network writes; `dev/corpus/tests/test_record_design_support.py`.
 - [ ] `W04.P08.S26` - Verify sidecar, export, normative-text, and calculation-oracle contracts remain distinct; `dev/docs/preprocess/tests/test_corpus_sidecar_freshness.py`.

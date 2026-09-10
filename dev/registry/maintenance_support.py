@@ -59,13 +59,13 @@ from dev.registry.compiler.identity import (
     registry_identity_stamp_location,
 )
 from cadrumo.domain.calculations.registry.ids import CrossReferenceId, OracleId
-from cadrumo.domain.calculations.registry.m303_orden_census_artefact import (
+from dev.registry.compiler.m303_orden_census_artefact import (
     EXTRACTOR_VERSION,
     M303_ORDEN_CENSUS_SCHEMA_VERSION,
     M303AnnualOrdenCensusArtefact,
     M303AnnualOrdenSourceCensus,
 )
-from cadrumo.domain.calculations.registry.m303_orden_manifest import (
+from dev.registry.compiler.m303_orden_manifest import (
     UTF_8_ENCODING,
     M303AnnualOrdenGeneratedManifest,
     SourceReference,

@@ -134,7 +134,7 @@ from cadrumo.domain.calculations.registry.schema_references import SourceReferen
 from cadrumo.domain.calculations.registry.support_matrix import ModeloEntry as _ModeloEntry
 from cadrumo.domain.calculations.registry.support_matrix import build_support_matrix as _build_support_matrix
 from cadrumo.domain.calculations.registry.support_matrix import revision_capability_probe as _revision_capability_probe
-from cadrumo.domain.calculations.registry.validate_registry_scope import (
+from dev.registry.compiler.registry_scope import (
     validate_registry_scope as _validate_registry_scope,
 )
 from dev.registry.compiler.authority import compile_validated_authority as _compile_validated_authority

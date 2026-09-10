@@ -21,7 +21,10 @@ from pathlib import Path
 import pytest
 
 from .....core.resources.bundled_data import bundled_path
+from ..artifact_catalogue import ArtifactRole, registry_source_identity
 from ..corpus_catalogue import (
+    compile_record_design_manifest_catalogue,
+    verify_catalogue_identity_bindings,
     verify_source_catalogue,
     verify_source_file,
 )
@@ -31,6 +34,36 @@ from ..schema_references import SourceReference
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def test_registry_cited_record_design_boundary_is_exhaustively_catalogued() -> None:
+    """The registry's record-design evidence boundary has one official role per source.
+
+    This is deliberately the registry publication consumer's bounded manifest
+    projection, rather than a taxonomy of all bundled data.  The registry
+    supplies its cited sources; the independently acquired manifests supply
+    their payload identities.
+    """
+    _modelos, catalogues = _committed_registry_tree()
+
+    compiled = compile_record_design_manifest_catalogue(bundled_path(), catalogues.sources)
+
+    assert compiled is not None
+    catalogue, record_design_sources = compiled
+    expected_paths = {registry_source_identity(source).path for source in record_design_sources.values()}
+
+    assert expected_paths
+    assert catalogue.diagnostics == ()
+    assert set(catalogue.roles) == expected_paths
+    assert set(catalogue.identities) == expected_paths
+    assert all(catalogue.roles[path] is ArtifactRole.OFFICIAL_ARTIFACT for path in expected_paths)
+    for source in record_design_sources.values():
+        registry_identity = registry_source_identity(source)
+        catalog_identity = catalogue.identities[registry_identity.path]
+        assert catalog_identity.sha256 == registry_identity.sha256
+        assert catalog_identity.bytes == registry_identity.bytes
+        assert catalog_identity.source_url == registry_identity.source_url
+    verify_catalogue_identity_bindings(catalogue, record_design_sources)
 
 
 def _committed_present_companion_binary() -> SourceReference:

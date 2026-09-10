@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from .source_evidence_fingerprint import collect_source_evidence_fingerprints
+from .supplementary_orden import compile_supplementary_ordenes
+from .validator import RegistryValidator
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry._source_evidence_fingerprint import collect_source_evidence_fingerprints
-from cadrumo.domain.calculations.registry._supplementary_orden import compile_supplementary_ordenes
-from cadrumo.domain.calculations.registry._validate import RegistryValidator
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from .identity import RegistryIdentity, resolve_registry_identity

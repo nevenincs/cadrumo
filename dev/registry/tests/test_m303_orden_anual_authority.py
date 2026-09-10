@@ -13,9 +13,9 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry._m303_orden_source import extract_m303_annual_orden_source
+from dev.registry.compiler._m303_orden_source import extract_m303_annual_orden_source
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
-from cadrumo.domain.calculations.registry.m303_orden_manifest import load_m303_annual_orden_authority
+from dev.registry.compiler.m303_orden_manifest import load_m303_annual_orden_authority
 from cadrumo.domain.calculations.registry.m303_orden_projection_models import M303AnnualOrdenProjection
 from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues

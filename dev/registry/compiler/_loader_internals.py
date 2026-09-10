@@ -26,18 +26,6 @@ from cadrumo.core.directory_scan import (
 from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.core.filing_projection_ref import compile_filing_projection_ref
 from cadrumo.core.toml import freeze_toml, read_toml
-from ._loader_revision_fragments import (
-    REVISION_SECTION_FIELDS as _REVISION_SECTION_FIELDS,
-)
-from ._loader_revision_fragments import (
-    merge_revision_fragment as _merge_revision_fragment,
-)
-from ._loader_revision_fragments import (
-    merge_revision_manifest as _merge_revision_manifest,
-)
-from ._loader_revision_fragments import (
-    reject_local_catalogues as _reject_local_catalogues,
-)
 from cadrumo.domain.calculations.registry._toml_helpers import as_toml_table as _as_toml_table
 from cadrumo.domain.calculations.registry.errors import (
     RegistryFailureClassification,
@@ -49,24 +37,6 @@ from cadrumo.domain.calculations.registry.export_field_casilla import derive_cas
 from cadrumo.domain.calculations.registry.export_semantics import ExportComputedKey, ExportDraftAttribute
 from cadrumo.domain.calculations.registry.identifier_lineage import identifier_lineage
 from cadrumo.domain.calculations.registry.ids import RevisionId
-from .loader_cache import (
-    BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS,
-    is_bundled_registry_root,
-    toml_file_fingerprint,
-)
-from .loader_cache import (
-    ModeloRevisionSource as _ModeloRevisionSource,
-)
-from .loader_fingerprints import (
-    _registry_fingerprint_cache,
-    bind_tree_fingerprint_collectors,
-)
-from .loader_fingerprints import (
-    clear_fingerprint_cache as _clear_fingerprint_cache,
-)
-from .loader_fingerprints import (
-    refresh_toml_fingerprint_after_load_error as _refresh_toml_fingerprint_after_load_error,
-)
 from cadrumo.domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
     as_toml_array,
@@ -91,6 +61,37 @@ from cadrumo.domain.calculations.registry.schema import (
 from cadrumo.domain.calculations.registry.schema_references import LegalParameter, LegalReference, SourceReference
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition, CasillaEvolutionKind
 from cadrumo.domain.calculations.registry.validate_revision_identity import revision_reference_identity_failures
+
+from ._loader_revision_fragments import (
+    REVISION_SECTION_FIELDS as _REVISION_SECTION_FIELDS,
+)
+from ._loader_revision_fragments import (
+    merge_revision_fragment as _merge_revision_fragment,
+)
+from ._loader_revision_fragments import (
+    merge_revision_manifest as _merge_revision_manifest,
+)
+from ._loader_revision_fragments import (
+    reject_local_catalogues as _reject_local_catalogues,
+)
+from .loader_cache import (
+    BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS,
+    is_bundled_registry_root,
+    toml_file_fingerprint,
+)
+from .loader_cache import (
+    ModeloRevisionSource as _ModeloRevisionSource,
+)
+from .loader_fingerprints import (
+    _registry_fingerprint_cache,
+    bind_tree_fingerprint_collectors,
+)
+from .loader_fingerprints import (
+    clear_fingerprint_cache as _clear_fingerprint_cache,
+)
+from .loader_fingerprints import (
+    refresh_toml_fingerprint_after_load_error as _refresh_toml_fingerprint_after_load_error,
+)
 
 _PREDECESSOR_FIELD: Final = "predecessor"
 _AUTHORITY_GRADE_FIELD: Final = "authority_grade"
@@ -1554,7 +1555,7 @@ def _directory_fingerprint(path: Path) -> _RegistryPathFingerprint:
 def _toml_fingerprint(path: Path) -> _RegistryPathFingerprint:
     """Return the ``(path, size, mtime_ns, content_digest)`` fingerprint for one TOML file.
 
-    Delegates to :func:`~cadrumo.domain.calculations.registry.loader_cache.toml_file_fingerprint`,
+    Delegates to :func:`~dev.registry.compiler.loader_cache.toml_file_fingerprint`,
     the shared primitive that makes mutable-tree fingerprints content-sensitive
     (a same-size, same-mtime rewrite still re-keys every cache above the
     loader) while the read-only bundled tree keeps the cheap stat-only form.
