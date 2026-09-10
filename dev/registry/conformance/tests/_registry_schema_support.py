@@ -9,24 +9,32 @@ from functools import cache
 from pathlib import Path
 
 import pytest
+from cadrumo.domain.calculations.registry.loader import load_registry_tree
 from pydantic import ValidationError
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
-from dev.registry.conformance.coverage import build_model_law_coverage_ledger
-from cadrumo.tests.registry_snapshot import build_snapshot
 from cadrumo.domain.calculations.registry._loader_internals import load_modelo_file
 from cadrumo.domain.calculations.registry._validate import RegistryValidator
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
-from cadrumo.domain.calculations.registry.loader import load_registry_tree
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema import (
+    ModeloDefinition,
+    ModeloRevision,
+    RegistryCatalogues,
+    RegistrySnapshot,
+)
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
 from cadrumo.domain.calculations.registry.schema_extraction import ExtractionTargetDefinition
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression, KeyedBracketEntry
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaContinuidadEvolutionDefinition, CasillaDefinition
+from cadrumo.domain.calculations.registry.schema_surfaces import (
+    CasillaContinuidadEvolutionDefinition,
+    CasillaDefinition,
+)
+from cadrumo.tests.registry_snapshot import build_snapshot
+from dev.registry.conformance.coverage import build_model_law_coverage_ledger
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

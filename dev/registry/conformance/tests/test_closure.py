@@ -10,6 +10,8 @@ import pytest
 from pydantic import ValidationError
 from typer.testing import CliRunner
 
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 from dev.registry.conformance.closure_models import (
     RegistryClosureEvidence,
     RegistryClosureFilingChannelRefusal,
@@ -17,8 +19,6 @@ from dev.registry.conformance.closure_models import (
     RegistryClosureOwnerDisposition,
     RegistryClosureRefusalReason,
 )
-from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 
 from ...export_proof import FilingExportProofAssessment
 from ...filing_export_proof_contracts import FilingExportProofCoordinate

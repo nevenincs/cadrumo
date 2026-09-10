@@ -566,13 +566,16 @@ class TestMultiplePagadoresObligation:
             (None, None, False),
         )
         for pagadores_count, secondary_income, expected in cases:
-            assert evaluate_multiple_pagadores_obligation(
-                pagadores_count,
-                secondary_income,
-                None,
-                filing_year=2024,
-                facts=_deadline_facts(2024),
-            ) is expected, (
+            assert (
+                evaluate_multiple_pagadores_obligation(
+                    pagadores_count,
+                    secondary_income,
+                    None,
+                    filing_year=2024,
+                    facts=_deadline_facts(2024),
+                )
+                is expected
+            ), (
                 pagadores_count,
                 secondary_income,
             )

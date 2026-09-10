@@ -20,8 +20,9 @@ from __future__ import annotations
 
 from functools import cache
 
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.loader import load_registry_tree
+
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.categories.registry import load_category_profiles
 from cadrumo.domain.user_profile.labels import profile_field_label_key, profile_section_title_key
 from cadrumo.domain.user_profile.loader import load_user_profile_schema

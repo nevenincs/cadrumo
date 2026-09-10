@@ -26,7 +26,6 @@ from pathlib import Path
 from shutil import copyfile
 
 import pytest
-from dev.registry.maintenance_support import check_m303_annual_orden_census_artefact
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry import m303_orden_manifest
@@ -45,6 +44,7 @@ from cadrumo.domain.calculations.registry.m303_orden_manifest import (
 )
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.tests.registry_tree import bundled_registry_tree
+from dev.registry.maintenance_support import check_m303_annual_orden_census_artefact
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 

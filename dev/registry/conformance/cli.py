@@ -180,12 +180,12 @@ def integrity(
         typer.echo(
             json.dumps(
                 {
-                "registry_root": str(resolved_registry_root),
-                "source_root": str(resolved_source_root),
-                "status": "passed",
-                "modelo_count": len(authority.modelos),
-                "revision_count": revision_count,
-                "legal_reference_count": len(authority.catalogues.legal),
+                    "registry_root": str(resolved_registry_root),
+                    "source_root": str(resolved_source_root),
+                    "status": "passed",
+                    "modelo_count": len(authority.modelos),
+                    "revision_count": revision_count,
+                    "legal_reference_count": len(authority.catalogues.legal),
                 },
                 indent=2,
             )

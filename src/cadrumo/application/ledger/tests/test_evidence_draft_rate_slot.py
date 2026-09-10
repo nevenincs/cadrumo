@@ -68,6 +68,7 @@ def _authority_percentages(on_date: date) -> set[Decimal]:
             percentages.add(resolved * Decimal("100"))
     return percentages
 
+
 # A 2011 invoice at the then-current 8% reducido: base 100,00, cuota 8,00.
 # Every figure is internally coherent -- the document is not malformed, it is
 # simply expressed in a rate slot this taxonomy does not carry.

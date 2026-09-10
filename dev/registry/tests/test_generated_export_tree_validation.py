@@ -18,7 +18,6 @@ from ..pipeline._tree_validation import (
     GeneratedExportTreeValidationContext,
     validate_generated_export_tree,
 )
-from ..pipeline.render_profile import RenderProfile, RenderProfileSourceEvidence
 from ..pipeline.export_fragment_provenance import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     ExportFragmentTarget,
@@ -26,6 +25,7 @@ from ..pipeline.export_fragment_provenance import (
     load_export_fragment_provenance_manifest,
 )
 from ..pipeline.joined_record_design import JoinedRecordDesign
+from ..pipeline.render_profile import RenderProfile, RenderProfileSourceEvidence
 from ..pipeline.semantic_map import SemanticMap
 from .test_export_tree import _wire_evidence, _wire_profile
 from .test_generated_export_trees import (

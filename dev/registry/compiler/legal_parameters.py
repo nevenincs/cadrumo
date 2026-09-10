@@ -25,10 +25,7 @@ from .loader import load_legal_parameters_only
 LEGAL_PARAMETER_PROVIDER_ID = "global-legal-parameters"
 LEGAL_PARAMETER_PROVIDER_DIRECTORY = "legal"
 
-_SCALAR_PARAMETER_IDS = frozenset(
-    {
-    }
-)
+_SCALAR_PARAMETER_IDS = frozenset({})
 LEGAL_PARAMETER_FACT_IDS = _SCALAR_PARAMETER_IDS
 
 

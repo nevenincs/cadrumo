@@ -73,9 +73,7 @@ def test_handoff_targets_live_wave3_steps_files_and_wave1_ledgers() -> None:
     external = tomllib.loads(
         (_ROOT / manifest["external_constants_ledger"]).read_text(encoding="utf-8"),
     )
-    external_fact_ids = {
-        row["destination_id"] for row in external["classifications"] if row["kind"] == "governed_fact"
-    }
+    external_fact_ids = {row["destination_id"] for row in external["classifications"] if row["kind"] == "governed_fact"}
     statutory_fact_ids = {fact.fact_id for fact in compile_statutory_constant_facts(bundled_path("registry", "aeat"))}
     assert statutory_fact_ids == external_fact_ids - {"iva-general-rate"}
 

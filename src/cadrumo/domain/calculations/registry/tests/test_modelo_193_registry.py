@@ -10,8 +10,8 @@ import pytest
 from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from .....core.casilla_id import CasillaId
 from .....core.resources.bundled_data import bundled_path
-from .....domain.deadlines.festivos import shift_deadline
 from .....domain.deadlines.errors import DeadlineValidationError
+from .....domain.deadlines.festivos import shift_deadline
 from .....tests.registry_observations import registry_grounded_modelo_observation
 from .....tests.registry_snapshot import build_snapshot
 from .._validate import RegistryValidator

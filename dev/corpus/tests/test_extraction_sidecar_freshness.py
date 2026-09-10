@@ -9,11 +9,11 @@ from pathlib import Path
 from typing import Final, cast
 
 import pytest
+from cadrumo.domain.calculations.registry.loader import load_shared_catalogues
 
 from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.loader import load_shared_catalogues
 from cadrumo.domain.calculations.registry.schema import SociedadesAnnualManualCoverageStatus
 
 from ..extract_corpus_sidecars import check_all as check_corpus_sidecars
@@ -336,14 +336,10 @@ def test_supported_tax_manual_matrix_ships_pdf_corpus_text() -> None:
                 pdf_path.name + _CORPUS_TEXT_SUFFIX,
             )
 
-            sociedades_gap = (
-                family == "sociedades"
-                and sociedades_statuses[year]
-                in {
-                    SociedadesAnnualManualCoverageStatus.UNACQUIRED,
-                    SociedadesAnnualManualCoverageStatus.UNPUBLISHED,
-                }
-            )
+            sociedades_gap = family == "sociedades" and sociedades_statuses[year] in {
+                SociedadesAnnualManualCoverageStatus.UNACQUIRED,
+                SociedadesAnnualManualCoverageStatus.UNPUBLISHED,
+            }
             if sociedades_gap or (family, year) in declared_gaps:
                 if pdf_path.exists() or sidecar_path.exists():
                     if family == "sociedades":

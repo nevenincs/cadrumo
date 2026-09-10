@@ -6,9 +6,9 @@ from dataclasses import replace
 
 import pytest
 
-from dev.registry.conformance.coverage import build_construct_evidence_ledger
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from dev.registry.conformance.coverage import build_construct_evidence_ledger
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

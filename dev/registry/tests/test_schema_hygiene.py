@@ -14,7 +14,6 @@ from functools import cache
 from pathlib import Path
 
 import pytest
-from dev.registry.parity.renta_web_open_replay_corpus import replay_corpus_directory
 from pydantic import ValidationError
 
 from cadrumo.core.aggregation import BindingTypedEnumKind
@@ -24,6 +23,7 @@ from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloDefinition
 from cadrumo.domain.calculations.registry.validate_revision_identity import revision_reference_identity_failures
+from dev.registry.parity.renta_web_open_replay_corpus import replay_corpus_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

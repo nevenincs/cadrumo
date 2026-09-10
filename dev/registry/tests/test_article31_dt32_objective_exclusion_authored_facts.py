@@ -12,12 +12,14 @@ from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from dev.registry.compiler.fact_loader import load_governed_facts
 from dev.registry.compiler.legal_parameters import compile_legal_parameter_facts
 
-_IDS = frozenset((
-    "lirpf-dt-32:eo-exclusion-rendimientos-conjunto-eur",
-    "lirpf-dt-32:eo-exclusion-rendimientos-factura-eur",
-    "lirpf-dt-32:eo-exclusion-compras-eur",
-    "lirpf-art-31:eo-exclusion-rendimientos-agricolas-ganaderos-forestales-eur",
-))
+_IDS = frozenset(
+    (
+        "lirpf-dt-32:eo-exclusion-rendimientos-conjunto-eur",
+        "lirpf-dt-32:eo-exclusion-rendimientos-factura-eur",
+        "lirpf-dt-32:eo-exclusion-compras-eur",
+        "lirpf-art-31:eo-exclusion-rendimientos-agricolas-ganaderos-forestales-eur",
+    )
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

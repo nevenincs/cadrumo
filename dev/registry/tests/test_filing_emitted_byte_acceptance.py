@@ -19,7 +19,6 @@ from pathlib import Path
 
 import pytest
 
-from dev.registry.conformance.closure_models import RegistryClosureLimb
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.resources.bundled_data import bundled_path
@@ -27,6 +26,7 @@ from cadrumo.domain.calculations.registry.authority import (
     ValidatedRegistryAuthority,
     bundled_authority,
 )
+from dev.registry.conformance.closure_models import RegistryClosureLimb
 from dev.registry.maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
 
 from ..conformance.filing_export_coverage import compose_filing_export_coverage

@@ -31,6 +31,13 @@ import pytest
 from pydantic import BaseModel, Field, ValidationError
 
 from cadrumo.core.tax_domain import TaxDomain
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_base import CalculationClass
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+from cadrumo.domain.calculations.registry.schema_revision_members import DependencyClassificationDefinition
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.tests.registry_tree import bundled_registry_tree
 from dev.registry.conformance.registry_classification_coherence import (
     _MAX_DETAIL_LENGTH,
     _TRUNCATION_SUFFIX,
@@ -42,13 +49,6 @@ from dev.registry.conformance.registry_classification_coherence import (
     audit_bundled_classification_coherence,
     build_classification_coherence_audit,
 )
-from cadrumo.tests.registry_tree import bundled_registry_tree
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_base import CalculationClass
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
-from cadrumo.domain.calculations.registry.schema_revision_members import DependencyClassificationDefinition
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

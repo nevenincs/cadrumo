@@ -6,10 +6,10 @@ from collections import Counter
 from pathlib import Path
 
 import pytest
+from cadrumo.domain.calculations.registry.loader import load_registry_tree
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.loader import load_registry_tree
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
 
 from ..pipeline._export_tree import render_complete_export_tree

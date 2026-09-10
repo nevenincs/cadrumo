@@ -7,14 +7,14 @@ from datetime import date
 import pytest
 
 from ....core.resources.bundled_data import bundled_path
-from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.authority import bundled_authority
+from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.facts.resolution import EventFactQuery, resolve_governed_fact
 from ...calculations.registry.facts.schema import EventFactPayload, FactSelector, GovernedFactCatalogue
 from ...calculations.registry.schema_base import DateAxis
 from ..festivos import (
-    HOLIDAY_EVENT_FACT_ID,
     HOLIDAY_CALENDAR_PUBLICATION_EVENT_FACT_ID,
+    HOLIDAY_EVENT_FACT_ID,
     CalendarCCAA,
     HolidayJurisdiction,
     compile_holiday_calendar_facts,
@@ -64,7 +64,10 @@ def test_publication_event_proves_a_clear_date_is_in_a_published_calendar() -> N
     )
     assert isinstance(resolved.payload, EventFactPayload)
     assert resolved.payload.event_code == "holiday_calendar_published"
-    assert dict((output.name, output.value) for output in resolved.payload.outputs)["boe_ref"] == "boe-resolucion-festivos-2025"
+    assert (
+        dict((output.name, output.value) for output in resolved.payload.outputs)["boe_ref"]
+        == "boe-resolucion-festivos-2025"
+    )
 
 
 def test_authority_calendar_facade_preserves_values_and_fails_closed_when_unpublished() -> None:

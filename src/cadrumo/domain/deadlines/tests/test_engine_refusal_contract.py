@@ -79,6 +79,7 @@ class TestMessageKeysMatchTheRegistry:
     def test_schedule_computation_key_is_the_registered_key(self) -> None:
         assert ScheduleComputationError.code.message_key == _SCHEDULE_COMPUTATION_MESSAGE_KEY
 
+
 class TestRefusalsCarryNoAuthoredSentence:
     """Every reachable refusal renders as its key, never as English."""
 

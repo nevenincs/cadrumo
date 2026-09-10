@@ -16,7 +16,6 @@ from threading import Barrier, Event, Lock, Thread
 from typing import Final, cast
 
 import pytest
-from dev.registry.maintenance_support import reset_registry_caches
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.directory_scan import scan_directory
@@ -33,6 +32,7 @@ from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from cadrumo.tests import REPO_ROOT
+from dev.registry.maintenance_support import reset_registry_caches
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

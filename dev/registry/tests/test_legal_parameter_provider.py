@@ -14,6 +14,8 @@ from dev.registry.compiler.legal_parameters import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
 def test_provider_projects_no_retired_legal_parameter_ids() -> None:
     facts = compile_legal_parameter_facts(bundled_path("registry", "aeat"))
 

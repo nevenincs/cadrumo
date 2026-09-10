@@ -49,7 +49,6 @@ from ..core.logging import default_log_file_path, get_logger
 from ..core.operator_action_enums import NoRecoveryOutcome
 from ..core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from ..core.requirement import Requirement, RequirementValue
-from ..core.resources.bundled_data import bundled_path
 from ..core.time.clock import now
 from ..core.url_validation import ANY_HTTP_URL_ADAPTER
 from .diagnostic_models import (
@@ -103,6 +102,7 @@ if TYPE_CHECKING:
     from .workflow.state_models import WorkflowState
 
 _log = get_logger(__name__)
+
 
 def build_cli_version_report() -> _CliVersionReport:
     """Return package identity for the CLI version surfaces."""

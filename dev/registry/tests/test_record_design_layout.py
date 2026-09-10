@@ -16,6 +16,7 @@ from cadrumo.domain.calculations.registry.record_design import (
 from cadrumo.domain.calculations.registry.record_design_schema import (
     RecordDesignRelativeSuffixMarker,
 )
+
 from ._record_design_support import (
     _RECORD_DESIGN_ROOT,
     _write_pdf_lines,

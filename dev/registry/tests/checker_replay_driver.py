@@ -3,9 +3,10 @@
 from collections.abc import Mapping
 from typing import Literal
 
-from .checker_oracle import decode_replay_observation, replay_parse_operation
 from cadrumo.domain.calculations.registry.checker_oracle_flow import CheckerDriverMode, CheckerObservation
 from cadrumo.domain.calculations.registry.remote_state_guard import RemoteOperation
+
+from .checker_oracle import decode_replay_observation, replay_parse_operation
 
 
 class CheckerReplayDriver:

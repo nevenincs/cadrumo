@@ -22,6 +22,7 @@ from dev.registry.compiler.statutory_constants import compile_statutory_constant
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+
 def test_statutory_provider_enrolls_every_governed_declaration_and_excludes_routing_sets() -> None:
     facts = compile_statutory_constant_facts(Path())
     fact_ids = {fact.fact_id for fact in facts}

@@ -20,7 +20,6 @@ import rtoml
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.edition_materialisation import MaterialisedEdition, materialise_edition
 from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor
-
 from dev.registry.compiler.loader import load_modelo_directory
 
 from ._export_tree import _render_toml_bytes
