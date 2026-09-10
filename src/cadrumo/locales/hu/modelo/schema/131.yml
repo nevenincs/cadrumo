@@ -35,7 +35,7 @@ modelo:
               vagy B típusú gépek): egységek száma'
           irpf-pf-modulos-diferencia:
             help: null
-            label: null
+            label: Különbözet
           irpf-pf-modulos-epigrafe-iae:
             help: null
             label: A tevékenység IAE-tételszáma az objektív becslési (modulos) rendszerben.
@@ -45,49 +45,50 @@ modelo:
               tekintse meg az m131-modulos-coeficientes-2024 együttható paramétert.
           irpf-pf-modulos-resultado-declaracion:
             help: null
-            label: null
+            label: A bevallás eredménye
           irpf-pf-modulos-resultados-negativos-anteriores:
             help: null
-            label: null
+            label: Korábbi negyedévek negatív eredményei
           irpf-pf-modulos-suma-rendimientos:
             help: null
-            label: null
+            label: Nettó jövedelmek összege
           irpf-pf-modulos-total:
             help: null
-            label: null
+            label: Összesen
           irpf-pf-modulos-volumen-agrario:
             help: null
-            label: null
+            label: A negyedév mezőgazdasági bevétele
           irpf-pf-modulos-volumen-sin-datos-base:
             help: null
-            label: null
+            label: Forgalom vagy bevétel alapadatok nélkül
           irpf-pf-saldo-negativo-fin-periodo:
             help: null
-            label: null
+            label: Későbbi időszakokra átvihető negatív egyenleg (max. 0, -10. rovat)
           minoracion-rendimientos-actividades-economicas:
             help: null
-            label: null
+            label: Csökkentés a gazdasági tevékenységből származó nettó jövedelem
+              után
           pago-fraccionado-previo:
             help: null
-            label: null
+            label: Előzetes előlegfizetések összege
           pago-fraccionado-previo-agrario:
             help: null
-            label: null
+            label: Előzetes mezőgazdasági előlegfizetés
           pago-fraccionado-previo-datos-base:
             help: null
-            label: null
+            label: Előzetes előlegfizetés alapadatok szerint (datos-base)
           pago-fraccionado-previo-sin-datos-base:
             help: null
-            label: null
+            label: Előzetes előlegfizetés alapadatok nélkül
           prestamo-vivienda-habitual:
             help: null
-            label: null
+            label: Az állandó lakóhelyre felvett kölcsönök törlesztése
           resultado-anteriores-autoliquidaciones:
             help: null
-            label: null
+            label: Korábbi önadózásokból befizetendő eredmény
           retenciones-ingresos-a-cuenta:
             help: null
-            label: null
+            label: Forrásadó és előlegfizetés
       field:
         official_name: Modelo 131. IRPF. Objektív megállapítás alá tartozó vállalkozók
           és szakemberek. Részletfizetés.

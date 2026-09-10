@@ -5,440 +5,501 @@ modelo:
         continuidad:
           irpf-aeip-centenario-del-hockey-1923-2023-aplicado:
             help: null
-            label: null
+            label: '"Centenary of Hockey 1923-2023": applied in this return'
           irpf-anexo-a-ceuta-melilla-deduccion-importe:
             help: null
-            label: null
+            label: Total amount of the deduction for income obtained in Ceuta or Melilla
           irpf-anexo-a-interes-cultural-deduccion-importe:
             help: null
-            label: null
+            label: 'Amount of the deduction: 15%'
           irpf-anexo-a-la-palma-deduccion-importe:
             help: null
-            label: null
+            label: Total amount of the deduction for habitual and effective residence
+              on the island of La Palma
           irpf-anexo-a-prestamo-id:
             help: null
-            label: null
+            label: 'Mortgage loan identification number:'
           irpf-anexo-a-prestamo-porcentaje-vivienda:
             help: null
-            label: null
+            label: 'Percentage of the total mortgage loan actually used for the acquisition
+              of the primary residence:'
           irpf-anexo-a-residente-ue-cuota-conjunta-hipotetica:
             help: null
-            label: null
+            label: Total net tax liability if all members of the family unit had filed
+              jointly (*)
           irpf-anexo-a-residente-ue-cuota-irnr:
             help: null
-            label: null
+            label: Non-Resident Income Tax liabilities corresponding to income obtained
+              in Spain in 2020 by the other members of the family unit resident in
+              an EU/EEA Member St...
           irpf-anexo-a-residente-ue-deduccion-importe:
             help: null
-            label: null
+            label: Deduction corresponding to the taxpayer (**)
           irpf-anexo-a-vehiculo-electrico-deduccion-importe:
             help: null
-            label: null
+            label: Amount of the deduction for the purchase of plug-in electric and
+              fuel-cell vehicles
           irpf-anexo-b-adoption-deduction-amount:
             help: null
-            label: null
+            label: 'Adoption deduction: Amount of the deduction'
           irpf-anexo-b-adoption-pending-claim:
             help: null
-            label: null
+            label: 'Adoption deduction: Amount pending to be claimed by the taxpayer'
           irpf-anexo-b-baleares-deduccion-nacimiento-importe:
             help: null
-            label: null
+            label: 'Birth deduction: Amount of the deduction'
           irpf-anexo-b-deduccion-nacimiento-abono-anticipado:
             help: null
-            label: null
+            label: 'Birth deduction: Amount of the advance payment'
           irpf-anexo-b-deduccion-nacimiento-cobro-anticipado-regularizar:
             help: null
-            label: null
+            label: 'Birth deduction: Amount of the advance payment to be regularised
+              (box [0504])'
           irpf-anexo-c-base-liq-neg-generado:
             help: null
-            label: null
+            label: Negative general net taxable base for 2020 pending offset over
+              the following 4 years
           irpf-anexo-c-exceso-deportistas-generado:
             help: null
-            label: null
+            label: Unapplied 2020 contributions whose amount is requested to be deductible
+              over the following 5 years
           irpf-anexo-c-exceso-eficiencia-energetica-generado:
             help: null
-            label: null
+            label: Amounts paid in tax year 2022 pending deduction over the following
+              4 years
           irpf-anexo-c-exceso-patrim-protegido-ejercicio-actual:
             help: null
-            label: null
+            label: Unapplied 2020 contributions whose amount is requested to be deductible
+              over the following 4 years
           irpf-anexo-c-exencion-reinversion-ganancia-exenta:
             help: null
-            label: null
+            label: Capital gain exempt through reinvestment
           irpf-anexo-c-exencion-reinversion-ganancia-patrimonial:
             help: null
-            label: null
+            label: Capital gain obtained as a result of the transfer of shares or
+              units for which the deduction under art. 68.1 of the Tax Law was claimed
           irpf-anexo-c-exencion-reinversion-importe-comprometido:
             help: null
-            label: null
+            label: Amount the taxpayer undertakes to reinvest in 2021, within the
+              year following the transfer, in shares or units of a newly or recently
+              created entity
           irpf-anexo-c-exencion-reinversion-importe-reinvertido:
             help: null
-            label: null
+            label: Amount reinvested by 31-12-2020 in the acquisition of shares or
+              units of a newly or recently created entity
           irpf-anexo-c-exencion-reinversion-importe-total-transmision:
             help: null
-            label: null
+            label: Total amount obtained from the transfer of shares or units eligible
+              for reinvestment for the reinvestment exemption in a newly or recently
+              created bus...
           irpf-anexo-c-exencion-rv-ganancia-exenta:
             help: null
-            label: null
+            label: Capital gain exempt through reinvestment
           irpf-anexo-c-exencion-rv-ganancia-patrimonial:
             help: null
-            label: null
+            label: Capital gain obtained
           irpf-anexo-c-exencion-rv-importe-comprometido:
             help: null
-            label: null
+            label: Amount the taxpayer undertakes to reinvest in 2021 (within the
+              6 months following the transfer)
           irpf-anexo-c-exencion-rv-importe-reinvertido:
             help: null
-            label: null
+            label: Amount reinvested by 31-12-2020 in life annuities
           irpf-anexo-c-exencion-rv-importe-total-transmision:
             help: null
-            label: null
+            label: Total amount obtained from the transfer of the asset(s)
           irpf-anexo-c-exencion-rv-retencion-comprometida:
             help: null
-            label: null
+            label: Amount of the withholding the taxpayer undertakes to reinvest in
+              2021
           irpf-anexo-c-gan-per-cuartas-anio-obtencion:
             help: null
-            label: null
+            label: Year in which the public aid was obtained
           irpf-anexo-c-gan-per-cuartas-aplicado:
             help: null
-            label: null
+            label: Amount of public aid applied in the year
           irpf-anexo-c-gan-per-cuartas-importe-total:
             help: null
-            label: null
+            label: Total amount of public aid received
           irpf-anexo-c-gan-per-cuartas-pendiente:
             help: null
-            label: null
+            label: Amount pending imputation
           irpf-anexo-c-gan-per-cuartas-tipo-ayuda:
             help: null
-            label: null
+            label: Type of public aid
           irpf-ascendiente-cede-flag:
             help: null
-            label: null
+            label: State whether you are transferring the right to the deduction and,
+              if so, the Tax ID (NIF) of the beneficiary
           irpf-ascendiente-cedido-flag:
             help: null
-            label: null
+            label: State whether the right to the deduction has been transferred to
+              you and, if so, the Tax ID (NIF) of the transferor(s)
           irpf-ascendiente-discapacidad-fecha-fin:
             help: null
-            label: null
+            label: End date of the disability
           irpf-ascendiente-discapacidad-fecha-inicio:
             help: null
-            label: null
+            label: Start date of the disability
           irpf-ascendiente-discapacidad-nombre:
             help: null
-            label: null
+            label: Name
           irpf-ascendiente-num-contribuyentes-derecho:
             help: null
-            label: null
+            label: State the number of persons entitled to the minimum for ascendants
           irpf-baleares-deduccion-nacimiento-importe-pendiente:
             help: null
-            label: null
+            label: 'Birth deduction: Amount pending to be claimed by the taxpayer'
           irpf-compensacion-conyuges-bank-address:
             help: null
-            label: null
+            label: Bank address
           irpf-compensacion-conyuges-devolver-renunciado:
             help: null
-            label: null
+            label: Amount of the refund from your return (box [0670]) whose effective
+              collection is being waived
           irpf-compensacion-conyuges-entidad-bancaria-nombre:
             help: null
-            label: null
+            label: Bank / Name of the bank
           irpf-compensacion-conyuges-entidad-ciudad:
             help: null
-            label: null
+            label: City
           irpf-compensacion-conyuges-iban:
             help: null
-            label: null
+            label: 'Compensation between spouses: IBAN'
           irpf-compensacion-conyuges-ingresar-suspendido:
             help: null
-            label: null
+            label: Amount payable from your return (box [0670]) for which suspension
+              is requested
           irpf-compensacion-conyuges-nosepa-pais-codigo:
             help: null
-            label: null
+            label: Country code
           irpf-compensacion-conyuges-numero-cuenta:
             help: null
-            label: null
+            label: Account number
           irpf-compensacion-conyuges-sepa-codigo:
             help: null
-            label: null
+            label: 'Compensation between spouses: SEPA'
           irpf-conyuge-discapacidad-fecha-fin:
             help: null
-            label: null
+            label: End date of the disability
           irpf-conyuge-discapacidad-fecha-inicio:
             help: null
-            label: null
+            label: Start date of the disability
           irpf-conyuge-discapacidad-nombre:
             help: null
-            label: null
+            label: Name
           irpf-conyuge-discapacidad-otro-contribuyente-flag:
             help: null
-            label: null
+            label: Mark with an "X" if another taxpayer is entitled, in respect of
+              the spouse with a disability, to the deduction for a dependent descendant
+              or ascendant with a disability
           irpf-deduccion-andalucia-adopcion-internacional:
             help: null
-            label: null
+            label: For the international adoption of children
           irpf-deduccion-andalucia-conyuge-discapacidad:
             help: null
-            label: null
+            label: For taxpayers with a spouse or common-law partner with a disability
           irpf-deduccion-andalucia-discapacidad:
             help: null
-            label: null
+            label: For taxpayers with a disability
           irpf-deduccion-andalucia-empleada-hogar-ccc:
             help: null
-            label: null
+            label: 'Social Security contribution account code:'
           irpf-deduccion-andalucia-empleada-hogar-ccc-2:
             help: null
-            label: null
+            label: 'Social Security contribution account code:'
           irpf-deduccion-andalucia-empleada-hogar-importe:
             help: null
-            label: null
+            label: Amount of the deduction
           irpf-deduccion-andalucia-empleada-hogar-importe-1:
             help: null
-            label: null
+            label: Amount of the deduction
           irpf-deduccion-andalucia-familia-monoparental:
             help: null
-            label: null
+            label: For a single parent and, where applicable, with ascendants over
+              75 years old
           irpf-deduccion-andalucia-familia-numerosa:
             help: null
-            label: null
+            label: For a large family
           irpf-deduccion-andalucia-general:
             help: null
-            label: null
+            label: Deduction applicable as a general rule
           irpf-deduccion-andalucia-vivienda-habitual-protegida:
             help: null
-            label: null
+            label: For the investment in a primary residence classed as protected
+              housing, and for young people
           irpf-deduccion-aragon-acogimiento-ucrania:
             help: null
-            label: null
+            label: For hosting displaced Ukrainian individuals or families due to
+              the armed conflict in their country
           irpf-deduccion-aragon-adopcion-internacional:
             help: null
-            label: null
+            label: For the international adoption of children
           irpf-deduccion-aragon-arrendamiento-social:
             help: null
-            label: null
+            label: For the lease of social housing (landlord's deduction)
           irpf-deduccion-aragon-ayuda-humanitaria-ucrania:
             help: null
-            label: null
+            label: For humanitarian aid to the Ukrainian people due to the armed conflict
+              in their country
           irpf-deduccion-aragon-cuidado-dependientes:
             help: null
-            label: null
+            label: For the care of dependent persons
           irpf-deduccion-aragon-donativos-ecologicos:
             help: null
-            label: null
+            label: For donations for ecological purposes and for scientific and technical
+              research and development
           irpf-deduccion-aragon-guarderia:
             help: null
-            label: null
+            label: For childcare (nursery) expenses for children under 3 years old
           irpf-deduccion-aragon-libros-texto:
             help: null
-            label: null
+            label: For the purchase of textbooks and school supplies
           irpf-deduccion-aragon-mayores-70:
             help: null
-            label: null
+            label: For persons over 70 years old
           irpf-deduccion-aragon-nacimiento-hijo-discapacidad:
             help: null
-            label: null
+            label: For the birth or adoption of a child, based on the degree of disability
           irpf-deduccion-aragon-nacimiento-primer-segundo-hijo:
             help: null
-            label: null
+            label: For the birth or adoption of a first and/or second child in towns
+              of under 10,000 inhabitants
           irpf-deduccion-aragon-nacimiento-tercer-hijo:
             help: null
-            label: null
+            label: For the birth or adoption of a third or subsequent child
           irpf-deduccion-aragon-residencia-municipios:
             help: null
-            label: null
+            label: For residence in certain municipalities
           irpf-deduccion-aragon-vivienda-victimas-terrorismo:
             help: null
-            label: null
+            label: For the acquisition of a primary residence by victims of terrorism
           irpf-deduccion-asturias-acogimiento-mayores:
             help: null
-            label: null
+            label: For unpaid fostering of persons over 65 years old
           irpf-deduccion-asturias-acogimiento-menores:
             help: null
-            label: null
+            label: For foster care of minors
           irpf-deduccion-asturias-adopcion-internacional:
             help: null
-            label: null
+            label: For the international adoption of minors
           irpf-deduccion-asturias-centros-0-3:
             help: null
-            label: null
+            label: For expenses on descendants at 0-to-3 centres
           irpf-deduccion-asturias-cuidado-descendientes:
             help: null
-            label: null
+            label: For the care of descendants or adopted children up to 25 years
+              of age
           irpf-deduccion-asturias-emancipacion-jovenes:
             help: null
-            label: null
+            label: For the emancipation of young people up to 35 years of age
           irpf-deduccion-asturias-familia-monoparental:
             help: null
-            label: null
+            label: For single-parent families
           irpf-deduccion-asturias-familia-numerosa:
             help: null
-            label: null
+            label: For large families
           irpf-deduccion-asturias-formacion-autoempleados:
             help: null
-            label: null
+            label: For training expenses incurred by taxpayers performing specially
+              qualified work directly and principally related to research and develop...
           irpf-deduccion-asturias-gestion-forestal:
             help: null
-            label: null
+            label: For certification of sustainable forest management
           irpf-deduccion-asturias-libros-texto:
             help: null
-            label: null
+            label: For the purchase of textbooks and school supplies
           irpf-deduccion-asturias-partos-multiples:
             help: null
-            label: null
+            label: For multiple births, or two or more adoptions finalised on the
+              same date
           irpf-deduccion-asturias-vivienda-discapacitados:
             help: null
-            label: null
+            label: For the acquisition or adaptation of a primary residence for taxpayers
+              with a disability
           irpf-deduccion-autonomica-arrendamiento-viv-hab-importe:
             help: null
-            label: null
+            label: Amount of the regional deduction for the lease of a primary residence
+              linked to certain debt-for-property settlement transactions
           irpf-deduccion-autonomica-otro-importe:
             help: null
-            label: null
+            label: Total amount of the deduction
           irpf-deduccion-baleares-arrendador-nif-extranjero-flag:
             help: null
-            label: null
+            label: Mark an "X" if you entered a Tax ID (NIF) from another country
+              in box [0911]
           irpf-deduccion-baleares-arrendamiento-residentes:
             help: null
-            label: null
+            label: For the lease of a dwelling in the Balearic Islands arising from
+              a temporary change of residence for employment reasons
           irpf-deduccion-baleares-descendientes-menores-6:
             help: null
-            label: null
+            label: For expenses relating to descendants or foster children under six
+              years old, for work-life balance reasons
           irpf-deduccion-baleares-donaciones-investigacion:
             help: null
-            label: null
+            label: For donations to certain entities engaged in research, scientific
+              or technological development, or innovation
           irpf-deduccion-baleares-donaciones-lengua:
             help: null
-            label: null
+            label: For donations to certain entities whose purpose is promoting the
+              Catalan language
           irpf-deduccion-baleares-donaciones-patrimonio:
             help: null
-            label: null
+            label: For donations, assignments of use, loan agreements, and business-collaboration
+              agreements relating to cultural, scientific, and technological-development
+              patronage, and to cultural consumption
           irpf-deduccion-baleares-donaciones-tercer-sector:
             help: null
-            label: null
+            label: For donations to third-sector entities
           irpf-deduccion-baleares-estudios-superiores:
             help: null
-            label: null
+            label: For pursuing higher education outside the island of habitual residence
           irpf-deduccion-baleares-idiomas:
             help: null
-            label: null
+            label: For extracurricular foreign-language learning expenses
           irpf-deduccion-baleares-libros-texto:
             help: null
-            label: null
+            label: For expenses on the purchase of textbooks
           irpf-deduccion-baleares-mecenazgo-deportivo:
             help: null
-            label: null
+            label: For donations, assignments of use, loan agreements, and collaboration
+              agreements relating to sports patronage
           irpf-deduccion-baleares-prestamo-hipotecario-incremento:
             help: null
-            label: null
+            label: To offset the increase in the cost of variable-rate mortgage loans
+              or credits
           irpf-deduccion-baleares-subvenciones-declaracion-sinistro:
             help: null
-            label: null
+            label: For certain grants and aid awarded due to a declaration of an area
+              severely affected by a civil-protection emergency
           irpf-deduccion-c-valenciana-abonos-culturales:
             help: null
-            label: null
+            label: For amounts allocated to cultural season tickets
           irpf-deduccion-c-valenciana-acciones-participaciones-pendiente:
             help: null
-            label: null
+            label: Amount generated in 2023 pending application
           irpf-deduccion-c-valenciana-arrendador-nif-extranjero-flag:
             help: null
-            label: null
+            label: Mark an "X" if you entered a Tax ID (NIF) from another country
+              in box [1096]
           irpf-deduccion-c-valenciana-ascendientes-mayores-75:
             help: null
-            label: null
+            label: For ascendants over 75, or over 65 if they are persons with a disability
           irpf-deduccion-c-valenciana-autoconsumo-generado:
             help: null
-            label: null
+            label: Amount generated in 2023
           irpf-deduccion-c-valenciana-conciliacion:
             help: null
-            label: null
+            label: For balancing work and family life
           irpf-deduccion-c-valenciana-discapacidad-33:
             help: null
-            label: null
+            label: For taxpayers with a disability rating of 33% or more, aged 65
+              or over
           irpf-deduccion-c-valenciana-donaciones-conservacion-patrimonio:
             help: null
-            label: null
+            label: For amounts donated for the conservation, repair, and restoration
+              of assets forming part of the Valencian Cultural Heritage
           irpf-deduccion-c-valenciana-donaciones-covid19:
             help: null
-            label: null
+            label: For donations contributing to the financing of expenses caused
+              by the Covid-19 health crisis
           irpf-deduccion-c-valenciana-donaciones-investigacion-sanitaria:
             help: null
-            label: null
+            label: For monetary donations aimed at financing research, innovation,
+              and scientific or technological development programmes in the treatment
+              and prevention of infections caused by...
           irpf-deduccion-c-valenciana-donaciones-lengua-valenciana:
             help: null
-            label: null
+            label: For donations aimed at promoting the Valencian language
           irpf-deduccion-c-valenciana-donaciones-otros-fines:
             help: null
-            label: null
+            label: For donations, assignments of use, or loan agreements for other
+              purposes of cultural, scientific, or non-professional sporting interest
           irpf-deduccion-c-valenciana-donaciones-patrimonio-cultural:
             help: null
-            label: null
+            label: For donations of assets forming part of the Valencian Cultural
+              Heritage
           irpf-deduccion-c-valenciana-donativos-ecologicos:
             help: null
-            label: null
+            label: For donations for ecological purposes
           irpf-deduccion-c-valenciana-dos-mas-descendientes:
             help: null
-            label: null
+            label: For taxpayers with two or more descendants
           irpf-deduccion-c-valenciana-familia-numerosa-monoparental:
             help: null
-            label: null
+            label: For a large or single-parent family
           irpf-deduccion-c-valenciana-gastos-salud:
             help: null
-            label: null
+            label: For amounts paid on certain health expenses
           irpf-deduccion-c-valenciana-material-escolar:
             help: null
-            label: null
+            label: For the purchase of school supplies
           irpf-deduccion-c-valenciana-nacimiento-adopcion-multiple:
             help: null
-            label: null
+            label: For multiple births or adoptions
           irpf-deduccion-c-valenciana-rentas-arrendamiento:
             help: null
-            label: null
+            label: For obtaining income from the lease of a dwelling whose rent does
+              not exceed the reference price for private rentals
           irpf-deduccion-c-valenciana-residencia-municipio-riesgo:
             help: null
-            label: null
+            label: For habitually residing in a municipality at risk of depopulation
           irpf-deduccion-c-valenciana-titulares-conservacion-patrimonio:
             help: null
-            label: null
+            label: For amounts allocated by their owners to the conservation, repair,
+              and restoration of assets forming part of the Valencian Cultural Heritage
           irpf-deduccion-c-valenciana-vehiculos-electricos:
             help: null
-            label: null
+            label: For the purchase of new vehicles in the categories covered by Order
+              5/2020, of 8 June
           irpf-deduccion-c-valenciana-vivienda-adquisicion-rehabilitacion:
             help: null
-            label: null
+            label: For amounts allocated to the acquisition or renovation of a primary
+              residence, arising from public aid
           irpf-deduccion-c-valenciana-vivienda-discapacidad:
             help: null
-            label: null
+            label: For the acquisition of a primary residence by persons with a disability
           irpf-deduccion-c-valenciana-vivienda-primera-adquisicion:
             help: null
-            label: null
+            label: For the first acquisition of a primary residence by taxpayers aged
+              35 or under
           irpf-deduccion-canarias-acogimiento-menores:
             help: null
-            label: null
+            label: For fostering of minors
           irpf-deduccion-canarias-cuotas-seguridad-social:
             help: Enter the Social Security contributions paid for hiring domestic
               employees.
             label: For Social Security contributions paid for hiring domestic employees
           irpf-deduccion-canarias-desempleados:
             help: null
-            label: null
+            label: For unemployed taxpayers
           irpf-deduccion-canarias-discapacidad-mayores-65:
             help: null
-            label: null
+            label: For taxpayers with a disability and over 65 years old
           irpf-deduccion-canarias-donaciones-culturales-deportivas:
             help: null
-            label: null
+            label: For donations and contributions for cultural, sporting, research,
+              or teaching purposes
           irpf-deduccion-canarias-donaciones-entidades-sin-animo:
             help: null
-            label: null
+            label: For donations to non-profit entities
           irpf-deduccion-canarias-donaciones-patrimonio-historico:
             help: null
-            label: null
+            label: For donations for the restoration or conservation of the historical
+              heritage of the Canary Islands
           irpf-deduccion-canarias-donativos-ecologicos:
             help: null
-            label: null
+            label: For donations for ecological purposes
           irpf-deduccion-canarias-familia-monoparental:
             help: null
-            label: null
+            label: For single-parent families
           irpf-deduccion-canarias-familia-numerosa:
             help: null
-            label: null
+            label: For a large family
           irpf-deduccion-canarias-familiares-discapacidad:
             help: null
-            label: null
+            label: For dependent family members with a disability
           irpf-deduccion-canarias-guarderia-importe-1:
             help: Enter amount paid 1.
             label: Amount paid 1
@@ -447,292 +508,322 @@ modelo:
             label: Amount paid 2
           irpf-deduccion-canarias-nacimiento-adopcion:
             help: null
-            label: null
+            label: For the birth or adoption of children
           irpf-deduccion-canarias-referencia-catastral-1:
             help: null
-            label: null
+            label: Cadastral reference 1
           irpf-deduccion-canarias-referencia-catastral-2:
             help: null
-            label: null
+            label: Cadastral reference 2
           irpf-deduccion-canarias-restauracion-bienes:
             help: null
-            label: null
+            label: For amounts allocated by their owners to the restoration, renovation,
+              or repair of properties declared of Cultural Interest
           irpf-deduccion-canarias-traslado-residencia-isla:
             help: null
-            label: null
+            label: For moving one's habitual residence to another island of the Archipelago
+              to carry out employed work or an economic activity
           irpf-deduccion-canarias-vivienda-discapacidad:
             help: null
-            label: null
+            label: For works to adapt the primary residence due to a disability
           irpf-deduccion-canarias-vivienda-habitual:
             help: null
-            label: null
+            label: For the primary-residence investment
           irpf-deduccion-cantabria-acogimiento-menores:
             help: null
-            label: null
+            label: For foster care of minors
           irpf-deduccion-cantabria-cuidado-familiares:
             help: null
-            label: null
+            label: For the care of family members
           irpf-deduccion-cantabria-donativos-fundaciones:
             help: null
-            label: null
+            label: For donations to foundations, to the Fondo Cantabria Coopera, or
+              to associations whose aims include supporting persons with a disability
           irpf-deduccion-cantabria-enfermedad:
             help: null
-            label: null
+            label: For illness expenses
           irpf-deduccion-cantabria-familia-monoparental:
             help: null
-            label: null
+            label: For single-parent families
           irpf-deduccion-cantabria-guarderia:
             help: null
-            label: null
+            label: For childcare (nursery) expenses
           irpf-deduccion-castilla-la-mancha-acciones-participaciones:
             help: null
-            label: null
+            label: For investment in the acquisition of shares and company units arising
+              from company-formation or capital-increase agreements in commercial
+              companies (amount from the...
           irpf-deduccion-castilla-la-mancha-acogimiento-mayores:
             help: null
-            label: null
+            label: For unpaid fostering of persons over 65 and/or with a disability
           irpf-deduccion-castilla-la-mancha-acogimiento-menores:
             help: null
-            label: null
+            label: For unpaid foster care of minors
           irpf-deduccion-castilla-la-mancha-cooperacion-internacional:
             help: null
-            label: null
+            label: For amounts donated for international development cooperation and
+              to entities fighting poverty, social exclusion, and assisting persons
+              with a disability
           irpf-deduccion-castilla-la-mancha-cuidado-ascendientes-75:
             help: null
-            label: null
+            label: For the care of ascendants over 75 years old
           irpf-deduccion-castilla-la-mancha-discapacidad-contribuyente:
             help: null
-            label: null
+            label: For the taxpayer's own disability
           irpf-deduccion-castilla-la-mancha-discapacidad-familiar:
             help: null
-            label: null
+            label: For the disability of ascendants or descendants
           irpf-deduccion-castilla-la-mancha-donaciones-bienes-culturales:
             help: null
-            label: null
+            label: For donations of cultural assets and contributions towards the
+              conservation, repair, and restoration of assets forming part of the
+              cultural heritage of Castilla-La Mancha, and for cultural...
           irpf-deduccion-castilla-la-mancha-donaciones-idi:
             help: null
-            label: null
+            label: For donations for research, development, and business innovation
+              purposes
           irpf-deduccion-castilla-la-mancha-familia-monoparental:
             help: null
-            label: null
+            label: For a single-parent family
           irpf-deduccion-castilla-la-mancha-familia-numerosa:
             help: null
-            label: null
+            label: For a large family
           irpf-deduccion-castilla-la-mancha-intereses-vivienda:
             help: null
-            label: null
+            label: For interest expenses on third-party financing for the acquisition
+              of a first primary residence by persons under 40
           irpf-deduccion-castilla-la-mancha-mayores-75:
             help: null
-            label: null
+            label: For taxpayers over 75 years old
           irpf-deduccion-castilla-la-mancha-residencia-zonas-rurales:
             help: null
-            label: null
+            label: For habitual residence in rural areas
           irpf-deduccion-castilla-la-mancha-vivienda-zonas-rurales:
             help: null
-            label: null
+            label: For the acquisition or renovation of a primary residence in rural
+              areas
           irpf-deduccion-castilla-y-leon-cuidado-hijos-menores:
             help: null
-            label: null
+            label: For the care of minor children
           irpf-deduccion-castilla-y-leon-cuotas-ss-hogar:
             help: null
-            label: null
+            label: For Social Security contributions for domestic employees
           irpf-deduccion-castilla-y-leon-donaciones-fundaciones:
             help: null
-            label: null
+            label: For amounts donated to foundations of Castile and León and for
+              the recovery of historical, cultural, and natural heritage
           irpf-deduccion-castilla-y-leon-donaciones-idi:
             help: null
-            label: null
+            label: For amounts donated to promote research, development, and innovation
           irpf-deduccion-castilla-y-leon-familia-numerosa:
             help: null
-            label: null
+            label: For a large family
           irpf-deduccion-castilla-y-leon-fecha-visado:
             help: null
-            label: null
+            label: 'Approval date of the execution project:'
           irpf-deduccion-castilla-y-leon-gastos-adopcion:
             help: null
-            label: null
+            label: For adoption expenses
           irpf-deduccion-castilla-y-leon-importe-general:
             help: null
-            label: null
+            label: Amount of the deduction
           irpf-deduccion-castilla-y-leon-nacimiento-adopcion:
             help: null
-            label: null
+            label: For the birth or adoption of children
           irpf-deduccion-castilla-y-leon-patrimonio-historico:
             help: null
-            label: null
+            label: For amounts invested in the recovery of historical, cultural, and
+              natural heritage
           irpf-deduccion-castilla-y-leon-rehabilitacion-importe:
             help: null
-            label: null
+            label: Amount of the deduction
           irpf-deduccion-castilla-y-leon-vehiculo-matricula:
             help: null
-            label: null
+            label: 'Vehicle registration number:'
           irpf-deduccion-catalunya-donaciones-investigacion:
             help: null
-            label: null
+            label: For donations to entities promoting scientific research and technological
+              development and innovation
           irpf-deduccion-catalunya-donaciones-lengua-catalana:
             help: null
-            label: null
+            label: For donations to entities promoting the use of Catalan or Occitan
           irpf-deduccion-catalunya-donaciones-medio-ambiente:
             help: null
-            label: null
+            label: For donations to certain entities benefiting the environment, natural-heritage
+              conservation, and land stewardship
           irpf-deduccion-catalunya-intereses-prestamos-estudios:
             help: null
-            label: null
+            label: For interest paid on loans for master's and doctoral studies
           irpf-deduccion-catalunya-prestamo-identificador:
             help: null
-            label: null
+            label: Loan identification number
           irpf-deduccion-catalunya-rehabilitacion-vivienda:
             help: null
-            label: null
+            label: For the renovation of the primary residence
           irpf-deduccion-catalunya-viudedad-anio:
             help: null
-            label: null
+            label: Year of widowhood
           irpf-deduccion-eficiencia-energetica-demanda-anterior:
             help: null
-            label: null
+            label: Prior heating-and-cooling energy demand
           irpf-deduccion-eficiencia-energetica-demanda-posterior:
             help: null
-            label: null
+            label: Subsequent heating-and-cooling energy demand
           irpf-deduccion-extremadura-acogimiento-menores:
             help: null
-            label: null
+            label: For fostering of minors
           irpf-deduccion-extremadura-cuidado-familiares-discapacidad:
             help: null
-            label: null
+            label: For the care of family members with a disability
           irpf-deduccion-extremadura-cuidado-hijos-menores-14:
             help: null
-            label: null
+            label: For the care of minor children up to 14 years old inclusive
           irpf-deduccion-extremadura-intereses-vivienda:
             help: null
-            label: null
+            label: For interest on third-party financing for the primary-residence
+              investment, for young people
           irpf-deduccion-extremadura-material-escolar:
             help: null
-            label: null
+            label: For the purchase of school supplies
           irpf-deduccion-extremadura-partos-multiples:
             help: null
-            label: null
+            label: For multiple births
           irpf-deduccion-extremadura-trabajo-dependiente:
             help: null
-            label: null
+            label: For salaried employment
           irpf-deduccion-extremadura-viudos:
             help: null
-            label: null
+            label: For widowed taxpayers
           irpf-deduccion-extremadura-vivienda-jovenes:
             help: null
-            label: null
+            label: For the acquisition or renovation of a primary residence for young
+              people and for victims of terrorism
           irpf-deduccion-galicia-acogimiento-menores:
             help: null
-            label: null
+            label: For fostering of minors
           irpf-deduccion-galicia-climatizacion-acs:
             help: null
-            label: null
+            label: For investment in heating and/or domestic hot-water installations
+              using renewable energy in the primary residence, exclusively for self-consumption
           irpf-deduccion-galicia-codigo-instalacion:
             help: null
-            label: null
+            label: 'Installation code provided by the Virtual Industry Office:'
           irpf-deduccion-galicia-cuidado-hijos-menores:
             help: null
-            label: null
+            label: For the care of minor children
           irpf-deduccion-galicia-deportistas-alto-nivel:
             help: null
-            label: null
+            label: For the aid and grants received by high-level athletes from Galicia
           irpf-deduccion-galicia-discapacidad-mayores-65:
             help: null
-            label: null
+            label: For taxpayers with a disability aged 65 or over who need help from
+              third parties
           irpf-deduccion-galicia-donaciones-idi:
             help: null
-            label: null
+            label: For donations for scientific research, development, and technological
+              innovation purposes
           irpf-deduccion-galicia-eficiencia-energetica:
             help: null
-            label: null
+            label: For energy-efficiency improvement works on residential buildings
+              or single-family homes
           irpf-deduccion-galicia-familia-numerosa:
             help: null
-            label: null
+            label: For a large family
           irpf-deduccion-galicia-nacimiento-adopcion:
             help: null
-            label: null
+            label: For the birth or adoption of children
           irpf-deduccion-galicia-nuevas-tecnologias:
             help: null
-            label: null
+            label: For expenses on the use of new technologies in Galician households
           irpf-deduccion-galicia-otras:
             help: Enter other deductions.
             label: Other deductions
           irpf-deduccion-galicia-rehabilitacion-centros-historicos:
             help: null
-            label: null
+            label: For the renovation of properties located in historic centres
           irpf-deduccion-galicia-vivienda-aldeas-modelo:
             help: null
-            label: null
+            label: For the acquisition and renovation of dwellings under model-village
+              projects
           irpf-deduccion-instalacion-recarga-fecha-fin:
             help: null
-            label: null
+            label: Date the installation is completed
           irpf-deduccion-la-rioja-adecuacion-importe:
             help: null
-            label: null
+            label: Amount of the deduction
           irpf-deduccion-la-rioja-adecuacion-municipio-codigo:
             help: null
-            label: null
+            label: 'Municipality code:'
           irpf-deduccion-la-rioja-adecuacion-vivienda-discapacidad:
             help: null
-            label: null
+            label: For amounts invested in adaptation works to the primary residence
+              for persons with a disability
           irpf-deduccion-la-rioja-arrendamiento-importe:
             help: null
-            label: null
+            label: Amount of the deduction
           irpf-deduccion-la-rioja-arrendamiento-municipio-codigo:
             help: null
-            label: null
+            label: Municipality code
           irpf-deduccion-la-rioja-bicicletas:
             help: null
-            label: null
+            label: For the purchase of non-assisted pedal bicycles
           irpf-deduccion-la-rioja-cantidades-investigacion-restauracion:
             help: null
-            label: null
+            label: For amounts allocated to research, conservation, restoration, renovation,
+              or consolidation of assets forming part of the historical heritage of
+              La Rioja
           irpf-deduccion-la-rioja-donaciones-empresas-culturales:
             help: null
-            label: null
+            label: For donations to cultural businesses
           irpf-deduccion-la-rioja-donaciones-investigacion-patrimonio:
             help: null
-            label: null
+            label: For donations for the research, conservation, restoration, renovation,
+              consolidation, dissemination, exhibition, and acquisition of assets
+              of cultural interest from the Historical Heritage of La Rioja
           irpf-deduccion-la-rioja-escuelas-infantiles-0-3:
             help: null
-            label: null
+            label: For each child aged 0 to 3 for expenses in nursery schools or early-education
+              centres in any municipality of La Rioja
           irpf-deduccion-la-rioja-internet-jovenes:
             help: null
-            label: null
+            label: For internet access for emancipated young people
           irpf-deduccion-la-rioja-nacimiento-adopcion:
             help: null
-            label: null
+            label: For the birth and adoption of children
           irpf-deduccion-la-rioja-obras-rehabilitacion:
             help: null
-            label: null
+            label: For amounts invested in renovation works on the primary residence
           irpf-deduccion-la-rioja-suministros-jovenes:
             help: null
-            label: null
+            label: For domestic electricity and gas supply for emancipated young people
           irpf-deduccion-la-rioja-vivienda-codigo-municipio:
             help: null
-            label: null
+            label: 'Municipality code:'
           irpf-deduccion-la-rioja-vivienda-habitual-jovenes:
             help: null
-            label: null
+            label: For amounts invested in the acquisition or construction of a primary
+              residence for young people
           irpf-deduccion-la-rioja-vivienda-jovenes:
             help: null
-            label: null
+            label: For the primary-residence investment by young people under 36
           irpf-deduccion-la-rioja-vivienda-municipio-importe:
             help: null
-            label: null
+            label: Amount of the deduction
           irpf-deduccion-madrid-acogimiento-mayores:
             help: null
-            label: null
+            label: For unpaid fostering of persons over 65 and/or with a disability
           irpf-deduccion-madrid-acogimiento-menores:
             help: null
-            label: null
+            label: For foster care of minors
           irpf-deduccion-madrid-adopcion-internacional:
             help: null
-            label: null
+            label: For the international adoption of children
           irpf-deduccion-madrid-autoempleo-jovenes:
             help: null
-            label: null
+            label: To encourage self-employment among young people under 35
           irpf-deduccion-madrid-dos-mas-descendientes-ingresos-reducidos:
             help: null
-            label: null
+            label: For families with two or more descendants and low income
           irpf-deduccion-madrid-empleada-hogar-ccc:
             help: Enter the contribution account code.
             label: Contribution account code
@@ -746,7 +837,7 @@ modelo:
               main residence due to rising interest rates
           irpf-deduccion-madrid-gastos-educativos:
             help: null
-            label: null
+            label: For education expenses
           irpf-deduccion-madrid-nuevos-contribuyentes-extranjero:
             help: Enter the deduction for investments by new taxpayers coming from
               abroad.
@@ -769,10 +860,10 @@ modelo:
             label: Acquisition price / amounts invested
           irpf-deduccion-murcia-acogimiento-mayores-discapacidad:
             help: null
-            label: null
+            label: For unpaid fostering of persons over 65 and/or persons with a disability
           irpf-deduccion-murcia-adopcion-nacimiento:
             help: null
-            label: null
+            label: For adoption or birth
           irpf-deduccion-murcia-conciliacion-ascendientes:
             help: Enter the reconciliation deduction for ascendants over 65 years
               old.
@@ -782,16 +873,16 @@ modelo:
             label: Contribution account code
           irpf-deduccion-murcia-discapacidad:
             help: null
-            label: null
+            label: For taxpayers with a disability
           irpf-deduccion-murcia-dispositivos-ahorro-agua:
             help: null
-            label: null
+            label: For investments in domestic water-saving devices
           irpf-deduccion-murcia-donaciones-investigacion-biosanitaria:
             help: null
-            label: null
+            label: For donations for biomedical research
           irpf-deduccion-murcia-empleada-hogar-ccc:
             help: null
-            label: null
+            label: Social Security contribution account code
           irpf-deduccion-murcia-familia-monoparental:
             help: Enter the deduction for a single-parent family.
             label: For single-parent family
@@ -803,10 +894,10 @@ modelo:
             label: For Internet access expenses
           irpf-deduccion-murcia-guarderia:
             help: null
-            label: null
+            label: For childcare (nursery) expenses
           irpf-deduccion-murcia-material-escolar:
             help: null
-            label: null
+            label: For school-supplies and textbook expenses
           irpf-deduccion-murcia-recursos-energeticos-renovables-generado:
             help: Enter the amount generated in 2024.
             label: Amount generated in 2024
@@ -815,691 +906,741 @@ modelo:
             label: Amount generated in 2024 pending application
           irpf-deduccion-vehiculo-cantidad-a-cuenta:
             help: null
-            label: null
+            label: Amount of the payment on account of the future purchase of the
+              vehicle
           irpf-deduccion-vehiculo-electrico-cantidades-satisfechas:
             help: null
-            label: null
+            label: Amounts paid since 30 June 2023 (per installation) (*) (**)
           irpf-deduccion-vehiculo-electrico-importe:
             help: null
-            label: null
+            label: Amount of the deduction for improving non-renewable primary-energy
+              consumption
           irpf-deduccion-vehiculo-electrico-situacion-clave:
             help: null
-            label: null
+            label: Location. Code.
           irpf-deduccion-vehiculo-fecha-matriculacion:
             help: null
-            label: null
+            label: Registration date
           irpf-deduccion-vehiculo-fecha-pago-a-cuenta:
             help: null
-            label: null
+            label: Date of the payment on account
           irpf-deduccion-vehiculo-gastos-tributos:
             help: null
-            label: null
+            label: Amount of the expenses and taxes inherent to the vehicle's acquisition
           irpf-deduccion-vehiculo-matricula:
             help: null
-            label: null
+            label: Registration plate
           irpf-deduccion-vehiculo-precio-sin-iva:
             help: null
-            label: null
+            label: Sale price of the vehicle purchased, excluding VAT or IGIC
           irpf-deduccion-vehiculo-tipo:
             help: null
-            label: null
+            label: Type (**)
           irpf-descendiente-cede-flag:
             help: null
-            label: null
+            label: State whether you are transferring the right to the deduction and,
+              if so, the Tax ID (NIF) of the beneficiary
           irpf-descendiente-cedido-flag:
             help: null
-            label: null
+            label: State whether the right to the deduction has been transferred to
+              you and, if so, the Tax ID (NIF) of the transferor(s)
           irpf-descendiente-discapacidad-fecha-fin:
             help: null
-            label: null
+            label: End date of the disability
           irpf-descendiente-discapacidad-fecha-inicio:
             help: null
-            label: null
+            label: Start date of the disability
           irpf-descendiente-discapacidad-nombre:
             help: null
-            label: null
+            label: Name
           irpf-descendiente-num-contribuyentes-derecho:
             help: null
-            label: null
+            label: State the number of persons entitled to the minimum for descendants
           irpf-ed-actividad-iae-code:
             help: null
-            label: null
+            label: IAE group or heading (of the main activity if several activities
+              of the same type are carried out)
           irpf-ed-actividad-tipo-clave:
             help: null
-            label: null
+            label: 'Type of activity/activities carried out: indicative code'
           irpf-ed-cobros-pagos-flag:
             help: null
-            label: null
+            label: If, for the timing allocation of the income, you choose the cash-receipts-and-payments
+              criterion, enter an "X"
           irpf-ed-derechos-imagen-cessation-flag:
             help: null
-            label: null
+            label: For income arising from the assignment of the exploitation of copyright,
+              if you choose to allocate the advance on account of it as the royalties
+              accrue...
           irpf-ed-modalidad-clave:
             help: null
-            label: null
+            label: Applicable direct-estimation method (enter N for normal, S for
+              simplified)
           irpf-eo-actividad-iae-code:
             help: null
-            label: null
+            label: IAE classification (group or heading)
           irpf-eo-agr-clave-actividad:
             help: null
-            label: null
+            label: Activity carried out. Code
           irpf-eo-agr-cobros-pagos-flag:
             help: null
-            label: null
+            label: If, for the timing allocation, you choose the cash-receipts-and-payments
+              criterion, enter an "X"
           irpf-eo-agr-gastos-extraordinarios:
             help: null
-            label: null
+            label: Extraordinary expenses due to exceptional circumstances
           irpf-eo-agr-indice-ecologica:
             help: null
-            label: null
+            label: 5. For organic-farming activities
           irpf-eo-agr-indice-forestal:
             help: null
-            label: null
+            label: 8. Correction index for certain forestry activities
           irpf-eo-agr-indice-medios-ajenos:
             help: null
-            label: null
+            label: 1. For using third-party means of production in agricultural activities
           irpf-eo-agr-indice-pequena-empresa:
             help: null
-            label: null
+            label: 7. For businesses whose reduced net income does not exceed 9,447.91
+              euros
           irpf-eo-agr-indice-personal-asalariado:
             help: null
-            label: null
+            label: 2. For using salaried staff
           irpf-eo-agr-indice-piensos-terceros:
             help: null
-            label: null
+            label: 4. For feed purchased from third parties exceeding 50%
           irpf-eo-agr-indice-regadio-electrico:
             help: null
-            label: null
+            label: 6. For crops on irrigated land using electrical energy for that
+              purpose
           irpf-eo-agr-indice-tierras-arrendadas:
             help: null
-            label: null
+            label: 3. For crops grown on leased land
           irpf-eo-agr-reduccion-art-32-2-3:
             help: null
-            label: null
+            label: Reduction for carrying out certain economic activities (article
+              32.2.3 of the Tax Law)
           irpf-eo-agr-total-ingresos:
             help: null
-            label: null
+            label: Total income
           irpf-eo-cobros-pagos-flag:
             help: null
-            label: null
+            label: If, for the timing allocation of the income, you choose the cash-receipts-and-payments
+              criterion, enter an "X"
           irpf-eo-gastos-extraordinarios:
             help: null
-            label: null
+            label: Extraordinary expenses due to exceptional circumstances
           irpf-eo-indice-corrector-especial:
             help: null
-            label: null
+            label: 1. Special correction index
           irpf-eo-indice-corrector-exceso:
             help: null
-            label: null
+            label: 4. Excess correction index
           irpf-eo-indice-corrector-inicio:
             help: null
-            label: null
+            label: 5. Correction index for starting a new activity
           irpf-eo-indice-corrector-pequena-dimension:
             help: null
-            label: null
+            label: 2. Correction index for small businesses
           irpf-eo-indice-corrector-temporada:
             help: null
-            label: null
+            label: 3. Seasonal correction index
           irpf-eo-minoracion-empleo:
             help: null
-            label: null
+            label: Reduction for the employment incentive
           irpf-eo-minoracion-inversion:
             help: null
-            label: null
+            label: Reduction for investment incentives
           irpf-eo-otras-percepciones:
             help: null
-            label: null
+            label: Other business receipts
           irpf-eo-rdto-neto-minorado:
             help: null
-            label: null
+            label: Reduced net income
           irpf-eo-rdto-neto-modulos:
             help: null
-            label: null
+            label: Net income under modules
           irpf-eo-rdto-neto-previo:
             help: null
-            label: null
+            label: Prior net income
           irpf-eo-reduccion-art-32-2-3:
             help: null
-            label: null
+            label: Reduction for carrying out certain economic activities (article
+              32.2.3 of the Tax Law)
           irpf-familia-numerosa-categoria-especial-flag:
             help: null
-            label: null
+            label: 'State the large-family category (mark the applicable box): Special'
           irpf-familia-numerosa-categoria-general-flag:
             help: null
-            label: null
+            label: 'State the large-family category (mark the applicable box): General'
           irpf-familia-numerosa-cede-flag:
             help: null
-            label: null
+            label: State whether you are transferring the right to the deduction and,
+              if so, the Tax ID (NIF) of the beneficiary
           irpf-familia-numerosa-cedido-flag:
             help: null
-            label: null
+            label: State whether the right to the deduction has been transferred to
+              you and, if so, the Tax ID (NIF) of the transferor(s)
           irpf-familia-numerosa-fecha-caducidad:
             help: null
-            label: null
+            label: Expiry date of the large-family certificate
           irpf-familia-numerosa-fecha-inicio:
             help: null
-            label: null
+            label: Start date of the large-family certificate
           irpf-familia-numerosa-hijos-exceden-minimo-flag:
             help: null
-            label: null
+            label: If the children forming part of the large family exceed the minimum
+              number required to qualify as a large family of general or special category,
+              mark this box
           irpf-familia-numerosa-num-ascendientes:
             help: null
-            label: null
+            label: State the number of ascendants who are part of the same large family
           irpf-familia-numerosa-titulo-id:
             help: null
-            label: null
+            label: Identification number of the large-family certificate
           irpf-feac-elemento-descripcion:
             help: null
-            label: null
+            label: Description
           irpf-feac-entidad-receptora-denominacion:
             help: null
-            label: null
+            label: Company name
           irpf-feac-entidad-receptora-sin-nif-flag:
             help: null
-            label: null
+            label: If you do not have a Tax ID (NIF), mark with an "X"
           irpf-feac-entidad-transmitida-denominacion:
             help: null
-            label: null
+            label: Company name
           irpf-feac-entidad-transmitida-sin-nif-flag:
             help: null
-            label: null
+            label: If you do not have a Tax ID (NIF), mark with an "X"
           irpf-feac-fecha-adquisicion-elemento:
             help: null
-            label: null
+            label: Acquisition date of the asset transferred
           irpf-feac-fecha-operacion:
             help: null
-            label: null
+            label: Date of the transaction (registration date of the public deed documenting
+              the transaction in the Commercial Registry)
           irpf-feac-ganancia-patrimonial-diferida:
             help: null
-            label: null
+            label: Deferred capital gain (Chapter VII, Title VII, of the Corporate
+              Income Tax Law)
           irpf-feac-inmueble-referencia-catastral:
             help: null
-            label: null
+            label: Cadastral reference
           irpf-feac-inmueble-situacion-clave:
             help: null
-            label: null
+            label: Location (code)
           irpf-feac-perdida-patrimonial-diferida:
             help: null
-            label: null
+            label: Deferred capital loss (Chapter VII, Title VII, of the Corporate
+              Income Tax Law).
           irpf-feac-valor-adquisicion-elemento:
             help: null
-            label: null
+            label: Acquisition value of the asset transferred (acquisition value for
+              tax purposes)
           irpf-feac-valor-mercado-elemento:
             help: null
-            label: null
+            label: Market value of the asset transferred
           irpf-g4-re-ganancia-patrimonial:
             help: null
-            label: null
+            label: Capital gains
           irpf-g4-re-transmision-intervivos-flag:
             help: null
-            label: null
+            label: If this is a taxpayer who has transferred the shares or units inter
+              vivos, mark this box (only taxpayers who have changed their residence
+              to another EU/EEA Member State...
           irpf-g4-re-valor-adquisicion-acciones:
             help: null
-            label: null
+            label: Acquisition value of the shares or units
           irpf-g4-re-valor-mercado-acciones:
             help: null
-            label: null
+            label: Market value of the shares or units
           irpf-g4-re-valor-transmision-acciones:
             help: null
-            label: null
+            label: Transfer value of the shares or units (only in the case of an inter
+              vivos transfer of the securities)
           irpf-ganancia-acciones-denominacion:
             help: null
-            label: null
+            label: Name of the securities transferred (issuing entity)
           irpf-ganancia-acciones-exenta-renta-vitalicia:
             help: null
-            label: null
+            label: Gains exempt through reinvestment in life annuities
           irpf-ganancia-acciones-ganancia:
             help: null
-            label: null
+            label: Capital gains
           irpf-ganancia-acciones-valor-adquisicion-global:
             help: null
-            label: null
+            label: Overall acquisition value of the securities transferred
           irpf-ganancia-acciones-valor-transmision-global:
             help: null
-            label: null
+            label: Overall amount of the transfers made in 2019
           irpf-ganancia-acciones-valor-transmision-renta-vitalicia:
             help: null
-            label: null
+            label: Transfer value used to set up a life annuity
           irpf-ganancia-cripto-anio-imputacion-1:
             help: null
-            label: null
+            label: Year of imputation
           irpf-ganancia-cripto-anio-imputacion-2:
             help: null
-            label: null
+            label: Year of imputation
           irpf-ganancia-cripto-anio-imputacion-3:
             help: null
-            label: null
+            label: Year of imputation
           irpf-ganancia-cripto-anio-imputacion-4:
             help: null
-            label: null
+            label: Year of imputation
           irpf-ganancia-cripto-denominacion:
             help: null
-            label: null
+            label: Name of the virtual currency transferred (bitcoin, ethereum, tether,
+              Binance Coin, USD Coin, XRP, Cardano, Solana, terra, avalanche, etc.)
           irpf-ganancia-cripto-exenta-renta-vitalicia:
             help: null
-            label: null
+            label: Gain exempt through reinvestment in a life annuity
           irpf-ganancia-cripto-ganancia-pendiente-1:
             help: null
-            label: null
+            label: Capital gain pending imputation
           irpf-ganancia-cripto-ganancia-pendiente-2:
             help: null
-            label: null
+            label: Capital gain pending imputation
           irpf-ganancia-cripto-ganancia-pendiente-4:
             help: null
-            label: null
+            label: Capital gain pending imputation
           irpf-ganancia-cripto-ganancia-pendiente-imputacion:
             help: null
-            label: null
+            label: Capital gain pending imputation
           irpf-ganancia-cripto-ganancia-pendiente-resto:
             help: null
-            label: null
+            label: Remaining capital gain pending imputation
           irpf-ganancia-cripto-importe-percibir-1:
             help: null
-            label: null
+            label: Amount to be received
           irpf-ganancia-cripto-importe-percibir-2:
             help: null
-            label: null
+            label: Amount to be received
           irpf-ganancia-cripto-importe-percibir-3:
             help: null
-            label: null
+            label: Amount to be received
           irpf-ganancia-cripto-importe-percibir-4:
             help: null
-            label: null
+            label: Amount to be received
           irpf-ganancia-cripto-importe-percibir-resto:
             help: null
-            label: null
+            label: Remaining amount to be received
           irpf-ganancia-cripto-imputacion-plazos:
             help: null
-            label: null
+            label: 'Timing allocation: mark with an "X" if you choose the instalment-sale
+              or deferred-price criterion (complete Annex C.1)'
           irpf-ganancia-cripto-tipo-contraprestacion-clave:
             help: null
-            label: null
+            label: Identification of what was received in exchange. Consideration-type
+              code
           irpf-ganancia-cripto-titular:
             help: null
-            label: null
+            label: Taxpayer holder
           irpf-ganancia-cripto-ultimo-anio-cobro:
             help: null
-            label: null
+            label: Last year of collection
           irpf-ganancia-cripto-valor-adquisicion:
             help: null
-            label: null
+            label: Acquisition value
           irpf-ganancia-cripto-valor-transmision:
             help: null
-            label: null
+            label: Transfer value
           irpf-ganancia-cripto-valor-transmision-renta-vitalicia:
             help: null
-            label: null
+            label: Transfer value used to set up a life annuity
           irpf-ganancia-derechos-denominacion:
             help: null
-            label: null
+            label: Name of the subscription rights transferred (issuing entity)
           irpf-ganancia-derechos-exenta-renta-vitalicia:
             help: null
-            label: null
+            label: Gains exempt through reinvestment in life annuities
           irpf-ganancia-derechos-ganancia:
             help: null
-            label: null
+            label: Capital gains
           irpf-ganancia-derechos-valor-adquisicion-global:
             help: null
-            label: null
+            label: Overall acquisition value of the securities transferred
           irpf-ganancia-derechos-valor-transmision-global:
             help: null
-            label: null
+            label: Overall amount of the transfers made in 2019
           irpf-ganancia-derechos-valor-transmision-renta-vitalicia:
             help: null
-            label: null
+            label: Transfer value used to set up a life annuity
           irpf-ganancia-fondos-exenta-renta-vitalicia:
             help: null
-            label: null
+            label: Gains exempt through reinvestment of life annuities
           irpf-ganancia-fondos-ganancia:
             help: null
-            label: null
+            label: Capital gains
           irpf-ganancia-fondos-valor-adquisicion-global:
             help: null
-            label: null
+            label: Overall amount of the acquisitions
           irpf-ganancia-fondos-valor-transmision-global:
             help: null
-            label: null
+            label: Overall amount of the transfers made in 2020
           irpf-ganancia-fondos-valor-transmision-renta-vitalicia:
             help: null
-            label: null
+            label: Transfer value used to set up a life annuity
           irpf-ganancia-inmueble-anexo-c1-referencia-catastral-1:
             help: null
-            label: null
+            label: Cadastral reference 1
           irpf-ganancia-inmueble-anexo-c1-referencia-catastral-2:
             help: null
-            label: null
+            label: Cadastral reference 2
           irpf-ganancia-inmueble-anexo-c1-referencia-catastral-3:
             help: null
-            label: null
+            label: Cadastral reference 3
           irpf-ganancia-inmueble-anio-imputacion-1:
             help: null
-            label: null
+            label: Year of imputation
           irpf-ganancia-inmueble-anio-imputacion-2:
             help: null
-            label: null
+            label: Year of imputation
           irpf-ganancia-inmueble-anio-imputacion-3:
             help: null
-            label: null
+            label: Year of imputation
           irpf-ganancia-inmueble-anio-imputacion-4:
             help: null
-            label: null
+            label: Year of imputation
           irpf-ganancia-inmueble-anios-permanencia-1994:
             help: null
-            label: null
+            label: Number of years held up to 31-12-1994, if applicable
           irpf-ganancia-inmueble-exenta-reinversion-vivienda:
             help: null
-            label: null
+            label: Gain exempt through reinvestment in a primary residence
           irpf-ganancia-inmueble-exenta-renta-vitalicia:
             help: null
-            label: null
+            label: Gain exempt through reinvestment in a life annuity
           irpf-ganancia-inmueble-fecha-adquisicion:
             help: null
-            label: null
+            label: Acquisition date (day, month, and year)
           irpf-ganancia-inmueble-fecha-transmision:
             help: null
-            label: null
+            label: Transfer date (day, month, and year)
           irpf-ganancia-inmueble-ganancia-pendiente:
             help: null
-            label: null
+            label: Capital gain pending imputation
           irpf-ganancia-inmueble-ganancia-pendiente-1:
             help: null
-            label: null
+            label: Capital gain pending imputation
           irpf-ganancia-inmueble-ganancia-pendiente-3:
             help: null
-            label: null
+            label: Capital gain pending imputation
           irpf-ganancia-inmueble-ganancia-pendiente-imputacion:
             help: null
-            label: null
+            label: Capital gain pending imputation
           irpf-ganancia-inmueble-ganancia-pendiente-resto:
             help: null
-            label: null
+            label: Remaining capital gain pending imputation
           irpf-ganancia-inmueble-importe-percibir-1:
             help: null
-            label: null
+            label: Amount to be received
           irpf-ganancia-inmueble-importe-percibir-2:
             help: null
-            label: null
+            label: Amount to be received
           irpf-ganancia-inmueble-importe-percibir-3:
             help: null
-            label: null
+            label: Amount to be received
           irpf-ganancia-inmueble-importe-percibir-4:
             help: null
-            label: null
+            label: Amount to be received
           irpf-ganancia-inmueble-importe-percibir-resto:
             help: null
-            label: null
+            label: Remaining amount to be received
           irpf-ganancia-inmueble-imputacion-plazos:
             help: null
-            label: null
+            label: 'Timing allocation: mark with an "X" if you choose the instalment-sale
+              or deferred-price criterion (complete Annex C.1)'
           irpf-ganancia-inmueble-no-exenta-imputable:
             help: null
-            label: null
+            label: Non-exempt capital gain imputable to 2022
           irpf-ganancia-inmueble-no-exenta-sin-reduccion:
             help: null
-            label: null
+            label: Non-exempt capital gain
           irpf-ganancia-inmueble-referencia-catastral-1:
             help: null
-            label: null
+            label: Cadastral reference 1
           irpf-ganancia-inmueble-referencia-catastral-2:
             help: null
-            label: null
+            label: Cadastral reference 2
           irpf-ganancia-inmueble-referencia-catastral-3:
             help: null
-            label: null
+            label: Cadastral reference 3
           irpf-ganancia-inmueble-situacion-clave:
             help: null
-            label: null
+            label: Location. Code
           irpf-ganancia-inmueble-tipo-elemento-clave:
             help: null
-            label: null
+            label: 'Type of asset. Code (I: Property owned; O: other rights in rem
+              over real estate)'
           irpf-ganancia-inmueble-titular-b:
             help: null
-            label: null
+            label: Taxpayer holder
           irpf-ganancia-inmueble-transmision-gratuita:
             help: null
-            label: null
+            label: Gratuitous inter vivos transfer (donation, gift, etc.)
           irpf-ganancia-inmueble-transmision-onerosa:
             help: null
-            label: null
+            label: Inter vivos transfer for consideration (sale, exchange, etc.)
           irpf-ganancia-inmueble-ultimo-anio-cobro:
             help: null
-            label: null
+            label: Last year of collection
           irpf-ganancia-inmueble-valor-transmision-renta-vitalicia:
             help: null
-            label: null
+            label: Transfer value used to set up a life annuity
           irpf-ganancia-inmueble-valor-transmision-susceptible-vh:
             help: null
-            label: null
+            label: Transfer value of the primary residence eligible for reinvestment
+              for the primary-residence reinvestment exemption
           irpf-ganancia-otras-ejer-ant-ganancia-imputable:
             help: null
-            label: null
+            label: Amount of the capital gain to be imputed to 2020
           irpf-ganancia-otros-anio-imputacion-1:
             help: null
-            label: null
+            label: Year of imputation
           irpf-ganancia-otros-anio-imputacion-2:
             help: null
-            label: null
+            label: Year of imputation
           irpf-ganancia-otros-anio-imputacion-3:
             help: null
-            label: null
+            label: Year of imputation
           irpf-ganancia-otros-anio-imputacion-4:
             help: null
-            label: null
+            label: Year of imputation
           irpf-ganancia-otros-anios-permanencia-1994:
             help: null
-            label: null
+            label: Number of years held up to 31-12-1994, if applicable
           irpf-ganancia-otros-exenta-nueva-empresa:
             help: null
-            label: null
+            label: Gain exempt through reinvestment in newly or recently created entities
           irpf-ganancia-otros-exenta-renta-vitalicia:
             help: null
-            label: null
+            label: Gain exempt through reinvestment in a life annuity
           irpf-ganancia-otros-fecha-adquisicion:
             help: null
-            label: null
+            label: Acquisition date (day, month, and year)
           irpf-ganancia-otros-fecha-transmision:
             help: null
-            label: null
+            label: Transfer date (day, month, and year)
           irpf-ganancia-otros-ganancia-pendiente-1:
             help: null
-            label: null
+            label: Capital gain pending imputation
           irpf-ganancia-otros-ganancia-pendiente-2:
             help: null
-            label: null
+            label: Capital gain pending imputation
           irpf-ganancia-otros-ganancia-pendiente-4:
             help: null
-            label: null
+            label: Capital gain pending imputation
           irpf-ganancia-otros-ganancia-pendiente-imputacion:
             help: null
-            label: null
+            label: Capital gain pending imputation
           irpf-ganancia-otros-importe-percibir-1:
             help: null
-            label: null
+            label: Amount to be received
           irpf-ganancia-otros-importe-percibir-2:
             help: null
-            label: null
+            label: Amount to be received
           irpf-ganancia-otros-importe-percibir-3:
             help: null
-            label: null
+            label: Amount to be received
           irpf-ganancia-otros-importe-percibir-4:
             help: null
-            label: null
+            label: Amount to be received
           irpf-ganancia-otros-reduccion-autotaxis-da7:
             help: null
-            label: null
+            label: Reduction (municipal taxi licence under objective estimation, Additional
+              Provision 7)
           irpf-ganancia-otros-reducida-imputable-da7:
             help: null
-            label: null
+            label: Non-exempt reduced capital gain imputable to 2020
           irpf-ganancia-otros-reducida-no-exenta-imputable-dt9:
             help: null
-            label: null
+            label: Non-exempt reduced capital gain imputable to 2020
           irpf-ganancia-otros-susceptible-reduccion-da7:
             help: null
-            label: null
+            label: Portion of the capital gain eligible for reduction (Additional
+              Provision 7)
           irpf-ganancia-otros-tipo-elemento-clave:
             help: null
-            label: null
+            label: Type of asset. Code
           irpf-ganancia-otros-titular:
             help: null
-            label: null
+            label: Taxpayer holder
           irpf-ganancia-otros-transmision-gratuita:
             help: null
-            label: null
+            label: Gratuitous inter vivos transfer (donation, gift, etc.)
           irpf-ganancia-otros-transmision-onerosa:
             help: null
-            label: null
+            label: Inter vivos transfer for consideration (sale, exchange, etc.)
           irpf-ganancia-otros-ultimo-anio-cobro:
             help: null
-            label: null
+            label: Last year of collection
           irpf-ganancia-otros-valor-adquisicion:
             help: null
-            label: null
+            label: Acquisition value
           irpf-ganancia-otros-valor-transmision:
             help: null
-            label: null
+            label: Transfer value
           irpf-ganancia-otros-valor-transmision-renta-vitalicia:
             help: null
-            label: null
+            label: Transfer value used to set up a life annuity
           irpf-ganancia-premios-aprovechamiento-forestal:
             help: null
-            label: null
+            label: Capital gains obtained by residents in 2020 from forestry exploitation
+              of public woodlands
           irpf-ganancia-premios-bono-cultural-joven:
             help: null
-            label: null
+            label: Youth Cultural Voucher
           irpf-ganancia-premios-juegos-ingresos-cuenta:
             help: null
-            label: null
+            label: Payments on account
           irpf-ganancia-premios-juegos-ingresos-cuenta-repercutidos:
             help: null
-            label: null
+            label: Payments on account passed on
           irpf-ganancia-premios-juegos-metalico:
             help: null
-            label: null
+            label: In cash
           irpf-ganancia-premios-juegos-pub-ingresos-cuenta:
             help: null
-            label: null
+            label: Payments on account
           irpf-ganancia-premios-juegos-pub-ingresos-cuenta-repercutidos:
             help: null
-            label: null
+            label: Payments on account passed on
           irpf-ganancia-premios-juegos-pub-metalico:
             help: null
-            label: null
+            label: In cash
           irpf-ganancia-premios-juegos-pub-valoracion:
             help: null
-            label: null
+            label: Valuation
           irpf-ganancia-premios-juegos-valoracion:
             help: null
-            label: null
+            label: Valuation
           irpf-ganancia-premios-otras-ganancias:
             help: null
-            label: null
+            label: 'Other capital gains and/or losses imputable to 2020: Amount of
+              gains'
           irpf-ganancia-reinversion-imputable:
             help: null
-            label: null
+            label: Amount of the capital gain to be imputed to 2020
           irpf-inmueble-1-valor-catastral:
             help: null
-            label: null
+            label: Cadastral value
           irpf-inmueble-2-valor-catastral:
             help: null
-            label: null
+            label: Cadastral value
           irpf-inmueble-3-valor-catastral:
             help: null
-            label: null
+            label: Cadastral value
           irpf-inmueble-a-disposicion-flag:
             help: null
-            label: null
+            label: Available to its owners
           irpf-inmueble-afecto-actividades-economicas-flag:
             help: null
-            label: null
+            label: Property used for economic activities
           irpf-inmueble-arrendamiento-accesorio-flag:
             help: null
-            label: null
+            label: Lease as an ancillary property
           irpf-inmueble-arrendamiento-flag:
             help: null
-            label: null
+            label: Lease
           irpf-inmueble-arrendamiento-reduccion-flag:
             help: null
-            label: null
+            label: Mark with an "X" if the lease is eligible for the reduction (article
+              23.2 of the Tax Law)
           irpf-inmueble-arrendatario1-nif-extranjero-flag:
             help: null
-            label: null
+            label: Mark an "X" if you entered a Tax ID (NIF) from another country
+              in box [0091]
           irpf-inmueble-arrendatario2-nif-extranjero-flag:
             help: null
-            label: null
+            label: Mark an "X" if you entered a Tax ID (NIF) from another country
+              in box [0094]
           irpf-inmueble-arrendatario3-nif-extranjero-flag:
             help: null
-            label: null
+            label: Mark an "X" if you entered a Tax ID (NIF) from another country
+              in box [0097]
           irpf-inmueble-contribuyente-actividad-economica:
             help: null
-            label: null
+            label: 'Taxpayer carrying out the economic activity: Property used for
+              economic activities'
           irpf-inmueble-dias-a-disposicion:
             help: null
-            label: null
+            label: Number of days available to the taxpayer
           irpf-inmueble-dias-afecto-actividades-economicas:
             help: null
-            label: null
+            label: 'Number of days it had this use: Property used for economic activities'
           irpf-inmueble-dias-arrendamiento-negocio:
             help: null
-            label: null
+            label: Property subject to a business lease
           irpf-inmueble-dias-otros-usos:
             help: null
-            label: null
+            label: Number of days
           irpf-inmueble-dias-uso:
             help: null
-            label: null
+            label: Number of days the dwelling has had this use
           irpf-inmueble-dias-vivienda-habitual:
             help: null
-            label: null
+            label: Number of days the property was your primary residence in 2020
           irpf-inmueble-direccion:
             help: null
-            label: null
+            label: Address
           irpf-inmueble-exconyuge-nif:
             help: null
-            label: null
+            label: Tax ID (NIF) of the excónyuge
           irpf-inmueble-exconyuge-nif-extranjero-flag:
             help: null
-            label: null
+            label: Mark an "X" if you entered a Tax ID (NIF) from another country
+              in box [0077]
           irpf-inmueble-fecha-contrato-arrendamiento:
             help: null
-            label: null
+            label: Contract date (*)
           irpf-inmueble-gastos-financiacion-pendientes-futuros:
             help: null
-            label: null
+            label: 2020 amount pending deduction over the following 4 years (complete
+              Annex C.1)
           irpf-inmueble-gastos-financiacion-pendientes-previos:
             help: null
-            label: null
+            label: Amount pending deduction from tax years 2016, 2017, 2018, and 2019
+              (complete Annex C.1)
           irpf-inmueble-gastos-reparacion-conservacion:
             help: null
-            label: null
+            label: Repair-and-maintenance expenses for tax year 2020 (itemised in
+              Annex D, optional to complete)
           irpf-inmueble-naturaleza-rustica:
             help: null
-            label: null
+            label: Rural
           irpf-inmueble-naturaleza-urbana:
             help: null
-            label: null
+            label: Urban
           irpf-inmueble-pct-a-disposicion:
             help: null
-            label: null
+            label: State the percentage (%) of the property available to the taxpayer
           irpf-inmueble-porcentaje-propiedad:
             help: Enter the ownership percentage.
             label: Ownership (%)
           irpf-inmueble-porcentaje-usufructo:
             help: null
-            label: null
+            label: Usufruct (%)
           irpf-inmueble-referencia-catastral-principal:
             help: null
-            label: null
+            label: Cadastral reference of the main property to which it is linked
           irpf-inmueble-situacion-clave:
             help: null
-            label: null
+            label: Location status code
           irpf-inmueble-uso-mixto-flag:
             help: null
-            label: null
+            label: In the exceptional case that the property is, on the same days,
+              partly available to the taxpayer and partly used for other purposes,
+              mark with an "X"
           irpf-inmueble-uso-residencia-separacion:
             help: null
-            label: null
+            label: Dwelling in which, in cases of separation or divorce, the children
+              and/or former spouse reside
           irpf-inmueble-valor-catastral-revisado-flag:
             help: null
-            label: null
+            label: State whether the cadastral value has been reviewed, modified,
+              or determined through a general collective valuation procedure that
+              entered into force in this tax year or in the...
           irpf-inmueble-vivienda-habitual-flag:
             help: Indicate whether it was the main residence in 2024.
             label: Primary residence in 2025
@@ -1510,322 +1651,348 @@ modelo:
               State portion'
           irpf-minimo-ascendientes-autonomico:
             help: null
-            label: null
+            label: 'Regional portion: Minimum for ascendants. Amount'
           irpf-minimo-ascendientes-estatal:
             help: null
-            label: null
+            label: 'State portion: Minimum for ascendants. Amount'
           irpf-minimo-discapacidad-autonomico:
             help: null
-            label: null
+            label: 'Regional portion: Minimum for disability. Amount'
           irpf-minimo-discapacidad-estatal:
             help: null
-            label: null
+            label: 'State portion: Minimum for disability. Amount'
           irpf-perdida-acciones-importe-computable:
             help: null
-            label: null
+            label: Capital losses. Computable amount
           irpf-perdida-acciones-importe-obtenido:
             help: null
-            label: null
+            label: Capital losses. Amount obtained
           irpf-perdida-cripto-imputable-ejercicio:
             help: null
-            label: null
+            label: Capital loss imputable to 2022
           irpf-perdida-cripto-pendiente-1:
             help: null
-            label: null
+            label: Capital loss pending imputation
           irpf-perdida-cripto-pendiente-2:
             help: null
-            label: null
+            label: Capital loss pending imputation
           irpf-perdida-cripto-pendiente-3:
             help: null
-            label: null
+            label: Capital loss pending imputation
           irpf-perdida-cripto-pendiente-4:
             help: null
-            label: null
+            label: Capital loss pending imputation
           irpf-perdida-cripto-pendiente-resto:
             help: null
-            label: null
+            label: Remaining capital loss pending imputation
           irpf-perdida-derechos-importe-computable:
             help: null
-            label: null
+            label: Capital losses. Computable amount
           irpf-perdida-derechos-importe-obtenido:
             help: null
-            label: null
+            label: Capital losses. Amount obtained
           irpf-perdida-fondos-importe:
             help: null
-            label: null
+            label: Capital losses
           irpf-perdida-fondos-importe-computable:
             help: null
-            label: null
+            label: Capital losses imputable to 2020
           irpf-perdida-inmueble-imputable-ejercicio:
             help: null
-            label: null
+            label: Capital loss imputable to 2022
           irpf-perdida-inmueble-pendiente:
             help: null
-            label: null
+            label: Capital loss pending imputation
           irpf-perdida-inmueble-pendiente-1:
             help: null
-            label: null
+            label: Capital loss pending imputation
           irpf-perdida-inmueble-pendiente-3:
             help: null
-            label: null
+            label: Capital loss pending imputation
           irpf-perdida-inmueble-pendiente-imputacion:
             help: null
-            label: null
+            label: Capital loss pending imputation
           irpf-perdida-inmueble-pendiente-resto:
             help: null
-            label: null
+            label: Remaining capital loss pending imputation
           irpf-perdida-otras-ejer-ant-imputable:
             help: null
-            label: null
+            label: Amount of the capital loss to be imputed to 2020
           irpf-perdida-otros-imputable-ejercicio:
             help: null
-            label: null
+            label: Capital loss imputable to 2020
           irpf-perdida-otros-pendiente:
             help: null
-            label: null
+            label: Capital loss pending imputation
           irpf-perdida-otros-pendiente-1:
             help: null
-            label: null
+            label: Capital loss pending imputation
           irpf-perdida-otros-pendiente-3:
             help: null
-            label: null
+            label: Capital loss pending imputation
           irpf-perdida-otros-pendiente-4:
             help: null
-            label: null
+            label: Capital loss pending imputation
           irpf-perdida-premios-juegos:
             help: null
-            label: null
+            label: Capital losses arising from these games
           irpf-perdida-premios-otras:
             help: null
-            label: null
+            label: Amount of losses
           irpf-rdto-trabajo-cesion-derechos-autor-anticipo-flag:
             help: null
-            label: null
+            label: For income arising from the assignment of the exploitation of copyright,
+              if you choose to allocate the advance on account of it as the royalties
+              accrue...
           irpf-re-agrup-interes-economico-base-imponible-imputada:
             help: null
-            label: null
+            label: Imputed taxable base
           irpf-re-agrup-interes-economico-nif:
             help: null
-            label: null
+            label: Tax ID number (NIF) of the entity
           irpf-re-aie-criterio-imputacion-clave:
             help: null
-            label: null
+            label: Timing-allocation criterion. Code
           irpf-re-aie-deduccion-ceuta-melilla:
             help: null
-            label: null
+            label: Deduction for income obtained in Ceuta or Melilla (imputed base)
           irpf-re-aie-deduccion-creacion-empleo:
             help: null
-            label: null
+            label: Job-creation deductions (imputed deductible amount)
           irpf-re-aie-deduccion-doble-imposicion:
             help: null
-            label: null
+            label: Deduction for international double taxation (imputed base)
           irpf-re-aie-deduccion-inversion-empresarial:
             help: null
-            label: null
+            label: Business-investment deductions (imputed bases)
           irpf-re-aie-retenciones-imputadas:
             help: null
-            label: null
+            label: Imputed withholdings and payments on account
           irpf-re-atrib-act-eco-minoraciones:
             help: null
-            label: null
+            label: Applicable reductions
           irpf-re-atrib-act-eco-reduccion-32-2-3:
             help: null
-            label: null
+            label: Applicable reduction (article 32.2.3 of the Tax Law)
           irpf-re-atrib-act-eco-reduccion-32-3:
             help: null
-            label: null
+            label: Applicable reduction (article 32.3 of the Tax Law)
           irpf-re-atrib-cap-inmo-minoraciones:
             help: null
-            label: null
+            label: Applicable reductions
           irpf-re-atrib-cap-inmo-reduccion-23-2:
             help: null
-            label: null
+            label: Applicable reduction (article 23.2 of the Tax Law)
           irpf-re-atrib-cap-mob-minoraciones:
             help: null
-            label: null
+            label: Applicable reductions
           irpf-re-atrib-cap-mob-rdto-neto-computable-ahorro:
             help: null
-            label: null
+            label: Net income attributed by the entity. Computable amount (except
+              that entered in box [1570])
           irpf-re-atrib-cap-mob-rdto-neto-entidad:
             help: null
-            label: null
+            label: Net income attributed by the entity
           irpf-re-atrib-cobros-pagos-flag:
             help: null
-            label: null
+            label: If, for the timing allocation of the income, you choose the cash-receipts-and-payments
+              criterion, enter an "X"
           irpf-re-atrib-deuda-subordinada:
             help: null
-            label: null
+            label: Income arising from subordinated-debt securities or preferred shares
           irpf-re-atrib-entidad-nif:
             help: null
-            label: null
+            label: Tax ID (NIF) of the entity under the income-attribution regime
           irpf-re-atrib-entidad-nif-alt:
             help: null
-            label: null
+            label: Tax ID (NIF) of the entity under income attribution, or identification
+              number in the country of residence in the case of non-resident entities
           irpf-re-atrib-gp-exentas-50pct:
             help: null
-            label: null
+            label: 50% exempt gains (certain urban properties only)
           irpf-re-atrib-gp-exentas-reinversion-nuevas:
             help: null
-            label: null
+            label: Gain exempt through reinvestment in newly or recently created entities
           irpf-re-atrib-gp-exentas-reinversion-vitalicia:
             help: null
-            label: null
+            label: Gains exempt due to reinvestment in life annuities
           irpf-re-atrib-gp-no-transmision-ganancias:
             help: null
-            label: null
+            label: Capital gains not arising from transfers, attributed by the entity
           irpf-re-atrib-gp-no-transmision-perdidas:
             help: null
-            label: null
+            label: Capital losses not arising from transfers, attributed by the entity
           irpf-re-atrib-gp-perdidas-transmision:
             help: null
-            label: null
+            label: Capital losses attributed by the entity
           irpf-re-atrib-gp-reducidas-no-exentas-imputables:
             help: null
-            label: null
+            label: Non-exempt reduced capital gains imputable to 2020
           irpf-re-atrib-gp-renta-vitalicia:
             help: null
-            label: null
+            label: Transfer value used to set up a life annuity
           irpf-re-atrib-gp-transmision-ganancias:
             help: null
-            label: null
+            label: Capital gains
           irpf-re-atrib-inmueble-num-dias:
             help: null
-            label: null
+            label: Number of days
           irpf-re-atrib-inmueble-pct-titularidad:
             help: null
-            label: null
+            label: '% Ownership'
           irpf-re-atrib-inmueble-ref-catastral:
             help: null
-            label: null
+            label: Cadastral reference
           irpf-re-atrib-inmueble-rustica-flag:
             help: null
-            label: null
+            label: '''RU''.- Rural'
           irpf-re-atrib-inmueble-situacion:
             help: null
-            label: null
+            label: Location
           irpf-re-atrib-inmueble-urbana-flag:
             help: null
-            label: null
+            label: '''UR''.- Urban'
           irpf-re-atrib-pct-participacion:
             help: null
-            label: null
+            label: Taxpayer's percentage holding in the entity
           irpf-re-atrib-rdto-neto-entidad:
             help: null
-            label: null
+            label: Net income attributed by the entity
           irpf-re-atrib-retenciones-act-eco:
             help: null
-            label: null
+            label: Attribution of withholdings on income from economic activities
           irpf-re-atrib-retenciones-cap-inmo:
             help: null
-            label: null
+            label: Attribution of withholdings on real-estate-capital income
           irpf-re-atrib-retenciones-cap-mob:
             help: null
-            label: null
+            label: Attribution of withholdings on movable-capital income
           irpf-re-atrib-retenciones-ganancias:
             help: null
-            label: null
+            label: Attribution of withholdings on capital gains and losses imputable
+              to 2020
           irpf-re-iic-denominacion:
             help: null
-            label: null
+            label: Name of the Collective Investment Institution
           irpf-re-iic-imputacion-importe:
             help: null
-            label: null
+            label: Amount of the imputation
           irpf-re-imagen-cantidad-imputar:
             help: null
-            label: null
+            label: Amount to be imputed
           irpf-re-imagen-empleador:
             help: null
-            label: null
+            label: 'Person or entity with which the taxpayer has the employment relationship:
+              Tax ID (NIF), if resident in Spain, or name'
           irpf-re-imagen-primera-cesionaria:
             help: null
-            label: null
+            label: 'Person or entity that is the first assignee of the image rights:
+              Tax ID (NIF), if resident in Spain, or name'
           irpf-re-imagen-suma-imputaciones:
             help: null
-            label: null
+            label: Sum of income imputations from the assignment of image rights
           irpf-red-deportistas-aportaciones-contribuciones:
             help: null
-            label: null
+            label: Contributions made in 2020 eligible for the reduction
           irpf-red-discapacidad-aportaciones-parientes:
             help: null
-            label: null
+            label: Contributions made in 2020 by relatives or guardians for the benefit
+              of the person with the disability
           irpf-red-discapacidad-aportaciones-propias:
             help: null
-            label: null
+            label: Contributions made in 2020 by the person with the disability themselves
           irpf-red-patrimonio-protegido-discapacidad-aportaciones:
             help: null
-            label: null
+            label: Contributions made in 2020 to the protected estate of the person
+              with a disability
           irpf-red-prevision-social-empleador-nif-extranjero-flag:
             help: null
-            label: null
+            label: If you do not have a Tax ID (NIF), mark with an "X"
           irpf-reduccion-mutualidad-deportistas-aplicada:
             help: null
-            label: null
+            label: For contributions to the social-welfare mutual scheme for professional
+              athletes. Amount from box [0490] applied
           irpf-reduccion-mutualidad-deportistas-total:
             help: null
-            label: null
+            label: Total eligible for the reduction
           irpf-reduccion-patrimonio-protegido-aplicada:
             help: null
-            label: null
+            label: For contributions to protected estates of persons with a disability.
+              Amount from box [0481] applied
           irpf-reduccion-patrimonio-protegido-total:
             help: null
-            label: null
+            label: Total eligible for the reduction
           irpf-reduccion-pensiones-compensatorias-total:
             help: null
-            label: null
+            label: Total eligible for the reduction
           irpf-reduccion-prevision-social-aplicada:
             help: null
-            label: null
+            label: For contributions to social-welfare schemes (general regime). Amount
+              from box [0468] applied
           irpf-reduccion-prevision-social-discapacidad-aplicada:
             help: null
-            label: null
+            label: For contributions to social-welfare schemes set up for the benefit
+              of persons with a disability. Amount from box [0476] applied
           irpf-reduccion-prevision-social-discapacidad-total:
             help: null
-            label: null
+            label: Total eligible for the reduction.
           irpf-regularizacion-complementaria-resultado:
             help: null
-            label: null
+            label: Result of the supplementary return
           irpf-regularizacion-devoluciones-solicitadas-ejercicio:
             help: null
-            label: null
+            label: Refunds requested from the Tax Agency as a consequence of processing
+              previous self-assessments for the 2020 tax year
           irpf-regularizacion-ingresar-autoliquidaciones-anteriores-ejercicio:
             help: null
-            label: null
+            label: Amounts payable from previous self-assessments or administrative
+              assessments for the 2020 tax year
           irpf-regularizacion-numero-justificante-rectificacion:
             help: null
-            label: null
+            label: Reference number of the self-assessment whose rectification is
+              requested
           irpf-rendimiento-capital-mobiliario-general-cesion-derechos-autor-anticipo-flag:
             help: null
-            label: null
+            label: For income arising from the assignment of the exploitation of copyright,
+              if you choose to allocate the advance on account of it as the royalties
+              accrue...
           irpf-retrib-especie-anio-percepcion:
             help: null
-            label: null
+            label: Year in which the benefit in kind is received
           irpf-retrib-especie-importe-no-exenta-1:
             help: null
-            label: null
+            label: 'Benefit in kind (not exempt for exceeding the amount set in article
+              42.3.f), pending imputation under article 14.2.m) of the Tax Law): Val...'
           irpf-retrib-especie-importe-no-exenta-2:
             help: null
-            label: null
+            label: 'Benefit in kind (not exempt for exceeding the amount set in article
+              42.3.f), pending imputation under article 14.2.m) of the Tax Law): Ingr...'
           irpf-retrib-especie-importe-no-exenta-3:
             help: null
-            label: null
+            label: 'Benefit in kind (not exempt for exceeding the amount set in article
+              42.3.f), pending imputation under article 14.2.m) of the Tax Law): Ingr...'
           irpf-retrib-especie-no-exenta-importe-integro-pendiente-imputacion:
             help: null
-            label: null
+            label: 'Benefit in kind (not exempt for exceeding the amount set in article
+              42.3.f), pending imputation under article 14.2.m) of the Tax Law): Impo...'
           irpf-saldo-neto-rdto-capital-mobiliario-ahorro:
             help: null
-            label: null
+            label: Positive net balance of movable-capital income imputable to 2020,
+              to be included in the savings taxable base
           irpf-saldo-neto-rdto-capital-mobiliario-ahorro-imputado:
             help: null
-            label: null
+            label: Negative net balance of movable-capital income imputable to 2020,
+              to be included in the savings taxable base
           irpf-vehiculo-electrico-instalador-nif:
             help: null
-            label: null
+            label: Tax ID (NIF/NIE) of the person/entity that carried out the installation
+              (1)
           irpf-vehiculo-electrico-referencia-catastral:
             help: null
-            label: null
+            label: Cadastral reference (property 1)
           irpf-vehiculo-electrico-vendedor-nif:
             help: null
-            label: null
+            label: Tax ID (NIF/NIE) of the selling person/entity
       field:
         official_name: Modelo 100. Personal Income Tax return.
         title: IRPF annual return

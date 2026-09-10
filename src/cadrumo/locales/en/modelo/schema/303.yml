@@ -387,256 +387,310 @@ modelo:
             label: General regime result
           m303-deducciones-sector-1-domestic-current-base:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 1 - Deductible IVA, domestic
+              transactions - Current goods and services - Taxable base
           m303-deducciones-sector-1-domestic-current-cuota:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 1 - Deductible IVA, domestic
+              transactions - Current goods and services - Deductible cuota
           m303-deducciones-sector-1-domestic-investment-base:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 1 - Deductible IVA, domestic
+              transactions - Capital goods - Taxable base
           m303-deducciones-sector-1-domestic-investment-cuota:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 1 - Deductible IVA, domestic
+              transactions - Capital goods - Deductible cuota
           m303-deducciones-sector-1-import-current-base:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 1 - Deductible IVA, imports
+              - Current goods - Taxable base
           m303-deducciones-sector-1-import-current-cuota:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 1 - Deductible IVA, imports
+              - Current goods - Deductible cuota
           m303-deducciones-sector-1-import-investment-base:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 1 - Deductible IVA, imports
+              - Capital goods - Taxable base
           m303-deducciones-sector-1-import-investment-cuota:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 1 - Deductible IVA, imports
+              - Capital goods - Deductible cuota
           m303-deducciones-sector-1-intra-eu-current-base:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 1 - Deductible IVA, intra-Community
+              acquisitions - Current goods and services - Taxable base
           m303-deducciones-sector-1-intra-eu-current-cuota:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 1 - Deductible IVA, intra-Community
+              acquisitions - Current goods and services - Deductible cuota
           m303-deducciones-sector-1-intra-eu-investment-base:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 1 - Deductible IVA, intra-Community
+              acquisitions - Capital goods - Taxable base
           m303-deducciones-sector-1-intra-eu-investment-cuota:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 1 - Deductible IVA, intra-Community
+              acquisitions - Capital goods - Deductible cuota
           m303-deducciones-sector-1-investment-regularisation:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 1 - Adjustment of capital
+              goods
           m303-deducciones-sector-1-reagp-base:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 1 - Compensation, special
+              regime for agriculture, livestock and fishing - Taxable base
           m303-deducciones-sector-1-reagp-cuota:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 1 - Compensation, special
+              regime for agriculture, livestock and fishing - Deductible cuota
           m303-deducciones-sector-1-rectification-base:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 1 - Correction of deductions
+              - Taxable base
           m303-deducciones-sector-1-rectification-cuota:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 1 - Correction of deductions
+              - Deductible cuota
           m303-deducciones-sector-1-total:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 1 - Total deductions
           m303-deducciones-sector-2-domestic-current-base:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 2 - Deductible IVA, domestic
+              transactions - Current goods and services - Taxable base
           m303-deducciones-sector-2-domestic-current-cuota:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 2 - Deductible IVA, domestic
+              transactions - Current goods and services - Deductible cuota
           m303-deducciones-sector-2-domestic-investment-base:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 2 - Deductible IVA, domestic
+              transactions - Capital goods - Taxable base
           m303-deducciones-sector-2-domestic-investment-cuota:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 2 - Deductible IVA, domestic
+              transactions - Capital goods - Deductible cuota
           m303-deducciones-sector-2-import-current-base:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 2 - Deductible IVA, imports
+              - Current goods - Taxable base
           m303-deducciones-sector-2-import-current-cuota:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 2 - Deductible IVA, imports
+              - Current goods - Deductible cuota
           m303-deducciones-sector-2-import-investment-base:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 2 - Deductible IVA, imports
+              - Capital goods - Taxable base
           m303-deducciones-sector-2-import-investment-cuota:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 2 - Deductible IVA, imports
+              - Capital goods - Deductible cuota
           m303-deducciones-sector-2-intra-eu-current-base:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 2 - Deductible IVA, intra-Community
+              acquisitions - Current goods and services - Taxable base
           m303-deducciones-sector-2-intra-eu-current-cuota:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 2 - Deductible IVA, intra-Community
+              acquisitions - Current goods and services - Deductible cuota
           m303-deducciones-sector-2-intra-eu-investment-base:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 2 - Deductible IVA, intra-Community
+              acquisitions - Capital goods - Taxable base
           m303-deducciones-sector-2-intra-eu-investment-cuota:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 2 - Deductible IVA, intra-Community
+              acquisitions - Capital goods - Deductible cuota
           m303-deducciones-sector-2-investment-regularisation:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 2 - Adjustment of capital
+              goods
           m303-deducciones-sector-2-reagp-base:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 2 - Compensation, special
+              regime for agriculture, livestock and fishing - Taxable base
           m303-deducciones-sector-2-reagp-cuota:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 2 - Compensation, special
+              regime for agriculture, livestock and fishing - Deductible cuota
           m303-deducciones-sector-2-rectification-base:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 2 - Correction of deductions
+              - Taxable base
           m303-deducciones-sector-2-rectification-cuota:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 2 - Correction of deductions
+              - Deductible cuota
           m303-deducciones-sector-2-total:
             help: null
-            label: null
+            label: 13. Differentiated deduction regimes - 2 - Total deductions
           m303-exonerado-390-107:
             help: null
-            label: null
+            label: 'Territorial taxation information: common territory'
           m303-exonerado-390-125:
             help: null
-            label: null
+            label: Transactions subject under the reverse charge
           m303-exonerado-390-126:
             help: null
-            label: null
+            label: Transactions not subject under place-of-supply rules covered by
+              the one-stop-shop special regimes
           m303-exonerado-390-127:
             help: null
-            label: null
+            label: OSS. Transactions subject to and covered by the one-stop-shop special
+              regimes
           m303-exonerado-390-128:
             help: null
-            label: null
+            label: Intra-group transactions valued per arts. 78 and 79 LIVA
           m303-exonerado-390-79:
             help: null
-            label: null
+            label: Transactions carried out in the year - Non-recurring supplies of
+              immovable property, financial transactions and investment gold transactions
           m303-exonerado-390-80:
             help: null
-            label: null
+            label: Transactions carried out in the year - Transactions under the general
+              regime
           m303-exonerado-390-81:
             help: null
-            label: null
+            label: Transactions carried out in the year - Transactions under the special
+              cash-basis regime per art. 75 LIVA
           m303-exonerado-390-83:
             help: null
-            label: null
+            label: Transactions carried out in the year - Exempt transactions with
+              no right to deduct
           m303-exonerado-390-84:
             help: null
-            label: null
+            label: Transactions carried out in the year - Transactions not subject
+              under place-of-supply rules (except those in box 126)
           m303-exonerado-390-86:
             help: null
-            label: null
+            label: Transactions carried out in the year - Transactions under the simplified
+              regime
           m303-exonerado-390-88:
             help: null
-            label: null
+            label: Transactions carried out in the year - Total turnover
           m303-exonerado-390-89:
             help: null
-            label: null
+            label: 'Territorial taxation information: Álava'
           m303-exonerado-390-90:
             help: null
-            label: null
+            label: 'Territorial taxation information: Gipuzkoa'
           m303-exonerado-390-91:
             help: null
-            label: null
+            label: 'Territorial taxation information: Bizkaia'
           m303-exonerado-390-92:
             help: null
-            label: null
+            label: 'Territorial taxation information: Navarre'
           m303-exonerado-390-93:
             help: null
-            label: null
+            label: Transactions carried out in the year - Intra-Community supplies
+              of goods and services
           m303-exonerado-390-94:
             help: null
-            label: null
+            label: Transactions carried out in the year - Exports and other exempt
+              transactions carrying a right to deduct
           m303-exonerado-390-95:
             help: null
-            label: null
+            label: Transactions carried out in the year - Transactions under the special
+              regime for agriculture, livestock and fishing
           m303-exonerado-390-96:
             help: null
-            label: null
+            label: Transactions carried out in the year - Transactions by taxable
+              persons under the recargo de equivalencia special regime
           m303-exonerado-390-97:
             help: null
-            label: null
+            label: Transactions carried out in the year - Transactions under the special
+              regime for second-hand goods, works of art, antiques and collectors'
+              items
           m303-exonerado-390-98:
             help: null
-            label: null
+            label: Transactions carried out in the year - Transactions under the special
+              regime for travel agencies
           m303-exonerado-390-99:
             help: null
-            label: null
+            label: Transactions carried out in the year - Supplies of capital goods
           m303-prorrata-actividad-fila-1-cnae:
             help: null
-            label: null
+            label: Pro rata shares - 1 - CNAE activity code
           m303-prorrata-actividad-fila-1-operaciones-con-derecho:
             help: null
-            label: null
+            label: Pro rata shares - 1 - Amount of transactions carrying a right to
+              deduct
           m303-prorrata-actividad-fila-1-operaciones-total:
             help: null
-            label: null
+            label: Pro rata shares - 1 - Amount of transactions
           m303-prorrata-actividad-fila-1-porcentaje:
             help: null
-            label: null
+            label: Pro rata shares - 1 - Pro rata %
           m303-prorrata-actividad-fila-1-tipo:
             help: null
-            label: null
+            label: Pro rata shares - 1 - Pro rata type
           m303-prorrata-actividad-fila-2-cnae:
             help: null
-            label: null
+            label: Pro rata shares - 2 - CNAE activity code
           m303-prorrata-actividad-fila-2-operaciones-con-derecho:
             help: null
-            label: null
+            label: Pro rata shares - 2 - Amount of transactions carrying a right to
+              deduct
           m303-prorrata-actividad-fila-2-operaciones-total:
             help: null
-            label: null
+            label: Pro rata shares - 2 - Amount of transactions
           m303-prorrata-actividad-fila-2-porcentaje:
             help: null
-            label: null
+            label: Pro rata shares - 2 - Pro rata %
           m303-prorrata-actividad-fila-2-tipo:
             help: null
-            label: null
+            label: Pro rata shares - 2 - Pro rata type
           m303-prorrata-actividad-fila-3-cnae:
             help: null
-            label: null
+            label: Pro rata shares - 3 - CNAE activity code
           m303-prorrata-actividad-fila-3-operaciones-con-derecho:
             help: null
-            label: null
+            label: Pro rata shares - 3 - Amount of transactions carrying a right to
+              deduct
           m303-prorrata-actividad-fila-3-operaciones-total:
             help: null
-            label: null
+            label: Pro rata shares - 3 - Amount of transactions
           m303-prorrata-actividad-fila-3-porcentaje:
             help: null
-            label: null
+            label: Pro rata shares - 3 - Pro rata %
           m303-prorrata-actividad-fila-3-tipo:
             help: null
-            label: null
+            label: Pro rata shares - 3 - Pro rata type
           m303-prorrata-actividad-fila-4-cnae:
             help: null
-            label: null
+            label: Pro rata shares - 4 - CNAE activity code
           m303-prorrata-actividad-fila-4-operaciones-con-derecho:
             help: null
-            label: null
+            label: Pro rata shares - 4 - Amount of transactions carrying a right to
+              deduct
           m303-prorrata-actividad-fila-4-operaciones-total:
             help: null
-            label: null
+            label: Pro rata shares - 4 - Amount of transactions
           m303-prorrata-actividad-fila-4-porcentaje:
             help: null
-            label: null
+            label: Pro rata shares - 4 - Pro rata %
           m303-prorrata-actividad-fila-4-tipo:
             help: null
-            label: null
+            label: Pro rata shares - 4 - Pro rata type
           m303-prorrata-actividad-fila-5-cnae:
             help: null
-            label: null
+            label: Pro rata shares - 5 - CNAE activity code
           m303-prorrata-actividad-fila-5-operaciones-con-derecho:
             help: null
-            label: null
+            label: Pro rata shares - 5 - Amount of transactions carrying a right to
+              deduct
           m303-prorrata-actividad-fila-5-operaciones-total:
             help: null
-            label: null
+            label: Pro rata shares - 5 - Amount of transactions
           m303-prorrata-actividad-fila-5-porcentaje:
             help: null
-            label: null
+            label: Pro rata shares - 5 - Pro rata %
           m303-prorrata-actividad-fila-5-tipo:
             help: null
-            label: null
+            label: Pro rata shares - 5 - Pro rata type
       construct:
         modelo-303-iva-autoliquidacion:
           field:

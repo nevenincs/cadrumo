@@ -35,7 +35,7 @@ modelo:
               B machines): number of units'
           irpf-pf-modulos-diferencia:
             help: null
-            label: null
+            label: Difference
           irpf-pf-modulos-epigrafe-iae:
             help: null
             label: IAE heading of the activity under the objective estimation (módulos)
@@ -45,49 +45,50 @@ modelo:
               for the exact assignment.
           irpf-pf-modulos-resultado-declaracion:
             help: null
-            label: null
+            label: Result of the return
           irpf-pf-modulos-resultados-negativos-anteriores:
             help: null
-            label: null
+            label: Negative results from previous quarters
           irpf-pf-modulos-suma-rendimientos:
             help: null
-            label: null
+            label: Sum of net income
           irpf-pf-modulos-total:
             help: null
-            label: null
+            label: Total
           irpf-pf-modulos-volumen-agrario:
             help: null
-            label: null
+            label: Agricultural income for the quarter
           irpf-pf-modulos-volumen-sin-datos-base:
             help: null
-            label: null
+            label: Turnover or income without base data
           irpf-pf-saldo-negativo-fin-periodo:
             help: null
-            label: null
+            label: Negative balance carried forward to later periods (max. 0, -box
+              10)
           minoracion-rendimientos-actividades-economicas:
             help: null
-            label: null
+            label: Reduction for net income from business/professional activities
           pago-fraccionado-previo:
             help: null
-            label: null
+            label: Sum of preliminary instalment payments
           pago-fraccionado-previo-agrario:
             help: null
-            label: null
+            label: Preliminary agricultural instalment payment
           pago-fraccionado-previo-datos-base:
             help: null
-            label: null
+            label: Preliminary instalment payment using base data (datos-base)
           pago-fraccionado-previo-sin-datos-base:
             help: null
-            label: null
+            label: Preliminary instalment payment without base data
           prestamo-vivienda-habitual:
             help: null
-            label: null
+            label: Payment of loans for the taxpayer's main home
           resultado-anteriores-autoliquidaciones:
             help: null
-            label: null
+            label: Result payable from previous self-assessments
           retenciones-ingresos-a-cuenta:
             help: null
-            label: null
+            label: Withholdings and payments on account
       field:
         official_name: Modelo 131. Personal Income Tax. Entrepreneurs and professionals
           under objective assessment. Instalment payment.

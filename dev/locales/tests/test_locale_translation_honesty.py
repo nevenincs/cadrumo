@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import tomllib
+from enum import StrEnum
 from functools import cache
+from typing import NamedTuple
 
 import pytest
 
@@ -285,3 +287,195 @@ def test_modelo_spanish_values_are_authority_source() -> None:
         f"es.yml is the mandatory official Modelo source; these schema leaves are blank AND have no "
         f"populated continuity label to fall back to, so they render nothing: {offenders[:10]}"
     )
+
+
+_TRANSLATED_LOCALES = ("ca", "en", "hu")
+
+
+class IdenticalTranslationClass(StrEnum):
+    """Why a translated casilla label may legitimately equal its Spanish source."""
+
+    SHARED_WORD = "shared_word"
+    """The target language spells the correct term exactly as Spanish does."""
+    ACRONYM = "acronym"
+    """The label is dominated by an official acronym the product keeps untranslated."""
+
+
+class IdenticalTranslation(NamedTuple):
+    """One classified, reviewed exception to the copied-source rule."""
+
+    classification: IdenticalTranslationClass
+    reason: str
+
+
+# Keyed per (locale, continuity label key). Never widened by modelo, prefix or count:
+# each entry is a translation a reviewer checked and found correct as written.
+_LEGITIMATE_IDENTICAL_CONTINUITY_LABELS: dict[tuple[str, str], IdenticalTranslation] = {
+    ("ca", "modelo.schema.100.casilla.continuidad.irpf-deduccion-vehiculo-matricula.label"): IdenticalTranslation(
+        IdenticalTranslationClass.SHARED_WORD, "Catalan for a vehicle registration plate is also 'Matrícula'."
+    ),
+    ("ca", "modelo.schema.131.casilla.continuidad.irpf-pf-modulos-total.label"): IdenticalTranslation(
+        IdenticalTranslationClass.SHARED_WORD, "Catalan 'Total' is the same word as the Spanish."
+    ),
+    ("en", "modelo.schema.131.casilla.continuidad.irpf-pf-modulos-total.label"): IdenticalTranslation(
+        IdenticalTranslationClass.SHARED_WORD, "English 'Total' is the same word as the Spanish."
+    ),
+    ("ca", "modelo.schema.180.casilla.continuidad.payee-nif.label"): IdenticalTranslation(
+        IdenticalTranslationClass.ACRONYM,
+        "NIF stays untranslated and 'del perceptor' is the correct Catalan, as the catalogue renders it elsewhere.",
+    ),
+}
+
+
+def _is_continuity_label_key(key: str) -> bool:
+    """Return whether ``key`` is a casilla continuity LABEL key.
+
+    Structural rather than registry-derived so the gate also sees a continuity
+    entry no current casilla declares. Encoded segments never carry a dot, so
+    the split is exact: ``modelo.schema.<modelo>.casilla.continuidad.<id>.label``.
+    """
+    parts = key.split(".")
+    return (
+        len(parts) == 7
+        and parts[:2] == ["modelo", "schema"]
+        and parts[3:5] == ["casilla", "continuidad"]
+        and parts[6] == ModeloLocalizationFieldKind.LABEL
+    )
+
+
+def _continuity_label_offenders(
+    source_leaves: dict[str, str | None],
+    target_leaves: dict[str, str | None],
+    *,
+    locale_code: str,
+    backing: dict[str, str],
+    allowlist: dict[tuple[str, str], IdenticalTranslation],
+) -> tuple[list[str], list[str]]:
+    """Return ``(copied, stranded)`` continuity label keys for one translated locale.
+
+    A continuity label is the lineage-wide tier of the label chain: an inherited
+    casilla row with no occurrence text of its own lands on it. Two states make
+    that tier render Spanish to a non-Spanish reader:
+
+    * copied -- the value IS the Spanish source, which reads as translated to a
+      presence check while giving the reader nothing. Only a classified per-key
+      allowlist entry excuses it.
+    * stranded -- the value is unfilled although one of the lineage's occurrence
+      keys already carries a translation in this locale. The translation exists;
+      only the rows that fall through to the continuity tier miss it.
+
+    A lineage with no translation at ANY tier is a coverage gap of a different
+    kind and is not judged here.
+    """
+    translated_lineages = {
+        continuity_key
+        for occurrence_key, continuity_key in backing.items()
+        if isinstance(value := target_leaves.get(occurrence_key), str) and value.strip()
+    }
+    copied: list[str] = []
+    stranded: list[str] = []
+    for key, source in source_leaves.items():
+        if not _is_continuity_label_key(key) or not isinstance(source, str) or not source.strip():
+            continue
+        target = target_leaves.get(key)
+        if isinstance(target, str) and target.strip():
+            if target.strip() == source.strip() and (locale_code, key) not in allowlist:
+                copied.append(key)
+        elif key in translated_lineages:
+            stranded.append(key)
+    return sorted(copied), sorted(stranded)
+
+
+def test_continuity_label_detector_discriminates() -> None:
+    """A planted copy and a planted stranded entry fire against the real catalogue.
+
+    The detector runs over the shipped ``en`` catalogue with one continuity
+    label replaced by its Spanish source and one reset to null, so this proves
+    teeth on real key shapes and a real registry backing, not on a toy mapping.
+    """
+    source = _catalogue_leaves("es")
+    target = _catalogue_leaves("en")
+    backing = _continuity_backing()
+    lineages = sorted(
+        {
+            continuity_key
+            for occurrence_key, continuity_key in backing.items()
+            if continuity_key.startswith("modelo.schema.303.")
+            and isinstance(target.get(occurrence_key), str)
+            and isinstance(target.get(continuity_key), str)
+            and isinstance(source.get(continuity_key), str)
+        }
+    )
+    assert len(lineages) >= 2, "modelo 303 carries no translated continuity lineage to plant a defect in"
+    planted_copy, planted_null = lineages[0], lineages[1]
+
+    clean_copied, clean_stranded = _continuity_label_offenders(
+        source, target, locale_code="en", backing=backing, allowlist=_LEGITIMATE_IDENTICAL_CONTINUITY_LABELS
+    )
+    assert planted_copy not in clean_copied
+    assert planted_null not in clean_stranded
+
+    target[planted_copy] = source[planted_copy]
+    target[planted_null] = None
+    copied, stranded = _continuity_label_offenders(
+        source, target, locale_code="en", backing=backing, allowlist=_LEGITIMATE_IDENTICAL_CONTINUITY_LABELS
+    )
+    assert planted_copy in copied
+    assert planted_null in stranded
+
+    excused, _ = _continuity_label_offenders(
+        source,
+        target,
+        locale_code="en",
+        backing=backing,
+        allowlist={("en", planted_copy): IdenticalTranslation(IdenticalTranslationClass.SHARED_WORD, "planted")},
+    )
+    assert planted_copy not in excused
+    assert _is_continuity_label_key("modelo.schema.303.casilla.continuidad.dr303-01.label")
+    assert not _is_continuity_label_key("modelo.schema.303.casilla.continuidad.dr303-01.help")
+    assert not _is_continuity_label_key("modelo.schema.303.revision.2024.casilla.01.label")
+
+
+def test_continuity_labels_are_translated_not_copied() -> None:
+    """No translated locale may render a continuity label as the Spanish source."""
+
+    source = _catalogue_leaves("es")
+    backing = _continuity_backing()
+    failures: list[str] = []
+    for locale_code in _TRANSLATED_LOCALES:
+        copied, stranded = _continuity_label_offenders(
+            source,
+            _catalogue_leaves(locale_code),
+            locale_code=locale_code,
+            backing=backing,
+            allowlist=_LEGITIMATE_IDENTICAL_CONTINUITY_LABELS,
+        )
+        if copied:
+            failures.append(
+                f"{locale_code}: {len(copied)} continuity label(s) copy the Spanish source. Translate them via "
+                f"`python -m dev.locales set-batch`, or classify a genuinely identical term per key. "
+                f"First five: {copied[:5]}"
+            )
+        if stranded:
+            failures.append(
+                f"{locale_code}: {len(stranded)} continuity label(s) are unfilled although their lineage is "
+                f"translated, so inherited rows render Spanish. First five: {stranded[:5]}"
+            )
+    assert failures == [], "\n".join(failures)
+
+
+def test_identical_translation_allowlist_is_live() -> None:
+    """Every allowlist entry still names a continuity label that equals its Spanish source.
+
+    An entry whose label was since retranslated, or whose key vanished, would
+    otherwise sit silently ready to excuse a future copy.
+    """
+    source = _catalogue_leaves("es")
+    stale: list[str] = []
+    for (locale_code, key), entry in _LEGITIMATE_IDENTICAL_CONTINUITY_LABELS.items():
+        target = _catalogue_leaves(locale_code).get(key)
+        if not entry.reason.strip() or not _is_continuity_label_key(key):
+            stale.append(f"{locale_code}:{key} (malformed entry)")
+        elif not isinstance(target, str) or target != source.get(key):
+            stale.append(f"{locale_code}:{key} (no longer identical to the Spanish source)")
+    assert stale == [], f"remove stale identical-translation allowlist entries: {stale}"

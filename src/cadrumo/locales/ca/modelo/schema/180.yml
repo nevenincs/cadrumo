@@ -68,7 +68,7 @@ modelo:
             label: Cognoms i nom, raó social o denominació del perceptor
           payee-nif:
             help: null
-            label: null
+            label: NIF del perceptor
           payee-province:
             help: null
             label: Codi de província del domicili del perceptor

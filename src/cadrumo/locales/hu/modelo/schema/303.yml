@@ -403,256 +403,303 @@ modelo:
             label: Általános rendszer eredménye
           m303-deducciones-sector-1-domestic-current-base:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 1 - Levonható IVA, belföldi
+              ügyletek - Forgóeszközök és szolgáltatások - Adóalap
           m303-deducciones-sector-1-domestic-current-cuota:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 1 - Levonható IVA, belföldi
+              ügyletek - Forgóeszközök és szolgáltatások - Levonható adóösszeg
           m303-deducciones-sector-1-domestic-investment-base:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 1 - Levonható IVA, belföldi
+              ügyletek - Beruházási javak - Adóalap
           m303-deducciones-sector-1-domestic-investment-cuota:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 1 - Levonható IVA, belföldi
+              ügyletek - Beruházási javak - Levonható adóösszeg
           m303-deducciones-sector-1-import-current-base:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 1 - Levonható IVA, import
+              - Forgóeszközök - Adóalap
           m303-deducciones-sector-1-import-current-cuota:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 1 - Levonható IVA, import
+              - Forgóeszközök - Levonható adóösszeg
           m303-deducciones-sector-1-import-investment-base:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 1 - Levonható IVA, import
+              - Beruházási javak - Adóalap
           m303-deducciones-sector-1-import-investment-cuota:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 1 - Levonható IVA, import
+              - Beruházási javak - Levonható adóösszeg
           m303-deducciones-sector-1-intra-eu-current-base:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 1 - Levonható IVA, Közösségen
+              belüli beszerzések - Forgóeszközök és szolgáltatások - Adóalap
           m303-deducciones-sector-1-intra-eu-current-cuota:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 1 - Levonható IVA, Közösségen
+              belüli beszerzések - Forgóeszközök és szolgáltatások - Levonható adóösszeg
           m303-deducciones-sector-1-intra-eu-investment-base:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 1 - Levonható IVA, Közösségen
+              belüli beszerzések - Beruházási javak - Adóalap
           m303-deducciones-sector-1-intra-eu-investment-cuota:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 1 - Levonható IVA, Közösségen
+              belüli beszerzések - Beruházási javak - Levonható adóösszeg
           m303-deducciones-sector-1-investment-regularisation:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 1 - Beruházási javak
+              korrekciója
           m303-deducciones-sector-1-reagp-base:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 1 - Kompenzáció, mezőgazdasági,
+              állattenyésztési és halászati különszabályozás - Adóalap
           m303-deducciones-sector-1-reagp-cuota:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 1 - Kompenzáció, mezőgazdasági,
+              állattenyésztési és halászati különszabályozás - Levonható adóösszeg
           m303-deducciones-sector-1-rectification-base:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 1 - Levonások helyesbítése
+              - Adóalap
           m303-deducciones-sector-1-rectification-cuota:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 1 - Levonások helyesbítése
+              - Levonható adóösszeg
           m303-deducciones-sector-1-total:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 1 - Levonások összege
           m303-deducciones-sector-2-domestic-current-base:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 2 - Levonható IVA, belföldi
+              ügyletek - Forgóeszközök és szolgáltatások - Adóalap
           m303-deducciones-sector-2-domestic-current-cuota:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 2 - Levonható IVA, belföldi
+              ügyletek - Forgóeszközök és szolgáltatások - Levonható adóösszeg
           m303-deducciones-sector-2-domestic-investment-base:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 2 - Levonható IVA, belföldi
+              ügyletek - Beruházási javak - Adóalap
           m303-deducciones-sector-2-domestic-investment-cuota:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 2 - Levonható IVA, belföldi
+              ügyletek - Beruházási javak - Levonható adóösszeg
           m303-deducciones-sector-2-import-current-base:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 2 - Levonható IVA, import
+              - Forgóeszközök - Adóalap
           m303-deducciones-sector-2-import-current-cuota:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 2 - Levonható IVA, import
+              - Forgóeszközök - Levonható adóösszeg
           m303-deducciones-sector-2-import-investment-base:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 2 - Levonható IVA, import
+              - Beruházási javak - Adóalap
           m303-deducciones-sector-2-import-investment-cuota:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 2 - Levonható IVA, import
+              - Beruházási javak - Levonható adóösszeg
           m303-deducciones-sector-2-intra-eu-current-base:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 2 - Levonható IVA, Közösségen
+              belüli beszerzések - Forgóeszközök és szolgáltatások - Adóalap
           m303-deducciones-sector-2-intra-eu-current-cuota:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 2 - Levonható IVA, Közösségen
+              belüli beszerzések - Forgóeszközök és szolgáltatások - Levonható adóösszeg
           m303-deducciones-sector-2-intra-eu-investment-base:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 2 - Levonható IVA, Közösségen
+              belüli beszerzések - Beruházási javak - Adóalap
           m303-deducciones-sector-2-intra-eu-investment-cuota:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 2 - Levonható IVA, Közösségen
+              belüli beszerzések - Beruházási javak - Levonható adóösszeg
           m303-deducciones-sector-2-investment-regularisation:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 2 - Beruházási javak
+              korrekciója
           m303-deducciones-sector-2-reagp-base:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 2 - Kompenzáció, mezőgazdasági,
+              állattenyésztési és halászati különszabályozás - Adóalap
           m303-deducciones-sector-2-reagp-cuota:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 2 - Kompenzáció, mezőgazdasági,
+              állattenyésztési és halászati különszabályozás - Levonható adóösszeg
           m303-deducciones-sector-2-rectification-base:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 2 - Levonások helyesbítése
+              - Adóalap
           m303-deducciones-sector-2-rectification-cuota:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 2 - Levonások helyesbítése
+              - Levonható adóösszeg
           m303-deducciones-sector-2-total:
             help: null
-            label: null
+            label: 13. Elkülönített levonási szabályozások - 2 - Levonások összege
           m303-exonerado-390-107:
             help: null
-            label: null
+            label: 'Területi adózási információ: közös terület'
           m303-exonerado-390-125:
             help: null
-            label: null
+            label: Fordított adózás alá tartozó ügyletek
           m303-exonerado-390-126:
             help: null
-            label: null
+            label: A teljesítési hely szabályai szerint nem adóztatandó, egyablakos
+              különszabályozás alá tartozó ügyletek
           m303-exonerado-390-127:
             help: null
-            label: null
+            label: OSS. Az egyablakos különszabályozás alá tartozó adóköteles ügyletek
           m303-exonerado-390-128:
             help: null
-            label: null
+            label: A LIVA 78. és 79. cikke szerint értékelt csoporton belüli ügyletek
           m303-exonerado-390-79:
             help: null
-            label: null
+            label: Az évben teljesített ügyletek - Nem szokásos ingatlanértékesítés,
+              pénzügyi és befektetési arany ügyletek
           m303-exonerado-390-80:
             help: null
-            label: null
+            label: Az évben teljesített ügyletek - Általános szabályozás szerinti
+              ügyletek
           m303-exonerado-390-81:
             help: null
-            label: null
+            label: Az évben teljesített ügyletek - A LIVA 75. cikke szerinti pénzforgalmi
+              különszabályozás ügyletei
           m303-exonerado-390-83:
             help: null
-            label: null
+            label: Az évben teljesített ügyletek - Levonási jogot nem keletkeztető
+              adómentes ügyletek
           m303-exonerado-390-84:
             help: null
-            label: null
+            label: Az évben teljesített ügyletek - A teljesítési hely szabályai szerint
+              nem adóztatandó ügyletek (a 126. rovat kivételével)
           m303-exonerado-390-86:
             help: null
-            label: null
+            label: Az évben teljesített ügyletek - Egyszerűsített szabályozás szerinti
+              ügyletek
           m303-exonerado-390-88:
             help: null
-            label: null
+            label: Az évben teljesített ügyletek - Teljes ügyleti forgalom
           m303-exonerado-390-89:
             help: null
-            label: null
+            label: 'Területi adózási információ: Álava'
           m303-exonerado-390-90:
             help: null
-            label: null
+            label: 'Területi adózási információ: Gipuzkoa'
           m303-exonerado-390-91:
             help: null
-            label: null
+            label: 'Területi adózási információ: Bizkaia'
           m303-exonerado-390-92:
             help: null
-            label: null
+            label: 'Területi adózási információ: Navarra'
           m303-exonerado-390-93:
             help: null
-            label: null
+            label: Az évben teljesített ügyletek - Közösségen belüli termékértékesítés
+              és szolgáltatásnyújtás
           m303-exonerado-390-94:
             help: null
-            label: null
+            label: Az évben teljesített ügyletek - Export és egyéb, levonásra jogosító
+              adómentes ügyletek
           m303-exonerado-390-95:
             help: null
-            label: null
+            label: Az évben teljesített ügyletek - Mezőgazdasági, állattenyésztési
+              és halászati különszabályozás ügyletei
           m303-exonerado-390-96:
             help: null
-            label: null
+            label: Az évben teljesített ügyletek - Az egyenértékű felár különszabályozása
+              alá tartozó adóalanyok ügyletei
           m303-exonerado-390-97:
             help: null
-            label: null
+            label: Az évben teljesített ügyletek - Használt cikkek, műalkotások, régiségek
+              és gyűjteménydarabok különszabályozásának ügyletei
           m303-exonerado-390-98:
             help: null
-            label: null
+            label: Az évben teljesített ügyletek - Utazási irodák különszabályozásának
+              ügyletei
           m303-exonerado-390-99:
             help: null
-            label: null
+            label: Az évben teljesített ügyletek - Beruházási javak értékesítése
           m303-prorrata-actividad-fila-1-cnae:
             help: null
-            label: null
+            label: Arányosítási kulcsok - 1 - CNAE tevékenységi kód
           m303-prorrata-actividad-fila-1-operaciones-con-derecho:
             help: null
-            label: null
+            label: Arányosítási kulcsok - 1 - Levonásra jogosító ügyletek összege
           m303-prorrata-actividad-fila-1-operaciones-total:
             help: null
-            label: null
+            label: Arányosítási kulcsok - 1 - Ügyletek összege
           m303-prorrata-actividad-fila-1-porcentaje:
             help: null
-            label: null
+            label: Arányosítási kulcsok - 1 - Arányosítási %
           m303-prorrata-actividad-fila-1-tipo:
             help: null
-            label: null
+            label: Arányosítási kulcsok - 1 - Arányosítás típusa
           m303-prorrata-actividad-fila-2-cnae:
             help: null
-            label: null
+            label: Arányosítási kulcsok - 2 - CNAE tevékenységi kód
           m303-prorrata-actividad-fila-2-operaciones-con-derecho:
             help: null
-            label: null
+            label: Arányosítási kulcsok - 2 - Levonásra jogosító ügyletek összege
           m303-prorrata-actividad-fila-2-operaciones-total:
             help: null
-            label: null
+            label: Arányosítási kulcsok - 2 - Ügyletek összege
           m303-prorrata-actividad-fila-2-porcentaje:
             help: null
-            label: null
+            label: Arányosítási kulcsok - 2 - Arányosítási %
           m303-prorrata-actividad-fila-2-tipo:
             help: null
-            label: null
+            label: Arányosítási kulcsok - 2 - Arányosítás típusa
           m303-prorrata-actividad-fila-3-cnae:
             help: null
-            label: null
+            label: Arányosítási kulcsok - 3 - CNAE tevékenységi kód
           m303-prorrata-actividad-fila-3-operaciones-con-derecho:
             help: null
-            label: null
+            label: Arányosítási kulcsok - 3 - Levonásra jogosító ügyletek összege
           m303-prorrata-actividad-fila-3-operaciones-total:
             help: null
-            label: null
+            label: Arányosítási kulcsok - 3 - Ügyletek összege
           m303-prorrata-actividad-fila-3-porcentaje:
             help: null
-            label: null
+            label: Arányosítási kulcsok - 3 - Arányosítási %
           m303-prorrata-actividad-fila-3-tipo:
             help: null
-            label: null
+            label: Arányosítási kulcsok - 3 - Arányosítás típusa
           m303-prorrata-actividad-fila-4-cnae:
             help: null
-            label: null
+            label: Arányosítási kulcsok - 4 - CNAE tevékenységi kód
           m303-prorrata-actividad-fila-4-operaciones-con-derecho:
             help: null
-            label: null
+            label: Arányosítási kulcsok - 4 - Levonásra jogosító ügyletek összege
           m303-prorrata-actividad-fila-4-operaciones-total:
             help: null
-            label: null
+            label: Arányosítási kulcsok - 4 - Ügyletek összege
           m303-prorrata-actividad-fila-4-porcentaje:
             help: null
-            label: null
+            label: Arányosítási kulcsok - 4 - Arányosítási %
           m303-prorrata-actividad-fila-4-tipo:
             help: null
-            label: null
+            label: Arányosítási kulcsok - 4 - Arányosítás típusa
           m303-prorrata-actividad-fila-5-cnae:
             help: null
-            label: null
+            label: Arányosítási kulcsok - 5 - CNAE tevékenységi kód
           m303-prorrata-actividad-fila-5-operaciones-con-derecho:
             help: null
-            label: null
+            label: Arányosítási kulcsok - 5 - Levonásra jogosító ügyletek összege
           m303-prorrata-actividad-fila-5-operaciones-total:
             help: null
-            label: null
+            label: Arányosítási kulcsok - 5 - Ügyletek összege
           m303-prorrata-actividad-fila-5-porcentaje:
             help: null
-            label: null
+            label: Arányosítási kulcsok - 5 - Arányosítási %
           m303-prorrata-actividad-fila-5-tipo:
             help: null
-            label: null
+            label: Arányosítási kulcsok - 5 - Arányosítás típusa
       construct:
         modelo-303-iva-autoliquidacion:
           field:

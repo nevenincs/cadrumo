@@ -5,409 +5,478 @@ modelo:
         continuidad:
           irpf-aeip-centenario-del-hockey-1923-2023-aplicado:
             help: null
-            label: null
+            label: '"A hoki centenáriuma 1923-2023": ebben a bevallásban alkalmazva'
           irpf-anexo-a-ceuta-melilla-deduccion-importe:
             help: null
-            label: null
+            label: A Ceutában vagy Melillában szerzett jövedelmek miatti levonás teljes
+              összege
           irpf-anexo-a-interes-cultural-deduccion-importe:
             help: null
-            label: null
+            label: 'A levonás összege: 15 százalék'
           irpf-anexo-a-la-palma-deduccion-importe:
             help: null
-            label: null
+            label: A La Palma-szigeten való szokásos és tényleges tartózkodás utáni
+              levonás teljes összege
           irpf-anexo-a-prestamo-id:
             help: null
-            label: null
+            label: 'A jelzáloghitel azonosítószáma:'
           irpf-anexo-a-prestamo-porcentaje-vivienda:
             help: null
-            label: null
+            label: 'A jelzáloghitel teljes összegének azon százaléka, amelyet ténylegesen
+              a szokásos lakóingatlan beszerzésére fordítottak:'
           irpf-anexo-a-residente-ue-cuota-conjunta-hipotetica:
             help: null
-            label: null
+            label: Teljes nettó adó, ha a családi egység minden tagja együttesen adózott
+              volna (*)
           irpf-anexo-a-residente-ue-cuota-irnr:
             help: null
-            label: null
+            label: A családi egység többi, Európai Uniós tagállamban rezidens tagja
+              által Spanyolországban 2020-ban szerzett jövedelmeknek megfelelő, a
+              nem rezidensek jövedelemadója (IRNR) szerinti adók...
           irpf-anexo-a-residente-ue-deduccion-importe:
             help: null
-            label: null
+            label: Az adózót megillető levonás (**)
           irpf-anexo-a-vehiculo-electrico-deduccion-importe:
             help: null
-            label: null
+            label: A "csatlakoztatható" elektromos és üzemanyagcellás járművek beszerzése
+              utáni levonás összege
           irpf-anexo-b-adoption-deduction-amount:
             help: null
-            label: null
+            label: 'Örökbefogadási levonás: a levonás összege'
           irpf-anexo-b-adoption-pending-claim:
             help: null
-            label: null
+            label: 'Örökbefogadási levonás: az adózó által igényelhető fennmaradó
+              összeg'
           irpf-anexo-b-baleares-deduccion-nacimiento-importe:
             help: null
-            label: null
+            label: 'Születési levonás: a levonás összege'
           irpf-anexo-b-deduccion-nacimiento-abono-anticipado:
             help: null
-            label: null
+            label: 'Születési levonás: az előleg összege'
           irpf-anexo-b-deduccion-nacimiento-cobro-anticipado-regularizar:
             help: null
-            label: null
+            label: 'Születési levonás: a rendezendő előlegfizetés összege ([0504]
+              rovat)'
           irpf-anexo-c-base-liq-neg-generado:
             help: null
-            label: null
+            label: A 2020-as negatív általános nettó adóalap, amely a következő 4
+              adóévben kompenzálandó
           irpf-anexo-c-exceso-deportistas-generado:
             help: null
-            label: null
+            label: A 2020-as, nem érvényesített hozzájárulások és befizetések, amelyek
+              összegét a következő 5 adóévben kérik levonni
           irpf-anexo-c-exceso-eficiencia-energetica-generado:
             help: null
-            label: null
+            label: A 2022-es adóévben kifizetett, a következő 4 adóévben levonandó
+              összegek
           irpf-anexo-c-exceso-patrim-protegido-ejercicio-actual:
             help: null
-            label: null
+            label: A 2020-ban nem érvényesített hozzájárulások, amelyek összegét a
+              következő 4 adóévben kérik levonni
           irpf-anexo-c-exencion-reinversion-ganancia-exenta:
             help: null
-            label: null
+            label: Újrabefektetés miatt mentesített vagyoni nyereség
           irpf-anexo-c-exencion-reinversion-ganancia-patrimonial:
             help: null
-            label: null
+            label: A törvény 68.1. cikke szerinti levonás alá eső részvények vagy
+              üzletrészek átruházásából eredő vagyoni nyereség
           irpf-anexo-c-exencion-reinversion-importe-comprometido:
             help: null
-            label: null
+            label: Az az összeg, amelynek 2021-ben, az átruházást követő évben, új
+              vagy nemrég alapított entitás részvényeibe vagy üzletrészeibe történő
+              újrabefektetésére az adózó kötelezettséget vállal
           irpf-anexo-c-exencion-reinversion-importe-reinvertido:
             help: null
-            label: null
+            label: A 2020.12.31-ig újrabefektetett összeg új vagy nemrég alapított
+              entitás részvényeinek vagy üzletrészeinek megszerzésébe
           irpf-anexo-c-exencion-reinversion-importe-total-transmision:
             help: null
-            label: null
+            label: A részvények vagy üzletrészek átruházásából elért, az új vagy nemrég
+              alapított vállalkozásba történő újrabefektetés miatti mentesség szempontjából
+              újrabefektethető teljes összeg...
           irpf-anexo-c-exencion-rv-ganancia-exenta:
             help: null
-            label: null
+            label: Újrabefektetés miatt mentesített vagyoni nyereség
           irpf-anexo-c-exencion-rv-ganancia-patrimonial:
             help: null
-            label: null
+            label: Elért vagyoni nyereség
           irpf-anexo-c-exencion-rv-importe-comprometido:
             help: null
-            label: null
+            label: Az az összeg, amelynek 2021-ben (az átruházást követő 6 hónapon
+              belül) történő újrabefektetésére az adózó kötelezettséget vállal
           irpf-anexo-c-exencion-rv-importe-reinvertido:
             help: null
-            label: null
+            label: A 2020.12.31-ig életjáradékokba újrabefektetett összeg
           irpf-anexo-c-exencion-rv-importe-total-transmision:
             help: null
-            label: null
+            label: A vagyontárgy(ak) átruházásából elért teljes összeg
           irpf-anexo-c-exencion-rv-retencion-comprometida:
             help: null
-            label: null
+            label: A visszatartás összege, amelynek 2021-ben történő újrabefektetésére
+              az adózó kötelezettséget vállal
           irpf-anexo-c-gan-per-cuartas-anio-obtencion:
             help: null
-            label: null
+            label: Az az év, amelyben az állami támogatást megkapták
           irpf-anexo-c-gan-per-cuartas-aplicado:
             help: null
-            label: null
+            label: Az adóévben alkalmazott állami támogatás összege
           irpf-anexo-c-gan-per-cuartas-importe-total:
             help: null
-            label: null
+            label: A kapott állami támogatás teljes összege
           irpf-anexo-c-gan-per-cuartas-pendiente:
             help: null
-            label: null
+            label: Hozzárendelésre váró összeg
           irpf-anexo-c-gan-per-cuartas-tipo-ayuda:
             help: null
-            label: null
+            label: Állami támogatás típusa
           irpf-ascendiente-cede-flag:
             help: null
-            label: null
+            label: Jelölje meg, hogy átengedi-e a levonáshoz való jogot, és adott
+              esetben a kedvezményezett adóazonosító számát
           irpf-ascendiente-cedido-flag:
             help: null
-            label: null
+            label: Jelölje meg, hogy átengedték-e Önnek a levonáshoz való jogot, és
+              adott esetben az átengedő fél/felek adóazonosító számát
           irpf-ascendiente-discapacidad-fecha-fin:
             help: null
-            label: null
+            label: A fogyatékosság végének dátuma
           irpf-ascendiente-discapacidad-fecha-inicio:
             help: null
-            label: null
+            label: A fogyatékosság kezdetének dátuma
           irpf-ascendiente-discapacidad-nombre:
             help: null
-            label: null
+            label: Név
           irpf-ascendiente-num-contribuyentes-derecho:
             help: null
-            label: null
+            label: Adja meg a felmenők utáni minimumra jogosult személyek számát
           irpf-baleares-deduccion-nacimiento-importe-pendiente:
             help: null
-            label: null
+            label: 'Születési levonás: az adózó által igényelhető fennmaradó összeg'
           irpf-compensacion-conyuges-bank-address:
             help: null
-            label: null
+            label: A bank címe/Address of the bank
           irpf-compensacion-conyuges-devolver-renunciado:
             help: null
-            label: null
+            label: A bevallás visszatérítendő eredményének összege (a [0670] rovat),
+              amelynek tényleges beszedéséről lemondanak
           irpf-compensacion-conyuges-entidad-bancaria-nombre:
             help: null
-            label: null
+            label: Bank/Name of the bank
           irpf-compensacion-conyuges-entidad-ciudad:
             help: null
-            label: null
+            label: Város/City
           irpf-compensacion-conyuges-iban:
             help: null
-            label: null
+            label: 'Házastársak közötti kiegyenlítés: IBAN'
           irpf-compensacion-conyuges-ingresar-suspendido:
             help: null
-            label: null
+            label: A bevallás befizetendő eredményének összege (a [0670] rovat), amelynek
+              felfüggesztését kérik
           irpf-compensacion-conyuges-nosepa-pais-codigo:
             help: null
-            label: null
+            label: Országkód/Country code
           irpf-compensacion-conyuges-numero-cuenta:
             help: null
-            label: null
+            label: Számlaszám
           irpf-compensacion-conyuges-sepa-codigo:
             help: null
-            label: null
+            label: 'Házastársak közötti kiegyenlítés: SEPA'
           irpf-conyuge-discapacidad-fecha-fin:
             help: null
-            label: null
+            label: A fogyatékosság végének dátuma
           irpf-conyuge-discapacidad-fecha-inicio:
             help: null
-            label: null
+            label: A fogyatékosság kezdetének dátuma
           irpf-conyuge-discapacidad-nombre:
             help: null
-            label: null
+            label: Név
           irpf-conyuge-discapacidad-otro-contribuyente-flag:
             help: null
-            label: null
+            label: Jelölje meg "X"-szel, ha másik adózó jogosult a fogyatékkal élő
+              házastárs tekintetében az eltartott fogyatékkal élő leszármazott vagy
+              felmenő utáni levonásra
           irpf-deduccion-andalucia-adopcion-internacional:
             help: null
-            label: null
+            label: Gyermekek nemzetközi örökbefogadása után
           irpf-deduccion-andalucia-conyuge-discapacidad:
             help: null
-            label: null
+            label: Fogyatékkal élő házastárssal vagy élettárssal rendelkező adózók
+              számára
           irpf-deduccion-andalucia-discapacidad:
             help: null
-            label: null
+            label: Fogyatékkal élő adózók számára
           irpf-deduccion-andalucia-empleada-hogar-ccc:
             help: null
-            label: null
+            label: 'Járulékfizetési számlakód:'
           irpf-deduccion-andalucia-empleada-hogar-ccc-2:
             help: null
-            label: null
+            label: 'Járulékfizetési számlakód:'
           irpf-deduccion-andalucia-empleada-hogar-importe:
             help: null
-            label: null
+            label: A levonás összege
           irpf-deduccion-andalucia-empleada-hogar-importe-1:
             help: null
-            label: null
+            label: A levonás összege
           irpf-deduccion-andalucia-familia-monoparental:
             help: null
-            label: null
+            label: Egyszülős család apja vagy anyja számára, adott esetben 75 évesnél
+              idősebb felmenőkkel
           irpf-deduccion-andalucia-familia-numerosa:
             help: null
-            label: null
+            label: Nagycsalád számára
           irpf-deduccion-andalucia-general:
             help: null
-            label: null
+            label: Általánosan alkalmazandó levonás
           irpf-deduccion-andalucia-vivienda-habitual-protegida:
             help: null
-            label: null
+            label: Védettnek minősülő szokásos lakóingatlanba történő befektetés és
+              fiatal személyek után
           irpf-deduccion-aragon-acogimiento-ucrania:
             help: null
-            label: null
+            label: Az országukban zajló fegyveres konfliktus miatt kitelepített ukrán
+              személyek vagy családok befogadása után
           irpf-deduccion-aragon-adopcion-internacional:
             help: null
-            label: null
+            label: Gyermekek nemzetközi örökbefogadása után
           irpf-deduccion-aragon-arrendamiento-social:
             help: null
-            label: null
+            label: Szociális lakás bérbeadása után (bérbeadói levonás)
           irpf-deduccion-aragon-ayuda-humanitaria-ucrania:
             help: null
-            label: null
+            label: Az ukrán népnek az országukban zajló fegyveres konfliktus miatt
+              nyújtott humanitárius segítség után
           irpf-deduccion-aragon-cuidado-dependientes:
             help: null
-            label: null
+            label: Ellátásra szoruló személyek gondozása után
           irpf-deduccion-aragon-donativos-ecologicos:
             help: null
-            label: null
+            label: Ökológiai célú, valamint tudományos és műszaki kutatási és fejlesztési
+              célú adományok után
           irpf-deduccion-aragon-guarderia:
             help: null
-            label: null
+            label: 3 év alatti gyermekek bölcsődei kiadásai után
           irpf-deduccion-aragon-libros-texto:
             help: null
-            label: null
+            label: Tankönyvek és iskolai felszerelés beszerzése után
           irpf-deduccion-aragon-mayores-70:
             help: null
-            label: null
+            label: 70 évesnél idősebbek számára
           irpf-deduccion-aragon-nacimiento-hijo-discapacidad:
             help: null
-            label: null
+            label: Gyermek születése vagy örökbefogadása után, a fogyatékossági fok
+              figyelembevételével
           irpf-deduccion-aragon-nacimiento-primer-segundo-hijo:
             help: null
-            label: null
+            label: 10.000 lakosnál kevesebb lakosú településeken első és/vagy második
+              gyermek születése vagy örökbefogadása után
           irpf-deduccion-aragon-nacimiento-tercer-hijo:
             help: null
-            label: null
+            label: Harmadik és további gyermek születése vagy örökbefogadása után
           irpf-deduccion-aragon-residencia-municipios:
             help: null
-            label: null
+            label: Bizonyos településeken való lakóhely után
           irpf-deduccion-aragon-vivienda-victimas-terrorismo:
             help: null
-            label: null
+            label: Szokásos lakóingatlan beszerzése után terrorizmus áldozatai esetén
           irpf-deduccion-asturias-acogimiento-mayores:
             help: null
-            label: null
+            label: 65 évesnél idősebbek díjazás nélküli befogadása után
           irpf-deduccion-asturias-acogimiento-menores:
             help: null
-            label: null
+            label: Kiskorúak családi befogadása után
           irpf-deduccion-asturias-adopcion-internacional:
             help: null
-            label: null
+            label: Kiskorúak nemzetközi örökbefogadása után
           irpf-deduccion-asturias-centros-0-3:
             help: null
-            label: null
+            label: A leszármazottak 0-3 éves korú gyermekek központjaiban felmerülő
+              kiadásai után
           irpf-deduccion-asturias-cuidado-descendientes:
             help: null
-            label: null
+            label: Legfeljebb 25 éves leszármazottak vagy örökbefogadottak gondozása
+              után
           irpf-deduccion-asturias-emancipacion-jovenes:
             help: null
-            label: null
+            label: Legfeljebb 35 éves fiatalok nagykorúsítása után
           irpf-deduccion-asturias-familia-monoparental:
             help: null
-            label: null
+            label: Egyszülős családok számára
           irpf-deduccion-asturias-familia-numerosa:
             help: null
-            label: null
+            label: Nagycsaládok számára
           irpf-deduccion-asturias-formacion-autoempleados:
             help: null
-            label: null
+            label: A kifejezetten szakképzett, közvetlenül és elsősorban kutatási
+              és fejlesztési tevékenységekhez kapcsolódó munkát végző adózóknál felmerült
+              képzési kiadások után...
           irpf-deduccion-asturias-gestion-forestal:
             help: null
-            label: null
+            label: A fenntartható erdőgazdálkodás tanúsítása után
           irpf-deduccion-asturias-libros-texto:
             help: null
-            label: null
+            label: Tankönyvek és iskolai felszerelés beszerzése után
           irpf-deduccion-asturias-partos-multiples:
             help: null
-            label: null
+            label: Többes szülés vagy ugyanazon a napon létrejött két vagy több örökbefogadás
+              után
           irpf-deduccion-asturias-vivienda-discapacitados:
             help: null
-            label: null
+            label: Szokásos lakóingatlan beszerzése vagy átalakítása után fogyatékkal
+              élő adózók esetén
           irpf-deduccion-autonomica-arrendamiento-viv-hab-importe:
             help: null
-            label: null
+            label: Bizonyos tartozásfejében-átadási ügyletekhez kapcsolódó, szokásos
+              lakóingatlan bérbeadása utáni autonóm-közösségi levonás összege
           irpf-deduccion-autonomica-otro-importe:
             help: null
-            label: null
+            label: A levonás teljes összege
           irpf-deduccion-baleares-arrendador-nif-extranjero-flag:
             help: null
-            label: null
+            label: Jelölje meg 'X'-szel, ha a [0911] rovatban másik ország adóazonosító
+              számát tüntette fel
           irpf-deduccion-baleares-arrendamiento-residentes:
             help: null
-            label: null
+            label: Lakóingatlan bérbevétele után a Baleár-szigetek területén, munkavállalási
+              okból történő ideiglenes lakóhely-áthelyezés miatt
           irpf-deduccion-baleares-descendientes-menores-6:
             help: null
-            label: null
+            label: A hatéves kor alatti leszármazottakkal vagy befogadottakkal kapcsolatos,
+              összeegyeztetési célú kiadások után
           irpf-deduccion-baleares-donaciones-investigacion:
             help: null
-            label: null
+            label: Kutatásra, tudományos vagy technológiai fejlesztésre, vagy innovációra
+              szánt bizonyos entitásoknak nyújtott adományok után
           irpf-deduccion-baleares-donaciones-lengua:
             help: null
-            label: null
+            label: A katalán nyelv ösztönzését célul kitűző bizonyos entitásoknak
+              nyújtott adományok után
           irpf-deduccion-baleares-donaciones-patrimonio:
             help: null
-            label: null
+            label: A kulturális, tudományos és technológiai fejlesztési mecénáshoz,
+              valamint a kulturális fogyasztáshoz kapcsolódó adományok, használatba
+              adások vagy kölcsönbe adási szerződések és vállalati együttműködési
+              megállapodások után
           irpf-deduccion-baleares-donaciones-tercer-sector:
             help: null
-            label: null
+            label: Harmadik szektorbeli entitásoknak nyújtott adományok után
           irpf-deduccion-baleares-estudios-superiores:
             help: null
-            label: null
+            label: A szokásos lakóhely szigetén kívüli felsőfokú tanulmányok folytatására
           irpf-deduccion-baleares-idiomas:
             help: null
-            label: null
+            label: Iskolán kívüli idegennyelv-tanulási kiadások után
           irpf-deduccion-baleares-libros-texto:
             help: null
-            label: null
+            label: Tankönyvbeszerzési kiadások után
           irpf-deduccion-baleares-mecenazgo-deportivo:
             help: null
-            label: null
+            label: A sportmecénáshoz kapcsolódó adományok, használatba adások vagy
+              kölcsönbe adási szerződések és együttműködési megállapodások után
           irpf-deduccion-baleares-prestamo-hipotecario-incremento:
             help: null
-            label: null
+            label: A változó kamatozású jelzáloghitelek vagy -kölcsönök költségnövekedésének
+              ellentételezésére
           irpf-deduccion-baleares-subvenciones-declaracion-sinistro:
             help: null
-            label: null
+            label: Polgári védelmi szükséghelyzet által súlyosan érintett övezetté
+              nyilvánítás miatt nyújtott bizonyos támogatások és segélyek után
           irpf-deduccion-c-valenciana-abonos-culturales:
             help: null
-            label: null
+            label: Kulturális bérletekre szánt összegek után
           irpf-deduccion-c-valenciana-acciones-participaciones-pendiente:
             help: null
-            label: null
+            label: A 2023-ban keletkezett, alkalmazásra váró összeg
           irpf-deduccion-c-valenciana-arrendador-nif-extranjero-flag:
             help: null
-            label: null
+            label: Jelölje meg "X"-szel, ha a [1096] rovatban másik ország adóazonosító
+              számát tüntette fel
           irpf-deduccion-c-valenciana-ascendientes-mayores-75:
             help: null
-            label: null
+            label: 75 évesnél idősebb felmenők, vagy 65 évesnél idősebb, fogyatékkal
+              élő felmenők után
           irpf-deduccion-c-valenciana-autoconsumo-generado:
             help: null
-            label: null
+            label: A 2023-ban keletkezett összeg
           irpf-deduccion-c-valenciana-conciliacion:
             help: null
-            label: null
+            label: A munka és a családi élet összeegyeztetése után
           irpf-deduccion-c-valenciana-discapacidad-33:
             help: null
-            label: null
+            label: Legalább 33%-os fogyatékossági fokú, legalább 65 éves adózók számára
           irpf-deduccion-c-valenciana-donaciones-conservacion-patrimonio:
             help: null
-            label: null
+            label: A Valenciai Kulturális Örökség részét képező vagyontárgyak megőrzésére,
+              javítására és helyreállítására adományozott összegek után
           irpf-deduccion-c-valenciana-donaciones-covid19:
             help: null
-            label: null
+            label: A Covid-19 által okozott egészségügyi válság kiadásainak finanszírozásához
+              hozzájáruló adományok után
           irpf-deduccion-c-valenciana-donaciones-investigacion-sanitaria:
             help: null
-            label: null
+            label: A ... által okozott fertőzések kezelésének és megelőzésének területén
+              folytatott kutatási, innovációs és tudományos vagy technológiai fejlesztési
+              programok finanszírozására irányuló pénzadományok után...
           irpf-deduccion-c-valenciana-donaciones-lengua-valenciana:
             help: null
-            label: null
+            label: A valenciai nyelv ösztönzésére szánt adományok után
           irpf-deduccion-c-valenciana-donaciones-otros-fines:
             help: null
-            label: null
+            label: Egyéb kulturális, tudományos vagy nem hivatásos sport célú érdekű
+              adományok, használatba adások vagy kölcsönbe adások után
           irpf-deduccion-c-valenciana-donaciones-patrimonio-cultural:
             help: null
-            label: null
+            label: A Valenciai Kulturális Örökség részét képező vagyontárgyak adományozása
+              után
           irpf-deduccion-c-valenciana-donativos-ecologicos:
             help: null
-            label: null
+            label: Ökológiai célú adományok után
           irpf-deduccion-c-valenciana-dos-mas-descendientes:
             help: null
-            label: null
+            label: Két vagy több leszármazottal rendelkező adózók után
           irpf-deduccion-c-valenciana-familia-numerosa-monoparental:
             help: null
-            label: null
+            label: Nagycsalád vagy egyszülős család után
           irpf-deduccion-c-valenciana-gastos-salud:
             help: null
-            label: null
+            label: Bizonyos egészségügyi kiadásokra kifizetett összegek után
           irpf-deduccion-c-valenciana-material-escolar:
             help: null
-            label: null
+            label: Iskolai felszerelés beszerzése után
           irpf-deduccion-c-valenciana-nacimiento-adopcion-multiple:
             help: null
-            label: null
+            label: Több gyermek egyidejű születése vagy örökbefogadása után
           irpf-deduccion-c-valenciana-rentas-arrendamiento:
             help: null
-            label: null
+            label: Olyan lakóingatlan bérbeadásából származó jövedelmek szerzése után,
+              amelynek bérleti díja nem haladja meg a magánbérletek referenciaárát
           irpf-deduccion-c-valenciana-residencia-municipio-riesgo:
             help: null
-            label: null
+            label: Elnéptelenedés kockázatával küzdő településen való szokásos tartózkodás
+              után
           irpf-deduccion-c-valenciana-titulares-conservacion-patrimonio:
             help: null
-            label: null
+            label: Tulajdonosaik által a Valenciai Kulturális Örökség részét képező
+              vagyontárgyak megőrzésére, javítására és helyreállítására szánt összegek
+              után
           irpf-deduccion-c-valenciana-vehiculos-electricos:
             help: null
-            label: null
+            label: A 2020. június 8-i 5/2020. rendeletben foglalt kategóriákba tartozó
+              új járművek beszerzése után
           irpf-deduccion-c-valenciana-vivienda-adquisicion-rehabilitacion:
             help: null
-            label: null
+            label: Állami támogatásokból származó, szokásos lakóingatlan beszerzésére
+              vagy felújítására szánt összegek után
           irpf-deduccion-c-valenciana-vivienda-discapacidad:
             help: null
-            label: null
+            label: Szokásos lakóingatlan beszerzése után fogyatékkal élő személyek
+              esetén
           irpf-deduccion-c-valenciana-vivienda-primera-adquisicion:
             help: null
-            label: null
+            label: Legfeljebb 35 éves adózók szokásos lakóingatlanának első beszerzése
+              után
           irpf-deduccion-canarias-acogimiento-menores:
             help: null
-            label: null
+            label: Kiskorúak befogadása után
           irpf-deduccion-canarias-cuotas-seguridad-social:
             help: Adja meg a háztartási alkalmazottak foglalkoztatása után fizetett
               társadalombiztosítási járulékokat.
@@ -415,31 +484,33 @@ modelo:
               járulékok után
           irpf-deduccion-canarias-desempleados:
             help: null
-            label: null
+            label: Munkanélküli adózók után
           irpf-deduccion-canarias-discapacidad-mayores-65:
             help: null
-            label: null
+            label: Fogyatékkal élő és 65 évesnél idősebb adózók után
           irpf-deduccion-canarias-donaciones-culturales-deportivas:
             help: null
-            label: null
+            label: Kulturális, sport-, kutatási vagy oktatási célú adományok és hozzájárulások
+              után
           irpf-deduccion-canarias-donaciones-entidades-sin-animo:
             help: null
-            label: null
+            label: Non-profit entitásoknak nyújtott adományok után
           irpf-deduccion-canarias-donaciones-patrimonio-historico:
             help: null
-            label: null
+            label: A Kanári-szigetek történelmi örökségének felújítására vagy megőrzésére
+              szánt adományok után
           irpf-deduccion-canarias-donativos-ecologicos:
             help: null
-            label: null
+            label: Ökológiai célú adományok után
           irpf-deduccion-canarias-familia-monoparental:
             help: null
-            label: null
+            label: Egyszülős családok után
           irpf-deduccion-canarias-familia-numerosa:
             help: null
-            label: null
+            label: Nagycsalád után
           irpf-deduccion-canarias-familiares-discapacidad:
             help: null
-            label: null
+            label: Ellátásra szoruló, fogyatékkal élő családtagok után
           irpf-deduccion-canarias-guarderia-importe-1:
             help: Adja meg az 1. megfizetett összeget.
             label: 1. megfizetett összeg
@@ -448,292 +519,332 @@ modelo:
             label: 2. megfizetett összeg
           irpf-deduccion-canarias-nacimiento-adopcion:
             help: null
-            label: null
+            label: Gyermek születése vagy örökbefogadása után
           irpf-deduccion-canarias-referencia-catastral-1:
             help: null
-            label: null
+            label: 1. kataszteri hivatkozás
           irpf-deduccion-canarias-referencia-catastral-2:
             help: null
-            label: null
+            label: 2. kataszteri hivatkozás
           irpf-deduccion-canarias-restauracion-bienes:
             help: null
-            label: null
+            label: Tulajdonosaik által Kulturális Érdekűvé nyilvánított ingatlanok
+              helyreállítására, felújítására vagy javítására szánt összegek után
           irpf-deduccion-canarias-traslado-residencia-isla:
             help: null
-            label: null
+            label: A szokásos lakóhely szigetcsoport másik szigetére történő áthelyezése
+              után, munkavállalói jogviszony vagy gazdasági tevékenység végzése céljából
           irpf-deduccion-canarias-vivienda-discapacidad:
             help: null
-            label: null
+            label: A szokásos lakóingatlan fogyatékosság miatti átalakítási munkálatai
+              után
           irpf-deduccion-canarias-vivienda-habitual:
             help: null
-            label: null
+            label: Szokásos lakóingatlanba történő befektetés után
           irpf-deduccion-cantabria-acogimiento-menores:
             help: null
-            label: null
+            label: Kiskorúak családi befogadása után
           irpf-deduccion-cantabria-cuidado-familiares:
             help: null
-            label: null
+            label: Családtagok gondozása után
           irpf-deduccion-cantabria-donativos-fundaciones:
             help: null
-            label: null
+            label: Alapítványoknak, a Cantabria Coopera Alapnak vagy a fogyatékkal
+              élők megsegítését is célul kitűző egyesületeknek nyújtott adományok
+              után
           irpf-deduccion-cantabria-enfermedad:
             help: null
-            label: null
+            label: Betegségi kiadások után
           irpf-deduccion-cantabria-familia-monoparental:
             help: null
-            label: null
+            label: Egyszülős családok után
           irpf-deduccion-cantabria-guarderia:
             help: null
-            label: null
+            label: Bölcsődei kiadások után
           irpf-deduccion-castilla-la-mancha-acciones-participaciones:
             help: null
-            label: null
+            label: Kereskedelmi társaságok alapítási megállapodásai vagy tőkeemelései
+              következtében történő részvény- és üzletrész-szerzésbe történő befektetés
+              után (a ... rovat összege...
           irpf-deduccion-castilla-la-mancha-acogimiento-mayores:
             help: null
-            label: null
+            label: 65 évesnél idősebbek és/vagy fogyatékkal élők díjazás nélküli befogadása
+              után
           irpf-deduccion-castilla-la-mancha-acogimiento-menores:
             help: null
-            label: null
+            label: Kiskorúak díjazás nélküli családi befogadása után
           irpf-deduccion-castilla-la-mancha-cooperacion-internacional:
             help: null
-            label: null
+            label: A nemzetközi fejlesztési együttműködésre, valamint a szegénység
+              elleni küzdelemmel, a társadalmi kirekesztéssel és a fogyatékkal élők
+              megsegítésével foglalkozó entitásoknak adományozott összegek után
           irpf-deduccion-castilla-la-mancha-cuidado-ascendientes-75:
             help: null
-            label: null
+            label: 75 évesnél idősebb felmenők gondozása után
           irpf-deduccion-castilla-la-mancha-discapacidad-contribuyente:
             help: null
-            label: null
+            label: Az adózó fogyatékossága után
           irpf-deduccion-castilla-la-mancha-discapacidad-familiar:
             help: null
-            label: null
+            label: Felmenők vagy leszármazottak fogyatékossága után
           irpf-deduccion-castilla-la-mancha-donaciones-bienes-culturales:
             help: null
-            label: null
+            label: Kulturális vagyontárgyak adományozása és a Castilla-La Mancha kulturális
+              örökségéhez tartozó vagyontárgyak megőrzésére, javítására és helyreállítására,
+              valamint kulturális célokra...
           irpf-deduccion-castilla-la-mancha-donaciones-idi:
             help: null
-            label: null
+            label: Kutatási és fejlesztési, valamint vállalati innovációs célú adományok
+              után
           irpf-deduccion-castilla-la-mancha-familia-monoparental:
             help: null
-            label: null
+            label: Egyszülős család után
           irpf-deduccion-castilla-la-mancha-familia-numerosa:
             help: null
-            label: null
+            label: Nagycsalád után
           irpf-deduccion-castilla-la-mancha-intereses-vivienda:
             help: null
-            label: null
+            label: 40 év alattiak első szokásos lakóingatlanának idegen finanszírozású
+              beszerzése miatti kamatkiadások után
           irpf-deduccion-castilla-la-mancha-mayores-75:
             help: null
-            label: null
+            label: 75 évesnél idősebb adózók számára
           irpf-deduccion-castilla-la-mancha-residencia-zonas-rurales:
             help: null
-            label: null
+            label: Vidéki övezetekben való szokásos lakóhely után
           irpf-deduccion-castilla-la-mancha-vivienda-zonas-rurales:
             help: null
-            label: null
+            label: Szokásos lakóingatlan beszerzése vagy felújítása után vidéki övezetekben
           irpf-deduccion-castilla-y-leon-cuidado-hijos-menores:
             help: null
-            label: null
+            label: Kiskorú gyermekek gondozása után
           irpf-deduccion-castilla-y-leon-cuotas-ss-hogar:
             help: null
-            label: null
+            label: Háztartási alkalmazottak társadalombiztosítási járulékai után
           irpf-deduccion-castilla-y-leon-donaciones-fundaciones:
             help: null
-            label: null
+            label: Castilla y León alapítványainak adományozott összegek, valamint
+              a történelmi, kulturális és természeti örökség helyreállítása után
           irpf-deduccion-castilla-y-leon-donaciones-idi:
             help: null
-            label: null
+            label: A kutatás, a fejlesztés és az innováció ösztönzésére adományozott
+              összegek után
           irpf-deduccion-castilla-y-leon-familia-numerosa:
             help: null
-            label: null
+            label: Nagycsalád után
           irpf-deduccion-castilla-y-leon-fecha-visado:
             help: null
-            label: null
+            label: 'A kivitelezési terv jóváhagyásának dátuma:'
           irpf-deduccion-castilla-y-leon-gastos-adopcion:
             help: null
-            label: null
+            label: Örökbefogadási kiadások után
           irpf-deduccion-castilla-y-leon-importe-general:
             help: null
-            label: null
+            label: A levonás összege
           irpf-deduccion-castilla-y-leon-nacimiento-adopcion:
             help: null
-            label: null
+            label: Gyermek születése vagy örökbefogadása után
           irpf-deduccion-castilla-y-leon-patrimonio-historico:
             help: null
-            label: null
+            label: A történelmi, kulturális és természeti örökség helyreállításába
+              fektetett összegek után
           irpf-deduccion-castilla-y-leon-rehabilitacion-importe:
             help: null
-            label: null
+            label: A levonás összege
           irpf-deduccion-castilla-y-leon-vehiculo-matricula:
             help: null
-            label: null
+            label: 'A jármű rendszáma:'
           irpf-deduccion-catalunya-donaciones-investigacion:
             help: null
-            label: null
+            label: A tudományos kutatást, valamint a technológiai fejlesztést és innovációt
+              ösztönző entitásoknak nyújtott adományok után
           irpf-deduccion-catalunya-donaciones-lengua-catalana:
             help: null
-            label: null
+            label: A katalán vagy okcitán nyelv használatát ösztönző entitásoknak
+              nyújtott adományok után
           irpf-deduccion-catalunya-donaciones-medio-ambiente:
             help: null
-            label: null
+            label: A környezet javára, a természeti örökség megőrzésére és a terület
+              gondozására szolgáló bizonyos entitásoknak nyújtott adományok után
           irpf-deduccion-catalunya-intereses-prestamos-estudios:
             help: null
-            label: null
+            label: Mesterképzési és doktori tanulmányokra felvett kölcsönök kamatainak
+              fizetése után
           irpf-deduccion-catalunya-prestamo-identificador:
             help: null
-            label: null
+            label: A kölcsön azonosítószáma
           irpf-deduccion-catalunya-rehabilitacion-vivienda:
             help: null
-            label: null
+            label: A szokásos lakóingatlan felújítása után
           irpf-deduccion-catalunya-viudedad-anio:
             help: null
-            label: null
+            label: Özvegység éve
           irpf-deduccion-eficiencia-energetica-demanda-anterior:
             help: null
-            label: null
+            label: Korábbi fűtési és hűtési energiaigény
           irpf-deduccion-eficiencia-energetica-demanda-posterior:
             help: null
-            label: null
+            label: Utólagos fűtési és hűtési energiaigény
           irpf-deduccion-extremadura-acogimiento-menores:
             help: null
-            label: null
+            label: Kiskorúak befogadása után
           irpf-deduccion-extremadura-cuidado-familiares-discapacidad:
             help: null
-            label: null
+            label: Fogyatékkal élő családtagok gondozása után
           irpf-deduccion-extremadura-cuidado-hijos-menores-14:
             help: null
-            label: null
+            label: Legfeljebb 14 éves kiskorú gyermekek gondozása után
           irpf-deduccion-extremadura-intereses-vivienda:
             help: null
-            label: null
+            label: Fiatalok szokásos lakóingatlanba történő befektetésének idegen
+              finanszírozási kamatai után
           irpf-deduccion-extremadura-material-escolar:
             help: null
-            label: null
+            label: Iskolai felszerelés vásárlása után
           irpf-deduccion-extremadura-partos-multiples:
             help: null
-            label: null
+            label: Többes szülés után
           irpf-deduccion-extremadura-trabajo-dependiente:
             help: null
-            label: null
+            label: Munkaviszony után
           irpf-deduccion-extremadura-viudos:
             help: null
-            label: null
+            label: Özvegy adózók számára
           irpf-deduccion-extremadura-vivienda-jovenes:
             help: null
-            label: null
+            label: Szokásos lakóingatlan beszerzése vagy felújítása után fiatalok
+              és terrorizmus áldozatai esetén
           irpf-deduccion-galicia-acogimiento-menores:
             help: null
-            label: null
+            label: Kiskorúak befogadása után
           irpf-deduccion-galicia-climatizacion-acs:
             help: null
-            label: null
+            label: A szokásos lakóingatlanban megújuló energiát alkalmazó, kizárólag
+              önfogyasztásra szánt klíma- és/vagy használati melegvíz-létesítményekbe
+              történő befektetés után
           irpf-deduccion-galicia-codigo-instalacion:
             help: null
-            label: null
+            label: 'Az Ipari Virtuális Iroda által megadott létesítménykód:'
           irpf-deduccion-galicia-cuidado-hijos-menores:
             help: null
-            label: null
+            label: Kiskorú gyermekek gondozása után
           irpf-deduccion-galicia-deportistas-alto-nivel:
             help: null
-            label: null
+            label: A Galicia élsportolói által kapott támogatások és segélyek után
           irpf-deduccion-galicia-discapacidad-mayores-65:
             help: null
-            label: null
+            label: Legalább 65 éves, harmadik személy segítségére szoruló fogyatékkal
+              élő adózók után
           irpf-deduccion-galicia-donaciones-idi:
             help: null
-            label: null
+            label: Tudományos kutatási és fejlesztési, valamint technológiai innovációs
+              célú adományok után
           irpf-deduccion-galicia-eficiencia-energetica:
             help: null
-            label: null
+            label: Lakóépületeken vagy egylakásos lakóingatlanokon végzett energiahatékonysági
+              felújítási munkálatok után
           irpf-deduccion-galicia-familia-numerosa:
             help: null
-            label: null
+            label: Nagycsalád után
           irpf-deduccion-galicia-nacimiento-adopcion:
             help: null
-            label: null
+            label: Gyermek születése vagy örökbefogadása után
           irpf-deduccion-galicia-nuevas-tecnologias:
             help: null
-            label: null
+            label: A galiciai háztartásokban új technológiák használatára irányuló
+              kiadások után
           irpf-deduccion-galicia-otras:
             help: Adja meg az egyéb kedvezményeket.
             label: Egyéb kedvezmények
           irpf-deduccion-galicia-rehabilitacion-centros-historicos:
             help: null
-            label: null
+            label: Történelmi városközpontokban fekvő ingatlanok felújítása után
           irpf-deduccion-galicia-vivienda-aldeas-modelo:
             help: null
-            label: null
+            label: Lakóingatlanok beszerzése és felújítása után mintafalu-projektekben
           irpf-deduccion-instalacion-recarga-fecha-fin:
             help: null
-            label: null
+            label: A létesítmény befejezésének dátuma
           irpf-deduccion-la-rioja-adecuacion-importe:
             help: null
-            label: null
+            label: A levonás összege
           irpf-deduccion-la-rioja-adecuacion-municipio-codigo:
             help: null
-            label: null
+            label: 'Település kódja:'
           irpf-deduccion-la-rioja-adecuacion-vivienda-discapacidad:
             help: null
-            label: null
+            label: Fogyatékkal élő személyek szokásos lakóingatlanának átalakítási
+              munkálataiba fektetett összegek után
           irpf-deduccion-la-rioja-arrendamiento-importe:
             help: null
-            label: null
+            label: A levonás összege
           irpf-deduccion-la-rioja-arrendamiento-municipio-codigo:
             help: null
-            label: null
+            label: Településkód
           irpf-deduccion-la-rioja-bicicletas:
             help: null
-            label: null
+            label: Nem rásegítéses pedálhajtású kerékpárok beszerzése után
           irpf-deduccion-la-rioja-cantidades-investigacion-restauracion:
             help: null
-            label: null
+            label: La Rioja történelmi örökségének részét képező vagyontárgyak kutatására,
+              megőrzésére, helyreállítására, felújítására vagy megerősítésére szánt
+              összegek után
           irpf-deduccion-la-rioja-donaciones-empresas-culturales:
             help: null
-            label: null
+            label: Kulturális vállalkozásoknak nyújtott adományok után
           irpf-deduccion-la-rioja-donaciones-investigacion-patrimonio:
             help: null
-            label: null
+            label: La Rioja történelmi örökségének kulturálisan érdekű vagyontárgyainak
+              kutatására, megőrzésére, helyreállítására, felújítására, megerősítésére,
+              terjesztésére, bemutatására és megszerzésére szánt adományok után
           irpf-deduccion-la-rioja-escuelas-infantiles-0-3:
             help: null
-            label: null
+            label: 0-3 éves gyermekenként, La Rioja bármely településén lévő bölcsődék
+              vagy kisgyermeknevelési központok kiadásai után
           irpf-deduccion-la-rioja-internet-jovenes:
             help: null
-            label: null
+            label: Nagykorúsított fiatalok internet-hozzáférése után
           irpf-deduccion-la-rioja-nacimiento-adopcion:
             help: null
-            label: null
+            label: Gyermek születése és örökbefogadása után
           irpf-deduccion-la-rioja-obras-rehabilitacion:
             help: null
-            label: null
+            label: A szokásos lakóingatlan felújítási munkálataiba fektetett összegek
+              után
           irpf-deduccion-la-rioja-suministros-jovenes:
             help: null
-            label: null
+            label: Nagykorúsított fiatalok háztartási villany- és gázellátása után
           irpf-deduccion-la-rioja-vivienda-codigo-municipio:
             help: null
-            label: null
+            label: 'Település kódja:'
           irpf-deduccion-la-rioja-vivienda-habitual-jovenes:
             help: null
-            label: null
+            label: Fiatalok szokásos lakóingatlanának beszerzésébe vagy építésébe
+              fektetett összegek után
           irpf-deduccion-la-rioja-vivienda-jovenes:
             help: null
-            label: null
+            label: 36 év alatti fiatalok szokásos lakóingatlanába történő befektetés
+              után
           irpf-deduccion-la-rioja-vivienda-municipio-importe:
             help: null
-            label: null
+            label: A levonás összege
           irpf-deduccion-madrid-acogimiento-mayores:
             help: null
-            label: null
+            label: 65 évesnél idősebbek és/vagy fogyatékkal élők díjazás nélküli befogadása
+              után
           irpf-deduccion-madrid-acogimiento-menores:
             help: null
-            label: null
+            label: Kiskorúak családi befogadása után
           irpf-deduccion-madrid-adopcion-internacional:
             help: null
-            label: null
+            label: Gyermekek nemzetközi örökbefogadása után
           irpf-deduccion-madrid-autoempleo-jovenes:
             help: null
-            label: null
+            label: A 35 év alatti fiatalok önfoglalkoztatásának ösztönzésére
           irpf-deduccion-madrid-dos-mas-descendientes-ingresos-reducidos:
             help: null
-            label: null
+            label: Két vagy több leszármazottal és alacsony jövedelemmel rendelkező
+              családok számára
           irpf-deduccion-madrid-empleada-hogar-ccc:
             help: Adja meg a járulékfizetési számla kódját.
             label: Járulékfizetési számla kódja
@@ -747,7 +858,7 @@ modelo:
               kamatemelkedés miatti növekedése után
           irpf-deduccion-madrid-gastos-educativos:
             help: null
-            label: null
+            label: Oktatási kiadások után
           irpf-deduccion-madrid-nuevos-contribuyentes-extranjero:
             help: Adja meg a külföldről érkező új adózók beruházásai után járó kedvezményt.
             label: Külföldről érkező új adózók beruházásai után
@@ -769,10 +880,11 @@ modelo:
             label: Beszerzési ár / befektetett összegek
           irpf-deduccion-murcia-acogimiento-mayores-discapacidad:
             help: null
-            label: null
+            label: 65 évesnél idősebbek és/vagy fogyatékkal élő személyek díjazás
+              nélküli befogadása után
           irpf-deduccion-murcia-adopcion-nacimiento:
             help: null
-            label: null
+            label: Örökbefogadás vagy születés után
           irpf-deduccion-murcia-conciliacion-ascendientes:
             help: Adja meg a 65 év feletti felmenők után járó gondozási összeegyeztetési
               kedvezményt.
@@ -782,16 +894,16 @@ modelo:
             label: Járulékfizetési számla kódja
           irpf-deduccion-murcia-discapacidad:
             help: null
-            label: null
+            label: Fogyatékkal élő adózók után
           irpf-deduccion-murcia-dispositivos-ahorro-agua:
             help: null
-            label: null
+            label: Háztartási vízmegtakarító eszközökbe történő befektetések után
           irpf-deduccion-murcia-donaciones-investigacion-biosanitaria:
             help: null
-            label: null
+            label: Orvosbiológiai kutatásra nyújtott adományok után
           irpf-deduccion-murcia-empleada-hogar-ccc:
             help: null
-            label: null
+            label: Járulékfizetési számlakód
           irpf-deduccion-murcia-familia-monoparental:
             help: Adja meg az egyszülős család után járó kedvezményt.
             label: Egyszülős család után
@@ -803,10 +915,10 @@ modelo:
             label: Internet-hozzáférési kiadások után
           irpf-deduccion-murcia-guarderia:
             help: null
-            label: null
+            label: Bölcsődei kiadások után
           irpf-deduccion-murcia-material-escolar:
             help: null
-            label: null
+            label: Iskolai felszerelési és tankönyvi kiadások után
           irpf-deduccion-murcia-recursos-energeticos-renovables-generado:
             help: Adja meg a 2024-ben keletkezett összeget.
             label: 2024-ben keletkezett összeg
@@ -815,691 +927,751 @@ modelo:
             label: 2024-ben keletkezett, még nem alkalmazott összeg
           irpf-deduccion-vehiculo-cantidad-a-cuenta:
             help: null
-            label: null
+            label: A jármű jövőbeli beszerzésére adott előleg összege
           irpf-deduccion-vehiculo-electrico-cantidades-satisfechas:
             help: null
-            label: null
+            label: 2023. június 30. óta kifizetett összegek (az egyes létesítmények
+              tekintetében) (*) (**)
           irpf-deduccion-vehiculo-electrico-importe:
             help: null
-            label: null
+            label: A meg nem újuló primerenergia-fogyasztás javítása utáni levonás
+              összege
           irpf-deduccion-vehiculo-electrico-situacion-clave:
             help: null
-            label: null
+            label: Helyzet. Kód.
           irpf-deduccion-vehiculo-fecha-matriculacion:
             help: null
-            label: null
+            label: Forgalomba helyezés dátuma
           irpf-deduccion-vehiculo-fecha-pago-a-cuenta:
             help: null
-            label: null
+            label: Az előlegfizetés dátuma
           irpf-deduccion-vehiculo-gastos-tributos:
             help: null
-            label: null
+            label: A jármű beszerzésével járó kiadások és adók összege
           irpf-deduccion-vehiculo-matricula:
             help: null
-            label: null
+            label: Rendszám
           irpf-deduccion-vehiculo-precio-sin-iva:
             help: null
-            label: null
+            label: A beszerzett jármű eladási ára HÉA vagy IGIC nélkül
           irpf-deduccion-vehiculo-tipo:
             help: null
-            label: null
+            label: Típus (**)
           irpf-descendiente-cede-flag:
             help: null
-            label: null
+            label: Jelölje meg, hogy átengedi-e a levonáshoz való jogot, és adott
+              esetben a kedvezményezett adóazonosító számát
           irpf-descendiente-cedido-flag:
             help: null
-            label: null
+            label: Jelölje meg, hogy átengedték-e Önnek a levonáshoz való jogot, és
+              adott esetben az átengedő fél/felek adóazonosító számát
           irpf-descendiente-discapacidad-fecha-fin:
             help: null
-            label: null
+            label: A fogyatékosság végének dátuma
           irpf-descendiente-discapacidad-fecha-inicio:
             help: null
-            label: null
+            label: A fogyatékosság kezdetének dátuma
           irpf-descendiente-discapacidad-nombre:
             help: null
-            label: null
+            label: Név
           irpf-descendiente-num-contribuyentes-derecho:
             help: null
-            label: null
+            label: Adja meg a leszármazottak utáni minimumra jogosult személyek számát
           irpf-ed-actividad-iae-code:
             help: null
-            label: null
+            label: IAE-csoport vagy alcsoport (a fő tevékenységé, ha ugyanolyan típusú
+              több tevékenységet is végeznek)
           irpf-ed-actividad-tipo-clave:
             help: null
-            label: null
+            label: 'A végzett tevékenység(ek) típusa: jelző kód'
           irpf-ed-cobros-pagos-flag:
             help: null
-            label: null
+            label: Ha a jövedelmek időbeli hozzárendelésénél a befizetések és kifizetések
+              szempontjának alkalmazását választja, tüntessen fel egy "X"-et
           irpf-ed-derechos-imagen-cessation-flag:
             help: null
-            label: null
+            label: A szerzői jogok kiaknázásának átengedéséből származó jövedelmek
+              esetén, ha úgy dönt, hogy az azokra adott előleget a jogok keletkezésének
+              ütemében számolja el...
           irpf-ed-modalidad-clave:
             help: null
-            label: null
+            label: 'A közvetlen becslés módszerének alkalmazandó módozata (jelölje:
+              N: normál, S: egyszerűsített)'
           irpf-eo-actividad-iae-code:
             help: null
-            label: null
+            label: IAE-besorolás (csoport vagy alcsoport)
           irpf-eo-agr-clave-actividad:
             help: null
-            label: null
+            label: Végzett tevékenység. Kód
           irpf-eo-agr-cobros-pagos-flag:
             help: null
-            label: null
+            label: Ha az időbeli hozzárendelésnél a befizetések és kifizetések szempontját
+              választja, tüntessen fel egy "X"-et
           irpf-eo-agr-gastos-extraordinarios:
             help: null
-            label: null
+            label: Kivételes körülmények miatti rendkívüli kiadások
           irpf-eo-agr-indice-ecologica:
             help: null
-            label: null
+            label: 5. Ökológiai gazdálkodási tevékenységek
           irpf-eo-agr-indice-forestal:
             help: null
-            label: null
+            label: 8. Korrekciós index bizonyos erdészeti tevékenységeknél
           irpf-eo-agr-indice-medios-ajenos:
             help: null
-            label: null
+            label: 1. Idegen termelőeszközök használata mezőgazdasági tevékenységekben
           irpf-eo-agr-indice-pequena-empresa:
             help: null
-            label: null
+            label: 7. Olyan vállalkozás esetén, amelynek csökkentett nettó hozama
+              nem haladja meg a 9.447,91 eurót
           irpf-eo-agr-indice-personal-asalariado:
             help: null
-            label: null
+            label: 2. Alkalmazott munkaerő igénybevétele
           irpf-eo-agr-indice-piensos-terceros:
             help: null
-            label: null
+            label: 4. Harmadik féltől vásárolt takarmány több mint 50 százalékban
           irpf-eo-agr-indice-regadio-electrico:
             help: null
-            label: null
+            label: 6. Öntözött földeken végzett termesztés, amely e célból villamos
+              energiát használ
           irpf-eo-agr-indice-tierras-arrendadas:
             help: null
-            label: null
+            label: 3. Bérelt földeken végzett termesztés
           irpf-eo-agr-reduccion-art-32-2-3:
             help: null
-            label: null
+            label: Csökkentés bizonyos gazdasági tevékenységek végzése után (a törvény
+              32.2.3. cikke)
           irpf-eo-agr-total-ingresos:
             help: null
-            label: null
+            label: Összes bevétel
           irpf-eo-cobros-pagos-flag:
             help: null
-            label: null
+            label: Ha a jövedelmek időbeli hozzárendelésénél a befizetések és kifizetések
+              szempontjának alkalmazását választja, tüntessen fel egy "X"-et
           irpf-eo-gastos-extraordinarios:
             help: null
-            label: null
+            label: Kivételes körülmények miatti rendkívüli kiadások
           irpf-eo-indice-corrector-especial:
             help: null
-            label: null
+            label: 1. Különleges korrekciós index
           irpf-eo-indice-corrector-exceso:
             help: null
-            label: null
+            label: 4. Túllépési korrekciós index
           irpf-eo-indice-corrector-inicio:
             help: null
-            label: null
+            label: 5. Új tevékenység indítási korrekciós index
           irpf-eo-indice-corrector-pequena-dimension:
             help: null
-            label: null
+            label: 2. Korrekciós index kisvállalkozások számára
           irpf-eo-indice-corrector-temporada:
             help: null
-            label: null
+            label: 3. Szezonális korrekciós index
           irpf-eo-minoracion-empleo:
             help: null
-            label: null
+            label: Csökkentés foglalkoztatási ösztönző után
           irpf-eo-minoracion-inversion:
             help: null
-            label: null
+            label: Csökkentés befektetési ösztönzők után
           irpf-eo-otras-percepciones:
             help: null
-            label: null
+            label: Egyéb vállalati kifizetések
           irpf-eo-rdto-neto-minorado:
             help: null
-            label: null
+            label: Csökkentett nettó jövedelem
           irpf-eo-rdto-neto-modulos:
             help: null
-            label: null
+            label: Modulok szerinti nettó jövedelem
           irpf-eo-rdto-neto-previo:
             help: null
-            label: null
+            label: Előzetes nettó jövedelem
           irpf-eo-reduccion-art-32-2-3:
             help: null
-            label: null
+            label: Csökkentés bizonyos gazdasági tevékenységek végzése után (a törvény
+              32.2.3. cikke)
           irpf-familia-numerosa-categoria-especial-flag:
             help: null
-            label: null
+            label: 'Adja meg a nagycsalád kategóriáját (jelölje meg a megfelelő rovatot):
+              Különleges'
           irpf-familia-numerosa-categoria-general-flag:
             help: null
-            label: null
+            label: 'Adja meg a nagycsalád kategóriáját (jelölje meg a megfelelő rovatot):
+              Általános'
           irpf-familia-numerosa-cede-flag:
             help: null
-            label: null
+            label: Jelölje meg, hogy átengedi-e a levonáshoz való jogot, és adott
+              esetben a kedvezményezett adóazonosító számát
           irpf-familia-numerosa-cedido-flag:
             help: null
-            label: null
+            label: Jelölje meg, hogy átengedték-e Önnek a levonáshoz való jogot, és
+              adott esetben az átengedő fél/felek adóazonosító számát
           irpf-familia-numerosa-fecha-caducidad:
             help: null
-            label: null
+            label: A nagycsaládi igazolvány lejárati dátuma
           irpf-familia-numerosa-fecha-inicio:
             help: null
-            label: null
+            label: A nagycsaládi igazolvány kezdetének dátuma
           irpf-familia-numerosa-hijos-exceden-minimo-flag:
             help: null
-            label: null
+            label: Ha a nagycsaládhoz tartozó gyermekek száma meghaladja az általános
+              vagy különleges kategóriájú nagycsaládhoz szükséges minimális gyermekszámot,
+              jelölje meg ezt a rovatot
           irpf-familia-numerosa-num-ascendientes:
             help: null
-            label: null
+            label: Adja meg az ugyanazon nagycsaládhoz tartozó felmenők számát
           irpf-familia-numerosa-titulo-id:
             help: null
-            label: null
+            label: A nagycsaládi igazolvány azonosítószáma
           irpf-feac-elemento-descripcion:
             help: null
-            label: null
+            label: Leírás
           irpf-feac-entidad-receptora-denominacion:
             help: null
-            label: null
+            label: Cégnév
           irpf-feac-entidad-receptora-sin-nif-flag:
             help: null
-            label: null
+            label: Ha nincs adóazonosító száma, jelölje meg "X"-szel
           irpf-feac-entidad-transmitida-denominacion:
             help: null
-            label: null
+            label: Cégnév
           irpf-feac-entidad-transmitida-sin-nif-flag:
             help: null
-            label: null
+            label: Ha nincs adóazonosító száma, jelölje meg "X"-szel
           irpf-feac-fecha-adquisicion-elemento:
             help: null
-            label: null
+            label: Az átruházott vagyontárgy szerzési dátuma
           irpf-feac-fecha-operacion:
             help: null
-            label: null
+            label: Az ügylet dátuma (az ügyletet dokumentáló közokirat Cégjegyzékbe
+              történő bejegyzésének dátuma)
           irpf-feac-ganancia-patrimonial-diferida:
             help: null
-            label: null
+            label: Halasztott vagyoni nyereség (a Társasági adóról szóló törvény VII.
+              címének VII. fejezete)
           irpf-feac-inmueble-referencia-catastral:
             help: null
-            label: null
+            label: Kataszteri hivatkozás
           irpf-feac-inmueble-situacion-clave:
             help: null
-            label: null
+            label: Helyzet (kód)
           irpf-feac-perdida-patrimonial-diferida:
             help: null
-            label: null
+            label: Halasztott vagyoni veszteség (a Társasági adóról szóló törvény
+              VII. címének VII. fejezete).
           irpf-feac-valor-adquisicion-elemento:
             help: null
-            label: null
+            label: Az átruházott vagyontárgy szerzési értéke (adózási célú szerzési
+              érték)
           irpf-feac-valor-mercado-elemento:
             help: null
-            label: null
+            label: Az átruházott vagyontárgy piaci értéke
           irpf-g4-re-ganancia-patrimonial:
             help: null
-            label: null
+            label: Vagyoni nyereségek
           irpf-g4-re-transmision-intervivos-flag:
             help: null
-            label: null
+            label: Ha olyan adózóról van szó, aki élők közötti jogügylettel átruházta
+              a részvényeket vagy üzletrészeket, jelölje meg ezt a rovatot (csak azok
+              az adózók, akik lakóhelyüket egy másik Európai Uniós tagállamba helyezték
+              át...
           irpf-g4-re-valor-adquisicion-acciones:
             help: null
-            label: null
+            label: A részvények vagy üzletrészek szerzési értéke
           irpf-g4-re-valor-mercado-acciones:
             help: null
-            label: null
+            label: A részvények vagy üzletrészek piaci értéke
           irpf-g4-re-valor-transmision-acciones:
             help: null
-            label: null
+            label: A részvények vagy üzletrészek átruházási értéke (csak az értékpapírok
+              élők közötti átruházása esetén)
           irpf-ganancia-acciones-denominacion:
             help: null
-            label: null
+            label: Az átruházott értékpapírok elnevezése (kibocsátó entitás)
           irpf-ganancia-acciones-exenta-renta-vitalicia:
             help: null
-            label: null
+            label: Életjáradékokba történő újrabefektetés miatt mentesített nyereségek
           irpf-ganancia-acciones-ganancia:
             help: null
-            label: null
+            label: Vagyoni nyereségek
           irpf-ganancia-acciones-valor-adquisicion-global:
             help: null
-            label: null
+            label: Az átruházott értékpapírok teljes szerzési értéke
           irpf-ganancia-acciones-valor-transmision-global:
             help: null
-            label: null
+            label: A 2019-ben teljesített átruházások teljes összege
           irpf-ganancia-acciones-valor-transmision-renta-vitalicia:
             help: null
-            label: null
+            label: Életjáradék létrehozására szánt átruházási érték
           irpf-ganancia-cripto-anio-imputacion-1:
             help: null
-            label: null
+            label: Hozzárendelés éve
           irpf-ganancia-cripto-anio-imputacion-2:
             help: null
-            label: null
+            label: Hozzárendelés éve
           irpf-ganancia-cripto-anio-imputacion-3:
             help: null
-            label: null
+            label: Hozzárendelés éve
           irpf-ganancia-cripto-anio-imputacion-4:
             help: null
-            label: null
+            label: Hozzárendelés éve
           irpf-ganancia-cripto-denominacion:
             help: null
-            label: null
+            label: Az átruházott virtuális pénznem elnevezése (bitcoin, ethereum,
+              tether, Binance Coin, USD Coin, XRP, Cardano, Solana, terra, avalanche
+              stb.)
           irpf-ganancia-cripto-exenta-renta-vitalicia:
             help: null
-            label: null
+            label: Életjáradékokba történő újrabefektetés miatt mentesített nyereség
           irpf-ganancia-cripto-ganancia-pendiente-1:
             help: null
-            label: null
+            label: Hozzárendelésre váró vagyoni nyereség
           irpf-ganancia-cripto-ganancia-pendiente-2:
             help: null
-            label: null
+            label: Hozzárendelésre váró vagyoni nyereség
           irpf-ganancia-cripto-ganancia-pendiente-4:
             help: null
-            label: null
+            label: Hozzárendelésre váró vagyoni nyereség
           irpf-ganancia-cripto-ganancia-pendiente-imputacion:
             help: null
-            label: null
+            label: Hozzárendelésre váró vagyoni nyereség
           irpf-ganancia-cripto-ganancia-pendiente-resto:
             help: null
-            label: null
+            label: Fennmaradó, hozzárendelésre váró vagyoni nyereség
           irpf-ganancia-cripto-importe-percibir-1:
             help: null
-            label: null
+            label: Kapandó összeg
           irpf-ganancia-cripto-importe-percibir-2:
             help: null
-            label: null
+            label: Kapandó összeg
           irpf-ganancia-cripto-importe-percibir-3:
             help: null
-            label: null
+            label: Kapandó összeg
           irpf-ganancia-cripto-importe-percibir-4:
             help: null
-            label: null
+            label: Kapandó összeg
           irpf-ganancia-cripto-importe-percibir-resto:
             help: null
-            label: null
+            label: Fennmaradó kapandó összeg
           irpf-ganancia-cripto-imputacion-plazos:
             help: null
-            label: null
+            label: 'Időbeli hozzárendelés: jelölje meg "X"-szel, ha a részletfizetéses
+              vagy halasztott árú ügyletek szempontját választja (Töltse ki a C.1
+              mellékletet)'
           irpf-ganancia-cripto-tipo-contraprestacion-clave:
             help: null
-            label: null
+            label: A cserébe kapott dolog azonosítása. Az ellenszolgáltatás típusának
+              kódja
           irpf-ganancia-cripto-titular:
             help: null
-            label: null
+            label: Tulajdonos adózó
           irpf-ganancia-cripto-ultimo-anio-cobro:
             help: null
-            label: null
+            label: Utolsó beszedési év
           irpf-ganancia-cripto-valor-adquisicion:
             help: null
-            label: null
+            label: Szerzési érték
           irpf-ganancia-cripto-valor-transmision:
             help: null
-            label: null
+            label: Átruházási érték
           irpf-ganancia-cripto-valor-transmision-renta-vitalicia:
             help: null
-            label: null
+            label: Életjáradék létrehozására szánt átruházási érték
           irpf-ganancia-derechos-denominacion:
             help: null
-            label: null
+            label: Az átruházott jegyzési jogok elnevezése (kibocsátó entitás)
           irpf-ganancia-derechos-exenta-renta-vitalicia:
             help: null
-            label: null
+            label: Életjáradékokba történő újrabefektetés miatt mentesített nyereségek
           irpf-ganancia-derechos-ganancia:
             help: null
-            label: null
+            label: Vagyoni nyereségek
           irpf-ganancia-derechos-valor-adquisicion-global:
             help: null
-            label: null
+            label: Az átruházott értékpapírok teljes szerzési értéke
           irpf-ganancia-derechos-valor-transmision-global:
             help: null
-            label: null
+            label: A 2019-ben teljesített átruházások teljes összege
           irpf-ganancia-derechos-valor-transmision-renta-vitalicia:
             help: null
-            label: null
+            label: Életjáradék létrehozására szánt átruházási érték
           irpf-ganancia-fondos-exenta-renta-vitalicia:
             help: null
-            label: null
+            label: Életjáradékokba történő újrabefektetés miatt mentesített nyereségek
           irpf-ganancia-fondos-ganancia:
             help: null
-            label: null
+            label: Vagyoni nyereségek
           irpf-ganancia-fondos-valor-adquisicion-global:
             help: null
-            label: null
+            label: A szerzések teljes összege
           irpf-ganancia-fondos-valor-transmision-global:
             help: null
-            label: null
+            label: A 2020-ban teljesített átruházások teljes összege
           irpf-ganancia-fondos-valor-transmision-renta-vitalicia:
             help: null
-            label: null
+            label: Életjáradék létrehozására szánt átruházási érték
           irpf-ganancia-inmueble-anexo-c1-referencia-catastral-1:
             help: null
-            label: null
+            label: 1. kataszteri hivatkozás
           irpf-ganancia-inmueble-anexo-c1-referencia-catastral-2:
             help: null
-            label: null
+            label: 2. kataszteri hivatkozás
           irpf-ganancia-inmueble-anexo-c1-referencia-catastral-3:
             help: null
-            label: null
+            label: 3. kataszteri hivatkozás
           irpf-ganancia-inmueble-anio-imputacion-1:
             help: null
-            label: null
+            label: Hozzárendelés éve
           irpf-ganancia-inmueble-anio-imputacion-2:
             help: null
-            label: null
+            label: Hozzárendelés éve
           irpf-ganancia-inmueble-anio-imputacion-3:
             help: null
-            label: null
+            label: Hozzárendelés éve
           irpf-ganancia-inmueble-anio-imputacion-4:
             help: null
-            label: null
+            label: Hozzárendelés éve
           irpf-ganancia-inmueble-anios-permanencia-1994:
             help: null
-            label: null
+            label: A 1994.12.31-ig tartó fennállás éveinek száma, adott esetben
           irpf-ganancia-inmueble-exenta-reinversion-vivienda:
             help: null
-            label: null
+            label: A szokásos lakóingatlanba történő újrabefektetés miatt mentesített
+              nyereség
           irpf-ganancia-inmueble-exenta-renta-vitalicia:
             help: null
-            label: null
+            label: Életjáradékokba történő újrabefektetés miatt mentesített nyereség
           irpf-ganancia-inmueble-fecha-adquisicion:
             help: null
-            label: null
+            label: Szerzés dátuma (nap, hónap, év)
           irpf-ganancia-inmueble-fecha-transmision:
             help: null
-            label: null
+            label: Átruházás dátuma (nap, hónap, év)
           irpf-ganancia-inmueble-ganancia-pendiente:
             help: null
-            label: null
+            label: Hozzárendelésre váró vagyoni nyereség
           irpf-ganancia-inmueble-ganancia-pendiente-1:
             help: null
-            label: null
+            label: Hozzárendelésre váró vagyoni nyereség
           irpf-ganancia-inmueble-ganancia-pendiente-3:
             help: null
-            label: null
+            label: Hozzárendelésre váró vagyoni nyereség
           irpf-ganancia-inmueble-ganancia-pendiente-imputacion:
             help: null
-            label: null
+            label: Hozzárendelésre váró vagyoni nyereség
           irpf-ganancia-inmueble-ganancia-pendiente-resto:
             help: null
-            label: null
+            label: Fennmaradó, hozzárendelésre váró vagyoni nyereség
           irpf-ganancia-inmueble-importe-percibir-1:
             help: null
-            label: null
+            label: Kapandó összeg
           irpf-ganancia-inmueble-importe-percibir-2:
             help: null
-            label: null
+            label: Kapandó összeg
           irpf-ganancia-inmueble-importe-percibir-3:
             help: null
-            label: null
+            label: Kapandó összeg
           irpf-ganancia-inmueble-importe-percibir-4:
             help: null
-            label: null
+            label: Kapandó összeg
           irpf-ganancia-inmueble-importe-percibir-resto:
             help: null
-            label: null
+            label: Fennmaradó kapandó összeg
           irpf-ganancia-inmueble-imputacion-plazos:
             help: null
-            label: null
+            label: 'Időbeli hozzárendelés: jelölje meg "X"-szel, ha a részletfizetéses
+              vagy halasztott árú ügyletek szempontját választja (Töltse ki a C.1
+              mellékletet)'
           irpf-ganancia-inmueble-no-exenta-imputable:
             help: null
-            label: null
+            label: 2022-re hozzárendelhető, nem mentesített vagyoni nyereség
           irpf-ganancia-inmueble-no-exenta-sin-reduccion:
             help: null
-            label: null
+            label: Nem mentesített vagyoni nyereség
           irpf-ganancia-inmueble-referencia-catastral-1:
             help: null
-            label: null
+            label: 1. kataszteri hivatkozás
           irpf-ganancia-inmueble-referencia-catastral-2:
             help: null
-            label: null
+            label: 2. kataszteri hivatkozás
           irpf-ganancia-inmueble-referencia-catastral-3:
             help: null
-            label: null
+            label: 3. kataszteri hivatkozás
           irpf-ganancia-inmueble-situacion-clave:
             help: null
-            label: null
+            label: Helyzet. Kód
           irpf-ganancia-inmueble-tipo-elemento-clave:
             help: null
-            label: null
+            label: 'Vagyontárgy típusa. Kód (I: tulajdonban lévő ingatlan, O: egyéb
+              ingatlanon fennálló dologi jogok)'
           irpf-ganancia-inmueble-titular-b:
             help: null
-            label: null
+            label: Tulajdonos adózó
           irpf-ganancia-inmueble-transmision-gratuita:
             help: null
-            label: null
+            label: Élők közötti ingyenes átruházás (ajándékozás, jótétemény stb.)
           irpf-ganancia-inmueble-transmision-onerosa:
             help: null
-            label: null
+            label: Élők közötti visszterhes átruházás (adásvétel, csere stb.)
           irpf-ganancia-inmueble-ultimo-anio-cobro:
             help: null
-            label: null
+            label: Utolsó beszedési év
           irpf-ganancia-inmueble-valor-transmision-renta-vitalicia:
             help: null
-            label: null
+            label: Életjáradék létrehozására szánt átruházási érték
           irpf-ganancia-inmueble-valor-transmision-susceptible-vh:
             help: null
-            label: null
+            label: A szokásos lakóingatlan átruházási értéke, amely a szokásos lakóingatlanba
+              történő újrabefektetés miatti mentesség szempontjából újrabefektethető
           irpf-ganancia-otras-ejer-ant-ganancia-imputable:
             help: null
-            label: null
+            label: A 2020-ra hozzárendelendő vagyoni nyereség összege
           irpf-ganancia-otros-anio-imputacion-1:
             help: null
-            label: null
+            label: Hozzárendelés éve
           irpf-ganancia-otros-anio-imputacion-2:
             help: null
-            label: null
+            label: Hozzárendelés éve
           irpf-ganancia-otros-anio-imputacion-3:
             help: null
-            label: null
+            label: Hozzárendelés éve
           irpf-ganancia-otros-anio-imputacion-4:
             help: null
-            label: null
+            label: Hozzárendelés éve
           irpf-ganancia-otros-anios-permanencia-1994:
             help: null
-            label: null
+            label: A 1994.12.31-ig tartó fennállás éveinek száma, adott esetben
           irpf-ganancia-otros-exenta-nueva-empresa:
             help: null
-            label: null
+            label: Új vagy nemrég alapított entitásokba történő újrabefektetés miatt
+              mentesített nyereség
           irpf-ganancia-otros-exenta-renta-vitalicia:
             help: null
-            label: null
+            label: Életjáradékokba történő újrabefektetés miatt mentesített nyereség
           irpf-ganancia-otros-fecha-adquisicion:
             help: null
-            label: null
+            label: Szerzés dátuma (nap, hónap, év)
           irpf-ganancia-otros-fecha-transmision:
             help: null
-            label: null
+            label: Átruházás dátuma (nap, hónap, év)
           irpf-ganancia-otros-ganancia-pendiente-1:
             help: null
-            label: null
+            label: Hozzárendelésre váró vagyoni nyereség
           irpf-ganancia-otros-ganancia-pendiente-2:
             help: null
-            label: null
+            label: Hozzárendelésre váró vagyoni nyereség
           irpf-ganancia-otros-ganancia-pendiente-4:
             help: null
-            label: null
+            label: Hozzárendelésre váró vagyoni nyereség
           irpf-ganancia-otros-ganancia-pendiente-imputacion:
             help: null
-            label: null
+            label: Hozzárendelésre váró vagyoni nyereség
           irpf-ganancia-otros-importe-percibir-1:
             help: null
-            label: null
+            label: Kapandó összeg
           irpf-ganancia-otros-importe-percibir-2:
             help: null
-            label: null
+            label: Kapandó összeg
           irpf-ganancia-otros-importe-percibir-3:
             help: null
-            label: null
+            label: Kapandó összeg
           irpf-ganancia-otros-importe-percibir-4:
             help: null
-            label: null
+            label: Kapandó összeg
           irpf-ganancia-otros-reduccion-autotaxis-da7:
             help: null
-            label: null
+            label: Csökkentés (önkormányzati taxiengedély objektív becslés esetén,
+              7. kiegészítő rendelkezés)
           irpf-ganancia-otros-reducida-imputable-da7:
             help: null
-            label: null
+            label: 2020-ra hozzárendelhető, csökkentett, nem mentesített vagyoni nyereség
           irpf-ganancia-otros-reducida-no-exenta-imputable-dt9:
             help: null
-            label: null
+            label: 2020-ra hozzárendelhető, csökkentett, nem mentesített vagyoni nyereség
           irpf-ganancia-otros-susceptible-reduccion-da7:
             help: null
-            label: null
+            label: A csökkentésre alkalmas vagyoni nyereség része (7. kiegészítő rendelkezés)
           irpf-ganancia-otros-tipo-elemento-clave:
             help: null
-            label: null
+            label: Vagyontárgy típusa. Kód
           irpf-ganancia-otros-titular:
             help: null
-            label: null
+            label: Tulajdonos adózó
           irpf-ganancia-otros-transmision-gratuita:
             help: null
-            label: null
+            label: Élők közötti ingyenes átruházás (ajándékozás, jótétemény stb.)
           irpf-ganancia-otros-transmision-onerosa:
             help: null
-            label: null
+            label: Élők közötti visszterhes átruházás (adásvétel, csere stb.)
           irpf-ganancia-otros-ultimo-anio-cobro:
             help: null
-            label: null
+            label: Utolsó beszedési év
           irpf-ganancia-otros-valor-adquisicion:
             help: null
-            label: null
+            label: Szerzési érték
           irpf-ganancia-otros-valor-transmision:
             help: null
-            label: null
+            label: Átruházási érték
           irpf-ganancia-otros-valor-transmision-renta-vitalicia:
             help: null
-            label: null
+            label: Életjáradék létrehozására szánt átruházási érték
           irpf-ganancia-premios-aprovechamiento-forestal:
             help: null
-            label: null
+            label: A lakosok által 2020-ban, közterületi erdők hasznosítása következtében
+              elért vagyoni nyereségek
           irpf-ganancia-premios-bono-cultural-joven:
             help: null
-            label: null
+            label: Ifjúsági Kulturális Utalvány
           irpf-ganancia-premios-juegos-ingresos-cuenta:
             help: null
-            label: null
+            label: Előlegfizetések
           irpf-ganancia-premios-juegos-ingresos-cuenta-repercutidos:
             help: null
-            label: null
+            label: Áthárított előlegfizetések
           irpf-ganancia-premios-juegos-metalico:
             help: null
-            label: null
+            label: Készpénzben
           irpf-ganancia-premios-juegos-pub-ingresos-cuenta:
             help: null
-            label: null
+            label: Előlegfizetések
           irpf-ganancia-premios-juegos-pub-ingresos-cuenta-repercutidos:
             help: null
-            label: null
+            label: Áthárított előlegfizetések
           irpf-ganancia-premios-juegos-pub-metalico:
             help: null
-            label: null
+            label: Készpénzben
           irpf-ganancia-premios-juegos-pub-valoracion:
             help: null
-            label: null
+            label: Értékelés
           irpf-ganancia-premios-juegos-valoracion:
             help: null
-            label: null
+            label: Értékelés
           irpf-ganancia-premios-otras-ganancias:
             help: null
-            label: null
+            label: '2020-ra hozzárendelhető egyéb vagyoni nyereségek és/vagy veszteségek:
+              nyereségek összege'
           irpf-ganancia-reinversion-imputable:
             help: null
-            label: null
+            label: A 2020-ra hozzárendelendő vagyoni nyereség összege
           irpf-inmueble-1-valor-catastral:
             help: null
-            label: null
+            label: Kataszteri érték
           irpf-inmueble-2-valor-catastral:
             help: null
-            label: null
+            label: Kataszteri érték
           irpf-inmueble-3-valor-catastral:
             help: null
-            label: null
+            label: Kataszteri érték
           irpf-inmueble-a-disposicion-flag:
             help: null
-            label: null
+            label: Tulajdonosaik rendelkezésére
           irpf-inmueble-afecto-actividades-economicas-flag:
             help: null
-            label: null
+            label: Gazdasági tevékenységekhez rendelt ingatlan
           irpf-inmueble-arrendamiento-accesorio-flag:
             help: null
-            label: null
+            label: Bérbeadás mint kiegészítő ingatlan
           irpf-inmueble-arrendamiento-flag:
             help: null
-            label: null
+            label: Bérbeadás
           irpf-inmueble-arrendamiento-reduccion-flag:
             help: null
-            label: null
+            label: Jelölje meg "X"-szel, ha a bérbeadás csökkentésre jogosít (a törvény
+              23.2. cikke)
           irpf-inmueble-arrendatario1-nif-extranjero-flag:
             help: null
-            label: null
+            label: Jelölje meg "X"-szel, ha a [0091] rovatban másik ország adóazonosító
+              számát tüntette fel
           irpf-inmueble-arrendatario2-nif-extranjero-flag:
             help: null
-            label: null
+            label: Jelölje meg "X"-szel, ha a [0094] rovatban másik ország adóazonosító
+              számát tüntette fel
           irpf-inmueble-arrendatario3-nif-extranjero-flag:
             help: null
-            label: null
+            label: Jelölje meg "X"-szel, ha a [0097] rovatban másik ország adóazonosító
+              számát tüntette fel
           irpf-inmueble-contribuyente-actividad-economica:
             help: null
-            label: null
+            label: 'A gazdasági tevékenységet végző adózó: gazdasági tevékenységekhez
+              rendelt ingatlan'
           irpf-inmueble-dias-a-disposicion:
             help: null
-            label: null
+            label: Az adózó rendelkezésére álló napok száma
           irpf-inmueble-dias-afecto-actividades-economicas:
             help: null
-            label: null
+            label: 'A napok száma, amikor ezt a használatot folytatta: gazdasági tevékenységekhez
+              rendelt ingatlan'
           irpf-inmueble-dias-arrendamiento-negocio:
             help: null
-            label: null
+            label: Üzleti bérbeadás tárgyát képező ingatlan
           irpf-inmueble-dias-otros-usos:
             help: null
-            label: null
+            label: Napok száma
           irpf-inmueble-dias-uso:
             help: null
-            label: null
+            label: A napok száma, amikor a lakóingatlan ezt a használatot folytatta
           irpf-inmueble-dias-vivienda-habitual:
             help: null
-            label: null
+            label: A napok száma, amikor az ingatlan 2020-ban az adózó szokásos lakóingatlana
+              volt
           irpf-inmueble-direccion:
             help: null
-            label: null
+            label: Cím
           irpf-inmueble-exconyuge-nif:
             help: null
-            label: null
+            label: A volt házastárs adóazonosító száma
           irpf-inmueble-exconyuge-nif-extranjero-flag:
             help: null
-            label: null
+            label: Jelölje meg "X"-szel, ha a [0077] rovatban másik ország adóazonosító
+              számát tüntette fel
           irpf-inmueble-fecha-contrato-arrendamiento:
             help: null
-            label: null
+            label: A szerződés dátuma (*)
           irpf-inmueble-gastos-financiacion-pendientes-futuros:
             help: null
-            label: null
+            label: A 2020-as, a következő 4 évben levonandó összeg (Töltse ki a C.1
+              mellékletet)
           irpf-inmueble-gastos-financiacion-pendientes-previos:
             help: null
-            label: null
+            label: A 2016., 2017., 2018. és 2019. adóévekből levonásra váró összeg
+              (Töltse ki a C.1 mellékletet)
           irpf-inmueble-gastos-reparacion-conservacion:
             help: null
-            label: null
+            label: A 2020-as adóévre vonatkozó javítási és karbantartási kiadások
+              (részletezés a D mellékletben, önkéntes kitöltés)
           irpf-inmueble-naturaleza-rustica:
             help: null
-            label: null
+            label: Vidéki
           irpf-inmueble-naturaleza-urbana:
             help: null
-            label: null
+            label: Városi
           irpf-inmueble-pct-a-disposicion:
             help: null
-            label: null
+            label: Adja meg az adózó rendelkezésére álló ingatlanrész százalékos arányát
+              (%)
           irpf-inmueble-porcentaje-propiedad:
             help: Adja meg a tulajdoni hányad százalékát.
             label: Tulajdoni hányad (%)
           irpf-inmueble-porcentaje-usufructo:
             help: null
-            label: null
+            label: Haszonélvezet (%)
           irpf-inmueble-referencia-catastral-principal:
             help: null
-            label: null
+            label: Annak a fő ingatlannak a kataszteri hivatkozása, amelyhez kapcsolódik
           irpf-inmueble-situacion-clave:
             help: null
-            label: null
+            label: Helyzetkód
           irpf-inmueble-uso-mixto-flag:
             help: null
-            label: null
+            label: Abban a kivételes esetben, ha az ingatlan ugyanazokon a napokon
+              részben az adózó rendelkezésére áll, részben más célra van szánva, jelölje
+              meg "X"-szel
           irpf-inmueble-uso-residencia-separacion:
             help: null
-            label: null
+            label: Az a lakóingatlan, ahol különválás vagy válás esetén a gyermekek
+              és/vagy a volt házastárs lakik
           irpf-inmueble-valor-catastral-revisado-flag:
             help: null
-            label: null
+            label: Jelölje meg, hogy a kataszteri értéket felülvizsgálták, módosították
+              vagy egy általános jellegű kollektív értékelési eljárás keretében állapították-e
+              meg, amely az adóévben vagy az utóbbi...
           irpf-inmueble-vivienda-habitual-flag:
             help: Jelezze, hogy 2024-ben szokásos lakóhely volt-e.
             label: Szokásos lakóhely 2024-ben
@@ -1509,322 +1681,362 @@ modelo:
             label: 'Az előző rendezéshez kapcsolódó késedelmi kamatok: állami rész'
           irpf-minimo-ascendientes-autonomico:
             help: null
-            label: null
+            label: 'Autonóm-közösségi rész: felmenők utáni minimum. Összeg'
           irpf-minimo-ascendientes-estatal:
             help: null
-            label: null
+            label: 'Állami rész: felmenők utáni minimum. Összeg'
           irpf-minimo-discapacidad-autonomico:
             help: null
-            label: null
+            label: 'Autonóm-közösségi rész: fogyatékosság utáni minimum. Összeg'
           irpf-minimo-discapacidad-estatal:
             help: null
-            label: null
+            label: 'Állami rész: fogyatékosság utáni minimum. Összeg'
           irpf-perdida-acciones-importe-computable:
             help: null
-            label: null
+            label: Vagyoni veszteségek. Beszámítható összeg
           irpf-perdida-acciones-importe-obtenido:
             help: null
-            label: null
+            label: Vagyoni veszteségek. Elért összeg
           irpf-perdida-cripto-imputable-ejercicio:
             help: null
-            label: null
+            label: 2022-re hozzárendelhető vagyoni veszteség
           irpf-perdida-cripto-pendiente-1:
             help: null
-            label: null
+            label: Hozzárendelésre váró vagyoni veszteség
           irpf-perdida-cripto-pendiente-2:
             help: null
-            label: null
+            label: Hozzárendelésre váró vagyoni veszteség
           irpf-perdida-cripto-pendiente-3:
             help: null
-            label: null
+            label: Hozzárendelésre váró vagyoni veszteség
           irpf-perdida-cripto-pendiente-4:
             help: null
-            label: null
+            label: Hozzárendelésre váró vagyoni veszteség
           irpf-perdida-cripto-pendiente-resto:
             help: null
-            label: null
+            label: Fennmaradó, hozzárendelésre váró vagyoni veszteség
           irpf-perdida-derechos-importe-computable:
             help: null
-            label: null
+            label: Vagyoni veszteségek. Beszámítható összeg
           irpf-perdida-derechos-importe-obtenido:
             help: null
-            label: null
+            label: Vagyoni veszteségek. Elért összeg
           irpf-perdida-fondos-importe:
             help: null
-            label: null
+            label: Vagyoni veszteségek
           irpf-perdida-fondos-importe-computable:
             help: null
-            label: null
+            label: 2020-ra hozzárendelhető vagyoni veszteségek
           irpf-perdida-inmueble-imputable-ejercicio:
             help: null
-            label: null
+            label: 2022-re hozzárendelhető vagyoni veszteség
           irpf-perdida-inmueble-pendiente:
             help: null
-            label: null
+            label: Hozzárendelésre váró vagyoni veszteség
           irpf-perdida-inmueble-pendiente-1:
             help: null
-            label: null
+            label: Hozzárendelésre váró vagyoni veszteség
           irpf-perdida-inmueble-pendiente-3:
             help: null
-            label: null
+            label: Hozzárendelésre váró vagyoni veszteség
           irpf-perdida-inmueble-pendiente-imputacion:
             help: null
-            label: null
+            label: Hozzárendelésre váró vagyoni veszteség
           irpf-perdida-inmueble-pendiente-resto:
             help: null
-            label: null
+            label: Fennmaradó, hozzárendelésre váró vagyoni veszteség
           irpf-perdida-otras-ejer-ant-imputable:
             help: null
-            label: null
+            label: A 2020-ra hozzárendelendő vagyoni veszteség összege
           irpf-perdida-otros-imputable-ejercicio:
             help: null
-            label: null
+            label: 2020-ra hozzárendelhető vagyoni veszteség
           irpf-perdida-otros-pendiente:
             help: null
-            label: null
+            label: Hozzárendelésre váró vagyoni veszteség
           irpf-perdida-otros-pendiente-1:
             help: null
-            label: null
+            label: Hozzárendelésre váró vagyoni veszteség
           irpf-perdida-otros-pendiente-3:
             help: null
-            label: null
+            label: Hozzárendelésre váró vagyoni veszteség
           irpf-perdida-otros-pendiente-4:
             help: null
-            label: null
+            label: Hozzárendelésre váró vagyoni veszteség
           irpf-perdida-premios-juegos:
             help: null
-            label: null
+            label: Ezekből a szerencsejátékokból eredő vagyoni veszteségek
           irpf-perdida-premios-otras:
             help: null
-            label: null
+            label: Veszteségek összege
           irpf-rdto-trabajo-cesion-derechos-autor-anticipo-flag:
             help: null
-            label: null
+            label: A szerzői jogok kiaknázásának átengedéséből származó jövedelmek
+              esetén, ha úgy dönt, hogy az azokra adott előleget a jogok keletkezésének
+              ütemében számolja el...
           irpf-re-agrup-interes-economico-base-imponible-imputada:
             help: null
-            label: null
+            label: Hozzárendelt adóalap
           irpf-re-agrup-interes-economico-nif:
             help: null
-            label: null
+            label: Az entitás adóazonosító száma (NIF)
           irpf-re-aie-criterio-imputacion-clave:
             help: null
-            label: null
+            label: Időbeli hozzárendelési szempont. Kód
           irpf-re-aie-deduccion-ceuta-melilla:
             help: null
-            label: null
+            label: Levonás Ceutában vagy Melillában szerzett jövedelmek után (hozzárendelt
+              alap)
           irpf-re-aie-deduccion-creacion-empleo:
             help: null
-            label: null
+            label: Munkahelyteremtési levonások (hozzárendelt levonható összeg)
           irpf-re-aie-deduccion-doble-imposicion:
             help: null
-            label: null
+            label: Levonás a nemzetközi kettős adóztatás miatt (hozzárendelt alap)
           irpf-re-aie-deduccion-inversion-empresarial:
             help: null
-            label: null
+            label: Vállalati befektetési levonások (hozzárendelt alapok)
           irpf-re-aie-retenciones-imputadas:
             help: null
-            label: null
+            label: Hozzárendelt visszatartások és előlegfizetések
           irpf-re-atrib-act-eco-minoraciones:
             help: null
-            label: null
+            label: Alkalmazandó csökkentések
           irpf-re-atrib-act-eco-reduccion-32-2-3:
             help: null
-            label: null
+            label: Alkalmazandó csökkentés (a törvény 32.2.3. cikke)
           irpf-re-atrib-act-eco-reduccion-32-3:
             help: null
-            label: null
+            label: Alkalmazandó csökkentés (a törvény 32.3. cikke)
           irpf-re-atrib-cap-inmo-minoraciones:
             help: null
-            label: null
+            label: Alkalmazandó csökkentések
           irpf-re-atrib-cap-inmo-reduccion-23-2:
             help: null
-            label: null
+            label: Alkalmazandó csökkentés (a törvény 23.2. cikke)
           irpf-re-atrib-cap-mob-minoraciones:
             help: null
-            label: null
+            label: Alkalmazandó csökkentések
           irpf-re-atrib-cap-mob-rdto-neto-computable-ahorro:
             help: null
-            label: null
+            label: Az entitás által hozzárendelt nettó jövedelem. Beszámítható összeg
+              (a [1570] rovatban feltüntetett kivételével)
           irpf-re-atrib-cap-mob-rdto-neto-entidad:
             help: null
-            label: null
+            label: Az entitás által hozzárendelt nettó jövedelem
           irpf-re-atrib-cobros-pagos-flag:
             help: null
-            label: null
+            label: Ha a jövedelmek időbeli hozzárendelésénél a befizetések és kifizetések
+              szempontjának alkalmazását választja, tüntessen fel egy "X"-et
           irpf-re-atrib-deuda-subordinada:
             help: null
-            label: null
+            label: Alárendelt kölcsöntőke-értékpapírokból vagy elsőbbségi részesedésekből
+              származó jövedelem
           irpf-re-atrib-entidad-nif:
             help: null
-            label: null
+            label: A jövedelem-hozzárendelési rendszerben működő entitás adóazonosító
+              száma
           irpf-re-atrib-entidad-nif-alt:
             help: null
-            label: null
+            label: A jövedelem-hozzárendelési entitás adóazonosító száma, vagy nem
+              rezidens entitások esetén a lakóhely szerinti ország azonosító száma
           irpf-re-atrib-gp-exentas-50pct:
             help: null
-            label: null
+            label: 50 százalékban mentesített nyereségek (csak bizonyos városi ingatlanok
+              esetén)
           irpf-re-atrib-gp-exentas-reinversion-nuevas:
             help: null
-            label: null
+            label: Új vagy nemrég alapított entitásokba történő újrabefektetés miatt
+              mentesített nyereség
           irpf-re-atrib-gp-exentas-reinversion-vitalicia:
             help: null
-            label: null
+            label: Életjáradékokba történő újrabefektetés miatt mentes nyereségek
           irpf-re-atrib-gp-no-transmision-ganancias:
             help: null
-            label: null
+            label: Az entitás által hozzárendelt, átruházásból nem eredő vagyoni nyereségek
           irpf-re-atrib-gp-no-transmision-perdidas:
             help: null
-            label: null
+            label: Az entitás által hozzárendelt, átruházásból nem eredő vagyoni veszteségek
           irpf-re-atrib-gp-perdidas-transmision:
             help: null
-            label: null
+            label: Az entitás által hozzárendelt vagyoni veszteségek
           irpf-re-atrib-gp-reducidas-no-exentas-imputables:
             help: null
-            label: null
+            label: 2020-ra hozzárendelhető, csökkentett, nem mentesített vagyoni nyereségek
           irpf-re-atrib-gp-renta-vitalicia:
             help: null
-            label: null
+            label: Életjáradék létrehozására szánt átruházási érték
           irpf-re-atrib-gp-transmision-ganancias:
             help: null
-            label: null
+            label: Vagyoni nyereségek
           irpf-re-atrib-inmueble-num-dias:
             help: null
-            label: null
+            label: Napok száma
           irpf-re-atrib-inmueble-pct-titularidad:
             help: null
-            label: null
+            label: '% Tulajdoni hányad'
           irpf-re-atrib-inmueble-ref-catastral:
             help: null
-            label: null
+            label: Kataszteri hivatkozás
           irpf-re-atrib-inmueble-rustica-flag:
             help: null
-            label: null
+            label: '''RU''.- Vidéki'
           irpf-re-atrib-inmueble-situacion:
             help: null
-            label: null
+            label: Helyzet
           irpf-re-atrib-inmueble-urbana-flag:
             help: null
-            label: null
+            label: '''UR''.- Városi'
           irpf-re-atrib-pct-participacion:
             help: null
-            label: null
+            label: Az adózó részesedési aránya az entitásban
           irpf-re-atrib-rdto-neto-entidad:
             help: null
-            label: null
+            label: Az entitás által hozzárendelt nettó jövedelem
           irpf-re-atrib-retenciones-act-eco:
             help: null
-            label: null
+            label: Gazdasági tevékenységekből származó jövedelmek visszatartásainak
+              hozzárendelése
           irpf-re-atrib-retenciones-cap-inmo:
             help: null
-            label: null
+            label: Ingatlan vagyoni tőkéből származó jövedelmek visszatartásainak
+              hozzárendelése
           irpf-re-atrib-retenciones-cap-mob:
             help: null
-            label: null
+            label: Ingó vagyoni tőkéből származó jövedelmek visszatartásainak hozzárendelése
           irpf-re-atrib-retenciones-ganancias:
             help: null
-            label: null
+            label: 2020-ra hozzárendelhető vagyoni nyereségek és veszteségek visszatartásainak
+              hozzárendelése
           irpf-re-iic-denominacion:
             help: null
-            label: null
+            label: A kollektív befektetési intézmény elnevezése
           irpf-re-iic-imputacion-importe:
             help: null
-            label: null
+            label: A hozzárendelés összege
           irpf-re-imagen-cantidad-imputar:
             help: null
-            label: null
+            label: Hozzárendelendő összeg
           irpf-re-imagen-empleador:
             help: null
-            label: null
+            label: 'Az a személy vagy entitás, amellyel az adózó munkaviszonyban áll:
+              adóazonosító szám (ha spanyol területen rezidens) vagy elnevezés'
           irpf-re-imagen-primera-cesionaria:
             help: null
-            label: null
+            label: 'A képmáshoz fűződő jogok első átvevője, személy vagy entitás:
+              adóazonosító szám (ha spanyol területen rezidens) vagy elnevezés'
           irpf-re-imagen-suma-imputaciones:
             help: null
-            label: null
+            label: A képmáshoz fűződő jogok átengedéséből eredő jövedelem-hozzárendelések
+              összege
           irpf-red-deportistas-aportaciones-contribuciones:
             help: null
-            label: null
+            label: A 2020-ban teljesített, csökkentésre jogosító hozzájárulások és
+              befizetések
           irpf-red-discapacidad-aportaciones-parientes:
             help: null
-            label: null
+            label: 2020-ban a rokonok vagy gyámok által a fogyatékkal élő személy
+              javára teljesített hozzájárulások
           irpf-red-discapacidad-aportaciones-propias:
             help: null
-            label: null
+            label: 2020-ban magának a fogyatékkal élő személynek a hozzájárulásai
           irpf-red-patrimonio-protegido-discapacidad-aportaciones:
             help: null
-            label: null
+            label: 2020-ban a fogyatékkal élő személy védett vagyonához teljesített
+              hozzájárulások
           irpf-red-prevision-social-empleador-nif-extranjero-flag:
             help: null
-            label: null
+            label: Ha nincs adóazonosító száma, jelölje meg "X"-szel
           irpf-reduccion-mutualidad-deportistas-aplicada:
             help: null
-            label: null
+            label: Hivatásos sportolók szociális előrelátási kölcsönös biztosítópénztárába
+              fizetett hozzájárulások után. A [0490] rovat alkalmazott összege
           irpf-reduccion-mutualidad-deportistas-total:
             help: null
-            label: null
+            label: Csökkentésre jogosító összeg
           irpf-reduccion-patrimonio-protegido-aplicada:
             help: null
-            label: null
+            label: Fogyatékkal élő személyek védett vagyonához nyújtott hozzájárulások
+              után. A [0481] rovat alkalmazott összege
           irpf-reduccion-patrimonio-protegido-total:
             help: null
-            label: null
+            label: Csökkentésre jogosító összeg
           irpf-reduccion-pensiones-compensatorias-total:
             help: null
-            label: null
+            label: Csökkentésre jogosító összeg
           irpf-reduccion-prevision-social-aplicada:
             help: null
-            label: null
+            label: Szociális előrelátási rendszerekbe fizetett hozzájárulások és befizetések
+              után (általános szabályozás). A [0468] rovat alkalmazott összege
           irpf-reduccion-prevision-social-discapacidad-aplicada:
             help: null
-            label: null
+            label: Fogyatékkal élő személyek javára létrehozott szociális előrelátási
+              rendszerekbe fizetett hozzájárulások és befizetések után. A [0476] rovat
+              alkalmazott összege
           irpf-reduccion-prevision-social-discapacidad-total:
             help: null
-            label: null
+            label: Csökkentésre jogosító összeg.
           irpf-regularizacion-complementaria-resultado:
             help: null
-            label: null
+            label: A kiegészítő bevallás eredménye
           irpf-regularizacion-devoluciones-solicitadas-ejercicio:
             help: null
-            label: null
+            label: Az Adóhatóságtól a 2020. adóévre vonatkozó korábbi önadózások feldolgozása
+              nyomán igényelt visszatérítések
           irpf-regularizacion-ingresar-autoliquidaciones-anteriores-ejercicio:
             help: null
-            label: null
+            label: A 2020. adóévre vonatkozó korábbi önadózásokból vagy közigazgatási
+              adómegállapításokból befizetendő eredmények
           irpf-regularizacion-numero-justificante-rectificacion:
             help: null
-            label: null
+            label: Annak az önadózásnak a bizonylatszáma, amelynek helyesbítését kérik
           irpf-rendimiento-capital-mobiliario-general-cesion-derechos-autor-anticipo-flag:
             help: null
-            label: null
+            label: A szerzői jogok kiaknázásának átengedéséből származó jövedelmek
+              esetén, ha úgy dönt, hogy az azokra adott előleget a jogok keletkezésének
+              ütemében számolja el...
           irpf-retrib-especie-anio-percepcion:
             help: null
-            label: null
+            label: Az az év, amelyben a természetbeni juttatást kapják
           irpf-retrib-especie-importe-no-exenta-1:
             help: null
-            label: null
+            label: 'Természetbeni juttatás (a törvény 42.3.f) cikkében előírt összeg
+              túllépése miatt nem mentesített, és a törvény 14.2.m) cikke szerint
+              hozzárendelésre váró): Érték...'
           irpf-retrib-especie-importe-no-exenta-2:
             help: null
-            label: null
+            label: 'Természetbeni juttatás (a törvény 42.3.f) cikkében előírt összeg
+              túllépése miatt nem mentesített, és a törvény 14.2.m) cikke szerint
+              hozzárendelésre váró): Előlegfizetés...'
           irpf-retrib-especie-importe-no-exenta-3:
             help: null
-            label: null
+            label: 'Természetbeni juttatás (a törvény 42.3.f) cikkében előírt összeg
+              túllépése miatt nem mentesített, és a törvény 14.2.m) cikke szerint
+              hozzárendelésre váró): Előlegfizetés...'
           irpf-retrib-especie-no-exenta-importe-integro-pendiente-imputacion:
             help: null
-            label: null
+            label: 'Természetbeni juttatás (a törvény 42.3.f) cikkében előírt összeg
+              túllépése miatt nem mentesített, és a törvény 14.2.m) cikke szerint
+              hozzárendelésre váró): Összeg...'
           irpf-saldo-neto-rdto-capital-mobiliario-ahorro:
             help: null
-            label: null
+            label: A 2020-ra hozzárendelhető ingó vagyoni tőke jövedelmének pozitív
+              nettó egyenlege, a megtakarítási adóalapba beszámítva
           irpf-saldo-neto-rdto-capital-mobiliario-ahorro-imputado:
             help: null
-            label: null
+            label: A 2020-ra hozzárendelhető ingó vagyoni tőke jövedelmének negatív
+              nettó egyenlege, a megtakarítási adóalapba beszámítva
           irpf-vehiculo-electrico-instalador-nif:
             help: null
-            label: null
+            label: A létesítményt kivitelező személy/entitás adóazonosító száma/külföldi
+              azonosító száma (1)
           irpf-vehiculo-electrico-referencia-catastral:
             help: null
-            label: null
+            label: Kataszteri hivatkozás (1. ingatlan)
           irpf-vehiculo-electrico-vendedor-nif:
             help: null
-            label: null
+            label: Az eladó személy/entitás adóazonosító száma/külföldi azonosító
+              száma
       field:
         official_name: Modelo 100. A magánszemélyek jövedelemadójának (IRPF) bevallása.
         title: IRPF éves bevallás
