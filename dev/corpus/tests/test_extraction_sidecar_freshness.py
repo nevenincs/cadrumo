@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Final, cast
 
 import pytest
@@ -13,15 +13,16 @@ import pytest
 from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.artifact_catalogue import DerivedArtifact
 from cadrumo.domain.calculations.registry.loader import load_shared_catalogues
 from cadrumo.domain.calculations.registry.schema import SociedadesAnnualManualCoverageStatus
 
 from ...docs.preprocess.normatives_html import HTML_EXTRACTOR_ID
-from ...docs.preprocess.schema import PreprocessOutput
 from ...docs.preprocess.sidecar import (
     EXTRACTED_JSON_SUFFIX,
     EXTRACTED_TEXT_SUFFIX,
-    matches_origin_name,
+    PreprocessSidecarError,
+    validate_sidecar,
 )
 from ..extract_corpus_sidecars import check_all as check_corpus_sidecars
 from ..extract_manual_corpus_text import extract_raw_text
@@ -47,6 +48,7 @@ def _repository_root_resolved() -> None:
 
 
 _CORPUS_ROOT = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus"
+_BUNDLED_DATA_ROOT = _CORPUS_ROOT.parent
 _MANUAL_CORPUS_TEXT_ROOT = _REPO_ROOT / "src" / "cadrumo" / "_data" / "manual_corpus_text"
 _CORPUS_TEXT_SUFFIX = ".corpus_text.json"
 
@@ -122,10 +124,6 @@ def _sociedades_annual_manual_statuses() -> dict[int, SociedadesAnnualManualCove
     return statuses
 
 
-def _sha256_of(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
 def _is_legal_citation_evidence_sidecar(json_path: Path) -> bool:
     """A doubly-suffixed sidecar (``*.extracted.md.extracted.json``) is legal-citation evidence.
 
@@ -140,6 +138,59 @@ def _is_legal_citation_evidence_sidecar(json_path: Path) -> bool:
     source-file sidecars this test polices, not drift from either.
     """
     return json_path.name.removesuffix(EXTRACTED_JSON_SUFFIX).endswith(EXTRACTED_TEXT_SUFFIX)
+
+
+def _catalogue_path(path: Path) -> PurePosixPath:
+    """Return ``path`` in the catalog's bundled-data-relative namespace."""
+    return PurePosixPath(path.resolve().relative_to(_BUNDLED_DATA_ROOT).as_posix())
+
+
+def _validated_extraction_derivatives() -> tuple[list[DerivedArtifact], list[str]]:
+    """Return catalog derivations for generic sidecars and named validation failures.
+
+    The shared validator owns strict schema, repository locality, source-digest,
+    and rendered-byte parity. This corpus gate retains corpus containment and
+    extractor-semantic checks, its legal citation exception, and projection of
+    each valid text/JSON pair to the catalog's derived-artifact relation. Legal
+    citation sidecars are semantic evidence with their own narrower consumer
+    contract, not generic extractor outputs, so they are deliberately outside
+    this derivation population.
+    """
+    derivatives: list[DerivedArtifact] = []
+    failures: list[str] = []
+    for json_path in scan_directory(_CORPUS_ROOT, pattern=f"*{EXTRACTED_JSON_SUFFIX}", recursive=True):
+        if _is_legal_citation_evidence_sidecar(json_path):
+            continue
+        rel_json = json_path.relative_to(_REPO_ROOT).as_posix()
+        try:
+            output = validate_sidecar(json_path, repo_root=_REPO_ROOT)
+        except PreprocessSidecarError as exc:
+            failures.append(f"{rel_json}: {exc}")
+            continue
+        text_path = json_path.with_name(json_path.name.removesuffix(EXTRACTED_JSON_SUFFIX) + EXTRACTED_TEXT_SUFFIX)
+        source = (_REPO_ROOT / output.source_relpath).resolve()
+        if not source.is_relative_to(_CORPUS_ROOT):
+            failures.append(f"{rel_json}: declared source escapes corpus root: {output.source_relpath}")
+            continue
+        if not output.units or any(not unit.text.strip() for unit in output.units):
+            failures.append(f"{rel_json}: extraction contains no units or an empty unit")
+            continue
+        if source.suffix == ".html" and output.preprocessor_id != HTML_EXTRACTOR_ID:
+            failures.append(
+                f"{rel_json}: normative HTML sidecar declares retired or unknown "
+                f"preprocessor_id {output.preprocessor_id!r}",
+            )
+            continue
+        for path in (json_path, text_path):
+            derivatives.append(
+                DerivedArtifact(
+                    path=_catalogue_path(path),
+                    input_path=_catalogue_path(source),
+                    input_sha256=output.source_sha256,
+                    producer=output.preprocessor_id,
+                ),
+            )
+    return derivatives, failures
 
 
 def test_enrolled_corpus_html_trees_use_canonical_lf_bytes() -> None:
@@ -185,51 +236,14 @@ def test_enrolled_html_and_workbook_sidecars_match_the_owner_check() -> None:
 
 
 def test_committed_extraction_sidecars_match_current_sources() -> None:
-    """Every committed extraction sidecar still matches its source bytes."""
-    failures: list[str] = []
+    """Every generic extraction pair validates and derives one catalog relation."""
     sidecars = scan_directory(_CORPUS_ROOT, pattern=f"*{EXTRACTED_JSON_SUFFIX}", recursive=True)
-
-    for json_path in sidecars:
-        if _is_legal_citation_evidence_sidecar(json_path):
-            continue
-        rel_json = json_path.relative_to(_REPO_ROOT).as_posix()
-        output = PreprocessOutput.model_validate_json(json_path.read_text(encoding="utf-8"))
-        origin = (_REPO_ROOT / output.source_relpath).resolve()
-        rel_origin = output.source_relpath
-        text_path = json_path.with_name(json_path.name.removesuffix(EXTRACTED_JSON_SUFFIX) + EXTRACTED_TEXT_SUFFIX)
-
-        if output.source_relpath != Path(output.source_relpath).as_posix():
-            failures.append(f"{rel_json}: source_relpath is not POSIX: {output.source_relpath!r}")
-        if not origin.is_file():
-            failures.append(f"{rel_json}: declared source is missing: {rel_origin}")
-            continue
-        if not origin.is_relative_to(_CORPUS_ROOT):
-            failures.append(f"{rel_json}: declared source escapes corpus root: {rel_origin}")
-        if json_path.parent != origin.parent or not matches_origin_name(json_path.name, origin.name):
-            failures.append(f"{rel_json}: sidecar is not paired with declared sibling source {rel_origin}")
-        if output.source_sha256 != _sha256_of(origin):
-            failures.append(f"{rel_json}: source_sha256 does not match current source bytes for {rel_origin}")
-        if not output.units or any(not unit.text.strip() for unit in output.units):
-            failures.append(f"{rel_json}: extraction contains no units or an empty unit")
-        if origin.suffix == ".html" and output.preprocessor_id != HTML_EXTRACTOR_ID:
-            failures.append(
-                f"{rel_json}: normative HTML sidecar declares retired or unknown "
-                f"preprocessor_id {output.preprocessor_id!r}",
-            )
-        if not text_path.is_file():
-            failures.append(f"{rel_json}: text sidecar is missing: {text_path.relative_to(_REPO_ROOT).as_posix()}")
-        # Compared as BYTES. The writer emits the rendered payload with
-        # ``newline=""`` -- no translation -- so the committed sidecar is
-        # byte-exact by construction, and the corpus tree is ``-text`` in
-        # .gitattributes precisely so nothing rewrites its terminators.
-        # ``read_text`` folds CR and CRLF to LF, so a translated sidecar
-        # decodes to the rendered string and reads fresh while its bytes
-        # differ from every byte the producer would write.
-        elif text_path.read_bytes() != output.render_text().encode("utf-8"):
-            failures.append(f"{rel_json}: text sidecar does not match rendered schema payload")
-
+    derivatives, failures = _validated_extraction_derivatives()
     assert sidecars, "no committed extraction sidecars found under src/cadrumo/_data/corpus"
     assert not failures, f"{len(failures)} stale or malformed extraction sidecars: {failures[:20]!r}"
+    expected_generic_sidecars = sum(not _is_legal_citation_evidence_sidecar(path) for path in sidecars)
+    assert len(derivatives) == expected_generic_sidecars * 2
+    assert all(derivative.path.parent == derivative.input_path.parent for derivative in derivatives)
 
 
 def test_manual_pdf_corpus_text_sidecars_exist_and_match_source_sha256() -> None:
