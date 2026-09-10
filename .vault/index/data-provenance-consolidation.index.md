@@ -6,7 +6,7 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:6ffde01a54af4ca7a260f885167748209fcce790476ad6bc12d21ec4ac857dab'
+body_hash: 'sha256:fd1f5b766c6e0d260fd17c975adb79fb8f69f86dd65dd77d3e71d5d390eab31b'
 related:
   - '[[2026-09-10-data-provenance-consolidation-W01-P01-S01]]'
   - '[[2026-09-10-data-provenance-consolidation-W01-P01-S02]]'
@@ -18,6 +18,7 @@ related:
   - '[[2026-09-10-data-provenance-consolidation-W02-P03-S08]]'
   - '[[2026-09-10-data-provenance-consolidation-W02-P03-S09]]'
   - '[[2026-09-10-data-provenance-consolidation-W02-P04-S10]]'
+  - '[[2026-09-10-data-provenance-consolidation-W02-P04-S11]]'
   - '[[2026-09-10-data-provenance-consolidation-adr]]'
   - '[[2026-09-10-data-provenance-consolidation-lane-inventory-research]]'
   - '[[2026-09-10-data-provenance-consolidation-live-lane-map-reference]]'
@@ -32,6 +33,7 @@ related:
   - '[[2026-09-10-data-provenance-consolidation-w02-p03-s08-origin-gate-review-audit]]'
   - '[[2026-09-10-data-provenance-consolidation-w02-p03-s09-integration-review-audit]]'
   - '[[2026-09-10-data-provenance-consolidation-w02-p04-s10-sync-catalogue-review-audit]]'
+  - '[[2026-09-10-data-provenance-consolidation-w02-p04-s11-off-host-alignment-review-audit]]'
 ---
 
 # `data-provenance-consolidation` feature index
@@ -56,6 +58,7 @@ Auto-generated index of all documents tagged with `#data-provenance-consolidatio
 - `2026-09-10-data-provenance-consolidation-w02-p03-s08-origin-gate-review-audit` - `data-provenance-consolidation` audit: `w02 p03 s08 origin gate review`
 - `2026-09-10-data-provenance-consolidation-w02-p03-s09-integration-review-audit` - `data-provenance-consolidation` audit: `w02 p03 s09 integration review`
 - `2026-09-10-data-provenance-consolidation-w02-p04-s10-sync-catalogue-review-audit` - `data-provenance-consolidation` audit: `w02 p04 s10 sync catalogue review`
+- `2026-09-10-data-provenance-consolidation-w02-p04-s11-off-host-alignment-review-audit` - `data-provenance-consolidation` audit: `w02 p04 s11 off host alignment review`
 
 ### exec
 
@@ -69,6 +72,7 @@ Auto-generated index of all documents tagged with `#data-provenance-consolidatio
 - `2026-09-10-data-provenance-consolidation-W02-P03-S08` - Replace three-way origin admission with catalog diagnostics for unknown and conflicting files
 - `2026-09-10-data-provenance-consolidation-W02-P03-S09` - Prove official identity alignment and non-payload role handling in an integration fixture
 - `2026-09-10-data-provenance-consolidation-W02-P04-S10` - Route manifest loading, payload classification, and acquisition diagnostics through the catalog
+- `2026-09-10-data-provenance-consolidation-W02-P04-S11` - Replace basename-only off-host assertion with exact catalog identity alignment fixtures
 
 ### plan
 

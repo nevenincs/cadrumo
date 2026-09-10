@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 import pytest
+
+from cadrumo.domain.calculations.registry.artifact_catalogue import ArtifactRole
 
 from ..sync_aeat_record_design_corpus import (
     _CORPUS,
@@ -21,6 +23,7 @@ from ..sync_aeat_record_design_corpus import (
     _load_off_host_sources,
     _Manifest,
     _OffHostSources,
+    _record_design_catalogue,
     _root_aggregate,
     check,
     unattested_corpus_files,
@@ -391,17 +394,44 @@ def test_the_shipped_extraction_sidecar_census_is_the_two_known_rows() -> None:
     )
 
 
-def test_every_off_host_artefact_is_registered_on_the_registry_side() -> None:
-    """The declaration names where the artefact is registered, and that file exists.
+def test_every_off_host_artefact_exactly_aligns_with_an_official_catalog_identity() -> None:
+    """The projection aligns path and URL, rather than merely sharing a basename.
 
-    A corpus declaration that pointed at nothing would restore the very asymmetry
-    it closes: the registry knowing about an artefact the acquisition path does not.
+    ``off_host_sources.json`` is an acquisition projection, not a second source
+    of authority.  It therefore has to agree with the manifest-derived catalog
+    on the complete canonical location and immutable source URL; a registry
+    declaration filename cannot prove either fact.
     """
-    registry_root = Path(__file__).resolve().parents[3] / "src/cadrumo/_data/registry"
+    catalogue, failures = _record_design_catalogue(_load_manifests(), _CORPUS)
 
+    assert failures == []
+    assert catalogue is not None
     for entry in _load_off_host_sources()["artefacts"]:
-        declaration = registry_root / entry["registry_declaration"]
-        assert declaration.is_file(), f"{entry['stored_path']} names a missing declaration"
-        assert entry["stored_path"].rsplit("/", 1)[-1] in declaration.read_text(encoding="utf-8"), (
-            f"{entry['registry_declaration']} does not reference {entry['stored_path']}"
-        )
+        path = PurePosixPath(entry["stored_path"])
+        identity = catalogue.identities.get(path)
+
+        assert identity is not None, f"{path} has no manifest catalog identity"
+        assert identity.path == path
+        assert catalogue.roles[path] is ArtifactRole.OFFICIAL_ARTIFACT
+        assert identity.source_url == entry["url"]
+
+
+def test_an_off_host_projection_url_mismatch_is_refused_against_catalog_identity(tmp_path: Path) -> None:
+    """A plausible URL cannot silently diverge from the manifest's exact identity."""
+    manifests, off_host = _corpus_fixture(tmp_path)
+    off_host["artefacts"][0]["url"] = "https://www.boe.es/boe/dias/2020/01/02/pdfs/X.pdf"
+
+    failures = _authority_failures(
+        manifests,
+        {f"{_STATIC}/DR_900/archivos/dr999.pdf"},
+        off_host,
+        tmp_path,
+        (),
+    )
+
+    assert failures == [
+        "off-host entry URL diverges from its manifest catalog identity: "
+        "modelo_999/files/02-orden.pdf "
+        "(https://www.boe.es/boe/dias/2020/01/02/pdfs/X.pdf != "
+        "https://www.boe.es/boe/dias/2020/01/01/pdfs/X.pdf)"
+    ]
