@@ -7,7 +7,7 @@ semantic_role = "is_correccion_provisiones_no_deducibles_art14_permanente_aument
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-14"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02742"
 number = "02742"
@@ -17,7 +17,7 @@ semantic_role = "is_correccion_provisiones_no_deducibles_art14_temporaria_ejerci
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-14"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02743"
 number = "02743"
@@ -27,7 +27,7 @@ semantic_role = "is_correccion_provisiones_no_deducibles_art14_temporaria_anteri
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-14"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02744"
 number = "02744"
@@ -37,7 +37,7 @@ semantic_role = "is_correccion_provisiones_no_deducibles_art14_saldo_inicial"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-14"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02745"
 number = "02745"
@@ -47,4 +47,4 @@ semantic_role = "is_correccion_provisiones_no_deducibles_art14_saldo_final_neto"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-14"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]

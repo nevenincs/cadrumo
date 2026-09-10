@@ -7,7 +7,7 @@ semantic_role = "is_correccion_rentas_negativas_art11_9_10_permanente_aumento"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02532"
 number = "02532"
@@ -17,7 +17,7 @@ semantic_role = "is_correccion_rentas_negativas_art11_9_10_temporaria_ejercicio_
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02533"
 number = "02533"
@@ -27,7 +27,7 @@ semantic_role = "is_correccion_rentas_negativas_art11_9_10_temporaria_anteriores
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02534"
 number = "02534"
@@ -37,7 +37,7 @@ semantic_role = "is_correccion_rentas_negativas_art11_9_10_saldo_inicial"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02535"
 number = "02535"
@@ -47,4 +47,4 @@ semantic_role = "is_correccion_rentas_negativas_art11_9_10_saldo_final_neto"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]

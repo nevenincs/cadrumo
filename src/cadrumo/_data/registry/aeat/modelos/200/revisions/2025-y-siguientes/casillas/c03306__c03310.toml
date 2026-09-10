@@ -7,7 +7,7 @@ semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:da-6"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03307"
 number = "03307"
@@ -17,7 +17,7 @@ semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:da-6"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03308"
 number = "03308"
@@ -27,7 +27,7 @@ semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:da-6"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03309"
 number = "03309"
@@ -37,7 +37,7 @@ semantic_role = "is_exencion_rentas_ajuste_saldo_inicio"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:da-6"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03310"
 number = "03310"
@@ -47,4 +47,4 @@ semantic_role = "is_exencion_transmision_saldo_fin"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:da-6"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]

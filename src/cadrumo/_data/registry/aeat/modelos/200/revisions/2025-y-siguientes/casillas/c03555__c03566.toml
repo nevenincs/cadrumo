@@ -7,7 +7,7 @@ semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03556"
 number = "03556"
@@ -17,7 +17,7 @@ semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03557"
 number = "03557"
@@ -27,7 +27,7 @@ semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03558"
 number = "03558"
@@ -37,7 +37,7 @@ semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03559"
 number = "03559"
@@ -47,7 +47,7 @@ semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03560"
 number = "03560"
@@ -57,7 +57,7 @@ semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03561"
 number = "03561"
@@ -67,7 +67,7 @@ semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03562"
 number = "03562"
@@ -77,7 +77,7 @@ semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03563"
 number = "03563"
@@ -87,7 +87,7 @@ semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03564"
 number = "03564"
@@ -97,7 +97,7 @@ semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03565"
 number = "03565"
@@ -107,7 +107,7 @@ semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03566"
 number = "03566"
@@ -117,4 +117,4 @@ semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]

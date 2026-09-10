@@ -7,7 +7,7 @@ semantic_role = "is_deduccion_donativos_general"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01324"
 number = "01324"
@@ -17,7 +17,7 @@ semantic_role = "is_deduccion_donativos_general"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01325"
 number = "01325"
@@ -27,7 +27,7 @@ semantic_role = "is_deduccion_donativos_general"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01326"
 number = "01326"
@@ -37,7 +37,7 @@ semantic_role = "is_deduccion_donativos_general"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01327"
 number = "01327"
@@ -47,7 +47,7 @@ semantic_role = "is_deduccion_donativos_general"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01328"
 number = "01328"
@@ -57,4 +57,4 @@ semantic_role = "is_deduccion_donativos_general"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]

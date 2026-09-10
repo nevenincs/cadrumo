@@ -20,4 +20,4 @@ semantic_role_cardinality_reason = "Total de correcciones de disminución al res
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-15", "ley-27-2014:art-12", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-105"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
