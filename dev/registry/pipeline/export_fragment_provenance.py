@@ -218,12 +218,19 @@ _FIELD_KEYS: Final[frozenset[str]] = frozenset(
         "date_format",
         "decimals",
         "signed",
+        "sign_position",
         "value_policy",
         "allowed_values",
         "legal_refs",
         "source_refs",
     },
 )
+#: Field keys added after trees were already attested. Each is serialised and
+#: projected only when a field declares it, so a field without the key attests
+#: exactly the bytes it did before the key existed, and no stored manifest or
+#: loader digest has to be rewritten to admit it. An explicit ``null`` in a
+#: stored manifest is therefore non-canonical and refuses on load.
+_FIELD_KEYS_PRESENT_ONLY_WHEN_DECLARED: Final[tuple[str, ...]] = ("sign_position",)
 _DISCRIMINATOR_KEYS: Final[frozenset[str]] = frozenset({"offset", "length", "requires"})
 _DICTIONARY_OVERRIDE_KEYS: Final[frozenset[str]] = frozenset({"field_id", "path", "reason"})
 
@@ -638,7 +645,17 @@ def verify_export_fragment_provenance_manifest(
 
 def export_fragment_provenance_manifest_json_bytes(manifest: ExportFragmentProvenanceManifest) -> bytes:
     """Return the sole canonical JSON serialisation for a provenance manifest."""
-    return canonical_json_bytes(manifest.model_dump(mode="json"))
+    payload = manifest.model_dump(mode="json")
+    for derivation in payload["field_derivations"]:
+        _omit_undeclared_field_keys(derivation["field"])
+    return canonical_json_bytes(payload)
+
+
+def _omit_undeclared_field_keys(field: dict[str, object]) -> dict[str, object]:
+    for key in _FIELD_KEYS_PRESENT_ONLY_WHEN_DECLARED:
+        if field[key] is None:
+            del field[key]
+    return field
 
 
 def load_export_fragment_provenance_manifest(raw: bytes) -> ExportFragmentProvenanceManifest:
@@ -1100,7 +1117,7 @@ def _normalise_loader_record(payload: Mapping[str, object]) -> dict[str, object]
 
 def _normalise_loader_field(payload: Mapping[str, object]) -> dict[str, object]:
     _require_exact_keys(payload, _FIELD_KEYS, subject="loader export field")
-    return {
+    normalised: dict[str, object] = {
         "id": payload["id"],
         "offset": payload["offset"],
         "length": payload["length"],
@@ -1124,6 +1141,9 @@ def _normalise_loader_field(payload: Mapping[str, object]) -> dict[str, object]:
         "legal_refs": _sorted_strings(payload["legal_refs"], subject="loader field legal_refs"),
         "source_refs": _sorted_strings(payload["source_refs"], subject="loader field source_refs"),
     }
+    for key in _FIELD_KEYS_PRESENT_ONLY_WHEN_DECLARED:
+        normalised[key] = payload[key]
+    return _omit_undeclared_field_keys(normalised)
 
 
 def _loader_record_sort_key(payload: Mapping[str, object]) -> tuple[int, str]:

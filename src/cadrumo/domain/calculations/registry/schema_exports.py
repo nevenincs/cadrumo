@@ -35,6 +35,7 @@ from .fixed_width_codec import (
     ExportEncodingValue,
     ExportJustificationValue,
     ExportPaddingValue,
+    ExportSignPositionValue,
     validate_fixed_width_shape,
 )
 from .ids import BindingId, ExportFieldId, ExportLayoutId, RecordId, SourceRefId
@@ -472,6 +473,7 @@ class ExportFieldDefinition(RegistryModel):
     date_format: str | None = None
     decimals: int | None = Field(default=None, ge=0)
     signed: bool
+    sign_position: ExportSignPositionValue = None
     value_policy: ExportValuePolicyValue = None
     allowed_values: tuple[str, ...] | None = None
     legal_refs: LegalRefs

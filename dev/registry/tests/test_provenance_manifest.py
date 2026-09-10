@@ -32,6 +32,7 @@ from ..pipeline.export_fragment_provenance import (
     export_fragment_provenance_manifest_json_bytes,
     load_export_fragment_provenance_manifest,
     loader_semantic_digest,
+    normalised_loader_semantics,
     semantic_map_digest,
 )
 from ..pipeline.joined_record_design import JoinedRecordDesign, JoinedRecordDesignField, JoinedRecordDesignRecord
@@ -638,3 +639,64 @@ def test_provenance_contract_has_no_legacy_layout_lookup_or_fallback_surface() -
     assert "intermediate" not in build_parameters
     assert build_parameters["semantic_map"].default is inspect.Signature.empty
     assert build_parameters["field_derivations"].default is inspect.Signature.empty
+
+
+def _money_layout(**field_overrides: object) -> ExportLayoutDefinition:
+    payload: dict[str, object] = {
+        "id": "importe",
+        "offset": 1,
+        "length": 11,
+        "kind": "casilla",
+        "casilla_id": "01",
+        "data_type": "money",
+        "required": False,
+        "padding": "left_zero",
+        "justification": "right",
+        "signed": True,
+        "legal_refs": ("ley-27-2014:art-40",),
+        "source_refs": ("aeat-dr-200-2025",),
+    }
+    payload.update(field_overrides)
+    field = ExportFieldDefinition.model_validate(payload)
+    layout = _one_field_layout()
+    return layout.model_copy(update={"records": (layout.records[0].model_copy(update={"fields": (field,)}),)})
+
+
+def test_an_undeclared_sign_position_is_absent_from_attested_bytes_and_a_declared_one_is_visible() -> None:
+    """A later field key must not move a single attested byte of a field that never declares it.
+
+    Otherwise admitting the key would silently invalidate every tree already
+    attested; declaring it is loader-visible meaning and must move the digest.
+    """
+    plain = _money_layout()
+    reserved = _money_layout(sign_position="blank_or_n")
+
+    records = normalised_loader_semantics(plain)["records"]
+    assert isinstance(records, list)
+    fields = [field for record in records for field in record["fields"]]
+    assert fields
+    assert all("sign_position" not in field for field in fields)
+    assert loader_semantic_digest(reserved) != loader_semantic_digest(plain)
+
+
+def test_a_stored_manifest_spelling_an_undeclared_sign_position_as_null_is_not_canonical(tmp_path) -> None:
+    export_root = tmp_path / "export"
+    (export_root / "records").mkdir(parents=True)
+    (export_root / "records" / "0001.toml").write_bytes(b"id = 'first'\n")
+    manifest = build_export_fragment_provenance_manifest(
+        joined=_joined(),
+        semantic_map=_semantic_map(),
+        target=ExportFragmentTarget(modelo="200", revision_id="2025-y-siguientes", design_epoch="2025"),
+        loaded_layout=_one_field_layout(),
+        export_root=export_root,
+        field_derivations=(_field_derivation(),),
+        render_profile=_sample_render_profile(),
+        render_profile_source_evidence=_render_profile_evidence(),
+    )
+    canonical = export_fragment_provenance_manifest_json_bytes(manifest)
+    assert b"sign_position" not in canonical
+
+    with_null = canonical_json_bytes(manifest.model_dump(mode="json"))
+
+    with pytest.raises(RegistryValidationError, match="not canonical"):
+        load_export_fragment_provenance_manifest(with_null)

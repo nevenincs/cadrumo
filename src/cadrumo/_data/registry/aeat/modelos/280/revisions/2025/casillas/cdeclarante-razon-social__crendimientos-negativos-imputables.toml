@@ -227,8 +227,9 @@ source_refs = ["boe-modelo-280-base-order", "boe-modelo-280-2016-amendment-hfp-1
 # amount on this record it carries an explicit sign byte: the design subdivides
 # it as "176. SIGNO: Campo alfabetico: se consignara siempre una 'N'" plus
 # "177-186: RENDIMIENTO NEGATIVO: Campo numerico de diez posiciones", itself
-# subdivided 177-184 entera and 185-186 decimal. Declared as one signed money
-# span so the signo and the magnitude cannot be filled inconsistently.
+# subdivided 177-184 entera and 185-186 decimal. The value is the magnitude of
+# the negative returns; the export writes the constant 'N' ahead of it, so the
+# signo and the magnitude cannot be filled inconsistently.
 [[revisions."2025".casillas]]
 id = "rendimientos-negativos-imputables"
 number = "tipo2.176-186"
