@@ -18,7 +18,11 @@ from typing import Final, Literal
 import rtoml
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.edition_materialisation import materialise_edition
 from cadrumo.domain.calculations.registry.loader import load_modelo_directory
+from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor
+
+from ._export_tree import _render_toml_bytes
 
 __all__ = [
     "GeneratedExportBootstrapTarget",
@@ -33,6 +37,8 @@ __all__ = [
 
 _EXPORT_AUTHORITY_DIRECTORY_NAMES: Final[frozenset[str]] = frozenset({"export", "export_layouts"})
 _BOOTSTRAP_TARGETS_PATH: Final[Path] = Path(__file__).with_name("generated_export_bootstrap_targets.toml")
+_CONTINUITY_SECTIONS: Final[tuple[str, ...]] = ("casillas", "casilla_continuidad_evolutions")
+_PREDECESSOR_DECLARATION: Final = "predecessor"
 
 
 @dataclass(frozen=True, slots=True)
@@ -125,45 +131,65 @@ def stage_continuity_metadata(
     once per revision is a singleton only in a tree that holds one revision.
     Staging all siblings answers both. A modelo with a single revision has no
     siblings to stage, and there a singleton genuinely is one.
+
+    Which edition a sibling inherits from is the ``predecessor`` it declares,
+    and the loader alone follows that chain; continuity evolution records play
+    no part in choosing what is staged. In a modelo where no edition names a
+    predecessor, every sibling states its own rows and is copied as it stands.
+    Once any edition names one, a sibling's own files may be only the rows it
+    changed, and the target it may inherit through is the one revision a
+    witness must not hold. Every sibling is then staged as the complete edition
+    the loader resolves for it, carrying no predecessor declaration, so each
+    loads on its own and none depends on a chain the witness cannot supply.
     """
     definition = load_modelo_directory(source_modelo_root)
-    selected = definition.revisions.get(revision)
-    if selected is None:
+    if revision not in definition.revisions:
         raise ValueError(f"modelo {definition.id} declares no revision {revision!r}")
 
-    pending = {str(item.from_revision) for item in selected.casilla_continuidad_evolutions}
-    predecessors: set[str] = set()
-    while pending:
-        predecessor_id = min(pending)
-        pending.remove(predecessor_id)
-        if predecessor_id == revision:
-            raise ValueError(f"revision {revision!r} continuity predecessor chain is cyclic")
-        if predecessor_id in predecessors:
-            continue
-        predecessor = definition.revisions.get(predecessor_id)
-        if predecessor is None:
-            raise ValueError(
-                f"revision {revision!r} continuity predecessor {predecessor_id!r} is not declared",
-            )
-        predecessors.add(predecessor_id)
-        pending.update(str(item.from_revision) for item in predecessor.casilla_continuidad_evolutions)
-
-    siblings = {str(item) for item in definition.revisions if str(item) != revision}
+    siblings = sorted(str(item) for item in definition.revisions if str(item) != revision)
     if not siblings:
         return None
     metadata_modelo_root = staging_root / "continuity-metadata" / str(definition.id)
     metadata_modelo_root.mkdir(parents=True)
     shutil.copy2(source_modelo_root / "manifest.toml", metadata_modelo_root / "manifest.toml")
-    for sibling_id in sorted(siblings):
+    names_a_predecessor = any(
+        isinstance(item.predecessor, DeclaredPredecessor) for item in definition.revisions.values()
+    )
+    for sibling_id in siblings:
+        if names_a_predecessor:
+            _stage_complete_sibling(source_modelo_root, metadata_modelo_root, revision=sibling_id)
+            continue
         source_revision_root = source_modelo_root / "revisions" / sibling_id
         target_revision_root = metadata_modelo_root / "revisions" / sibling_id
         target_revision_root.mkdir(parents=True)
         shutil.copy2(source_revision_root / "revision.toml", target_revision_root / "revision.toml")
-        for member in ("casillas", "casilla_continuidad_evolutions"):
+        for member in _CONTINUITY_SECTIONS:
             source_member = source_revision_root / member
             if source_member.is_dir():
                 shutil.copytree(source_member, target_revision_root / member)
     return metadata_modelo_root
+
+
+def _stage_complete_sibling(source_modelo_root: Path, metadata_modelo_root: Path, *, revision: str) -> None:
+    """Write one sibling as the complete edition it stands for, naming no predecessor.
+
+    The witness carries a sibling's manifest facts and its continuity sections
+    and nothing else, whether or not the sibling inherits; the resolved edition
+    is cut back to exactly those members so the two staging forms hold the same
+    families. A declared root's explicit no-predecessor is dropped with any
+    named predecessor, because a witness mixing declared roots with editions
+    that no longer name one would read as a forest with several key-less roots.
+    """
+    edition = materialise_edition(source_modelo_root, revision)
+    manifest = tomllib.loads((source_modelo_root / "revisions" / revision / "revision.toml").read_text("utf-8"))
+    manifest_members = frozenset(manifest.get("revisions", {}).get(revision, {}))
+    staged_members = (manifest_members | frozenset(_CONTINUITY_SECTIONS)) - {_PREDECESSOR_DECLARATION}
+    table = {key: value for key, value in edition.table.items() if key in staged_members}
+    revisions_root = metadata_modelo_root / "revisions"
+    revisions_root.mkdir(exist_ok=True)
+    (revisions_root / f"{revision}.toml").write_bytes(
+        _render_toml_bytes(f"{revision}.toml", {"revisions": {revision: table}}),
+    )
 
 
 #: Authority directories resolved BY NAME at registry load, beside `legal` and
