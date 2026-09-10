@@ -11,7 +11,7 @@ related:
   - '[[2026-09-09-registry-generator-signal-coverage-research]]'
 modified: '2026-09-10'
 body_schema: body-v2
-body_hash: 'sha256:52d97284973fe082a5e2588fc4df4a3f2f834aafb837c3a246ea9cb14b95ef2d'
+body_hash: 'sha256:6c426e0c9d27de0fb33031022a17d5b45079bfd1acfd386d4c6df275653a86ef'
 ---
 
 # `registry-generator` plan
@@ -92,7 +92,7 @@ Implements the primary remedy: an arithmetic, decidable check that a row's type 
 
 - [x] `W02.P04.S13` - Implement the width arithmetic that reads a type column and a content cell as one slot; `dev/registry/pipeline/_export_tree.py`.
 - [x] `W02.P04.S14` - Raise on a contradiction naming modelo, revision, field and both readings; `dev/registry/pipeline/_export_tree.py`.
-- [ ] `W02.P04.S15` - UNBLOCKED - the publication gap is closed and nothing here changes emitted output. The 579 uncontrolled spellings split three ways and two are now settled from the designs' own text. (1) 241 'Numerico' fields across 184 x2, 185, 296 and 347 x2: unsigned is CORRECT and grounded - modelo 184 and 296 both state 'por la izquierda sin signos y sin empaquetar', and 296 carries direction in a separate alphabetic SIGNO subfield filled only 'cuando el resultado sea menor de 0', not as an N prefix on the amount. (2) 243 'Alfanumerico', 'Alfabetico' and 'Blancos' fields: non-numeric, sign not applicable. (3) 95 'No consta' fields remain UNRESOLVED as a declaration: the design states no type, and the generator asserts unsigned by fallthrough, which collapses 'not stated' into 'unsigned'. Across all six affected revisions no field is signed at all (347 text, 216 integer, 10 decimal, 8 date), so the emitted bytes are almost certainly right; what is missing is authority for the claim. Close this step by grounding or refusing those 95; `dev/registry/pipeline/_export_tree.py`.
+- [x] `W02.P04.S15` - Decide the sign disposition of the 579 uncontrolled AEAT type spellings from the designs' own text. Settled, and nothing emitted changes. 241 'Numerico' and 93 of 95 'No consta' fields are unsigned under an explicit design-wide rule, verified against the design each revision pins (aeat-dr-184-2023-2024, -184-2025, -296-2024, -347-2011, -347-2025): 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar'; modelo 296 carries direction in a separate alphabetic SIGNO subfield, never an N prefix. The last 2 'No consta' fields are in aeat-dr-185-2026, whose design states no convention: a TELEFONO header field and an APELLIDOS Y NOMBRE header field, a phone number and a name, which have no negative domain, so unsigned follows from the field and not from a design rule. 243 alphabetic and blank spellings are not numeric; `dev/registry/pipeline/_export_tree.py`.
 - [x] `W02.P04.S16` - Prove the detector with a planted contradiction in an isolated temporary tree; `dev/registry/tests/`.
 - [x] `W02.P04.S17` - Prove a consistent unsigned design does not fire the detector; `dev/registry/tests/`.
 
