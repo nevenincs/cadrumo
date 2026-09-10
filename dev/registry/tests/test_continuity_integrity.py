@@ -3,8 +3,9 @@
 Two of this screen's conditions hold across the whole corpus and are gated as
 invariants elsewhere. A gate that only ever sees a clean corpus proves nothing
 on its own, so both are constructed here on copies of real revisions and shown
-to be caught. The other two conditions occur live and are pinned against the
-corpus itself.
+to be caught. The singleton condition is constructed the same way, so its proof
+survives the corpus being repaired. Absent continuity occurs live and is pinned
+against the corpus itself.
 """
 
 from __future__ import annotations
@@ -29,23 +30,44 @@ def test_a_modelo_with_sound_continuity_reports_nothing(authority: ValidatedRegi
     assert screen_authority(authority, ("100",)) == ()
 
 
-def test_a_singleton_chain_in_the_corpus_is_reported_by_name(authority: ValidatedRegistryAuthority) -> None:
+def test_a_singleton_chain_is_reported_by_name(authority: ValidatedRegistryAuthority) -> None:
     """A chain sitting in a single revision asserts continuity across nothing.
 
-    Held by chain identity rather than by how many exist. A count here fails
-    when a second singleton appears, which is the screen succeeding, and the
-    reader who repairs it by raising the number has been taught to absorb the
-    finding instead of reading it.
-
-    Pinned to a live declaration: chain `dr303-112` sits alone in one revision.
-    When it gains a sibling or is retired this test fails on that name, which is
-    the correction; name another singleton the screen reports, or construct one
-    if none remains, because the condition must keep a proof either way.
+    Constructed on a copy of a modelo whose chains hold together: one chain
+    carried across several revisions is stripped from all but one, the
+    shape a sibling deleted by mistake leaves behind. The screen must report that
+    chain, by name and by the one revision holding it, and nothing else. Held by
+    identity rather than by count, and constructed rather than taken from the
+    corpus, so repairing every live singleton leaves the proof standing.
     """
-    findings = [item for item in screen_authority(authority, ("303",)) if item.kind == "singleton_chain"]
-    assert findings, "the singleton condition lost its live proof"
-    assert any("dr303-112" in item.detail for item in findings)
-    assert all("appears only in revision" in item.detail for item in findings)
+    definition = authority.modelo("100")
+    assert definition_findings(definition, modelo_id="100") == (), "the constructed singleton must be the only one"
+    _, revisions, _ = chain_index(definition)
+    chain = min(name for name, seen in revisions.items() if len(seen) > 1)
+    kept = min(revisions[chain])
+
+    def _strip(revision_id, revision):
+        if revision_id == kept:
+            return revision
+        return revision.model_copy(
+            update={
+                "casillas": tuple(
+                    item.model_copy(update={"continuidad_id": None})
+                    if str(getattr(item, "continuidad_id", "")) == chain
+                    else item
+                    for item in revision.casillas
+                )
+            }
+        )
+
+    planted = definition.model_copy(
+        update={"revisions": {rid: _strip(str(rid), rev) for rid, rev in definition.revisions.items()}}
+    )
+
+    findings = definition_findings(planted, modelo_id="100")
+    assert [(item.kind, item.detail) for item in findings] == [
+        ("singleton_chain", f"chain {chain} appears only in revision {kept}")
+    ]
 
 
 def test_absent_continuity_is_reported_as_its_own_kind(authority: ValidatedRegistryAuthority) -> None:
