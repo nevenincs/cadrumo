@@ -26,10 +26,6 @@ LEGAL_PARAMETER_PROVIDER_DIRECTORY = "legal"
 
 _SCALAR_PARAMETER_IDS = frozenset(
     {
-        "liva-art-161:recargo-rate-general",
-        "liva-art-161:recargo-rate-reducido",
-        "liva-art-161:recargo-rate-super-reducido",
-        "liva-art-161:recargo-rate-tabaco",
         "lirpf-dt-32:eo-exclusion-rendimientos-conjunto-eur",
         "lirpf-dt-32:eo-exclusion-rendimientos-factura-eur",
         "lirpf-art-31:eo-exclusion-rendimientos-agricolas-ganaderos-forestales-eur",

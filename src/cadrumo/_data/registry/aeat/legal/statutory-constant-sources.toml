@@ -256,6 +256,69 @@ source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BO
 review_status = "agent_reviewed"
 corpus_tier = "provision_excerpt"
 
+# Exact BOE open-data redactions for the equivalence-surcharge rates.  The
+# 2012 article wording was versioned on 15 July, but the amending provision
+# makes its IVA changes effective only from 1 September; source applicability
+# follows that legal effect, not the earlier wrapper date.
+
+[sources."boe-liva-art-161-1993-01-01"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-1992-28740-art-161-redaction-19930101.xml"
+sha256 = "d3d03690f5d833a832b1c81309cb76a806ba4bc7d02594233f08f2e071ad2e01"
+bytes = 692
+retrieved_at = 2026-09-10
+published_at = 1992-12-29
+applies_from = 1993-01-01
+applies_to = 1996-12-31
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-1992-28740/texto/bloque/a161"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-liva-art-161-1997-01-01"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-1992-28740-art-161-redaction-19970101.xml"
+sha256 = "a75415a2ddc099e2114bf46e7888e4e8693d903d8d805e15f74a7e80e8a19c8a"
+bytes = 1023
+retrieved_at = 2026-09-10
+published_at = 1996-12-31
+applies_from = 1997-01-01
+applies_to = 2012-08-31
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-1992-28740/texto/bloque/a161"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-liva-art-161-2012-07-15"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-1992-28740-art-161-redaction-20120715.xml"
+sha256 = "b80529868fb4904f88b67e98ec54dbb82e8ff876478bcce8666ddb84e1ffee34"
+bytes = 1452
+retrieved_at = 2026-09-10
+published_at = 2012-07-14
+applies_from = 2012-09-01
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-1992-28740/texto/bloque/a161"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-rdl-20-2012-art-23-2012-09-01"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2012-9364-art-23-redaction-20120715.xml"
+sha256 = "73cdc93bfe9819ebe29c68f3e6a57ccec8d7d9b6d744c3e8756a567e811fea6b"
+bytes = 26194
+retrieved_at = 2026-09-10
+published_at = 2012-07-14
+applies_from = 2012-09-01
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2012-9364/texto/bloque/a23"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
 # Official AEAT guidance gives the exact Modelo 036 activity-code table.  It
 # is intentionally a bounded source: its verified 2026-03-26 update marker
 # supports this vocabulary from that date, but says nothing about older form
