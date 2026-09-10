@@ -214,3 +214,88 @@ def test_identity_model_still_rejects_malformed_values_at_construction() -> None
             publisher="Example authority",
             retrieved_at=date(2026, 9, 10),
         )
+
+
+def test_compiler_reports_a_derivative_when_its_input_digest_has_changed(tmp_path: Path) -> None:
+    """A derivative is stale when its recorded input no longer has the official digest."""
+    official = ArtifactIdentity(
+        path=_OFFICIAL_PATH,
+        sha256=_SOURCE_DIGEST,
+        bytes=14,
+        source_url="https://www.example.test/official/source.pdf",
+        publisher="Example authority",
+        retrieved_at=date(2026, 9, 10),
+    )
+
+    catalogue = compile_artifact_catalogue(
+        known_paths=_temporary_bundled_paths(tmp_path),
+        official_identities=(official,),
+        derived_artifacts=(
+            DerivedArtifact(
+                path=_DERIVED_PATH,
+                input_path=_OFFICIAL_PATH,
+                input_sha256="b" * 64,
+                producer="tests.artifact_catalogue",
+            ),
+        ),
+        semantic_annotations=(SemanticAnnotation(path=_ANNOTATION_PATH, target_path=_OFFICIAL_PATH),),
+        dispositions=(
+            ArtifactDisposition(
+                declaration_path=_DISPOSITION_PATH,
+                target_path=_OFFICIAL_PATH,
+                reason="historical acquisition is outside the supported window",
+            ),
+        ),
+        fixture_paths=(_FIXTURE_PATH,),
+    )
+
+    assert {(diagnostic.kind, diagnostic.path) for diagnostic in catalogue.diagnostics} == {
+        (ArtifactDiagnosticKind.STALE_DERIVATIVE, _DERIVED_PATH),
+    }
+
+
+def test_compiler_reports_a_registry_identity_that_diverges_from_catalogue(tmp_path: Path) -> None:
+    """A registry projection must bind the exact catalog byte identity, not a similar source."""
+    official = ArtifactIdentity(
+        path=_OFFICIAL_PATH,
+        sha256=_SOURCE_DIGEST,
+        bytes=14,
+        source_url="https://www.example.test/official/source.pdf",
+        publisher="Example authority",
+        retrieved_at=date(2026, 9, 10),
+    )
+    divergent_registry_identity = ArtifactIdentity(
+        path=_OFFICIAL_PATH,
+        sha256="b" * 64,
+        bytes=14,
+        source_url="https://www.example.test/official/source.pdf",
+        publisher="Example authority",
+        retrieved_at=date(2026, 9, 10),
+    )
+
+    catalogue = compile_artifact_catalogue(
+        known_paths=_temporary_bundled_paths(tmp_path),
+        official_identities=(official,),
+        derived_artifacts=(
+            DerivedArtifact(
+                path=_DERIVED_PATH,
+                input_path=_OFFICIAL_PATH,
+                input_sha256=_SOURCE_DIGEST,
+                producer="tests.artifact_catalogue",
+            ),
+        ),
+        semantic_annotations=(SemanticAnnotation(path=_ANNOTATION_PATH, target_path=_OFFICIAL_PATH),),
+        dispositions=(
+            ArtifactDisposition(
+                declaration_path=_DISPOSITION_PATH,
+                target_path=_OFFICIAL_PATH,
+                reason="historical acquisition is outside the supported window",
+            ),
+        ),
+        fixture_paths=(_FIXTURE_PATH,),
+        registry_identities=(divergent_registry_identity,),
+    )
+
+    assert {(diagnostic.kind, diagnostic.path) for diagnostic in catalogue.diagnostics} == {
+        (ArtifactDiagnosticKind.BROKEN_REGISTRY_BINDING, _OFFICIAL_PATH),
+    }

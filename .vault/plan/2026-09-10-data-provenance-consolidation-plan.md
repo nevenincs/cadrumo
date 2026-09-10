@@ -10,7 +10,7 @@ related:
   - '[[2026-09-10-data-provenance-consolidation-live-lane-map-reference]]'
 modified: '2026-09-10'
 body_schema: body-v2
-body_hash: 'sha256:fd8142832dc556478011c9d14bff0c77db20a8bae1d4825b8615eb93824d9085'
+body_hash: 'sha256:c87710142bcea9f54130705ac76c662ca58d55e17ac0d4fc1f4445047a046d37'
 ---
 
 # `data-provenance-consolidation` plan
@@ -41,7 +41,7 @@ Demonstrate that every catalog defect class is independently detected before pro
 
 - [x] `W01.P02.S04` - Prove normal catalog compilation and every declared role in a temporary bundled tree; `src/cadrumo/domain/calculations/registry/tests/test_artifact_catalogue.py`.
 - [x] `W01.P02.S05` - Prove conflicting identity, malformed data, orphaned targets, and unclassified files produce distinct diagnostics; `src/cadrumo/domain/calculations/registry/tests/test_artifact_catalogue.py`.
-- [ ] `W01.P02.S06` - Prove changed derivative inputs and divergent registry source identity fail closed; `src/cadrumo/domain/calculations/registry/tests/test_artifact_catalogue.py`.
+- [x] `W01.P02.S06` - Prove changed derivative inputs and divergent registry source identity fail closed; `src/cadrumo/domain/calculations/registry/tests/test_artifact_catalogue.py`.
 
 ## Wave `W02` - Migrate consumers behind the catalog
 
