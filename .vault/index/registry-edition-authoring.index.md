@@ -6,7 +6,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:525ca83e8ca44b2368ded07844b2656b2beb06e70bfe6b5454f83203f3113fd4'
+body_hash: 'sha256:f83a2c8575d2ca86164b15c4a78a7b76f075ef6786a4af607bfbf3953132fabb'
 related:
   - '[[2026-09-09-registry-edition-authoring-W01-P01-S01]]'
   - '[[2026-09-09-registry-edition-authoring-W01-P01-S02]]'
@@ -35,6 +35,7 @@ related:
   - '[[2026-09-09-registry-edition-authoring-W02-P03-S48]]'
   - '[[2026-09-09-registry-edition-authoring-W02-P03-S55]]'
   - '[[2026-09-09-registry-edition-authoring-W02-P03-S61]]'
+  - '[[2026-09-09-registry-edition-authoring-W02-P04-S52]]'
   - '[[2026-09-09-registry-edition-authoring-W02-P04-S56]]'
   - '[[2026-09-09-registry-edition-authoring-W04-P09-S53]]'
   - '[[2026-09-09-registry-edition-authoring-adr]]'
@@ -52,7 +53,7 @@ Auto-generated index of all documents tagged with `#registry-edition-authoring`.
 
 ### adr
 
-- `2026-09-09-registry-edition-authoring-adr` - `registry-edition-authoring` adr: `edition-relative casilla authoring` | (**status:** `proposed`)
+- `2026-09-09-registry-edition-authoring-adr` - `registry-edition-authoring` adr: `edition-relative casilla authoring` | (**status:** `accepted`)
 
 ### exec
 
@@ -83,6 +84,7 @@ Auto-generated index of all documents tagged with `#registry-edition-authoring`.
 - `2026-09-09-registry-edition-authoring-W02-P03-S48` - [S | opus-medium] Give the predecessor key an explicit value meaning no predecessor exists, distinct from the key being absent. One modelo has three editions sharing a single validity date whose own declarations each assert they have no earlier sibling; without an explicit value it would be forced into a false sequence, and with the key merely absent it would be indistinguishable from a forgotten declaration. Proof: that modelo loads with all three editions declared parallel, and the forest rule accepts it without inventing an order.
 - `2026-09-09-registry-edition-authoring-W02-P03-S55` - [S | sonnet-high] Make the materialiser's exclusion of non-casilla families explicit and tested, rather than relying on it merging only what it was told to. The completeness manifest is a revision section merged by the same fragment machinery as the casillas, so a materialiser written against the raw revision mapping picks it up by default; and its casilla collection is an append array whose duplicate-identifier validator would then refuse the load with an error naming a duplicate rather than naming inheritance. Loud but misattributed is still expensive. Proof: a planted delta whose predecessor has manifest rows materialises with the successor's own manifest untouched, and the duplicate-identifier path is never reached.
 - `2026-09-09-registry-edition-authoring-W02-P03-S61` - [S | opus-medium] Add the declared-predecessor date-agreement rule: where an edition names a predecessor and the two editions do not overlap in validity, the predecessor must be the earlier one; overlapping editions are exempt, and that exemption is exactly the parallel-variant case. Also make the lineage totality rule follow a named predecessor edge instead of the adjacent edition. Both land before the first modelo migrates. Proof: a successor naming a later non-overlapping edition is refused naming both; an overlapping pair loads; a totality fixture with a named non-adjacent predecessor resolves against the named edition.
+- `2026-09-09-registry-edition-authoring-W02-P04-S52` - [M | opus-medium] Fix candidate staging, which copies a predecessor's raw casilla directory wholesale and would therefore copy a DELTA rather than an edition once the predecessor is migrated. It also walks the continuity-evolution chain rather than the edition-inheritance chain, so under this decision it follows the wrong relationship. Proof: staging a candidate from a migrated predecessor produces a complete edition, and the chain it walks is the declared predecessor chain.
 - `2026-09-09-registry-edition-authoring-W02-P04-S56` - [M | opus-medium] Fix isolated staging, which deletes exactly what a delta edition needs. The publication path stages a single edition by copying the modelo and removing every sibling directory, so staging a migrated successor deletes its predecessor: the staged tree then declares a predecessor that does not exist, and either the forest rule refuses it or it materialises to only its stated rows and presents a partial edition as complete. The function exists to create isolation, and isolation is precisely what an inheriting edition cannot survive. Two options: keep the ancestor chain when staging, or materialise before staging. The owning lane prefers materialise-before-staging and the reason is sound — it makes the staged thing a complete edition by construction, rather than depending on every downstream check knowing it is looking at a fragment. Proof: a migrated multi-edition modelo stages and validates in isolation, and a staged delta whose predecessor was removed is refused rather than silently thinned.
 - `2026-09-09-registry-edition-authoring-W04-P09-S53` - [S | opus-medium] Rule on what a governance review stamp covers once editions inherit. The stamp writes declared scalars into the declaring file and is therefore still literally true after migration — but a reviewer signs off on a delta while the compiled edition carries inherited rows the reviewer never saw, so the stamp's SCOPE shrinks silently while its wording does not. Either the stamp states what it covers, or review is defined over the materialised edition. Silence here converts an honest attestation into a misleading one without anyone changing it. The same shape has already been confirmed once on a neighbouring gate: the type-column gate reads derivation records out of a generation manifest, so a hand-authored revision's 1,220 shipped fields are not explained, not pinned and not failing — they are invisible, and the gate covers 32 of 94 shipped revisions while reading as clean. Delta authoring produces stated rather than generated editions, so any gate keyed on manifest presence will read a migrated edition as absent rather than as unchecked. Rule on that too, or migration silently widens the blind spot. Proof: a migrated edition is distinguishable from an unreviewed one by what the stamp says, not by what a reader infers.
 

@@ -5,14 +5,14 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:a3625a330aa126fa1ba144679e7432aebb84a0c8c021812ce847bb7466beae33'
+body_hash: 'sha256:526982b1f0e43023546d008fc07e1399c13925308d134b6100cc09db06c1c1ae'
 related:
   - "[[2026-09-09-registry-edition-authoring-edition-restatement-measurement-research]]"
   - "[[2026-09-09-registry-edition-authoring-registry-mechanics-audit-research]]"
   - "[[2026-09-09-registry-edition-authoring-code-shape-and-blast-radius-reference]]"
 ---
 
-# `registry-edition-authoring` adr: `edition-relative casilla authoring` | (**status:** `proposed`)
+# `registry-edition-authoring` adr: `edition-relative casilla authoring` | (**status:** `accepted`)
 
 ## Problem Statement
 
