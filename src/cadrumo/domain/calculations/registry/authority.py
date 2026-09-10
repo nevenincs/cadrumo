@@ -205,7 +205,7 @@ class _AuthorityRootPairIdentity:
     """Canonical physical identity for one registry and source-root pair."""
 
     root: Path
-    source_root: Path
+    source_root: Path | None
     key: _AuthorityRootKey
 
 
@@ -992,7 +992,7 @@ def _authority_from_published_artifact(
     runtime_root = artifact_path.parent
     authority = ValidatedRegistryAuthority(
         root=runtime_root,
-        source_root=_bundled_path(),
+        source_root=None,
         modelos=artifact.modelos,
         catalogues=artifact.catalogues,
         _modelos_by_id={modelo.id: modelo for modelo in artifact.modelos},

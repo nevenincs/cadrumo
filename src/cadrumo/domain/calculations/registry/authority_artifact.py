@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import re
 from base64 import b64decode, b64encode
+from binascii import Error as Base64Error
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -24,8 +25,8 @@ from pydantic import BaseModel, ValidationError
 from ....core.atomic_write import atomic_write_bytes
 from ....core.ed25519_signing import digest_signature_is_valid, sign_digest_hex
 from ....core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant, sha256_hex
-from .schema import ModeloDefinition, RegistryCatalogues
 from .corpus_provenance import NormativeCorpusProvenance
+from .schema import DeclaredPredecessor, ModeloDefinition, NoPredecessor, RegistryCatalogues
 
 __all__ = [
     "AUTHORITY_ARTIFACT_SCHEMA_VERSION",
@@ -100,6 +101,7 @@ class PublishedSourceEvidence:
     payload_sha256: str
 
     def __post_init__(self) -> None:
+        """Reject incomplete or altered publisher-projected source bytes."""
         if not self.source_reference_id:
             raise ValueError("published source evidence requires a source reference id")
         if not self.payload:
@@ -126,9 +128,11 @@ class AuthorityEvidenceProjection:
         ids = tuple(item.legal_reference_id for item in self.legal)
         if len(ids) != len(set(ids)):
             raise ValueError("authority evidence projection legal reference ids must be unique")
-        source_ids = tuple(item.source_reference_id for item in self.sources)
-        if not isinstance(self.sources, tuple) or not all(isinstance(item, PublishedSourceEvidence) for item in self.sources):
+        if not isinstance(self.sources, tuple) or not all(
+            isinstance(item, PublishedSourceEvidence) for item in self.sources
+        ):
             raise TypeError("authority evidence projection source entries must be PublishedSourceEvidence tuples")
+        source_ids = tuple(item.source_reference_id for item in self.sources)
         if len(source_ids) != len(set(source_ids)):
             raise ValueError("authority evidence projection source reference ids must be unique")
 
@@ -148,6 +152,7 @@ class AuthorityEvidenceProjection:
         return bool(quotation.strip()) and normalise_corpus_text(quotation) in self.legal_text(legal_reference_id)
 
     def legal_provenance(self, legal_reference_id: str) -> NormativeCorpusProvenance:
+        """Return the publisher-derived provenance for one legal reference."""
         for item in self.legal:
             if item.legal_reference_id == legal_reference_id:
                 return item.provenance
@@ -156,6 +161,7 @@ class AuthorityEvidenceProjection:
         )
 
     def source_bytes(self, source_reference_id: str) -> bytes:
+        """Return signed runtime source bytes for one source reference."""
         for item in self.sources:
             if item.source_reference_id == source_reference_id:
                 return item.payload
@@ -243,7 +249,7 @@ def _decode_artifact(raw: bytes, *, verification_public_key_hex: str) -> Authori
             digest_hex=expected_digest,
             signature_hex=signature,
         )
-    except ValueError as exc:
+    except (Base64Error, ValueError) as exc:
         raise AuthorityArtifactFormatError("published authority artifact has an invalid signature encoding") from exc
     if not signature_valid:
         raise AuthorityArtifactIntegrityError("published authority artifact was not signed by the trusted publisher")
@@ -286,10 +292,10 @@ def _artifact_from_document(payload: Mapping[str, object]) -> AuthorityArtifact:
         identity_digest = _required_string(payload, "identity_digest")
         evidence_document = _required_mapping(payload, "evidence")
         modelos = tuple(
-            ModeloDefinition.model_validate_json(canonical_json_bytes(_mapping_item(item, "modelos")))
+            ModeloDefinition.model_validate(_immutable_json_value(_mapping_item(item, "modelos")), strict=False)
             for item in modelos_document
         )
-        catalogues = RegistryCatalogues.model_validate_json(canonical_json_bytes(catalogues_document))
+        catalogues = RegistryCatalogues.model_validate(_immutable_json_value(catalogues_document), strict=False)
         legal_evidence = tuple(
             PublishedLegalEvidence(
                 legal_reference_id=_required_string(_mapping_item(item, "evidence.legal"), "legal_reference_id"),
@@ -321,8 +327,32 @@ def _artifact_from_document(payload: Mapping[str, object]) -> AuthorityArtifact:
 
 def _json_value(value: object) -> object:
     """Project registry values to JSON without omitting excluded model fields."""
+    if isinstance(value, DeclaredPredecessor | NoPredecessor):
+        # The predecessor union intentionally owns a compact authored wire
+        # dialect. Its serializer is a semantic projection, unlike ordinary
+        # presentation serializers that may hide fields needed for authority
+        # reconstruction.
+        return _json_value(value.model_dump(mode="json"))
     if isinstance(value, BaseModel):
-        return {field_name: _json_value(getattr(value, field_name)) for field_name in type(value).model_fields}
+        decorators = type(value).__pydantic_decorators__
+        # A model serializer owns the complete wire spelling.  In particular,
+        # predecessor declarations must retain their authored string/table
+        # form rather than their internal wrapper fields.
+        if decorators.model_serializers:
+            return _json_value(value.model_dump(mode="json", round_trip=True))
+        serializer_fields = {
+            field_name
+            for decorator in decorators.field_serializers.values()
+            for field_name in decorator.info.fields
+        }
+        return {
+            field_name: _json_value(
+                value.model_dump(mode="json", include={field_name}, round_trip=True)[field_name]
+                if field_name in serializer_fields
+                else getattr(value, field_name)
+            )
+            for field_name in type(value).model_fields
+        }
     if isinstance(value, Mapping):
         return {_json_key(key): _json_value(item) for key, item in value.items()}
     if isinstance(value, (tuple, list, frozenset, set)):
@@ -338,6 +368,55 @@ def _json_value(value: object) -> object:
     if value is None or isinstance(value, (str, int, float, bool)):
         return value
     raise TypeError(f"authority artifact cannot serialize {type(value).__name__}")
+
+
+_DATE_FIELD_NAMES = frozenset(
+    {
+        "applies_from",
+        "applies_to",
+        "closes_on",
+        "consolidated_as_of",
+        "effective_from",
+        "effective_to",
+        "event_date",
+        "governs_periods_from",
+        "governs_periods_to",
+        "observed_at",
+        "opens_on",
+        "payment_cutoff_on",
+        "published_at",
+        "retrieved_at",
+        "reviewed_at",
+        "span_from",
+        "span_to",
+        "valid_from",
+        "valid_to",
+    }
+)
+
+
+def _immutable_json_value(value: object, *, field_name: str | None = None) -> object:
+    """Restore JSON primitives only for declared strict authority field names.
+
+    The registry models are intentionally strict and model their declared
+    collections as tuples and date fields as :class:`date`. JSON has only
+    arrays and date strings, so this converts those authenticated wire shapes
+    before model reconstruction. The artifact signature authenticates this
+    canonical JSON; the schema still validates every declared invariant.
+    """
+    if isinstance(value, Mapping):
+        return {str(key): _immutable_json_value(item, field_name=str(key)) for key, item in value.items()}
+    if isinstance(value, list):
+        return tuple(_immutable_json_value(item, field_name=field_name) for item in value)
+    if field_name in _DATE_FIELD_NAMES and isinstance(value, str):
+        try:
+            return date.fromisoformat(value)
+        except ValueError:
+            # A catalogue identifier may happen to use a date-shaped field
+            # name at a deeper mapping level; its declared schema remains the
+            # authority for interpreting that value.
+            return value
+    return value
 
 
 def _json_key(key: object) -> str:
@@ -393,4 +472,6 @@ def _decode_base64(value: str) -> bytes:
     try:
         return b64decode(value.encode("ascii"), validate=True)
     except ValueError as exc:
-        raise AuthorityArtifactFormatError("published authority artifact contains invalid base64 source evidence") from exc
+        raise AuthorityArtifactFormatError(
+            "published authority artifact contains invalid base64 source evidence"
+        ) from exc

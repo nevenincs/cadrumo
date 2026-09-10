@@ -41,7 +41,6 @@ from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import lru_cache
-from pathlib import Path
 from types import MappingProxyType
 from typing import Protocol
 
@@ -53,6 +52,7 @@ from ...core.identity import SubjectTaxId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from ...domain.calculations.registry.authority_artifact import AuthorityArtifactError, AuthorityEvidenceProjection
 from ...domain.calculations.registry.errors import (
     RegistryFailureCondition,
     RegistrySnapshotError,
@@ -317,8 +317,8 @@ class RegistrySchemaAccessor:
     collections: Mapping[str, RegistryCasillaCollection]
     subviews: Mapping[str, RegistryModeloSubview]
     snapshots: Mapping[str, RegistrySnapshot]
-    source_root: Path | None = None
     sources: Mapping[SourceRefId, SourceReference] = field(default_factory=_empty_source_references)
+    evidence: AuthorityEvidenceProjection = field(default_factory=AuthorityEvidenceProjection)
 
     def __post_init__(self) -> None:
         """Retain one immutable, internally consistent snapshot selection."""
@@ -349,6 +349,21 @@ class RegistrySchemaAccessor:
         object.__setattr__(self, "subviews", MappingProxyType(dict(self.subviews)))
         object.__setattr__(self, "snapshots", MappingProxyType(dict(self.snapshots)))
         object.__setattr__(self, "sources", MappingProxyType(dict(self.sources)))
+
+    def source_payload(self, source_ref_id: SourceRefId) -> bytes:
+        """Return signed publication bytes for one runtime source reference."""
+        try:
+            return self.evidence.source_bytes(str(source_ref_id))
+        except AuthorityArtifactError as exc:
+            raise ModeloBuilderError(
+                translated_message="application.filing.runtime.errors.registry_empty",
+                context={"reason": f"missing-published-source:{source_ref_id}"},
+            ) from exc
+
+    @property
+    def source_payloads(self) -> Mapping[str, bytes]:
+        """Expose the immutable signed source projection for layout consumers."""
+        return MappingProxyType({item.source_reference_id: item.payload for item in self.evidence.sources})
 
     def get_collection(self, modelo: str) -> CasillaCollection:
         """Return the casilla collection for ``modelo``.
@@ -601,8 +616,8 @@ def _schema_provider_for_authority(
         collections={modelo_id: collection_from_snapshot(snapshot) for modelo_id, snapshot in snapshots.items()},
         subviews={modelo_id: _subview_from_snapshot(snapshot) for modelo_id, snapshot in snapshots.items()},
         snapshots=snapshots,
-        source_root=authority.source_root,
         sources=dict(authority.catalogues.sources),
+        evidence=authority.evidence,
     )
 
 

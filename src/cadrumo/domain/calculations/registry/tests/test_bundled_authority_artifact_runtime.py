@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -25,6 +26,12 @@ from ._referential_integrity_support import _minimal_catalogues, _minimal_modelo
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _IDENTITY_DIGEST = "e4c712d347701b34615314b6e3f8fdfd75ca5ee3eabe9c1c651668549fb7f66f"
+
+
+@pytest.fixture(scope="session", autouse=True)
+def compose_runtime_ports() -> Iterator[None]:
+    """Keep staged artifact-boundary contracts independent of app port setup."""
+    yield
 
 
 def _stage_runtime_publication(root: Path) -> tuple[Path, Ed25519KeypairHex]:
@@ -116,17 +123,35 @@ def test_runtime_answers_a_citation_from_signed_evidence_without_a_corpus_root(
     assert authority.legal_quotation_is_grounded("test:art-1", "published provision")
 
 
-def test_runtime_keeps_real_bundled_citation_inspection_after_artifact_loading(
+def test_runtime_reads_signed_provenance_without_a_corpus_tree(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """The artifact authority retains its package data root for real citation inspection."""
-    _artifact_path, keys = _stage_runtime_publication(tmp_path)
+    """A signed provenance projection remains available without a corpus tree."""
+    artifact_path, keys = _stage_runtime_publication(tmp_path)
+    legal_id = next(iter(_minimal_catalogues().legal))
+    text = "Official BOE consolidated source excerpt"
+    write_authority_artifact(
+        artifact_path,
+        AuthorityArtifact(
+            modelos=(_minimal_modelo(_minimal_revision()),),
+            catalogues=_minimal_catalogues(),
+            identity_digest=_IDENTITY_DIGEST,
+            evidence=AuthorityEvidenceProjection(
+                legal=(
+                    PublishedLegalEvidence(
+                        legal_reference_id=legal_id,
+                        anchored_text=text,
+                        text_sha256=sha256_hex(text.encode("utf-8")),
+                        provenance=NormativeCorpusProvenance.BOE_ATTESTED,
+                    ),
+                )
+            ),
+        ),
+        signing_private_key_hex=keys.private_key_hex,
+    )
     _use_staged_package(monkeypatch, tmp_path, keys)
     authority = bundled_authority()
-    legal_id = next(iter(authority.catalogues.legal))
-    authority.catalogues.legal[legal_id] = authority.catalogues.legal[legal_id].model_copy(
-        update={"corpus_ref": "corpus/normatives/html/ley-35-2006-art-85.html#a85"}
-    )
+    authority.source_root = tmp_path / "absent-corpus"
 
     provenance = authority.legal_corpus_provenance(legal_id)
 
