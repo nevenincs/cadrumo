@@ -69,6 +69,7 @@ from .model_validation import (
     validate_non_negative_decimal,
 )
 from .raw_transaction import RawTransaction
+from .retencion_parameters import retencion_effective_date
 
 __all__ = ["DecisionProvenance", "derive_split_group_id"]
 
@@ -927,6 +928,10 @@ class Transaction(BaseModel):
             direction=self.direction,
             category_id=self.category_id,
             irpf_category=self.irpf_category,
+            effective_date=retencion_effective_date(
+                value_date=self.raw.value_date,
+                booked_date=self.raw.booked_date,
+            ),
         )
         return self
 

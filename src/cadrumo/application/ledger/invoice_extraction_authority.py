@@ -174,7 +174,7 @@ def resolve_invoice_extraction_authority_values(*, period: Period) -> InvoiceExt
     return InvoiceExtractionAuthorityValues(
         period=period,
         iva_rate_pcts=_overlapping_iva_rate_pcts(period),
-        retencion_rate_pcts=_as_pcts(statutory_activity_retencion_rates()),
+        retencion_rate_pcts=_as_pcts(statutory_activity_retencion_rates(effective_date=period.end_date)),
         no_printed_tax_categories=tuple(sorted(NO_PRINTED_TAX_IVA_CATEGORIES, key=lambda member: member.value)),
         regime_legend_phrases=regime_legend_phrases(),
     )

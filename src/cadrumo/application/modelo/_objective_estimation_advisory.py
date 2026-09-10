@@ -39,14 +39,11 @@ from ...domain.modelos.verification_report import (
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
-    from ...domain.calculations.registry.ids import SourceRefId
     from ...domain.modelos.work_unit import WorkUnit
 
 _SETTLED_YEAR_MIN = 2016
 _SETTLED_YEAR_MAX = 2026
 _AFFECTED_MODELOS = frozenset({Modelo.M100.value, Modelo.M131.value})
-_AEAT_RENTA_2025_MANUAL_SOURCE_REF: SourceRefId = "aeat-renta-2025-manual-parte1"
-
 _PARAMETER_BY_PROFILE_FIELD = (
     (
         "objective_estimation_prior_year_gross_income_eur",
@@ -145,11 +142,7 @@ def _objective_estimation_exclusion_advisory_findings(
                     "threshold": threshold,
                 },
                 legal_refs=threshold_fact.legal_refs,
-                source_refs=tuple(
-                    dict.fromkeys(
-                        (*threshold_fact.source_refs, *_scope_source_refs(work_unit.filing_year))
-                    )
-                ),
+                source_refs=threshold_fact.source_refs,
             ),
         )
     return tuple(findings)
@@ -196,12 +189,6 @@ def _resolve_objective_estimation_threshold(
             context={"parameter_id": parameter_id, "filing_year": filing_year, "fact_legal_refs": False},
         )
     return cast("ResolvedScalarFact", resolved)
-
-
-def _scope_source_refs(filing_year: int) -> tuple[SourceRefId, ...]:
-    if filing_year in (2025, 2026):
-        return (_AEAT_RENTA_2025_MANUAL_SOURCE_REF,)
-    return ()
 
 
 def _as_decimal(value: object, surface: str) -> Decimal:

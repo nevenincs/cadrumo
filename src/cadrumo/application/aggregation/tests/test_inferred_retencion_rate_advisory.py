@@ -69,6 +69,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BASE = Decimal("2000.00")
 _IVA = Decimal("420.00")
 _GROSS = _BASE + _IVA
+_EFFECTIVE_DATE = date(2024, 3, 15)
 
 
 def _raw(provider_id: str, *, amount: Decimal) -> RawTransaction:
@@ -146,7 +147,7 @@ def test_the_registry_grounds_every_art_95_rate() -> None:
     parameters collapse to four figures because 95.4.2.º/95.5 both fix 2 % and
     95.4.1.º/95.6.1.º both fix 1 %.
     """
-    rates = load_retencion_actividades_rates()
+    rates = load_retencion_actividades_rates(effective_date=_EFFECTIVE_DATE)
 
     assert rates.general_rate == Decimal("0.15")
     assert rates.inicio_actividad_rate == Decimal("0.07")
@@ -154,7 +155,7 @@ def test_the_registry_grounds_every_art_95_rate() -> None:
     assert rates.ganadera_engorde_rate == Decimal("0.01")
     assert rates.forestal_rate == Decimal("0.02")
     assert rates.estimacion_objetiva_rate == Decimal("0.01")
-    assert statutory_activity_retencion_rates() == {
+    assert statutory_activity_retencion_rates(effective_date=_EFFECTIVE_DATE) == {
         Decimal("0.15"),
         Decimal("0.07"),
         Decimal("0.02"),

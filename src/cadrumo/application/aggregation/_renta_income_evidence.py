@@ -24,7 +24,10 @@ from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.components import category_cuota_is_zero_by_law
 from ...domain.transactions.irpf_categories import has_activity_irpf_category
 from ...domain.transactions.models import Transaction
-from ...domain.transactions.retencion_parameters import maximum_supported_activity_retencion_rate
+from ...domain.transactions.retencion_parameters import (
+    maximum_supported_activity_retencion_rate,
+    retencion_effective_date,
+)
 
 
 class SalesInvoiceEvidenceRefusal(StrEnum):
@@ -197,7 +200,15 @@ def income_withheld_amount(
     if invoice_gross <= cash_received:
         return _WithheldInference(Decimal("0"), LedgerWithholdingDerivation.NONE_WITHHELD)
     inferred = invoice_gross - cash_received
-    maximum_supported = round_to_cents(transaction.taxable_base * maximum_supported_activity_retencion_rate())
+    maximum_supported = round_to_cents(
+        transaction.taxable_base
+        * maximum_supported_activity_retencion_rate(
+            effective_date=retencion_effective_date(
+                value_date=transaction.raw.value_date,
+                booked_date=transaction.raw.booked_date,
+            ),
+        )
+    )
     if round_to_cents(inferred) > maximum_supported:
         return _WithheldInference(Decimal("0"), LedgerWithholdingDerivation.REFUSED_ABOVE_SUPPORTED_RATE)
     return _WithheldInference(inferred, derivation)

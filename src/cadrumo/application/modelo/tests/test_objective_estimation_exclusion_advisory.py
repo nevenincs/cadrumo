@@ -116,7 +116,7 @@ def test_objective_estimation_exclusion_advisory_fires_for_settled_year_excess()
     }
 
 
-def test_objective_estimation_exclusion_advisory_applies_to_aeat_2025_scope() -> None:
+def test_objective_estimation_exclusion_advisory_reverts_to_article31_in_2025() -> None:
     profile = _objective_profile(
         objective_estimation_prior_year_gross_income_eur=Decimal("250000.01"),
         objective_estimation_prior_year_invoice_gross_income_eur=Decimal("125000.01"),
@@ -131,10 +131,11 @@ def test_objective_estimation_exclusion_advisory_applies_to_aeat_2025_scope() ->
 
     assert len(findings) == 4
     assert all(finding.message_facts["filing_year"] == 2025 for finding in findings)
-    assert {finding.source_refs for finding in findings} == {("aeat-renta-2025-manual-parte1",)}
+    assert {finding.legal_refs for finding in findings} == {("ley-35-2006:art-31",)}
+    assert {finding.source_refs for finding in findings} == {("boe-lirpf-art-31-2016-01-01",)}
 
 
-def test_objective_estimation_exclusion_advisory_applies_to_aeat_2026_scope() -> None:
+def test_objective_estimation_exclusion_advisory_uses_article31_in_2026() -> None:
     profile = _objective_profile(
         objective_estimation_prior_year_invoice_gross_income_eur=Decimal("125000.01"),
     )
@@ -145,8 +146,8 @@ def test_objective_estimation_exclusion_advisory_applies_to_aeat_2026_scope() ->
     )
 
     assert len(findings) == 1
-    assert findings[0].legal_refs == ("ley-35-2006:dt-32",)
-    assert findings[0].source_refs == ("aeat-renta-2025-manual-parte1",)
+    assert findings[0].legal_refs == ("ley-35-2006:art-31",)
+    assert findings[0].source_refs == ("boe-lirpf-art-31-2016-01-01",)
 
 
 def test_objective_estimation_exclusion_advisory_does_not_project_beyond_official_scope() -> None:
