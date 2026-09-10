@@ -11,7 +11,7 @@ related:
   - '[[2026-09-09-registry-generator-signal-coverage-research]]'
 modified: '2026-09-10'
 body_schema: body-v2
-body_hash: 'sha256:5e5f74b5e3b3867fcc03d2584007e0d7594e1a8c71f42bd5250701bf7c43c521'
+body_hash: 'sha256:b6939a48dbd798f5257ac0c3c8e74afe52047ed90563fb220c0b603356315d91'
 ---
 
 # `registry-generator` plan
@@ -185,7 +185,7 @@ Decodes official worked examples through the shipped codec and compares field by
 
 - [x] `W04.P13.S47` - Extend the existing external-oracle corpus enum rather than creating a second oracle surface; `src/cadrumo/core/external_oracle_corpus.py`.
 - [x] `W04.P13.S48` - Extend the existing grounding fold and conformance-vector mechanism to carry the new comparison; `src/cadrumo/domain/calculations/registry/external_grounding.py`.
-- [ ] `W04.P13.S70` - BLOCKED on official evidence, and the note-scope axis it sat beside is now closed: the adrift pointer population is 2, both diagnosed benign, after correcting a screen that over-reported by ninety times; `src/cadrumo/_data/corpus/manual_oracles/`.
+- [ ] `W04.P13.S70` - Confirm at least one official worked example carries a negative amount in a fixed-width slot. STILL BLOCKED on official evidence, now with the search recorded: no N-prefixed amount appears anywhere in the bundled corpus; AEAT's 'Disenos de registro - breve manual de uso' (v.2, 12/12/2022, sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/Ayudas/Disenyos_registro_Manual_uso.pdf) states the rule in text - 'N: numerico con signo ... Los datos numericos negativos llevaran una N en la primera posicion del campo' and 'precedidos del caracter N', zero-filled - but its only worked example, a modelo 111 2022 file, carries positive amounts alone. The manual is cited by the codec but not bundled; pinning it as a manual_pdf source would ground that citation and is a smaller, separate step; `src/cadrumo/_data/corpus/manual_oracles/`.; `src/cadrumo/_data/corpus/manual_oracles/`.
 - [x] `W04.P13.S49` - Satisfied by the shipped worked-example oracles: the corporate-tax and instalment tests compare computed values field by field against AEAT's printed liquidacion tables, with page locators into the bundled official manuals; `src/cadrumo/application/modelo/tests/`.
 - [x] `W04.P13.S50` - Confirm no expected value in the oracle originates in the generator; `src/cadrumo/domain/calculations/registry/tests/`.
 
