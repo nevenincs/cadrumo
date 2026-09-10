@@ -12,10 +12,11 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.corpus_catalogue import verify_source_file
+from ..compiler.corpus_catalogue import verify_source_file
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.legal import verify_legal_catalogue
+from ..compiler.legal_grounding import verify_legal_catalogue
 from cadrumo.tests import REPO_ROOT
+from dev.registry.compiler.loader import load_catalogue_file
 
 from ._catalogue_verification_support import (
     _FORMAL_WITHHOLDING_ARTICLE_REF,

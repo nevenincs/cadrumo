@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 
 from .....core.resources.bundled_data import bundled_path
-from ..corpus_catalogue import verify_source_file
-from ..legal import verify_legal_catalogue
+from dev.registry.compiler.corpus_catalogue import verify_source_file
+from dev.registry.compiler.legal_grounding import verify_legal_catalogue
 from ..record_design import extract_record_design_pdf
 from ._registry_schema_support import _committed_registry_tree
 

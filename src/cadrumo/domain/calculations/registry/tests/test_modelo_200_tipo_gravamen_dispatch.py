@@ -41,7 +41,7 @@ from .....core.resources.bundled_data import bundled_path
 from ..binding_selector_utils import selector_as_dict
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
-from ..legal import verify_legal_catalogue
+from dev.registry.compiler.legal_grounding import verify_legal_catalogue
 from ..schema_formula import ParameterDefinition
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 

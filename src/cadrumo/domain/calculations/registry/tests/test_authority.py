@@ -9,6 +9,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compile_validated_authority
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
@@ -265,7 +266,7 @@ def test_authority_cache_invalidates_when_fragmented_revision_changes(tmp_path: 
     manifest_before = manifest.read_bytes()
 
     clear_fingerprint_cache()
-    first = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
+    first = compile_validated_authority(registry_root, tmp_path)
 
     casilla_fragment.write_text(
         casilla_fragment.read_text(encoding="utf-8") + _SECOND_CASILLA_FRAGMENT_TOML,
@@ -274,7 +275,7 @@ def test_authority_cache_invalidates_when_fragmented_revision_changes(tmp_path: 
     assert manifest.read_bytes() == manifest_before
 
     clear_fingerprint_cache()
-    second = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
+    second = compile_validated_authority(registry_root, tmp_path)
 
     assert first is not second
     assert tuple(casilla.id for casilla in first.modelo("999").revisions["2025"].casillas) == ("01",)
@@ -307,12 +308,12 @@ def test_authority_uses_fingerprint_backed_process_cache_and_invalidates_real_ab
     clear_fingerprint_cache()
 
     # Load 1: should run validation.
-    auth1 = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
+    auth1 = compile_validated_authority(registry_root, tmp_path)
     assert auth1._registry_validated is True
     first_generation = auth1.read_current_coordinate().generation
 
     # Load 2: same fingerprint returns the in-process cached authority.
-    auth2 = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
+    auth2 = compile_validated_authority(registry_root, tmp_path)
     assert auth2 is auth1
 
     # Modify file to invalidate cache
@@ -323,7 +324,7 @@ def test_authority_uses_fingerprint_backed_process_cache_and_invalidates_real_ab
     clear_fingerprint_cache()
 
     # Load 3: changed fingerprint must build and validate a fresh authority.
-    auth3 = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
+    auth3 = compile_validated_authority(registry_root, tmp_path)
     assert auth3._registry_validated is True
     assert auth3 is not auth1
     assert auth3.modelo("999").revisions["2025"].source_refs == ("test-source-002",)
@@ -339,7 +340,7 @@ def test_authority_uses_fingerprint_backed_process_cache_and_invalidates_real_ab
     )
     clear_fingerprint_cache()
 
-    auth4 = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
+    auth4 = compile_validated_authority(registry_root, tmp_path)
 
     assert auth4 is not auth1
     assert auth4 is not auth3
@@ -372,14 +373,14 @@ def test_authority_cache_invalidates_when_source_evidence_changes(tmp_path: Path
     )
 
     clear_fingerprint_cache()
-    first = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
-    assert ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path) is first
+    first = compile_validated_authority(registry_root, tmp_path)
+    assert compile_validated_authority(registry_root, tmp_path) is first
 
     corpus_file.write_bytes(b"y" * 1000)
     os.utime(corpus_file, (1812542400, 1812542400))
 
     with pytest.raises(RegistryValidationError, match="sha256 mismatch"):
-        ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
+        compile_validated_authority(registry_root, tmp_path)
 
 
 def test_authority_ignores_legacy_validated_marker_and_revalidates_ambiguity(tmp_path: Path) -> None:
@@ -436,7 +437,7 @@ source_refs = ["test-source-001"]
 
     try:
         with pytest.raises(RegistryValidationError, match="casilla reference token '01' is ambiguous"):
-            ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
+            compile_validated_authority(registry_root, tmp_path)
     finally:
         stale_cache_path.unlink(missing_ok=True)
 
@@ -479,7 +480,7 @@ source_refs = ["test-source-001"]
     clear_fingerprint_cache()
 
     with pytest.raises(RegistryValidationError, match=r"ambiguous bare casilla ids \['01'\]"):
-        ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
+        compile_validated_authority(registry_root, tmp_path)
 
 
 def test_the_authority_module_keeps_a_public_locally_defined_surface() -> None:

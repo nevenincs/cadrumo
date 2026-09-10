@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from dev.registry.compiler.loader import load_registry_tree
+
 from .....core.directory_scan import scan_directory
 from .....core.resources.bundled_data import bundled_path
 from .._snapshot_internals import collect_snapshot_ref_ids
-from ..loader import load_registry_tree
 from ..schema import ModeloDefinition, RegistryCatalogues
 
 

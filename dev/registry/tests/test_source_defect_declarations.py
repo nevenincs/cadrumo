@@ -39,6 +39,7 @@ from cadrumo.domain.calculations.registry.fixed_width_codec import (
     render_fixed_width_export_field,
 )
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
+from dev.registry.compiler.loader import load_registry_tree
 
 from ..pipeline._export_tree import (
     ExportTreeTransportProfile,

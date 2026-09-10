@@ -40,8 +40,9 @@ import sys
 from dataclasses import dataclass
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 __all__ = [
     "SelectionProbe",
@@ -167,7 +168,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--only-surprising", action="store_true", help="hide rows resolving to themselves")
     args = parser.parse_args(argv)
 
-    probes = probe_modelo(bundled_authority(), args.modelo, filing_year=args.filing_year)
+    probes = probe_modelo(compiled_bundled_authority(), args.modelo, filing_year=args.filing_year)
     surprising = 0
     for probe in probes:
         if not probe.resolves_to_itself:

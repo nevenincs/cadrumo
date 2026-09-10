@@ -102,7 +102,8 @@ import sys
 from dataclasses import dataclass
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..pipeline.export_fragment_provenance import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from .corpus import bundled_modelo_ids
@@ -312,7 +313,7 @@ def screen_authority(
 
 def main() -> int:
     """Print one row per revision, then the findings and a closing census; always exit 0."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo_ids = bundled_modelo_ids()
     census = capability_census(authority, modelo_ids)
     for row in census:

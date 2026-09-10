@@ -14,12 +14,12 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
     write_authority_artifact,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryValidationError
-from cadrumo.domain.calculations.registry.facts import providers
 from cadrumo.domain.calculations.registry.tests._referential_integrity_support import (
     minimal_catalogues,
     minimal_modelo,
     minimal_revision,
 )
+from dev.registry.compiler import fact_providers
 from dev.registry.conformance.tests._loader_directory_mode_support import (
     write_extracted_corpus_sidecar,
     write_fragmented_revision,
@@ -61,7 +61,7 @@ required_text = ["test provision text"]
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
-corpus_path = "corpus/test/test-source-001.pdf"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_999/files/test-source-001.pdf"
 sha256 = "44f8354494a5ba03ba1792a8d3e9c534c47a9181980fde7a3f44b06ef2ae7c7f"
 bytes = 1000
 retrieved_at = 2025-01-01
@@ -80,6 +80,21 @@ source_url = "https://example.com/test-source-002"
 review_status = "pending_review"
 """
 )
+
+_RECORD_DESIGN_MANIFEST = """\
+{
+  "source": "Test AEAT record-design publisher",
+  "retrieved_at": "2025-01-01",
+  "artefacts": [
+    {
+      "stored_path": "files/test-source-001.pdf",
+      "sha256": "44f8354494a5ba03ba1792a8d3e9c534c47a9181980fde7a3f44b06ef2ae7c7f",
+      "bytes": 1000,
+      "url": "https://example.com/test-source"
+    }
+  ]
+}
+"""
 
 _MANIFEST = """\
 [modelo]
@@ -140,7 +155,7 @@ def _previous_publication() -> AuthorityArtifact:
 @pytest.fixture
 def isolated_provider_registration(monkeypatch: pytest.MonkeyPatch) -> None:
     """Keep the test candidate's real compiler path independent of unrelated provider corpora."""
-    monkeypatch.setattr(providers, "FACT_PROVIDER_REGISTRATIONS", ())
+    monkeypatch.setattr(fact_providers, "FACT_PROVIDER_REGISTRATIONS", ())
 
 
 def _stage_valid_candidate(root: Path) -> None:
@@ -152,7 +167,10 @@ def _stage_valid_candidate(root: Path) -> None:
     legal_dir.mkdir()
     corpus_dir = root / "corpus" / "test"
     corpus_dir.mkdir(parents=True)
-    (corpus_dir / "test-source-001.pdf").write_bytes(b"x" * 1000)
+    record_design_dir = root / "corpus" / "aeat_official" / "disenos_registro" / "modelo_999"
+    (record_design_dir / "files").mkdir(parents=True)
+    (record_design_dir / "files" / "test-source-001.pdf").write_bytes(b"x" * 1000)
+    (record_design_dir / "manifest.json").write_text(_RECORD_DESIGN_MANIFEST, encoding="utf-8", newline="\n")
     (corpus_dir / "test-source-002.pdf").write_bytes(b"x" * 1000)
     legal_corpus = corpus_dir / "test-ley-001.html"
     legal_corpus.write_text("<html>test provision text</html>", encoding="utf-8")
@@ -184,6 +202,29 @@ def test_staged_candidate_publishes_and_the_trusted_reader_consumes_it(
     assert consumed.modelos[0].id == "999"
 
 
+def test_published_legal_evidence_answers_citation_queries_after_its_source_is_gone(
+    tmp_path: Path, isolated_provider_registration: None
+) -> None:
+    """A signed artifact carries the validated anchor needed by a runtime citation."""
+    candidate_root = tmp_path / "candidate"
+    _stage_valid_candidate(candidate_root)
+    keys = generate_ed25519_keypair_hex()
+    artifact_path = tmp_path / "published" / "authority.json"
+
+    publish_authority_candidate_workflow(
+        registry_root=candidate_root / "registry" / "aeat",
+        source_root=candidate_root,
+        artifact_path=artifact_path,
+        signing_private_key_hex=keys.private_key_hex,
+    )
+    legal_source = candidate_root / "corpus" / "test" / "test-ley-001.html.extracted.json"
+    legal_source.unlink()
+
+    consumed = read_authority_artifact(artifact_path, verification_public_key_hex=keys.public_key_hex)
+
+    assert consumed.evidence.quotation_is_grounded("test-ley-001:art-1", "test provision text")
+
+
 def test_defective_candidate_refuses_before_replacing_the_previous_artifact(tmp_path: Path) -> None:
     """A real compiler refusal leaves the prior published artifact byte-for-byte intact."""
     keys = generate_ed25519_keypair_hex()
@@ -199,6 +240,40 @@ def test_defective_candidate_refuses_before_replacing_the_previous_artifact(tmp_
         publish_authority_candidate_workflow(
             registry_root=tmp_path / "defective-registry",
             source_root=tmp_path / "defective-sources",
+            artifact_path=artifact_path,
+            signing_private_key_hex=keys.private_key_hex,
+        )
+
+    assert artifact_path.read_bytes() == previous_bytes
+
+
+def test_divergent_record_design_manifest_identity_refuses_and_preserves_the_previous_artifact(
+    tmp_path: Path, isolated_provider_registration: None
+) -> None:
+    """The publish workflow refuses a registry source that no longer binds its manifest artifact."""
+    candidate_root = tmp_path / "candidate"
+    _stage_valid_candidate(candidate_root)
+    keys = generate_ed25519_keypair_hex()
+    artifact_path = tmp_path / "authority.json"
+    write_authority_artifact(
+        artifact_path,
+        _previous_publication(),
+        signing_private_key_hex=keys.private_key_hex,
+    )
+    previous_bytes = artifact_path.read_bytes()
+    manifest_path = candidate_root / "corpus" / "aeat_official" / "disenos_registro" / "modelo_999" / "manifest.json"
+    manifest_path.write_text(
+        manifest_path.read_text(encoding="utf-8").replace(
+            "44f8354494a5ba03ba1792a8d3e9c534c47a9181980fde7a3f44b06ef2ae7c7f", "0" * 64
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
+
+    with pytest.raises(RegistryError, match="does not exactly bind an official artifact catalog identity"):
+        publish_authority_candidate_workflow(
+            registry_root=candidate_root / "registry" / "aeat",
+            source_root=candidate_root,
             artifact_path=artifact_path,
             signing_private_key_hex=keys.private_key_hex,
         )

@@ -30,8 +30,9 @@ from typing import Final
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..analysis.footnote_only_wire_facts import (
     ADJUDICATED_KINDS,
@@ -107,7 +108,7 @@ def _applicability_reading(
 
 @pytest.fixture(scope="module")
 def authority() -> ValidatedRegistryAuthority:
-    return bundled_authority()
+    return compiled_bundled_authority()
 
 
 @pytest.fixture(scope="module")

@@ -9,8 +9,9 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..analysis.revision_selection_probe import declared_period_codes, probe_modelo
 
@@ -19,7 +20,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 @pytest.fixture(scope="module")
 def authority() -> ValidatedRegistryAuthority:
-    return bundled_authority()
+    return compiled_bundled_authority()
 
 
 def test_the_three_one_stop_shop_schemes_each_resolve_to_themselves(

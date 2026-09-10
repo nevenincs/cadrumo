@@ -21,6 +21,7 @@ from __future__ import annotations
 from collections.abc import Container
 
 from cadrumo.core.concept_lifecycle import ConceptLifecycle
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .errors import TerminologyValidationError
 from .loader import HandbookValidator, TerminologyHandbook
@@ -62,7 +63,7 @@ def legal_refs_resolve_validator(legal_ref_ids: Container[str] | None = None) ->
     Args:
         legal_ref_ids: The set of legal-ref ids that resolve. Defaults to
             the bundled registry authority's legal catalogue keys
-            (``bundled_authority().catalogues.legal``) -- the same
+            (``compiled_bundled_authority().catalogues.legal``) -- the same
             catalogue the calculation engine grounds against. Passing an
             explicit container lets a unit test resolve against a small
             synthetic catalogue without loading the full registry.
@@ -223,9 +224,8 @@ def _bundled_legal_ref_ids() -> frozenset[str]:
     A restored instrument returning a different population is worse than a
     blocked one. This one stays blocked until the registry validates.
     """
-    from cadrumo.domain.calculations.registry.authority import bundled_authority
 
-    return frozenset(bundled_authority().catalogues.legal)
+    return frozenset(compiled_bundled_authority().catalogues.legal)
 
 
 def _first_replaced_by_cycle(handbook: TerminologyHandbook) -> list[str] | None:

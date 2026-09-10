@@ -45,6 +45,7 @@ from cadrumo.domain.categories.registry import category_profile_years, resolve_c
 from cadrumo.domain.iva.catalogue import iva_catalogue_years, resolve_catalogue
 from cadrumo.domain.iva.errors import IvaCatalogueError
 from cadrumo.domain.iva.place_of_supply import load_place_of_supply_table, place_of_supply_rule, place_of_supply_years
+from dev.registry.compiler.loader import load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

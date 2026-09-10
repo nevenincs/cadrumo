@@ -3,9 +3,9 @@
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.loader import load_modelo_directory, load_registry_tree, load_shared_catalogues
 
 from ..errors import RegistryLoadError
-from ..loader import load_legal_parameters_only, load_modelo_directory, load_registry_tree
 from ..loader_cache import discover_modelo_sources
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -98,7 +98,7 @@ def test_registry_tree_rejects_wrong_suffix_legal_file(tmp_path: Path) -> None:
 
 
 @pytest.mark.parametrize("entry_kind", ["wrong_suffix", "nested"])
-def test_legal_parameters_only_rejects_non_flat_toml_tree(tmp_path: Path, entry_kind: str) -> None:
+def test_shared_catalogues_reject_non_flat_toml_tree(tmp_path: Path, entry_kind: str) -> None:
     legal = tmp_path / "legal"
     legal.mkdir()
     if entry_kind == "wrong_suffix":
@@ -109,7 +109,7 @@ def test_legal_parameters_only_rejects_non_flat_toml_tree(tmp_path: Path, entry_
         match = "unrecognized legal directory"
 
     with pytest.raises(RegistryLoadError, match=match):
-        load_legal_parameters_only(tmp_path)
+        load_shared_catalogues(tmp_path)
 
 
 def test_fragment_folder_may_declare_only_its_owned_section(tmp_path: Path) -> None:

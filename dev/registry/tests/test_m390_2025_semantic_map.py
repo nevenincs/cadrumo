@@ -9,8 +9,9 @@ import pytest
 from cadrumo.domain.calculations.registry.loader import load_registry_tree
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
+from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.compiler.loader import load_registry_tree
 
 from ..pipeline._export_tree import render_complete_export_tree
 from ..pipeline.record_design_intermediate import (
@@ -114,7 +115,7 @@ def _assert_layout_owner(entry: SemanticMapEntry, field: ExportFieldDefinition) 
 
 
 def test_m390_2025_bijects_every_parser_anchor_to_the_reviewed_revision_owner() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     revision = authority.modelo("390").revisions["2025"]
     design_2024 = _design("aeat-dr-390-2024", filing_year=2024, epoch="2024")
     design = _design(_SOURCE_REF, filing_year=2025, epoch="2025")
@@ -187,7 +188,7 @@ def test_m390_2025_bijects_every_parser_anchor_to_the_reviewed_revision_owner() 
 
 def test_m390_2025_profile_and_map_render_all_numbered_anchors_from_the_exact_source(tmp_path: Path) -> None:
     inputs = revision_render_inputs(
-        bundled_authority(),
+        compiled_bundled_authority(),
         modelo="390",
         revision="2025",
         source_ref=_SOURCE_REF,

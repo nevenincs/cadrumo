@@ -21,10 +21,8 @@ from pydantic import BaseModel, Field, computed_field, model_validator
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
-from cadrumo.domain.calculations.registry.authority import (
-    ValidatedRegistryAuthority,
-    bundled_authority,
-)
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..export_proof import FilingExportProofAuthority
 from ..temporal_coverage import (
@@ -336,7 +334,7 @@ def load_registry_closure_report(
     application-owned missing-evidence refusals. A release caller that has a
     live proof authority can supply it to this same single join.
     """
-    authority = bundled_authority() if registry_authority is None else registry_authority
+    authority = compiled_bundled_authority() if registry_authority is None else registry_authority
     resolved_as_of = date.today() if as_of is None else as_of
     return build_registry_closure_report(
         temporal_coverage=compose_temporal_coverage(authority=authority),

@@ -7,6 +7,7 @@ from decimal import Decimal
 from functools import cache
 
 import pytest
+from dev.registry.compiler.loader import load_modelo_directory, load_shared_catalogues
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.hashing import hash_file
@@ -15,7 +16,6 @@ from .....tests.registry_snapshot import build_snapshot
 from .._validate_export_layout_coverage import validate_export_layout_record_coverage
 from .._validate_semantic_roles import semantic_role_consistency_failures
 from ..errors import AmbiguousRevisionSelectionError, NoRevisionForPeriodError, RegistryValidationError
-from ..loader import load_modelo_directory, load_shared_catalogues
 from ..record_design import extract_record_design
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..temporal import select_revision

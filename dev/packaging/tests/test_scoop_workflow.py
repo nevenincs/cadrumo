@@ -21,10 +21,10 @@ def _workflow() -> dict[str, object]:
 def test_scoop_workflow_declares_the_native_release_row() -> None:
     """The acquisition job runs natively on the labelled self-hosted Windows runner.
 
-    Operator mandate 2026-07-21: no hosted/cloud runners. The lane is pinned to
-    the ``windows-scoop`` label so it schedules only onto the dedicated
-    non-admin runner user, leaving the fleet's one Docker daemon permanently in
-    Linux-container mode.
+    Operator mandate 2026-07-21: no hosted/cloud runners. The lane selects the
+    fleet's one self-hosted Windows runner by platform labels only (the fleet
+    standard forbids repo/tool labels such as the former ``windows-scoop``),
+    leaving the fleet's one Docker daemon permanently in Linux-container mode.
 
     The preflight is retargeted rather than dropped: it fails fast and free on
     anything but AMD64 with a resolvable Scoop profile, and refuses an elevated
@@ -36,7 +36,7 @@ def test_scoop_workflow_declares_the_native_release_row() -> None:
 
     job = document["jobs"]["cadrumo-scoop-acquisition"]
     assert job["name"] == "Test: Channel acquisition (Windows)"
-    assert job["runs-on"] == ["self-hosted", "Windows", "X64", "windows-scoop"]
+    assert job["runs-on"] == ["self-hosted", "Windows", "X64"]
     preflight = next(step for step in job["steps"] if step["name"] == "Verify declared Windows native release row")
     assert 'PROCESSOR_ARCHITECTURE -ne "AMD64"' in _executable_lines(preflight["run"])
     assert "Get-Command scoop" in _executable_lines(preflight["run"])

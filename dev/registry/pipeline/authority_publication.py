@@ -7,20 +7,28 @@ destination lock through the atomic artifact replacement.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
-from cadrumo.core.hashing import content_hash_hex, hash_file
+from cadrumo.core.hashing import content_hash_hex, hash_file, sha256_hex
 from cadrumo.core.locks import exclusive_file_lock
-from cadrumo.domain.calculations.registry._source_evidence_fingerprint import (
+from cadrumo.domain.calculations.registry.authority_artifact import (
+    AuthorityArtifact,
+    AuthorityEvidenceProjection,
+    PublishedLegalEvidence,
+    write_authority_artifact,
+)
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema_references import LegalReference
+from dev.registry.compiler.authority import canonical_authoring_root_pair, compile_validated_authority
+from dev.registry.compiler.identity import resolve_registry_identity
+from dev.registry.compiler.legal_grounding import published_legal_evidence_text
+from dev.registry.compiler.loader import collect_registry_tree_fingerprints
+from dev.registry.compiler.source_evidence_fingerprint import (
     SourceEvidenceFingerprint,
     collect_source_evidence_fingerprints,
 )
-from cadrumo.domain.calculations.registry.authority_artifact import AuthorityArtifact, write_authority_artifact
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.identity import resolve_registry_identity
-from dev.registry.compiler.authority import canonical_authoring_root_pair, compile_validated_authority
-from dev.registry.compiler.loader import collect_registry_tree_fingerprints
 
 __all__ = [
     "AuthorityPublicationReceipt",
@@ -96,6 +104,7 @@ def validate_authority_candidate(*, registry_root: Path, source_root: Path) -> V
         modelos=authority.modelos,
         catalogues=authority.catalogues,
         identity_digest=receipt_after.identity_digest,
+        evidence=_project_evidence(authority.catalogues.legal, source_root=resolved_source_root),
     )
     return ValidatedAuthorityCandidate(
         registry_root=resolved_registry_root,
@@ -103,6 +112,19 @@ def validate_authority_candidate(*, registry_root: Path, source_root: Path) -> V
         receipt=receipt_after,
         artifact=artifact,
     )
+
+
+def _project_evidence(legal: Mapping[str, LegalReference], *, source_root: Path) -> AuthorityEvidenceProjection:
+    """Capture all validated legal anchors as signed, path-free runtime evidence."""
+    entries = tuple(
+        PublishedLegalEvidence(
+            legal_reference_id=str(reference_id),
+            anchored_text=(text := published_legal_evidence_text(reference, source_root=source_root)),
+            text_sha256=sha256_hex(text.encode("utf-8")),
+        )
+        for reference_id, reference in sorted(legal.items())
+    )
+    return AuthorityEvidenceProjection(legal=entries)
 
 
 def publish_validated_authority_candidate(

@@ -33,6 +33,7 @@ from cadrumo.domain.calculations.registry.static_inspection import (
     StaticGeneratedArtifactInspection,
     StaticGeneratedArtifactSource,
 )
+from dev.registry.compiler.loader import load_modelo_directory
 
 from ..pipeline import _export_tree
 from ..pipeline._export_tree import ExportTreeTransportProfile, render_complete_export_tree

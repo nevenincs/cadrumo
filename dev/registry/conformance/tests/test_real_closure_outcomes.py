@@ -10,7 +10,7 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.core.modelo import Modelo
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..closure import load_registry_closure_report
 
@@ -20,7 +20,7 @@ _AS_OF = date(2026, 8, 24)
 
 @cache
 def _canonical_report():
-    return load_registry_closure_report(as_of=_AS_OF, registry_authority=bundled_authority())
+    return load_registry_closure_report(as_of=_AS_OF, registry_authority=compiled_bundled_authority())
 
 
 def test_real_below_grade_row_is_complete_without_filing_export() -> None:
@@ -59,7 +59,7 @@ def test_real_grade_scope_row_guards_bite_both_participation_mutations() -> None
 
 
 def test_real_loader_reports_stale_layout_bytes_from_a_live_catalogue_mutation() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo = authority.modelo(Modelo.M100)
     revision = modelo.revisions["2025"]
     source_id = next(
@@ -82,7 +82,7 @@ def test_real_loader_reports_stale_layout_bytes_from_a_live_catalogue_mutation()
 
 
 def test_real_loader_reports_cross_limb_disagreement_from_divergent_authority_cache() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo = authority.modelo(Modelo.M303)
     selected = modelo.revisions["2025"]
     selector = selected.period_selector.model_copy(update={"years": (2026,), "year_from": None, "year_to": None})

@@ -11,6 +11,7 @@ from cadrumo.domain.calculations.registry.loader import load_catalogue_file, loa
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
+from dev.registry.compiler.loader import load_catalogue_file, load_modelo_directory
 
 from ..analysis import m200_semantic_casilla_candidates as subject
 from ..pipeline.record_design_intermediate import RecordDesignIntermediateField, load_record_design_intermediate

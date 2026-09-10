@@ -17,6 +17,7 @@ from cadrumo.domain.calculations.registry.record_design_schema import (
     RecordDesignCompositeRelativeClosing,
     RecordDesignRelativeSuffixMarker,
 )
+from dev.registry.compiler.loader import load_catalogue_file
 from dev.registry.maintenance_support import resolve_record_design_binary
 
 from ..pipeline import record_design_intermediate

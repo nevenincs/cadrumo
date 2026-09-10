@@ -14,6 +14,7 @@ from cadrumo.domain.calculations.registry.record_design_schema import (
     RecordDesignRelativeSuffixMarker,
     RecordDesignSheet,
 )
+from dev.registry.compiler.loader import load_catalogue_file
 from dev.registry.maintenance_support import resolve_record_design_binary
 
 from ..pipeline.record_design_intermediate import (

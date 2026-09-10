@@ -42,6 +42,7 @@ from cadrumo.domain.calculations.registry.schema_base import (
 )
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 from cadrumo.tests.registry_tree import bundled_registry_tree
+from dev.registry.compiler.loader import load_modelo_directory
 from dev.registry.conformance.coverage import REQUIRED_COVERAGE_TIERS
 
 from ._loader_directory_mode_support import _load_revision as _shared_load_revision

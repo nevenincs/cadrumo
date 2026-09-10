@@ -8,10 +8,10 @@ from datetime import date
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compile_validated_authority
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.period import Period
-from ....domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.queries import RegistryQueryService
 from ..binding_readiness import _annual_period_for_year, profile_resolvable_binding_ids
@@ -270,7 +270,7 @@ def test_year_only_binding_readiness_refuses_multiple_covering_revisions(
     caplog.set_level(logging.DEBUG, logger="cadrumo.application.modelo.binding_readiness")
 
     registry_root = _write_year_ambiguous_registry(tmp_path)
-    authority = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
+    authority = compile_validated_authority(registry_root, tmp_path)
 
     assert _annual_period_for_year(authority, modelo="999", filing_year=2025) is None
     assert any(
@@ -288,7 +288,7 @@ def test_year_only_report_and_readiness_share_effective_revision_selection(tmp_p
             ("2025-late", "2T", "2025-07-01", None),
         ),
     )
-    authority = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
+    authority = compile_validated_authority(registry_root, tmp_path)
     service = RegistryQueryService(authority)
 
     early_as_of = date(2025, 3, 31)

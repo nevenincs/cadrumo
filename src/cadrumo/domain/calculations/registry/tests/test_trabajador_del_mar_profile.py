@@ -17,7 +17,7 @@ import pytest
 from .....core.resources.bundled_data import bundled_path
 from ....user_profile.loader import load_user_profile_schema
 from ....user_profile.schema import ProfileFieldType
-from ..legal import verify_legal_catalogue
+from dev.registry.compiler.legal_grounding import verify_legal_catalogue
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

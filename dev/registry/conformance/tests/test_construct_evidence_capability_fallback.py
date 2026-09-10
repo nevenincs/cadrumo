@@ -25,14 +25,14 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.conformance.coverage import ConstructEvidenceLedger, audit_registry_construct_evidence
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 
 
 def _audit() -> tuple[ConstructEvidenceLedger, ...]:
-    return audit_registry_construct_evidence(bundled_authority()).ledgers
+    return audit_registry_construct_evidence(compiled_bundled_authority()).ledgers
 
 
 def test_a_reviewed_revision_without_an_export_layout_still_produces_a_ledger() -> None:

@@ -30,9 +30,9 @@ from pathlib import Path
 from typing import cast
 
 import pytest
+from dev.registry.compiler.loader import load_registry_tree
 
 from ....core.resources.bundled_data import bundled_path
-from ....domain.calculations.registry.loader import load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

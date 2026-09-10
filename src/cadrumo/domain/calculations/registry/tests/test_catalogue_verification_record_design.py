@@ -7,11 +7,11 @@ import shutil
 from pathlib import Path, PurePosixPath
 
 import pytest
+from dev.registry.compiler.authority import compile_validated_authority
+from dev.registry.compiler.loader import load_registry_tree
 
 from .....core.resources.bundled_data import bundled_path
-from ..authority import ValidatedRegistryAuthority
 from ..errors import RegistryValidationError
-from ..loader import load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -53,7 +53,7 @@ def test_authority_publication_rejects_divergent_record_design_manifest_binding(
     artifact = next(item for item in manifest["artefacts"] if item["stored_path"] == stored_path)
     assert artifact["url"] == source.source_url
 
-    published = ValidatedRegistryAuthority.load(registry_root, source_root=bundled_path())
+    published = compile_validated_authority(registry_root, bundled_path())
 
     assert published._registry_validated is True
 
@@ -74,4 +74,4 @@ def test_authority_publication_rejects_divergent_record_design_manifest_binding(
     )
 
     with pytest.raises(RegistryValidationError, match="does not exactly bind an official artifact catalog identity"):
-        ValidatedRegistryAuthority.load(registry_root, source_root=bundled_path())
+        compile_validated_authority(registry_root, bundled_path())

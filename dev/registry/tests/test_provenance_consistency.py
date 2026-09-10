@@ -25,6 +25,7 @@ from cadrumo.domain.calculations.registry.schema_exports import (
 )
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..analysis.provenance_consistency import provenance_findings
 
@@ -164,7 +165,6 @@ def test_the_scope_projection_agrees_with_the_index_it_reduces() -> None:
     The two are separate collapses of the same measurement, so they can drift.
     Total sites must be equal and the reference set must be the index's own.
     """
-    from cadrumo.domain.calculations.registry.authority import bundled_authority
 
     from ..analysis.corpus import bundled_modelo_ids
     from ..analysis.provenance_consistency import (
@@ -173,7 +173,7 @@ def test_the_scope_projection_agrees_with_the_index_it_reduces() -> None:
         screen_authority,
     )
 
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo_ids = bundled_modelo_ids()
     index = outside_reference_index(screen_authority(authority, modelo_ids))
     assert index, "the index is empty, so this proves nothing"
@@ -192,12 +192,11 @@ def test_a_deadline_window_citing_outside_its_manifest_is_reported() -> None:
     reported a revision as consistent whose due-date grounding named an orden
     the manifest never applies.
     """
-    from cadrumo.domain.calculations.registry.authority import bundled_authority
 
     from ..analysis.corpus import bundled_modelo_ids
     from ..analysis.provenance_consistency import screen_authority
 
-    findings = screen_authority(bundled_authority(), bundled_modelo_ids())
+    findings = screen_authority(compiled_bundled_authority(), bundled_modelo_ids())
     windows = [item for item in findings if item.child_kind == "deadline_windows"]
     assert windows, "no deadline window cites outside its manifest, so this proves nothing"
     for item in windows:
@@ -215,7 +214,6 @@ def test_the_walked_families_and_the_declared_child_kinds_agree() -> None:
     added by the screen rather than by the walk.
     """
 
-    from cadrumo.domain.calculations.registry.authority import bundled_authority
     from cadrumo.domain.calculations.registry.schema import SCHEMA_FAMILY, ModeloRevision
 
     from ..analysis.provenance_consistency import citing_children
@@ -227,7 +225,7 @@ def test_the_walked_families_and_the_declared_child_kinds_agree() -> None:
     }
     assert annotated, "the schema annotates no family, so this proves nothing"
 
-    revision = bundled_authority().modelo("303").revisions["2025"]
+    revision = compiled_bundled_authority().modelo("303").revisions["2025"]
     walked = {kind for kind, _ in citing_children(revision)}
     # Every walked family is one the schema declares. The reverse does not hold:
     # a family this revision leaves empty, or that carries no citations at all,
@@ -244,12 +242,11 @@ def test_both_provenance_screens_walk_the_same_families() -> None:
     construction: the mirror's family walk is this module's, so any family added
     here reaches both screens without a second edit.
     """
-    from cadrumo.domain.calculations.registry.authority import bundled_authority
 
     from ..analysis.manifest_uncited_references import uncited_manifest_references
     from ..analysis.provenance_consistency import citing_children
 
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     revision = authority.modelo("303").revisions["2025"]
     walked = {kind for kind, items in citing_children(revision) if items}
     assert "deadline_windows" in walked, "the family that motivated this is not walked"

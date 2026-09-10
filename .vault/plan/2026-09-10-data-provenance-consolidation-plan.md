@@ -10,7 +10,7 @@ related:
   - '[[2026-09-10-data-provenance-consolidation-live-lane-map-reference]]'
 modified: '2026-09-10'
 body_schema: body-v2
-body_hash: 'sha256:717308b2eefa1457d773d2b0702d4e1a62e8238dfe0fa139e5054b245c4c810e'
+body_hash: 'sha256:c7a88212d55078e01b8121f7b13e4a3d19779b7afb7e8e5e12f9c120ad9dbd20'
 ---
 
 # `data-provenance-consolidation` plan
@@ -98,10 +98,10 @@ Prove the shipped tree and all distinct quality contracts remain enforced after 
 
 ### Phase `W04.P08` - Focused and handoff verification
 
-Exercise the compiled catalog and all retained distinct quality contracts against real data.
+Exercise each consumer-owned catalog boundary and all retained distinct quality contracts against real data.
 
-- [ ] `W04.P08.S23` - Verify catalog compilation classifies every shipped bundled data file exactly once; `src/cadrumo/domain/calculations/registry/tests/test_artifact_catalogue.py`.
-- [ ] `W04.P08.S24` - Verify real registry authority publication rejects divergent source bindings; `src/cadrumo/domain/calculations/registry/tests/test_catalogue_verification_record_design.py`.
+- [x] `W04.P08.S23` - Verify each production consumer-owned evidence boundary has exhaustive exactly-once catalog classification; `dev/corpus/tests/ and dev/registry/tests/`.
+- [ ] `W04.P08.S24` - Verify the authority publish workflow rejects a divergent record-design source binding while preserving the prior artifact; `dev/registry/tests/test_authority_publication.py`.
 - [x] `W04.P08.S25` - Verify record-design sync reproducibility and catalog-backed coverage without network writes; `dev/corpus/tests/test_record_design_support.py`.
 - [ ] `W04.P08.S26` - Verify sidecar, export, normative-text, and calculation-oracle contracts remain distinct; `dev/docs/preprocess/tests/test_corpus_sidecar_freshness.py`.
 
@@ -111,4 +111,4 @@ Waves are sequential. In W02, P03, P04, and P05 may proceed in parallel after W0
 
 ## Verification
 
-Every catalog diagnostic has temporary-tree detector teeth and the compiled shipped tree assigns exactly one role to each in-scope file. Registry authority publication, record-design sync, corpus coverage, and both sidecar suites pass through their real paths. Generated-export reproduction, normative-text authenticity, and calculation/oracle gates remain separate passing contracts. Ruff, formatting, type checks, plan validation, and focused vault checks pass; unrelated pre-existing failures are reported separately.
+Every catalog diagnostic has temporary-tree detector teeth and each production consumer-owned evidence boundary assigns exactly one role to each of its in-scope files. Registry authority publication, record-design sync, corpus coverage, and both sidecar suites pass through their real paths. Generated-export reproduction, normative-text authenticity, and calculation/oracle gates remain separate passing contracts. Ruff, formatting, type checks, plan validation, and focused vault checks pass; unrelated pre-existing failures are reported separately.

@@ -17,7 +17,6 @@ import pytest
 from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.schema import CasillaDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
@@ -28,6 +27,7 @@ from cadrumo.domain.calculations.registry.schema_exports import (
 )
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..analysis.export_ref_symmetry import screen_authority, unsatisfied_export_refs
 
@@ -142,7 +142,7 @@ def test_bundled_registry_export_edge_is_symmetric() -> None:
     Counted from the authority rather than from the screen: the screen returns
     findings alone, so its own population is not observable from its result.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     codes = tuple(sorted(registry_modelo_codes()))
 
     assert len(codes) >= _MINIMUM_MODELO_CODES, (

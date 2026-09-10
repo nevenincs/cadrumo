@@ -25,14 +25,15 @@ import pytest
 from cadrumo.core import resources as core_resources
 from cadrumo.core.config import override_settings
 from cadrumo.domain.calculations.registry import formula_runtime_ops
-from cadrumo.domain.calculations.registry._loader_internals import _collect_registry_tree_fingerprints_uncached
-from cadrumo.domain.calculations.registry._source_evidence_fingerprint import collect_source_evidence_fingerprints
-from cadrumo.domain.calculations.registry._verdict_cache import certify_registry_validation, compute_verdict_key
+from dev.registry.compiler._loader_internals import _collect_registry_tree_fingerprints_uncached
+from dev.registry.compiler.source_evidence_fingerprint import collect_source_evidence_fingerprints
+from dev.registry.compiler.verdict_cache import certify_registry_validation, compute_verdict_key
+from dev.registry.compiler.convenio import collect_convenio_fingerprints
 from cadrumo.domain.calculations.registry.formula_runtime_ops import read_parameter
-from cadrumo.domain.calculations.registry.identity import compute_walked_tree_digest
-from cadrumo.domain.calculations.registry.loader_cache import _bundled_registry_root
-from cadrumo.domain.calculations.registry.loader_fingerprints import clear_fingerprint_cache
-from cadrumo.domain.calculations.registry.m303_orden_manifest import collect_m303_annual_orden_fingerprints
+from dev.registry.compiler.identity import compute_walked_tree_digest
+from dev.registry.compiler.loader_cache import _bundled_registry_root
+from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
+from dev.registry.compiler.m303_orden_manifest import collect_m303_annual_orden_fingerprints
 from cadrumo.tests.attribute_scope import scoped_attribute
 from dev.registry.compiler.convenio import collect_convenio_fingerprints
 

@@ -4,17 +4,18 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from cadrumo.domain.calculations.registry._source_evidence_fingerprint import collect_source_evidence_fingerprints
-from cadrumo.domain.calculations.registry._supplementary_orden import compile_supplementary_ordenes
-from cadrumo.domain.calculations.registry._validate import RegistryValidator
+from .source_evidence_fingerprint import collect_source_evidence_fingerprints
+from .supplementary_orden import compile_supplementary_ordenes
+from .validator import RegistryValidator
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-from cadrumo.domain.calculations.registry.identity import RegistryIdentity
+from .identity import RegistryIdentity, resolve_registry_identity
 from cadrumo.domain.iva.compilation_catalogues import compiling_catalogues
 
 from .convenio import load_convenio_authority, validate_convenio_legal_refs
 from .fact_providers import compile_registered_fact_providers, validate_fact_provider_directory_ownership
-from .loader import load_registry_tree
+from .loader import collect_registry_tree_fingerprints, load_registry_tree
 
 
 def canonical_authoring_root_pair(registry_root: Path, source_root: Path) -> tuple[Path, Path]:
@@ -33,10 +34,17 @@ def compile_validated_authority(
     registry_root: Path,
     source_root: Path,
     *,
-    identity: RegistryIdentity,
+    identity: RegistryIdentity | None = None,
 ) -> ValidatedRegistryAuthority:
-    """Compile and validate a source candidate; never used by product runtime."""
+    """Compile and validate a source candidate; never used by product runtime.
+
+    ``identity`` defaults to the identity resolved for ``registry_root`` the
+    same way :func:`load_registry_tree` resolves it. A caller that must pin the
+    identity it captured earlier, such as publication, passes it explicitly.
+    """
     root, sources_root = canonical_authoring_root_pair(registry_root, source_root)
+    if identity is None:
+        identity = resolve_registry_identity(root, collect_fingerprints=collect_registry_tree_fingerprints)
     modelos, catalogues = load_registry_tree(root, identity=identity)
     validate_fact_provider_directory_ownership(root)
     with compiling_catalogues(catalogues.legal, catalogues.sources, sources_root):
@@ -84,3 +92,25 @@ def compile_validated_authority(
     )
     authority.validate_registry()
     return authority
+
+
+_COMPILED_BUNDLED_AUTHORITIES: dict[str, ValidatedRegistryAuthority] = {}
+
+
+def compiled_bundled_authority() -> ValidatedRegistryAuthority:
+    """Compile the bundled registry sources for development tooling.
+
+    Runtime reads only the signed published artifact, which a development
+    checkout does not have and cannot sign. Development tools, screens and tests
+    compile the same sources instead. The result is cached by registry identity,
+    so an unchanged tree compiles once per process and any change to the sources
+    compiles afresh.
+    """
+    registry_root, source_root = canonical_authoring_root_pair(bundled_path("registry", "aeat"), bundled_path())
+    identity = resolve_registry_identity(registry_root, collect_fingerprints=collect_registry_tree_fingerprints)
+    cached = _COMPILED_BUNDLED_AUTHORITIES.get(identity.digest)
+    if cached is None:
+        cached = compile_validated_authority(registry_root, source_root, identity=identity)
+        _COMPILED_BUNDLED_AUTHORITIES.clear()
+        _COMPILED_BUNDLED_AUTHORITIES[identity.digest] = cached
+    return cached

@@ -25,6 +25,7 @@ from ....core.resources.bundled_data import bundled_path as _bundled_path
 from ._snapshot_internals import _build_validated_snapshot
 from .authority_artifact import (
     AuthorityArtifact,
+    AuthorityEvidenceProjection,
     read_authority_artifact,
 )
 from .corpus_provenance import NormativeCorpusProvenance, classify_normative_corpus_provenance
@@ -392,6 +393,7 @@ class ValidatedRegistryAuthority:
     _validated_modelos: set[str]
     _snapshots: dict[_SnapshotKey, RegistrySnapshot]
     _identity_digest: str = ""
+    evidence: AuthorityEvidenceProjection = field(default_factory=AuthorityEvidenceProjection)
     _capture_generation: int = field(default=0, init=False, repr=False)
     _capture_reset_epoch: int = field(default=0, init=False, repr=False)
     _capture_state: _AuthorityLoadState | None = field(default=None, init=False, repr=False)
@@ -445,6 +447,21 @@ class ValidatedRegistryAuthority:
             return self._modelos_by_id[modelo_id]
         except KeyError as exc:
             raise RegistrySnapshotError(f"modelo {modelo_id!r} is not present in the calculation registry") from exc
+
+    def legal_evidence_text(self, legal_ref_id: LegalRefId) -> str:
+        """Return the signed anchor text for one runtime legal citation.
+
+        Published authorities answer this without resolving a source root.  A
+        development authority has no projection until it passes publication,
+        so absence is a refusal rather than a corpus fallback.
+        """
+        with self._state_lock:
+            return self.evidence.legal_text(str(legal_ref_id))
+
+    def legal_quotation_is_grounded(self, legal_ref_id: LegalRefId, quotation: str) -> bool:
+        """Answer one citation query entirely from signed published evidence."""
+        with self._state_lock:
+            return self.evidence.quotation_is_grounded(str(legal_ref_id), quotation)
 
     def legal_corpus_provenance(self, legal_ref_id: LegalRefId) -> NormativeCorpusProvenance:
         """Return one legal reference's provenance through this validated authority.
@@ -982,6 +999,7 @@ def _authority_from_published_artifact(
         _validated_modelos={modelo.id for modelo in artifact.modelos},
         _snapshots={},
         _identity_digest=artifact.identity_digest,
+        evidence=artifact.evidence,
     )
     authority._bind_published_artifact_incarnation()
     return authority

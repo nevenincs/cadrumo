@@ -22,8 +22,8 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.support_matrix import build_support_matrix, revision_capability_probe
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.conformance.profile import audit_bundled_registry_conformance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -35,7 +35,7 @@ _MINIMUM_COMPARED_ROWS = 60
 
 def test_every_conformance_row_matches_the_support_authority_probe() -> None:
     """Each row's capability facts equal the authority's probe of THAT revision."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     profile = audit_bundled_registry_conformance()
 
     compared = 0
@@ -67,7 +67,7 @@ def test_every_conformance_row_matches_the_support_authority_probe() -> None:
 
 def test_support_matrix_rows_probe_the_latest_revision() -> None:
     """Each support-matrix row equals the probe of its modelo's latest revision."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     entries = build_support_matrix(authority)
 
     assert entries, "the bundled registry produced no support-matrix rows"
@@ -92,7 +92,7 @@ def test_this_revision_and_latest_revision_capabilities_stay_distinct() -> None:
     revision differs in capabilities from an earlier one, the two must report
     that difference rather than agreeing.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     profile = audit_bundled_registry_conformance()
 
     observed_divergences: list[str] = []

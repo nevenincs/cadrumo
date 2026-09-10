@@ -6,10 +6,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import (
-    ValidatedRegistryAuthority,
-    bundled_authority,
-)
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..export_proof import FilingExportProofAuthority
 from ..filing_export_proof import canonical_two_channel_filing_export_proof_authority
@@ -38,7 +36,7 @@ def canonical_live_registry_closure_authorities(
 ) -> RegistryClosureAuthorities:
     """Return current live authorities without inventing absent proof entries."""
     resolved_root = repository_root.resolve(strict=True)
-    registry = bundled_authority()
+    registry = compiled_bundled_authority()
     filing = canonical_two_channel_filing_export_proof_authority(
         workspace_root=resolved_root,
         registry_root=bundled_path("registry", "aeat"),

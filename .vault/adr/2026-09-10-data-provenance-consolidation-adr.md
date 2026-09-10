@@ -5,7 +5,7 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:30ce561231affd01fbeec58845d1206870e0c82dbd684b000c96723ffef4e274'
+body_hash: 'sha256:997b8626203c45c773b01dfbcc1c304c290e41770256870a603c877bd3e4607a'
 related:
   - "[[2026-09-10-data-provenance-consolidation-lane-inventory-research]]"
   - "[[2026-09-10-data-provenance-consolidation-live-lane-map-reference]]"
@@ -25,7 +25,7 @@ related:
 - The seven off-host BOE rows already align with manifests and registry sources; the extra file duplicates classification rather than closing a coverage gap.
 - Prose remains valuable documentation but cannot prove immutable source identity.
 - Derivation freshness, export reproduction, normative-text authenticity, and calculation/oracle correctness are independent properties.
-- Each bundled file needs an explicit, reviewable role.
+- Each artifact inside an owning evidence boundary needs an explicit, reviewable role; registry configuration remains specialized authority rather than a catalog artifact.
 
 ## Considered options
 
@@ -48,7 +48,7 @@ related:
 
 ## Implementation
 
-Introduce a typed, read-only `ArtifactIdentity` catalog/compiler keyed by canonical bundled relative path. A record carries immutable acquisition identity and exactly one role: official artifact, derived artifact, semantic annotation, disposition, or explicitly non-authoritative fixture.
+Introduce a typed, read-only `ArtifactIdentity` catalog/compiler keyed by canonical bundled relative path. The compiler remains caller-bounded: authority publication supplies the registry-cited evidence boundary and record-design sync supplies its acquisition boundary. A record carries immutable acquisition identity and exactly one role: official artifact, derived artifact, semantic annotation, disposition, or explicitly non-authoritative fixture.
 
 Existing manifests, off-host rows, manual manifests, and e-invoice records become validated adapters or generated projections. Registry sources bind catalog identity while retaining their regulatory semantics. The compiler becomes the shared resolver for payload role, normalized location, identity alignment, and coverage diagnostics.
 
@@ -60,4 +60,4 @@ Artifact identity and role are shared facts currently reconstructed by multiple 
 
 ## Consequences
 
-The project gains one canonical resolver for bundled identity and role, plus explicit diagnostics for unclassified, conflicting, stale, or orphaned data. Registry authority remains filing-specific and byte-verified. Specialized derivation and correctness gates remain intact. Migration must be staged, because every deletion requires replacement evidence.
+The project gains one canonical resolver for bundled identity and role within each owning evidence boundary, plus explicit diagnostics for unclassified, conflicting, stale, or orphaned data. Registry authority remains filing-specific and byte-verified; the catalog does not become a universal configuration inventory. Specialized derivation and correctness gates remain intact. Migration must be staged, because every deletion requires replacement evidence.

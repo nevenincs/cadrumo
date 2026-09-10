@@ -14,10 +14,9 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
     resolve_governed_fact,
 )
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
-from cadrumo.domain.calculations.registry.facts.validation import governed_fact_catalogue_failures
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from dev.registry.compiler.fact_loader import load_governed_facts
-from dev.registry.compiler.legal_parameters import compile_legal_parameter_facts
+from dev.registry.compiler.fact_validation import governed_fact_catalogue_failures
 from dev.registry.compiler.loader import load_shared_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -88,11 +87,9 @@ def test_payment_fraction_selectors_resolve_from_the_bounded_m036_mapping_and_ex
     assert resolved.source_refs == source_refs
 
 
-def test_payment_fraction_selectors_are_not_projected_by_the_legal_parameter_adapter() -> None:
-    adapter_ids = {fact.fact_id for fact in compile_legal_parameter_facts(bundled_path("registry", "aeat"))}
+def test_payment_fraction_selectors_exclude_retired_broad_identity() -> None:
     authored_ids = {fact.fact_id for fact in load_governed_facts(bundled_path("registry", "aeat", "facts"))}
 
-    assert not _SELECTOR_IDS & adapter_ids
     assert "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrario-objetiva" not in authored_ids
 
 

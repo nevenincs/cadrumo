@@ -6,8 +6,8 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
-from cadrumo.domain.calculations.registry.facts.validation import governed_fact_catalogue_failures
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
+from dev.registry.compiler.fact_validation import governed_fact_catalogue_failures
 from dev.registry.compiler.iva import compile_iva_rate_facts, compile_iva_recargo_facts
 from dev.registry.compiler.loader import load_shared_catalogues
 

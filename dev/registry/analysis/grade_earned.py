@@ -34,9 +34,10 @@ from dataclasses import dataclass
 from typing import Literal
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.support_matrix import revision_capability_probe
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .corpus import bundled_modelo_ids
 
@@ -101,7 +102,7 @@ def screen_authority(authority: ValidatedRegistryAuthority, modelo_ids: tuple[st
 
 def main() -> int:
     """Print one greppable row per finding and a summary; always exit 0."""
-    findings = screen_authority(bundled_authority(), bundled_modelo_ids())
+    findings = screen_authority(compiled_bundled_authority(), bundled_modelo_ids())
     for f in findings:
         sys.stdout.write(
             f"grade_{f.kind} modelo={f.modelo} revision={f.revision} declared={f.declared_grade} "

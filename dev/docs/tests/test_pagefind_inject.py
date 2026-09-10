@@ -18,7 +18,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..pagefind_inject import (
     InjectionStats,
@@ -304,7 +304,7 @@ _CLI_GAP_FRAGMENT = "CLI projection was skipped"
 @pytest.fixture(scope="module")
 def _real_casilla_record() -> SearchRecord:
     """One real projected casilla record, so a complete census is not a fiction."""
-    records, _stats = project_casilla_search_records(bundled_authority())
+    records, _stats = project_casilla_search_records(compiled_bundled_authority())
     assert records, "the casilla projection carried nothing, so this proves nothing"
     return to_search_record(records[0])
 

@@ -29,7 +29,6 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
 from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor, ModeloDefinition
 from cadrumo.domain.calculations.registry.tests.test_revision_edition_round_trip import (
@@ -37,6 +36,7 @@ from cadrumo.domain.calculations.registry.tests.test_revision_edition_round_trip
     copy_registry_tree,
     edition_round_trip_report,
 )
+from dev.registry.compiler.authority import compile_validated_authority
 
 from ..analysis.delta_minimality import LINEAGE_CLAIM_FIELDS, definition_findings, restatement_differences
 from ..edition_delta_migration import (
@@ -67,7 +67,7 @@ def _registry(destination: Path, modelo_id: str) -> Path:
 
 
 def _load(root: Path, modelo_id: str) -> ModeloDefinition:
-    return ValidatedRegistryAuthority.load(root, source_root=bundled_path()).modelo(modelo_id)
+    return compile_validated_authority(root, bundled_path()).modelo(modelo_id)
 
 
 def _edition_dir(root: Path, modelo_id: str, revision_id: str) -> Path:

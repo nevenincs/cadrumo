@@ -129,6 +129,7 @@ from pathlib import Path, PurePosixPath
 from typing import Final
 
 import pytest
+from dev.registry.compiler.authority import compile_validated_authority, compiled_bundled_authority
 
 from .....application.filing.draft_construction import build_draft
 from .....application.filing.export import export_draft
@@ -141,7 +142,7 @@ from .....application.filing.producer_snapshot import (
     TaxpayerIdentityFacts,
     build_filing_producer_snapshot,
 )
-from .....application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
+from .....application.filing.runtime import ModeloOperatorProfile, schema_provider_from_authority
 from .....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from .....core.i18n.render import override_locales_root
 from .....core.modelo import Modelo
@@ -154,7 +155,6 @@ from .....core.result_disposition import ResultDisposition
 from .....domain.filing.protocols import ModeloInputs
 from .....domain.submission.models import ModeloDraftStatus
 from .....tests.inventory import REPO_ROOT
-from ..authority import ValidatedRegistryAuthority, bundled_authority
 from ..errors import RegistryError
 from ..modelo_localization import (
     ModeloLocalizationFieldKind,
@@ -363,7 +363,7 @@ def _refused(kind: RoundTripFindingKind, exc: RegistryError) -> RoundTripReport:
 
 
 def _load_modelo(registry_root: Path, modelo_id: str) -> ModeloDefinition:
-    return ValidatedRegistryAuthority.load(registry_root, source_root=bundled_path()).modelo(modelo_id)
+    return compile_validated_authority(registry_root, bundled_path()).modelo(modelo_id)
 
 
 def _delta_authored(modelo: ModeloDefinition) -> tuple[str, ...]:
@@ -635,9 +635,8 @@ def _export_bytes_finding(
     rendered: dict[str, bytes] = {}
     draft = None
     for side, root in (("live", live_registry_root), ("pre-migration", reference_registry_root)):
-        provider = build_runtime_schema_provider(
-            root,
-            source_root=bundled_path(),
+        provider = schema_provider_from_authority(
+            compile_validated_authority(root, bundled_path()),
             modelos=(modelo_id,),
             filing_year=scenario.period.filing_year,
             period=scenario.period,
@@ -707,7 +706,7 @@ def _bundled_modelo_ids() -> tuple[str, ...]:
 @pytest.mark.parametrize("modelo_id", sorted(set(_bundled_modelo_ids()) | set(_MIGRATIONS)))
 def test_every_bundled_modelo_either_is_unmigrated_or_round_trips(modelo_id: str, tmp_path: Path) -> None:
     """A modelo naming a predecessor anywhere must round-trip against its recorded full-copy form."""
-    modelo = bundled_authority().modelo(modelo_id)
+    modelo = compiled_bundled_authority().modelo(modelo_id)
     delta_authored = _delta_authored(modelo)
     entry = _MIGRATIONS.get(modelo_id)
     if entry is None:

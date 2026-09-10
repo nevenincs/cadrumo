@@ -15,6 +15,7 @@ from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import SociedadesAnnualManualCoverageStatus
+from dev.registry.compiler.loader import load_shared_catalogues
 
 from ..extract_corpus_sidecars import check_all as check_corpus_sidecars
 from ..extract_manual_corpus_text import extract_raw_text

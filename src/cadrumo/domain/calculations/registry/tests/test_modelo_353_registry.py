@@ -6,6 +6,7 @@ from datetime import date
 from hashlib import sha256
 
 import pytest
+from dev.registry.compiler.loader import load_catalogue_file, load_modelo_directory
 
 from .....core.iva_deduction_fact import IvaDeductionFactKind
 from .....core.resources.bundled_data import bundled_path
@@ -15,7 +16,6 @@ from .._validate import RegistryValidator
 from ..authority import bundled_authority
 from ..bindings_previous_filing import previous_filing_source_reference
 from ..errors import NoRevisionForPeriodError, RegistryValidationError
-from ..loader import load_catalogue_file, load_modelo_directory
 from ..record_design import extract_record_design
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..temporal import select_revision

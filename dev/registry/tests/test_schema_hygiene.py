@@ -20,9 +20,9 @@ from cadrumo.core.aggregation import BindingTypedEnumKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloDefinition
 from cadrumo.domain.calculations.registry.validate_revision_identity import revision_reference_identity_failures
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.parity.renta_web_open_replay_corpus import replay_corpus_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -41,7 +41,7 @@ _FORBIDDEN_XML_ROOT_TOKENS = frozenset(
 
 @cache
 def _all_modelos() -> tuple[ModeloDefinition, ...]:
-    return bundled_authority().modelos
+    return compiled_bundled_authority().modelos
 
 
 def test_bundled_revisions_produce_no_ambiguous_reference_identity_failures() -> None:

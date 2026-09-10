@@ -31,12 +31,10 @@ from datetime import date
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n import lookup_translation_entry
 from cadrumo.core.modelo import Modelo
-from cadrumo.domain.calculations.registry.authority import (
-    ValidatedRegistryAuthority,
-    bundled_authority,
-)
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .search_record import CasillaSearchRecord, SearchRecordKind
 
@@ -93,7 +91,7 @@ def project_casilla_search_records(
         A ``(records, stats)`` pair: the deduplicated records sorted by
         ``(modelo, casilla_id)`` and the raw-vs-deduplicated counts.
     """
-    resolved = authority if authority is not None else bundled_authority()
+    resolved = authority if authority is not None else compiled_bundled_authority()
     raw_rows = 0
     by_key: dict[tuple[str, str], _RevisionCasilla] = {}
     sources: dict[tuple[str, str], list[_RevisionCasilla]] = {}
@@ -135,7 +133,7 @@ def project_modelo_casillas(
     A focused projection used by tests and by per-modelo index builds; it
     walks only ``modelo``'s revisions and applies the same dedup rule.
     """
-    resolved = authority if authority is not None else bundled_authority()
+    resolved = authority if authority is not None else compiled_bundled_authority()
     definition = resolved.modelo(modelo.value)
     by_key: dict[tuple[str, str], _RevisionCasilla] = {}
     sources: dict[tuple[str, str], list[_RevisionCasilla]] = {}

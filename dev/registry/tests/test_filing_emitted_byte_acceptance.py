@@ -22,10 +22,8 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import (
-    ValidatedRegistryAuthority,
-    bundled_authority,
-)
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.conformance.closure_models import RegistryClosureLimb
 from dev.registry.maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
 
@@ -48,7 +46,7 @@ def _canonical_filing_authority():
     Both secure-replay inputs are absent because these tests exercise the public
     channel; an operator supplies those.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     return authority, canonical_two_channel_filing_export_proof_authority(
         workspace_root=_REPOSITORY_ROOT,
         registry_root=bundled_path("registry", "aeat"),

@@ -14,6 +14,7 @@ from datetime import date, datetime
 from pathlib import Path, PurePosixPath
 
 import pytest
+from dev.registry.compiler.loader import load_registry_tree
 
 from .....core.resources.bundled_data import bundled_path
 from .._validate import RegistryValidator
@@ -29,7 +30,6 @@ from ..artifact_catalogue import (
 )
 from ..errors import RegistryValidationError
 from ..facts.schema import GovernedFactCatalogue
-from ..loader import load_registry_tree
 from ..schema import RegistryCatalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
