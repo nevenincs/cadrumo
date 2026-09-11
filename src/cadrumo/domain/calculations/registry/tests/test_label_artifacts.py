@@ -5,14 +5,14 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler._validate_label_artifacts import collect_label_artifact_findings, validate_no_label_artifacts
+from dev.registry.compiler.registry_scope import validate_registry_scope
+from dev.registry.conformance.tests._registry_schema_support import _committed_registry_tree
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .._validate_label_artifacts import collect_label_artifact_findings, validate_no_label_artifacts
 from ..schema import ModeloDefinition, ModeloRevision
 from ..schema_references import PeriodSelector
 from ..schema_surfaces import CasillaDefinition
-from ..validate_registry_scope import validate_registry_scope
-from ._registry_schema_support import _committed_registry_tree
 from ._synthetic_locale_fixtures import _synthetic_locale_scope, _write_test_label
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -5,11 +5,11 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler.validator import RegistryValidator
 
 from .....core.period import PeriodKind, registry_period_kind
 from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
-from .._validate import RegistryValidator
 from ..temporal import select_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

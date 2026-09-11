@@ -39,9 +39,9 @@ See Also:
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler import _validate_export_layout_coverage as coverage
 
 from .....core.modelo import Modelo
-from .. import _validate_export_layout_coverage as coverage
 from ..authority import ValidatedRegistryAuthority, bundled_authority
 from ..errors import RegistryError
 from ..schema import RegistrySnapshot

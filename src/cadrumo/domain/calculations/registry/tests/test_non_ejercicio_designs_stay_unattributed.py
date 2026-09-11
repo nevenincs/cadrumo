@@ -27,8 +27,8 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from dev.registry.conformance.tests._registry_schema_support import _committed_registry_tree
 
-from ._registry_schema_support import _committed_registry_tree
 from ._revision_span_design_support import _design_coverage_years, _design_sources
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -22,6 +22,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 from pydantic import ValidationError
 
 from .....application.aggregation import RentaIncomeObservation
@@ -42,7 +43,6 @@ from ..ledger_renta_income_bindings import (
     validate_ledger_renta_income_aggregation_binding_definition,
 )
 from ..schema import DataBindingDefinition
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

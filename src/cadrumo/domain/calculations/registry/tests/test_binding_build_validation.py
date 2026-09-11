@@ -28,18 +28,18 @@ Anti-tautology proofs (the gate is not trivially rejecting everything):
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.validator import RegistryValidator
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
-from .._validate import RegistryValidator
 from ..bindings import (
     _BINDING_VALIDATOR_REGISTRY,
     validate_binding_selector_shape,
 )
 from ..errors import RegistryValidationError
 from ..schema import DataBindingDefinition, ModeloDefinition, ModeloRevision, RegistryCatalogues
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

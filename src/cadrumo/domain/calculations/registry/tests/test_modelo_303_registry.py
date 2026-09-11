@@ -5,10 +5,10 @@ from __future__ import annotations
 from datetime import date, timedelta
 
 import pytest
+from dev.registry.compiler.validator import RegistryValidator
 
 from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_snapshot import build_snapshot
-from .._validate import RegistryValidator
 from ..errors import NoRevisionForPeriodError
 from ..temporal import select_revision
 from ._modelo_303_registry_support import (

@@ -3,16 +3,16 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 
 import pytest
-
-from .._validate_relation_periods import (
+from dev.registry.compiler._validate_relation_periods import (
     select_relation_source_revisions,
     validate_relation_source_coordinate_coverage,
 )
-from .._validate_relation_sources import _relation_is_prior_year_filing_carry
+from dev.registry.compiler._validate_relation_sources import _relation_is_prior_year_filing_carry
+from dev.registry.conformance.tests._registry_schema_support import _committed_registry_tree
+
 from ..bindings_previous_filing import previous_filing_source_reference
 from ..schema import DataBindingDefinition, ModeloDefinition, ModeloRevision
 from ..schema_surfaces import RelationDefinition
-from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

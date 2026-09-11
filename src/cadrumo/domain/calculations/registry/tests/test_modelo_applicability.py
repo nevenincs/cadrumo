@@ -6,6 +6,7 @@ from datetime import date
 from typing import TypedDict
 
 import pytest
+from dev.registry.conformance.tests._registry_schema_support import _committed_registry_tree
 from pydantic import ValidationError
 
 from ....contribuyente.entity_type import EntityType, LegalEntityForm
@@ -27,7 +28,6 @@ from ..applicability import (
 )
 from ..applicability_modelo202 import Modelo202Modality, Modelo202ModalityVerdict
 from ..authority import bundled_authority
-from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

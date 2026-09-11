@@ -9,19 +9,19 @@ from datetime import date
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler._validate_evidence import EvidenceValidator
+from dev.registry.compiler.corpus_catalogue import verify_source_catalogue, verify_source_file
+from dev.registry.compiler.legal_grounding import verify_legal_catalogue
+from dev.registry.compiler.validator import RegistryValidator
+from dev.registry.conformance.tests._registry_schema_support import _committed_registry_tree
 from pydantic import ValidationError
 
 from .....core.config import Settings
 from .._citation_blocklist import _KNOWN_BAD_CITATIONS, KnownBadCitation, _fold_diacritics, find_known_bad
-from .._validate import RegistryValidator
-from .._validate_evidence import EvidenceValidator
-from dev.registry.compiler.corpus_catalogue import verify_source_catalogue, verify_source_file
 from ..errors import RegistryValidationError
-from dev.registry.compiler.legal_grounding import verify_legal_catalogue
 from ..schema import RegistryCatalogues
 from ..schema_base import EvidenceTier, SourceCitation
 from ..schema_references import LegalReference, SourceReference
-from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

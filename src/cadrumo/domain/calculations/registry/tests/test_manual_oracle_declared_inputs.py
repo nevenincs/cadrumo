@@ -127,11 +127,11 @@ from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
+from dev.registry.tests.manual_oracle_support import read_manual_worked_example
 
 from .....core.directory_scan import scan_directory
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.resources.bundled_data import bundled_path
-from .manual_oracle_support import read_manual_worked_example
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

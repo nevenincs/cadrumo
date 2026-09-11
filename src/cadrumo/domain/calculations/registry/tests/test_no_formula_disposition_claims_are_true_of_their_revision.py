@@ -32,8 +32,7 @@ those modelos gains a legitimate total.
 from __future__ import annotations
 
 import pytest
-
-from ._registry_schema_support import _committed_registry_tree
+from dev.registry.conformance.tests._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

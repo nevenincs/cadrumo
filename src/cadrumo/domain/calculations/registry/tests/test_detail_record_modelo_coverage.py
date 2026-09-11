@@ -14,10 +14,10 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 import pytest
+from dev.registry.conformance.tests._registry_schema_support import _committed_registry_tree
 
 from .....application.storage.calc_sheets.engine import collect_row_sets
 from ..schema import ModeloDefinition
-from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

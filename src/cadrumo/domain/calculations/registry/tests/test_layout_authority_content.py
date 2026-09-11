@@ -26,16 +26,16 @@ from __future__ import annotations
 import re
 
 import pytest
-
-from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_tree import bundled_registry_tree
-from .._validate_layout_authority_content import (
+from dev.registry.compiler._validate_layout_authority_content import (
     _ANNEX_BLOCK,
     _ANNEX_HEADING,
     _LAYOUT_VOCABULARY,
     _carries_layout_content,
     validate_layout_authority_content,
 )
+
+from .....core.resources.bundled_data import bundled_path
+from .....tests.registry_tree import bundled_registry_tree
 from ..schema_references import SourceReference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

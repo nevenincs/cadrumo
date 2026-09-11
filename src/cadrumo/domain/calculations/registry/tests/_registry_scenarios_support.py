@@ -7,10 +7,11 @@ from datetime import date
 from decimal import Decimal
 from functools import lru_cache
 
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
+
 from .....core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from .....core.resources.bundled_data import bundled_path
 from ..ids import LegalRefId, SourceRefId
-from ._registry_schema_support import _committed_modelo
 from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,

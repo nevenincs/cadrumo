@@ -17,21 +17,21 @@ from datetime import date
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.loader import load_modelo_directory
-
-from .....core.resources.bundled_data import bundled_path
-from .._validate import RegistryValidator
-from .._validate_cross_revision import (
+from dev.registry.compiler._validate_cross_revision import (
     cross_revision_casilla_consistency_failures,
     declared_cross_revision_continuity_semantic_linkage_failures,
 )
+from dev.registry.compiler.loader import load_modelo_directory
+from dev.registry.compiler.registry_scope import validate_registry_scope
+from dev.registry.compiler.validator import RegistryValidator
+from dev.registry.conformance.tests._registry_schema_support import _committed_registry_tree
+
+from .....core.resources.bundled_data import bundled_path
 from ..ids import LegalRefId
 from ..modelo_localization import ModeloLocalizationFieldKind, casilla_occurrence_locale_key
 from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from ..schema_references import PeriodSelector
 from ..schema_surfaces import CasillaConstraints, CasillaDefinition
-from ..validate_registry_scope import validate_registry_scope
-from ._registry_schema_support import _committed_registry_tree
 from ._synthetic_locale_fixtures import (
     _synthetic_locale_scope,
     _write_test_label,

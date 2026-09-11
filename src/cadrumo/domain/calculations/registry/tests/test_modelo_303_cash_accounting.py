@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import pytest
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 
 from .....core.aggregation import BindingSourceKind
 from ..binding_selector_utils import selector_as_dict
 from ..schema_input_kind import InputKind
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

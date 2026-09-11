@@ -17,10 +17,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
+
 from .....core.period import Period
 from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_snapshot import build_snapshot
-from ._registry_schema_support import _committed_modelo
 
 if TYPE_CHECKING:
     from ..schema import ModeloRevision

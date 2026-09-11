@@ -23,12 +23,12 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 import pytest
+from dev.registry.compiler._validate_relation_periods import select_relation_source_revisions
+from dev.registry.conformance.tests._registry_schema_support import _committed_registry_tree
 
-from .._validate_relation_periods import select_relation_source_revisions
 from ..binding_selector_utils import selector_as_dict
 from ..schema import ModeloDefinition
 from ..schema_surfaces import RelationDefinition
-from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -9,19 +9,19 @@ from datetime import date
 from pathlib import Path
 
 import pytest
-
-from .....core.directory_scan import scan_directory
-from .....core.resources.bundled_data import bundled_path
-from .._validate import RegistryValidator
-from ..authority import bundled_authority
-from ..corpus_catalogue import verify_source_catalogue
-from ..corpus_provenance import NormativeCorpusProvenance, classify_normative_corpus_provenance
-from ..errors import RegistryValidationError
-from ..legal import (
+from dev.registry.compiler.corpus_catalogue import verify_source_catalogue
+from dev.registry.compiler.legal_grounding import (
     _REVIEWED_PRESUMPTIVE_NORMATIVE_CORPUS,
     verify_legal_catalogue,
     verify_legal_reference_grounding,
 )
+from dev.registry.compiler.validator import RegistryValidator
+
+from .....core.directory_scan import scan_directory
+from .....core.resources.bundled_data import bundled_path
+from ..authority import bundled_authority
+from ..corpus_provenance import NormativeCorpusProvenance, classify_normative_corpus_provenance
+from ..errors import RegistryValidationError
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..schema_references import LegalReference
 

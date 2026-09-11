@@ -6,12 +6,13 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.validator import RegistryValidator
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo, _committed_snapshot
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.corpus_text import normalise_corpus_text
 from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_observations import registry_grounded_modelo_observation
-from .._validate import RegistryValidator
 from ..authority import bundled_authority
 from ..binding_selector_utils import selector_as_dict
 from ..bindings import CasillaObservation, RegistryModeloObservation
@@ -21,7 +22,6 @@ from ..formula_runtime import calculate_registry_snapshot
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..schema_input_kind import InputKind
 from ..temporal import select_revision
-from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

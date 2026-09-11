@@ -7,6 +7,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 from pydantic import ValidationError
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
@@ -30,7 +31,6 @@ from ..ledger_renta_gastos_estimacion_directa_bindings import (
     validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definition,
 )
 from ..schema import DataBindingDefinition, ModeloRevision, RegistrySnapshot
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

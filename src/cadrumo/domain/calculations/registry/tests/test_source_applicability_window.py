@@ -19,16 +19,16 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo, _committed_snapshot
 from pydantic import ValidationError
 
 from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_snapshot import build_snapshot
 from .._snapshot_internals import _SUBSTANTIVE_LAW_KINDS, collect_snapshot_ref_ids
-from .._validate_orden_aplicabilidad import RevisionLegalApplicabilityWindow
 from ..errors import RegistryValidationError
+from ..orden_applicability import RevisionLegalApplicabilityWindow
 from ..schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 from ..schema_references import LegalReference
-from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

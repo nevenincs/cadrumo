@@ -78,6 +78,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 
 from .....application.aggregation import aggregate_renta_m100_income_ledger
 from .....core.aggregation import LedgerIncomeGrounding
@@ -97,7 +98,6 @@ from ..ledger_renta_income_bindings import (
 )
 from ..schema import ModeloRevision
 from ..schema_input_kind import InputKind
-from ._registry_schema_support import _committed_modelo
 from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,

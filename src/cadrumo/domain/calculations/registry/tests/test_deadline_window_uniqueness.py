@@ -5,11 +5,11 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler._validate_revision_rules import validate_deadline_window_uniqueness
+from dev.registry.compiler.validator import RegistryValidator
 
 from .....core.period import Period
 from .....core.result_disposition import ResultDisposition
-from .._validate import RegistryValidator
-from .._validate_revision_rules import validate_deadline_window_uniqueness
 from ..errors import RegistryValidationError
 from ..schema_deadlines import DeadlineWindowDefinition
 from ..schema_references import PeriodSelector

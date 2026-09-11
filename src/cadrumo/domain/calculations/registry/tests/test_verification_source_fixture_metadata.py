@@ -38,6 +38,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from dev.registry.conformance.tests._registry_schema_support import _committed_registry_tree
 
 from .....core.directory_scan import scan_directory
 from .....core.resources.bundled_data import bundled_path
@@ -47,7 +48,6 @@ from .....tests.fixtures.provenance import (
     provenance_mismatches,
     sidecar_provenance,
 )
-from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

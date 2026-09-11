@@ -5,18 +5,18 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler.validator import RegistryValidator
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 
 from .....core.iva_deduction_fact import IvaDeductionFactKind
 from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_snapshot import build_snapshot
 from ....iva.schema import IvaLedgerObservationRole
-from .._validate import RegistryValidator
 from ..authority import bundled_authority
 from ..deadline_coordinate import deadline_semantic_coordinate
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..temporal import select_revision
 from ._ledger_iva_aggregation_support import _deduction_provenance
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

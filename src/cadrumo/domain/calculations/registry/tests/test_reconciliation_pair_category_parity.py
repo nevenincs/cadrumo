@@ -34,11 +34,11 @@ import re
 from collections.abc import Mapping
 
 import pytest
+from dev.registry.conformance.tests._registry_schema_support import _committed_registry_tree
 
 from .....core.aggregation import BindingSourceKind
 from ..binding_selector_utils import selector_as_dict
 from ..schema import ModeloRevision
-from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

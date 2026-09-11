@@ -14,9 +14,9 @@ authority loads below.
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler import _validate_revision_rules as rules
 
 from .....core.irnr import M210_TIPO_RENTA_CODE_PROJECTION
-from .. import _validate_revision_rules as rules
 from ..authority import bundled_authority
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]

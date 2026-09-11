@@ -5,13 +5,13 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....tests.registry_observations import registry_grounded_modelo_observation
 from ..bindings import RegistryModeloObservation
 from ..relations import resolve_relation_values_from_observations
 from ..schema import ModeloDefinition, ModeloRevision
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

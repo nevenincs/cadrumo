@@ -36,13 +36,13 @@ These tests pin the closed state at the application-facing resolution boundary
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
+from dev.registry.compiler.validator import RegistryValidator
 
 from .....core.directory_scan import iter_directory
 from .....core.resources.bundled_data import bundled_path
-from .._validate import RegistryValidator
 from ..authority import bundled_authority
 from ..errors import RegistryValidationError
-from ..loader_fingerprints import clear_fingerprint_cache
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

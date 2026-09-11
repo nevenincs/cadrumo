@@ -8,6 +8,7 @@ from functools import cache
 from typing import Any
 
 import pytest
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 from pydantic import ValidationError
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
@@ -33,7 +34,6 @@ from ._ledger_iva_aggregation_support import (
     _calculate_303_from_observations,
     _observation,
 )
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

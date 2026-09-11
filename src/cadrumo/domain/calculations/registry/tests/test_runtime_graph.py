@@ -15,10 +15,10 @@ from decimal import Decimal
 from graphlib import CycleError
 
 import pytest
+from dev.registry.compiler._validate_formulas import validate_formula_dag
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....tests.registry_tree import bundled_registry_tree
-from .._validate_formulas import validate_formula_dag
 from ..runtime_graph import (
     enum_consumed_binding_ids,
     expression_binding_refs,

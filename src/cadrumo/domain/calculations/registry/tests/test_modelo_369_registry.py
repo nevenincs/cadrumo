@@ -8,12 +8,13 @@ from datetime import date
 from functools import lru_cache
 
 import pytest
+from dev.registry.compiler.validator import RegistryValidator
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo, _committed_snapshot
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .....core.resources.bundled_data import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
-from .._validate import RegistryValidator
 from ..authority import bundled_authority
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..ids import LegalRefId
@@ -24,7 +25,6 @@ from ..ledger_oss_bindings import (
 from ..record_design import extract_record_design
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..schema_verification import LiveVerificationSurface
-from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW1_HOST = aeat_host("www1")

@@ -21,6 +21,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 import pytest
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
@@ -31,7 +32,6 @@ from ..irnr_ledger_bindings import (
     unsupported_ledger_irnr_income_observations,
     validate_ledger_irnr_income_aggregation_binding_definition,
 )
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

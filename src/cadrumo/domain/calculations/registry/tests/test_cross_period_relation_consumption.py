@@ -24,12 +24,12 @@ set is allowed to stand unconsumed by its declared role.
 from __future__ import annotations
 
 import pytest
+from dev.registry.conformance.tests._registry_schema_support import _committed_registry_tree
 
 from .....core.modelo import Modelo
 from ..authority import bundled_authority
 from ..handoffs import relation_consumption_channels, relation_consumption_index
 from ..schema_surfaces import CasillaDefinition
-from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

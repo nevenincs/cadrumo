@@ -5,13 +5,13 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.validator import RegistryValidator
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 
 from .....core.resources.bundled_data import bundled_path
-from .._validate import RegistryValidator
 from ..errors import RegistryValidationError
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..schema_extraction import ExtractionProfileDefinition, ExtractionTargetDefinition
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

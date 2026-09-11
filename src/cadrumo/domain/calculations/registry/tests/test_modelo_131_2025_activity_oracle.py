@@ -15,10 +15,10 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.conformance.tests._registry_schema_support import _committed_snapshot
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from ..formula_runtime import calculate_registry_snapshot
-from ._registry_schema_support import _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -49,8 +49,7 @@ formula still exhibits the shape, so a fixed citation forces the entry's removal
 from __future__ import annotations
 
 import pytest
-
-from ._registry_schema_support import _committed_registry_tree
+from dev.registry.conformance.tests._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 

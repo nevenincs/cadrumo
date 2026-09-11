@@ -31,9 +31,7 @@ from __future__ import annotations
 import re
 
 import pytest
-
-from .....core.export_layout_format import ExportLayoutFormat
-from .._validate_export_layout_coverage import (
+from dev.registry.compiler._validate_export_layout_coverage import (
     _administration_reserved,
     _belongs_to_layout,
     _covers,
@@ -45,6 +43,8 @@ from .._validate_export_layout_coverage import (
     _sheet_constants,
     validate_export_layout_record_coverage,
 )
+
+from .....core.export_layout_format import ExportLayoutFormat
 from ..errors import RegistryValidationError
 from ..export import derive_export_layouts_from_bindings
 from ..record_design import extract_record_design
@@ -661,7 +661,7 @@ def test_a_row_aeat_does_not_mark_constante_yields_no_constant(
     the fixed ``<T`` delimiters directly, which is how Modelo 360's design
     declares them without the word.
     """
-    from .._validate_export_layout_coverage import _IDENTIFIER_VOCABULARY
+    from dev.registry.compiler._validate_export_layout_coverage import _IDENTIFIER_VOCABULARY
 
     modelos, catalogues = registry_tree
     checked = 0

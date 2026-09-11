@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import pytest
-
-from ._registry_schema_support import _committed_modelo
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

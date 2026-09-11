@@ -13,6 +13,7 @@ from decimal import Decimal
 from typing import Any
 
 import pytest
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 from pydantic import ValidationError
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
@@ -24,7 +25,6 @@ from ..invoice_bindings import (
     resolve_invoice_binding_values,
 )
 from ..schema import DataBindingDefinition, ModeloRevision
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

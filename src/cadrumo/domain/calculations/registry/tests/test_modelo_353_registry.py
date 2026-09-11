@@ -7,12 +7,13 @@ from hashlib import sha256
 
 import pytest
 from dev.registry.compiler.loader import load_catalogue_file, load_modelo_directory
+from dev.registry.compiler.validator import RegistryValidator
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 
 from .....core.iva_deduction_fact import IvaDeductionFactKind
 from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_snapshot import build_snapshot
 from ....iva.schema import IvaLedgerObservationRole
-from .._validate import RegistryValidator
 from ..authority import bundled_authority
 from ..bindings_previous_filing import previous_filing_source_reference
 from ..errors import NoRevisionForPeriodError, RegistryValidationError
@@ -20,7 +21,6 @@ from ..record_design import extract_record_design
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..temporal import select_revision
 from ._ledger_iva_aggregation_support import _deduction_provenance
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

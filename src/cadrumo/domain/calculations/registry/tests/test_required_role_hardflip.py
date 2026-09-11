@@ -14,12 +14,12 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-
-from .._validate_semantic_role_required import (
+from dev.registry.compiler._validate_semantic_role_required import (
     _REQUIRED_ROLE_LABEL_PATTERNS,
     collect_casillas_by_semantic_role,
     required_role_declaration_failures,
 )
+
 from ..schema import ModeloDefinition, ModeloRevision
 from ..schema_references import PeriodSelector
 from ..schema_surfaces import CasillaDefinition

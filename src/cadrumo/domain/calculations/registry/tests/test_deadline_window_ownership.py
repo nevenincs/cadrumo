@@ -5,14 +5,14 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-
-from .....core.period import Period
-from .._validate import RegistryValidator
-from .._validate_revision_rules import (
+from dev.registry.compiler._validate_revision_rules import (
     validate_deadline_window_cadence,
     validate_deadline_window_ownership,
     validate_periodic_deadline_completeness,
 )
+from dev.registry.compiler.validator import RegistryValidator
+
+from .....core.period import Period
 from ..errors import RegistryValidationError
 from ..schema import SupportedFilingYearsCatalogue
 from ..schema_deadlines import DeadlineWindowDefinition, ModeloScheduleDefinition

@@ -22,6 +22,7 @@ loading.
 from __future__ import annotations
 
 import pytest
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 
 from ....contribuyente.entity_type import EntityType, LegalEntityForm
 from ....deadlines.models import (
@@ -31,7 +32,6 @@ from ....deadlines.models import (
     TaxpayerProfile,
 )
 from ..applicability import ApplicabilityVerdict, derive_modelo_applicability
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

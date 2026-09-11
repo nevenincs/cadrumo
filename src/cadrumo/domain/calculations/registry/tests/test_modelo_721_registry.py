@@ -7,15 +7,15 @@ from datetime import date
 from typing import Any
 
 import pytest
+from dev.registry.compiler.corpus_catalogue import verify_source_file
+from dev.registry.compiler.legal_grounding import verify_legal_catalogue
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 
 from .....core.resources.bundled_data import bundled_path
 from .....tests import REPO_ROOT
-from dev.registry.compiler.corpus_catalogue import verify_source_file
 from ..errors import NoRevisionForPeriodError, RegistryValidationError
-from dev.registry.compiler.legal_grounding import verify_legal_catalogue
 from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from ..temporal import select_revision
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

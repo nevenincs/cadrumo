@@ -6,17 +6,17 @@ from datetime import date
 from typing import cast
 
 import pytest
+from dev.registry.compiler.validator import RegistryValidator
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.resources.bundled_data import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .....tests.registry_snapshot import build_snapshot
-from .._validate import RegistryValidator
 from ..binding_selector_utils import selector_as_dict
 from ..errors import RegistryValidationError
 from ..schema import ModeloRevision
 from ..schema_input_kind import InputKind
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW1_HOST = aeat_host("www1")

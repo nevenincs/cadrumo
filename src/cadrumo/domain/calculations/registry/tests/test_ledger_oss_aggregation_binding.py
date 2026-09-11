@@ -11,6 +11,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 from pydantic import ValidationError
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
@@ -26,7 +27,6 @@ from ..ledger_oss_bindings import (
     validate_ledger_oss_aggregation_binding_definition,
 )
 from ..schema import DataBindingDefinition, ModeloRevision
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

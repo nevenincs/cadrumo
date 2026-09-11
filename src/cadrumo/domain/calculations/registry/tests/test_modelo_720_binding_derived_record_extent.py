@@ -23,11 +23,11 @@ every unclaimed position emits as a space.
 from __future__ import annotations
 
 import pytest
+from dev.registry.conformance.tests._registry_schema_support import _committed_registry_tree
 
 from .....core.resources.bundled_data import bundled_path
 from ..export import derive_export_layouts_from_bindings
 from ..record_design import extract_record_design
-from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

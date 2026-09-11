@@ -7,16 +7,16 @@ from decimal import Decimal
 from functools import lru_cache
 
 import pytest
+from dev.registry.compiler.legal_grounding import verify_legal_catalogue
+from dev.registry.compiler.validator import RegistryValidator
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 
 from .....core.casilla_id import CasillaId
 from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_snapshot import build_snapshot
-from .._validate import RegistryValidator
 from ..formula_runtime import _evaluate_expression
-from dev.registry.compiler.legal_grounding import verify_legal_catalogue
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..schema_formula import FormulaExpression
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

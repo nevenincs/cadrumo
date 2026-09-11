@@ -21,16 +21,16 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.conformance.tests._registry_schema_support import _committed_registry_tree
 
 from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_snapshot import build_snapshot
-from .._validate_orden_aplicabilidad import validate_orden_aplicabilidad
 from ..errors import RegistryValidationError
 from ..ids import LegalRefId, SourceRefId
+from ..orden_applicability import validate_orden_aplicabilidad
 from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from ..schema_base import EvidenceTier
 from ..schema_references import LegalReference, PeriodSelector
-from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

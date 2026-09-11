@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 import pytest
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.resources.bundled_data import bundled_path
@@ -12,7 +13,6 @@ from .....tests.registry_snapshot import build_snapshot
 from ..binding_selector_utils import selector_as_dict
 from ..ids import ParameterId
 from ..schema_formula import FormulaExpression
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -15,9 +15,9 @@ from pathlib import Path, PurePosixPath
 
 import pytest
 from dev.registry.compiler.loader import load_registry_tree
+from dev.registry.compiler.validator import RegistryValidator
 
 from .....core.resources.bundled_data import bundled_path
-from .._validate import RegistryValidator
 from ..artifact_catalogue import (
     ArtifactDiagnosticKind,
     ArtifactDisposition,

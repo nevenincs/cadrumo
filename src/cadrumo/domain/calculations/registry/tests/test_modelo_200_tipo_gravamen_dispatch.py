@@ -34,6 +34,8 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.legal_grounding import verify_legal_catalogue
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo, _committed_snapshot
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
@@ -41,9 +43,7 @@ from .....core.resources.bundled_data import bundled_path
 from ..binding_selector_utils import selector_as_dict
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
-from dev.registry.compiler.legal_grounding import verify_legal_catalogue
 from ..schema_formula import ParameterDefinition
-from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

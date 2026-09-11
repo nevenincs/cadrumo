@@ -26,13 +26,17 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.validator import RegistryValidator
+from dev.registry.conformance.tests._registry_schema_support import (
+    _NUMERIC_CASILLA_01,
+    _committed_modelo,
+    _with_revision,
+)
 from pydantic import ValidationError
 
 from .....core.resources.bundled_data import bundled_path
-from .._validate import RegistryValidator
 from ..errors import RegistryValidationError
 from ..schema_verification import VerificationExpectationDefinition, VerificationPredicateDefinition
-from ._registry_schema_support import _NUMERIC_CASILLA_01, _committed_modelo, _with_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

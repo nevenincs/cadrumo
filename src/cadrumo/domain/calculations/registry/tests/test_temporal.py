@@ -15,10 +15,15 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler._validate_revision_rules import validate_revision_windows
+from dev.registry.conformance.tests._registry_schema_support import (
+    _committed_modelo,
+    _committed_registry_tree,
+    _committed_snapshot,
+)
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.errors.error_codes import resolve_error_message
-from .._validate_revision_rules import validate_revision_windows
 from ..authority import bundled_authority
 from ..errors import (
     AmbiguousRevisionSelectionError,
@@ -29,7 +34,6 @@ from ..relations import relation_source_requirements
 from ..schema import ModeloDefinition
 from ..schema_deadlines import DeadlineWindowDefinition
 from ..temporal import select_revision, select_revision_for_year
-from ._registry_schema_support import _committed_modelo, _committed_registry_tree, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

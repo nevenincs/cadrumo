@@ -6,12 +6,12 @@ import re
 from datetime import date
 
 import pytest
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from ..errors import NoRevisionForPeriodError
 from ..schema import DataBindingDefinition
 from ..temporal import select_revision
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

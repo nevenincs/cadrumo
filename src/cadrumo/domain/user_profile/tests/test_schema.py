@@ -5,12 +5,12 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.legal_grounding import verify_legal_catalogue
 from pydantic import ValidationError
 
 from ....core.classification.policies import SensitivityClass
 from ....core.resources.bundled_data import bundled_path
 from ...calculations.registry.authority import bundled_authority
-from ...calculations.registry.legal import verify_legal_catalogue
 from ..errors import SCHEMA_LOAD_MESSAGE_KEY, UserProfileNotFoundError, UserProfileSchemaLoadError
 from ..loader import CONDITION_SCHEMA_PATH_STAT, CONDITION_SCHEMA_TABLE_PRESENT, load_user_profile_schema
 from ..schema import (

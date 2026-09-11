@@ -22,11 +22,11 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 
 from .....core.aggregation import BindingSourceKind
 from ..invoice_bindings import InvoiceObservation, resolve_invoice_binding_row_values
 from ..schema import ModeloRevision
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

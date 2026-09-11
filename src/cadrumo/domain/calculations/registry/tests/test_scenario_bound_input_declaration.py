@@ -47,6 +47,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 from pydantic import ValidationError
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
@@ -56,7 +57,6 @@ from .....tests.registry_tree import bundled_registry_tree
 from ..errors import RegistryValidationError
 from ..schema import ModeloRevision
 from ..schema_input_kind import InputKind
-from ._registry_schema_support import _committed_modelo
 from ._scenarios import bound_casilla_ids, run_registry_calculation_scenario
 from .test_m100_2024_estimacion_directa_manual_worked_example import (
     _REGISTRY_ROOT,

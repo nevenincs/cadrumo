@@ -16,8 +16,8 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler._validate_parameter_temporal import validate_dated_values
 
-from .._validate_parameter_temporal import validate_dated_values
 from ..schema_formula import DatedValue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

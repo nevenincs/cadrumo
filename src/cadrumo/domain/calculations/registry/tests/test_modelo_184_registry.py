@@ -5,19 +5,19 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler.validator import RegistryValidator
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo, _committed_snapshot
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.hashing import hash_file
 from .....core.resources.bundled_data import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
-from .._validate import RegistryValidator
 from ..errors import AmbiguousRevisionSelectionError, RegistryValidationError
 from ..record_design import extract_record_design
 from ..record_design_schema import RecordDesignSheet
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..support_matrix import revision_capability_probe
 from ..temporal import select_revision
-from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW1_HOST = aeat_host("www1")

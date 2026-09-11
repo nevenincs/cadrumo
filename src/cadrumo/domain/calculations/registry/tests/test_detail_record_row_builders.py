@@ -16,6 +16,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.conformance.tests._registry_schema_support import _committed_registry_tree
 
 from .....core.foreign_asset_obligation import M720AssetClassCode
 from ..detail_record_bindings import (
@@ -25,7 +26,6 @@ from ..detail_record_bindings import (
     resolve_atribucion_binding_row_values,
     resolve_foreign_asset_binding_row_values,
 )
-from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

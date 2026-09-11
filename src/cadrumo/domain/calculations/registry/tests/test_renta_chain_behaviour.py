@@ -14,12 +14,12 @@ from decimal import Decimal
 from functools import lru_cache
 
 import pytest
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 
 # Importing the renta package registers the first-slice routing cross-domain
 # snapshot check required by Modelo 100 parity scenarios run via _scenarios.
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
-from ._registry_schema_support import _committed_modelo
 from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,

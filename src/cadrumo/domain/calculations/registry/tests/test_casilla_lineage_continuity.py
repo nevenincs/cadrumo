@@ -15,12 +15,12 @@ from datetime import date
 from typing import TypedDict, Unpack
 
 import pytest
+from dev.registry.compiler.registry_scope import validate_registry_scope
 
 from ..casilla_lineage import CasillaLineageOrigin
 from ..schema import ModeloDefinition, ModeloRevision
 from ..schema_references import PeriodSelector
 from ..schema_surfaces import CasillaDefinition
-from ..validate_registry_scope import validate_registry_scope
 from ._synthetic_locale_fixtures import _synthetic_locale_scope, _write_test_label
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

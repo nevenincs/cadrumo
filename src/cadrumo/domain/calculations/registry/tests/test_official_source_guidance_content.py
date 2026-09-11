@@ -25,11 +25,8 @@ from __future__ import annotations
 from typing import override
 
 import pytest
-
-from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_tree import bundled_registry_tree
-from .._validate_evidence import EvidenceValidator
-from .._validate_official_source_guidance_content import (
+from dev.registry.compiler._validate_evidence import EvidenceValidator
+from dev.registry.compiler._validate_official_source_guidance_content import (
     _DEADLINE_VOCABULARY,
     _SUPPRESSION_VOCABULARY,
     _carries_deadline_content,
@@ -38,6 +35,9 @@ from .._validate_official_source_guidance_content import (
     validate_suppression_notice_content,
 )
 from dev.registry.compiler.corpus_catalogue import verify_source_file
+
+from .....core.resources.bundled_data import bundled_path
+from .....tests.registry_tree import bundled_registry_tree
 from ..schema_references import SourceReference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

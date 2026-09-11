@@ -10,14 +10,14 @@ same revision binding to the same oracle id.
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.validator import RegistryValidator
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo, _committed_registry_tree
 from pydantic import ValidationError
 
 from .....core.resources.bundled_data import bundled_path
-from .._validate import RegistryValidator
 from ..errors import RegistryValidationError
 from ..schema import ModeloDefinition, ModeloRevision
 from ..schema_verification import LiveCrossReferenceDecision
-from ._registry_schema_support import _committed_modelo, _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

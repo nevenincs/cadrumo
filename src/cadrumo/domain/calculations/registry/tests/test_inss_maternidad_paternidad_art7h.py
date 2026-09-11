@@ -33,12 +33,12 @@ from functools import lru_cache
 from pathlib import Path
 
 import pytest
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 
 from .....core.config import SecretStoreBackend
 from .....tests.secure_sql import dev_test_database_password
 from ..schema import FormulaDefinition
 from ..temporal import select_revision
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -7,13 +7,14 @@ from decimal import Decimal
 from typing import Any
 
 import pytest
+from dev.registry.compiler.validator import RegistryValidator
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo, _committed_snapshot
 
 from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
 from ....iva.schema import IvaLedgerObservationRole
-from .._validate import RegistryValidator
 from ..binding_aggregation import binding_aggregation_op
 from ..binding_selector_utils import selector_as_dict
 from ..bindings import binding_source_casilla_ids, binding_source_modelo
@@ -21,7 +22,6 @@ from ..errors import RegistryValidationError
 from ..runtime_graph import expression_casilla_refs
 from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from ..schema_input_kind import InputKind
-from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

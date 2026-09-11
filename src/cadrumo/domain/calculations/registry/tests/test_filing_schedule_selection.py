@@ -5,13 +5,13 @@ from __future__ import annotations
 from collections.abc import Callable
 
 import pytest
+from dev.registry.compiler.validator import RegistryValidator
 
 from .....core.errors.severity import BaseSeverity
 from .....core.resources.bundled_data import bundled_path
 from ....deadlines.models import IVARegime, ModeloEnrollment, TaxpayerProfile
 from ....user_profile.loader import load_user_profile_schema
 from ....user_profile.registry_contract import validate_user_profile_registry_contract
-from .._validate import RegistryValidator
 from ..authority import ValidatedRegistryAuthority
 from ..errors import RegistryValidationError
 from ..schedules import applicable_filing_schedules

@@ -15,18 +15,8 @@ from decimal import Decimal
 from typing import Any
 
 import pytest
-from pydantic import ValidationError
-
-from .....core.period import Period
-from .....core.resources.bundled_data import bundled_path
-from .._validate import RegistryValidator
-from ..errors import RegistryValidationError
-from ..schema import ModeloRevision
-from ..schema_deadlines import DeadlineWindowDefinition
-from ..schema_extraction import ExtractionProfileDefinition, ExtractionTargetDefinition
-from ..schema_formula import KeyedBracketEntry, ParameterDefinition
-from ..schema_surfaces import CalculationCompletenessCasilla, CalculationCompletenessManifest
-from ._registry_schema_support import (
+from dev.registry.compiler.validator import RegistryValidator
+from dev.registry.conformance.tests._registry_schema_support import (
     _NUMERIC_CASILLA_01,
     _as_communication_revision,
     _committed_modelo,
@@ -35,6 +25,16 @@ from ._registry_schema_support import (
     _revision,
     _with_revision,
 )
+from pydantic import ValidationError
+
+from .....core.period import Period
+from .....core.resources.bundled_data import bundled_path
+from ..errors import RegistryValidationError
+from ..schema import ModeloRevision
+from ..schema_deadlines import DeadlineWindowDefinition
+from ..schema_extraction import ExtractionProfileDefinition, ExtractionTargetDefinition
+from ..schema_formula import KeyedBracketEntry, ParameterDefinition
+from ..schema_surfaces import CalculationCompletenessCasilla, CalculationCompletenessManifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

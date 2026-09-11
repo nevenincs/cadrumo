@@ -9,13 +9,13 @@ from pathlib import Path
 
 import pytest
 from dev.registry.compiler.loader import load_registry_tree
+from dev.registry.compiler.validator import RegistryValidator
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
 from .....domain.contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
 from .....tests.aeat_literal_fixtures import aeat_url, configured_path
 from .....tests.registry_snapshot import build_snapshot
-from .._validate import RegistryValidator
 from ..errors import RegistryValidationError
 from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
 

@@ -18,10 +18,11 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from dev.registry.conformance.tests._registry_schema_support import _committed_snapshot
+
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.money.rounding import round_to_cents
 from ..formula_runtime import calculate_registry_snapshot
-from ._registry_schema_support import _committed_snapshot
 
 # Rendimiento anual por unidad antes de amortización (Orden HAC/1347/2024
 # Anexo II, filing year 2025), independently transcribed for cross-check —

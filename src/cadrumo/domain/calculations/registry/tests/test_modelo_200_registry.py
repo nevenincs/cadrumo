@@ -8,6 +8,9 @@ from html import unescape
 from typing import get_args
 
 import pytest
+from dev.registry.compiler.legal_grounding import verify_legal_catalogue
+from dev.registry.compiler.validator import RegistryValidator
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 from pydantic import ValidationError
 
 from .....core.authority_grade import RegistryAuthorityGrade
@@ -19,13 +22,10 @@ from .....core.filing_projection_ref import (
 )
 from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_snapshot import build_snapshot
-from .._validate import RegistryValidator
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
-from dev.registry.compiler.legal_grounding import verify_legal_catalogue
 from ..runtime_graph import expression_casilla_refs
 from ..schema_input_kind import InputKind
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

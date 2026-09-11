@@ -11,13 +11,13 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler._validate_export_exemption import validate_export_exemption_declarations
+from dev.registry.compiler._validate_export_layout_coverage import validate_export_layout_record_coverage
 from dev.registry.compiler.loader import load_catalogue_file, load_modelo_directory, load_registry_tree
+from dev.registry.compiler.validator import RegistryValidator
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.resources.bundled_data import bundled_path
-from .._validate import RegistryValidator
-from .._validate_export_exemption import validate_export_exemption_declarations
-from .._validate_export_layout_coverage import validate_export_layout_record_coverage
 from ..errors import RegistryValidationError
 from ..record_design import extract_record_design
 from ..temporal import select_revision

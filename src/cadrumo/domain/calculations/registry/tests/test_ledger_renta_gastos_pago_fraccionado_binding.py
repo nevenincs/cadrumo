@@ -20,6 +20,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 import pytest
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
@@ -30,7 +31,6 @@ from ..ledger_renta_gastos_pago_fraccionado_bindings import (
     unsupported_ledger_renta_gastos_pago_fraccionado_observations,
     validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition,
 )
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

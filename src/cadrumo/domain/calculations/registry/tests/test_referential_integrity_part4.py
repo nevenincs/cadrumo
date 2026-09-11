@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
+from dev.registry.compiler.validator import RegistryValidator
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from ...export_field_kind import CasillaFieldKind
-from .._validate import RegistryValidator
 from ..errors import RegistryValidationError
 from ..schema import (
     FormulaDefinition,

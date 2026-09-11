@@ -13,15 +13,15 @@ import json
 from pathlib import Path
 
 import pytest
-
-from .....core.config import override_settings
-from .. import _validate_evidence as evidence_cache
-from .._validate_evidence import (
+from dev.registry.compiler import _validate_evidence as evidence_cache
+from dev.registry.compiler._validate_evidence import (
     _CORPUS_TEXT_CACHE_FILENAME,
     _corpus_text_cache_path,
     _load_disk_cache,
     _write_disk_cache,
 )
+
+from .....core.config import override_settings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

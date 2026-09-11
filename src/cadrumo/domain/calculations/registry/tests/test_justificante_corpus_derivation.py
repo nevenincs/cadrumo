@@ -18,9 +18,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
+from dev.registry.compiler.validator import RegistryValidator
 
 from .....core.resources.bundled_data import bundled_path
-from .._validate import RegistryValidator
 from ..schema import RegistryCatalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -22,8 +22,8 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler._validate_parameter_temporal import validate_non_filing_axis_admission
 
-from .._validate_parameter_temporal import validate_non_filing_axis_admission
 from ..authority import ValidatedRegistryAuthority, bundled_authority
 from ..schema_formula import ParameterDefinition
 

@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.legal_grounding import verify_legal_catalogue
+from dev.registry.compiler.validator import RegistryValidator
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 
 from .....core.resources.bundled_data import bundled_path
-from .._validate import RegistryValidator
-from dev.registry.compiler.legal_grounding import verify_legal_catalogue
 from ..schema import ModeloDefinition, RegistryCatalogues
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -29,12 +29,12 @@ from pathlib import Path
 
 import pytest
 from dev.registry.compiler.authority import compile_validated_authority
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 
 from .....core.resources.bundled_data import bundled_path
 from ..record_design import extract_record_design
 from ..record_design_schema import RecordDesignSheet
 from ..schema import ModeloRevision, RegistryCatalogues
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

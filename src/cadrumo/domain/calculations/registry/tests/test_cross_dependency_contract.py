@@ -7,12 +7,13 @@ from functools import cache
 from typing import Protocol, get_args
 
 import pytest
+from dev.registry.compiler._validate_relation_periods import select_relation_source_revisions
+from dev.registry.compiler.validator import RegistryValidator
+from dev.registry.conformance.tests._registry_schema_support import _committed_registry_tree
 
 from .....core.aggregation import RelationAggregationOp
 from .....core.resources.bundled_data import bundled_path
 from .._relation_aggregation import relation_aggregation_op
-from .._validate import RegistryValidator
-from .._validate_relation_periods import select_relation_source_revisions
 from ..binding_selector_utils import selector_as_dict
 from ..bindings import binding_source_casilla_ids
 from ..errors import RegistryValidationError
@@ -29,7 +30,6 @@ from ..schema import (
 from ..schema_input_kind import InputKind
 from ..schema_revision_members import DependencyClassificationDefinition
 from ..schema_surfaces import RelationDefinition
-from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

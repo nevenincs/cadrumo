@@ -16,9 +16,9 @@ set — re-grounding those is a separate ganancias pass (see the V11 audit note)
 from __future__ import annotations
 
 import pytest
+from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 
 from ..temporal import select_revision
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

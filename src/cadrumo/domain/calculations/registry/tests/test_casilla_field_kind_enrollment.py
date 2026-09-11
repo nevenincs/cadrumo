@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from dev.registry.conformance.tests._registry_schema_support import _committed_registry_tree
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from .....core.casilla_id import CasillaId, validated_casilla_id
@@ -18,7 +19,6 @@ from ..schema_exports import (
     ExportRecordDefinition,
 )
 from ..schema_references import PeriodSelector
-from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

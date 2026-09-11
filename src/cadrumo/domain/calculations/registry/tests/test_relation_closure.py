@@ -5,14 +5,15 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler._validate_relation_sources import validate_relation_closure, validate_slot_source_hygiene
+from dev.registry.compiler.validator import RegistryValidator
+from dev.registry.conformance.tests._registry_schema_support import _committed_registry_tree
 from pydantic import ValidationError
 
 from .....core.aggregation import BindingSourceKind
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_observations import registry_grounded_modelo_observation
-from .._validate import RegistryValidator
-from .._validate_relation_sources import validate_relation_closure, validate_slot_source_hygiene
 from ..binding_selector_utils import selector_as_dict
 from ..bindings import RegistryModeloObservation
 from ..errors import RegistryValidationError
@@ -23,7 +24,6 @@ from ..relations import (
 )
 from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from ..schema_surfaces import RelationDefinition, RelationPeriodAlignment, RelationRevisionSelector
-from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -676,7 +676,10 @@ class TestSourceUpperBound:
     """Pure unit coverage for the future-year structural exclusion helpers."""
 
     def test_an_open_ended_candidate_has_no_ceiling(self) -> None:
-        from .._validate_relation_periods import _is_beyond_latest_modelled_source_year, _source_upper_bound
+        from dev.registry.compiler._validate_relation_periods import (
+            _is_beyond_latest_modelled_source_year,
+            _source_upper_bound,
+        )
 
         modelos, _catalogues = _committed_tree()
         m115_revision = _modelo(modelos, "115").revisions["2019-y-siguientes"]
@@ -685,7 +688,10 @@ class TestSourceUpperBound:
         assert _is_beyond_latest_modelled_source_year(2099, (m115_revision,)) is False
 
     def test_closed_per_year_candidates_bound_at_the_latest_year(self) -> None:
-        from .._validate_relation_periods import _is_beyond_latest_modelled_source_year, _source_upper_bound
+        from dev.registry.compiler._validate_relation_periods import (
+            _is_beyond_latest_modelled_source_year,
+            _source_upper_bound,
+        )
 
         modelos, _catalogues = _committed_tree()
         m100_revisions = tuple(_modelo(modelos, "100").revisions.values())

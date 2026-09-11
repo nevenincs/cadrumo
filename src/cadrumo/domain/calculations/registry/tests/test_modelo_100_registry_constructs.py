@@ -7,6 +7,8 @@ from decimal import Decimal
 from typing import Any, cast
 
 import pytest
+from dev.registry.compiler._validate_constructs import _CONSTRUCT_MEMBER_ATTRS
+from dev.registry.compiler.validator import RegistryValidator
 from pydantic import AnyUrl, ValidationError
 
 from .....core.authority_grade import RegistryAuthorityGrade
@@ -16,8 +18,6 @@ from ....contribuyente.family_profile import RentaFamilyProfile
 from ....contribuyente.family_types import RentaAscendantProfile, RentaDescendantProfile
 from ....contribuyente.keys import profile_keys as registered_profile_keys
 from ....contribuyente.tax_residence import TaxResidenceProfile
-from .._validate import RegistryValidator
-from .._validate_constructs import _CONSTRUCT_MEMBER_ATTRS
 from ..binding_selector_utils import selector_as_dict
 from ..errors import RegistryValidationError
 from ..export import resolve_export_layout

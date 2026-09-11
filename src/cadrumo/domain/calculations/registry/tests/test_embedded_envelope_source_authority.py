@@ -10,13 +10,13 @@ cannot preserve a missing, rebound, mismatched, or stale source claim.
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler._validate_exports import _validate_embedded_envelope_source_authority
+from dev.registry.conformance.tests._registry_schema_support import _committed_registry_tree
 
 from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_snapshot import build_snapshot
-from .._validate_exports import _validate_embedded_envelope_source_authority
 from ..errors import RegistryValidationError
 from ..schema import RegistryCatalogues
-from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

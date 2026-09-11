@@ -12,17 +12,17 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler._validate_applicability_section import validate_applicability_section
 from dev.registry.compiler.loader import load_modelo_directory
+from dev.registry.conformance.tests._schema_family_support import schema_family_enrollment_failures
 
 from .....core.modelo import Modelo
-from .._validate_applicability_section import validate_applicability_section
 from ..applicability import ModeloApplicabilityRule, hydrate_applicability_rule
 from ..errors import RegistryLoadError, RegistryValidationError
 from ..schema import ModeloRevision
 from ..schema_base import schema_family_fields
 from ..schema_revision_members import ApplicabilityRuleDefinition
 from ._referential_integrity_support import REFERENCE_LEGAL_ID, minimal_legal_ref, minimal_revision
-from ._schema_family_support import schema_family_enrollment_failures
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

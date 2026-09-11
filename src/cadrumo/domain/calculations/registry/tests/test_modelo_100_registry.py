@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 
 import pytest
+from dev.registry.compiler._validate_relation_periods import select_relation_source_revisions
 
-from .._validate_relation_periods import select_relation_source_revisions
 from ._modelo_100_registry_support import _loaded_registry, _registry_validator, _source_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

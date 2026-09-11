@@ -49,14 +49,14 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler._validate_revision_rules import _bracket_coverage_gaps
+from dev.registry.conformance.tests._registry_schema_support import _committed_snapshot
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .._validate_revision_rules import _bracket_coverage_gaps
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema_formula import ParameterDefinition
 from ..schema_input_kind import InputKind
-from ._registry_schema_support import _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
