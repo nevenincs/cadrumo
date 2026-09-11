@@ -10,6 +10,72 @@ line_ending = 'crlf'
 required = true
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200001.f0064'
+offset = 203
+length = 1
+kind = 'casilla'
+casilla_id = '00086'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'selected-1-unselected-0'
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200001.f0065'
+offset = 204
+length = 1
+kind = 'casilla'
+casilla_id = '00033'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'selected-1-unselected-0'
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200001.f0066'
+offset = 205
+length = 1
+kind = 'casilla'
+casilla_id = '00034'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'selected-1-unselected-0'
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
 id = 'm200-2025.dp200001.f0067'
 offset = 206
 length = 1
@@ -20,6 +86,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -41,6 +108,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -62,6 +130,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -83,6 +152,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -104,6 +174,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -125,6 +196,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -146,6 +218,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -167,6 +240,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -188,6 +262,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -209,6 +284,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -230,6 +306,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -251,6 +328,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -272,6 +350,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -293,6 +372,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -314,6 +394,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -335,6 +416,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -356,6 +438,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -377,6 +460,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -398,6 +482,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -419,6 +504,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -440,6 +526,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -461,6 +548,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -482,6 +570,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -503,6 +592,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -524,6 +614,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -545,6 +636,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -566,6 +658,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -587,6 +680,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -608,6 +702,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -629,6 +724,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -650,6 +746,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -671,6 +768,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -692,6 +790,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -713,6 +812,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -734,6 +834,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'enumerated-digits'
 allowed_values = [
     '0',
@@ -759,6 +860,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -780,6 +882,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -801,6 +904,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',

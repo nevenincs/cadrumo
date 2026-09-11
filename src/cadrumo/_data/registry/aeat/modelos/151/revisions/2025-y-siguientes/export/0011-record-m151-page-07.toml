@@ -147,6 +147,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-35-2006:art-93',
     'rd-439-2007:art-113',
@@ -166,6 +167,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-35-2006:art-93',
     'rd-439-2007:art-113',
@@ -222,6 +224,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-35-2006:art-93',
     'rd-439-2007:art-113',
@@ -241,6 +244,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-35-2006:art-93',
     'rd-439-2007:art-113',
@@ -297,6 +301,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-35-2006:art-93',
     'rd-439-2007:art-113',
@@ -316,6 +321,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-35-2006:art-93',
     'rd-439-2007:art-113',
@@ -372,6 +378,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-35-2006:art-93',
     'rd-439-2007:art-113',
@@ -391,6 +398,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-35-2006:art-93',
     'rd-439-2007:art-113',
@@ -447,6 +455,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-35-2006:art-93',
     'rd-439-2007:art-113',
@@ -466,6 +475,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-35-2006:art-93',
     'rd-439-2007:art-113',
@@ -522,6 +532,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-35-2006:art-93',
     'rd-439-2007:art-113',
@@ -541,6 +552,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-35-2006:art-93',
     'rd-439-2007:art-113',
@@ -597,6 +609,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-35-2006:art-93',
     'rd-439-2007:art-113',
@@ -616,6 +629,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-35-2006:art-93',
     'rd-439-2007:art-113',
@@ -672,6 +686,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-35-2006:art-93',
     'rd-439-2007:art-113',
@@ -691,6 +706,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-35-2006:art-93',
     'rd-439-2007:art-113',
@@ -710,6 +726,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-35-2006:art-93',
     'rd-439-2007:art-113',
@@ -729,6 +746,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-35-2006:art-93',
     'rd-439-2007:art-113',
@@ -748,6 +766,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-35-2006:art-93',
     'rd-439-2007:art-113',
@@ -767,6 +786,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-35-2006:art-93',
     'rd-439-2007:art-113',

@@ -105,6 +105,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-20',
     'orden-eha-3111-2009:art-1',
@@ -123,6 +124,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-26',
     'orden-eha-3111-2009:art-1',
@@ -141,6 +143,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-27',
     'orden-eha-3111-2009:art-1',
@@ -159,6 +162,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-92',
     'ley-37-1992:art-95',
@@ -178,6 +182,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-115',
     'ley-37-1992:art-116',
@@ -197,6 +202,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-26',
     'ley-37-1992:art-84',
@@ -216,6 +222,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-69',
     'ley-37-1992:art-70',
@@ -236,6 +243,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-163-decies',
     'ley-37-1992:art-163-duodecies',
@@ -256,6 +264,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-163-decies',
     'ley-37-1992:art-163-duodecies',
@@ -276,6 +285,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-163-quaterdecies',
     'ley-37-1992:art-163-terdecies',
@@ -295,6 +305,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-163-quaterdecies',
     'ley-37-1992:art-163-terdecies',
@@ -351,6 +362,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-37-1992:art-104',
     'orden-eha-3111-2009:art-1',
@@ -370,6 +382,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-37-1992:art-104',
     'ley-37-1992:art-94',
@@ -408,6 +421,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-37-1992:art-103',
     'ley-37-1992:art-104',
@@ -464,6 +478,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-37-1992:art-104',
     'orden-eha-3111-2009:art-1',
@@ -483,6 +498,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-37-1992:art-104',
     'ley-37-1992:art-94',
@@ -521,6 +537,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-37-1992:art-103',
     'ley-37-1992:art-104',
@@ -577,6 +594,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-37-1992:art-104',
     'orden-eha-3111-2009:art-1',
@@ -596,6 +614,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-37-1992:art-104',
     'ley-37-1992:art-94',
@@ -634,6 +653,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-37-1992:art-103',
     'ley-37-1992:art-104',
@@ -690,6 +710,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-37-1992:art-104',
     'orden-eha-3111-2009:art-1',
@@ -709,6 +730,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-37-1992:art-104',
     'ley-37-1992:art-94',
@@ -747,6 +769,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-37-1992:art-103',
     'ley-37-1992:art-104',
@@ -803,6 +826,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-37-1992:art-104',
     'orden-eha-3111-2009:art-1',
@@ -822,6 +846,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-37-1992:art-104',
     'ley-37-1992:art-94',
@@ -860,6 +885,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-37-1992:art-103',
     'ley-37-1992:art-104',
