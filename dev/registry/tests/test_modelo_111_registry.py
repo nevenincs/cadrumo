@@ -5,13 +5,14 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from test_support.registry_authoring import _committed_modelo
 
-from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_snapshot import build_snapshot
-from ..authority import bundled_authority
-from ..schema import ModeloDefinition, RegistryCatalogues
-from ..temporal import select_revision
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -15,7 +15,7 @@ from cadrumo.domain.calculations.registry.schema_references import SourceReferen
 from .. import maintenance_support as _maintenance_support
 from ..compiler import corpus_catalogue as _corpus_catalogue
 from ..maintenance_support import resolve_record_design_binary
-from ._catalogue_verification_support import _catalogues
+from .catalogue_verification_support import _catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

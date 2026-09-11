@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.record_design_schema import (
     RecordDesignSinglePositionCorrection,
 )
@@ -18,7 +19,6 @@ from ..compiler.record_design_pdf_rows import unnamed_position_candidate
 from ._record_design_support import (
     _RECORD_DESIGN_ROOT,
     _write_pdf_lines,
-    bundled_path,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

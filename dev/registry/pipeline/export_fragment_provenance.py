@@ -36,8 +36,8 @@ from cadrumo.domain.calculations.registry.ids import (
 )
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportLayoutDefinition
 
-from ._pydantic_error_detail import validation_error_detail
-from ._variable_envelope import FilingEnvelopeProvenance
+from .pydantic_error_detail import validation_error_detail
+from .variable_envelope import FilingEnvelopeProvenance
 from .joined_record_design import JoinedRecordDesign
 from .record_design_intermediate import (
     RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,

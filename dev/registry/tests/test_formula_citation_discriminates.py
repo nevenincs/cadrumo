@@ -22,7 +22,7 @@ performs.
 
 THE ALLOWLIST IS NOW EMPTY, AND THAT IS THE POINT. It once held four entries --
 modelos 187, 188, 194 and 296 -- each justified the same way: a formula may only
-cite an ``official_source_guidance``-tier source (``_validate_formulas.py`` requires
+cite an ``official_source_guidance``-tier source (``validate_formulas.py`` requires
 that tier), and for those four the only guidance-tier source was an AEAT procedure
 landing page that never mentions a box, while the sources that DO describe the boxes
 were ``layout_authority`` tier and ineligible. The weak phrase was forced by the

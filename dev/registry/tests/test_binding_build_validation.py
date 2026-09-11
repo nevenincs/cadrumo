@@ -28,17 +28,24 @@ Anti-tautology proofs (the gate is not trivially rejecting everything):
 from __future__ import annotations
 
 import pytest
-from test_support.registry_authoring import RegistryValidator, _committed_modelo
 
-from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources.bundled_data import bundled_path
-from ..bindings import (
+from cadrumo.core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.bindings import (
     _BINDING_VALIDATOR_REGISTRY,
     validate_binding_selector_shape,
 )
-from ..errors import RegistryValidationError
-from ..schema import DataBindingDefinition, ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import (
+    DataBindingDefinition,
+    ModeloDefinition,
+    ModeloRevision,
+    RegistryCatalogues,
+)
+
+from ..compiler.validator import RegistryValidator
+from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -13,7 +13,7 @@ from cadrumo.domain.calculations.registry.schema_exports import FilingEnvelopeCl
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader import load_registry_tree
-from ..pipeline._variable_envelope import (
+from ..pipeline.variable_envelope import (
     FilingEnvelopeProvenance,
     compile_filing_envelope_definition,
     validate_variable_envelope,
@@ -211,7 +211,7 @@ def test_m303_static_declaration_refuses_source_drift_and_reordered_body_definit
 
 def test_static_generator_has_no_instance_carrier_vocabulary() -> None:
     """DP30300 compilation retains grammar only; application owns filing bytes."""
-    source = Path("dev/registry/pipeline/_variable_envelope.py").read_text(encoding="utf-8")
+    source = Path("dev/registry/pipeline/variable_envelope.py").read_text(encoding="utf-8")
 
     forbidden = {
         "M303EnvelopeGenerationInput",
@@ -226,7 +226,7 @@ def test_static_generator_has_no_instance_carrier_vocabulary() -> None:
 #: One bundled design per distinct official envelope spelling, with the roles
 #: that design PRINTS. Not a Modelo 303 fixture list: the point of these rows is
 #: that six modelos reach one compiler with no per-modelo code, so a seventh is
-#: a row here rather than a branch in `_variable_envelope.py`.
+#: a row here rather than a branch in `variable_envelope.py`.
 _CROSS_MODELO_ENVELOPES = (
     ("308", "aeat-dr-308-2019", "2019", 2019, "M30800", 13),
     ("322", "aeat-dr-322-2024-2025", "2024", 2025, "DR32200", 13),

@@ -123,7 +123,8 @@ _UTF_8: str = UTF_8_ENCODING
 # ``tests/test_manager.py`` rather than being trusted because it was written.
 _PUBLIC_DATA_ALIASES: dict[str, tuple[str, ...]] = {
     "cadrumo.core.casilla_id": ("CasillaId",),
-    "cadrumo.core.identity": ("ContentDigest", "SubjectTaxId", "TaxIdIdentityToken"),
+    "cadrumo.core.identity": ("ContentDigest",),
+    "cadrumo.core.identity.tax_id": ("SubjectTaxId", "TaxIdIdentityToken"),
 }
 _PUBLIC_FUNCTION_ALIASES: dict[str, tuple[str, ...]] = {}
 
@@ -134,11 +135,11 @@ _PUBLIC_FUNCTION_ALIASES: dict[str, tuple[str, ...]] = {}
 # the defining-module stub remains their sole object owner.
 _NON_OWNER_GENERIC_IMPORTS: dict[str, tuple[str, ...]] = {
     "cadrumo.application._config_reset_repository": ("JournalRepositoryBase",),
-    "cadrumo.application.aggregation._impatriado_income_ledger": ("LedgerAggregationResultBase",),
-    "cadrumo.application.aggregation._irnr_income_ledger": ("LedgerAggregationResultBase",),
-    "cadrumo.application.aggregation._renta_gasto_ledger": ("LedgerAggregationResultBase",),
-    "cadrumo.application.aggregation._renta_income_ledger": ("LedgerAggregationResultBase",),
-    "cadrumo.application.aggregation._renta_ledger": ("LedgerAggregationResultBase",),
+    "cadrumo.application.aggregation.impatriado_income_ledger": ("LedgerAggregationResultBase",),
+    "cadrumo.application.aggregation.irnr_income_ledger": ("LedgerAggregationResultBase",),
+    "cadrumo.application.aggregation.renta_gasto_ledger": ("LedgerAggregationResultBase",),
+    "cadrumo.application.aggregation.renta_income_ledger": ("LedgerAggregationResultBase",),
+    "cadrumo.application.aggregation.renta_ledger": ("LedgerAggregationResultBase",),
     "cadrumo.application.operator_actions.models": ("PreconditionOutcomeInvariant",),
     "cadrumo.application.user_profile.bundle_export_operation": ("JournalRepositoryBase",),
     "cadrumo.core.json_contract": ("PreconditionOutcomeInvariant",),

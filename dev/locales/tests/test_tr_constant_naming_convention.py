@@ -62,7 +62,7 @@ def test_rule_fires_on_an_unsuffixed_constant_reference() -> None:
     invisible to the declaration-side scanner. The detector must fire.
     """
     tree = ast.parse(
-        "from cadrumo.core.i18n import tr\n"
+        "from cadrumo.core.i18n.render import tr\n"
         "\n"
         "SOME_MESSAGE = 'cli.app.some.message'\n"
         "\n"
@@ -84,7 +84,7 @@ def test_rule_passes_on_a_correctly_suffixed_constant_reference() -> None:
     this gate.
     """
     tree = ast.parse(
-        "from cadrumo.core.i18n import tr\n"
+        "from cadrumo.core.i18n.render import tr\n"
         "\n"
         "SOME_MESSAGE_LOCALE_KEY = 'cli.app.some.message'\n"
         "\n"
@@ -102,7 +102,7 @@ def test_rule_fires_through_the_aliased_translator_import() -> None:
     site uses the project's underscore-aliased translator import.
     """
     tree = ast.parse(
-        "from cadrumo.core.i18n import tr as _tr\n"
+        "from cadrumo.core.i18n.render import tr as _tr\n"
         "\n"
         "BANNER = 'cli.app.banner'\n"
         "\n"
@@ -125,7 +125,7 @@ def test_rule_ignores_a_lowercase_or_mixed_case_argument() -> None:
     dispatch, not the concealment class this gate targets.
     """
     tree = ast.parse(
-        "from cadrumo.core.i18n import tr\n\ndef render(dynamic_key: str) -> str:\n    return tr(dynamic_key)\n",
+        "from cadrumo.core.i18n.render import tr\n\ndef render(dynamic_key: str) -> str:\n    return tr(dynamic_key)\n",
     )
 
     assert list(tr_constant_naming_violations_in_tree(tree)) == []
@@ -139,7 +139,7 @@ def test_rule_ignores_a_literal_string_argument() -> None:
     declaration-side literal scanner), so it must not be flagged here.
     """
     tree = ast.parse(
-        "from cadrumo.core.i18n import tr\n\ndef render() -> str:\n    return tr('cli.app.literal.key')\n",
+        "from cadrumo.core.i18n.render import tr\n\ndef render() -> str:\n    return tr('cli.app.literal.key')\n",
     )
 
     assert list(tr_constant_naming_violations_in_tree(tree)) == []

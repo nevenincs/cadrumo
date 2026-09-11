@@ -28,7 +28,7 @@ from cadrumo.core.orden_anual_html import (
     extract_orden_anual_iva_authority,
     orden_anual_iva_authority_units,
 )
-from cadrumo.domain.calculations.registry._m303_orden_constants import (
+from cadrumo.domain.calculations.registry.m303_orden_constants import (
     EXPECTED_ACTIVITY_COUNT,
     EXPECTED_MODULE_DISTRIBUTION,
     EXTRACTOR_VERSION,

@@ -9,8 +9,8 @@ and read that as a clean tree.
 
 WHAT THIS GATE ASSERTS, as a property and never as a tally: no production site
 open-codes a tax-identifier normal form that
-:func:`~core.identity.tax_id_identity_token` or
-:func:`~core.identity.same_tax_identifier` already owns, except sites named in
+:func:`~core.identity.tax_id.tax_id_identity_token` or
+:func:`~core.identity.tax_id.same_tax_identifier` already owns, except sites named in
 the census's ``EXEMPTIONS`` with a stated reason.
 
 WHY THE ACTIONABLE KINDS ARE ASSERTED SEPARATELY from the rest. A ``comparison``

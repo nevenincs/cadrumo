@@ -34,13 +34,17 @@ import re
 from collections import defaultdict
 
 import pytest
-from test_support.registry_authoring import validate_record_design_epoch_uniqueness, validate_record_design_epoch_window
 
-from .....core.record_design_epoch import RECORD_DESIGN_EPOCH_PATTERN
-from .registry_tree import bundled_registry_tree
-from ....modelos.calculation_revision_m303_evidence import M303RegimenSimplificadoCalculationResult
-from ..errors import RegistryValidationError
-from ..schema_references import SourceReference
+from cadrumo.core.record_design_epoch import RECORD_DESIGN_EPOCH_PATTERN
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+from cadrumo.domain.modelos.calculation_revision_m303_evidence import M303RegimenSimplificadoCalculationResult
+
+from ..compiler.validate_record_design_epochs import (
+    validate_record_design_epoch_uniqueness,
+    validate_record_design_epoch_window,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

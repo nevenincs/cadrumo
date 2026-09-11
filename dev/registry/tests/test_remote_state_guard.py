@@ -34,7 +34,7 @@ from cadrumo.tests.aeat_literal_fixtures import (
 )
 from cadrumo.tests.registry_snapshot import build_snapshot
 
-from ..conformance.tests._registry_schema_support import _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 from ..maintenance_support import LiveParityCatalogue, OracleEnvironment
 from ..parity.renta_web_open_oracle import RentaWebOpenOracle
 from .aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle

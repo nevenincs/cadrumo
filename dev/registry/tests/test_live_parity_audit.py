@@ -27,7 +27,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
-from ..conformance.tests._registry_schema_support import _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 from ..maintenance_support import (
     CrossReferenceApplicabilityDeclaracion,
     LiveParityCatalogue,

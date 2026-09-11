@@ -5,14 +5,15 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 import pytest
-from test_support.registry_authoring import _committed_modelo
 
-from .....core.authority_grade import RegistryAuthorityGrade
-from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_snapshot import build_snapshot
-from ..binding_selector_utils import selector_as_dict
-from ..ids import ParameterId
-from ..schema_formula import FormulaExpression
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
+from cadrumo.domain.calculations.registry.ids import ParameterId
+from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

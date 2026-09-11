@@ -65,7 +65,7 @@ from cadrumo.domain.calculations.registry.ids import (
 from cadrumo.domain.calculations.registry.schema_base import LegalRefs, SourceRefs
 from cadrumo.domain.calculations.registry.schema_exports import FilingEnvelopePrefixRole, RecordDiscriminator
 
-from ._pydantic_error_detail import validation_error_detail
+from .pydantic_error_detail import validation_error_detail
 from .record_design_intermediate import AnchorKey, RecordKey
 
 __all__ = [

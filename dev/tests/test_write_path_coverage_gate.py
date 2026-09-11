@@ -1,6 +1,6 @@
 """Gate: a persistence surface a product command reads must have a production writer.
 
-Wires :mod:`dev.audit.write_path_coverage` into the pytest/CI surface.
+Wires :mod:`dev.quality.write_path_coverage` into the pytest/CI surface.
 
 The defect this protects against is invisible to every other gate in the
 repository, including the reachability audit it is built on. A snapshot store
@@ -30,12 +30,12 @@ from pathlib import Path
 import pytest
 
 from dev.audit.unreachable_code import EntryPoint, ShippedTreeSpec
-from dev.audit.write_path_coverage import (
+from dev.quality.write_path_coverage import (
     PersistenceSurfaceSpec,
     WritePathOutcome,
+    run_gate,
     scan_write_path_coverage,
 )
-from dev.quality.write_path_coverage import run_gate
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.timeout(600)]
 """The 600-second budget is contention, not a slow test.

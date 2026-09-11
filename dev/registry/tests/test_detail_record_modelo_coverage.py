@@ -14,10 +14,11 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 import pytest
-from test_support.registry_authoring import _committed_registry_tree
 
-from .....application.storage.calc_sheets.engine import collect_row_sets
-from ..schema import ModeloDefinition
+from cadrumo.application.storage.calc_sheets.engine import collect_row_sets
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+
+from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

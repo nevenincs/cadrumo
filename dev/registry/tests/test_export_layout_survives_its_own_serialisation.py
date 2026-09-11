@@ -24,9 +24,10 @@ stopped refusing while dropping a field would pass the weaker form.
 from __future__ import annotations
 
 import pytest
-from test_support.registry_authoring import _committed_registry_tree
 
-from ..schema_exports import ExportLayoutDefinition
+from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
+
+from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

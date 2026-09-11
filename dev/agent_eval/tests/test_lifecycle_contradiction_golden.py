@@ -39,11 +39,11 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 
 from cadrumo.tests.cli_envelope import parse_json_object, require_error_document, require_schema_envelope
-from cadrumo.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
-from cadrumo_harness.mcp import build_tool_descriptors
+from cadrumo_harness.mcp._tools import build_tool_descriptors
 from dev.scripted_registration_channels import scripted_registration_descriptors
 
 from .._models import ContradictionScenario
@@ -376,7 +376,7 @@ def test_every_lifecycle_stage_is_carried_by_the_mutating_roster() -> None:
     on the live manifest, so the roster cannot be satisfied by a stage that does
     not mutate anything.
     """
-    from cadrumo_harness.mcp import build_tool_descriptors
+    from cadrumo_harness.mcp._tools import build_tool_descriptors
 
     from .._models import LIFECYCLE_STAGE_ORDER
 

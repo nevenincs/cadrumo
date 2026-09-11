@@ -22,21 +22,19 @@ from cadrumo.domain.calculations.registry.schema import (
 )
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 
-from ._compiled_cache import (
-    load_compiled_registry_cache,
-    store_compiled_registry_cache,
-)
 from ._loader_internals import (
-    _collect_modelo_directory_fingerprints,
-    _collect_registry_tree_fingerprints,
     _load_catalogue_file_cached,
     _load_modelo_directory_cached,
+    _load_modelo_file_cached,
     _refresh_modelo_directory_fingerprints_after_load_error,
     _refresh_registry_tree_fingerprints_after_load_error,
     _RegistryPathFingerprints,
     _toml_fingerprint,
     _validate_legal_directory,
-    load_modelo_file,
+)
+from .compiled_cache import (
+    load_compiled_registry_cache,
+    store_compiled_registry_cache,
 )
 from .identity import (
     RegistryIdentity,
@@ -51,8 +49,25 @@ from .loader_cache import (
     validate_modelo_directory_source,
 )
 from .loader_fingerprints import (
+    collect_modelo_directory_fingerprints,
+    collect_registry_tree_fingerprints,
+)
+from .loader_fingerprints import (
     refresh_toml_fingerprint_after_load_error as _refresh_toml_fingerprint_after_load_error,
 )
+
+
+def load_modelo_file(path: Path) -> ModeloDefinition:
+    """Load one modelo TOML file into strict schema objects."""
+    resolved = path.resolve()
+    fingerprint = _toml_fingerprint(resolved)
+    try:
+        return _load_modelo_file_cached(str(resolved), fingerprint[1], fingerprint[2], fingerprint[3])
+    except RegistryLoadError as exc:
+        refreshed = _refresh_toml_fingerprint_after_load_error(resolved, exc)
+        if refreshed == fingerprint:
+            raise
+        return _load_modelo_file_cached(str(resolved), refreshed[1], refreshed[2], refreshed[3])
 
 
 def load_modelo_directory(directory: Path) -> ModeloDefinition:
@@ -63,7 +78,7 @@ def load_modelo_directory(directory: Path) -> ModeloDefinition:
     if not (resolved / "manifest.toml").is_file():
         raise RegistryLoadError(f"{resolved}: missing manifest.toml")
     validate_modelo_directory_source(resolved)
-    fingerprints = _collect_modelo_directory_fingerprints(resolved)
+    fingerprints = collect_modelo_directory_fingerprints(resolved)
     try:
         return _load_modelo_directory_cached(str(resolved), fingerprints)
     except RegistryLoadError as exc:
@@ -164,12 +179,12 @@ def load_registry_tree(
     """Compile the complete mutable registry tree for development publication."""
     resolved = root.resolve()
     if identity is None:
-        identity = resolve_registry_identity(resolved, collect_fingerprints=_collect_registry_tree_fingerprints)
+        identity = resolve_registry_identity(resolved, collect_fingerprints=collect_registry_tree_fingerprints)
     if identity.is_stamped:
         return _load_registry_tree_cached(str(resolved), stamped_cache_key_tuples(identity))
     _validate_legal_directory(resolved / "legal")
     discover_modelo_sources(resolved / "modelos")
-    fingerprints = _collect_registry_tree_fingerprints(resolved)
+    fingerprints = collect_registry_tree_fingerprints(resolved)
     try:
         return _load_registry_tree_cached(str(resolved), fingerprints)
     except RegistryLoadError as exc:
@@ -196,4 +211,6 @@ def _load_registry_tree_cached(
     return result
 
 
-collect_registry_tree_fingerprints = _collect_registry_tree_fingerprints
+def clear_registry_tree_cache() -> None:
+    """Clear the in-process compiled-tree memo without touching disk caches."""
+    _load_registry_tree_cached.cache_clear()

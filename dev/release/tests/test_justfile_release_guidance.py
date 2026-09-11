@@ -10,8 +10,6 @@ import pytest
 from dev._paths import REPO_ROOT
 from dev.ci.lane_reachability import resolve_just_executable
 
-from ..version_identity import PYPI_PROJECTS
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _REPO_ROOT = REPO_ROOT
@@ -130,28 +128,26 @@ def test_release_apply_is_absent_from_the_justfile() -> None:
 
 
 def test_release_survives_as_the_read_only_dry_run_preview() -> None:
-    """`just release-publish` still runs, previews only, and points at nothing deleted."""
+    """`just release-preview` remains read-only and points at no mutation."""
     recipes = _recipe_summary()
-    assert "release" in recipes
+    assert "release-preview" in recipes
 
-    rendered = _render_recipe("release")
+    rendered = _render_recipe("release-preview")
 
-    assert "--dry-run" in rendered
+    assert "python -m dev.release preview" in rendered
     assert "release-apply" not in rendered
+    assert "release-publish" not in rendered
     # Preview-only: the recipe body must not contain a real (non---dry-run)
     # mutating git push, since nothing downstream of the preview may act.
     assert "git push" not in rendered
 
 
 def test_release_rollback_names_every_yank_target_and_only_the_rollback_tag() -> None:
-    """The rendered rollback guide covers all distributions and one named tag."""
-    rendered = _render_recipe("release-rollback", "1.2.3")
+    """The recipe delegates to the read-only rollback-plan CLI with one version."""
+    rendered = _render_recipe("release-rollback-plan", "1.2.3")
 
-    for distribution in PYPI_PROJECTS:
-        assert f"https://pypi.org/manage/project/{distribution}/release/1.2.3/" in rendered
-    assert "git push origin main" in rendered
-    assert "git push origin refs/tags/v1.2.3-rollback" in rendered
-    assert "git push origin main --tags" not in rendered
+    assert "python -m dev.release rollback 1.2.3" in rendered
+    assert "git push" not in rendered
 
 
 def test_doctor_invokes_the_aeat_human_cli() -> None:
@@ -193,8 +189,11 @@ def test_local_upload_authority_is_absent_from_just() -> None:
     recipes = _recipe_summary()
     assert "publish" not in recipes
     assert "publish-data" not in recipes
-    assert "release" in recipes
-    assert "release-readiness" in recipes
+    assert "release-preview" in recipes
+    assert "release-check" in recipes
+    assert "release-rollback-plan" in recipes
+    assert "release-publish" not in recipes
+    assert "release-readiness" not in recipes
 
 
 def test_the_cohort_ordering_gate_refuses_a_build_moved_into_the_worker_pool() -> None:

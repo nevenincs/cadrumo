@@ -15,12 +15,14 @@ from functools import cache
 from pathlib import Path
 
 import pytest
-from test_support.registry_authoring import RegistryValidator, _committed_modelo
 
-from .....core.resources.bundled_data import bundled_path
-from ..errors import RegistryValidationError
-from ..schema import ModeloDefinition, RegistryCatalogues
-from ..schema_extraction import ExtractionProfileDefinition
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema_extraction import ExtractionProfileDefinition
+
+from ..compiler.validator import RegistryValidator
+from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 from ._gate_support import catalogues_for_m130_gate_tests
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

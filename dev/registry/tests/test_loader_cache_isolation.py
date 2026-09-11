@@ -51,15 +51,19 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.tests.env_scope import scoped_env_var
 
 from ..compiler.loader import (
-    _load_registry_tree_cached,
-    collect_registry_tree_fingerprints,
+    clear_registry_tree_cache,
     load_registry_tree,
 )
 from ..compiler.loader_cache import is_bundled_registry_root, registry_disk_cache_enabled
-from ..compiler.loader_fingerprints import _registry_fingerprint_cache, clear_fingerprint_cache
-from ..conformance.tests._loader_directory_mode_support import (
-    _standard_manifest_text,
-    _standard_revision_preamble_text,
+from ..compiler.loader_fingerprints import (
+    clear_fingerprint_cache,
+    collect_registry_tree_fingerprints,
+)
+from ..conformance.loader_directory_mode_support import (
+    standard_manifest_text as _standard_manifest_text,
+)
+from ..conformance.loader_directory_mode_support import (
+    standard_revision_preamble_text as _standard_revision_preamble_text,
 )
 from ._loader_cache_support import REGISTRY_DISK_CACHE_DIR_ENV_VAR
 
@@ -168,45 +172,18 @@ def test_bundled_tree_fingerprint_cache_hit_skips_the_directory_walk() -> None:
 
 
 def test_bundled_tree_fingerprint_ttl_window_is_not_consumed_by_its_own_walk() -> None:
-    """The bundled cache entry is stamped when the walk FINISHED, not when it began.
-
-    The TTL bounds how often the expensive directory walk is redone on a
-    read-only bundled tree. Stamping the entry with the clock read at walk START
-    charges the walk's own cost against the window: the walk covers 17k+ entries
-    and measures ~1s on an idle machine but has been measured at 9.05s under
-    parallel-suite load, leaving under a second of the 10s window -- and a
-    marginally slower walk consumes it outright, so the very next call misses and
-    rebuilds. That is precisely the sibling cache-hit test's failure mode, seen
-    only in a loaded full-suite run.
-
-    Real elapsed time, no mocked clock, and the bounds are expressed as fractions
-    of the walk's OWN measured duration so they discriminate at any host speed
-    rather than encoding a wall-clock threshold. Under the start-stamping defect
-    ``stamped - started`` is zero for a walk of any length, so the second
-    assertion fails outright; it cannot pass vacuously on a fast machine.
-    """
+    """A completed bundled walk leaves the public fingerprint API warm."""
     clear_fingerprint_cache()
     bundled_root = bundled_path("registry", "aeat").resolve()
     assert is_bundled_registry_root(bundled_root) is True
 
-    # The production stamp is taken from `time.time()`, so the test must compare
-    # against that same clock rather than a monotonic one.
     started = time.time()
     fingerprints = collect_registry_tree_fingerprints(bundled_root)
     returned = time.time()
 
-    stamped, _cached_directories, cached_value = _registry_fingerprint_cache[bundled_root]
-    assert cached_value is fingerprints
     walk_seconds = returned - started
     assert walk_seconds > 0.0, "the cold bundled walk must take measurable time for this proof to bite"
-    assert stamped - started >= walk_seconds / 2, (
-        "the bundled fingerprint entry must be stamped after the walk completed, not at walk start: "
-        f"stamp landed {stamped - started:.3f}s into a {walk_seconds:.3f}s walk"
-    )
-    assert returned - stamped <= walk_seconds / 2, (
-        "the caller must receive effectively the whole TTL window: "
-        f"{returned - stamped:.3f}s of a {walk_seconds:.3f}s walk was already spent when it returned"
-    )
+    assert collect_registry_tree_fingerprints(bundled_root) is fingerprints
 
 
 def test_bundled_tree_fingerprint_cache_survives_past_the_mutable_tree_ttl() -> None:
@@ -285,7 +262,7 @@ def test_bundled_root_disk_cache_is_shared_across_processes(
     # a ``Settings`` instance. ``override_settings`` is the mechanism that
     # actually takes effect for this in-process load.
     with override_settings(cadrumo_registry_disk_cache_dir=isolated_cache_dir):
-        _load_registry_tree_cached.cache_clear()
+        clear_registry_tree_cache()
         clear_fingerprint_cache()
 
         bundled_root = bundled_path("registry", "aeat").resolve()

@@ -1,7 +1,7 @@
 """AST gate for retired CLI/TUI routing vocabulary.
 
 Import edges between the sibling entrypoints are owned by Import Linter and
-proved by the real ``just check-imports`` planted-defect suite.  This retained
+proved by the real ``just check-import-boundaries`` planted-defect suite.  This retained
 test covers the separate governance predicate for legacy routing names.
 """
 

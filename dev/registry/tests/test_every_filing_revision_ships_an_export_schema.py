@@ -29,9 +29,10 @@ every member carries a schema with content in it.
 from __future__ import annotations
 
 import pytest
-from test_support.registry_authoring import _committed_registry_tree
 
-from .....core.export_layout_format import ExportLayoutFormat
+from cadrumo.core.export_layout_format import ExportLayoutFormat
+
+from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

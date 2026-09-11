@@ -55,10 +55,10 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.filing_year import FilingYear
 from cadrumo.core.period import RegistrySelectorPeriodCode
 from cadrumo.core.revision_review import RevisionReviewStatus
-from cadrumo.domain.calculations.registry._schema_family_coverage import (
+from cadrumo.domain.calculations.registry.schema_family_coverage import (
     CoverageModel,
 )
-from cadrumo.domain.calculations.registry._snapshot_internals import check_snapshot_filing_review_tier
+from cadrumo.domain.calculations.registry.snapshot import check_snapshot_filing_review_tier
 from cadrumo.domain.calculations.registry.authority import RegistryCoverageFacts, ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError, RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import (

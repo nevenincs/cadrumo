@@ -13,7 +13,7 @@ publisher, in a delivery-only workflow behind a protected environment. The
 isolation was already true.
 
 It was true by accident. Nothing observed it, so nothing would notice it ending:
-a ``check-all: docs-deploy`` prerequisite, or a verification job growing a
+a ``check-code: docs-publish`` prerequisite, or a verification job growing a
 publish step, would both have landed green. That is the same shape as the
 boundary audit's drift-detectability finding -- a property held by "nobody has
 done it yet" rather than by a guarantee -- and this module converts it into the
@@ -70,7 +70,7 @@ def _workflow_documents() -> tuple[Path, ...]:
 
 #: The publishing verbs. Membership is asserted rather than trusted, so an
 #: undeclared publisher cannot join the command surface.
-_DEPLOY_RECIPES = frozenset({"docs-deploy", "docs-stack-deploy"})
+_DEPLOY_RECIPES = frozenset({"docs-publish", "docs-stack-provision"})
 
 #: The prefixes that name a development check surface. Deliberately broad: the
 #: question is "can verification reach publication", so over-including a recipe
@@ -84,10 +84,10 @@ _CHECK_PREFIXES = ("check", "test", "audit", "docs-check", "packaging", "lint", 
 #:
 #: No recipe name is captured here. The names are read from the tokens that
 #: follow, because just's argument grammar accepts several recipes in one
-#: invocation (``just docs-check docs-deploy``) and flags that carry a value
-#: (``just --set workers 4 docs-deploy``). The pattern this replaces captured
+#: invocation (``just docs-check docs-publish``) and flags that carry a value
+#: (``just --set workers 4 docs-publish``). The pattern this replaces captured
 #: ONE trailing name and got both forms wrong in the same direction: it missed
-#: ``docs-deploy`` in the first, and in the second it landed on the flag VALUE
+#: ``docs-publish`` in the first, and in the second it landed on the flag VALUE
 #: ``workers`` -- not a recipe, so the intersection below discarded it and the
 #: edge vanished entirely. A vanished edge here is a silent pass of the very
 #: severance this module exists to hold.
@@ -100,7 +100,7 @@ _INVOCATION_TOKEN = re.compile(r"[\w.\-/=]+")
 #: The two ways a workflow step can reach a publisher other than by naming the
 #: verb. The verb itself is read through :func:`_recipes_invoked_in`, for the
 #: reason above: a pattern demanding the recipe immediately after ``just``
-#: cannot see ``just --no-deps docs-deploy``, and an unseen publisher does not
+#: cannot see ``just --no-deps docs-publish``, and an unseen publisher does not
 #: fail this gate -- it drops out of the census the gate compares.
 _DEPLOY_IN_WORKFLOW = (
     re.compile(r"dev\.deploy\.docs_static_site"),
@@ -237,11 +237,11 @@ def test_no_development_check_lane_can_reach_a_deploy_verb() -> None:
 @pytest.mark.parametrize(
     ("invocation", "why"),
     [
-        ("just docs-check docs-deploy", "two recipes in one invocation"),
-        ("just --set workers 4 docs-deploy", "a flag carrying a value"),
-        ("just --no-deps docs-deploy", "a bare flag"),
-        ("@just docs-deploy", "just's quiet prefix"),
-        ("-just docs-deploy", "just's ignore-error prefix"),
+        ("just docs-check docs-publish", "two recipes in one invocation"),
+        ("just --set workers 4 docs-publish", "a flag carrying a value"),
+        ("just --no-deps docs-publish", "a bare flag"),
+        ("@just docs-publish", "just's quiet prefix"),
+        ("-just docs-publish", "just's ignore-error prefix"),
     ],
     ids=["multi-recipe", "valued-flag", "bare-flag", "quiet", "ignore-error"],
 )
@@ -249,7 +249,7 @@ def test_a_body_reaching_a_publisher_is_seen_however_it_is_written(tmp_path: Pat
     """Detector teeth for the edge reader, against an isolated justfile.
 
     Each form runs the publisher. The pattern this replaced saw only the
-    first token after ``just``: it missed ``docs-deploy`` behind a second
+    first token after ``just``: it missed ``docs-publish`` behind a second
     recipe name and, behind a valued flag, landed on ``workers`` -- a name
     no recipe carries, so the intersection dropped it and the edge did not
     exist. A dropped edge does not fail the severance claim above; it
@@ -258,13 +258,13 @@ def test_a_body_reaching_a_publisher_is_seen_however_it_is_written(tmp_path: Pat
     """
     justfile = tmp_path / "justfile"
     justfile.write_text(
-        f'docs-deploy:\n    @echo "publish"\n\ndocs-check:\n    @echo "check"\n\ncheck-reaching:\n    {invocation}\n',
+        f'docs-publish:\n    @echo "publish"\n\ndocs-check:\n    @echo "check"\n\ncheck-reaching:\n    {invocation}\n',
         encoding="utf-8",
     )
 
     graph = _recipe_graph(justfile)
 
-    assert "docs-deploy" in _reachable(graph, "check-reaching"), f"{why} hid the publisher edge: {graph}"
+    assert "docs-publish" in _reachable(graph, "check-reaching"), f"{why} hid the publisher edge: {graph}"
 
 
 def test_a_body_that_only_mentions_a_publisher_is_not_an_edge(tmp_path: Path) -> None:
@@ -276,7 +276,7 @@ def test_a_body_that_only_mentions_a_publisher_is_not_an_edge(tmp_path: Path) ->
     """
     justfile = tmp_path / "justfile"
     justfile.write_text(
-        'docs-deploy:\n    @echo "publish"\n\ncheck-quiet:\n    @echo "adjust docs-deploy by hand"\n',
+        'docs-publish:\n    @echo "publish"\n\ncheck-quiet:\n    @echo "adjust docs-publish by hand"\n',
         encoding="utf-8",
     )
 
@@ -324,44 +324,37 @@ def test_the_traversal_fires_on_a_planted_edge(tmp_path: Path) -> None:
     source = _JUSTFILE.read_bytes()
     planted = tmp_path / "justfile"
 
-    prerequisite = source.replace(b"\ncheck-all:", b"\ncheck-all: docs-deploy", 1)
-    assert prerequisite != source, "could not plant a prerequisite edge; check-all was not found"
+    prerequisite = source.replace(b"\ncheck-code:", b"\ncheck-code: docs-publish", 1)
+    assert prerequisite != source, "could not plant a prerequisite edge; check-code was not found"
     planted.write_bytes(prerequisite)
-    assert "docs-deploy" in _reachable(_recipe_graph(planted), "check-all"), (
+    assert "docs-publish" in _reachable(_recipe_graph(planted), "check-code"), (
         "a planted prerequisite edge was not detected; the traversal is blind"
     )
 
-    invocation = source.replace(b"\naudit-all:", b"\naudit-all:\n    just docs-stack-deploy", 1)
-    assert invocation != source, "could not plant a body invocation; audit-all was not found"
+    invocation = source.replace(
+        b"\naudit-code *ARGS:\r\n", b"\naudit-code *ARGS:\r\n    just docs-stack-provision\r\n", 1
+    )
+    if invocation == source:
+        invocation = source.replace(
+            b"\naudit-code *ARGS:\n", b"\naudit-code *ARGS:\n    just docs-stack-provision\n", 1
+        )
+    assert invocation != source, "could not plant a body invocation; audit-code was not found"
     planted.write_bytes(invocation)
-    assert "docs-stack-deploy" in _reachable(_recipe_graph(planted), "audit-all"), (
+    assert "docs-stack-provision" in _reachable(_recipe_graph(planted), "audit-code"), (
         "a planted body invocation was not detected; the traversal is blind"
     )
 
 
-def test_the_deploy_group_holds_exactly_the_publishing_verbs() -> None:
-    """Membership is pinned in both directions.
-
-    A new publishing verb filed under another group would sit outside every
-    assertion in this module, and a build verb filed into ``deploy`` would make
-    the group stop meaning "this writes to production".
-    """
+def test_outward_documentation_recipes_stay_in_the_docs_group() -> None:
+    """Outward documentation authorities remain visible in the docs namespace."""
     recipes = _dump(_JUSTFILE)
-    # Read the `group` key exactly. Matching "deploy" anywhere in the attribute
-    # blob instead catches any recipe whose `doc` text merely mentions the word
-    # -- which it did on the first run, pulling in a testing-group lane whose
-    # description names the dev/deploy subsystem it covers.
-    grouped = {
-        name
-        for name, body in recipes.items()
-        if any(
-            isinstance(attribute, dict) and attribute.get("group") == "deploy"
-            for attribute in body.get("attributes", [])
-        )
-    }
-    assert grouped == set(_DEPLOY_RECIPES), (
-        f"deploy group membership drifted: {sorted(grouped)} != {sorted(_DEPLOY_RECIPES)}"
-    )
+    for name in sorted(_DEPLOY_RECIPES):
+        groups = {
+            attribute.get("group")
+            for attribute in recipes[name].get("attributes", [])
+            if isinstance(attribute, dict) and attribute.get("group")
+        }
+        assert groups == {"docs"}, f"{name} escaped the docs namespace: {sorted(groups)}"
 
 
 def test_only_the_delivery_workflow_runs_a_publisher() -> None:

@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.record_design_schema import (
     RecordDesignCompositeRelativeClosing,
@@ -17,11 +18,8 @@ from ..compiler import record_design_workbook as record_design_workbook_module
 from ..compiler.record_design import (
     extract_record_design,
 )
+from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 from ..maintenance_support import resolve_record_design_binary
-from ._record_design_support import (
-    _committed_registry_tree,
-    bundled_path,
-)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

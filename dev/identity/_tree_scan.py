@@ -12,7 +12,7 @@ file it was built for.
 DETECTION IS NOT IMPLEMENTED HERE. The pattern, the checksum and the value-free
 finding shape all come from the sanitiser's identity detection, reached through
 :mod:`dev.sanitizer`, which already imports
-:func:`cadrumo.core.identity.validate_identity` rather than restating the AEAT
+:func:`cadrumo.core.identity.documents.validate_identity` rather than restating the AEAT
 control-letter algorithm. Re-deriving any of it would be a second authority for
 one rule. This module contributes the SURFACE (a working tree rather than a
 sanitised PDF) and the SCOPE decision, nothing else.

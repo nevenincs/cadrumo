@@ -24,7 +24,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from cadrumo.core.i18n import extract_placeholders
+from cadrumo.core.i18n.render import extract_placeholders
 
 from .manager import (
     LocaleManager,

@@ -29,14 +29,16 @@ from cadrumo.domain.calculations.registry.ids import (
 from cadrumo.domain.calculations.registry.period_selector_match import selector_period_matches_request
 
 from ..compiler.authority import compile_validated_authority
-from ._workbook_parity import (
+from .workbook_parity import (
+    run_registry_workbook_parity,
+    scan_workbook,
+)
+from .workbook_parity_models import (
     SyntheticInputSet,
     WorkbookArtefactReport,
     WorkbookCellRef,
     WorkbookParityRunReport,
     WorkbookRunnerAvailability,
-    run_registry_workbook_parity,
-    scan_workbook,
 )
 
 ParityStatus = Literal["match", "mismatch"]

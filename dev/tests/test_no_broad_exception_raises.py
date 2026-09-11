@@ -12,7 +12,7 @@ from typing import NamedTuple
 
 import pytest
 
-from cadrumo.tests import (
+from cadrumo.tests.inventory import (
     ast_for_path,
     qualified_name,
     repo_relative,

@@ -37,6 +37,7 @@ from pathlib import Path
 from typing import Final
 
 from dev._paths import REPO_ROOT, UTF_8
+from dev.exit_codes import ADVISORY_BROKEN, OK
 
 _UTF_8: Final[str] = UTF_8
 _TARGETS: Final[tuple[str, ...]] = ("src/cadrumo", "dev/audit/vulture_whitelist.py")
@@ -99,12 +100,21 @@ class DeadCodeResult:
         return cls(outcome=DeadCodeOutcome.CLEAN, modules_offered=modules_offered)
 
     @classmethod
-    def from_findings(cls, findings: tuple[DeadCodeFinding, ...]) -> DeadCodeResult:
+    def from_findings(
+        cls,
+        findings: tuple[DeadCodeFinding, ...],
+        *,
+        modules_offered: int = 0,
+    ) -> DeadCodeResult:
         """A scan that found dead code."""
         if not findings:
             msg = "from_findings requires at least one finding"
             raise ValueError(msg)
-        return cls(outcome=DeadCodeOutcome.FINDINGS, findings=findings)
+        return cls(
+            outcome=DeadCodeOutcome.FINDINGS,
+            modules_offered=modules_offered,
+            findings=findings,
+        )
 
     @classmethod
     def error(cls, reason: str) -> DeadCodeResult:
@@ -230,7 +240,7 @@ def run_dead_code_scan(repo_root: Path, *, timeout: float = _VULTURE_TIMEOUT_SEC
             return DeadCodeResult.error(
                 "vulture exited 3 (findings expected) but produced no parseable finding line",
             )
-        return DeadCodeResult.from_findings(findings)
+        return DeadCodeResult.from_findings(findings, modules_offered=offered)
 
     detail = (completed.stderr or completed.stdout or "").strip().splitlines()
     tail = detail[-1] if detail else "no diagnostic output"
@@ -254,9 +264,9 @@ def render_console_report(result: DeadCodeResult, *, full: bool = False, cap: in
 def main() -> int:
     """Run the dead-code scan and print the reduced console report.
 
-    Preserves today's exit-code contract: non-zero when dead code is found
-    (matching vulture's own exit 3), 0 when clean, 1 on a tool error --
-    `just audit-all` already tolerates this via its own advisory posture.
+    Findings are advisory and therefore return 0. A scan that cannot run
+    returns the shared advisory-broken status so missing evidence is not read
+    as a clean result.
     """
     import argparse
 
@@ -297,10 +307,10 @@ def main() -> int:
         print(render_console_report(result, full=args.full))
 
     if result.outcome is DeadCodeOutcome.ERROR:
-        return 1
+        return ADVISORY_BROKEN
     if result.outcome is DeadCodeOutcome.FINDINGS:
-        return _EXIT_FINDINGS
-    return 0
+        return OK
+    return OK
 
 
 if __name__ == "__main__":

@@ -4,11 +4,11 @@ from pathlib import Path
 
 import pytest
 import yaml
+from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
 
 from cadrumo.application.operator_surface.contract import MOUNTED_COMMAND_FAMILIES
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLanguage
-from cadrumo.tests.cli_runner import invoke_typer_app
 
 from .._ast_scanner import scan_namespace_markers, scan_source_tree
 from .._paths import DOCS_SRC_DIR, HARNESS_SRC_DIR, LOCALES_DIR, SRC_DIR
@@ -872,7 +872,7 @@ def test_ast_scanner_logs_syntax_failures_and_keeps_scanning(tmp_path: Path, cap
     """A broken module is debug-logged and does not hide valid locale keys nearby."""
 
     (tmp_path / "valid_surface.py").write_text(
-        "from cadrumo.core.i18n import tr\n"
+        "from cadrumo.core.i18n.render import tr\n"
         "\n"
         "def render(reason):\n"
         "    return tr('cli.locales.app_help') + tr(f'wizard.errors.{reason}')\n",
@@ -920,14 +920,14 @@ def test_ast_scanner_resolves_aliased_translator_import(tmp_path: Path) -> None:
     """An aliased ``tr`` import (``from ... import tr as _tr``) declares live keys.
 
     The underscore-aliased module-level import convention
-    (``from cadrumo.core.i18n import tr as _tr``) is used across the CLI surface.
+    (``from cadrumo.core.i18n.render import tr as _tr``) is used across the CLI surface.
     The scanner must resolve the alias and treat ``_tr("dotted.key")`` as a live
     translation call; otherwise the key is invisible and its genuinely-live
     catalogue entry is wrongly reported as an orphan.
     """
 
     (tmp_path / "aliased_surface.py").write_text(
-        "from cadrumo.core.i18n import tr as _tr\n\ndef render() -> str:\n    return _tr('cli.root.verbose_help')\n",
+        "from cadrumo.core.i18n.render import tr as _tr\n\ndef render() -> str:\n    return _tr('cli.root.verbose_help')\n",
         encoding="utf-8",
     )
 

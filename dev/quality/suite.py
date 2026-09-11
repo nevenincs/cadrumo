@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Consolidated static-gate dashboard for the build harness.
+"""Consolidated blocking code-quality dashboard for the build harness.
 
 Runs every fast static quality gate to completion (not fail-fast), then
 reports signal only:
@@ -39,35 +39,9 @@ GATES: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("check-style", ("ruff", "check", ".")),
     ("check-format", ("ruff", "format", "--check", ".")),
     ("check-types", (sys.executable, "-m", "dev.quality.types")),
-    ("check-imports", (sys.executable, "-m", "dev.quality.import_gate")),
-    ("check-identity", (sys.executable, "-m", "dev.identity")),
-    ("check-locales", (sys.executable, "-m", "dev.locales", "audit")),
+    ("check-import-boundaries", (sys.executable, "-m", "dev.quality.import_gate")),
     (
-        "check-docs-api",
-        (sys.executable, "-m", "dev.docs.apidocs", "scaffold", "--check"),
-    ),
-    (
-        "check-docs-synonyms",
-        (sys.executable, "-m", "dev.docs.terminology.synonyms", "validate"),
-    ),
-    ("check-modelo-regulatory-literals", (sys.executable, "-m", "dev.quality.modelo_regulatory_literals")),
-    ("check-modelo-regulatory-embeds", (sys.executable, "-m", "dev.quality.modelo_regulatory_embeds")),
-    (
-        "check-facts-catalogue-structure",
-        (sys.executable, "-m", "dev.registry.analysis.facts_catalogue_quality"),
-    ),
-    (
-        "report-governed-literal-discovery",
-        (sys.executable, "-m", "dev.registry.analysis.governed_literal_discovery"),
-    ),
-    # Aggregated deliberately: the recipe existed in the static-checks group
-    # with no row here, so `just check-all` never ran it while the gate table
-    # still looked complete. It is a fast pure-Python scan, unlike the six
-    # recipes _NOT_AGGREGATED holds out for being heavy, external, or the
-    # aggregator itself, so there is no reason for it to sit outside.
-    ("check-secure-store-write-path", (sys.executable, "-m", "dev.quality.secure_store_write_path")),
-    (
-        "check-dependencies",
+        "check-dependency-declarations",
         (
             "deptry",
             "src/cadrumo",
@@ -94,25 +68,26 @@ GATES: tuple[tuple[str, tuple[str, ...]], ...] = (
         ),
     ),
     (
-        "check-unreachable-module-coverage",
+        "check-module-reachability",
         (sys.executable, "-m", "dev.quality.unreachable_module_coverage"),
     ),
     (
-        "check-unused-symbol-coverage",
+        "check-symbol-usage",
         (sys.executable, "-m", "dev.quality.unused_symbol_coverage"),
     ),
     (
-        "check-docstring-references",
-        (sys.executable, "-m", "dev.quality.docstring_reference_targets"),
-    ),
-    (
-        "check-unconsumed-export-coverage",
+        "check-export-consumption",
         (sys.executable, "-m", "dev.quality.unconsumed_export_coverage"),
     ),
     (
-        "check-write-path-coverage",
+        "check-secure-store-write-paths",
+        (sys.executable, "-m", "dev.quality.secure_store_write_path"),
+    ),
+    (
+        "check-persistence-write-paths",
         (sys.executable, "-m", "dev.quality.write_path_coverage"),
     ),
+    ("check-docstring-references", (sys.executable, "-m", "dev.quality.docstring_reference_targets")),
 )
 
 
@@ -163,7 +138,7 @@ def main() -> int:
     if not failed:
         return 0
 
-    _emit(f"check-all: {len(failed)} of {len(results)} gates failed\n")
+    _emit(f"check-code: {len(failed)} of {len(results)} gates failed\n")
     for result in failed:
         _emit(f"FAIL  {result.name}")
         if result.output:

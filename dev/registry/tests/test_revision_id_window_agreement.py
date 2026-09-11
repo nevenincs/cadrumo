@@ -12,13 +12,14 @@ import re
 from datetime import date
 
 import pytest
-from test_support.registry_authoring import (
+
+from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+
+from ..compiler.validate_revision_id_window_agreement import (
     revision_id_claims_open_window,
     revision_window_closures,
     validate_revision_id_window_agreement,
 )
-
-from .registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

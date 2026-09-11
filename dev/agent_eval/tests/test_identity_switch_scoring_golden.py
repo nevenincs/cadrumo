@@ -22,13 +22,13 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo_harness.mcp import (
+from cadrumo_harness.mcp._dispatch import tool_name_for_command
+from cadrumo_harness.mcp._identity_gate import (
     IDENTITY_READ_CONSOLE_TOOLS,
     SessionIdentityState,
-    build_tool_descriptors,
     identity_gate_refusal,
-    tool_name_for_command,
 )
+from cadrumo_harness.mcp._tools import build_tool_descriptors
 
 from .._live_scoring import IdentityConfirmationScore, score_identity_trajectory
 from .._models import LiveToolCallRecord, LiveTrajectory

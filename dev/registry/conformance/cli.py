@@ -11,6 +11,8 @@ Verbs:
 
 * ``report`` -- every conformance axis, one row per modelo revision.
 * ``coverage`` -- per-axis measured counts against their real populations.
+* ``valid`` -- fail-closed whole-registry and legal-catalogue validation.
+* ``runtime-load`` -- exact artifact-backed bundled-authority loadability.
 * ``integrity`` -- fail-closed registry, legal-corpus and authority-artifact
   currency gate.
 * ``edition MODELO REVISION`` -- one edition as the complete edition it
@@ -75,12 +77,16 @@ from typing import TYPE_CHECKING, Annotated, NoReturn
 import typer
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority_artifact_path
+from cadrumo.domain.calculations.registry.authority import (
+    ValidatedRegistryAuthority,
+    bundled_authority,
+    bundled_authority_artifact_path,
+)
 
 from ..compiler.authority import compile_validated_authority
 from ..compiler.legal_grounding import verify_legal_catalogue
 from ..pipeline.authority_publication import AuthorityArtifactCurrency, authority_artifact_currency
-from ._stamp import StampableReviewStatus, StampError, bundled_registry_root, stamp_revision
+from .stamp import StampableReviewStatus, StampError, bundled_registry_root, stamp_revision
 from .edition import RegistryEditionView, read_registry_edition, render_registry_edition
 from .errors import RegistryApplicationInputError
 from .manager import (
@@ -100,6 +106,25 @@ app = typer.Typer(
     help="Report modelo registry conformance: provenance, grounding, coherence, enforcement.",
     no_args_is_help=True,
 )
+
+
+def validate_registry(
+    *,
+    registry_root: Path | None = None,
+    source_root: Path | None = None,
+) -> ValidatedRegistryAuthority:
+    """Compile and verify the complete registry authority without publishing it."""
+    resolved_registry_root = registry_root or bundled_path("registry", "aeat")
+    resolved_source_root = source_root or bundled_path()
+    authority = compile_validated_authority(resolved_registry_root, resolved_source_root)
+    verify_legal_catalogue(authority.catalogues.legal, source_root=resolved_source_root)
+    return authority
+
+
+def load_bundled_runtime_authority() -> ValidatedRegistryAuthority:
+    """Load the exact artifact-backed authority used by the product runtime."""
+    return bundled_authority()
+
 
 _NoValidate = Annotated[
     bool,
@@ -158,6 +183,90 @@ def coverage(as_json: _AsJson = False, no_validate: _NoValidate = False) -> None
     _warn_if_vacuous(composed)
 
 
+@app.command("valid")
+def valid(
+    as_json: _AsJson = False,
+    registry_root: Annotated[
+        Path | None,
+        typer.Option("--registry-root", help="Registry tree to verify; defaults to the bundled registry."),
+    ] = None,
+    source_root: Annotated[
+        Path | None,
+        typer.Option("--source-root", help="Source tree holding the legal corpus; defaults to bundled data."),
+    ] = None,
+) -> None:
+    """Fail closed unless the complete registry and legal catalogue validate."""
+    try:
+        authority = validate_registry(registry_root=registry_root, source_root=source_root)
+    except Exception as error:
+        detail = f"{type(error).__name__}: {error}"
+        if as_json:
+            typer.echo(json.dumps({"status": "failed", "detail": detail}, indent=2), err=True)
+        else:
+            typer.echo(f"registry-valid\tstatus=failed\tdetail={detail}", err=True)
+        raise typer.Exit(code=1) from error
+
+    revision_count = sum(len(modelo.revisions) for modelo in authority.modelos)
+    if as_json:
+        typer.echo(
+            json.dumps(
+                {
+                    "status": "passed",
+                    "modelo_count": len(authority.modelos),
+                    "revision_count": revision_count,
+                    "legal_reference_count": len(authority.catalogues.legal),
+                },
+                indent=2,
+            )
+        )
+        return
+    typer.echo(
+        "registry-valid"
+        "\tstatus=passed"
+        f"\tmodelos={len(authority.modelos)}"
+        f"\trevisions={revision_count}"
+        f"\tlegal_references={len(authority.catalogues.legal)}",
+    )
+
+
+@app.command("runtime-load")
+def runtime_load(as_json: _AsJson = False) -> None:
+    """Fail closed unless the production artifact-backed authority loads exactly."""
+    try:
+        authority = load_bundled_runtime_authority()
+    except Exception as error:
+        detail = f"{type(error).__name__}: {error}"
+        if as_json:
+            typer.echo(json.dumps({"status": "failed", "loadable": False, "detail": detail}, indent=2), err=True)
+        else:
+            typer.echo(f"registry-runtime-load\tstatus=failed\tloadable=false\tdetail={detail}", err=True)
+        raise typer.Exit(code=1) from error
+
+    revision_count = sum(len(modelo.revisions) for modelo in authority.modelos)
+    if as_json:
+        typer.echo(
+            json.dumps(
+                {
+                    "status": "passed",
+                    "loadable": True,
+                    "modelo_count": len(authority.modelos),
+                    "revision_count": revision_count,
+                    "artifact": str(bundled_authority_artifact_path()),
+                },
+                indent=2,
+            )
+        )
+        return
+    typer.echo(
+        "registry-runtime-load"
+        "\tstatus=passed"
+        "\tloadable=true"
+        f"\tmodelos={len(authority.modelos)}"
+        f"\trevisions={revision_count}"
+        f"\tartifact={bundled_authority_artifact_path()}",
+    )
+
+
 @app.command("integrity")
 def integrity(
     as_json: _AsJson = False,
@@ -198,8 +307,7 @@ def integrity(
     )
     if not currency.is_current:
         _refuse_authority_artifact(currency, as_json=as_json)
-    authority = compile_validated_authority(resolved_registry_root, resolved_source_root)
-    verify_legal_catalogue(authority.catalogues.legal, source_root=resolved_source_root)
+    authority = validate_registry(registry_root=resolved_registry_root, source_root=resolved_source_root)
     revision_count = sum(len(modelo.revisions) for modelo in authority.modelos)
     if as_json:
         typer.echo(
@@ -531,4 +639,4 @@ def _warn_if_vacuous(composed: ConformanceReport) -> None:
         typer.echo(warning)
 
 
-__all__ = ["app"]
+__all__ = ["app", "load_bundled_runtime_authority", "validate_registry"]

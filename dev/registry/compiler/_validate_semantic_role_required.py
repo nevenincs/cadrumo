@@ -19,7 +19,7 @@ from collections import defaultdict
 from collections.abc import Iterable, Mapping
 
 from cadrumo.core.casilla_id import CasillaId
-from cadrumo.core.i18n import MissingTranslationError
+from cadrumo.core.i18n.render import MissingTranslationError
 from cadrumo.domain.calculations.registry.ids import ModeloId, RevisionId
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 

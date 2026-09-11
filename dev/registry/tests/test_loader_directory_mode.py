@@ -25,35 +25,69 @@ from cadrumo.domain.calculations.registry.errors import (
     RegistryValidationError,
 )
 
-from ..compiler._loader_internals import load_modelo_file
 from ..compiler.loader import (
     load_catalogue_file,
     load_modelo_directory,
+    load_modelo_file,
     load_modelo_source,
     load_registry_tree,
     load_shared_catalogues,
 )
 from ..compiler.loader_cache import ModeloSource, discover_modelo_sources
 from ..compiler.loader_fingerprints import clear_fingerprint_cache
-from ..conformance.tests._loader_directory_mode_support import (
-    _MAX_SINGLE_FILE_MODELO_LINES,
-    _MAX_TOML_FRAGMENT_LINES,
-    _MAX_TOML_ROW_CHARS,
-    _build_directory_layout,
-    _committed_modelo,
-    _committed_modelo_sources,
-    _committed_modelo_sources_by_id,
-    _committed_modelo_toml_paths,
-    _committed_modelos_dir,
-    _committed_registry_modelos,
-    _committed_toml_paths_by_fragment_revision,
-    _committed_toml_paths_by_modelo_id,
-    _minimal_fragment_revision_layout,
-    _split_single_file_modelo_text,
-    _standard_manifest_text,
-    _standard_revision_preamble_text,
-    _write_standard_manifest,
+from ..conformance.loader_directory_mode_support import (
+    MAX_SINGLE_FILE_MODELO_LINES as _MAX_SINGLE_FILE_MODELO_LINES,
+)
+from ..conformance.loader_directory_mode_support import (
+    MAX_TOML_FRAGMENT_LINES as _MAX_TOML_FRAGMENT_LINES,
+)
+from ..conformance.loader_directory_mode_support import (
+    MAX_TOML_ROW_CHARS as _MAX_TOML_ROW_CHARS,
+)
+from ..conformance.loader_directory_mode_support import (
+    build_directory_layout as _build_directory_layout,
+)
+from ..conformance.loader_directory_mode_support import (
+    committed_modelo as _committed_modelo,
+)
+from ..conformance.loader_directory_mode_support import (
+    committed_modelo_sources as _committed_modelo_sources,
+)
+from ..conformance.loader_directory_mode_support import (
+    committed_modelo_sources_by_id as _committed_modelo_sources_by_id,
+)
+from ..conformance.loader_directory_mode_support import (
+    committed_modelo_toml_paths as _committed_modelo_toml_paths,
+)
+from ..conformance.loader_directory_mode_support import (
+    committed_modelos_dir as _committed_modelos_dir,
+)
+from ..conformance.loader_directory_mode_support import (
+    committed_registry_modelos as _committed_registry_modelos,
+)
+from ..conformance.loader_directory_mode_support import (
+    committed_toml_paths_by_fragment_revision as _committed_toml_paths_by_fragment_revision,
+)
+from ..conformance.loader_directory_mode_support import (
+    committed_toml_paths_by_modelo_id as _committed_toml_paths_by_modelo_id,
+)
+from ..conformance.loader_directory_mode_support import (
+    minimal_fragment_revision_layout as _minimal_fragment_revision_layout,
+)
+from ..conformance.loader_directory_mode_support import (
+    split_single_file_modelo_text as _split_single_file_modelo_text,
+)
+from ..conformance.loader_directory_mode_support import (
+    standard_manifest_text as _standard_manifest_text,
+)
+from ..conformance.loader_directory_mode_support import (
+    standard_revision_preamble_text as _standard_revision_preamble_text,
+)
+from ..conformance.loader_directory_mode_support import (
     write_minimal_shared_catalogues,
+)
+from ..conformance.loader_directory_mode_support import (
+    write_standard_manifest as _write_standard_manifest,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

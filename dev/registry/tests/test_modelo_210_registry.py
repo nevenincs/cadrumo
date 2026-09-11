@@ -6,24 +6,25 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from test_support.registry_authoring import (
-    RegistryValidator,
-    _committed_modelo,
-    convenio_authority_from_facts,
-    load_catalogue_file,
-    load_governed_facts,
-    load_modelo_directory,
-    verify_legal_catalogue,
-)
 
-from .....core.irnr import ConvenioOverrideKind, TipoRentaIrnr
-from .....core.resources.bundled_data import bundled_path
-from .....core.result_disposition import ResultDisposition
-from .....tests.registry_snapshot import build_snapshot
-from ..errors import NoRevisionForPeriodError
-from ..facts.schema import GovernedFactCatalogue
-from ..schema import ModeloDefinition, RegistryCatalogues
-from ..temporal import select_revision
+from cadrumo.core.irnr import ConvenioOverrideKind, TipoRentaIrnr
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.result_disposition import ResultDisposition
+from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ..compiler.convenio import convenio_authority_from_facts
+from ..compiler.fact_loader import load_governed_facts
+from ..compiler.legal_grounding import verify_legal_catalogue
+from ..compiler.loader import (
+    load_catalogue_file,
+    load_modelo_directory,
+)
+from ..compiler.validator import RegistryValidator
+from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -19,7 +19,7 @@ from cadrumo.core.filing_projection_ref import (
     M303RegimenSimplificadoModuleProjectionRef,
     M303RegimenSimplificadoModuleValue,
 )
-from cadrumo.domain.calculations.registry._snapshot_internals import _validate_materialized_export_record_families
+from cadrumo.domain.calculations.registry.snapshot import validate_materialized_export_record_families
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
@@ -33,16 +33,18 @@ from cadrumo.domain.calculations.registry.schema_exports import (
 )
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 
-from ..compiler._loader_internals import (
-    _compile_export_semantic_field,
-    _compile_projection_endpoint_declaration,
+from ..compiler.validate_exports import (
+    validate_export_record,
+    validate_generated_projection_layout_bijection,
 )
-from ..compiler._validate_evidence import EvidenceValidator
-from ..compiler._validate_exports import (
-    _validate_export_record,
-    _validate_generated_projection_layout_bijection,
-    _validate_projection_endpoint_declarations,
+from ..compiler.validate_projection_endpoints import validate_projection_endpoint_declarations
+from ..compiler.loader_semantics import (
+    compile_export_semantic_field as _compile_export_semantic_field,
 )
+from ..compiler.loader_semantics import (
+    compile_projection_endpoint_declaration as _compile_projection_endpoint_declaration,
+)
+from ..compiler.validate_evidence import EvidenceValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -315,7 +317,7 @@ def test_registry_validation_rechecks_repeat_family_after_model_copy() -> None:
     derived_record = record.model_copy(update={"repeat": "binding_rows"})
     failures: list[str] = []
 
-    _validate_export_record(
+    validate_export_record(
         failures,
         prefix="modelo 303 revision projection-test",
         revision=revision,
@@ -335,7 +337,7 @@ def test_materialized_snapshot_boundary_refuses_unresolved_binding_record() -> N
     materialized = revision.model_copy(update={"export_layouts": derive_export_layouts_from_bindings(revision)})
 
     with pytest.raises(RegistryValidationError, match="did not materialize binding fields"):
-        _validate_materialized_export_record_families(materialized)
+        validate_materialized_export_record_families(materialized)
 
 
 @pytest.mark.parametrize(
@@ -371,7 +373,7 @@ def test_projection_endpoint_validator_refuses_duplicate_and_unknown_casilla() -
     )
     failures: list[str] = []
 
-    _validate_projection_endpoint_declarations(
+    validate_projection_endpoint_declarations(
         failures,
         prefix="modelo 303 revision projection-test",
         revision=revision,
@@ -391,7 +393,7 @@ def test_generated_projection_fields_must_biject_revision_owned_declarations() -
     revision = _revision(_field(projection_ref=reference))
     failures: list[str] = []
 
-    _validate_generated_projection_layout_bijection(
+    validate_generated_projection_layout_bijection(
         failures,
         prefix="modelo 303 revision projection-test",
         revision=revision,
@@ -405,7 +407,7 @@ def test_generated_projection_fields_must_biject_revision_owned_declarations() -
     ]
     declared = revision.model_copy(update={"projection_endpoints": (_declaration(projection_ref=reference),)})
     clean: list[str] = []
-    _validate_generated_projection_layout_bijection(
+    validate_generated_projection_layout_bijection(
         clean,
         prefix="modelo 303 revision projection-test",
         revision=declared,

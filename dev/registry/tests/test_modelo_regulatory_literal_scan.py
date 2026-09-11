@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from ..analysis.modelo_regulatory_literal_scan import derive_regulatory_literal_findings
+from ..validation.regulatory_literals import derive_regulatory_literal_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

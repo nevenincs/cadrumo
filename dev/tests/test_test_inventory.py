@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.tests import (
+from cadrumo.tests.inventory import (
     FIXTURES_DIR,
     REPO_ROOT,
     SRC_CADRUMO,

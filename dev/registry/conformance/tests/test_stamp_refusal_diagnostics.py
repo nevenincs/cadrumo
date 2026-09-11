@@ -1,6 +1,6 @@
-"""``_stamp.py``'s three exception-formatting refusal sites never echo a raw payload.
+"""``stamp.py``'s three exception-formatting refusal sites never echo a raw payload.
 
-:func:`~dev.registry.conformance._stamp.stamp_revision` writes governance
+:func:`~dev.registry.conformance.stamp.stamp_revision` writes governance
 provenance -- who engineered or reviewed a revision -- and every value it
 handles is caller-supplied free text. Three sites in that module format an
 arbitrary underlying exception into the ``StampError`` message a caller sees,
@@ -35,7 +35,7 @@ from pathlib import Path
 
 import pytest
 
-from .._stamp import (
+from ..stamp import (
     StampError,
     _assert_revision_is_compiled,  # pyright: ignore[reportPrivateUsage]
     _assert_schema_accepts,  # pyright: ignore[reportPrivateUsage]

@@ -7,23 +7,26 @@ from decimal import Decimal
 from functools import cache
 
 import pytest
-from test_support.registry_authoring import RegistryValidator, verify_legal_catalogue, verify_source_file
 
-from .....core.corpus_text import normalise_corpus_text
-from .....core.export_layout_format import ExportLayoutFormat
-from .....core.resources.bundled_data import bundled_path
-from .....tests import REPO_ROOT
-from .....tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED
-from .....tests.registry_snapshot import build_snapshot
-from ...export_field_kind import CasillaFieldKind
-from ..authority import bundled_authority
-from ..export import derive_export_layouts_from_bindings, resolve_export_layout
-from ..export_parse import parse_export_payload
-from ..fixed_width_codec import ExportEncoding
-from ..schema import RegistrySnapshot
-from ..schema_exports import ExportFieldDefinition
-from ..schema_input_kind import InputKind
-from ..temporal import select_revision
+from cadrumo.core.corpus_text import normalise_corpus_text
+from cadrumo.core.export_layout_format import ExportLayoutFormat
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings, resolve_export_layout
+from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
+from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED
+from cadrumo.tests.inventory import REPO_ROOT
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ..compiler.corpus_catalogue import verify_source_file
+from ..compiler.legal_grounding import verify_legal_catalogue
+from ..compiler.validator import RegistryValidator
 from ._modelo_349_registry_support import (
     _DECL_IMPORTE_OPERACIONES_CASILLA,
     _DECL_IMPORTE_RECTIFICACIONES_CASILLA,

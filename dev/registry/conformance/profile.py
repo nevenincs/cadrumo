@@ -137,10 +137,10 @@ from cadrumo.domain.calculations.registry.support_matrix import revision_capabil
 from ..compiler.authority import compile_validated_authority as _compile_validated_authority
 from ..compiler.identity import resolve_registry_identity as _resolve_registry_identity
 from ..compiler.loader import (
-    collect_registry_tree_fingerprints as _collect_registry_tree_fingerprints,
-)
-from ..compiler.loader import (
     load_registry_tree as _load_registry_tree,
+)
+from ..compiler.loader_fingerprints import (
+    collect_registry_tree_fingerprints as _collect_registry_tree_fingerprints,
 )
 from ..compiler.registry_scope import (
     validate_registry_scope as _validate_registry_scope,

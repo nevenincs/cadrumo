@@ -14,6 +14,7 @@ import shutil
 import tempfile
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
+from enum import StrEnum
 from pathlib import Path
 from typing import Annotated, Literal
 
@@ -22,7 +23,10 @@ import typer
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.i18n.render import locale_map, override_locales_root
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority_artifact_path
+from cadrumo.domain.calculations.registry.authority import (
+    ValidatedRegistryAuthority,
+    bundled_authority_artifact_path,
+)
 from cadrumo.domain.calculations.registry.authority_artifact import AuthorityArtifact
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.modelo_localization import (
@@ -122,6 +126,7 @@ def publish_authority(
         f"\tidentity_digest={published.identity_digest}"
         f"\tmodelos={len(published.modelos)}",
     )
+    typer.echo("next\tcurrentness=report-registry-status\tpublication=registry-publish-target-if-targets-stale")
 
 
 @dataclass(frozen=True, slots=True)
@@ -161,9 +166,14 @@ def _bootstrap_target(invocation: _Invocation, *, source_sha256: str) -> Generat
     return target
 
 
-def _prepare(invocation: _Invocation, root: Path) -> _PreparedInvocation:
+def _prepare(
+    invocation: _Invocation,
+    root: Path,
+    *,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> _PreparedInvocation:
     """Stage one narrow candidate and derive its render inputs from authority."""
-    authority = compiled_bundled_authority()
+    authority = compiled_bundled_authority() if authority is None else authority
     target_root = bundled_path("registry", "aeat")
     target_export_root = target_root / "modelos" / invocation.modelo / "revisions" / invocation.revision / "export"
     source = next(
@@ -559,11 +569,190 @@ def _run(
         raise typer.Exit(code=1) from error
 
 
+class TargetCurrentnessState(StrEnum):
+    """Read-only state of one named generated export target."""
+
+    CURRENT = "current"
+    STALE = "stale"
+    DRIFTED = "drifted"
+    NEVER_COMMITTED = "never-committed"
+
+
+@dataclass(frozen=True, slots=True)
+class TargetCurrentnessFact:
+    """Canonical generated-tree currentness fact and its comparison evidence."""
+
+    modelo: str
+    revision: str
+    state: TargetCurrentnessState
+    differing: tuple[str, ...] = ()
+    only_committed: tuple[str, ...] = ()
+    only_rendered: tuple[str, ...] = ()
+    serialization_only: tuple[str, ...] = ()
+    detail: str = ""
+
+
+def target_currentness(
+    modelo: str,
+    revision: str,
+    source_ref: str | None,
+    filing_year: int | None,
+    period: str | None = None,
+    *,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> TargetCurrentnessFact:
+    """Prove one generated target currentness without publishing or repairing it.
+
+    The canonical generated-tree checker owns the fresh render, isolated
+    authority validation, published-layout load, and byte comparison. The
+    comparison below is used only to classify a refused check as stale
+    attestation or substantive drift for the read-only fact.
+    """
+    effective_authority = compiled_bundled_authority() if authority is None else authority
+    selected = effective_authority.modelo(modelo).revisions.get(revision)
+    if selected is None:
+        raise ValueError(f"modelo {modelo} declares no revision {revision!r}")
+    if source_ref is None:
+        design_refs = tuple(
+            ref
+            for ref in selected.source_refs
+            if (source := effective_authority.catalogues.sources.get(ref)) is not None
+            and source.kind == "record_design"
+            and source.record_design_epoch is not None
+        )
+        if len(design_refs) != 1:
+            raise ValueError(f"{modelo}/{revision} requires an explicit record-design source for currentness")
+        source_ref = str(design_refs[0])
+    effective_period = period or str(selected.period_selector.periods[0])
+    invocation = _Invocation(
+        modelo,
+        revision,
+        source_ref,
+        selected.valid_from.year if filing_year is None else filing_year,
+        effective_period,
+    )
+    with tempfile.TemporaryDirectory(prefix="cadrumo-generated-export-currentness-") as temporary_name:
+        prepared = _prepare(invocation, Path(temporary_name), authority=effective_authority)
+        if not prepared.target_export_root.exists():
+            _check(prepared)
+            return TargetCurrentnessFact(
+                modelo=modelo,
+                revision=revision,
+                state=TargetCurrentnessState.NEVER_COMMITTED,
+                detail="the target rendered successfully but has no committed export tree",
+            )
+        try:
+            _check(prepared)
+        except (OSError, RegistryError, ValueError) as error:
+            candidate_export_root = prepared.candidate_root / "modelos" / modelo / "revisions" / revision / "export"
+            comparison: RenderComparison | None = None
+            try:
+                if not candidate_export_root.exists():
+                    _render_candidate(prepared)
+                comparison = compare_export_tree_roots(
+                    modelo=modelo,
+                    revision=revision,
+                    layout_id=prepared.inputs.layout_id,
+                    committed_root=prepared.target_export_root,
+                    rendered_root=candidate_export_root,
+                )
+            except (OSError, RegistryError, ValueError):
+                pass
+            if comparison is not None:
+                state = TargetCurrentnessState.STALE if comparison.provenance_only else TargetCurrentnessState.DRIFTED
+                return TargetCurrentnessFact(
+                    modelo=modelo,
+                    revision=revision,
+                    state=state,
+                    differing=comparison.differing,
+                    only_committed=comparison.only_committed,
+                    only_rendered=comparison.only_rendered,
+                    serialization_only=comparison.serialization_only,
+                    detail=str(error),
+                )
+            return TargetCurrentnessFact(
+                modelo=modelo,
+                revision=revision,
+                state=TargetCurrentnessState.DRIFTED,
+                detail=str(error),
+            )
+    return TargetCurrentnessFact(
+        modelo=modelo,
+        revision=revision,
+        state=TargetCurrentnessState.CURRENT,
+        detail="fresh canonical output matches the committed target",
+    )
+
+
 _MODELO = Annotated[str, typer.Argument(help="Three-digit AEAT modelo identifier.")]
 _REVISION = Annotated[str, typer.Argument(help="Exact declared revision identifier.")]
 _SOURCE = Annotated[str, typer.Argument(help="Exact declared record-design source reference.")]
 _FILING_YEAR = Annotated[int, typer.Argument(help="Filing year used to select the stated source.")]
 _PERIOD = Annotated[str, typer.Argument(help="Non-empty declared filing period, for example 0A.")]
+
+
+@app.command("target-current")
+def target_current_command(
+    modelo: _MODELO,
+    revision: _REVISION,
+    source_ref: _SOURCE,
+    filing_year: _FILING_YEAR,
+    period: _PERIOD,
+) -> None:
+    """Prove one named generated target is current without changing it."""
+    try:
+        fact = target_currentness(modelo, revision, source_ref, filing_year, period)
+    except (OSError, RegistryError, ValueError) as error:
+        typer.echo(f"refused: {error}", err=True)
+        raise typer.Exit(code=1) from error
+    typer.echo(
+        "target-current"
+        f"\tmodelo={fact.modelo}"
+        f"\trevision={fact.revision}"
+        f"\tstate={fact.state.value}"
+        f"\tdetail={fact.detail}",
+    )
+    if fact.state is not TargetCurrentnessState.CURRENT:
+        raise typer.Exit(code=1)
+
+
+@app.command("publish-target")
+def publish_target_command(
+    modelo: _MODELO,
+    revision: _REVISION,
+    source_ref: _SOURCE,
+    filing_year: _FILING_YEAR,
+    period: _PERIOD,
+) -> None:
+    """Check, then transactionally publish one named static target tree."""
+    _run(_Invocation(modelo, revision, source_ref, filing_year, period), action="publish")
+    typer.echo(f"publish-target\tmodelo={modelo}\trevision={revision}\tsource={source_ref}")
+    typer.echo(
+        "next\tcurrentness=check-registry-target-current\tpublication=registry-publish-authority-if-authority-stale"
+    )
+
+
+@app.command("republish-target")
+def republish_target_command(
+    modelo: _MODELO,
+    revision: _REVISION,
+    source_ref: _SOURCE,
+    filing_year: _FILING_YEAR,
+    period: _PERIOD,
+    expected_manifest_sha256: Annotated[
+        str,
+        typer.Argument(help="Exact current manifest sha256 reviewed for provenance-only replacement."),
+    ],
+) -> None:
+    """Digest-bound republish of one named target after its exact state was reviewed."""
+    _run(
+        _Invocation(modelo, revision, source_ref, filing_year, period, expected_manifest_sha256),
+        action="republish",
+    )
+    typer.echo(f"republish-target\tmodelo={modelo}\trevision={revision}\tsource={source_ref}")
+    typer.echo(
+        "next\tcurrentness=check-registry-target-current\tpublication=registry-publish-authority-if-authority-stale"
+    )
 
 
 @app.command("check")
@@ -611,4 +800,10 @@ def republish_command(
     typer.echo(f"republished modelo={modelo} revision={revision} source={source_ref}")
 
 
-__all__ = ["app", "publish_authority_candidate_workflow"]
+__all__ = [
+    "TargetCurrentnessFact",
+    "TargetCurrentnessState",
+    "app",
+    "publish_authority_candidate_workflow",
+    "target_currentness",
+]

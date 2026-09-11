@@ -45,7 +45,7 @@ from cadrumo.domain.calculations.registry.schema_exports import (
     ProjectionEndpointDeclaration,
 )
 
-from ._variable_envelope import (
+from .variable_envelope import (
     compile_auxiliary_envelope_header_definition,
     compile_filing_envelope_definition,
 )

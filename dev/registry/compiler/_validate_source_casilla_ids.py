@@ -7,7 +7,7 @@ to cross-model relation validators.
 See Also:
     :mod:`domain.calculations.registry._casilla_membership`
         Declared-id membership and non-canonical metadata-token lookup.
-    :mod:`domain.calculations.registry._validate_relation_sources`
+    :mod:`dev.registry.compiler.validate_relation_sources`
         Relation source validation that consumes these canonical outputs.
     :mod:`domain.calculations.registry._validate_previous_filing_sources`
         Previous-filing binding validation that shares the same source check.

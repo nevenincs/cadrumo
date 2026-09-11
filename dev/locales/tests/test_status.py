@@ -5,8 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-
-from cadrumo.tests.cli_runner import invoke_typer_app
+from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
 
 from .._status import CatalogueLeafState, catalogue_status, classify_catalogue_leaf
 from ..cli import app
@@ -25,7 +24,7 @@ def manager(tmp_path: Path) -> LocaleManager:
     source_dir = tmp_path / "source"
     source_dir.mkdir()
     (source_dir / "surface.py").write_text(
-        "from cadrumo.core.i18n import tr\n\n"
+        "from cadrumo.core.i18n.render import tr\n\n"
         "def render() -> tuple[str, str, str, str, str]:\n"
         '    return (tr("audit.first"), tr("audit.second"), tr("audit.third"),\n'
         '            tr("audit.fourth"), tr("audit.fifth"))\n',

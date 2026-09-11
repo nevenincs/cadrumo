@@ -6,7 +6,7 @@ same official-source evidence gate as the revision-closure dispatcher, so a
 layout-only source cannot make a construct filing-grade.
 
 See Also:
-    :func:`~domain.calculations.registry._validate_constructs.validate_construct_closure`
+    :func:`~dev.registry.compiler.validate_constructs.validate_construct_closure`
         Construct grounding gate exercised through the public validator.
     :class:`~dev.registry.compiler.validator.RegistryValidator`
         Modelo-level validator whose call path this regression pins.
@@ -19,8 +19,8 @@ import pytest
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_revision_members import ConstructDefinition
 
-from ..compiler._validate_constructs import _CONSTRUCT_MEMBER_ATTRS, validate_construct_closure
-from ..compiler._validate_evidence import EvidenceValidator
+from ..compiler.validate_constructs import CONSTRUCT_MEMBER_ATTRIBUTES, validate_construct_closure
+from ..compiler.validate_evidence import EvidenceValidator
 from ..compiler.validator import RegistryValidator
 from ._referential_integrity_support import (
     REFERENCE_LEGAL_ID,
@@ -65,7 +65,7 @@ def test_a_construct_member_missing_legal_refs_is_refused_not_silently_skipped()
     ``source_refs`` must be refused, not silently treated as requiring none.
 
     Every one of the fourteen construct-member kinds this validator recognises
-    (``_CONSTRUCT_MEMBER_ATTRS``) declares both fields on its own schema class
+    (``CONSTRUCT_MEMBER_ATTRIBUTES``) declares both fields on its own schema class
     -- confirmed programmatically across casilla, formula, parameter, binding,
     relation, export layout, extraction profile,
     cross-reference, workbook parity reference, verification expectation,
@@ -91,7 +91,7 @@ def test_a_construct_member_missing_legal_refs_is_refused_not_silently_skipped()
     )
     revision = minimal_revision(constructs=(construct,))
     catalogues = minimal_catalogues()
-    member_objects: dict[str, dict[str, object]] = {kind: {} for kind in _CONSTRUCT_MEMBER_ATTRS}
+    member_objects: dict[str, dict[str, object]] = {kind: {} for kind in CONSTRUCT_MEMBER_ATTRIBUTES}
     member_objects["formula"]["f1"] = _DriftedMember()
     evidence = EvidenceValidator(legal_refs=catalogues.legal, source_refs=catalogues.sources, source_root=None)
 
@@ -115,7 +115,7 @@ _NON_MEMBER_CONSTRUCT_FIELDS = frozenset({"id", "localization_key", "legal_refs"
 
 
 def test_construct_member_attrs_is_exactly_the_construct_definitions_member_sections() -> None:
-    """``_CONSTRUCT_MEMBER_ATTRS`` must name every member-reference field and no other.
+    """``CONSTRUCT_MEMBER_ATTRIBUTES`` must name every member-reference field and no other.
 
     Read live from :class:`ConstructDefinition` rather than restated, so a
     field added to or removed from the model is what this test measures, not
@@ -125,22 +125,22 @@ def test_construct_member_attrs_is_exactly_the_construct_definitions_member_sect
     model no longer has. What actually matters is completeness: a new
     section-bearing field on ``ConstructDefinition`` — a fifteenth member kind
     a future revision might declare — currently has nothing forcing a
-    matching ``_CONSTRUCT_MEMBER_ATTRS`` entry, so
+    matching ``CONSTRUCT_MEMBER_ATTRIBUTES`` entry, so
     ``validate_construct_closure`` would silently never walk it: construct
     members of that new kind would go unvalidated with no failure, no
     refusal, and no visible gap. Asserting both directions is what makes that
     addition fail loudly instead.
     """
     construct_member_sections = frozenset(ConstructDefinition.model_fields) - _NON_MEMBER_CONSTRUCT_FIELDS
-    declared_attrs = frozenset(_CONSTRUCT_MEMBER_ATTRS.values())
+    declared_attrs = frozenset(CONSTRUCT_MEMBER_ATTRIBUTES.values())
 
     assert declared_attrs <= construct_member_sections, (
-        f"_CONSTRUCT_MEMBER_ATTRS names {sorted(declared_attrs - construct_member_sections)!r}, which "
+        f"CONSTRUCT_MEMBER_ATTRIBUTES names {sorted(declared_attrs - construct_member_sections)!r}, which "
         "ConstructDefinition no longer declares as a member-reference field"
     )
     assert construct_member_sections <= declared_attrs, (
         f"ConstructDefinition declares member-reference field(s) "
-        f"{sorted(construct_member_sections - declared_attrs)!r} that _CONSTRUCT_MEMBER_ATTRS does not "
+        f"{sorted(construct_member_sections - declared_attrs)!r} that CONSTRUCT_MEMBER_ATTRIBUTES does not "
         "walk -- construct members of this kind are never validated for legal/source ref inclusion"
     )
 
@@ -150,4 +150,4 @@ def test_construct_member_attrs_keys_are_unique_diagnostic_labels() -> None:
     must stay one-to-one with the member-reference fields: a duplicate or missing label
     would make ``member_objects[kind]`` ambiguous or unreachable for the field it names.
     """
-    assert len(_CONSTRUCT_MEMBER_ATTRS) == len(set(_CONSTRUCT_MEMBER_ATTRS.values()))
+    assert len(CONSTRUCT_MEMBER_ATTRIBUTES) == len(set(CONSTRUCT_MEMBER_ATTRIBUTES.values()))

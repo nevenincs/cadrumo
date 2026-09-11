@@ -7,20 +7,27 @@ from decimal import Decimal
 from typing import Any
 
 import pytest
-from test_support.registry_authoring import RegistryValidator, _committed_modelo, _committed_snapshot
 
-from .....core.aggregation import BindingAggregationOp, BindingSourceKind
-from .....core.authority_grade import RegistryAuthorityGrade
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources.bundled_data import bundled_path
-from ....iva.schema import IvaLedgerObservationRole
-from ..binding_aggregation import binding_aggregation_op
-from ..binding_selector_utils import selector_as_dict
-from ..bindings import binding_source_casilla_ids, binding_source_modelo
-from ..errors import RegistryValidationError
-from ..runtime_graph import expression_casilla_refs
-from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
-from ..schema_input_kind import InputKind
+from cadrumo.core.aggregation import BindingAggregationOp, BindingSourceKind
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.binding_aggregation import binding_aggregation_op
+from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
+from cadrumo.domain.calculations.registry.bindings import binding_source_casilla_ids, binding_source_modelo
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.iva.schema import IvaLedgerObservationRole
+
+from ..compiler.validator import RegistryValidator
+from ..conformance.registry_schema_support import (
+    committed_modelo as _committed_modelo,
+)
+from ..conformance.registry_schema_support import (
+    committed_snapshot as _committed_snapshot,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

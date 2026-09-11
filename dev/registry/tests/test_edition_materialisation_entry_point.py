@@ -12,7 +12,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 from ..compiler.edition_materialisation import materialise_edition
-from ..conformance.tests._loader_directory_mode_support import _write_standard_manifest
+from ..conformance.loader_directory_mode_support import write_standard_manifest as _write_standard_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

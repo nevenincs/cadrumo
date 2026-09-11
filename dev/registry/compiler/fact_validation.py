@@ -14,8 +14,8 @@ from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 
 from . import fact_providers
-from ._validate_evidence import EvidenceValidator
 from .legal_grounding import verify_legal_reference_grounding
+from .validate_evidence import EvidenceValidator
 
 __all__ = ["governed_fact_catalogue_failures", "retired_fact_provider_closure_failures"]
 

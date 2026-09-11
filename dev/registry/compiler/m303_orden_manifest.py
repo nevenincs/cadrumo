@@ -12,7 +12,7 @@ from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.hashing import blake2b_hex
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry._m303_orden_constants import EXTRACTOR_VERSION
+from cadrumo.domain.calculations.registry.m303_orden_constants import EXTRACTOR_VERSION
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import LegalRefId, SourceRefId
 from cadrumo.domain.calculations.registry.m303_orden_projection_models import (
@@ -38,7 +38,7 @@ if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
 
-def _generate_manifest_with_censuses(
+def generate_manifest_with_censuses(
     *,
     source_root: Path,
     sources: Mapping[SourceRefId, SourceReference],
@@ -120,7 +120,7 @@ def _generated_source_from_census(
     )
 
 
-def _render_generated_manifest(manifest: M303AnnualOrdenGeneratedManifest) -> str:
+def render_generated_manifest(manifest: M303AnnualOrdenGeneratedManifest) -> str:
     """Render an ALREADY-generated manifest in canonical TOML order.
 
     Split out because generating the manifest costs a full BeautifulSoup pass
@@ -165,7 +165,7 @@ def _render_generated_manifest(manifest: M303AnnualOrdenGeneratedManifest) -> st
     return "\n".join(lines)
 
 
-def _check_manifest_with_censuses(
+def check_manifest_with_censuses(
     *,
     manifest_path: Path,
     source_root: Path,
@@ -199,13 +199,13 @@ def _check_manifest_with_censuses(
     # manifest are the same derivation of the same corpus, so deriving them
     # separately cost a second full extraction of every pinned annual Orden
     # and could not have disagreed.
-    manifest, censuses = _generate_manifest_with_censuses(
+    manifest, censuses = generate_manifest_with_censuses(
         source_root=source_root,
         sources=sources,
         registry_root=registry_root,
         supported_filing_years=supported_filing_years,
     )
-    expected = _render_generated_manifest(manifest)
+    expected = render_generated_manifest(manifest)
     try:
         actual = manifest_path.read_text(encoding=UTF_8_ENCODING)
     except OSError as exc:
@@ -230,7 +230,7 @@ def load_m303_annual_orden_authority(
     # compile below needs, so they are carried out of the check rather than
     # re-derived: extracting one Orden is a full BeautifulSoup parse of its BOE
     # HTML, and this loop used to pay for all five a second time.
-    manifest, censuses = _check_manifest_with_censuses(
+    manifest, censuses = check_manifest_with_censuses(
         manifest_path=manifest_path,
         source_root=source_root,
         sources=sources,

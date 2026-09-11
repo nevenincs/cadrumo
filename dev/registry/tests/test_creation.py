@@ -18,10 +18,12 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.application.aggregation import (
-    CalculationSourceContext,
     invoice_devengo_in_period,
     proxy_attributed_invoice_ids,
     resolve_invoice_devengo,
+)
+from cadrumo.application.aggregation.source_mesh import (
+    CalculationSourceContext,
 )
 from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 from cadrumo.application.invoices.source_resolver import InvoiceCatalogueSourceResolver

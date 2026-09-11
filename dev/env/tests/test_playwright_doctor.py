@@ -1,4 +1,4 @@
-"""Real-behavior gate for the `just doctor-playwright` provisioning probe.
+"""Real-behavior gate for the `just doctor-browser` provisioning probe.
 
 Every assertion here forces the REAL condition it names: a real Playwright
 launch of a real, provisioned channel for the success path, and a real launch
@@ -70,7 +70,7 @@ def test_run_doctor_defaults_to_the_live_configured_setting() -> None:
     """With no explicit channel, `run_doctor` resolves and probes `Settings.cadrumo_browser_channel`.
 
     The default settings value is `chrome`, which is provisioned on the test
-    workstation (`just setup-playwright`), so the settings-driven default path
+    workstation (`just setup-browser`), so the settings-driven default path
     exits 0 exactly like an explicit `channel="chrome"` probe would.
     """
     assert Settings().cadrumo_browser_channel == "chrome"

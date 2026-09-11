@@ -20,7 +20,7 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.hashing import sha256_hex
-from cadrumo.core.identity import ContentDigest
+from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.domain.calculations.registry import authority as authority_module
 from cadrumo.domain.calculations.registry.authority import (
     RegistryAuthorityCapture,
@@ -33,7 +33,7 @@ from cadrumo.domain.calculations.registry.authority_artifact import AuthorityArt
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
-from cadrumo.tests import REPO_ROOT
+from cadrumo.tests.inventory import REPO_ROOT
 
 from ..compiler.authority import compile_validated_authority, compiled_bundled_authority
 from ..maintenance_support import reset_registry_caches

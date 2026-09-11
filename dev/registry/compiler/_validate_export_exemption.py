@@ -337,7 +337,7 @@ def validate_export_exemption_declarations(
         #
         # This cannot become a mute button, and the reason is not that grade is
         # hard to change. It is that the RUNTIME check is not scoped by grade:
-        # `_check_snapshot_filing_capability` refuses a filing-grade snapshot from
+        # `check_snapshot_filing_capability` refuses a filing-grade snapshot from
         # any revision with no export layout, so the capability can never be
         # exercised whatever a revision declares here. Demotion is also a real
         # capability loss rather than a free pass -- an applicability-grade

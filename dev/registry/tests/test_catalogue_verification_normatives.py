@@ -12,12 +12,12 @@ from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.tests import REPO_ROOT
+from cadrumo.tests.inventory import REPO_ROOT
 
 from ..compiler.corpus_catalogue import verify_source_file
 from ..compiler.legal_grounding import verify_legal_catalogue
 from ..compiler.loader import load_catalogue_file
-from ._catalogue_verification_support import (
+from .catalogue_verification_support import (
     _FORMAL_WITHHOLDING_ARTICLE_REF,
     _FORMAL_WITHHOLDING_MODELOS,
     _FRACTIONAL_PAYMENT_ARTICLE_REF,

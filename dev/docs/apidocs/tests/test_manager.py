@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import importlib
 import inspect
 from pathlib import Path
@@ -29,6 +30,31 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 #: discovery that found no module deletes the whole reference while
 #: reporting the removal each case here asks for.
 _MINIMUM_STUB_POPULATION = 1000
+
+
+def _module_tree(module_name: str) -> ast.Module:
+    """Read a declared documentation target without executing its module body."""
+    spec = importlib.util.find_spec(module_name)
+    assert spec is not None and spec.origin is not None, f"documentation target module is absent: {module_name}"
+    return ast.parse(Path(spec.origin).read_text(encoding="utf-8"))
+
+
+def _bound_names(tree: ast.Module) -> set[str]:
+    """Return names the target module binds directly in source."""
+    names: set[str] = set()
+    for node in tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            names.add(node.name)
+        elif isinstance(node, (ast.Assign, ast.AnnAssign)):
+            targets = node.targets if isinstance(node, ast.Assign) else (node.target,)
+            names.update(target.id for target in targets if isinstance(target, ast.Name))
+        elif isinstance(node, (ast.Import, ast.ImportFrom)):
+            names.update(alias.asname or alias.name.rsplit(".", 1)[-1] for alias in node.names)
+    return names
+
+
+def _defines_class_or_function(tree: ast.Module, name: str) -> bool:
+    return any(isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and node.name == name for node in tree.body)
 
 
 def test_every_manual_alias_target_resolves_at_the_module_it_claims() -> None:
@@ -60,14 +86,13 @@ def test_every_manual_alias_target_resolves_at_the_module_it_claims() -> None:
     already_indexed: list[str] = []
     for module_name, aliases in sorted(_PUBLIC_DATA_ALIASES.items()):
         assert aliases, f"{module_name!r} claims a manual target for no alias at all"
-        module = importlib.import_module(module_name)
+        tree = _module_tree(module_name)
         for alias in aliases:
-            if not hasattr(module, alias):
+            if alias not in _bound_names(tree):
                 unresolved.append(f"{module_name}.{alias}")
                 continue
-            member = getattr(module, alias)
-            if inspect.isclass(member) or inspect.isroutine(member):
-                already_indexed.append(f"{module_name}.{alias} ({type(member).__name__})")
+            if _defines_class_or_function(tree, alias):
+                already_indexed.append(f"{module_name}.{alias}")
     assert unresolved == [], (
         "manual py:data targets name aliases their module does not resolve, so the generated "
         f"reference documents nothing at those anchors: {unresolved}"
@@ -95,13 +120,12 @@ def test_every_generic_exclusion_names_a_symbol_its_module_does_not_own() -> Non
     owned_here: list[str] = []
     for module_name, excluded in sorted(_NON_OWNER_GENERIC_IMPORTS.items()):
         assert excluded, f"{module_name!r} excludes no member at all"
-        module = importlib.import_module(module_name)
+        tree = _module_tree(module_name)
         for name in excluded:
-            if not hasattr(module, name):
+            if name not in _bound_names(tree):
                 unresolved.append(f"{module_name}.{name}")
                 continue
-            owner = getattr(getattr(module, name), "__module__", None)
-            if owner == module_name:
+            if _defines_class_or_function(tree, name):
                 owned_here.append(f"{module_name}.{name}")
     assert unresolved == [], f"generic exclusions name symbols their module does not import; remove them: {unresolved}"
     assert owned_here == [], (
@@ -120,8 +144,8 @@ def test_public_type_aliases_have_one_canonical_module_target(tmp_path: Path) ->
     identity_api_text = (tmp_path / "api" / "cadrumo.core.identity.rst").read_text(encoding="utf-8")
     all_stub_text = "\n".join(path.read_text(encoding="utf-8") for path in (tmp_path / "api").glob("*.rst"))
     assert ".. py:data:: CasillaId\n   :module: cadrumo.core.casilla_id" in core_api_text
-    assert ".. py:data:: TaxIdIdentityToken\n   :module: cadrumo.core.identity" in identity_api_text
-    assert ".. py:data:: SubjectTaxId\n   :module: cadrumo.core.identity" in identity_api_text
+    assert ".. py:data:: TaxIdIdentityToken\n   :module: cadrumo.core.identity.tax_id" in identity_api_text
+    assert ".. py:data:: SubjectTaxId\n   :module: cadrumo.core.identity.tax_id" in identity_api_text
     assert ".. py:data:: ContentDigest\n   :module: cadrumo.core.identity" in identity_api_text
     assert all_stub_text.count(".. py:data:: CasillaId\n") == 1
     assert all_stub_text.count(".. py:data:: TaxIdIdentityToken\n") == 1
@@ -135,7 +159,7 @@ def test_imported_generic_models_are_excluded_only_at_consumers(tmp_path: Path) 
     manager.scaffold()
 
     owner = (tmp_path / "api" / "cadrumo.application.aggregation._models.rst").read_text(encoding="utf-8")
-    consumer = (tmp_path / "api" / "cadrumo.application.aggregation._renta_ledger.rst").read_text(
+    consumer = (tmp_path / "api" / "cadrumo.application.aggregation.renta_ledger.rst").read_text(
         encoding="utf-8",
     )
     assert "LedgerAggregationResultBase" not in owner

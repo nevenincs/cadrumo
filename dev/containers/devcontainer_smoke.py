@@ -17,9 +17,8 @@ The checks map one-to-one onto defects that shipped in this image:
 * ``import cadrumo`` under a LOGIN shell — ``bash -lc`` re-runs ``/etc/profile``,
   which resets ``PATH`` and discarded the virtualenv, so ``python`` resolved to
   the system interpreter. Broke the VS Code integrated terminal too.
-* ``just`` on ``PATH`` — the devcontainer ``postCreateCommand`` is
-  ``just setup-install && just setup-env``; without it the image builds and then
-  fails at container creation.
+* ``just`` on ``PATH`` — the devcontainer ``postCreateCommand`` is ``just setup``;
+  without it the image builds and then fails at container creation.
 * unit-test collection — the pre-warmed editable install resolves.
 * a real headless Chromium LAUNCH — ``playwright install --dry-run`` only prints
   a download URL. It touches no shared libraries, so it stayed green straight
@@ -86,7 +85,7 @@ def _check_just() -> None:
     except RuntimeError as error:
         raise SystemExit(
             "FAIL: `just` is not on PATH in the image, but devcontainer.json's "
-            "postCreateCommand is `just setup-install && just setup-env` — the image would "
+            "postCreateCommand is `just setup` — the image would "
             "build and then fail at container creation."
         ) from error
     completed = subprocess.run(  # noqa: S603 - `shutil.which`-resolved executable, fixed argv, no caller input

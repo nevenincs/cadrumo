@@ -93,7 +93,7 @@ def install(repo_root: Path, config: Path) -> int:
             "available, so the committed hooks are NOT installed and every commit "
             "in this worktree bypasses them.\n"
             "  Remedy: declare a hook runner in pyproject.toml's dev dependency "
-            "group, refresh uv.lock, and re-run `just init-tools`.",
+            "group, refresh uv.lock, and re-run `just setup-repository-tools`.",
             file=sys.stderr,
             flush=True,
         )

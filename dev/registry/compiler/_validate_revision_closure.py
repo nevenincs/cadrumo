@@ -9,14 +9,14 @@ references, and revision-level invariants against a prebuilt
 The reference-surface pass checks revision-level
 :class:`~domain.calculations.registry.LegalReference` and
 :class:`~domain.calculations.registry.SourceReference` ids with the
-:class:`~domain.calculations.registry._validate_evidence.EvidenceValidator`.
+:class:`~domain.calculations.registry.validate_evidence.EvidenceValidator`.
 
 See Also:
     :func:`domain.calculations.registry._validate_application_links.validate_application_link_closure`
         Application-link surface closure invoked by this module.
-    :func:`domain.calculations.registry._validate_constructs.validate_construct_closure`
+    :func:`dev.registry.compiler.validate_constructs.validate_construct_closure`
         Construct member and grounding closure invoked by this module.
-    :func:`domain.calculations.registry._validate_formulas.validate_formula_dag`
+    :func:`dev.registry.compiler.validate_formulas.validate_formula_dag`
         Formula dependency-cycle guard invoked by this module.
 """
 
@@ -30,14 +30,12 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 
 from ._validate_application_links import validate_application_link_closure
-from ._validate_constructs import validate_construct_closure
-from ._validate_evidence import EvidenceValidator
-from ._validate_formulas import validate_formula_dag
+from .validate_constructs import validate_construct_closure
+from .validate_formulas import validate_formula_dag
 from ._validate_helpers import missing_refs as _missing_refs
-from ._validate_revision_rules import (
-    validate_bracket_table_temporal_coverage,
-    validate_reconciliation_total_closure,
-)
+from .validate_parameter_temporal import validate_bracket_table_temporal_coverage
+from .validate_revision_rules import validate_reconciliation_total_closure
+from .validate_evidence import EvidenceValidator
 
 _REVISION_REFERENCE_SOURCE_TIERS = ("official_source_guidance", "layout_authority")
 
@@ -93,7 +91,7 @@ def _validate_revision_reference_surfaces(
     :class:`~domain.calculations.registry.LegalReference` and
     :class:`~domain.calculations.registry.SourceReference` maps provide id
     closure, while
-    :class:`~domain.calculations.registry._validate_evidence.EvidenceValidator`
+    :class:`~domain.calculations.registry.validate_evidence.EvidenceValidator`
     enforces the source-tier requirements for revision-level reference surfaces.
     """
     manifest = revision.completeness_manifest

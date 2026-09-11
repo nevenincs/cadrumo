@@ -77,7 +77,7 @@ from cadrumo.domain.calculations.registry.ids import ModeloId
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_base import CalculationClass, CalculationClassField
 
-from ..compiler._validate_revision_rules import validate_informative_class_invariant
+from ..compiler.validate_revision_rules import validate_informative_class_invariant
 from ..compiler.loader import load_registry_tree
 
 #: The ``calculation_class`` value naming the informative enforcement posture.

@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..compiler.record_design import (
@@ -16,15 +17,14 @@ from ..compiler.record_design import (
     extract_record_design_pdf,
 )
 from ..compiler.record_design_pdf_orchestration import extract_record_design_pdf_stream
+from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 from ._record_design_support import (
     _RECORD_DESIGN_ROOT,
-    _committed_registry_tree,
     _official_record_design_sheets,
     _official_record_designs,
     _record_design_pdf,
     _record_design_pdf_files,
     _write_pdf_lines,
-    bundled_path,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -375,7 +375,7 @@ print(",".join(deferred) if deferred else "clean")
 def test_registry_import_does_not_load_the_pdf_and_xls_parser_backends() -> None:
     """Importing the registry must not drag in the spreadsheet/PDF parser stack.
 
-    ``_record_design`` and ``_workbook_parity`` are both imported eagerly by the
+    ``record_design`` and ``workbook_parity`` are both imported eagerly by the
     registry facade, so a module-scope ``import openpyxl`` / ``pdfplumber`` /
     ``pypdfium2`` / ``xlrd`` in either makes every registry consumer -- every
     taxpayer calculation -- pay for a parser stack it never calls. They are

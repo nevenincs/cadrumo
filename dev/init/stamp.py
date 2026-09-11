@@ -1,4 +1,4 @@
-"""Idempotence: why a second `just init` costs nothing.
+"""Idempotence: why a second `just setup` costs nothing.
 
 `init` has to be cheap enough that a git hook, a provisioner and a habit can
 all call it unconditionally. It cannot get there by making each step fast -
@@ -10,7 +10,7 @@ What decides that is a digest over the phase's declared inputs - the lockfiles,
 the version pins, the manifests - plus this package's own source, so a change
 to what `init` DOES invalidates every stamp that was written by the old
 behaviour. The digest is per phase, so editing ``uv.lock`` re-runs
-``init-python`` without rerunning unrelated initialization phases.
+``setup-python`` without rerunning unrelated initialization phases.
 
 A stamp alone is not sufficient and is not trusted alone. It records what the
 inputs were, not whether the result still exists, so each phase also declares

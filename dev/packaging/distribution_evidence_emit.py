@@ -234,7 +234,7 @@ def _assert_mcp_oracle_bound_to_cohort(*, cohort: LoadedReleaseCohort, mcp_evide
             runtime_server,
             distribution="cadrumo",
             entry_point="cadrumo-mcp",
-            expected_value="cadrumo_harness.mcp:main",
+            expected_value="cadrumo_harness.mcp.main:main",
         )
     except RuntimeError as exc:
         raise EvidenceCohortBindingError(str(exc)) from exc

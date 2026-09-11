@@ -228,7 +228,7 @@ def test_foreign_launcher_cannot_borrow_an_exact_installed_payload(tmp_path: Pat
                 foreign,
                 distribution="cadrumo",
                 entry_point="cadrumo-mcp",
-                expected_value="cadrumo_harness.mcp:main",
+                expected_value="cadrumo_harness.mcp.main:main",
             )
     finally:
         foreign.unlink()
@@ -281,7 +281,7 @@ def test_exact_path_foreign_launcher_is_refused(tmp_path: Path) -> None:
             copied_server,
             distribution="cadrumo",
             entry_point="cadrumo-mcp",
-            expected_value="cadrumo_harness.mcp:main",
+            expected_value="cadrumo_harness.mcp.main:main",
         )
 
 

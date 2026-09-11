@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo import llm
+from cadrumo.adapters.outbound import llm
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.optional_extras import LLM_EXTRA
 
@@ -75,16 +75,16 @@ _GUARDED_SURFACES: tuple[tuple[str, str], ...] = (
 #: nothing, so every consumer -- this probe included -- reaches a name at the
 #: module that owns it.
 _DEFINING_MODULES: dict[str, str] = {
-    "rasterise_pdf_pages_to_base64_png": "cadrumo.llm.providers.local",
-    "transcribe_document_images": "cadrumo.llm.evidence_draft_vision",
-    "extract_invoice_fields_from_text": "cadrumo.llm.evidence_draft_text",
-    "LocalVisionDocumentTranscriber": "cadrumo.llm.evidence_draft_vision",
-    "TextInvoiceFieldExtractor": "cadrumo.llm.evidence_draft_text",
-    "LocalTextLLMClassifier": "cadrumo.llm.text_classifier",
-    "LocalVisionLLMClassifier": "cadrumo.llm.vision_classifier",
-    "SemanticColumnRoleMapper": "cadrumo.llm.column_role_mapping",
-    "SupplyNatureProposer": "cadrumo.llm.supply_nature_proposal",
-    "MultimodalImageInput": "cadrumo.llm.models",
+    "rasterise_pdf_pages_to_base64_png": "cadrumo.adapters.outbound.llm.providers.local",
+    "transcribe_document_images": "cadrumo.adapters.outbound.llm.evidence_draft_vision",
+    "extract_invoice_fields_from_text": "cadrumo.adapters.outbound.llm.evidence_draft_text",
+    "LocalVisionDocumentTranscriber": "cadrumo.adapters.outbound.llm.evidence_draft_vision",
+    "TextInvoiceFieldExtractor": "cadrumo.adapters.outbound.llm.evidence_draft_text",
+    "LocalTextLLMClassifier": "cadrumo.adapters.outbound.llm.text_classifier",
+    "LocalVisionLLMClassifier": "cadrumo.adapters.outbound.llm.vision_classifier",
+    "SemanticColumnRoleMapper": "cadrumo.adapters.outbound.llm.column_role_mapping",
+    "SupplyNatureProposer": "cadrumo.adapters.outbound.llm.supply_nature_proposal",
+    "MultimodalImageInput": "cadrumo.adapters.outbound.llm.models",
 }
 
 
@@ -156,9 +156,9 @@ def _drive_surfaces(work_dir: Path, python: Path) -> dict[str, object]:
     # NameError -- which reads as "this surface did not refuse properly" when
     # the truth is that the probe never reached it. `MultimodalImageInput` is a
     # helper the calls construct, not a guarded surface, so it stays explicit.
-    # One import per DEFINING module, not one from the package. `cadrumo.llm`
-    # is an inert namespace marker and re-exports nothing, so the former
-    # `from cadrumo.llm import (...)` raised ImportError and the probe died
+    # One import per DEFINING module, not one from the package. The outbound
+    # LLM package root is an inert namespace marker and re-exports nothing, so
+    # a package-root import would raise ImportError and the probe would die
     # before reaching any surface -- which reads as 'the surface did not
     # refuse properly' when the probe never ran.
     by_module: dict[str, set[str]] = {}

@@ -6,27 +6,32 @@ from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
-from test_support.registry_authoring import (
-    RegistryValidator,
-    _committed_registry_tree,
-    validate_relation_closure,
-    validate_slot_source_hygiene,
-)
 
-from .....core.aggregation import BindingSourceKind
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources.bundled_data import bundled_path
-from .registry_observations import registry_grounded_modelo_observation
-from ..binding_selector_utils import selector_as_dict
-from ..bindings import RegistryModeloObservation
-from ..errors import RegistryValidationError
-from ..relations import (
+from cadrumo.core.aggregation import BindingSourceKind
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.relations import (
     RegistryFoldRequirement,
     relation_source_requirements,
     resolve_relation_values_from_observations,
 )
-from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
-from ..schema_surfaces import RelationDefinition, RelationPeriodAlignment, RelationRevisionSelector
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema_surfaces import (
+    RelationDefinition,
+    RelationPeriodAlignment,
+    RelationRevisionSelector,
+)
+from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
+
+from ..compiler.validate_relation_sources import (
+    validate_relation_closure,
+    validate_slot_source_hygiene,
+)
+from ..compiler.validator import RegistryValidator
+from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -586,7 +591,7 @@ def _m130_relation_reading_m100(
 
     ``target_binding`` is deliberately a parameter rather than fixed: it
     controls ``source_is_observation_history``
-    (``_relation_is_prior_year_filing_carry``), which gates the EXISTING
+    (``relation_is_prior_year_filing_carry``), which gates the EXISTING
     pre-modelled-history exception this module's own tests must not
     conflate with the NEW future-year one. Modelo 130's own
     ``irpf.previous_year_economic_activity_net_income`` binding is
@@ -679,20 +684,26 @@ class TestSourceUpperBound:
     """Pure unit coverage for the future-year structural exclusion helpers."""
 
     def test_an_open_ended_candidate_has_no_ceiling(self) -> None:
-        from ..compiler._validate_relation_periods import _is_beyond_latest_modelled_source_year, _source_upper_bound
+        from ..compiler.validate_relation_periods import (
+            is_beyond_latest_modelled_source_year,
+            source_year_upper_bound,
+        )
 
         modelos, _catalogues = _committed_tree()
         m115_revision = _modelo(modelos, "115").revisions["2019-y-siguientes"]
 
-        assert _source_upper_bound((m115_revision,)) is None
-        assert _is_beyond_latest_modelled_source_year(2099, (m115_revision,)) is False
+        assert source_year_upper_bound((m115_revision,)) is None
+        assert is_beyond_latest_modelled_source_year(2099, (m115_revision,)) is False
 
     def test_closed_per_year_candidates_bound_at_the_latest_year(self) -> None:
-        from ..compiler._validate_relation_periods import _is_beyond_latest_modelled_source_year, _source_upper_bound
+        from ..compiler.validate_relation_periods import (
+            is_beyond_latest_modelled_source_year,
+            source_year_upper_bound,
+        )
 
         modelos, _catalogues = _committed_tree()
         m100_revisions = tuple(_modelo(modelos, "100").revisions.values())
 
-        assert _source_upper_bound(m100_revisions) == 2025
-        assert _is_beyond_latest_modelled_source_year(2026, m100_revisions) is True
-        assert _is_beyond_latest_modelled_source_year(2025, m100_revisions) is False
+        assert source_year_upper_bound(m100_revisions) == 2025
+        assert is_beyond_latest_modelled_source_year(2026, m100_revisions) is True
+        assert is_beyond_latest_modelled_source_year(2025, m100_revisions) is False

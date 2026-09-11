@@ -17,7 +17,7 @@ import pytest
 from pydantic import BaseModel, ConfigDict
 
 from cadrumo.application.wizard.models import WizardChoice, WizardFlow, WizardQuestion, WizardSection, WizardWidget
-from cadrumo.core.i18n import Translatable as tr
+from cadrumo.core.i18n.translatable import Translatable as tr
 
 from ..wizard_translation_audit import (
     _FIXED_RUNTIME_KEYS,
@@ -203,7 +203,7 @@ def test_cli_keys_referenced_in_source_only_harvests_translation_call_sites(tmp_
     source.write_text(
         "\n".join(
             (
-                "from cadrumo.core.i18n import tr",
+                "from cadrumo.core.i18n.render import tr",
                 "label = tr('cli.config.list.help')",
                 "condition_id = 'cli.log_level.environment_value.recognised'",
             )

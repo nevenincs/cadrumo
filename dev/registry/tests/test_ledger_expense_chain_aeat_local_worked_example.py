@@ -52,22 +52,23 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from test_support.registry_authoring import _committed_modelo
 
-from .....application.aggregation import aggregate_renta_ledger_expenses
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.period import Period
-from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_snapshot import build_snapshot
-from ....categories.spending_category import SpendingCategory
-from ....invoices.models import InvoiceCatalogue
-from ....transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from ....transactions.models import Transaction, TransactionCatalogue
-from ....transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ..ledger_renta_gastos_estimacion_directa_bindings import (
+from cadrumo.application.aggregation import aggregate_renta_ledger_expenses
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.period import Period
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
     resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values,
 )
-from ..schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.categories.spending_category import SpendingCategory
+from cadrumo.domain.invoices.models import InvoiceCatalogue
+from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
+from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

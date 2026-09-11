@@ -20,7 +20,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.tests.registry_tree import bundled_registry_tree
+from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 

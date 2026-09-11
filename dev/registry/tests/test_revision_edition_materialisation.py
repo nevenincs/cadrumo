@@ -26,7 +26,7 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 from ..compiler.loader import load_modelo_directory
-from ..conformance.tests._loader_directory_mode_support import _write_standard_manifest
+from ..conformance.loader_directory_mode_support import write_standard_manifest as _write_standard_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

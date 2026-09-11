@@ -37,7 +37,7 @@ from cadrumo.domain.calculations.registry.ids import (
     SourceRefId,
 )
 
-from ._pydantic_error_detail import validation_error_detail
+from .pydantic_error_detail import validation_error_detail
 from .joined_record_design import JoinedRecordDesign, design_view
 from .record_design_intermediate import RecordDesignIntermediateField
 from .render_profile_eligibility import (

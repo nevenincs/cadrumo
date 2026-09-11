@@ -1,7 +1,7 @@
 """Planted-defect proofs for the single import-quality gate.
 
 Every policy proof below writes only to ``tmp_path`` and invokes the real
-``just check-imports`` recipe.  The temporary authority is copied from the
+``just check-import-boundaries`` recipe.  The temporary authority is copied from the
 live ``.importlinter`` file; its roots and layer declarations are materialised
 by reading that file, so this test contains no second dependency matrix.
 """
@@ -26,42 +26,15 @@ from dev.quality.import_checker import (
     has_architectural_warning,
     read_authority,
 )
-from dev.quality.import_gate import run_import_gate, run_subordinate
+from dev.quality.import_gate import run_import_gate, run_import_linter, run_subordinate
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 _IMPORTLINTER_CONFIG = REPO_ROOT / ".importlinter"
 _ROOT_ENV = "CADRUMO_IMPORT_GATE_ROOT"
 _LINTER_ENV = "CADRUMO_IMPORT_GATE_LINT_IMPORTS"
+_CHECKER_ENV = "CADRUMO_IMPORT_GATE_CHECKER"
 _FORCE_CHECKER_ENV = "CADRUMO_IMPORT_GATE_FORCE_CHECKER_EXCEPTION"
-
-# These are only package tails needed to give the fixture real nested module
-# paths.  They do not decide which imports are legal; the authority does that.
-_NESTED_PACKAGE_TAILS = frozenset(
-    {
-        "_data",
-        "adapters",
-        "application",
-        "audit",
-        "ci",
-        "core",
-        "corpus",
-        "deploy",
-        "domain",
-        "docs",
-        "entrypoints",
-        "inbound",
-        "llm",
-        "locales",
-        "mcp",
-        "outbound",
-        "packaging",
-        "quality",
-        "registry",
-        "tests",
-        "tui",
-    }
-)
 
 
 def _write_package(root: Path, dotted: str, source: str = "") -> None:
@@ -109,10 +82,7 @@ def _fixture_root(tmp_path: Path) -> Path:
         for container in _words(section.get("containers", "")):
             for layer in _layer_names(section.get("layers", "")):
                 dotted = f"{container}.{layer}"
-                if layer in _NESTED_PACKAGE_TAILS:
-                    _write_package(tmp_path, dotted)
-                else:
-                    _write_module(tmp_path, dotted, "VALUE = 1\n")
+                _write_package(tmp_path, dotted)
 
     # Contract module expressions are still authority data, not a policy
     # table.  Materialise their named package prefixes so an otherwise clean
@@ -136,7 +106,7 @@ def _run_real_gate(root: Path, **updates: str) -> tuple[int, str]:
     just_executable = shutil.which("just")
     assert just_executable is not None, "the real just driver is required for planted-defect proofs"
     result = subprocess.run(  # noqa: S603 - resolved just executable, fixed argv, no shell
-        [just_executable, "check-imports"],
+        [just_executable, "check-import-boundaries"],
         cwd=REPO_ROOT,
         env=environment,
         capture_output=True,
@@ -154,6 +124,21 @@ def _assert_category(root: Path, category: str) -> str:
     assert returncode != 0, output
     assert f"[{category}]" in output, output
     return output
+
+
+def test_subordinate_cli_cannot_be_used_as_a_contributor_verdict() -> None:
+    result = subprocess.run(
+        [sys.executable, "-m", "dev.quality.import_checker"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        encoding=UTF_8,
+        errors="replace",
+        check=False,
+    )
+
+    assert result.returncode == TOOL_BROKEN
+    assert "[INTERNAL_CHECKER]" in (result.stdout + result.stderr)
 
 
 @pytest.mark.parametrize(
@@ -200,6 +185,12 @@ def _assert_category(root: Path, category: str) -> str:
             "cadrumo.core.bad",
             "from ..entrypoints.module import VALUE\n",
             ("cadrumo.entrypoints.module",),
+        ),
+        (
+            "product-to-separate-harness-root",
+            "cadrumo.entrypoints.bad",
+            "import cadrumo_harness.mcp.module\n",
+            ("cadrumo_harness.mcp.module",),
         ),
         (
             "domain-to-application",
@@ -284,10 +275,39 @@ def test_undeclared_source_root_fails_authority_preflight(tmp_path: Path) -> Non
     _assert_category(root, "UNCLASSIFIED_ROOT")
 
 
+def test_undeclared_source_module_fails_authority_preflight(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+    (root / "src" / "stray.py").write_text("VALUE = 1\n", encoding=UTF_8, newline="\n")
+    _assert_category(root, "UNCLASSIFIED_ROOT")
+
+
+def test_declared_source_module_collision_fails_authority_preflight(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+    (root / "src" / "cadrumo.py").write_text("VALUE = 1\n", encoding=UTF_8, newline="\n")
+    _assert_category(root, "AUTHORITY_CONFIG")
+
+
 def test_undeclared_source_package_fails_authority_preflight(tmp_path: Path) -> None:
     root = _fixture_root(tmp_path)
     _write_package(root, "cadrumo.unclassified_package")
     _assert_category(root, "UNCLASSIFIED_PACKAGE")
+
+
+def test_authority_must_include_type_checking_edges(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+    config = configparser.ConfigParser(interpolation=None)
+    config.read(root / ".importlinter", encoding=UTF_8)
+    config["importlinter"]["exclude_type_checking_imports"] = "True"
+    with (root / ".importlinter").open("w", encoding=UTF_8, newline="\n") as stream:
+        config.write(stream)
+
+    _assert_category(root, "AUTHORITY_CONFIG")
+
+
+def test_invalid_authority_config_fails_closed(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+    (root / ".importlinter").write_text("[importlinter\n", encoding=UTF_8, newline="\n")
+    _assert_category(root, "AUTHORITY_CONFIG")
 
 
 @pytest.mark.parametrize(
@@ -301,9 +321,51 @@ def test_undeclared_source_package_fails_authority_preflight(tmp_path: Path) -> 
             "ABSOLUTE_INTRA_CADRUMO",
         ),
         (
+            "static-first-party-target-missing",
+            "dev.quality.consumer",
+            "import cadrumo.domain.missing\n",
+            "",
+            "STATIC_TARGET_UNRESOLVED",
+        ),
+        (
+            "absolute-intra-cadrumo-dynamic",
+            "cadrumo.core.consumer",
+            "import importlib\nimportlib.import_module('cadrumo.domain.module')\n",
+            "cadrumo.domain.module",
+            "ABSOLUTE_INTRA_CADRUMO",
+        ),
+        (
+            "unsupported-first-party-wildcard",
+            "dev.quality.consumer",
+            "from . import *\n",
+            "",
+            "UNSUPPORTED_IMPORT",
+        ),
+        (
+            "unsupported-relative-escape",
+            "cadrumo.core.consumer",
+            "from .... import VALUE\n",
+            "",
+            "UNSUPPORTED_IMPORT",
+        ),
+        (
+            "unsupported-dynamic-call",
+            "dev.quality.consumer",
+            "import importlib\nimportlib.import_module()\n",
+            "",
+            "UNSUPPORTED_DYNAMIC",
+        ),
+        (
             "dunder-init-submodule",
             "dev.quality.consumer",
             "import cadrumo.domain.module.__init__\n",
+            "",
+            "DUNDER_INIT_SUBMODULE",
+        ),
+        (
+            "dunder-init-from-submodule",
+            "dev.quality.consumer",
+            "from cadrumo.domain.module.__init__ import VALUE\n",
             "",
             "DUNDER_INIT_SUBMODULE",
         ),
@@ -375,6 +437,13 @@ def test_undeclared_source_package_fails_authority_preflight(tmp_path: Path) -> 
             "RAW_FIRST_PARTY_IMPORT",
         ),
         (
+            "literal-dynamic-first-party-target-missing",
+            "dev.quality.consumer",
+            "import importlib\nimportlib.import_module('cadrumo.domain.missing')\n",
+            "",
+            "DYNAMIC_TARGET_UNRESOLVED",
+        ),
+        (
             "local-package-facade",
             "dev.quality.consumer",
             "def load():\n    from . import VALUE\n    return VALUE\n",
@@ -419,6 +488,143 @@ def test_subordinate_defect_fails_through_real_gate(
     _assert_category(root, category)
 
 
+def test_finite_iterable_dynamic_target_is_resolved_by_the_subordinate_checker(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+    _write_module(
+        root,
+        "dev.quality.consumer",
+        (
+            "import importlib\n"
+            "targets = ('cadrumo.domain._private', 'third.party')\n"
+            "for target in targets:\n"
+            "    importlib.import_module(target)\n"
+        ),
+    )
+    _write_module(root, "cadrumo.domain._private", "VALUE = 1\n")
+
+    _assert_category(root, "PRIVATE_CROSS_PACKAGE")
+
+
+def test_aliased_dynamic_loader_is_resolved_by_the_subordinate_checker(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+    _write_module(
+        root,
+        "dev.quality.consumer",
+        ("from importlib import import_module as load_module\nload_module('cadrumo.domain._private')\n"),
+    )
+    _write_module(root, "cadrumo.domain._private", "VALUE = 1\n")
+
+    _assert_category(root, "PRIVATE_CROSS_PACKAGE")
+
+
+def test_module_alias_dynamic_loader_is_resolved_by_the_subordinate_checker(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+    _write_module(
+        root,
+        "dev.quality.consumer",
+        ("import importlib as il\nloader = il.import_module\nloader('cadrumo.domain._private')\n"),
+    )
+    _write_module(root, "cadrumo.domain._private", "VALUE = 1\n")
+
+    _assert_category(root, "PRIVATE_CROSS_PACKAGE")
+
+
+def test_dotted_dynamic_loader_alias_is_resolved_by_the_subordinate_checker(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+    _write_module(
+        root,
+        "dev.quality.consumer",
+        ("import importlib.import_module as loader\nloader('cadrumo.domain._private')\n"),
+    )
+    _write_module(root, "cadrumo.domain._private", "VALUE = 1\n")
+
+    _assert_category(root, "PRIVATE_CROSS_PACKAGE")
+
+
+def test_relative_dynamic_target_uses_the_importing_package(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+    _write_module(
+        root,
+        "cadrumo.core.consumer",
+        "import importlib\nimportlib.import_module('.dynamic', __package__)\n",
+    )
+    _write_module(root, "cadrumo.core.dynamic", "VALUE = 1\n")
+
+    returncode, output = _run_real_gate(root)
+
+    assert returncode == 0, output
+
+
+def test_finite_object_module_projection_is_resolved_by_the_subordinate_checker(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+    _write_module(
+        root,
+        "dev.quality.consumer",
+        (
+            "from dataclasses import dataclass\n"
+            "import importlib\n\n"
+            "@dataclass(frozen=True)\n"
+            "class Target:\n"
+            "    module: str\n\n"
+            "target = Target('cadrumo.domain._private')\n"
+            "importlib.import_module(target.module)\n"
+        ),
+    )
+    _write_module(root, "cadrumo.domain._private", "VALUE = 1\n")
+
+    _assert_category(root, "PRIVATE_CROSS_PACKAGE")
+
+
+def test_relative_object_module_projection_uses_its_explicit_package_anchor(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+    _write_module(
+        root,
+        "cadrumo.core.consumer",
+        (
+            "from dataclasses import dataclass\n"
+            "import importlib\n\n"
+            "@dataclass(frozen=True)\n"
+            "class Target:\n"
+            "    module: str\n"
+            "    qualname: str\n"
+            "    package: str | None = None\n\n"
+            "target = Target('.dynamic', 'VALUE', __package__)\n"
+            "importlib.import_module(target.module, target.package)\n"
+        ),
+    )
+    _write_module(root, "cadrumo.core.dynamic", "VALUE = 1\n")
+
+    returncode, output = _run_real_gate(root)
+
+    assert returncode == 0, output
+
+
+def test_unknown_object_module_projection_fails_closed(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+    _write_module(
+        root,
+        "dev.quality.consumer",
+        "import importlib\n\nclass Target: pass\ntarget = Target()\nimportlib.import_module(target.module)\n",
+    )
+
+    _assert_category(root, "UNRESOLVED_DYNAMIC_TARGET")
+
+
+def test_separate_harness_root_keeps_absolute_product_imports(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+    _write_module(
+        root,
+        "cadrumo_harness.mcp.consumer",
+        "from cadrumo.core.module import VALUE\n",
+    )
+    _write_module(root, "cadrumo.core.module", "VALUE = 1\n")
+
+    returncode, output = _run_real_gate(root)
+
+    assert returncode == 0, output
+    assert "ABSOLUTE_INTRA_CADRUMO" not in output
+
+
 def test_invalid_utf8_in_governed_file_fails_closed(tmp_path: Path) -> None:
     root = _fixture_root(tmp_path)
     path = root / "src" / "dev" / "quality" / "unreadable.py"
@@ -440,10 +646,48 @@ def test_missing_import_linter_executable_is_nonzero_through_real_recipe(tmp_pat
     assert run_import_gate(root, lint_executable="cadrumo-import-linter-does-not-exist") == TOOL_MISSING
 
 
+def test_missing_subordinate_checker_executable_is_nonzero_through_real_recipe(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = _fixture_root(tmp_path)
+    returncode, output = _run_real_gate(root, **{_CHECKER_ENV: "cadrumo-import-checker-does-not-exist"})
+    assert returncode != 0, output
+    assert "[TOOL_MISSING]" in output
+    monkeypatch.setenv(_CHECKER_ENV, "cadrumo-import-checker-does-not-exist")
+    assert run_import_gate(root) == TOOL_MISSING
+
+
 def test_abnormal_import_linter_status_is_tool_broken(tmp_path: Path) -> None:
     root = _fixture_root(tmp_path)
 
     assert run_import_gate(root, lint_executable=sys.executable) == TOOL_BROKEN
+
+
+def test_import_linter_timeout_is_tool_broken(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+    authority = read_authority(root).authority
+    assert authority is not None
+
+    component = run_import_linter(authority, executable=sys.executable, timeout=0)
+
+    assert component.returncode == TOOL_BROKEN
+    assert "[TOOL_BROKEN]" in component.output
+
+
+def test_import_linter_exception_is_tool_broken(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    root = _fixture_root(tmp_path)
+    authority = read_authority(root).authority
+    assert authority is not None
+
+    def fail(*args: object, **kwargs: object) -> object:
+        del args, kwargs
+        raise RuntimeError("forced Import Linter failure")
+
+    monkeypatch.setattr("dev.quality.import_gate.subprocess.run", fail)
+    component = run_import_linter(authority, executable=sys.executable)
+
+    assert component.returncode == TOOL_BROKEN
+    assert "[TOOL_BROKEN]" in component.output
 
 
 def test_forced_checker_exception_is_nonzero_through_real_recipe(
@@ -499,12 +743,33 @@ def test_zero_file_subordinate_scan_is_tool_broken(tmp_path: Path) -> None:
 
 def test_warning_and_advisory_native_diagnostics_are_not_clean() -> None:
     assert has_architectural_warning("Warnings:\n- architectural advisory\n")
+    assert has_architectural_warning("Warnings: 1\n")
+    assert not has_architectural_warning("Warnings: 0\n")
     assert not has_architectural_warning("No warnings were emitted.\n")
+
+
+def test_zero_status_with_a_native_warning_fails_the_graph_component(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = _fixture_root(tmp_path)
+    authority = read_authority(root).authority
+    assert authority is not None
+
+    def fake_run(*args: object, **kwargs: object) -> subprocess.CompletedProcess[str]:
+        del args, kwargs
+        return subprocess.CompletedProcess([], 0, "Warnings: 1\n", "")
+
+    monkeypatch.setattr("dev.quality.import_gate.subprocess.run", fake_run)
+
+    component = run_import_linter(authority, executable=sys.executable)
+
+    assert component.returncode == 1
+    assert "Warnings: 1" in component.output
 
 
 def test_clean_fixture_has_a_nonzero_governed_scan_and_passes_the_component(tmp_path: Path) -> None:
     root = _fixture_root(tmp_path)
     returncode, output = _run_real_gate(root)
     assert returncode == 0, output
-    assert "check-imports: passed" in output
+    assert "check-import-boundaries: passed" in output
     assert "governed Python file" not in output

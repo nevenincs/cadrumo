@@ -20,12 +20,17 @@ import ast
 from functools import cache
 
 import pytest
-from test_support.registry_authoring import _committed_modelo
 
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.directory_scan import scan_directory
-from .....tests import REPO_ROOT
-from ..runtime_graph import expression_binding_refs, expression_parameter_refs, expression_relation_refs
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.directory_scan import scan_directory
+from cadrumo.domain.calculations.registry.runtime_graph import (
+    expression_binding_refs,
+    expression_parameter_refs,
+    expression_relation_refs,
+)
+from cadrumo.tests.inventory import REPO_ROOT
+
+from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

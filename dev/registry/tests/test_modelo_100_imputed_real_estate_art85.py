@@ -13,7 +13,8 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.calculations.registry.tests._modelo_100_registry_support import (
+
+from ._modelo_100_registry_support import (
     _m100_2024_deduccion_maternidad_bindings,
 )
 

@@ -234,5 +234,4 @@ def test_the_retired_private_closure_module_is_gone() -> None:
     package = Path(importlib.import_module("dev.registry.conformance").__file__).parent
 
     assert not (package / "_closure.py").exists()
-    with pytest.raises(ModuleNotFoundError):
-        importlib.import_module("dev.registry.conformance._closure")
+    assert importlib.util.find_spec("dev.registry.conformance._closure") is None

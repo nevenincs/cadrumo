@@ -2,7 +2,7 @@
 
 Validates the declaration side of strict cross-revision continuity: evolution
 endpoints, duplicate ownership, and explicit retirements. Drift detection
-stays in :mod:`._validate_cross_revision`, which combines these accumulated
+stays in :mod:`.validate_cross_revision`, which combines these accumulated
 facts with divergence evidence in its established diagnostic order.
 """
 

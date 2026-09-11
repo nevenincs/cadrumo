@@ -18,7 +18,7 @@ from cadrumo.core.orden_anual_html import (
     orden_anual_iva_authority_units,
 )
 from cadrumo.core.revision_review import RevisionReviewStatus
-from cadrumo.domain.calculations.registry._m303_orden_constants import EXTRACTOR_VERSION
+from cadrumo.domain.calculations.registry.m303_orden_constants import EXTRACTOR_VERSION
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import LegalRefId
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier, PublishingAuthority

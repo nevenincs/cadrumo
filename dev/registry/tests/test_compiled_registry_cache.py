@@ -17,16 +17,14 @@ import pytest
 from cadrumo.core.config import override_settings
 from cadrumo.core.resources.bundled_data import bundled_path
 
-from ..compiler._compiled_cache import (
+from ..compiler.compiled_cache import (
     CompiledRegistryPayload,
-    _encode_frame,
     compiled_cache_path,
     load_compiled_registry_cache,
     store_compiled_registry_cache,
 )
-from ..compiler._loader_internals import _collect_registry_tree_fingerprints
-from ..compiler.loader import _load_registry_tree_cached, load_registry_tree
-from ..compiler.loader_fingerprints import clear_fingerprint_cache
+from ..compiler.loader import clear_registry_tree_cache, load_registry_tree
+from ..compiler.loader_fingerprints import clear_fingerprint_cache, collect_registry_tree_fingerprints
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -35,7 +33,7 @@ def _bundled_payload() -> tuple[Path, tuple[tuple[str, int, int, str], ...], Com
     """Compile the real bundled registry once and return its root, fingerprints, and payload."""
     clear_fingerprint_cache()
     root = bundled_path("registry", "aeat").resolve()
-    fingerprints = _collect_registry_tree_fingerprints(root)
+    fingerprints = collect_registry_tree_fingerprints(root)
     payload = load_registry_tree(root)
     assert payload[0], "sanity: the bundled tree must compile at least one modelo"
     return root, fingerprints, payload
@@ -113,7 +111,11 @@ def test_a_foreign_shaped_payload_is_refused_and_deleted(tmp_path: Path) -> None
         path.parent.mkdir(parents=True, exist_ok=True)
         # A frame with a valid schema version and a matching digest, but a foreign
         # payload object -- integrity passes, the structural type-check must not.
-        path.write_bytes(_encode_frame(("not", "a", "compiled", "registry")))  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+        store_compiled_registry_cache(  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+            root,
+            fingerprints,
+            ("not", "a", "compiled", "registry"),
+        )
 
         assert load_compiled_registry_cache(root, fingerprints) is None
         assert not path.is_file()
@@ -137,7 +139,7 @@ def test_a_well_framed_pre_schema_pydantic_payload_is_deleted_not_hydrated(tmp_p
     with override_settings(cadrumo_registry_disk_cache_dir=cache_dir):
         path = compiled_cache_path(root, fingerprints)
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(_encode_frame((modelos, stale_catalogues)))
+        store_compiled_registry_cache(root, fingerprints, (modelos, stale_catalogues))
 
         assert load_compiled_registry_cache(root, fingerprints) is None
         assert not path.exists(), "a stale Pydantic object must be deleted, not compatibility-hydrated"
@@ -162,7 +164,7 @@ def test_a_nested_pre_qualifier_deadline_window_is_deleted_not_served(tmp_path: 
     with override_settings(cadrumo_registry_disk_cache_dir=cache_dir):
         path = compiled_cache_path(root, fingerprints)
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(_encode_frame((tuple(modelos), payload[1])))
+        store_compiled_registry_cache(root, fingerprints, (tuple(modelos), payload[1]))
 
         assert load_compiled_registry_cache(root, fingerprints) is None
         assert not path.exists(), "a pre-qualifier deadline object must never reach validation"
@@ -190,10 +192,10 @@ def test_mutating_the_cache_through_the_loader_rebuilds_byte_equivalently_from_t
     # earlier call already built and cached a ``Settings`` instance.
     # ``override_settings`` is the mechanism that actually takes effect here.
     with override_settings(cadrumo_registry_disk_cache_dir=cache_dir):
-        _load_registry_tree_cached.cache_clear()
+        clear_registry_tree_cache()
         clear_fingerprint_cache()
         root = bundled_path("registry", "aeat").resolve()
-        fingerprints = _collect_registry_tree_fingerprints(root)
+        fingerprints = collect_registry_tree_fingerprints(root)
 
         # Cold compile from TOML into the empty cache dir; this is the oracle.
         reference_modelos, reference_catalogues = load_registry_tree(root)
@@ -207,7 +209,7 @@ def test_mutating_the_cache_through_the_loader_rebuilds_byte_equivalently_from_t
         path.write_bytes(bytes(corrupted))
 
         # Clear only the in-process memo so the next load must consult disk.
-        _load_registry_tree_cached.cache_clear()
+        clear_registry_tree_cache()
         rebuilt_modelos, rebuilt_catalogues = load_registry_tree(root)
 
         # The mutated cache was refused; the loader rebuilt from TOML byte-equivalently.

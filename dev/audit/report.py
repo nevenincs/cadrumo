@@ -15,17 +15,17 @@ model:
   "graph broken" failure mode, so this dimension never reports RED on its own --
   it is advisory by design (mirrors ``dev/audit/duplication.py``'s own
   "duplication is advisory debt, not a gate" contract).
-* **Import quality** -- consumes the authoritative ``dev.quality.import_gate``
+* **Import quality** -- consumes the authoritative ``just check-import-boundaries``
   process result. Any non-zero result is RED; zero is GREEN. This report does
   not parse Import Linter output or maintain a second contract inventory.
 * **Complexity** -- reuses ``dev.audit.complexity``'s live cyclomatic,
   maintainability, and cognitive scan. Any current hotspot is RED; zero is
   GREEN. This dimension has no development-state partition.
 
-This module does not re-implement any scanner; it shells out to / imports the
-existing tools and applies one shared severity vocabulary on top. See
-``aeat-calculation-aggregation`` / ``aeat-architecture-boundaries``
-for why composition-over-reimplementation is the mandated shape here.
+This module does not re-implement any scanner; it shells out to or imports the
+existing tools and applies one shared severity vocabulary on top. Keeping the
+composition here separate from the primitive scanners gives each consumer one
+authoritative measurement path.
 
 Usage::
 
@@ -33,7 +33,7 @@ Usage::
 
 Exit code is 1 if any dimension is RED, 0 otherwise (AMBER does not fail the
 run -- it is a debt signal a contributor reads on the monthly cadence, not a
-release blocker). Complexity and layering remain hard live signals;
+release blocker). Complexity and import quality remain hard live signals;
 duplication remains advisory.
 
 See Also:
@@ -51,6 +51,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import shutil
 import subprocess
 import sys
 from dataclasses import dataclass, field
@@ -59,6 +61,7 @@ from pathlib import Path
 from typing import Final
 
 from dev._paths import REPO_ROOT, UTF_8
+from dev.exit_codes import TOOL_BROKEN, TOOL_MISSING
 from dev.test_runs.paths import allocate_run_directory
 
 from .complexity import scan_complexity
@@ -83,6 +86,7 @@ class DimensionReport:
     status: Status
     headline: str
     details: list[str] = field(default_factory=list)
+    available: bool = True
 
 
 # ---------------------------------------------------------------------------
@@ -111,6 +115,7 @@ def audit_duplication(repo_root: Path) -> DimensionReport:
             status=Status.AMBER,
             headline=result.headline(),
             details=["no duplication evidence was produced this cycle; this is not a clean-tree signal"],
+            available=False,
         )
     if result.outcome is DuplicationOutcome.OBSERVED_ZERO:
         return DimensionReport(name="duplication", status=Status.GREEN, headline=result.headline())
@@ -124,20 +129,24 @@ def audit_duplication(repo_root: Path) -> DimensionReport:
 
 
 # ---------------------------------------------------------------------------
-# Layering (.importlinter contracts)
+# Import quality (authoritative import gate)
 # ---------------------------------------------------------------------------
 
 
 def audit_layering(repo_root: Path) -> DimensionReport:
     """Consume the sole import-quality gate as this report's import dimension."""
-    command = (
-        sys.executable,
-        "-m",
-        "dev.quality.import_gate",
-        "--root",
-        str(repo_root),
-    )
+    just_executable = shutil.which("just")
     working_directory = repo_root if repo_root.is_dir() else REPO_ROOT
+    if just_executable is None:
+        return DimensionReport(
+            name="layering",
+            status=Status.RED,
+            headline="authoritative `just check-import-boundaries` could not run: just is unavailable",
+            available=False,
+        )
+    command = (just_executable, "check-import-boundaries")
+    environment = os.environ.copy()
+    environment["CADRUMO_IMPORT_GATE_ROOT"] = str(repo_root)
     try:
         result = subprocess.run(
             command,
@@ -147,6 +156,7 @@ def audit_layering(repo_root: Path) -> DimensionReport:
             errors="replace",
             check=False,
             cwd=working_directory,
+            env=environment,
             timeout=300,
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
@@ -154,6 +164,7 @@ def audit_layering(repo_root: Path) -> DimensionReport:
             name="layering",
             status=Status.RED,
             headline=f"authoritative import gate could not run ({exc})",
+            available=False,
         )
 
     if result.returncode != 0:
@@ -162,7 +173,8 @@ def audit_layering(repo_root: Path) -> DimensionReport:
             name="layering",
             status=Status.RED,
             headline=f"authoritative import gate exited {result.returncode}; import quality failed",
-            details=[*diagnostic, "run `just check-imports` locally for the full import-quality result"],
+            details=[*diagnostic, "run `just check-import-boundaries` locally for the full import-quality result"],
+            available=result.returncode not in {TOOL_BROKEN, TOOL_MISSING},
         )
 
     return DimensionReport(
@@ -179,7 +191,15 @@ def audit_layering(repo_root: Path) -> DimensionReport:
 
 def audit_complexity() -> DimensionReport:
     """Return RED for current live hotspots and GREEN only for zero."""
-    scan = scan_complexity()
+    try:
+        scan = scan_complexity()
+    except (OSError, RuntimeError, subprocess.SubprocessError) as exc:
+        return DimensionReport(
+            name="complexity",
+            status=Status.AMBER,
+            headline=f"complexity signal unavailable this cycle: {exc}",
+            available=False,
+        )
     if scan.finding_count:
         return DimensionReport(
             name="complexity",
@@ -219,6 +239,7 @@ class HealthReport:
                 {
                     "name": d.name,
                     "status": d.status.value,
+                    "available": d.available,
                     "headline": d.headline,
                     "details": d.details,
                 }
@@ -266,7 +287,8 @@ def render_text_report(report: HealthReport, full: bool) -> str:
 
 def persist_report(repository: Path, report: HealthReport, command: tuple[str, ...]) -> Path:
     """Persist one uniquely identified report and its producing command."""
-    run_dir = allocate_run_directory(repository, family="audit-runs", label="audit-health-report")
+    label = "report-code-health-monthly" if "--full" in command else "report-code-health"
+    run_dir = allocate_run_directory(repository, family="audit-runs", label=label)
     run_dir.mkdir(parents=True)
     payload = {"command": list(command), "report": report.to_json()}
     (run_dir / "report.json").write_text(

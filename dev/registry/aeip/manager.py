@@ -44,7 +44,7 @@ from pathlib import Path
 
 from pydantic import TypeAdapter, ValidationError
 
-from cadrumo.core.i18n import MissingTranslationError
+from cadrumo.core.i18n.render import MissingTranslationError
 from cadrumo.core.identity import ContinuidadId
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 

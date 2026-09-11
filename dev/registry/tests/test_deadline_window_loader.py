@@ -9,11 +9,12 @@ import pytest
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 
-from ..compiler._loader_internals import load_modelo_file
-from ..compiler.loader import load_modelo_directory
-from ..conformance.tests._loader_directory_mode_support import (
-    _standard_manifest_text,
-    _standard_revision_preamble_text,
+from ..compiler.loader import load_modelo_directory, load_modelo_file
+from ..conformance.loader_directory_mode_support import (
+    standard_manifest_text as _standard_manifest_text,
+)
+from ..conformance.loader_directory_mode_support import (
+    standard_revision_preamble_text as _standard_revision_preamble_text,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

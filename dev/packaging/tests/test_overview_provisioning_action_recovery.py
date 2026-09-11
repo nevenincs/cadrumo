@@ -24,7 +24,7 @@ from typing import cast
 import pytest
 
 from cadrumo.application.provisioning import ProvisioningPreconditionCondition
-from cadrumo.core.i18n import SUPPORTED_OUTPUT_LANGUAGES
+from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 
 from ..lane_verification_core import (

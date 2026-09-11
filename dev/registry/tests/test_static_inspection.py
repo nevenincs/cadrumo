@@ -17,12 +17,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _REPOSITORY_ROOT = REPO_ROOT
 _SOURCE_ROOT = _REPOSITORY_ROOT / "src" / "cadrumo"
 _STATIC_CONSUMERS = (
-    _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "_semantic_map_validation.py",
+    _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "semantic_map_validation.py",
     _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "record_design_intermediate.py",
     _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "joined_record_design.py",
     _REPOSITORY_ROOT / "dev" / "registry" / "analysis" / "_dp30302_field_matrix.py",
     _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "_export_tree.py",
-    _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "_variable_envelope.py",
+    _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "variable_envelope.py",
 )
 _LEGACY_STATIC_SYMBOLS = frozenset(
     {

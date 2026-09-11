@@ -21,16 +21,17 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from test_support.registry_authoring import _committed_registry_tree
 
-from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_snapshot import build_snapshot
-from ..errors import RegistryValidationError
-from ..ids import LegalRefId, SourceRefId
-from ..orden_applicability import validate_orden_aplicabilidad
-from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
-from ..schema_base import EvidenceTier
-from ..schema_references import LegalReference, PeriodSelector
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.ids import LegalRefId, SourceRefId
+from cadrumo.domain.calculations.registry.orden_applicability import validate_orden_aplicabilidad
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
+from cadrumo.domain.calculations.registry.schema_references import LegalReference, PeriodSelector
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

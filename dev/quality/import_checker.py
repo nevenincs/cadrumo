@@ -26,8 +26,9 @@ from dev._paths import REPO_ROOT, UTF_8
 from dev.exit_codes import FAILED, TOOL_BROKEN
 
 _DOTTED_NAME: Final[re.Pattern[str]] = re.compile(r"^[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*$")
-_LAYER_NAME: Final[re.Pattern[str]] = re.compile(r"^\(?([A-Za-z_]\w*)\)?$")
+_LAYER_NAME: Final[re.Pattern[str]] = re.compile(r"^(?:\(([A-Za-z_]\w*)\)|([A-Za-z_]\w*))$")
 _MAX_ENUMERATED_VALUES: Final[int] = 128
+_MAX_CLOSED_DYNAMIC_TARGETS: Final[int] = 4096
 
 
 @dataclass(frozen=True)
@@ -40,7 +41,10 @@ class RootPackage:
     @property
     def source_root(self) -> Path:
         """Return the directory from which the root is importable."""
-        return self.path.parent
+        source_root = self.path
+        for _ in self.name.split("."):
+            source_root = source_root.parent
+        return source_root
 
 
 @dataclass(frozen=True)
@@ -64,7 +68,7 @@ class Authority:
         for name, layers in self.classifications:
             if name == container:
                 return frozenset(layers)
-        return frozenset()
+        return frozenset[str]()
 
 
 @dataclass(frozen=True)
@@ -136,7 +140,12 @@ def read_authority(repository: Path, config_path: Path | None = None) -> Authori
     if not repository.is_dir():
         return AuthorityRead(None, (f"[AUTHORITY_CONFIG] repository root is not a directory: {repository}",))
 
-    path = (repository / ".importlinter") if config_path is None else config_path.resolve()
+    path = (
+        (repository / ".importlinter")
+        if config_path is None
+        else (config_path if config_path.is_absolute() else repository / config_path)
+    )
+    path = path.resolve()
     parser = configparser.ConfigParser(interpolation=None)
     try:
         with path.open("r", encoding=UTF_8) as stream:
@@ -214,7 +223,7 @@ def read_authority(repository: Path, config_path: Path | None = None) -> Authori
 
     for name in parser.sections():
         contract = parser[name]
-        if _has_values(contract, "ignore_imports") or _has_values(contract, "exhaustive_ignores"):
+        if _has_options(contract, "ignore_imports", "exhaustive_ignores"):
             findings.append(f"[AUTHORITY_CONFIG] contract {name!r} contains an import suppression")
         if _truthy(contract.get("allow_indirect_imports", "false")):
             findings.append(f"[AUTHORITY_CONFIG] contract {name!r} allows indirect-import suppression")
@@ -249,7 +258,7 @@ def _parse_layer_names(value: str, contract_name: str, findings: list[str]) -> t
         if match is None:
             findings.append(f"[UNCLASSIFIED_PACKAGE] invalid layer {token!r} in {contract_name!r}")
             continue
-        result.append(match.group(1))
+        result.append(match.group(1) or match.group(2))
     if len(result) != len(set(result)):
         findings.append(f"[AUTHORITY_CONFIG] layer contract {contract_name!r} repeats a layer")
     return tuple(result)
@@ -314,6 +323,7 @@ def _check_undeclared_top_level_roots(repository: Path, root_packages: Sequence[
     """Find regular or namespace-like Python roots omitted from the authority."""
     declared = {package.split(".", 1)[0] for package in root_packages}
     candidates: set[str] = set()
+    source_modules: set[str] = set()
     for base in (repository / "src", repository):
         if not base.is_dir():
             continue
@@ -323,21 +333,28 @@ def _check_undeclared_top_level_roots(repository: Path, root_packages: Sequence[
             findings.append(f"[AUTHORITY_CONFIG] cannot inspect source-root directory {base}: {exc}")
             continue
         for entry in entries:
-            if entry.name.startswith(".") or not entry.is_dir():
+            if entry.name.startswith("."):
+                continue
+            if base == repository / "src" and entry.is_file() and entry.suffix == ".py":
+                source_modules.add(entry.stem)
+                continue
+            if not entry.is_dir():
                 continue
             if (entry / "__init__.py").is_file() or (base == repository / "src" and any(entry.rglob("*.py"))):
                 candidates.add(entry.name)
-    for candidate in sorted(candidates):
+    for candidate in sorted(candidates | source_modules):
         if candidate not in declared:
             findings.append(f"[UNCLASSIFIED_ROOT] Python root {candidate!r} is absent from root_packages")
+    for candidate in sorted(source_modules & declared):
+        findings.append(f"[AUTHORITY_CONFIG] source module {candidate!r} collides with a declared root")
 
 
 def _truthy(value: str) -> bool:
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
-def _has_values(section: Mapping[str, str], key: str) -> bool:
-    return bool(section.get(key, "").strip())
+def _has_options(section: Mapping[str, str], *keys: str) -> bool:
+    return any(key in section for key in keys)
 
 
 @dataclass
@@ -449,7 +466,7 @@ def _module_name(path: Path, root: RootPackage) -> str:
 
 def _collect_bindings(module: _Module, root_names: frozenset[str]) -> None:
     imported_names: set[str] = set()
-    for node in module.tree.body:
+    for node in _iter_binding_statements(module.tree.body):
         if isinstance(node, ast.Import):
             module.has_imports = True
             for alias in node.names:
@@ -489,6 +506,23 @@ def _collect_bindings(module: _Module, root_names: frozenset[str]) -> None:
                 module.bindings[name] = _Binding(kind)
                 if kind == "definition":
                     module.local_definitions += 1
+        elif isinstance(node, ast.TypeAlias):
+            module.local_definitions += 1
+            module.bindings[node.name.id] = _Binding("definition")
+
+
+def _iter_binding_statements(nodes: Iterable[ast.stmt]) -> Iterable[ast.stmt]:
+    """Yield module-scope bindings from guarded and exception-handling blocks."""
+    for node in nodes:
+        yield node
+        if isinstance(node, ast.If):
+            yield from _iter_binding_statements((*node.body, *node.orelse))
+        elif isinstance(node, ast.Try):
+            yield from _iter_binding_statements(node.body)
+            for handler in node.handlers:
+                yield from _iter_binding_statements(handler.body)
+            yield from _iter_binding_statements(node.orelse)
+            yield from _iter_binding_statements(node.finalbody)
 
 
 def _assigned_names(targets: Iterable[ast.expr]) -> tuple[str, ...]:
@@ -763,8 +797,9 @@ def _is_package(name: str, modules: Mapping[str, _Module], root_names: frozenset
 
 def _check_dynamic_imports(authority: Authority, modules: Mapping[str, _Module], findings: list[Finding]) -> None:
     known = frozenset((*modules, *authority.root_packages))
+    closed_attribute_targets = _closed_attribute_targets(modules, authority.root_names, known)
     for module in modules.values():
-        context = _EvaluationContext(module.tree)
+        context = _EvaluationContext(module.tree, module.name)
         import_module_names, importlib_names, raw_import_names = _dynamic_aliases(module)
         for node in ast.walk(module.tree):
             if not isinstance(node, ast.Call):
@@ -798,6 +833,10 @@ def _check_dynamic_imports(authority: Authority, modules: Mapping[str, _Module],
                 )
                 continue
             targets = context.values_for(target_node, node.lineno)
+            computed_projection = False
+            if targets is None or not targets:
+                targets = _computed_attribute_targets(target_node, node.lineno, context, closed_attribute_targets)
+                computed_projection = targets is not None
             if targets is None or not targets:
                 findings.append(
                     Finding(
@@ -834,7 +873,12 @@ def _check_dynamic_imports(authority: Authority, modules: Mapping[str, _Module],
                 if not _is_first_party(resolved, authority.root_names):
                     continue
                 in_cadrumo = module.name == "cadrumo" or module.name.startswith("cadrumo.")
-                if in_cadrumo and not target.startswith(".") and _is_first_party(resolved, frozenset({"cadrumo"})):
+                if (
+                    in_cadrumo
+                    and not computed_projection
+                    and not target.startswith(".")
+                    and _is_first_party(resolved, frozenset({"cadrumo"}))
+                ):
                     findings.append(
                         Finding(
                             "ABSOLUTE_INTRA_CADRUMO",
@@ -855,6 +899,156 @@ def _check_dynamic_imports(authority: Authority, modules: Mapping[str, _Module],
                     )
 
 
+def _closed_attribute_targets(
+    modules: Mapping[str, _Module], root_names: frozenset[str], known: frozenset[str]
+) -> frozenset[str]:
+    """Derive the finite module values carried by object ``.module`` fields.
+
+    The product's outer resolvers pass immutable target records into
+    ``import_module`` rather than keeping a second import map beside the
+    declarations.  A checker that only evaluates bare strings would therefore
+    mistake ``import_module(target.module)`` for an open computation.  Harvest
+    the literal constructor values that can populate a module field, resolving
+    relative values against the constructor's explicit package argument.  This
+    is a closed set derived from source, not an allowlist: an unknown or
+    unbounded constructor expression contributes nothing and remains a finding.
+    """
+    targets: set[str] = set()
+    module_record_classes = _module_record_classes(modules)
+    for module in modules.values():
+        context = _EvaluationContext(module.tree, module.name)
+        for node in ast.walk(module.tree):
+            if not isinstance(node, ast.Call):
+                continue
+            if not _is_module_record_constructor(module, node, module_record_classes):
+                continue
+            module_node = _constructor_argument(node, "module", positional_index=0)
+            if module_node is None:
+                continue
+            values = context.values_for(module_node, node.lineno)
+            if values is None:
+                continue
+            package_node = _constructor_argument(node, "package", positional_index=2)
+            for value in values:
+                resolved = _resolve_constructor_target(module, value, package_node, node, context)
+                if resolved is None or not _is_first_party(resolved, root_names) or resolved not in known:
+                    continue
+                targets.add(resolved)
+                if len(targets) > _MAX_CLOSED_DYNAMIC_TARGETS:
+                    return frozenset()
+    return frozenset(targets)
+
+
+def _module_record_classes(modules: Mapping[str, _Module]) -> frozenset[str]:
+    """Find record classes that declare a ``module`` field."""
+    classes: set[str] = set()
+    for module in modules.values():
+        for node in module.tree.body:
+            if not isinstance(node, ast.ClassDef):
+                continue
+            fields = {
+                item.target.id
+                for item in node.body
+                if isinstance(item, ast.AnnAssign) and isinstance(item.target, ast.Name)
+            }
+            fields.update(
+                item.targets[0].id
+                for item in node.body
+                if isinstance(item, ast.Assign) and len(item.targets) == 1 and isinstance(item.targets[0], ast.Name)
+            )
+            if "module" in fields:
+                classes.add(f"{module.name}.{node.name}")
+    return frozenset(classes)
+
+
+def _is_module_record_constructor(module: _Module, call: ast.Call, module_record_classes: frozenset[str]) -> bool:
+    """Return whether a call names a locally or explicitly imported module record."""
+    if not isinstance(call.func, ast.Name):
+        return False
+    local_name = call.func.id
+    if f"{module.name}.{local_name}" in module_record_classes:
+        return True
+    binding = module.bindings.get(local_name)
+    if binding is None or binding.target is None or binding.imported_name is None:
+        return False
+    return f"{binding.target}.{binding.imported_name}" in module_record_classes
+
+
+def _constructor_argument(node: ast.Call, name: str, *, positional_index: int) -> ast.AST | None:
+    """Return one constructor field expression without naming a product class."""
+    for keyword in node.keywords:
+        if keyword.arg == name:
+            return keyword.value
+    return node.args[positional_index] if len(node.args) > positional_index else None
+
+
+def _resolve_constructor_target(
+    module: _Module,
+    value: str,
+    package_node: ast.AST | None,
+    call: ast.Call,
+    context: _EvaluationContext,
+) -> str | None:
+    """Resolve one literal constructor module value, or reject it as open."""
+    if not value.startswith("."):
+        return value
+    if package_node is None:
+        return None
+    if isinstance(package_node, ast.Name) and package_node.id == "__package__":
+        package = module.name if module.is_package else module.name.rpartition(".")[0]
+    else:
+        package_values = context.values_for(package_node, call.lineno)
+        if package_values is None or len(package_values) != 1:
+            return None
+        package = next(iter(package_values))
+    level = len(value) - len(value.lstrip("."))
+    remainder = value[level:] or None
+    return _resolve_from(package, True, level, remainder)
+
+
+def _computed_attribute_targets(
+    target_node: ast.AST,
+    lineno: int,
+    context: _EvaluationContext,
+    closed_attribute_targets: frozenset[str],
+) -> frozenset[str] | None:
+    """Return the closed set for a projected module field, if one exists."""
+    if isinstance(target_node, ast.Attribute) and target_node.attr == "module" and closed_attribute_targets:
+        return closed_attribute_targets
+    if isinstance(target_node, ast.Name) and closed_attribute_targets:
+        scope = context._nearest_function(target_node)
+        assignments = context._latest_values(target_node.id, lineno, scope)
+        if assignments and any(
+            _is_module_projection_expression(assignment.value, context, lineno, scope, set())
+            for assignment in assignments
+        ):
+            return closed_attribute_targets
+    return None
+
+
+def _is_module_projection_expression(
+    node: ast.AST,
+    context: _EvaluationContext,
+    lineno: int,
+    scope: ast.AST | None,
+    resolving: set[str],
+) -> bool:
+    """Recognise a finite expression that projects target records' module fields."""
+    if isinstance(node, (ast.SetComp, ast.ListComp, ast.GeneratorExp)):
+        return isinstance(node.elt, ast.Attribute) and node.elt.attr == "module"
+    if isinstance(node, ast.Name) and node.id not in resolving:
+        assignments = context._latest_values(node.id, lineno, scope)
+        if assignments:
+            resolving.add(node.id)
+            result = any(
+                _is_module_projection_expression(assignment.value, context, lineno, scope, resolving)
+                for assignment in assignments
+            )
+            resolving.remove(node.id)
+            return result
+    return False
+
+
 def _dynamic_aliases(module: _Module) -> tuple[set[str], set[str], set[str]]:
     import_module_names = {"importlib.import_module"}
     importlib_names = {"importlib"}
@@ -865,17 +1059,48 @@ def _dynamic_aliases(module: _Module) -> tuple[set[str], set[str], set[str]]:
                 local = alias.asname or alias.name.split(".", 1)[0]
                 if alias.name == "importlib":
                     importlib_names.add(local)
+                elif alias.name == "importlib.import_module" and alias.asname:
+                    import_module_names.add(local)
                 elif alias.name == "builtins":
                     raw_import_names.add(f"{local}.__import__")
+                elif alias.name == "builtins.__import__" and alias.asname:
+                    raw_import_names.add(local)
         elif isinstance(node, ast.ImportFrom) and node.level == 0:
             if node.module == "importlib":
                 for alias in node.names:
-                    if alias.name == "import_module":
+                    if alias.name == "*":
+                        import_module_names.add("import_module")
+                    elif alias.name == "import_module":
                         import_module_names.add(alias.asname or alias.name)
             elif node.module == "builtins":
                 for alias in node.names:
-                    if alias.name == "__import__":
+                    if alias.name == "*":
+                        raw_import_names.add("__import__")
+                    elif alias.name == "__import__":
                         raw_import_names.add(alias.asname or alias.name)
+        elif isinstance(node, (ast.Assign, ast.AnnAssign)):
+            value = node.value
+            if value is None:
+                continue
+            qualified = _qualified_name(value)
+            for local in _assigned_names(node.targets if isinstance(node, ast.Assign) else (node.target,)):
+                if qualified == "importlib" or qualified in importlib_names:
+                    importlib_names.add(local)
+                if qualified == "builtins":
+                    raw_import_names.add(f"{local}.__import__")
+                if (
+                    qualified == "importlib.import_module"
+                    or qualified in import_module_names
+                    or (
+                        isinstance(value, ast.Attribute)
+                        and value.attr == "import_module"
+                        and isinstance(value.value, ast.Name)
+                        and value.value.id in importlib_names
+                    )
+                ):
+                    import_module_names.add(local)
+                if qualified == "builtins.__import__" or qualified in raw_import_names:
+                    raw_import_names.add(local)
     return import_module_names, importlib_names, raw_import_names
 
 
@@ -883,6 +1108,8 @@ def _dynamic_target(module: _Module, target: str, call: ast.Call, context: _Eval
     if not target.startswith("."):
         return target
     package_node = next((keyword.value for keyword in call.keywords if keyword.arg == "package"), None)
+    if package_node is None and len(call.args) > 1:
+        package_node = call.args[1]
     if isinstance(package_node, ast.Name) and package_node.id == "__package__":
         package = module.name if module.is_package else module.name.rpartition(".")[0]
     else:
@@ -927,12 +1154,15 @@ def _qualified_name(node: ast.AST) -> str | None:
 class _Assignment:
     lineno: int
     value: ast.AST
+    projection: tuple[int, ...] = ()
+    unpack: bool = False
 
 
 class _EvaluationContext:
     """Conservative finite-string evaluator for dynamic import arguments."""
 
-    def __init__(self, tree: ast.Module) -> None:
+    def __init__(self, tree: ast.Module, module_name: str | None = None) -> None:
+        self._module_name = module_name
         self._parents: dict[int, ast.AST] = {}
         self._module_assignments: dict[str, list[_Assignment]] = {}
         self._function_assignments: dict[int, dict[str, list[_Assignment]]] = {}
@@ -956,13 +1186,51 @@ class _EvaluationContext:
                 self._save_assignment(node.targets, node.value, node)
             elif isinstance(node, ast.AnnAssign) and node.value is not None:
                 self._save_assignment((node.target,), node.value, node)
+            elif isinstance(node, ast.For):
+                self._save_assignment((node.target,), node.iter, node, unpack=True)
 
-    def _save_assignment(self, targets: Iterable[ast.expr], value: ast.AST, node: ast.AST) -> None:
+    def _save_assignment(
+        self, targets: Iterable[ast.expr], value: ast.AST, node: ast.AST, *, unpack: bool = False
+    ) -> None:
         scope = self._nearest_function(node)
         target_map = self._module_assignments if scope is None else self._function_assignments.setdefault(id(scope), {})
-        assignment = _Assignment(getattr(node, "lineno", 0), value)
-        for name in _assigned_names(targets):
-            target_map.setdefault(name, []).append(assignment)
+        for target in targets:
+            self._save_target_assignment(target_map, target, value, node, unpack=unpack)
+
+    def _save_target_assignment(
+        self,
+        target_map: dict[str, list[_Assignment]],
+        target: ast.expr,
+        value: ast.AST,
+        node: ast.AST,
+        *,
+        unpack: bool,
+    ) -> None:
+        if isinstance(target, ast.Name):
+            target_map.setdefault(target.id, []).append(_Assignment(getattr(node, "lineno", 0), value, unpack=unpack))
+            return
+        if isinstance(target, (ast.Tuple, ast.List)):
+            for index, element in enumerate(target.elts):
+                self._save_target_projection(target_map, element, value, node, (index,), unpack=unpack)
+
+    def _save_target_projection(
+        self,
+        target_map: dict[str, list[_Assignment]],
+        target: ast.expr,
+        value: ast.AST,
+        node: ast.AST,
+        projection: tuple[int, ...],
+        *,
+        unpack: bool,
+    ) -> None:
+        if isinstance(target, ast.Name):
+            target_map.setdefault(target.id, []).append(
+                _Assignment(getattr(node, "lineno", 0), value, projection, unpack)
+            )
+            return
+        if isinstance(target, (ast.Tuple, ast.List)):
+            for index, element in enumerate(target.elts):
+                self._save_target_projection(target_map, element, value, node, (*projection, index), unpack=unpack)
 
     def _nearest_function(self, node: ast.AST) -> ast.AST | None:
         parent = self._parents.get(id(node))
@@ -988,6 +1256,8 @@ class _EvaluationContext:
             value = node.value
             return frozenset({value}) if isinstance(value, str) else None
         if isinstance(node, ast.Name):
+            if node.id == "__name__" and self._module_name is not None:
+                return frozenset({self._module_name})
             key = (id(scope) if scope is not None else 0, node.id)
             if key in resolving:
                 return None
@@ -997,7 +1267,24 @@ class _EvaluationContext:
             resolving.add(key)
             result: set[str] = set()
             for assignment in assignments:
-                evaluated = self._values(assignment.value, assignment.lineno - 1, resolving, scope)
+                if assignment.unpack:
+                    evaluated = self._unpacked_values(
+                        assignment.value,
+                        assignment.projection,
+                        assignment.lineno - 1,
+                        resolving,
+                        scope,
+                    )
+                elif assignment.projection:
+                    evaluated = self._values_at_indices(
+                        assignment.value,
+                        assignment.projection,
+                        assignment.lineno - 1,
+                        resolving,
+                        scope,
+                    )
+                else:
+                    evaluated = self._values(assignment.value, assignment.lineno - 1, resolving, scope)
                 if evaluated is None:
                     resolving.remove(key)
                     return None
@@ -1027,6 +1314,14 @@ class _EvaluationContext:
                 self._values(node.body, lineno, resolving, scope),
                 self._values(node.orelse, lineno, resolving, scope),
             )
+        if isinstance(node, (ast.Tuple, ast.List, ast.Set)):
+            result: set[str] = set()
+            for element in node.elts:
+                evaluated = self._values(element, lineno, resolving, scope)
+                if evaluated is None:
+                    return None
+                result.update(evaluated)
+            return _bounded(result)
         if isinstance(node, ast.Subscript):
             values = self._sequence_values(node.value, lineno, resolving, scope)
             if values is None:
@@ -1039,31 +1334,119 @@ class _EvaluationContext:
             return frozenset(values)
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "format":
             bases = self._values(node.func.value, lineno, resolving, scope)
-            arguments = [self._values(argument, lineno, resolving, scope) for argument in node.args]
-            if any(keyword.arg is None for keyword in node.keywords):
+            if bases is None:
                 return None
-            keywords = {keyword.arg: self._values(keyword.value, lineno, resolving, scope) for keyword in node.keywords}
-            if (
-                bases is None
-                or any(argument is None for argument in arguments)
-                or any(value is None for value in keywords.values())
-                or any(keyword.arg is None for keyword in node.keywords)
-            ):
-                return None
+            positional: list[frozenset[str]] = []
+            for argument in node.args:
+                values = self._values(argument, lineno, resolving, scope)
+                if values is None:
+                    return None
+                positional.append(values)
+            keyword_names: list[str] = []
+            keyword_values: list[frozenset[str]] = []
+            for keyword in node.keywords:
+                if keyword.arg is None:
+                    return None
+                values = self._values(keyword.value, lineno, resolving, scope)
+                if values is None:
+                    return None
+                keyword_names.append(keyword.arg)
+                keyword_values.append(values)
             result: set[str] = set()
-            positional = [argument if argument is not None else () for argument in arguments]
-            keyword_names = sorted(keywords)
-            keyword_values = [keywords[name] if keywords[name] is not None else () for name in keyword_names]
             for base in bases:
-                positional_products = itertools.product(*positional) if positional else [()]
-                for values in positional_products:
-                    named_products = itertools.product(*keyword_values) if keyword_values else [()]
-                    for named in named_products:
+                for values in _products(positional):
+                    for named in _products(keyword_values):
                         try:
                             result.add(base.format(*values, **dict(zip(keyword_names, named, strict=True))))
                         except (IndexError, KeyError, ValueError):
                             return None
             return _bounded(result)
+        return None
+
+    def _unpacked_values(
+        self,
+        node: ast.AST,
+        projection: tuple[int, ...],
+        lineno: int,
+        resolving: set[tuple[int, str]],
+        scope: ast.AST | None,
+    ) -> frozenset[str] | None:
+        """Evaluate a finite iterable assignment made by tuple unpacking."""
+        elements = self._sequence_nodes(node, lineno, resolving, scope)
+        if elements is None:
+            return None
+        result: set[str] = set()
+        for element in elements:
+            values = self._values_at_indices(element, projection, lineno, resolving, scope)
+            if values is None:
+                return None
+            result.update(values)
+        return _bounded(result)
+
+    def _values_at_indices(
+        self,
+        node: ast.AST,
+        indexes: tuple[int, ...],
+        lineno: int,
+        resolving: set[tuple[int, str]],
+        scope: ast.AST | None,
+    ) -> frozenset[str] | None:
+        """Evaluate one finite tuple/list/dict-items projection."""
+        if not indexes:
+            return self._values(node, lineno, resolving, scope)
+        elements = self._sequence_nodes(node, lineno, resolving, scope)
+        if elements is None or indexes[0] >= len(elements):
+            return None
+        return self._values_at_indices(elements[indexes[0]], indexes[1:], lineno, resolving, scope)
+
+    def _sequence_nodes(
+        self,
+        node: ast.AST,
+        lineno: int,
+        resolving: set[tuple[int, str]],
+        scope: ast.AST | None,
+    ) -> tuple[ast.AST, ...] | None:
+        if isinstance(node, (ast.Tuple, ast.List)):
+            elements: list[ast.AST] = []
+            for element in node.elts:
+                if isinstance(element, ast.Starred):
+                    expanded = self._sequence_nodes(element.value, lineno, resolving, scope)
+                    if expanded is None:
+                        return None
+                    elements.extend(expanded)
+                else:
+                    elements.append(element)
+            return tuple(elements)
+        if isinstance(node, ast.Dict):
+            if any(key is None for key in node.keys):
+                return None
+            return tuple(
+                ast.Tuple(elts=[key, value], ctx=ast.Load()) for key, value in zip(node.keys, node.values, strict=True)
+            )
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "items":
+            if node.args or node.keywords:
+                return None
+            return self._sequence_nodes(node.func.value, lineno, resolving, scope)
+        if isinstance(node, ast.Name):
+            key = (id(scope) if scope is not None else 0, node.id)
+            if key in resolving:
+                return None
+            assignments = self._latest_values(node.id, lineno, scope)
+            if not assignments:
+                return None
+            resolving.add(key)
+            sequences: list[ast.AST] = []
+            for assignment in assignments:
+                if assignment.projection:
+                    resolving.remove(key)
+                    return None
+                values = self._sequence_nodes(assignment.value, assignment.lineno - 1, resolving, scope)
+                if values is None:
+                    resolving.remove(key)
+                    return None
+                sequences.extend(values)
+            resolving.remove(key)
+            return tuple(sequences)
         return None
 
     def _sequence_values(
@@ -1117,6 +1500,16 @@ def _combine(left: frozenset[str] | None, right: frozenset[str] | None) -> froze
     return _bounded({a + b for a, b in itertools.product(left, right)})
 
 
+def _products(groups: Sequence[Iterable[str]]) -> tuple[tuple[str, ...], ...]:
+    """Return a bounded Cartesian product for finite formatter arguments."""
+    products: list[tuple[str, ...]] = [()]
+    for group in groups:
+        products = [(*prefix, value) for prefix in products for value in group]
+        if len(products) > _MAX_ENUMERATED_VALUES:
+            return ()
+    return tuple(products)
+
+
 def _union(left: frozenset[str] | None, right: frozenset[str] | None) -> frozenset[str] | None:
     if left is None or right is None:
         return None
@@ -1134,19 +1527,31 @@ def has_architectural_warning(output: str) -> bool:
         lowered = line.strip().lower()
         if not lowered or lowered.startswith("no warning") or lowered.startswith("no advisory"):
             continue
+        if re.search(r"\b(?:warnings?|advisories?)\s*[:=]\s*0\b", lowered):
+            continue
         if re.search(r"\b(?:warning|warnings|advisory|advisories)\b", lowered):
             return True
     return False
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Run the subordinate component directly for diagnostics and isolation tests."""
-    parser = argparse.ArgumentParser(description=__doc__)
+    """Run the internal subordinate component for diagnostics and isolation tests."""
+    parser = argparse.ArgumentParser(
+        description="Internal import-quality component; use just check-import-boundaries for the verdict."
+    )
+    parser.add_argument("--internal", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--root", type=Path, default=None, help="repository/source root to scan")
     parser.add_argument("--config", type=Path, default=None, help="Import Linter configuration path")
     args = parser.parse_args(argv)
+    if not args.internal:
+        print("[INTERNAL_CHECKER] subordinate checker is internal; use just check-import-boundaries")
+        return TOOL_BROKEN
     root = args.root or Path(os.environ.get("CADRUMO_IMPORT_GATE_ROOT", REPO_ROOT))
-    read = read_authority(root, args.config)
+    try:
+        read = read_authority(root, args.config)
+    except Exception as exc:  # broad: direct component execution must fail closed
+        print(f"[INTERNAL_CHECKER] authority preflight aborted: {exc}")
+        return TOOL_BROKEN
     if read.authority is None:
         for finding in read.findings:
             print(finding)

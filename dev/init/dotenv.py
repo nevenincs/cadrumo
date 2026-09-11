@@ -5,7 +5,7 @@ overwritten, because it carries the operator's own local credentials and
 overwriting it is unrecoverable. The only thing this does is turn absence into
 presence.
 
-It is a preflight rather than a step of ``init-tools`` for a specific reason.
+It is a preflight rather than a step of ``setup-repository-tools`` for a specific reason.
 ``vaultspec-a2a``'s justfile sets ``dotenv-load``, which means `just` itself
 reads `.env` before it runs anything - so a worktree without one is
 under-configured for the very command that would have created it. Running this

@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 
 from ..python_cohort import (
-    COHORT_STAMPED_WHEEL_DATA_PATHS,
     _stamp_bundled_registry_records_into_build_tree,
+    cohort_stamped_wheel_data_paths,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -37,7 +37,7 @@ def test_stamped_members_match_the_declared_cohort_set(tmp_path: Path) -> None:
 
     stamped = _stamp_bundled_registry_records_into_build_tree(build_root)
 
-    assert stamped == COHORT_STAMPED_WHEEL_DATA_PATHS
+    assert stamped == cohort_stamped_wheel_data_paths()
 
 
 def test_stamped_members_land_on_disk_where_the_wheel_will_carry_them(tmp_path: Path) -> None:

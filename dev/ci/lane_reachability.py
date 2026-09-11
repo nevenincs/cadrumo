@@ -75,7 +75,7 @@ that is correct -- but a recipe no workflow ever invokes has never executed, so
 a gate that accepts it reports coverage over tests CI has never run. That was
 not hypothetical either: ``just test-integration`` (370 integration-marked
 modules under ``src/`` -- every cross-layer test the product has) and
-``just test-dev-tooling`` (ten ``dev/`` subsystems, whose own recipe docstring
+``just test-tooling`` (the canonical ``dev/`` subject aggregate, whose recipe docstring
 reads "the gates that no other lane reaches") were both declared, both healthy,
 and named by no workflow at all. :func:`ci_invoked_lanes` narrows the lane set
 to what CI actually reaches, so the two questions can be asked separately and
@@ -492,7 +492,7 @@ def _recipes_invoked_by(text: str) -> set[str]:
     Executed, because this reads justfile recipe BODIES as well as workflow
     ``run:`` blocks, and a body is a script with prose in it. Six comment lines
     in this justfile name a real recipe inside an explanatory sentence --
-    "Verify the result with `just doctor-playwright`" -- and harvesting the raw
+    "Verify the result with `just doctor-browser`" -- and harvesting the raw
     text counted every one of them as an invocation. Five were also invoked for
     real, so they cost nothing; ``check-rag`` was reached by nothing else and
     was reported CI-invoked on the strength of a sentence mentioning it.
@@ -772,7 +772,7 @@ def ci_invoked_lanes(root: Path) -> tuple[Lane, ...]:
     recipe counts — which is correct for its question and dangerously
     reassuring for the one a reader usually means. Two lanes proved that:
     ``just test-integration`` (370 integration-marked modules under ``src/``)
-    and ``just test-dev-tooling`` (ten ``dev/`` subsystems, including the
+    and ``just test-tooling`` (the canonical ``dev/`` subject aggregate, including the
     deploy-authority tests) were both declared, both healthy, and invoked by no
     workflow at all, so the declared-lane gate reported full coverage over
     tests CI had never once run.

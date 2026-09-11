@@ -1,6 +1,6 @@
 """Unit proof for the shared ``ValidationError`` rendering helper.
 
-:func:`~dev.registry.pipeline._pydantic_error_detail.validation_error_detail`
+:func:`~dev.registry.pipeline.pydantic_error_detail.validation_error_detail`
 is the one place three pipeline modules (``export_fragment_provenance.py``,
 ``render_profile.py``, ``semantic_map.py``) build a message from a
 caught :exc:`~pydantic.ValidationError`. These tests pin its contract
@@ -14,7 +14,7 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel, ValidationError, model_validator
 
-from ..pipeline._pydantic_error_detail import validation_error_detail
+from ..pipeline.pydantic_error_detail import validation_error_detail
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

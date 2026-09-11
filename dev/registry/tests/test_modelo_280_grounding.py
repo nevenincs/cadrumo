@@ -5,10 +5,12 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from test_support.registry_authoring import verify_legal_catalogue, verify_source_catalogue
 
-from .....core.resources.bundled_data import bundled_path
-from ..authority import bundled_authority
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+
+from ..compiler.corpus_catalogue import verify_source_catalogue
+from ..compiler.legal_grounding import verify_legal_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

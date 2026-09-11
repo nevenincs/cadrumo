@@ -10,12 +10,14 @@ cannot preserve a missing, rebound, mismatched, or stale source claim.
 from __future__ import annotations
 
 import pytest
-from test_support.registry_authoring import _committed_registry_tree, _validate_embedded_envelope_source_authority
 
-from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_snapshot import build_snapshot
-from ..errors import RegistryValidationError
-from ..schema import RegistryCatalogues
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ..compiler.validate_exports import validate_embedded_envelope_source_authority
+from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -164,7 +166,7 @@ def test_embedded_envelope_source_kind_guard_reports_each_non_design_catalogue_s
     )
     failures: list[str] = []
 
-    _validate_embedded_envelope_source_authority(
+    validate_embedded_envelope_source_authority(
         failures,
         prefix=f"modelo {modelo.id} revision {revision.id}",
         layout=layout,

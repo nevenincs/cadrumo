@@ -155,7 +155,7 @@ def _commands(job: dict[str, Any], recipes: dict[str, str]) -> list[str]:
     def expand(text: str, stack: frozenset[str] = frozenset(), *, recipe_body: bool = False) -> None:
         invoked = _recipes_invoked_by(text)
         if invoked:
-            for recipe in sorted(invoked - {"init"}):
+            for recipe in sorted(invoked - {"setup"}):
                 if recipe in recipes and recipe not in stack:
                     expand(recipes[recipe], stack | {recipe}, recipe_body=True)
             return

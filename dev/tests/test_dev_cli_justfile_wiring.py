@@ -11,18 +11,18 @@ from dev._paths import REPO_ROOT
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _EXPECTED_WIRING: Final[dict[str, str]] = {
-    "dev.docs.apidocs": "docs-api-scaffold",
-    "dev.docs.sequences": "docs-sequences-check",
-    "dev.docs.terminology.coverage": "docs-terminology-coverage",
-    "dev.docs.terminology.sweep": "docs-terminology-sweep",
-    "dev.docs.terminology.synonyms": "docs-terminology-synonyms",
-    "dev.docs.terminology_handbook": "docs-terminology",
+    "dev.docs.apidocs": "docs-generate-api-stubs",
+    "dev.docs.sequences": "docs-generate-sequences",
+    "dev.docs.terminology.coverage": "docs-generate-terminology-coverage",
+    "dev.docs.terminology.synonyms": "docs-synonyms-maintain",
+    "dev.docs.terminology_handbook": "docs-terminology-report",
     "dev.identity": "check-identity",
-    "dev.locales": "locales",
-    "dev.registry.aeip": "audit-aeip",
-    "dev.registry.conformance": "audit-registry-conformance",
-    "dev.registry.newmodelo": "newmodelo",
-    "dev.registry.pipeline": "registry-pipeline",
+    "dev.locales": "check-locales",
+    "dev.release": "release-preview",
+    "dev.registry.aeip": "report-registry-aeip",
+    "dev.registry.conformance": "report-registry-conformance",
+    "dev.registry.newmodelo": "registry-modelo-scaffold",
+    "dev.registry.pipeline": "registry-publish-target",
     "dev.tui": "tui-review",
     "dev.tui.harness": "tui-harness",
 }
@@ -30,7 +30,6 @@ _EXPECTED_WIRING: Final[dict[str, str]] = {
 _STANDALONE_CLIS: Final[frozenset[str]] = frozenset(
     {
         "dev.docs.terminology.coverage",
-        "dev.docs.terminology.sweep",
         "dev.docs.terminology.synonyms",
     }
 )

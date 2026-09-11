@@ -17,9 +17,11 @@ failure this module exists to make visible.
 
 from __future__ import annotations
 
+import ast
 import tomllib
-from importlib import import_module
+from importlib.util import find_spec
 from importlib.metadata import packages_distributions
+from pathlib import Path
 
 import pytest
 
@@ -127,12 +129,17 @@ def test_the_surface_inventory_names_real_entry_points() -> None:
 
     missing: list[str] = []
     for module_name, name, _call in _INFERENCE_SURFACES:
-        try:
-            module = import_module(module_name)
-        except ImportError as error:  # pragma: no cover - reported, not raised
-            missing.append(f"{module_name} is not importable: {error}")
+        spec = find_spec(module_name)
+        if spec is None or spec.origin is None:
+            missing.append(f"{module_name} is not resolvable")
             continue
-        if not hasattr(module, name):
+        tree = ast.parse(Path(spec.origin).read_text(encoding="utf-8"))
+        declared = {
+            node.name
+            for node in tree.body
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+        }
+        if name not in declared:
             missing.append(f"{module_name} does not define {name}")
 
     assert missing == [], (

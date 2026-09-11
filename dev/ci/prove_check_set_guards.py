@@ -57,9 +57,9 @@ def _proofs() -> tuple[Proof, ...]:
         Proof(
             "test_no_command_runs_twice_in_one_workflow_run",
             workflow,
-            "      - name: Import architecture\n        run: just check-imports\n",
-            "      - name: Import architecture\n        run: just check-imports\n"
-            "      - name: Import architecture again\n        run: just check-imports\n",
+            "      - name: Import architecture\n        run: just check-import-boundaries\n",
+            "      - name: Import architecture\n        run: just check-import-boundaries\n"
+            "      - name: Import architecture again\n        run: just check-import-boundaries\n",
             "duplicate commands",
         ),
         Proof(

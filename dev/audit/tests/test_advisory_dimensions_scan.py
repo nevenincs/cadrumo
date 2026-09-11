@@ -51,5 +51,7 @@ def test_audit_layering_reports_the_authoritative_gate_failure_as_red() -> None:
 
     assert report.name == "layering"
     assert report.status is Status.RED
+    assert not report.available
     assert "exited" in report.headline or "could not run" in report.headline
     assert report.details
+    assert any("AUTHORITY_CONFIG" in detail for detail in report.details)

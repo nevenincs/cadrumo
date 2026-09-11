@@ -8,7 +8,7 @@ cardinalities; the full 537-element anchor set is derived from that geometry and
 then compared exactly with the parser output.
 
 The 13-field auxiliary header is governed separately by
-``dev.registry.pipeline._m390_auxiliary_envelope``.  Including it here would
+``dev.registry.pipeline.m390_auxiliary_envelope``.  Including it here would
 turn a numbered-page census into a second owner for page zero.
 """
 

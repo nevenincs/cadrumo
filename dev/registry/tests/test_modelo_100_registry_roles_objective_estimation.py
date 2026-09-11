@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.casilla_id import validated_casilla_id
+from cadrumo.core.casilla_id import validated_casilla_id
+
 from ._modelo_100_registry_support import _loaded_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

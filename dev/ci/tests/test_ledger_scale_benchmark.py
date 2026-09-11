@@ -81,8 +81,10 @@ from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCata
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.transactions import TX_BUCKET_NAMESPACE, TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql import SecureObjectRepository
-from cadrumo.application.aggregation import (
+from cadrumo.application.aggregation.iva_ledger import (
     aggregate_iva_ledger_observations_from_repositories,
+)
+from cadrumo.application.aggregation.renta_ledger import (
     aggregate_renta_ledger_expenses_from_repositories,
 )
 from cadrumo.application.aggregation.tests.iva_authority_support import aggregate_iva_ledger_observations
@@ -94,6 +96,7 @@ from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.period import Period
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.invoices.models import InvoiceCatalogue
 from cadrumo.domain.transactions.enums import (
     BusinessClassification,
@@ -105,7 +108,6 @@ from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransa
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.tests.bucket_aggregation_calculate import calculate_modelo_revision_from_bucket_aggregation
 from cadrumo.tests.profile_capsule import seed_test_profile_record
-from cadrumo.tests.registry_observations import registry_grounded_observations
 from cadrumo.tests.secure_sql import isolated_runtime_profile
 
 from ..perf_measurement import wall_advisory_message

@@ -11,7 +11,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
-from cadrumo.tests.registry_tree import bundled_registry_tree
+from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 
 @pytest.fixture(scope="session")

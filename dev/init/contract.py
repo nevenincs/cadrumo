@@ -27,8 +27,8 @@ if TYPE_CHECKING:
 #: every worktree on the fleet exactly once.
 CONTRACT_VERSION: Final = 1
 
-#: The phases, in the order `init` runs them. The order is a dependency order,
-#: not a preference: `tools` installs git hooks and enrolls the framework out
+#: The phases, in the order `setup` runs them. The order is a dependency
+#: order, not a preference: `tools` installs git hooks and enrolls the framework out
 #: of the environment `python` creates, and in one repository those hooks lint
 #: the SPA that `node` restores.
 PHASES: Final[tuple[str, ...]] = ("python", "tools")
@@ -144,7 +144,7 @@ class PhaseResult:
     Attributes:
         name: One of :data:`PHASES`.
         status: :data:`OK`, :data:`FRESH`, :data:`SKIPPED`, :data:`FAILED`, or
-            :data:`STALE` (the last only under ``init-check``).
+            :data:`STALE` (the last only under ``setup-check``).
         reason: Why, in one line, for any status that is not :data:`OK`.
         steps: The step results, in execution order.
         exit_code: The contract code this phase would exit with.

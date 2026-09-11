@@ -15,25 +15,30 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from test_support.registry_authoring import (
-    _committed_modelo,
-    _committed_registry_tree,
-    _committed_snapshot,
-    validate_revision_windows,
-)
 
-from .....core.authority_grade import RegistryAuthorityGrade
-from .....core.errors.error_codes import resolve_error_message
-from ..authority import bundled_authority
-from ..errors import (
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.core.errors.error_codes import resolve_error_message
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.errors import (
     AmbiguousRevisionSelectionError,
     NoRevisionForPeriodError,
     RegistrySnapshotError,
 )
-from ..relations import relation_source_requirements
-from ..schema import ModeloDefinition
-from ..schema_deadlines import DeadlineWindowDefinition
-from ..temporal import select_revision, select_revision_for_year
+from cadrumo.domain.calculations.registry.relations import relation_source_requirements
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition
+from cadrumo.domain.calculations.registry.temporal import select_revision, select_revision_for_year
+
+from ..compiler.validate_revision_rules import validate_revision_windows
+from ..conformance.registry_schema_support import (
+    committed_modelo as _committed_modelo,
+)
+from ..conformance.registry_schema_support import (
+    committed_registry_tree as _committed_registry_tree,
+)
+from ..conformance.registry_schema_support import (
+    committed_snapshot as _committed_snapshot,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

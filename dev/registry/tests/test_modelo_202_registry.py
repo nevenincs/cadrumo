@@ -7,14 +7,17 @@ from decimal import Decimal
 from functools import lru_cache
 
 import pytest
-from test_support.registry_authoring import RegistryValidator, _committed_modelo, verify_legal_catalogue
 
-from .....core.casilla_id import CasillaId
-from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_snapshot import build_snapshot
-from ..formula_runtime import _evaluate_expression
-from ..schema import ModeloDefinition, RegistryCatalogues
-from ..schema_formula import FormulaExpression
+from cadrumo.core.casilla_id import CasillaId
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.formula_runtime import _evaluate_expression
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ..compiler.legal_grounding import verify_legal_catalogue
+from ..compiler.validator import RegistryValidator
+from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

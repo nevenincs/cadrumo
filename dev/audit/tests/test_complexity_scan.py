@@ -58,6 +58,19 @@ def test_cognitive_scan_refuses_an_empty_source_root(tmp_path: Path) -> None:
         collect_cog(tmp_path, is_test_run=False, threshold=20)
 
 
+def test_cognitive_scan_refuses_an_unavailable_file_analyzer(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A file-analysis failure must not be reduced to a false clean result."""
+    (tmp_path / "module.py").write_text("def planted():\n    return 1\n", encoding="utf-8")
+
+    def fail(_path: str) -> None:
+        raise ValueError("unsupported syntax")
+
+    monkeypatch.setattr(complexity, "file_complexity", fail)
+
+    with pytest.raises(RuntimeError, match="could not analyze"):
+        collect_cog(tmp_path, is_test_run=False, threshold=20)
+
+
 def test_monthly_report_projects_the_same_live_findings(monkeypatch: pytest.MonkeyPatch) -> None:
     red_scan = ComplexityScan(
         cyclomatic=(CcHit("src/cadrumo/a.py", "branch", "C", 22),),

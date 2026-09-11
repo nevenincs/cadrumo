@@ -30,11 +30,11 @@ from cadrumo.domain.calculations.registry.schema import (
     REVISION_MANIFEST_ONLY_FIELDS,
     ModeloRevision,
 )
-from cadrumo.tests.registry_tree import bundled_registry_tree
+from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 from ..compiler.loader import load_modelo_directory
-from ..conformance.tests._loader_directory_mode_support import _load_revision as _shared_load_revision
-from ..conformance.tests._loader_directory_mode_support import _write_modelo as _shared_write_modelo
+from ..conformance.loader_directory_mode_support import load_revision as _shared_load_revision
+from ..conformance.loader_directory_mode_support import write_modelo as _shared_write_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

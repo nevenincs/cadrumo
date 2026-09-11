@@ -15,8 +15,8 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader import load_catalogue_file
-from ..pipeline import _m390_auxiliary_envelope
-from ..pipeline._m390_auxiliary_envelope import (
+from ..pipeline import m390_auxiliary_envelope
+from ..pipeline.m390_auxiliary_envelope import (
     M390_AUXILIARY_ENVELOPE_TARGETS,
     M390AuxiliaryEnvelopeGenerationInput,
     M390AuxiliaryEnvelopeNumberedPage,
@@ -244,7 +244,7 @@ def test_refuses_current_unreviewed_registry_revision_as_a_prospective_target() 
 
 def test_m390_auxiliary_authority_has_no_layout_or_historical_output_dependency() -> None:
     """The page-zero contract admits only prospective parser authority and supplied bytes."""
-    module = ast.parse(inspect.getsource(_m390_auxiliary_envelope))
+    module = ast.parse(inspect.getsource(m390_auxiliary_envelope))
     imported_modules = {
         node.module for node in ast.walk(module) if isinstance(node, ast.ImportFrom) and node.module is not None
     }

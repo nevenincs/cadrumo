@@ -31,13 +31,13 @@ from __future__ import annotations
 import ast
 import collections
 import dataclasses
-import importlib
 import pathlib
 from collections.abc import Iterable
 from typing import Final
 
 import pytest
 
+from cadrumo.adapters.outbound.aeat.sede.declarations import DeclaracionesRegisterSession
 from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
@@ -48,6 +48,9 @@ from ..analysis.casilla_id_grammar import screen_authority as grammar_screen
 from ..analysis.continuity_integrity import screen_authority as continuity_screen
 from ..analysis.export_ref_symmetry import screen_authority as export_ref_screen
 from ..compiler.authority import compiled_bundled_authority
+from ..maintenance_support import resolved_export_endpoints
+from ..pipeline.render_profile import RenderProfile
+from ..pipeline.semantic_map import SemanticMap
 
 _BINDING_DERIVATION = "derive_export_layouts_from_bindings"
 
@@ -56,6 +59,24 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: Named once per module, as this tree requires, rather than repeated at each
 #: read site where a typo would be a silent decode change.
 _UTF_8: Final[str] = "utf-8"
+
+# The bundled authority currently carries one filed-observation consumer. Keep
+# that finite target set explicit: adding another target makes the gate fail
+# until its defining object is deliberately enrolled here.
+_FILED_OBSERVATION_CONSUMERS: dict[str, object] = {
+    "cadrumo.adapters.outbound.aeat.sede.declarations.DeclaracionesRegisterSession.capture_observation": (
+        DeclaracionesRegisterSession.capture_observation
+    ),
+}
+
+# README references are also a closed vocabulary. The module references map to
+# one concrete public object from each module so the documentation gate does
+# not rebuild import paths at runtime.
+_DOCUMENTED_TARGETS: dict[str, object] = {
+    "dev.registry.maintenance_support.resolved_export_endpoints": resolved_export_endpoints,
+    "dev.registry.pipeline.render_profile": RenderProfile,
+    "dev.registry.pipeline.semantic_map": SemanticMap,
+}
 
 
 @pytest.fixture(scope="module")
@@ -70,18 +91,7 @@ def modelo_ids() -> tuple[str, ...]:
 
 def _python_target_resolves(target: str) -> bool:
     """Return whether a registry-owned ``cadrumo`` target resolves."""
-    parts = target.split(".")
-    for boundary in range(len(parts), 1, -1):
-        try:
-            value: object = importlib.import_module(".".join(parts[:boundary]))
-        except ModuleNotFoundError:
-            continue
-        for attribute in parts[boundary:]:
-            if not hasattr(value, attribute):
-                return False
-            value = getattr(value, attribute)
-        return True
-    return False
+    return target in _FILED_OBSERVATION_CONSUMERS
 
 
 def test_every_filed_observation_application_link_consumer_resolves(
@@ -217,7 +227,6 @@ def test_every_symbol_the_contributor_readmes_name_still_resolves() -> None:
     This walks the READMEs rather than a hand-kept list, so a newly documented
     symbol is covered by writing it down.
     """
-    import importlib
     import pathlib
     import re
 
@@ -229,19 +238,7 @@ def test_every_symbol_the_contributor_readmes_name_still_resolves() -> None:
             documented.update(re.findall(r"`((?:cadrumo|dev)\.[A-Za-z0-9_.]+)`", readme.read_text(encoding=_UTF_8)))
     assert documented, "the contributor READMEs must name at least one symbol"
 
-    unresolved: list[str] = []
-    for dotted in sorted(documented):
-        try:
-            importlib.import_module(dotted)
-            continue
-        except ImportError:
-            pass
-        module_path, _, attribute = dotted.rpartition(".")
-        try:
-            if not hasattr(importlib.import_module(module_path), attribute):
-                unresolved.append(dotted)
-        except ImportError:
-            unresolved.append(dotted)
+    unresolved = sorted(set(documented) - _DOCUMENTED_TARGETS.keys())
     assert not unresolved, f"contributor READMEs name symbols that no longer resolve: {unresolved}"
 
 
@@ -541,16 +538,14 @@ def test_every_kind_a_screen_emits_is_named_in_its_own_docstring(
     would see. Kinds that occur only under a constructed defect are not covered
     here; they are covered by the detector test that constructs them.
     """
-    import importlib
-
-    from ..analysis.screens import screen_findings
+    from ..analysis.screens import screen_findings, screen_module
 
     observed: set[tuple[str, str]] = set()
     undocumented: list[str] = []
     # Both tables, through the shared traversal. This gate iterated the
     # authority table alone and so never read a corpus screen's kinds.
     for name, findings in screen_findings(authority, modelo_ids):
-        module = importlib.import_module(f"dev.registry.analysis.{name}")
+        module = screen_module(name)
         doc = module.__doc__ or ""
         for finding in findings:
             kind = getattr(finding, "kind", None)
@@ -652,7 +647,7 @@ def test_every_committed_export_tree_is_enrolled_in_its_reproduction_test(
     from cadrumo.core.resources.bundled_data import bundled_path
 
     from ..pipeline.export_fragment_provenance import EXPORT_FRAGMENT_PROVENANCE_FILENAME
-    from .test_generated_export_trees import _GENERATED_TREES
+    from ..pipeline.generated_tree_inventory import generated_export_trees
 
     committed = {
         (modelo_id, str(revision_id))
@@ -664,7 +659,7 @@ def test_every_committed_export_tree_is_enrolled_in_its_reproduction_test(
         ).is_file()
     }
     assert committed, "no export tree is committed, so this gate checked nothing"
-    enrolled = {(tree.modelo, tree.revision) for tree in _GENERATED_TREES}
+    enrolled = {(tree.modelo, tree.revision) for tree in generated_export_trees()}
     assert committed == enrolled, (
         "generated-tree reproduction enrollment differs from the provenance-attested registry projection: "
         f"missing={sorted(committed - enrolled)}, extra={sorted(enrolled - committed)}"
@@ -964,17 +959,16 @@ def test_a_screen_that_counts_its_conditions_states_the_right_number(
     are looking at is complete, so the condition they never find is the one they
     conclude does not exist.
     """
-    import importlib
     import re
 
     wrong: list[str] = []
     unstated_conditions: list[str] = []
     checked = 0
-    from ..analysis.screens import screen_findings, screen_module_names
+    from ..analysis.screens import screen_findings, screen_module, screen_module_names
 
     findings_by_name = dict(screen_findings(authority, modelo_ids))
     for screen_name in sorted(screen_module_names()):
-        module = importlib.import_module(f"dev.registry.analysis.{screen_name}")
+        module = screen_module(screen_name)
         doc = module.__doc__ or ""
         # Any noun, not just "conditions". The screens say conditions,
         # disagreements, kinds - the claim is "N somethings are reported", and a
@@ -1103,16 +1097,15 @@ def test_a_screen_that_counts_the_facts_it_reads_states_the_right_number() -> No
     count different bullet runs in one docstring and a gate that conflated them
     would be wrong in whichever direction it guessed.
     """
-    import importlib
     import re
 
     wrong: list[str] = []
     unstated_facts: list[str] = []
     checked = 0
-    from ..analysis.screens import screen_module_names
+    from ..analysis.screens import screen_module, screen_module_names
 
     for screen_name in sorted(screen_module_names()):
-        module = importlib.import_module(f"dev.registry.analysis.{screen_name}")
+        module = screen_module(screen_name)
         doc = module.__doc__ or ""
         claim = re.search(r"\b([A-Za-z]+) facts decide\b", doc)
         if claim is None:
@@ -1294,9 +1287,8 @@ def test_every_screen_finding_type_declares_the_identity_the_contract_promises()
     only where a screen reports more than one condition.
     """
     import dataclasses
-    import importlib
 
-    from ..analysis.screens import FINDING_IDENTITY_CONTRACT
+    from ..analysis.screens import FINDING_IDENTITY_CONTRACT, screen_module
 
     assert FINDING_IDENTITY_CONTRACT == ("modelo",), "the contract changed; this gate encodes it"
 
@@ -1305,7 +1297,7 @@ def test_every_screen_finding_type_declares_the_identity_the_contract_promises()
     from ..analysis.screens import screen_module_names
 
     for screen_name in sorted(screen_module_names()):
-        module = importlib.import_module(f"dev.registry.analysis.{screen_name}")
+        module = screen_module(screen_name)
         for name, obj in vars(module).items():
             if not dataclasses.is_dataclass(obj) or getattr(obj, "__module__", None) != module.__name__:
                 continue
@@ -1608,10 +1600,9 @@ def test_every_declared_condition_has_a_live_member_or_a_written_proof(
     version - that the condition is reachable from constructed input - is what
     the owning screen's own tests assert.
     """
-    import importlib
     import pathlib
 
-    from ..analysis.screens import CORPUS_SCREENS, SCREENS
+    from ..analysis.screens import CORPUS_SCREENS, SCREENS, screen_module
     from ..analysis.screens import screen_findings as _screen_findings
 
     live: dict[str, set[str]] = {}
@@ -1627,7 +1618,7 @@ def test_every_declared_condition_has_a_live_member_or_a_written_proof(
     declared_total = 0
     unproven: list[str] = []
     for entry in (*SCREENS, *CORPUS_SCREENS):
-        module = importlib.import_module(f"dev.registry.analysis.{entry.name}")
+        module = screen_module(entry.name)
         for kind in getattr(module, "KINDS", ()) or ():
             declared_total += 1
             if kind in live.get(entry.name, set()):

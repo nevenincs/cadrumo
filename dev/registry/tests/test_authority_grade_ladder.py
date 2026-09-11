@@ -13,11 +13,13 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from test_support.registry_authoring import load_registry_tree, validate_authority_grade_section
 
-from .....core.authority_grade import RegistryAuthorityGrade
-from .....core.schema_family_disposition import RegistrySchemaFamilyDisposition
-from .._schema_family_coverage import build_revision_coverage_manifest
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.core.schema_family_disposition import RegistrySchemaFamilyDisposition
+from cadrumo.domain.calculations.registry.schema_family_coverage import build_revision_coverage_manifest
+
+from ..compiler.validate_authority_grade import validate_authority_grade_section
+from ..compiler.loader import load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

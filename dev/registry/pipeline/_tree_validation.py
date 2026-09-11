@@ -23,10 +23,11 @@ from cadrumo.tests.registry_snapshot import build_snapshot
 
 from ..compiler.authority import compile_registry_tree, compile_validated_authority
 from ..compiler.identity import resolve_registry_identity
-from ..compiler.loader import collect_registry_tree_fingerprints, load_modelo_directory
+from ..compiler.loader import load_modelo_directory
+from ..compiler.loader_fingerprints import collect_registry_tree_fingerprints
 from ..compiler.registry_scope import validate_registry_scope
 from ._export_tree import RenderedExportTree
-from ._tree_paths import require_existing_non_link
+from .tree_paths import require_existing_non_link
 from .export_fragment_provenance import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     ExportFragmentProvenanceManifest,

@@ -84,20 +84,6 @@ def cohort_stamped_wheel_data_paths() -> frozenset[str]:
     )
 
 
-def __getattr__(name: str) -> object:
-    """Resolve ``COHORT_STAMPED_WHEEL_DATA_PATHS`` lazily.
-
-    Kept as a module attribute so its consumers read unchanged, but resolved on
-    access rather than at import. Deriving it reaches the registry facade, which
-    is a heavy import this module otherwise takes only inside the one function
-    that needs it; binding the value at import time would pull the whole
-    registry package into every tool that merely reads a cohort manifest.
-    """
-    if name == "COHORT_STAMPED_WHEEL_DATA_PATHS":
-        return cohort_stamped_wheel_data_paths()
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-
-
 _DISTRIBUTIONS: Final[tuple[str, ...]] = (
     "cadrumo",
     "cadrumo-data-manuals",

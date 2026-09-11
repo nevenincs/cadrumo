@@ -8,11 +8,12 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.application.aggregation import (
+from cadrumo.application.aggregation.iva_ledger import (
     IvaDifferentiatedDeductionContribution,
+    IvaLedgerProrrataApportionment,
+    IvaLedgerSectorApportionment,
     resolve_iva_differentiated_deduction_contributions,
 )
-from cadrumo.application.aggregation.iva_ledger import IvaLedgerProrrataApportionment, IvaLedgerSectorApportionment
 from cadrumo.core.filing_projection_ref import (
     M303DifferentiatedDeductionProjectionField,
     M303DifferentiatedDeductionProjectionRef,
@@ -47,7 +48,7 @@ from cadrumo.tests.registry_snapshot import build_snapshot
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader import load_catalogue_file
 from ..compiler.record_design import extract_record_design
-from ..conformance.tests._registry_schema_support import _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 from ..maintenance_support import resolve_record_design_binary
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -7,13 +7,16 @@ from datetime import date
 from typing import Any
 
 import pytest
-from test_support.registry_authoring import _committed_modelo, verify_legal_catalogue, verify_source_file
 
-from .....core.resources.bundled_data import bundled_path
-from .....tests import REPO_ROOT
-from ..errors import NoRevisionForPeriodError, RegistryValidationError
-from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
-from ..temporal import select_revision
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError, RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.tests.inventory import REPO_ROOT
+
+from ..compiler.corpus_catalogue import verify_source_file
+from ..compiler.legal_grounding import verify_legal_catalogue
+from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

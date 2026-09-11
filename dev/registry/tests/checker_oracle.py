@@ -8,7 +8,7 @@ from typing import Protocol
 
 from pydantic import AnyUrl, BaseModel
 
-from cadrumo.core.identity import tax_id_identity_token
+from cadrumo.core.identity.tax_id import tax_id_identity_token
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.domain.calculations.registry.checker_oracle_flow import (
     CheckerDriverModeValue,

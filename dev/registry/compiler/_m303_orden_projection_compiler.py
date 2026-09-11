@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Literal
 
-from cadrumo.core.identity import ContentDigest
+from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.text_fold import ascii_slug
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import LegalRefId, RevisionId, SourceRefId

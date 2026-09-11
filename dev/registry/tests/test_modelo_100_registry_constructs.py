@@ -8,28 +8,30 @@ from typing import Any, cast
 
 import pytest
 from pydantic import AnyUrl, ValidationError
-from test_support.registry_authoring import _CONSTRUCT_MEMBER_ATTRS, RegistryValidator
 
-from .....core.authority_grade import RegistryAuthorityGrade
-from .....core.casilla_id import CasillaId
-from .....tests.registry_snapshot import build_snapshot
-from ....contribuyente.family_profile import RentaFamilyProfile
-from ....contribuyente.family_types import RentaAscendantProfile, RentaDescendantProfile
-from ....contribuyente.keys import profile_keys as registered_profile_keys
-from ....contribuyente.tax_residence import TaxResidenceProfile
-from ..binding_selector_utils import selector_as_dict
-from ..errors import RegistryValidationError
-from ..export import resolve_export_layout
-from ..export_parse import parse_export_payload
-from ..remote_state_guard import (
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.core.casilla_id import CasillaId
+from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.export import resolve_export_layout
+from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
+from cadrumo.domain.calculations.registry.remote_state_guard import (
     RemoteOperation,
     assert_remote_operation_allowed,
     remote_state_policy_from_cross_reference,
 )
-from ..schema import DataBindingDefinition, RegistrySnapshot
-from ..schema_input_kind import InputKind
-from ..schema_revision_members import ApplicationLinkSurface
-from ..schema_surfaces import CasillaDefinition
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.schema_revision_members import ApplicationLinkSurface
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.domain.contribuyente.family_profile import RentaFamilyProfile
+from cadrumo.domain.contribuyente.family_types import RentaAscendantProfile, RentaDescendantProfile
+from cadrumo.domain.contribuyente.keys import profile_keys as registered_profile_keys
+from cadrumo.domain.contribuyente.tax_residence import TaxResidenceProfile
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ..compiler.validate_constructs import CONSTRUCT_MEMBER_ATTRIBUTES
+from ..compiler.validator import RegistryValidator
 from ._modelo_100_registry_support import (
     _DECLARATIONS_LISTING_URL,
     _MEMBER_GROUNDED_2025_CONSTRUCT_IDS,
@@ -103,7 +105,7 @@ def _construct_members(construct: object) -> tuple[tuple[str, str], ...]:
     member kind reaches these assertions the moment production learns it.
     """
     members: list[tuple[str, str]] = []
-    for kind, attribute in _CONSTRUCT_MEMBER_ATTRS.items():
+    for kind, attribute in CONSTRUCT_MEMBER_ATTRIBUTES.items():
         for member_id in getattr(construct, attribute, ()):
             assert isinstance(member_id, str)
             members.append((kind, member_id))
@@ -113,7 +115,7 @@ def _construct_members(construct: object) -> tuple[tuple[str, str], ...]:
 def _members_of_kind(construct: object, kind: str) -> tuple[str, ...]:
     """Return the member ids a construct declares for one kind."""
     members: list[str] = []
-    for member_id in getattr(construct, _CONSTRUCT_MEMBER_ATTRS[kind], ()):
+    for member_id in getattr(construct, CONSTRUCT_MEMBER_ATTRIBUTES[kind], ()):
         assert isinstance(member_id, str)
         members.append(member_id)
     return tuple(members)

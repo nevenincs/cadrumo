@@ -13,7 +13,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
-from ..conformance.tests._registry_schema_support import _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 from ..maintenance_support import (
     LiveParityCatalogue,
     OracleEnvironment,

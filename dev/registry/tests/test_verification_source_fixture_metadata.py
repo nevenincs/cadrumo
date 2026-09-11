@@ -38,16 +38,17 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from test_support.registry_authoring import _committed_registry_tree
 
-from .....core.directory_scan import scan_directory
-from .....core.resources.bundled_data import bundled_path
-from .....tests.fixtures.provenance import (
+from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.tests.fixtures.provenance import (
     FIXTURE_PROVENANCE_REAL,
     FIXTURE_PROVENANCE_SYNTHETIC,
     provenance_mismatches,
     sidecar_provenance,
 )
+
+from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
