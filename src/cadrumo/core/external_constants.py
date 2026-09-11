@@ -25,13 +25,10 @@ from __future__ import annotations
 
 import re
 import tomllib
-from collections.abc import Mapping
-from decimal import Decimal
 from enum import StrEnum
 from functools import cached_property, lru_cache
 from importlib.resources import files  # nosemgrep
 from pathlib import Path
-from types import MappingProxyType
 from typing import Any, Final, Literal
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
@@ -517,108 +514,6 @@ DEFAULT_OUTPUT_LANGUAGE: Final[OutputLanguage] = OutputLanguage.ES
 #: boundary.
 SUPPORTED_OUTPUT_LANGUAGES: Final[tuple[str, ...]] = tuple(lang.value for lang in OutputLanguage)
 
-#: Modelo 347 declaration floor per counterparty. Binding provision: RD 1065/2007
-#: art. 33.1 ("operaciones que en su conjunto … hayan superado la cifra de 3.005,06
-#: euros"), which fixes the figure; art. 31.1 only defines the general obligation.
-#: Counterparties whose annual operations total at most this amount are NOT declarable.
-M347_THRESHOLD_EUR: Final[Decimal] = Decimal("3005.06")
-
-#: Modelo 347 clave C declaration floor per beneficiary. Binding provisions:
-#: RD 1065/2007 art. 32.c ("300,51 euros durante el mismo periodo, cuando...
-#: realicen la función de cobro por cuenta de terceros de honorarios
-#: profesionales o de derechos derivados de la propiedad intelectual,
-#: industrial o de autor") and art. 33.4 (same figure, framed as the
-#: declaration threshold rather than the exclusion floor). Applies ONLY to
-#: :attr:`~core.ThirdPartyDeclarationRole.THIRD_PARTY_FEE_COLLECTOR` rows,
-#: alongside -- never instead of -- ``M347_THRESHOLD_EUR``: the same
-#: counterparty can carry both ordinary and clave-C operations in the same
-#: year, and each is judged against its own floor.
-M347_CLAVE_C_THRESHOLD_EUR: Final[Decimal] = Decimal("300.51")
-
-#: Art. 7.p) LIRPF (Ley 35/2006, BOE-A-2006-20764) annual exemption cap for
-#: foreign-work income of maritime and other qualifying workers.
-#: The exempt amount is the lesser of the proportional daily salary for
-#: qualifying days and this ceiling.  Binding provision: Art. 7.p) LIRPF.
-ART_7P_EXEMPTION_CAP_EUR: Final[Decimal] = Decimal("60100")
-
-#: Art. 96.3 LIRPF (Ley 35/2006) secondary-pagador trigger amount. When work
-#: income comes from more than one pagador, the reduced filing-exemption limit
-#: (see ``WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR``) applies only
-#: when the aggregate income from the 2nd and subsequent pagadores STRICTLY
-#: exceeds this amount; at or below it the general 22.000 € limit is retained
-#: (Art. 96.3.a.1.º). Binding provision: Art. 96.3 LIRPF (Ley 35/2006). This
-#: trigger is year-stable and has not been revalued.
-MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR: Final[Decimal] = Decimal("1500")
-
-#: Art. 96.3 LIRPF (Ley 35/2006) REDUCED filing-exemption ceiling for
-#: rendimientos íntegros del trabajo, keyed by filing year (the year the income
-#: was obtained). The general 22.000 € ceiling drops to this reduced amount when
-#: work income comes from more than one pagador AND the 2nd-and-subsequent
-#: aggregate exceeds ``MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR`` (1.500 €).
-#: The amount is DATED: 2019-2022 use 14.000 € (Art. 96.3 LIRPF base value,
-#: post-Ley 26/2014); 2023 uses 15.000 € (Ley 31/2022 PGE-2023,
-#: BOE-A-2022-22128, art. 96.3 modification); 2024-2026 use 15.876 €
-#: (RD-Ley 4/2024, BOE-A-2024-13066, art. 96.3 modification, confirmed by
-#: the bundled consolidated LIRPF art-96 corpus).
-#: Binding provision: Art. 96.3 LIRPF (Ley 35/2006), as modified per year above.
-#: A filing year beyond the latest tabulated entry resolves to the latest known
-#: amount (forward-compatible) until a new law revalues it.
-WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR: Final[Mapping[int, Decimal]] = MappingProxyType(
-    {
-        2019: Decimal("14000"),
-        2020: Decimal("14000"),
-        2021: Decimal("14000"),
-        2022: Decimal("14000"),
-        2023: Decimal("15000"),
-        2024: Decimal("15876"),
-        2025: Decimal("15876"),
-        2026: Decimal("15876"),
-    },
-)
-
-#: Art. 40.3 LIS (Ley 27/2014, BOE-A-2014-12328) INCN threshold that makes the
-#: base-imponible pago-fraccionado modality MANDATORY for Modelo 202. A taxpayer
-#: whose importe neto de la cifra de negocios in the 12 months prior to the start of
-#: the relevant período impositivo exceeded this amount must use the art. 40.3
-#: modality; below it, the art. 40.2 (cuota) modality is optional. Binding
-#: provision: Ley 27/2014 art. 40.3 (modalidad obligatoria por cifra de negocios).
-MODELO_202_ART_40_3_INCN_THRESHOLD_EUR: Final[Decimal] = Decimal("6000000")
-
-#: Art. 20 LIRPF (Ley 35/2006) rendimiento-neto-del-trabajo ceiling above which the
-#: reducción por obtención de rendimientos del trabajo is zero. The reduction is a
-#: piecewise-linear function of the rendimiento neto del trabajo (RNT) that decays to
-#: zero at this ceiling: for RNT strictly below it the general reduction is positive;
-#: at or above it the reduction is nil. Used by the Modelo 100 art. 20 advisory to flag
-#: a possibly-unapplied reduction (RNT inside the band but the general-reduction casilla
-#: zero) — a ``no-silent-under-declaration`` safeguard. The DATED per-ejercicio schedule
-#: is authoritative in the registry; this is the current (2024-2025) ceiling raised by
-#: RDL 4/2024. Binding provision: Ley 35/2006 art. 20, schedule per RDL 4/2024 art. 3.1
-#: (BOE-A-2024-12944).
-MODELO_100_ART_20_TRABAJO_REDUCCION_RNT_CEILING_EUR: Final[Decimal] = Decimal("19747.50")
-
-#: Art. 52.1 LIRPF (Ley 35/2006) individual-contribution sub-limit for the
-#: reducción por aportaciones y contribuciones a sistemas de previsión social.
-#: The joint reducción (casilla 0468) is capped at the lesser of 30% of net
-#: yields and EUR 10.000, but a taxpayer whose aportaciones are PURELY
-#: individual — no plan-de-empleo worker contribution (casilla 0426) and no
-#: contribución empresarial (casilla 0427) backing the EUR 8.500 increment —
-#: is bound by the lower EUR 1.500 general limit; the EUR 8.500 increment
-#: "siempre que tal incremento provenga de contribuciones empresariales, o de
-#: aportaciones del trabajador al mismo instrumento de previsión social".
-#: Used by the Modelo 100 art. 52 advisory to flag a possible over-reduction
-#: (a granted reducción above this sub-limit with no employer-linked backing),
-#: pending the full individual/employer contribution-split compute. Binding
-#: provision: Ley 35/2006 art. 52.1.
-MODELO_100_ART_52_INDIVIDUAL_SUBLIMIT_EUR: Final[Decimal] = Decimal("1500")
-
-#: Default IVA general-rate percentage for input/pre-fill purposes.
-#: This is the LIVA art. 90 Uno general rate (Ley 37/1992, BOE-A-1992-28740)
-#: currently in force for Spain (ES).
-#: The DATED authoritative percentage lives in ``registry/aeat/iva/rates.toml``
-#: and is resolved via :func:`domain.iva.lookup_rate`; this constant is
-#: bound to that registry authority by a gate test so it cannot silently drift.
-DEFAULT_IVA_GENERAL_RATE_PCT: Final[Decimal] = Decimal("21.00")
-
 #: Modelos belonging to the *retenciones* aggregation family (withholding/retention filings).
 #: Covers: M111 (labour income), M115 (leases), M123 (capital yields), M180 (lease annual),
 #: M190 (labour annual summary), M193 (capital yields annual summary).
@@ -631,129 +526,9 @@ RETENCIONES_MODELOS: Final[tuple[Modelo, ...]] = (
     Modelo.M193,
 )
 
-#: Modelos belonging to the *counterpart* aggregation family (third-party declaration filings).
-#: Covers: M347 (annual operations with third parties), M349 (intra-EU operations summary).
-COUNTERPART_MODELOS: Final[tuple[Modelo, ...]] = (Modelo.M347, Modelo.M349)
-
-#: Modelos belonging to the *foreign assets* aggregation family (overseas-asset declaration).
-#: Covers: M720 (assets and rights abroad declaration per Ley 7/2012).
-FOREIGN_ASSET_MODELOS: Final[tuple[Modelo, ...]] = (Modelo.M720,)
-
 #: Modelos belonging to the *IVA regime* gating group (value-added tax periodic filings).
 #: Covers: M303 (quarterly/monthly IVA self-assessment), M390 (IVA annual summary).
 IVA_REGIME_MODELOS: Final[tuple[Modelo, ...]] = (Modelo.M303, Modelo.M390)
-
-#: REBECA 50% exemption of qualifying maritime navigation income.
-#: Applies to crew of REBECA-registered vessels and scheduled Canary Islands routes.
-#: Binding provision: Ley 19/1994 art. 75.1 (BOE-A-1994-15794) fixes the 50 por 100
-#: renta exenta; art. 73 establishes REBECA eligibility. Catalogue: ley-19-1994:art-75.
-REBECA_MARITIME_EXEMPTION_FRACTION: Final[Decimal] = Decimal("0.50")
-
-#: First filing year the post-birth alta route (and its 150 euro increment) reaches.
-#: Before it, Art. 81 LIRPF granted the deducción only to a madre already registered
-#: with the Seguridad Social or a mutualidad "en el momento del nacimiento" (Manual
-#: Práctico de Renta 2021, "Normativa: Arts. 81 Ley IRPF y 60 Reglamento" — the manual's
-#: own beneficiary test names no post-birth alta at all). The Manual Práctico de Renta
-#: 2023 worked example states the extension in terms: "a partir del 1 de enero de 2023
-#: se han ampliado los supuestos que dan derecho a ésta". Filing years before this take
-#: no increment and keep the ordinary DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR cap.
-DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR: Final[int] = 2023
-
-#: Art. 81.1 LIRPF: the first filing year in which the deducción por maternidad is NO
-#: LONGER capped at the mother's Social Security cotizaciones. Until 2022 the deducción
-#: was limited to the "cotizaciones y cuotas totales a la Seguridad Social y mutualidades
-#: devengadas en cada período impositivo", stated in the Manual Práctico de Renta 2020 and
-#: 2022; the Manual Práctico de Renta 2024 records the removal in terms — "desaparece esta
-#: limitación del importe de la deducción a las cotizaciones devengadas en el período
-#: impositivo … el nuevo régimen resulta aplicable desde el 1 de enero de 2023".
-#:
-#: Shares a value with the alta-posterior gate above and is deliberately NOT merged with
-#: it: two independent rules that happen to change in the same reform. Collapsing them
-#: would silently move one if the other were ever corrected.
-DEDUCCION_MATERNIDAD_COTIZACIONES_CEILING_RETIRED_FILING_YEAR: Final[int] = 2023
-
-#: Art. 58.1 LIRPF (Ley 35/2006, BOE-A-2006-20764) ordinary mínimo-por-descendientes
-#: age ceiling: a descendant qualifies for the ordinary mínimo while younger than 25
-#: (exclusive) at year end, unless disabled (which removes the age limit).
-MINIMO_DESCENDIENTE_MAX_AGE: Final[int] = 25
-
-#: Art. 58.2 LIRPF (Ley 35/2006, BOE-A-2006-20764) bajo-3-años supplement age ceiling:
-#: "Cuando el descendiente sea menor de tres años, el mínimo … se aumentará". The
-#: additional mínimo applies to a descendant younger than 3 (exclusive) at year end.
-MINIMO_MENOR_TRES_MAX_AGE: Final[int] = 3
-
-#: Art. 61.4ª LIRPF (Ley 35/2006, BOE-A-2006-20764) custodia compartida prorrata
-#: factor: under the normas comunes, when two contribuyentes have the right to the
-#: same mínimo "su importe se prorrateará entre ellos por partes iguales" — a 50 %
-#: split between the two custodial parents.
-CUSTODIA_COMPARTIDA_PRORRATA_FACTOR: Final[Decimal] = Decimal("0.5")
-
-#: Art. 81.1 LIRPF (Ley 35/2006, BOE-A-2006-20764) adopción/acogimiento window for the
-#: deducción por maternidad: the limb runs "durante los tres años siguientes a la fecha
-#: de la inscripción en el Registro Civil". Counted in YEARS from a date, unlike the
-#: Art. 58.2 window below, which counts whole tax PERIODS from the entry period — two
-#: rules that read alike and are not, so they stay separate constants.
-ART_81_1_ENTRY_WINDOW_YEARS: Final[int] = 3
-
-#: Madrid DL 1/2010 art. 4 deducción por nacimiento o adopción applicability window,
-#: expressed as the count of periods FOLLOWING the entry period. The deducción applies
-#: in the period of nacimiento/adopción and in each of the two following, i.e. a
-#: three-period window keyed on the entry year. Grounded in the bundled AEAT Renta 2025
-#: manual, parte 2 (deducciones autonómicas), "Ámbito temporal de aplicación de la
-#: deducción". Autonómico rather than estatal, so it is the likelier of the two to move.
-NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS: Final[int] = 2
-
-#: LIRPF Disposición Transitoria 12ª (Ley 35/2006, BOE-A-2006-20764) reducción rate:
-#: 40 % reducción on the part of a plan-de-pensiones capital rescate attributable to
-#: contributions made on or before 31-12-2006.
-DT12_RESCATE_REDUCCION_RATE: Final[Decimal] = Decimal("0.40")
-
-#: LIRPF DT 12ª apartado 3 (added by Ley 26/2014 art. 1.85, BOE-A-2014-12327)
-#: time-window boundaries, each quoted from the bundled consolidated LIRPF at
-#: ``corpus/normatives/html/ley-35-2006.html#dtduodecima``. The régimen
-#: transitorio -- and so the 40 % reducción above -- reaches only prestaciones
-#: percibidas inside a window measured from the contingencia year.
-#:
-#: These are boundaries fixed once by the 2014 amendment, not figures the law
-#: re-sets per filing year, so they are leaf constants rather than registry
-#: parameters: year-versioning an invariant value would duplicate it across
-#: every revision to vary nothing.
-#:
-#: General rule, contingencia 2015 onwards: percibida "en el ejercicio en el que
-#: acaezca la contingencia correspondiente, o en los dos ejercicios siguientes".
-DT12_GENERAL_WINDOW_FOLLOWING_YEARS: Final[int] = 2
-
-#: Contingencia "acaecidas en los ejercicios 2011 a 2014": percibida "hasta la
-#: finalización del octavo ejercicio siguiente a aquel en el que acaeció la
-#: contingencia correspondiente".
-DT12_TRANSITIONAL_CONTINGENCIA_FIRST_YEAR: Final[int] = 2011
-DT12_TRANSITIONAL_CONTINGENCIA_LAST_YEAR: Final[int] = 2014
-DT12_TRANSITIONAL_WINDOW_FOLLOWING_YEARS: Final[int] = 8
-
-#: Contingencia "acaecidas en los ejercicios 2010 o anteriores": percibida
-#: "hasta el 31 de diciembre de 2018".
-DT12_CLIFF_LAST_YEAR: Final[int] = 2018
-
-#: Ley 44/2015 art. 14.1 (BOE-A-2015-11071) SAL/SLL reserva especial dotación rate:
-#: 10 % of net profit endowed each year ("se dotará con el diez por ciento del
-#: beneficio líquido de cada ejercicio").
-SAL_RESERVA_DOTACION_RATE: Final[Decimal] = Decimal("0.10")
-
-#: Ley 44/2015 art. 14.1 (BOE-A-2015-11071) SAL/SLL reserva especial accumulation cap
-#: multiple: the reserve accrues until it exceeds twice the share capital ("hasta que
-#: alcance al menos una cifra superior al doble del capital social").
-SAL_RESERVA_CAPITAL_MULTIPLE: Final[Decimal] = Decimal("2")
-
-#: Ley 39/2015 art. 43.2 (BOE-A-2015-10565) rechazo-tácito window for an electronic
-#: notification: "se entenderá rechazada cuando hayan transcurrido diez días naturales
-#: desde la puesta a disposición de la notificación sin que se acceda a su contenido".
-#: Días NATURALES, not hábiles — weekends, holidays and August count, so a
-#: días-hábiles reading would compute a later lapse date than the law allows and
-#: understate urgency to the taxpayer. The clock runs from the puesta a disposición,
-#: never from access. The provision is enrolled in the legal catalogue as
-#: ``ley-39-2015:art-43.2``, and the quoted clause above is that entry's own
-#: corpus text rather than a restatement of it.
-DEHU_RECHAZO_TACITO_DIAS_NATURALES: Final[int] = 10
 
 
 @lru_cache(maxsize=1)

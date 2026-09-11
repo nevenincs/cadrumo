@@ -12,8 +12,10 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-11'
 body_schema: body-v2
-body_hash: 'sha256:d772ffbce85b2d6cb2941d06261bb98f3ccb26fc984bc6814b047f87a58d0e34'
+body_hash: 'sha256:a5f354fad47fca7ca598a772460b424ade7f66bf9a9bca4e0008df1a815821af'
 ---
+
+<!-- RETIRED: S65 -->
 
 # `facts-registry` plan
 
@@ -192,10 +194,9 @@ Move approved adapted data families and Python-held facts into one-fact-per-file
 
 Remove migrated legal declarations and local interpretations while preserving unrelated technical configuration and serialization tokens.
 
-- [ ] `W04.P16.S31` - Delete migrated statutory declarations but retain technical configuration; `src/cadrumo/core/external_constants.py`.
+- [x] `W04.P16.S31` - Delete migrated statutory declarations but retain technical configuration; `src/cadrumo/core/external_constants.py`.
 - [ ] `W04.P16.S32` - Delete numeric IVA interpretation but retain persisted enum tokens; `src/cadrumo/domain/invoices/enums.py`.
 - [ ] `W04.P16.S33` - Delete superseded regulatory mappings and fallback policies; `src/cadrumo`.
-- [ ] `W04.P16.S65` - Delete the statutory Python-fact adapter and duplicate declarations after normalized fact fragments replace both lanes; `dev/registry/compiler/statutory_constants.py and dev/registry/compiler/fact_providers.py and dev/registry/tests/test_statutory_constants_provider.py and src/cadrumo/core/external_constants.py`.
 
 ### Phase `W04.P17` - Delete bespoke loaders caches and data paths
 
