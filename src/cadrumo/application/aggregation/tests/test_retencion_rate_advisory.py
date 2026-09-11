@@ -79,37 +79,50 @@ def test_advisory_fires_on_administrador_rate_matching_neither_statutory_figure(
 
 def test_advisory_silent_on_administrador_general_35_percent_rate() -> None:
     """€2.000 * 0,35 = €700,00 is the art. 101.2 general rate → no advisory."""
-    assert administrador_retencion_rate_advisory_observations(
-        [_administrador("2000.00", "700.00")], effective_date=_EFFECTIVE_DATE
-    ) == ()
+    assert (
+        administrador_retencion_rate_advisory_observations(
+            [_administrador("2000.00", "700.00")], effective_date=_EFFECTIVE_DATE
+        )
+        == ()
+    )
 
 
 def test_advisory_silent_on_administrador_reduced_19_percent_rate() -> None:
     """€2.000 * 0,19 = €380,00 is the art. 101.2 reduced (INCN < 100.000 €) rate → no advisory."""
-    assert administrador_retencion_rate_advisory_observations(
-        [_administrador("2000.00", "380.00")], effective_date=_EFFECTIVE_DATE
-    ) == ()
+    assert (
+        administrador_retencion_rate_advisory_observations(
+            [_administrador("2000.00", "380.00")], effective_date=_EFFECTIVE_DATE
+        )
+        == ()
+    )
 
 
 def test_advisory_tolerates_one_cent_rounding_on_the_fixed_rate() -> None:
     """A row rounded to cents (1.234,56 * 0,35 = 432,096 → 432,10) stays within tolerance."""
-    assert administrador_retencion_rate_advisory_observations(
-        [_administrador("1234.56", "432.10")], effective_date=_EFFECTIVE_DATE
-    ) == ()
+    assert (
+        administrador_retencion_rate_advisory_observations(
+            [_administrador("1234.56", "432.10")], effective_date=_EFFECTIVE_DATE
+        )
+        == ()
+    )
 
 
 def test_advisory_silent_on_administrador_zero_base() -> None:
     """A non-positive base carries no verifiable rate → advisory out of scope."""
-    assert administrador_retencion_rate_advisory_observations(
-        [_administrador("0", "0")], effective_date=_EFFECTIVE_DATE
-    ) == ()
+    assert (
+        administrador_retencion_rate_advisory_observations([_administrador("0", "0")], effective_date=_EFFECTIVE_DATE)
+        == ()
+    )
 
 
 def test_advisory_silent_on_empleado_progressive_scheme() -> None:
     """Ordinary empleados follow the personalised art. 101.1 escala; no fixed rate applies."""
-    assert administrador_retencion_rate_advisory_observations(
-        [_empleado("2000.00", "300.00")], effective_date=_EFFECTIVE_DATE
-    ) == ()
+    assert (
+        administrador_retencion_rate_advisory_observations(
+            [_empleado("2000.00", "300.00")], effective_date=_EFFECTIVE_DATE
+        )
+        == ()
+    )
 
 
 def test_advisory_fires_once_per_divergent_administrador_row() -> None:

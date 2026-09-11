@@ -314,9 +314,10 @@ def test_a_mixed_classified_activity_receipt_is_undivided_at_the_binding() -> No
     # Coherent as a pair: 300,00 IS the art. 95.1 general 15 % of the income
     # declared beside it. Halving the income while claiming the whole
     # withholding would present a 30 % rate no article fixes.
-    assert mixed_retencion == mixed_income * load_retencion_actividades_rates(
-        effective_date=date(2026, 3, 15)
-    ).general_rate
+    assert (
+        mixed_retencion
+        == mixed_income * load_retencion_actividades_rates(effective_date=date(2026, 3, 15)).general_rate
+    )
     assert mixed_income != invoiced_base * Decimal("0.50"), "a receipt is not divided by affectation"
 
 

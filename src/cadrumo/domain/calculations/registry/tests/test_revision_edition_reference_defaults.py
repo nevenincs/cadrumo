@@ -579,7 +579,5 @@ def test_the_source_default_resolves_against_the_catalogue_even_when_no_row_take
         with pytest.raises(RegistryValidationError, match=re.escape(failure)):
             compile_validated_authority(root, bundled_path())
         return
-    revision = (
-        compile_validated_authority(root, bundled_path()).modelo("111").revisions["2019-y-siguientes"]
-    )
+    revision = compile_validated_authority(root, bundled_path()).modelo("111").revisions["2019-y-siguientes"]
     assert revision.casilla_source_refs == (declared,)

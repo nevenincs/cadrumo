@@ -99,9 +99,7 @@ class _GuarderiaContext(NamedTuple):
 def _family_fact_context(filing_year: int) -> FamilyFactResolutionContext:
     """Compose the advisory's explicit family fact coordinates."""
     coordinate = date(filing_year, 12, 31)
-    return FamilyFactResolutionContext(
-        authority=bundled_authority(), filing_period=coordinate, devengo_date=coordinate
-    )
+    return FamilyFactResolutionContext(authority=bundled_authority(), filing_period=coordinate, devengo_date=coordinate)
 
 
 def _has_descendiente_facts(bucket_id: str) -> bool:

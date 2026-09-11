@@ -48,6 +48,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def _authority():
     return bundled_authority()
 
+
 _NATIONAL_HOLIDAY_DATES_2025 = (
     date(2025, 1, 1),  # Año Nuevo
     date(2025, 1, 6),  # Reyes

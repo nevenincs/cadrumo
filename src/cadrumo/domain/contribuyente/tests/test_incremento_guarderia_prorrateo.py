@@ -293,11 +293,14 @@ class TestMaternidadLapsesWhileTheIncrementContinues:
         """
         child = _child(date(2022, 1, 20), mensual="2-6:500", segundo_ciclo_mes=9)
 
-        assert child.maternidad_contributing_meses(
-            _YEAR + 1,
-            thresholds=registry_thresholds(_YEAR + 1),
-            context=_context(_YEAR + 1),
-        ) == 0
+        assert (
+            child.maternidad_contributing_meses(
+                _YEAR + 1,
+                thresholds=registry_thresholds(_YEAR + 1),
+                context=_context(_YEAR + 1),
+            )
+            == 0
+        )
         assert _total(child, year=_YEAR + 1) == Decimal("416.67")
 
     def test_a_mother_starting_work_after_the_birthday_still_carries_the_increment(self) -> None:

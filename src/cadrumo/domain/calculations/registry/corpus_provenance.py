@@ -66,22 +66,17 @@ def resolve_normative_corpus_path(source_root: Path, corpus_ref: str) -> Path | 
     root = source_root.resolve()
     direct_normatives = (root / "corpus" / "normatives").resolve()
     packaged_data_root = (root / _PACKAGED_DATA_ROOT).resolve()
-    packaged_normatives = (
-        packaged_data_root / "corpus" / "normatives"
-    ).resolve()
+    packaged_normatives = (packaged_data_root / "corpus" / "normatives").resolve()
     direct = (root / corpus_path).resolve()
     packaged = (root / _PACKAGED_DATA_ROOT / corpus_path).resolve()
     if not (
         root in direct_normatives.parents
         and (packaged_data_root == root or root in packaged_data_root.parents)
         and packaged_data_root in packaged_normatives.parents
-        and
-        direct_normatives in direct.parents
+        and direct_normatives in direct.parents
         and packaged_normatives in packaged.parents
     ):
-        raise RegistryValidationError(
-            f"normative corpus target {corpus_ref!r} escapes the normative corpus tree"
-        )
+        raise RegistryValidationError(f"normative corpus target {corpus_ref!r} escapes the normative corpus tree")
 
     path = direct if direct.is_file() else packaged
     if not path.is_file():

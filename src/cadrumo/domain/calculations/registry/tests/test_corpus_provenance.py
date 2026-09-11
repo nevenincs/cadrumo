@@ -38,10 +38,13 @@ def test_attested_normative_text_is_classified_from_its_own_bytes(
     del case_id  # pytest's id is descriptive; the payload is the test input.
     _write_corpus_fixture(tmp_path, "attested.html", payload)
 
-    assert classify_normative_corpus_provenance(
-        tmp_path,
-        "corpus/normatives/html/attested.html#a1",
-    ) is NormativeCorpusProvenance.BOE_ATTESTED
+    assert (
+        classify_normative_corpus_provenance(
+            tmp_path,
+            "corpus/normatives/html/attested.html#a1",
+        )
+        is NormativeCorpusProvenance.BOE_ATTESTED
+    )
 
 
 def test_boe_structural_markup_without_attribution_is_presumptive(tmp_path: Path) -> None:
@@ -51,19 +54,25 @@ def test_boe_structural_markup_without_attribution_is_presumptive(tmp_path: Path
         '<h5 class="articulo">Artículo 1.</h5><p class="parrafo">Texto.</p>',
     )
 
-    assert classify_normative_corpus_provenance(
-        tmp_path,
-        "corpus/normatives/html/markup-only.html",
-    ) is NormativeCorpusProvenance.BOE_PRESUMPTIVE
+    assert (
+        classify_normative_corpus_provenance(
+            tmp_path,
+            "corpus/normatives/html/markup-only.html",
+        )
+        is NormativeCorpusProvenance.BOE_PRESUMPTIVE
+    )
 
 
 def test_text_without_boe_attribution_or_structure_is_authored(tmp_path: Path) -> None:
     _write_corpus_fixture(tmp_path, "authored.html", "<p>Texto redactado sin atribución.</p>")
 
-    assert classify_normative_corpus_provenance(
-        tmp_path,
-        "corpus/normatives/html/authored.html",
-    ) is NormativeCorpusProvenance.AUTHORED
+    assert (
+        classify_normative_corpus_provenance(
+            tmp_path,
+            "corpus/normatives/html/authored.html",
+        )
+        is NormativeCorpusProvenance.AUTHORED
+    )
 
 
 def test_non_normative_target_is_out_of_scope_and_never_read(
@@ -74,10 +83,13 @@ def test_non_normative_target_is_out_of_scope_and_never_read(
     outside.write_text("BOE-A-2024-1526", encoding="utf-8")
 
     assert resolve_normative_corpus_path(tmp_path, "corpus/aeat_official/manual.html") is None
-    assert classify_normative_corpus_provenance(
-        tmp_path,
-        "corpus/aeat_official/manual.html",
-    ) is NormativeCorpusProvenance.OUT_OF_SCOPE
+    assert (
+        classify_normative_corpus_provenance(
+            tmp_path,
+            "corpus/aeat_official/manual.html",
+        )
+        is NormativeCorpusProvenance.OUT_OF_SCOPE
+    )
 
 
 def test_packaged_data_target_is_resolved_when_source_root_is_repository(tmp_path: Path) -> None:
@@ -88,10 +100,13 @@ def test_packaged_data_target_is_resolved_when_source_root_is_repository(tmp_pat
         encoding="utf-8",
     )
 
-    assert classify_normative_corpus_provenance(
-        tmp_path,
-        "corpus/normatives/html/attested.html",
-    ) is NormativeCorpusProvenance.BOE_ATTESTED
+    assert (
+        classify_normative_corpus_provenance(
+            tmp_path,
+            "corpus/normatives/html/attested.html",
+        )
+        is NormativeCorpusProvenance.BOE_ATTESTED
+    )
 
 
 @pytest.mark.parametrize(

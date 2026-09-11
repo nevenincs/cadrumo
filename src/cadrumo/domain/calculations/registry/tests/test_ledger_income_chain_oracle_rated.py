@@ -178,16 +178,14 @@ def test_the_retencion_expectation_is_the_statutory_rate_not_the_engine_route() 
     article names as the base -- and the fact that the two routes meet is what
     the assertions further down are entitled to rely on.
     """
-    statutory = (
-        _BASE * load_retencion_actividades_rates(effective_date=_VALUE_DATE).general_rate
-    ).quantize(Decimal("0.01"))
+    statutory = (_BASE * load_retencion_actividades_rates(effective_date=_VALUE_DATE).general_rate).quantize(
+        Decimal("0.01")
+    )
 
     assert statutory == _RETENCION
-    assert statutory != (
-        _TOTAL * load_retencion_actividades_rates(effective_date=_VALUE_DATE).general_rate
-    ).quantize(Decimal("0.01")), (
-        "the retencion base is the base imponible, never the IVA-inclusive total"
-    )
+    assert statutory != (_TOTAL * load_retencion_actividades_rates(effective_date=_VALUE_DATE).general_rate).quantize(
+        Decimal("0.01")
+    ), "the retencion base is the base imponible, never the IVA-inclusive total"
 
 
 def test_the_declared_invoice_reaches_casilla_01_as_its_published_base() -> None:
@@ -222,9 +220,9 @@ def test_the_declared_invoice_reaches_the_retenciones_casilla_at_the_statutory_f
     aggregation = _aggregated(declares_substrate=True)
 
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
-    statutory = (
-        _BASE * load_retencion_actividades_rates(effective_date=_VALUE_DATE).general_rate
-    ).quantize(Decimal("0.01"))
+    statutory = (_BASE * load_retencion_actividades_rates(effective_date=_VALUE_DATE).general_rate).quantize(
+        Decimal("0.01")
+    )
 
     rate = load_retencion_actividades_rates(effective_date=_VALUE_DATE).general_rate
 
@@ -365,9 +363,9 @@ def test_the_sub_cap_invoice_reaches_the_retenciones_casilla_at_its_own_statutor
     aggregation = _aggregated(declares_substrate=True, cash=_INICIO_CASH)
 
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
-    statutory = (
-        _BASE * load_retencion_actividades_rates(effective_date=_VALUE_DATE).inicio_actividad_rate
-    ).quantize(Decimal("0.01"))
+    statutory = (_BASE * load_retencion_actividades_rates(effective_date=_VALUE_DATE).inicio_actividad_rate).quantize(
+        Decimal("0.01")
+    )
 
     assert resolved[_RETENCIONES_BINDING] == statutory
     assert resolved[_INGRESOS_BINDING] == _BASE
