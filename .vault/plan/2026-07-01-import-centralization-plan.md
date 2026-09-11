@@ -7,8 +7,10 @@ tier: L4
 related:
   - '[[2026-07-01-import-centralization-adr]]'
   - '[[2026-07-01-import-centralization-research]]'
-modified: '2026-08-24'
-body_hash: 'sha256:a7a4b809b416910772efda08e3a1ccc7c74a15c90f77dcc99a5047133261f790'
+  - '[[2026-09-11-import-centralization-import-authority-drift-audit]]'
+  - '[[2026-08-24-quality-gate-zero-closure-plan]]'
+modified: '2026-09-11'
+body_hash: 'sha256:55de118683ba37860eb64f53f6eecfbfc2198fdce24965330dca5a54ea46c064'
 ---
 
 <!-- RETIRED: P01, S365, S366, S367, S370, S371, S372, S373, S374, S375, S376, S380, S381, S385, S386 -->
@@ -18,6 +20,8 @@ body_hash: 'sha256:a7a4b809b416910772efda08e3a1ccc7c74a15c90f77dcc99a5047133261f
 ## Steps
 
 ## Description
+
+> **2026-09-11 reopening.** Waves W01 through W06 are historical execution of the earlier facade campaign. Wave W07 is the current implementation authority for the amended closed-lane and canonical-defining-module decision. Its open Steps replace, rather than revive, the former facade, baseline, and scanner-authority model: tests have no layer carve-out, `src` has no dependency on `dev`, `cadrumo.llm` merges into the outbound adapter lane, and `just check-imports` receives the final exact-zero authority through the related quality plan.
 
 The on-disk import-hygiene scanner (`dev/import_hygiene_scan.py`) enumerates every
 cross-package private import in `src/aeat`: 2465 total sites, split into 866
@@ -906,7 +910,48 @@ Confirm the scanner reports zero production Family-1 violations, flip the Wave W
 - [x] `W06.P90.S402` - Extend the import-hygiene scanner to detect underscore-named __all__ entries and dispose the 8 pre-existing hits surfaced by honesty-review finding #7; `dev/import_hygiene_scan.py`.
 - [x] `W06.P90.S403` - Reconcile the post-close import-integrity drift measured by the machine-secret S18 honesty review: return the test-only private-import debt ratchet to exact named equality, dispose every new Family-2 forwarding wrapper, correct the excluded-test-tree dev-tooling detector, remove every dangling first-party import target, and prove the complete import-hygiene and import-edge lane has zero failures without enlarging a baseline or exemption; `dev/quality/import_hygiene_test_debt.json; dev/quality/import_hygiene_scan.py; dev/tests/test_import_hygiene_gate.py; dev/tests/test_import_edge_integrity_gate.py; current named producer and consumer sites`.
 
+## Wave `W07` - closed import authority convergence
+
+Reopen the completed historical campaign only for the 2026-09-11 amendment: classify every governed source package, close the hexagonal graph without exceptions, merge the top-level LLM package into the outbound adapter lane, dispose the harness stub, enforce canonical relative and dynamic imports, and return the authoritative import policy to exact zero.
+
+### Phase `W07.P91` - close source roots and dependency lanes
+
+Declare every authored and generated first-party root, encode the complete allowed matrix in Import Linter, include local and type-only imports, and make every src-to-repository-only edge - including every test or fixture edge to dev - a hard violation with no unclassified fallback.
+
+- [ ] `W07.P91.S404` - Declare every authored, generated, test, resource, and separately shipped first-party package in a closed lane classification, failing on any new undeclared root or package; `.importlinter, pyproject.toml, and src/`.
+- [ ] `W07.P91.S405` - Encode the complete core, domain, application, adapter-peer, entrypoint-sibling, resource, shared-test, and harness-stub dependency matrix as exhaustive Import Linter contracts; `.importlinter`.
+- [ ] `W07.P91.S406` - Include module-local and TYPE_CHECKING imports in the authoritative graph and remove configuration that excludes governed import edges; `.importlinter`.
+- [ ] `W07.P91.S407` - Forbid every static, local, type-only, and supported dynamic dependency from src into dev, docs, vault surfaces, root test support, or another repository-only root, including all tests and fixtures; `.importlinter, dev/quality/, and src/`.
+
+### Phase `W07.P92` - eliminate graph exceptions and place tests at legal seams
+
+Remove the existing exception ledger by correcting source-boundary leaks and hexagonal inversions in inward-to-outward order, relocate cross-layer integration tests to their outermost seam, and split shared support until every test inherits one legal owner lane.
+
+- [ ] `W07.P92.S408` - Inventory and remove every src consumer of root test_support or dev support, moving genuinely shared helpers to an inward product owner or the legal outer test seam without compatibility forwarding; `src/cadrumo/, src/cadrumo_harness/, test_support/, and dev/`.
+- [ ] `W07.P92.S409` - Eliminate core and domain outward dependencies and application imports of concrete adapters, moving ports to the innermost legitimate owner and composition into entrypoints; `src/cadrumo/core/, src/cadrumo/domain/, src/cadrumo/application/, and src/cadrumo/entrypoints/`.
+- [ ] `W07.P92.S410` - Eliminate concrete adapter-sibling coupling, imports of entrypoints from outside the entrypoint package, and CLI-to-TUI or TUI-to-CLI imports by moving shared contracts inward; `src/cadrumo/adapters/ and src/cadrumo/entrypoints/`.
+- [ ] `W07.P92.S411` - Relocate cross-layer tests and fixtures to the outermost seam they exercise, split neutral shared test support to core-only ownership, and remove every wildcard or test-specific forbidden-direction ignore; `src/cadrumo test modules and .importlinter`.
+
+### Phase `W07.P93` - consolidate outer packages
+
+Merge cadrumo.llm into the outbound LLM adapter package and dispose the separately shipped cadrumo_harness stub through a hard retirement or an explicitly complete independent composition root, preserving zero dependency from cadrumo into the harness and no harness dependency on product entrypoints.
+
+- [ ] `W07.P93.S412` - Merge the top-level cadrumo.llm implementation, tests, resources, and consumers into cadrumo.adapters.outbound.llm and delete the displaced package without an alias or re-export; `src/cadrumo/llm/, src/cadrumo/adapters/outbound/llm/, and pyproject.toml`.
+- [ ] `W07.P93.S413` - Census every distribution declaration and live consumer of the cadrumo_harness stub and record whether any supported independent composition-root behavior remains; `src/cadrumo_harness/, pyproject.toml, and uv.lock`.
+- [ ] `W07.P93.S414` - Execute the harness disposition as one hard cutover: retire the stub when it has no supported behavior, otherwise complete an independent composition root that consumes only canonical inward product modules and never product entrypoints or dev; `src/cadrumo_harness/, pyproject.toml, and src/cadrumo/entrypoints/`.
+
+### Phase `W07.P94` - canonical static and dynamic imports
+
+Convert every intra-cadrumo static import to explicit relative syntax and the canonical public defining module, retire active initializers and forwarding surfaces, close private cross-package reaches, and centralize or eliminate computed first-party dynamic loading.
+
+- [ ] `W07.P94.S415` - Convert every absolute intra-cadrumo static import, including local and TYPE_CHECKING imports, to explicit relative syntax without changing its lane edge; `src/cadrumo/`.
+- [ ] `W07.P94.S416` - Repoint every cross-package consumer to the canonical public defining module and delete package-facade bindings, re-exports, forwarding modules, active initializers, and private cross-package reaches; `src/cadrumo/`.
+- [ ] `W07.P94.S417` - Resolve every literal and finite dynamic first-party target under the same lane and canonical-home rules, centralizing any genuinely computed target behind one closed resolver and prohibiting unresolved raw first-party imports; `src/cadrumo/ and dev/quality/`.
+- [ ] `W07.P94.S418` - Run the complete Import Linter graph and canonical-import migration checks at exact zero, remove the final exception-ledger entries, and hand the clean authority to the sole check-imports driver; `.importlinter, src/, and dev/quality/`.
+
 ## Parallelization
+
+For W07, P91 establishes the closed classification before any other Phase can claim architectural correctness. After P91, P92 graph remediation and P93 outer-package consolidation may proceed in disjoint paths. P94 may inventory in parallel but consumer rewrites wait for the relevant P92 or P93 owner move, so no canonical path is written against a package scheduled for relocation. The final P94 exact-zero handoff waits for every W07 Step and for the W09 authoritative driver to be able to receive it.
 
 Waves are sequenced strictly: W01 before W02 (a consumer cannot import a symbol its
 owning package has not yet exported), W02 before W03 (the umbrella retirement in W03
@@ -947,6 +992,10 @@ precede the collection and suite gates, which must precede the structural and
 honesty reviews, which must precede the Step Record rollup and codification.
 
 ## Verification
+
+The reopened plan is complete only when all W07 Steps are closed with execution records and the amended import authority is true of the current `src/` tree: every first-party package is classified; no module under `src/`, including any test or fixture, imports or loads `dev` or another repository-only root; every test obeys its nearest owner lane; the dependency graph is exhaustive and exception-free; `cadrumo.llm` is merged into `cadrumo.adapters.outbound.llm`; the harness stub has a completed hard disposition; intra-`cadrumo` static imports are relative and canonical; supported dynamic targets resolve under the same rules; package facades, forwarding modules, private cross-package reaches, broad ignores, and grandfathered violations are absent; and the complete authority hands off at exact zero to `just check-imports`.
+
+The historical W01-W06 verification below remains evidence for those Waves but cannot satisfy W07.
 
 The plan is complete when every Step in the plan is closed (`- [x]`) and every
 closed Step carries a matching Step Record, per the plan-closure-requires-exec-

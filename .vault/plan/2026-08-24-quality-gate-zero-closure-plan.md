@@ -15,8 +15,10 @@ related:
   - '[[2026-09-07-quality-gate-zero-closure-blind-green-measurement-research]]'
   - '[[2026-09-07-quality-gate-zero-closure-gate-consumer-parser-blindness-audit]]'
   - '[[2026-09-08-quality-gate-zero-closure-product-boundary-adr]]'
-modified: '2026-09-08'
-body_hash: 'sha256:1c121304693e540134d96b52a8c631691418704901b3d355d0b19aae68050e1e'
+  - '[[2026-07-01-import-centralization-adr]]'
+  - '[[2026-09-11-import-centralization-import-authority-drift-audit]]'
+modified: '2026-09-11'
+body_hash: 'sha256:606d02d6b12ae937881113a9e2b6809ca512c6e49edaa6bd2562f29ac32c0480'
 ---
 
 <!-- RETIRED: W01, W02, W03, W04, W05, W06, P01, P02, P03, P04, P05, P06, P07, P08, P09, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P21, P22, S01, S02, S03, S04, S05, S06, S07, S08, S09, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19, S20, S21, S22, S23, S24, S25, S26, S27, S28, S29, S30, S31, S32, S33, S34, S35, S36, S37, S38, S39, S40, S41, S42, S43, S44, S45, S46, S47, S48, S49, S50, S51, S52, S53, S54, S55, S56, S57, S58, S59, S60, S61, S62, S63, S64, S65, S66, S67, S68, S69, S70, S71, S72, S73, S74, S75, S76, S77, S78, S79, S80, S81, S82, S83, S84, S85, S86, S87, S88, S89, S90, S91, S92, S95, S96, S97, S98, S99, S100, S101, S102, S103, S121 -->
@@ -27,14 +29,13 @@ body_hash: 'sha256:1c121304693e540134d96b52a8c631691418704901b3d355d0b19aae68050
 
 ## Description
 
-This L3 roll-up is repurposed. Its original scope - activating the rolling ratchet controller from 2026-08-24-quality-gate-zero-closure-adr - is superseded: the controller's speculative activation Phases are retired into the record above, and this plan now owns the implementation surface named by 2026-09-07-quality-gate-zero-closure-blind-green-gates-adr. Wave W07 remains as the two closed observation Steps that were actually performed.
+This L3 roll-up is reopened only for Wave W09 under the accepted 2026-09-08 product-boundary ADR as amended on 2026-09-11. Waves W07 and W08 remain immutable historical execution: their mutation and meta-detector machinery is retired and this plan does not authorize recreating it.
 
-The subject is a gate that is green because it cannot fail. Every standing gate decision here governs a gate that can go red; none governs one that stays green through the exact defect it was written to catch. Wave W08 installs the instruments that detect that condition: mutmut first as the prerequisite ground truth, then one structural detector per mechanically decidable class, a both-locales condition over the locale detector's hit set, and a conformance gate that closes the absence-assertion class by requiring the canonical accessor or a site-naming declaration. No Phase creates a CI lane; the detector gates land where the per-push lane already looks.
+Wave W09 owns delivery of the repository's single import-quality verdict. The import-centralization ADR and plan own package classification, dependency directions, canonical import form, and migration of violations. This plan owns orchestration behind `just check-imports`, fail-closed process behavior, representative planted-defect proofs, exact predicate-subsumption before duplicate removal, and elimination of alternate reporting interpretations. It may consume the import authority but may not restate its lane matrix.
 
-Completion is over mechanisms proven to bite, never over an exhausted population; the Verification section states the end signal exactly. No Step permits a baseline, threshold, new exclusion, suppression, skip, xfail, mock, monkeypatch, tautological assertion, or hidden allowlist to make a red signal disappear, and no Step is satisfied by a mutation score. Model routing is stable: Luna max owns audits, type and mechanical work, Terra xhigh owns fixes and refactors, and Sol handles architecture decisions only.
+Completion is exact and revision-scoped. No warning, unavailable component, broad ignore, grandfathered edge, unclassified package, unresolved supported first-party target, duplicate live import predicate, or alternate contributor verdict may be presented as green. Tests with distinct runtime, packaging, third-party dependency, or governance behavior remain.
 
 ## Steps
-
 ## Wave `W07` - observation performed before the repurpose
 
 Historical. This Wave was the rolling ratchet controller's activation, and its repair, recheck and checkpoint Phases are retired into the record above. Only the two observation Steps below were performed. The controller described by 2026-08-24-quality-gate-zero-closure-adr is accepted and now has no installation plan; a successor plan must be opened to install it, and that loss is recorded in the amendment to that ADR rather than absorbed here.
@@ -99,26 +100,48 @@ Extend the family from assertions to verdicts. A gate's reporting layer converts
 - [x] `W08.P28.S122` - Reconcile the live two-drift-direction deferred-edge declaration: remove the 26 stale rows, classify the 8 undeclared live edges with checked site-specific rationale, and retire the generic _DECLARED aggregate in favour of PINNED_DEFERRED_CROSS_LAYER_IMPORTS, since the existing undeclared and stale tests correctly failed in both directions (Terra xhigh fixes and refactors); `src/cadrumo/tests/`.
 - [x] `W08.P28.S123` - Replace the banned unittest.mock spy in dev/registry/newmodelo/tests/test_manager.py with observation of the real cache through the public loader's object identity, so the assertion fails when the production reset call is removed rather than merely recording that a call occurred (Terra xhigh fixes and refactors); `dev/registry/newmodelo/tests/`.
 
+## Wave `W09` - single import-quality verdict
+
+Implement the product-boundary amendment without restoring the retired meta-detector stack: make just check-imports the only import-quality verdict, make every component fail closed, prove every contract through the authoritative driver, and retire overlapping pytest and development-tool predicates only after exact subsumption.
+
+### Phase `W09.P29` - authoritative driver and fail-closed execution
+
+Make just check-imports orchestrate source classification, the Import Linter graph, and the subordinate syntax and dynamic checker as one non-zero-on-any-defect result, with no warning-only or unavailable-tool success path.
+
+- [ ] `W09.P29.S124` - Make just check-imports invoke the closed-root preflight, Import Linter graph, and subordinate canonical-syntax and dynamic checker as one contributor-facing result; `justfile, .importlinter, and dev/quality/`.
+- [ ] `W09.P29.S125` - Make every import component fail closed on violations, warnings, parser or read errors, unavailable tools, unclassified packages, unsupported forms, and unresolved first-party dynamic targets; `justfile, dev/quality/, and dev/tests/`.
+- [ ] `W09.P29.S126` - Make the subordinate checker consume or derive the Import Linter classification without carrying a second lane matrix, exception ledger, or independently callable live-tree policy verdict; `.importlinter and dev/quality/`.
+
+### Phase `W09.P30` - contract teeth and overlap retirement
+
+Prove each dependency and import-form contract with an isolated planted violation through the real driver, map every overlapping pytest and scanner predicate, and retire a duplicate only after exact subsumption while retaining distinct behavior and packaging tests.
+
+- [ ] `W09.P30.S127` - Plant isolated source-boundary and dependency-direction defects for core, domain, application, adapter siblings, entrypoints, sibling entrypoints, owner-lane tests, and src-to-dev, proving each makes just check-imports non-zero; `dev/tests/, .importlinter, and justfile`.
+- [ ] `W09.P30.S128` - Plant isolated absolute, facade, re-export, forwarding, private, inert-initializer, local, type-only, literal-dynamic, and computed-dynamic defects, proving each makes the same driver non-zero; `dev/tests/, dev/quality/, and justfile`.
+- [ ] `W09.P30.S129` - Map every architecture pytest test and development scanner predicate to its authoritative-driver contract, separating import policy from distinct runtime, packaging, dependency-declaration, and governance behavior; `src/, dev/, and .vault/audit/`.
+- [ ] `W09.P30.S130` - Remove each duplicate import-policy predicate only after its mapped planted defect passes, splitting mixed tests so every distinct behavior assertion remains; `src/ and dev/`.
+
+### Phase `W09.P31` - single-verdict reporting and closure
+
+Remove alternate import-health interpretations, make development reporting consume only the authoritative process result, verify there is one documented contributor command, and close with zero violations, ignores, warnings, unclassified roots, or unresolved supported imports.
+
+- [ ] `W09.P31.S131` - Simplify the development health report to consume only the authoritative command exit status and bounded native diagnostics, with non-zero red and no independent contract parsing or declaration count; `dev/audit/report.py and dev/tests/`.
+- [ ] `W09.P31.S132` - Remove or redirect every alternate contributor-facing import-quality command and document just check-imports as the sole verdict without creating a second policy authority; `justfile, pyproject.toml, docs/, and dev/`.
+- [ ] `W09.P31.S133` - Verify exact-zero import quality through just check-imports with no warnings, broad ignores, grandfathered violations, unclassified roots, unresolved supported imports, duplicate live predicates, or advisory fallback, then record the independent closeout review; `justfile, .importlinter, src/, dev/, and .vault/audit/`.
+
 ## Parallelization
 
-W08.P27 is a hard prerequisite. mutmut must be installed and measured before the detector Phases, because a detector built with no way to check that it can itself fail is the artefact this plan exists to remove. P23 is a one-Step documentation correction and may run alongside P27.
-
-After P27, P24 and P25 are independent of each other and may run in parallel: they add different modules under dev/quality/ and different gates under dev/quality/tests/, which the per-push test-dev-ci path set already invokes. No Phase edits the justfile or a workflow file, so there is no shared lane surface to contend over and ci-lane-deconflation keeps sole ownership of it. What each Phase must still prove is that the existing lane actually runs its gate: residence in that directory is necessary but not sufficient, because the lane's marker expression deselects an unmarked test. P26 depends only on P27 and may run at any point after it; its measurement is what tells the detector Phases whether a further class is worth a gate at all.
-
-Within P25 the order is strict: the axis must be demonstrated failing against a real locale-dependent assertion before that assertion is repaired, or the axis is never shown to bite. Repairs under P25 touch src/cadrumo/ while other sessions are editing it, so each batch stages only its own files and absorbs no unrelated change. Luna max performs audits, type and mechanical checks, and evidence review; Terra xhigh performs fixes and refactors; Sol is reserved for architecture.
+Within W09, P29 is the prerequisite because the real driver and its fail-closed semantics must exist before planted defects can prove it. After P29, P30 predicate mapping and planted-defect work may proceed by independent contract family. Duplicate removal follows the proof for that exact predicate. P31 follows P29 and the relevant P30 mappings; its final verification waits for every import-centralization W07 migration step that can make the authoritative gate red. No W09 work recreates the retired W08 analyzer or mutation stack.
 
 ## Verification
 
-This plan is complete when the instruments exist and are proven to bite. It is not complete when the tree is free of blind assertions, and it never claims that. Completion of this plan does not assert permanent codebase sanity or close future work.
+Wave W09 and the reopened plan complete only when all of the following are evidenced at one pinned revision:
 
-All five conditions, each evidenced:
+1. `just check-imports` is the sole documented contributor-facing import-quality command and returns non-zero for any component failure or architectural finding.
+2. Import Linter is the only package/lane graph authority; the subordinate checker enforces only canonical syntax, privacy, inert-package, forwarding, and supported dynamic-import properties it cannot express.
+3. Each graph direction and import-form family has a representative isolated planted defect that fails through `just check-imports` itself.
+4. Every removed pytest predicate or development scanner row has an exact mapping to a proven authoritative contract. Mixed tests retain their distinct behavior and artifact assertions.
+5. The development health report consumes the authoritative process outcome and bounded native diagnostics without reparsing contract grammar or maintaining a second declaration count.
+6. The full gate passes with zero violations, architectural warnings, broad ignores, grandfathered edges, unclassified roots, unresolved supported targets, duplicate live import predicates, and advisory fallback.
 
-1. mutmut is installed and pinned, one bounded package carries a recorded measurement of wall clock and killed and surviving counts, survivors are triaged into real findings and semantically inert mutants, and the standing scope and cadence are declared from that measured cost.
-2. The tautological-assertion scanner's recorded boundary is corrected and names which classes are decidable by static analysis and which remain a human question.
-3. Every decidable class named in the governing decision has a detector that sweeps the real tree, carries a passing positive control and an anti-vacuity floor, lives under `dev/quality/tests/` so the existing per-push lane invokes it, and has had its own gate killed by mutmut.
-4. The both-locales condition holds over the locale detector's hit set and has been demonstrated failing against a locale-dependent assertion before any repair it surfaces - real, or seeded for the demonstration and removed once recorded.
-5. An absence assertion in a module that mentions a taxonomy token either routes through the canonical accessor or carries a declaration naming its own site, enforced by a conformance gate that fails on both a stale declaration and an undeclared site. The re-measured population is context for scoping, never the pass condition.
-
-Condition 3 is load-bearing: it is satisfied by mechanisms that demonstrably fail on a real defect, not by a count of sites repaired. Condition 5 is deliberately a mechanism rather than a disposition of a measured population, because that count is a floor the instrument cannot bound. No condition is satisfied by exhausting a list, by a mutation score, or by a threshold, baseline, exclusion, suppression, skip, xfail, or unchecked allowlist. No Step creates a CI lane or edits a workflow file; `ci-lane-deconflation` keeps that surface. Terra xhigh repairs and refactors with real behavior proof; Luna max runs audits, type and mechanical checks, affected-gate checks, and evidence review; Sol handles architecture only.
-
-A Phase may be added when a new decidable class is measured, or contracted when a class is shown undecidable or empty. Both require evidence and neither reopens the completion condition. Findings produced after this plan closes are routed as ordinary owner work under the rolling ratchet, which is what that controller is for.
+The W07 and W08 records remain historical evidence only. Their retired mutation/meta-detector completion criteria do not satisfy W09.

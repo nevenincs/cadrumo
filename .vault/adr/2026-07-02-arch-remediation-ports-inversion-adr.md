@@ -3,13 +3,15 @@ tags:
   - '#adr'
   - '#arch-remediation-ports-inversion'
 date: '2026-07-02'
-modified: '2026-08-15'
-body_hash: 'sha256:f0ff75a47aa69a5ac8b3c306440cafd64a9d8db13edf10093583007cbfc8246f'
+modified: '2026-09-11'
+body_hash: 'sha256:0945f04e5b588e9a879fce4c53db6ad08b7f725c90cc598e782f83c1d23db4c6'
 related:
-  - "[[2026-07-02-aeat-architecture-review-audit]]"
-  - "[[2026-07-02-arch-remediation-program-adr]]"
-  - "[[2026-06-01-domain-boundary-audit-adr]]"
+  - '[[2026-07-02-aeat-architecture-review-audit]]'
+  - '[[2026-07-02-arch-remediation-program-adr]]'
+  - '[[2026-06-01-domain-boundary-audit-adr]]'
   - '[[2026-07-06-arch-remediation-ports-inversion-research]]'
+  - '[[2026-07-01-import-centralization-adr]]'
+  - '[[2026-09-11-import-centralization-import-authority-drift-audit]]'
 ---
 # `arch-remediation-ports-inversion` adr: `domain persistence ports inversion: fincas template as standard` | (**status:** `accepted`)
 
@@ -178,3 +180,11 @@ With the `SecureObjectWrite` relocation (the last static TYPE_CHECKING edge) and
 the extraction-parser inversion (the last dynamic edge) both landed, grimp
 production `domain → adapters` edges are now zero of EVERY kind — static and
 dynamic. The domain tree is fully independent of the adapter tree.
+
+## 2026-09-11 amendment: canonical modules and composition-root construction
+
+The import-authority drift audit and the amended import-centralization decision correct two clauses in this record. The earlier instruction that consumers use package top-level re-exports is retired. Consumers import directly from the public module that defines the port, contract, or implementation; package initializers remain inert and no relocation uses a facade, alias, forwarding module, or compatibility bridge.
+
+The statement that application is permitted to import adapters and construct concrete repositories is also retired. Repository and service ports live at the innermost legitimate consumer boundary: a domain-owned port may be imported by domain, application, adapters, and entrypoints; an application-owned port may be imported by application, adapters, and entrypoints. Concrete implementations remain in persistence or outbound adapters. Only an outer composition root imports both an inward port and its concrete adapter and injects the implementation. Domain and application never import a concrete adapter, at module scope, locally, under `TYPE_CHECKING`, or dynamically.
+
+The fincas migration remains the structural precedent only where it satisfies these corrected directions. Completion evidence is zero domain-to-adapter and application-to-concrete-adapter edges, canonical defining-module imports, no package re-export, and a composition-root wiring proof. Tests inherit the lane of their owner; adapter round-trip setup that needs a concrete adapter lives at the adapter or entrypoint seam instead of receiving an import exception.

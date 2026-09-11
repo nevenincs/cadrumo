@@ -3,12 +3,13 @@ tags:
   - '#adr'
   - '#import-centralization'
 date: '2026-07-01'
-modified: '2026-08-25'
-body_hash: 'sha256:57410a053ffb2e6cb446019a664078392400f8212d05779e457758c7910dc5c5'
+modified: '2026-09-11'
+body_hash: 'sha256:ff42246a804eab81d4fb49588532183b6d4ae24bfd8e18510647ee47617ca0c7'
 related:
   - '[[2026-07-01-import-centralization-research]]'
   - '[[2026-07-02-import-centralization-audit]]'
   - '[[2026-07-02-arch-remediation-program-adr]]'
+  - '[[2026-09-11-import-centralization-import-authority-drift-audit]]'
 ---
 # `import-centralization` adr: `canonical defining modules as the sole cross-package import surface` | (**status:** `accepted`)
 
@@ -56,3 +57,49 @@ A package facade is an additional import authority even when it does not duplica
 - Existing facade consumers require broad atomic migration, including tests, manifests, receipts, and dynamic imports.
 - Some underscore-private modules must become public defining modules; rejected or single-caller callback authorities are deleted instead.
 - Import statements are more explicit, but ownership and deletion proofs no longer depend on tracing umbrella exports.
+
+## 2026-09-11 amendment: closed lanes, governed tests, and one import verdict
+
+The import-authority drift audit establishes that the canonical-module decision is substantially present in the codebase but is not yet closed or singly enforced. This amendment makes the complete lane model and the contributor-facing verdict explicit. Where an earlier accepted record permits package-facade consumption, application construction of concrete adapters, test-layer carve-outs, warning-only import findings, or an independently authoritative scanner, this amendment controls.
+
+### Source and package classification
+
+`src/` is the product-source boundary. Every Python module below it is governed, including tests, fixtures, `conftest.py`, type-only code, local imports, dynamic imports, and files excluded from distribution artifacts. No module under `src/` may import, dynamically load, or otherwise depend on `dev`, `docs`, `.vault`, `.vaultspec`, root-level test support, or any undeclared first-party root. There is no test exception to this rule.
+
+The closed `cadrumo` lanes are:
+
+- `cadrumo.core`: core.
+- `cadrumo.domain`: domain. Public domain-to-domain imports are permitted when they target the canonical public defining module.
+- `cadrumo.application`: application and inward-owned application ports.
+- `cadrumo.adapters.inbound`, `cadrumo.adapters.outbound`, and `cadrumo.adapters.persistence`: concrete adapter peers.
+- `cadrumo.entrypoints` direct modules: shared composition-root code; `cadrumo.entrypoints.cli` and `cadrumo.entrypoints.tui`: sibling outermost entrypoints.
+- `cadrumo._data`, `cadrumo.locales`, and generated `cadrumo_data` artifacts: passive resource/data surfaces reached through an inward resource boundary.
+- `cadrumo.tests`: neutral core-only test support. Tests below another package inherit that nearest owner's lane.
+- `cadrumo.llm`: migration-only; it is merged into `cadrumo.adapters.outbound.llm` and has no independent final-state lane.
+- `cadrumo_harness`: a separately shipped outer stub. `cadrumo` never imports it. Until it is retired or explicitly completed, it may consume canonical inward product modules but not `cadrumo.entrypoints` or repository-only roots. Its tests inherit the same restriction.
+
+Any new source root or package without an explicit classification is a gate error.
+
+### Closed dependency direction
+
+Core imports only core and approved passive resource access. Domain imports domain and core. Application imports application, domain, core, and inward-owned ports; it never imports concrete adapters. Each concrete adapter imports its own implementation package plus inward-owned ports/contracts, application, domain, and core, but not a concrete sibling adapter merely for reuse. Entrypoints compose inward packages and concrete adapters. Nothing outside `cadrumo.entrypoints` imports an entrypoint, and CLI, TUI, and any later sibling entrypoint do not import one another. Shared contracts needed by more than one outer package move inward.
+
+Tests do not gain permissions from being tests. A test or fixture has exactly the permissions of its nearest owning package. Cross-layer integration tests live at the outermost seam they exercise. Moving setup into a fixture, `TYPE_CHECKING` block, helper, or dynamic import does not change the edge.
+
+### Complete import-form rule
+
+Every static import under `src/cadrumo` that resolves to another `cadrumo` module uses explicit relative syntax and targets the canonical public defining module. The rule applies at module scope, in class bodies, conditionals, exception handlers, functions and methods, annotations, fixtures, and `TYPE_CHECKING` blocks. Absolute intra-`cadrumo` imports, package-facade symbol imports, re-exports, aliases, forwarding modules, private cross-package reaches, and active package initializers are violations. A child module object may be imported from its parent only when that child module is itself the consumed object and the initializer does not bind or forward it; symbol imports name the defining module.
+
+Literal dynamic targets and statically enumerable target sets obey the same lane, source-boundary, privacy, and canonical-home rules. Intra-`cadrumo` dynamic imports use relative targets anchored to the importing package. A computed target that may resolve first-party must pass through one approved centralized resolver with a closed, provable target set; an unresolved first-party candidate fails. Raw `__import__` is prohibited for first-party loading unless that resolver proves the same contract. Executable embedded Python is parsed or replaced with typed declarations. Process-invocation strings are not imports and do not authorize an in-process sibling-entrypoint dependency.
+
+### Sole enforcement authority
+
+`just check-imports` is the only contributor-facing import-quality verdict. `.importlinter` owns the complete package classification and dependency graph. It is exhaustive over governed roots and includes local and type-only edges. One subordinate parser may run behind the command for relative syntax, canonical defining modules, privacy, inert initializers, forwarding/re-export shapes, and supported dynamic imports that Import Linter cannot express. That parser does not contain a second lane matrix or emit an independent policy verdict.
+
+Every component fails closed. A broken contract, unclassified package, parser failure, unreadable source, missing executable, unresolved first-party dynamic target, unsupported import form, or architectural warning makes `just check-imports` non-zero. Development reports consume that process result; they do not reparse Import Linter grammar or reinterpret an unavailable gate as advisory evidence.
+
+Duplicate pytest predicates and development scanners are removed only after the exact predicate is represented by the authoritative driver and a planted defect demonstrates that the driver fails. Distinct runtime behavior, artifact packaging, third-party dependency declaration, and governance tests remain. The planted-defect suite covers every lane direction and syntax/dynamic family through `just check-imports` itself.
+
+### Migration discipline
+
+No current violation is grandfathered. No count becomes a baseline, no wildcard test carve-out survives, no warning is accepted as an architectural result, and no broad `ignore_imports` entry remains. Migration proceeds from source-boundary leaks through inward-layer inversions, application-to-adapter edges, adapter-sibling coupling, entrypoint crossings, test relocation and support splitting, the LLM merge and harness disposition, then canonical static and dynamic import cleanup. The gate may remain red on an implementation branch while the violations are removed; it becomes the repository verdict only with zero violations and proven teeth.

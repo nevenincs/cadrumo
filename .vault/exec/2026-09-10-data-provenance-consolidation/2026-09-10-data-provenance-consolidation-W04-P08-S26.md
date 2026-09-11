@@ -5,7 +5,7 @@ tags:
 date: '2026-09-11'
 modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:7ae0d012613304de6082259befab4a758618e123fa815b8fb47a8dd25caac45c'
+body_hash: 'sha256:b3cdc8eb400b5bbe7174cab519f422eb2a413ed27b343d1baeb51c3ebfc12b5a'
 step_id: 'S26'
 related:
   - "[[2026-09-10-data-provenance-consolidation-plan]]"
@@ -35,8 +35,4 @@ related:
 - `verify:` `uv run pytest -n0 dev/docs/preprocess/tests/test_corpus_sidecar_freshness.py -q` -> `pass`
 - `verify:` `uv run pytest -n0 dev/corpus/tests/test_extraction_sidecar_freshness.py -q` -> `pass`
 - `verify:` `uv run pytest -n0 dev/corpus/tests/test_extract_boe_article.py dev/registry/tests/test_oracle_parity.py -q` -> `pass`
-- `verify:` `uv run pytest -n0 dev/registry/tests/test_generated_export_trees.py -q` -> `fail`
-
-## Notes
-
-The final export-reproduction gate is held open by an unresolved add/add merge conflict in `src/cadrumo/core/frozen_mapping.py`. The merged Modelo 222 state correctly retires its drift disposition and declares calculation authority, but pytest cannot import the registry harness while the conflict markers remain. No files in that concurrent merge were altered here.
+- `verify:` `uv run pytest -n0 dev/registry/tests/test_generated_export_trees.py -q` -> `pass`

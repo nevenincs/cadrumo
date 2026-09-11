@@ -4,14 +4,16 @@ tags:
   - "#quality-gate-zero-closure"
 date: '2026-09-08'
 related:
-  - "[[2026-09-07-quality-gate-zero-closure-blind-green-measurement-research]]"
-  - "[[2026-09-08-quality-gate-zero-closure-dev-tooling-product-boundary-audit]]"
+  - '[[2026-09-07-quality-gate-zero-closure-blind-green-measurement-research]]'
+  - '[[2026-09-08-quality-gate-zero-closure-dev-tooling-product-boundary-audit]]'
+  - '[[2026-07-01-import-centralization-adr]]'
+  - '[[2026-09-11-import-centralization-import-authority-drift-audit]]'
 supersedes:
   - '2026-09-07-quality-gate-zero-closure-blind-green-gates-adr'
   - '2026-09-02-object-name-declustering-adr'
-modified: '2026-09-08'
+modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:cd8f6527b32c8559a892e959b1a3f28aca36d7a9b3c12353e6144713f399d3ba'
+body_hash: 'sha256:8b50251f1684c0261d107cc2656a2611f4af66744c47e44f70ac340df6fe05da'
 ---
 # `quality-gate-zero-closure` adr: `Development tooling serves product authority and behavior` | (**status:** `accepted`)
 
@@ -60,3 +62,13 @@ Product authority direction is decisive. Development code may exercise product a
 ## Consequences
 
 The prior mutation/meta-detector mandate must not be recreated. Its machinery remains deleted, while historical research and product repairs remain. Registry conformance and filing-boundary tests take priority. Mutation has no standing repository role. Removing weak gates may reduce check count while increasing assurance; green remains revision-scoped product evidence, never an inference from tooling volume.
+
+## 2026-09-11 amendment: import tooling serves one product-source verdict
+
+The product/tooling boundary permits one narrow subordinate import analyzer because its subject is the shipped source boundary and its output is owned by the authoritative product import command. This is not a restoration of the superseded meta-detector stack.
+
+`just check-imports` is the sole contributor-facing import-quality verdict. Import Linter owns the dependency graph, source-root classification, and lane directions. A subordinate parser may enforce only properties the graph cannot express: relative intra-`cadrumo` spelling, canonical defining-module imports, private ownership, inert initializers, forwarding and re-export shapes, and supported dynamic targets. It runs only behind `just check-imports`, imports or derives the graph classification rather than restating it, and has no separate live-tree verdict.
+
+The command fails closed when any component reports a violation, cannot parse or read governed source, cannot classify a first-party package, cannot resolve a supported first-party dynamic target, or is unavailable. Architectural warnings are errors. The development health report may invoke or consume the command's exit status and bounded native diagnostics, but it does not parse Import Linter's contract grammar, count declarations, or turn unavailable execution into an alternate advisory import result.
+
+Representative planted defects are acceptance evidence for the command and each contract family. Existing pytest gates and scanners are removed only when their exact import predicate is proven by that driver; distinct product behavior and packaging tests remain.

@@ -3,10 +3,12 @@ tags:
   - '#adr'
   - '#importlinter-test-carveout'
 date: '2026-07-08'
-modified: '2026-07-17'
-body_hash: 'sha256:b9b9669cb760ef6ec738a818c0060f8449f58c2711dc0d8850982b1794ba6748'
+modified: '2026-09-11'
+body_hash: 'sha256:b88f1b47fdc7f41e3d777120f4b81c9c0723598c083ca6e51979eeac2df33089'
 related:
   - '[[2026-07-10-importlinter-test-carveout-research]]'
+  - '[[2026-07-01-import-centralization-adr]]'
+  - '[[2026-09-11-import-centralization-import-authority-drift-audit]]'
 ---
 
 # `importlinter-test-carveout` adr: `Test-file import-linter carve-out` | (**status:** `accepted`)
@@ -124,3 +126,13 @@ that class of review shifts to code review of the test itself. The 4
 prorrata production violations remain visibly `BROKEN` under `AEAT layered
 architecture` until the prorrata campaign either adds its own justified
 exemption or removes the coupling — this is the intended, honest state.
+
+## 2026-09-11 amendment: the test carve-out is retired
+
+The wildcard carve-out decided above is withdrawn in full. It conflicts with the accepted closed import model and has hidden exactly the class of architectural drift the gate must reject. This amendment is the controlling disposition of this record.
+
+Every test, fixture, helper, and `conftest.py` under `src/` inherits the dependency permissions of its nearest owning package. A core test has core permissions; a domain test has domain and core permissions; an application test has application, domain, core, and inward-owned-port permissions. Test code does not import a concrete outer adapter merely to arrange a fixture. A cross-layer round trip or integration test moves to the outermost adapter or entrypoint seam it exercises.
+
+No module under `src/`, including any test-only or artifact-excluded module, may import or dynamically load `dev`, root test support, or another repository-only surface. Moving an import into a helper, a local scope, `TYPE_CHECKING`, a string target, or a shared test package does not change the dependency.
+
+All wildcard test ignores and test-specific forbidden-direction bypasses are migration debt to remove, not a sanctioned baseline. Structurally legal directions replace them in `.importlinter`; no replacement test allowlist is created. The authoritative planted-defect suite proves through `just check-imports` that an owner-lane test crossing outward and any `src` test importing `dev` both fail.
