@@ -12,6 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
   - '[[2026-09-11-facts-registry-s59-strict-type-repair-reference]]'
   - '[[2026-09-11-facts-registry-iva-rate-evidence-window-research]]'
+  - '[[2026-09-11-facts-registry-iva-raw-authority-retirement-research]]'
 modified: '2026-09-11'
 body_schema: body-v2
 body_hash: 'sha256:64a4c9df051af51d9d2ac455ef605ebeb2337eb4425c1431c2c246373472f160'

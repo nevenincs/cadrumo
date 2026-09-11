@@ -6,7 +6,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:d89ae97ba56b0368c0ab3f2e151a785e14108d152e541a4501f46b34da48f8ca'
+body_hash: 'sha256:25338e04ac78bbbfa146f601ae3992e0e739901e0e878c33c4eaee0b2d0a0787'
 related:
   - '[[2026-09-09-facts-registry-W01-P01-S01]]'
   - '[[2026-09-09-facts-registry-W01-P01-S02]]'
@@ -107,6 +107,8 @@ related:
   - '[[2026-09-11-facts-registry-adapted-family-normalization-reference]]'
   - '[[2026-09-11-facts-registry-external-constants-retirement-reference]]'
   - '[[2026-09-11-facts-registry-iva-rate-evidence-window-research]]'
+  - '[[2026-09-11-facts-registry-iva-raw-authority-retirement-reference]]'
+  - '[[2026-09-11-facts-registry-iva-raw-authority-retirement-research]]'
   - '[[2026-09-11-facts-registry-objective-estimation-publication-boundary-reference]]'
   - '[[2026-09-11-facts-registry-reference]]'
   - '[[2026-09-11-facts-registry-s30-iva-recargo-normalization-audit]]'
@@ -256,6 +258,7 @@ Auto-generated index of all documents tagged with `#facts-registry`.
 - `2026-09-10-facts-registry-legal-parameter-consumer-migration-reference` - `facts-registry` reference: `Facts registry legal-parameter consumer migration reference`
 - `2026-09-11-facts-registry-adapted-family-normalization-reference` - `facts-registry` reference: adapted family normalization
 - `2026-09-11-facts-registry-external-constants-retirement-reference` - `facts-registry` reference: external constants retirement
+- `2026-09-11-facts-registry-iva-raw-authority-retirement-reference` - `facts-registry` reference: raw IVA authority reader inventory
 - `2026-09-11-facts-registry-objective-estimation-publication-boundary-reference` - `facts-registry` reference: objective-estimation publication boundary
 - `2026-09-11-facts-registry-reference` - `facts-registry` reference: retired global legal-parameter provider
 - `2026-09-11-facts-registry-s59-strict-type-repair-reference` - `facts-registry` reference: `s59 strict type repair`
@@ -267,3 +270,4 @@ Auto-generated index of all documents tagged with `#facts-registry`.
 - `2026-09-09-facts-registry-discovery-blast-radius-research` - `facts-registry` research: `Tax fact discovery and blast radius`
 - `2026-09-09-facts-registry-schema-persistence-research` - `facts-registry` research: `Governed fact schema and persistence`
 - `2026-09-11-facts-registry-iva-rate-evidence-window-research` - `facts-registry` research: `iva-rate-evidence-window`
+- `2026-09-11-facts-registry-iva-raw-authority-retirement-research` - `facts-registry` research: raw IVA authority retirement evidence
