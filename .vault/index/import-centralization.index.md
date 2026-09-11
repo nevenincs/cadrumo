@@ -6,7 +6,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:9e0fa49893d4005b622c8b50fd33587de3761c2c8c6bedd107eea52a69687d3b'
+body_hash: 'sha256:a5eb2db838a3925d7f038ff1de12bc7aab59029fe9c198feac737011a6b0f639'
 related:
   - '[[2026-07-01-import-centralization-adr]]'
   - '[[2026-07-01-import-centralization-ledger]]'
@@ -17,6 +17,7 @@ related:
   - '[[2026-08-24-import-centralization-audit]]'
   - '[[2026-08-30-import-centralization-core-facade-dismantling-inventory-audit]]'
   - '[[2026-09-11-import-centralization-import-authority-drift-audit]]'
+  - '[[2026-09-11-import-centralization-outer-package-consolidation-audit]]'
 ---
 
 # `import-centralization` feature index
@@ -35,6 +36,7 @@ Auto-generated index of all documents tagged with `#import-centralization`.
 - `2026-08-24-import-centralization-audit` - `import-centralization` audit: `S403 import-integrity closure review`
 - `2026-08-30-import-centralization-core-facade-dismantling-inventory-audit` - `import-centralization` audit: core facade dismantling inventory
 - `2026-09-11-import-centralization-import-authority-drift-audit` - `import-centralization` audit: `Import authority drift and single-gate ownership`
+- `2026-09-11-import-centralization-outer-package-consolidation-audit` - `import-centralization` audit: `Outer-package consolidation and canonical imports review`
 
 ### exec
 

@@ -1,15 +1,21 @@
 ---
 tags:
-  - '#adr'
-  - '#just-tooling-bootstrap'
+  - "#adr"
+  - "#just-tooling-bootstrap"
 date: '2026-06-04'
-modified: '2026-07-17'
-body_hash: 'sha256:7a2eb60fda3b5f6933328c5120224c37fef5d9d62a29e4658b2e140546693b2a'
 related:
-  - '[[2026-06-04-just-tooling-bootstrap-research]]'
+  - "[[2026-06-04-just-tooling-bootstrap-research]]"
+superseded_by: '2026-09-11-justfile-design-adr'
+modified: '2026-09-11'
+body_hash: 'sha256:62f6ff86c128fc701b392c46bfa1d3e4eab8791d3691a53444a69a4091dbc24e'
 ---
+# `just-tooling-bootstrap` adr: `quality audit command surface` | (**status:** `superseded`)
 
-# `just-tooling-bootstrap` adr: `quality audit command surface` | (**status:** `accepted`)
+This record preserves the historical introduction of repeatable quality tooling. Its
+public `quality` / `quality-audit` command taxonomy and aggregate mandates are retired;
+`2026-09-11-justfile-design-adr` now governs the justfile surface. The distinction this
+record introduced between blocking verdicts and advisory discovery remains historical
+grounding, not a second active command contract.
 
 ## Problem Statement
 
@@ -48,7 +54,7 @@ audit surfaces before being promoted to ratcheted hard gates.
 
 ## Implementation
 
-The `justfile` will expose a layered quality surface:
+The implementation authorized at the time exposed a layered quality surface:
 
 - a hard `quality` recipe for existing deterministic gates;
 - advisory audit recipes for dependency drift, dead code, duplication,

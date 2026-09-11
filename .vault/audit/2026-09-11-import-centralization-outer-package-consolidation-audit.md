@@ -5,12 +5,10 @@ tags:
 date: '2026-09-11'
 modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:0264226c895cd870a23217609d3018edce106485a09f15190972c654656634ec'
+body_hash: 'sha256:bf93571f5fa8f2a2e5007cc032caa66ae31a109f809b5d28eb650a991513f7c9'
 related:
   - "[[2026-09-11-import-centralization-import-authority-drift-audit]]"
 ---
-
-
 
 # `import-centralization` audit: `Outer-package consolidation and canonical imports review`
 
@@ -59,6 +57,14 @@ Development packaging/evaluation consumers still refer to the deleted
 permitted edit set and require LANE 3/tooling-owner migration before the global
 residue and installed-artifact gates can reach exact zero.
 
+### entrypoint-imports-outside-root | high | Application and shared-test modules still reach entrypoint modules
+
+The resolved-import audit found 13 imports from outside `cadrumo.entrypoints`
+into `cadrumo.entrypoints.operation_composition` or CLI modules. They are
+concentrated in application tests and shared CLI helpers; they are not part of
+the owned outer-package rewrite and require LANE 1 to move the exercised
+contract inward or relocate the test seam.
+
 ## Recommendations
 
 Close `harness-entrypoint-dependency` by replacing the listed CLI and adapter
@@ -71,3 +77,7 @@ and repointing all inward consumers in one atomic handoff.
 Close `deferred-target-absolute-paths` and `external-consumer-residue` through
 the authoritative dynamic resolver and tooling migration, then rerun the exact
 zero import and installed-wheel checks.
+
+Close `entrypoint-imports-outside-root` by handing the shared operation and CLI
+contracts inward and removing the application/test reaches in the same lane
+graph migration.

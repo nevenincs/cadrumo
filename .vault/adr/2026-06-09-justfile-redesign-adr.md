@@ -1,15 +1,22 @@
 ---
 tags:
-  - '#adr'
-  - '#justfile-redesign'
+  - "#adr"
+  - "#justfile-redesign"
 date: '2026-06-09'
-modified: '2026-07-17'
-body_hash: 'sha256:e5f96c493e5ad42e7c5758dfa3435dd03e2ebd5d5618537e3c02446199869048'
 related:
-  - '[[2026-06-09-justfile-redesign-research]]'
+  - "[[2026-06-09-justfile-redesign-research]]"
+superseded_by: '2026-09-11-justfile-design-adr'
+modified: '2026-09-11'
+body_hash: 'sha256:dddb7af6af2db6f725def0f08277dbbb0b496b670ecaad880b05fd429e45fd33'
 ---
+# `justfile-redesign` adr: Quality and Testing Harness Redesign | (**status:** `superseded`)
 
-# `justfile-redesign` adr: Quality and Testing Harness Redesign | (**status:** `accepted`)
+This record preserves the historical prefix and test-harness redesign. Its complete
+public taxonomy is retired: in particular, the RAG daemon/index/search recipes, the
+earlier aggregate boundaries, and its environment naming no longer govern.
+`2026-09-11-justfile-design-adr` is the sole current authority for the justfile surface.
+Independent verify-only hook and deterministic test-verdict constraints continue only
+through their own governing decisions and rules.
 
 ## Problem Statement
 
@@ -20,7 +27,8 @@ The repository's root `justfile` serves as the primary developer and CI/CD inter
 4. **Lane Bypass:** Slow LibreOffice workbook parity tests run by default in the fast `unit` test suite because the `workbook_parity` marker is forbidden by `test_marker_integrity.py`. The `justfile`'s separate `test-workbook-parity` command runs 0 tests.
 5. **Complex Inline Scripts:** Large Python complexity calculation scripts are embedded directly inside the `justfile` as heredocs rather than stored as clean, versioned scripts.
 
-This ADR is persisted to define the standardized, self-documenting prefix taxonomy, clean comment hygiene rules, and pre-commit verify-only constraints for the redesigned harness.
+This ADR originally defined the standardized prefix taxonomy, comment hygiene, and
+verify-only hook constraints used by that redesign.
 
 ---
 
@@ -43,7 +51,8 @@ This ADR is persisted to define the standardized, self-documenting prefix taxono
 
 ## Implementation
 
-The root `justfile` will be refactored to implement a standardized prefix-based recipe taxonomy:
+The implementation authorized at the time refactored the root `justfile` around the
+following prefix-based taxonomy:
 
 ### 1. Recipe Prefix Taxonomy
 * **`check-` (Verify, Read-Only):**

@@ -3,14 +3,15 @@ tags:
   - '#adr'
   - '#facts-registry'
 date: '2026-09-09'
-modified: '2026-09-09'
+modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:eff7ccaecab64264454e3cdf9b934b459b8a510ddbde85d66d61655986fff227'
+body_hash: 'sha256:0f0470533f8a3fadef544899b700604f0f84d4384fa6c2b20134aca6dbcce1d1'
 related:
   - "[[2026-09-09-facts-registry-discovery-blast-radius-research]]"
   - "[[2026-09-09-facts-registry-schema-persistence-research]]"
   - "[[2026-09-09-facts-registry-authority-plumbing-research]]"
   - "[[2026-09-09-facts-registry-dev-tooling-research]]"
+  - '[[2026-09-11-fact-relocation-research]]'
 ---
 
 # `facts-registry` adr: `Unify governed tax facts under a sibling registry catalogue` | (**status:** `accepted`)
@@ -43,6 +44,10 @@ migration closure. Grounding:
   Grounding: `2026-09-09-facts-registry-authority-plumbing-research`.
 - Static discovery cannot prove completeness or classify every candidate.
   Grounding: `2026-09-09-facts-registry-discovery-blast-radius-research`.
+- The residual Python audit found declarations and reusable mechanisms mixed
+  inside the same modules, so placement must be decided at symbol, table, or
+  row granularity rather than by filename. Grounding:
+  `2026-09-11-fact-relocation-research`.
 
 ## Considered options
 
@@ -91,6 +96,23 @@ is the proposed option.
 - Overlap requires validated, deterministic, acyclic precedence; declaration
   order is never precedence.
 - Evidence requirements are family-aware, not one universal cardinality rule.
+- Python owns reusable execution mechanics; the validated registry authority
+  owns filing-affecting legal and modelo declarations. Mechanics include
+  parsing, evaluation, date arithmetic, predicate execution, aggregation,
+  evidence reduction, row materialisation, serialisation, resolver dispatch,
+  and workflow orchestration. Declarations include legal values, formula
+  operands, thresholds, temporal applicability, model-specific mappings,
+  relation and binding instances, decision-table rows, casilla and detail
+  identities, export layouts, and verification tolerances.
+- Classification is declaration-granular. A Python module may remain while its
+  embedded governed declarations move to registry `_data` TOML and its code
+  becomes a consumer of the compiled authority.
+- A residual candidate may be relocated only into an existing typed family. A
+  missing payload shape requires its own evidence-backed schema decision; it
+  cannot be represented as an opaque dictionary or served by a second loader.
+- Taxpayer facts, operator inputs, technical configuration, protocol tokens,
+  extraction rules, and product workflow remain outside the governed catalogue
+  unless a later classification decision establishes otherwise.
 
 ## Implementation
 
@@ -135,6 +157,16 @@ Modelo/casilla tools remain unchanged. A report-only sentinel supports
 continued discovery; enforceable gates prohibit retired imports, direct
 governed-directory reads, unregistered loaders, and provenance-free results.
 
+Residual fact relocation proceeds through a disposition ledger derived from
+`2026-09-11-fact-relocation-research`. Every candidate records its exact Python
+declaration, owning registry family and revision, official evidence, authority
+publication dependency, consumer migration, and retirement condition. Allowed
+dispositions are relocate, retain as mechanics, temporary bridge, defer pending
+evidence, or unsupported/refusal. A migration is complete only when the
+declaration is authored under registry `_data`, compiled and published through
+the validated authority artifact, resolved with provenance by its consumers,
+and absent from every parallel Python authority path.
+
 ## Rationale
 
 The sibling catalogue is the only option meeting both knockout criteria: the
@@ -169,3 +201,12 @@ Grounding: `2026-09-09-facts-registry-dev-tooling-research`.
 - Continued discovery remains necessary; its sentinel cannot prove absence.
 - New payload families require deliberate end-to-end enrollment, preventing ad
   hoc dictionaries and bespoke loaders from recreating divergent lanes.
+- Python modules become expressions of reusable mechanics rather than stores of
+  filing-affecting tax facts; mixed modules may remain after their declarations
+  are relocated.
+- Residual relocation depends on the existing `facts-registry` plan and the
+  authority-artifact publication boundary; it does not duplicate either
+  campaign's provider or publication work.
+- A candidate without sufficient legal evidence remains deferred or explicitly
+  unsupported. It is never converted silently to a default, zero, or inferred
+  applicability rule.

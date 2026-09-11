@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#registry-edition-authoring'
 date: '2026-09-10'
-modified: '2026-09-10'
+modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:0f868140d33e4b50e1a8e171fbafc00c693175b44aa38ce576a28576cdf36f1c'
+body_hash: 'sha256:5af3fe357f87c77b69192dd8a401f464eca9c0ba5779b8921020de9b13e36cff'
 step_id: 'S17'
 related:
   - "[[2026-09-09-registry-edition-authoring-plan]]"

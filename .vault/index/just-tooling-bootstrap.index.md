@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#just-tooling-bootstrap'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:740c84623115a533164e3490b88795668ecebfd2a1f869666b9b1d49939c5e7d'
+body_hash: 'sha256:333dcd6dc6d1a42ef268c15868af83104556478732419ec88d9435e3c8fb9f59'
 related:
   - '[[2026-06-04-just-tooling-bootstrap-adr]]'
   - '[[2026-06-04-just-tooling-bootstrap-code-review-audit]]'
@@ -25,7 +25,7 @@ Auto-generated index of all documents tagged with `#just-tooling-bootstrap`.
 
 ### adr
 
-- `2026-06-04-just-tooling-bootstrap-adr` - `just-tooling-bootstrap` adr: `quality audit command surface` | (**status:** `accepted`)
+- `2026-06-04-just-tooling-bootstrap-adr` - `just-tooling-bootstrap` adr: `quality audit command surface` | (**status:** `superseded`)
 
 ### audit
 

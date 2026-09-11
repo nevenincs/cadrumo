@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#justfile-redesign'
 date: '2026-08-16'
-modified: '2026-09-09'
+modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:19558eb43de5a154c6f17943711d3402d5c1f94e9b175c591f7e9ad6a6302cb9'
+body_hash: 'sha256:5da94d09a97f5fb5b4583a9d6e2cc54bbc9b3ddc8748018a5c179c9e8cc9ea97'
 related:
   - '[[2026-06-09-justfile-redesign-S48]]'
   - '[[2026-06-09-justfile-redesign-S49]]'
@@ -31,7 +31,7 @@ Auto-generated index of all documents tagged with `#justfile-redesign`.
 
 ### adr
 
-- `2026-06-09-justfile-redesign-adr` - `justfile-redesign` adr: Quality and Testing Harness Redesign | (**status:** `accepted`)
+- `2026-06-09-justfile-redesign-adr` - `justfile-redesign` adr: Quality and Testing Harness Redesign | (**status:** `superseded`)
 
 ### exec
 

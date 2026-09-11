@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#registry-temporal-coverage'
 date: '2026-08-26'
-modified: '2026-09-10'
+modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:1393249dd5b716ac5f848fc03eebd937b96cfeef9484e74a38473218d408ed33'
+body_hash: 'sha256:dbb918a3568f56a201d500c8bbcb0af6136791aeb0f5836dedc83a1ea1cec633'
 related:
   - '[[2026-08-14-registry-temporal-coverage-W01-P09-S32]]'
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
@@ -90,7 +90,7 @@ Auto-generated index of all documents tagged with `#registry-temporal-coverage`.
 - `2026-08-14-registry-temporal-coverage-adr` - `registry-temporal-coverage` adr: `filing-grade legal review and year-scoped registry authority` | (**status:** `accepted`)
 - `2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr` - `registry-temporal-coverage` adr: `grade-bound registry coverage and evidence horizons` | (**status:** `proposed`)
 - `2026-08-27-registry-temporal-coverage-design-authority-declaration-adr` - `registry-temporal-coverage` adr: `Declare whether a bundled record design is an authority` | (**status:** `accepted`)
-- `2026-09-10-registry-temporal-coverage-corpus-tier-enforcement-adr` - `registry-temporal-coverage` adr: `corpus tier enforcement` | (**status:** accepted)
+- `2026-09-10-registry-temporal-coverage-corpus-tier-enforcement-adr` - `registry-temporal-coverage` adr: `corpus tier enforcement` | (**status:** `accepted`)
 
 ### audit
 
