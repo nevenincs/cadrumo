@@ -158,6 +158,7 @@ class FactSelector(RegistryModel):
     """One typed, exact-match coordinate of a governed variant."""
 
     name: str = Field(min_length=1, max_length=64, pattern=r"^[a-z][a-z0-9_]*$")
+    value_type: Literal["decimal"] | None = None
     value: FactAtomField
 
     @field_validator("value", mode="after")
@@ -166,11 +167,15 @@ class FactSelector(RegistryModel):
         """Materialise exact authored decimal selectors without float coercion."""
         if info.data.get("value_type") != "decimal":
             return value
+        if isinstance(value, Decimal):
+            if value.is_finite():
+                return value
+            raise RegistryValidationError("decimal fact selector value_type requires a finite decimal")
         if not isinstance(value, str):
             raise RegistryValidationError("decimal fact selector value_type requires a decimal string")
         try:
             decimal = Decimal(value)
-        except ValueError as exc:
+        except (InvalidOperation, ValueError) as exc:
             raise RegistryValidationError("decimal fact selector value_type requires a valid decimal string") from exc
         if not decimal.is_finite():
             raise RegistryValidationError("decimal fact selector value_type requires a finite decimal")
@@ -205,7 +210,7 @@ class ScalarFactPayload(RegistryModel):
             raise RegistryValidationError("decimal fact value_type requires a decimal string")
         try:
             decimal = Decimal(value)
-        except ValueError as exc:
+        except (InvalidOperation, ValueError) as exc:
             raise RegistryValidationError("decimal fact value_type requires a valid decimal string") from exc
         if not decimal.is_finite():
             raise RegistryValidationError("decimal fact value_type requires a finite decimal")
@@ -248,6 +253,7 @@ class MappingFactEntry(RegistryModel):
     """One exact key-to-value mapping entry."""
 
     key: FactAtomField
+    value_type: Literal["decimal"] | None = None
     value: FactAtomField
 
     @field_validator("value", mode="after")
@@ -256,11 +262,15 @@ class MappingFactEntry(RegistryModel):
         """Materialise an authored mapping Decimal without coercing ordinary strings."""
         if info.data.get("value_type") != "decimal":
             return value
+        if isinstance(value, Decimal):
+            if value.is_finite():
+                return value
+            raise RegistryValidationError("decimal mapping value_type requires a finite decimal")
         if not isinstance(value, str):
             raise RegistryValidationError("decimal mapping value_type requires a decimal string")
         try:
             decimal = Decimal(value)
-        except ValueError as exc:
+        except (InvalidOperation, ValueError) as exc:
             raise RegistryValidationError("decimal mapping value_type requires a valid decimal string") from exc
         if not decimal.is_finite():
             raise RegistryValidationError("decimal mapping value_type requires a finite decimal")

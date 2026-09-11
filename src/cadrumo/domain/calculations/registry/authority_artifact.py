@@ -44,7 +44,8 @@ from pydantic import BaseModel, ValidationError
 from ....core.atomic_write import atomic_write_bytes
 from ....core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant, sha256_hex
 from .facts.schema import TAGGED_FACT_ATOM_CONTEXT, FactAtomField, OptionalFactAtomField, tagged_fact_atom_json
-from .schema import ModeloDefinition, RegistryCatalogues
+from .provenance import NormativeCorpusProvenance
+from .schema import DeclaredPredecessor, ModeloDefinition, NoPredecessor, RegistryCatalogues
 
 __all__ = [
     "AUTHORITY_ARTIFACT_SCHEMA_VERSION",
@@ -117,7 +118,7 @@ class PublishedSourceEvidence:
     """Publisher-validated source bytes required by a shipped workflow.
 
     Corpus paths remain descriptive catalogue metadata.  A runtime reader gets
-    bytes only through this signed projection, never by joining that path to a
+    bytes only through this digest-checked projection, never by joining that path to a
     package or checkout root.
     """
 
@@ -186,7 +187,7 @@ class AuthorityEvidenceProjection:
         )
 
     def source_bytes(self, source_reference_id: str) -> bytes:
-        """Return signed runtime source bytes for one source reference."""
+        """Return digest-checked runtime source bytes for one source reference."""
         for item in self.sources:
             if item.source_reference_id == source_reference_id:
                 return item.payload
@@ -420,8 +421,8 @@ def _immutable_json_value(value: object, *, field_name: str | None = None) -> ob
     The registry models are intentionally strict and model their declared
     collections as tuples and date fields as :class:`date`. JSON has only
     arrays and date strings, so this converts those authenticated wire shapes
-    before model reconstruction. The artifact signature authenticates this
-    canonical JSON; the schema still validates every declared invariant.
+    before model reconstruction. The frame digest protects this canonical JSON;
+    the schema still validates every declared invariant.
     """
     if isinstance(value, Mapping):
         return {str(key): _immutable_json_value(item, field_name=str(key)) for key, item in value.items()}
@@ -490,7 +491,7 @@ def _required_sequence(document: Mapping[str, object], field_name: str) -> Seque
 def _decode_base64(value: str) -> bytes:
     try:
         return b64decode(value.encode("ascii"), validate=True)
-    except ValueError as exc:
+    except (Base64Error, ValueError) as exc:
         raise AuthorityArtifactFormatError(
             "published authority artifact contains invalid base64 source evidence"
         ) from exc

@@ -27,11 +27,10 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
     OverrideFactQuery,
     ScalarFactQuery,
 )
-from cadrumo.domain.calculations.registry.facts.schema import FactSelector
+from cadrumo.domain.calculations.registry.facts.schema import FactSelector, GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
-from dev.registry.compiler._validate_evidence import EvidenceValidator
 from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.compiler.legal_grounding import verify_legal_reference_grounding
+from dev.registry.compiler.fact_validation import governed_fact_catalogue_failures
 
 __all__ = [
     "CROSS_DOMAIN_FACT_PROBES",
@@ -213,11 +212,6 @@ def cross_domain_fact_findings(
 ) -> tuple[CrossDomainFactFinding, ...]:
     """Return every cross-domain authority, evidence, or refusal defect."""
     findings: list[CrossDomainFactFinding] = []
-    evidence = EvidenceValidator(
-        legal_refs=authority.catalogues.legal,
-        source_refs=authority.catalogues.sources,
-        source_root=source_root,
-    )
     for probe in probes:
         try:
             resolved = authority.resolve_governed_fact(probe.query)
@@ -241,60 +235,26 @@ def cross_domain_fact_findings(
                     "resolved fact carries neither legal nor source provenance",
                 )
             )
-        for legal_ref_id in resolved.legal_refs:
-            reference = authority.catalogues.legal.get(legal_ref_id)
-            if reference is None:
-                findings.append(
-                    CrossDomainFactFinding(
-                        CrossDomainFactFindingKind.LEGAL_REFERENCE_UNREGISTERED,
-                        probe.domain,
-                        resolved.fact_id,
-                        f"resolved legal reference {legal_ref_id!r} is not registered",
-                    )
-                )
+        fact = authority.catalogues.facts.facts[resolved.fact_id]
+        failures = governed_fact_catalogue_failures(
+            GovernedFactCatalogue(facts={fact.fact_id: fact}),
+            legal_ref_ids=authority.catalogues.legal,
+            source_ref_ids=authority.catalogues.sources,
+            legal_refs=authority.catalogues.legal,
+            source_refs=authority.catalogues.sources,
+            source_root=source_root,
+        )
+        for failure in failures:
+            if f"variant {resolved.variant_id!r}" not in failure:
                 continue
-            try:
-                verify_legal_reference_grounding(reference, source_root=source_root)
-            except RegistryValidationError as error:
-                findings.append(
-                    CrossDomainFactFinding(
-                        CrossDomainFactFindingKind.CORPUS_GROUNDING_FAILED,
-                        probe.domain,
-                        resolved.fact_id,
-                        f"legal reference {legal_ref_id!r}: {error}",
-                    )
+            findings.append(
+                CrossDomainFactFinding(
+                    _finding_kind_for_fact_validation_failure(failure),
+                    probe.domain,
+                    resolved.fact_id,
+                    failure,
                 )
-        source_ref_ids = set(authority.catalogues.sources)
-        for source_ref_id in resolved.source_refs:
-            if source_ref_id not in source_ref_ids:
-                findings.append(
-                    CrossDomainFactFinding(
-                        CrossDomainFactFindingKind.SOURCE_REFERENCE_UNREGISTERED,
-                        probe.domain,
-                        resolved.fact_id,
-                        f"resolved source reference {source_ref_id!r} is not registered",
-                    )
-                )
-                continue
-            citations = tuple(
-                citation for citation in resolved.source_citations if citation.source_ref == source_ref_id
             )
-            failures = evidence.validate_source_citations(
-                "cross-domain governed fact",
-                f"{resolved.fact_id}:{resolved.variant_id}",
-                (source_ref_id,),
-                citations,
-                str(authority.catalogues.sources[source_ref_id].evidence_tier),
-            )
-            for failure in failures:
-                findings.append(
-                    CrossDomainFactFinding(
-                        CrossDomainFactFindingKind.SOURCE_CITATION_INVALID,
-                        probe.domain,
-                        resolved.fact_id,
-                        failure,
-                    )
-                )
 
         try:
             authority.resolve_governed_fact(probe.unsupported_query)
@@ -311,6 +271,18 @@ def cross_domain_fact_findings(
     return tuple(findings)
 
 
+def _finding_kind_for_fact_validation_failure(failure: str) -> CrossDomainFactFindingKind:
+    if "unknown legal id" in failure:
+        return CrossDomainFactFindingKind.LEGAL_REFERENCE_UNREGISTERED
+    if "unknown source id" in failure:
+        return CrossDomainFactFindingKind.SOURCE_REFERENCE_UNREGISTERED
+    if "legal evidence" in failure:
+        return CrossDomainFactFindingKind.CORPUS_GROUNDING_FAILED
+    if "citation" in failure or "source evidence" in failure:
+        return CrossDomainFactFindingKind.SOURCE_CITATION_INVALID
+    return CrossDomainFactFindingKind.PROVENANCE_MISSING
+
+
 def main(argv: list[str] | None = None) -> int:
     """Run the development-only cross-domain governed-fact authority gate."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
@@ -318,9 +290,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     findings = cross_domain_fact_findings(compiled_bundled_authority(), source_root=args.source_root)
     for finding in findings:
-        sys.stdout.write(
-            f"{finding.kind} domain={finding.domain} fact={finding.fact_id} detail={finding.detail}\n"
-        )
+        sys.stdout.write(f"{finding.kind} domain={finding.domain} fact={finding.fact_id} detail={finding.detail}\n")
     return 1 if findings else 0
 
 
