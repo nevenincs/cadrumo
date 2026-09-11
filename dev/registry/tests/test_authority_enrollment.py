@@ -77,10 +77,11 @@ def test_fact_catalogue_identity_prevents_reusing_a_green_validation_memo(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(provider_module, "FACT_PROVIDER_REGISTRATIONS", FACT_PROVIDER_REGISTRATIONS[:1])
     shared_legal: dict[str, LegalReference] = {}
     shared_sources: dict[str, SourceReference] = {}
+    monkeypatch.setattr(provider_module, "FACT_PROVIDER_REGISTRATIONS", ())
     RegistryValidator(RegistryCatalogues(legal=shared_legal, sources=shared_sources)).validate_registry(())
+    monkeypatch.setattr(provider_module, "FACT_PROVIDER_REGISTRATIONS", FACT_PROVIDER_REGISTRATIONS[:1])
     facts_dir = tmp_path / "facts"
     facts_dir.mkdir()
     _write_fact(facts_dir / "0001-test-limit.toml")

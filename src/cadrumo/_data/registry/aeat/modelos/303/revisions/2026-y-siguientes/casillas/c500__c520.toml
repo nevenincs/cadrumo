@@ -1,0 +1,94 @@
+# Modelo 303 DP30305 per-activity prorrata projection endpoints.
+# The five fixed official rows are populated only from canonical encrypted
+# ProrrataRegister activity children. They are not independent casilla inputs,
+# formula targets, bindings, selector rows, or an export-layout reactivation.
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "500"
+number = "500"
+section = ["iva", "prorrata", "actividad", "fila_1", "cnae"]
+data_type = "text"
+semantic_role = "m303_prorrata_actividad_fila_1_cnae_2026_four_digit"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The 2026 record design widens this CNAE field from the prior three-byte code to four bytes, so it is not substitution-compatible with the historical role."
+continuidad_id = "m303-prorrata-actividad-fila-1-cnae"
+required = false
+input_kind = "projection_only"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
+
+[revisions."2026-y-siguientes".casillas.constraints]
+min_length = 4
+max_length = 4
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "505"
+number = "505"
+section = ["iva", "prorrata", "actividad", "fila_2", "cnae"]
+data_type = "text"
+semantic_role = "m303_prorrata_actividad_fila_2_cnae_2026_four_digit"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The 2026 record design widens this CNAE field from the prior three-byte code to four bytes, so it is not substitution-compatible with the historical role."
+continuidad_id = "m303-prorrata-actividad-fila-2-cnae"
+required = false
+input_kind = "projection_only"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
+
+[revisions."2026-y-siguientes".casillas.constraints]
+min_length = 4
+max_length = 4
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "510"
+number = "510"
+section = ["iva", "prorrata", "actividad", "fila_3", "cnae"]
+data_type = "text"
+semantic_role = "m303_prorrata_actividad_fila_3_cnae_2026_four_digit"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The 2026 record design widens this CNAE field from the prior three-byte code to four bytes, so it is not substitution-compatible with the historical role."
+continuidad_id = "m303-prorrata-actividad-fila-3-cnae"
+required = false
+input_kind = "projection_only"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
+
+[revisions."2026-y-siguientes".casillas.constraints]
+min_length = 4
+max_length = 4
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "515"
+number = "515"
+section = ["iva", "prorrata", "actividad", "fila_4", "cnae"]
+data_type = "text"
+semantic_role = "m303_prorrata_actividad_fila_4_cnae_2026_four_digit"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The 2026 record design widens this CNAE field from the prior three-byte code to four bytes, so it is not substitution-compatible with the historical role."
+continuidad_id = "m303-prorrata-actividad-fila-4-cnae"
+required = false
+input_kind = "projection_only"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
+
+[revisions."2026-y-siguientes".casillas.constraints]
+min_length = 4
+max_length = 4
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "520"
+number = "520"
+section = ["iva", "prorrata", "actividad", "fila_5", "cnae"]
+data_type = "text"
+semantic_role = "m303_prorrata_actividad_fila_5_cnae_2026_four_digit"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The 2026 record design widens this CNAE field from the prior three-byte code to four bytes, so it is not substitution-compatible with the historical role."
+continuidad_id = "m303-prorrata-actividad-fila-5-cnae"
+required = false
+input_kind = "projection_only"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
+
+[revisions."2026-y-siguientes".casillas.constraints]
+min_length = 4
+max_length = 4

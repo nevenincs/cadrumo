@@ -1,4 +1,7 @@
 [revisions.2026-y-siguientes]
+predecessor = "2025"
+casilla_source_refs = ["aeat-dr-303-2026"]
+reviewed_against = "2025"
 # Prepared and reviewed by an agent against the bundled diseño de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and
 # 'agent_reviewed' plus this reviewer token record that state honestly rather

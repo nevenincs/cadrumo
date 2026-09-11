@@ -167,15 +167,6 @@ _REPRODUCTION_PENDING = {
         ),
         check_mode_refusal="cannot satisfy the requested 'filing' snapshot authority",
     ),
-    "m222-2025-y-siguientes": _ReproductionPendingPin(
-        source_ref="aeat-dr-222-2025",
-        source_sha256="0a44cd6bcae3b6ecbdb7bba1e54ddfad519506b91545b655c8da8454a3a63f51",
-        reason="revision earns applicability authority, below the publisher's calculation-grade floor",
-        reconsideration_condition=(
-            "Reconsider when the revision earns calculation authority or the generated tree is withdrawn."
-        ),
-        check_mode_refusal="cannot satisfy the requested 'filing' snapshot authority",
-    ),
 }
 
 
@@ -300,6 +291,14 @@ def _authorities(
 #: that govern pending republication. A changed refusal makes the owning row red.
 _CHECK_MODE_PENDING: dict[str, str] = {
     subject: pin.check_mode_refusal for subject, pin in _REPRODUCTION_PENDING.items()
+} | {
+    # The tree is published at calculation grade and reproduces exactly, but check
+    # mode validates the candidate as a filing snapshot, and the revision's
+    # relationship families are not yet resolved to filing grade. Retires, by
+    # failing the pass assertion below, the day the revision earns filing grade.
+    "m222-2025-y-siguientes": (
+        "declares 'calculation' authority grade, which cannot satisfy the requested 'filing' snapshot authority"
+    ),
 }
 
 

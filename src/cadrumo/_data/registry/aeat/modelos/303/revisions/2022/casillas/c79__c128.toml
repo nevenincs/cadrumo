@@ -8,12 +8,11 @@ continuidad_id = "m303-exonerado-390-79"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "80"
@@ -25,12 +24,11 @@ continuidad_id = "m303-exonerado-390-80"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "81"
@@ -42,12 +40,11 @@ continuidad_id = "m303-exonerado-390-81"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "83"
@@ -59,12 +56,11 @@ continuidad_id = "m303-exonerado-390-83"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "84"
@@ -76,12 +72,11 @@ continuidad_id = "m303-exonerado-390-84"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "86"
@@ -93,12 +88,11 @@ continuidad_id = "m303-exonerado-390-86"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "88"
@@ -110,12 +104,11 @@ continuidad_id = "m303-exonerado-390-88"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "89"
@@ -127,14 +120,13 @@ continuidad_id = "m303-exonerado-390-89"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
 min_value = "0"
 max_value = "100"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "90"
@@ -146,14 +138,13 @@ continuidad_id = "m303-exonerado-390-90"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
 min_value = "0"
 max_value = "100"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "91"
@@ -165,14 +156,13 @@ continuidad_id = "m303-exonerado-390-91"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
 min_value = "0"
 max_value = "100"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "92"
@@ -184,14 +174,13 @@ continuidad_id = "m303-exonerado-390-92"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
 min_value = "0"
 max_value = "100"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "93"
@@ -203,12 +192,11 @@ continuidad_id = "m303-exonerado-390-93"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "94"
@@ -220,12 +208,11 @@ continuidad_id = "m303-exonerado-390-94"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "95"
@@ -237,12 +224,11 @@ continuidad_id = "m303-exonerado-390-95"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "96"
@@ -254,12 +240,11 @@ continuidad_id = "m303-exonerado-390-96"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "97"
@@ -271,12 +256,11 @@ continuidad_id = "m303-exonerado-390-97"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "98"
@@ -288,12 +272,11 @@ continuidad_id = "m303-exonerado-390-98"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "99"
@@ -305,12 +288,11 @@ continuidad_id = "m303-exonerado-390-99"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "107"
@@ -322,14 +304,13 @@ continuidad_id = "m303-exonerado-390-107"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
 min_value = "0"
 max_value = "100"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "125"
@@ -341,12 +322,11 @@ continuidad_id = "m303-exonerado-390-125"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "126"
@@ -358,12 +338,11 @@ continuidad_id = "m303-exonerado-390-126"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "127"
@@ -375,12 +354,11 @@ continuidad_id = "m303-exonerado-390-127"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "128"
@@ -392,9 +370,8 @@ continuidad_id = "m303-exonerado-390-128"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]

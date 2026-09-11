@@ -1,0 +1,162 @@
+[[revisions.2023.casillas]]
+id = "27"
+number = "27"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_27"
+continuidad_id = "dr303-27"
+required = false
+input_kind = "computed"
+formula = "modelo-303-dr303-27-projection"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.casillas]]
+id = "29"
+number = "29"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_29"
+continuidad_id = "dr303-29"
+required = false
+input_kind = "computed"
+formula = "modelo-303-dr303-29-projection"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.casillas]]
+id = "33"
+number = "33"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_33"
+continuidad_id = "dr303-33"
+required = false
+input_kind = "computed"
+formula = "modelo-303-dr303-33-projection"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.casillas]]
+id = "37"
+number = "37"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_37"
+continuidad_id = "dr303-37"
+required = false
+input_kind = "computed"
+formula = "modelo-303-dr303-37-projection"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.casillas]]
+id = "45"
+number = "45"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_45"
+continuidad_id = "dr303-45"
+required = false
+input_kind = "computed"
+formula = "modelo-303-dr303-45-projection"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.casillas]]
+id = "120"
+number = "120"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_120"
+continuidad_id = "dr303-120"
+required = false
+input_kind = "bound"
+binding = "modelo-303-casilla-120-no-sujetas-localizacion-base"
+# Casilla 120 reports the base of operations Spain does not tax because the
+# place-of-supply rules locate them elsewhere. The substantive ground is LIVA
+# art. 69 (Uno.1), not the repercusión/deducción articles 88/92 that stood here
+# as a generic default: a NO SUJETA operation never entered the hecho imponible,
+# so nothing is repercutido and nothing is deducible. Same correction, and for
+# the same reason, as casillas 59 and 122.
+legal_refs = ["ley-37-1992:art-69", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.casillas]]
+id = "122"
+number = "122"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_122"
+continuidad_id = "dr303-122"
+required = false
+input_kind = "bound"
+binding = "modelo-303-casilla-122-inversion-sujeto-pasivo-base"
+# Casilla 122 reports the base imponible of the SUPPLIER's side of a domestic
+# reverse charge. The substantive ground is LIVA art. 84.Uno.2.º (the recipient
+# is the sujeto pasivo), not the repercusión/deducción articles 88/92 that stood
+# here as a generic default — this supplier repercutes nothing and deducts
+# nothing, which is the entire point of the box. Same correction, and for the
+# same reason, as the one already applied to casilla 59.
+legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.casillas]]
+id = "64"
+continuidad_id = "dr303-64"
+continuidad_origin = "seeded"
+number = "64"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_64"
+required = false
+input_kind = "computed"
+formula = "modelo-303-iva-suma-resultados"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
+
+[[revisions.2023.casillas]]
+id = "65"
+number = "65"
+section = ["iva", "resultado"]
+data_type = "ratio"
+semantic_role = "dr303_65"
+continuidad_id = "dr303-65"
+required = false
+input_kind = "bound"
+binding = "modelo-303-profile-state-attribution-ratio"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.casillas]]
+id = "66"
+continuidad_id = "dr303-66"
+continuidad_origin = "seeded"
+number = "66"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_66"
+required = false
+input_kind = "computed"
+formula = "modelo-303-iva-atribuible-estado"
+legal_refs = ["rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
+
+[[revisions.2023.casillas]]
+id = "109"
+number = "109"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_109"
+continuidad_id = "dr303-109"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_303/files/03-303-ejercicio-2023-actualizado-14-12-23-376-kb-xlsx.xlsx.extracted.md:398 (sha256 72e463cb2998) prints box [109]; corpus/aeat_official/disenos_registro/modelo_303/files/02-303-ejercicio-2022-y-siguientes-actualizado-27-12-2021-332-kb-xlsx.xlsx.extracted.md (sha256 6648f6b31957) prints no box [109] and retires none"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.casillas]]
+id = "71"
+continuidad_id = "dr303-71"
+continuidad_origin = "seeded"
+number = "71"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_71"
+required = false
+input_kind = "computed"
+formula = "modelo-303-iva-resultado-final"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30"]
+additional_source_refs = ["aeat-modelo-303-procedure"]

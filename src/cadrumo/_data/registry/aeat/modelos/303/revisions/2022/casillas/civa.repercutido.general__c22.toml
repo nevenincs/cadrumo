@@ -9,7 +9,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-303-iva-repercutido-general-cuota"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "iva.repercutido.reducido"
@@ -22,7 +21,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-303-iva-repercutido-reducido-cuota"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "iva.repercutido.super-reducido"
@@ -35,7 +33,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-303-iva-repercutido-super-reducido-cuota"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "iva.soportado.interiores"
@@ -48,7 +45,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-303-iva-soportado-interiores-cuota"
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "iva.autorepercutido.intracomunitaria"
@@ -61,7 +57,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-303-iva-autorepercutido-intracomunitaria-cuota"
 legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "iva.autorepercutido.interior.devengado"
@@ -74,7 +69,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-303-iva-autorepercutido-interior-devengado-cuota"
 legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "iva.autorepercutido.interior.deducible"
@@ -87,7 +81,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-303-iva-autorepercutido-interior-deducible-cuota"
 legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 # Intra-community-acquisition official-box parity casillas. They expose the
 # self-assessed AIC cuota in its official devengado (boxes 10/11) and deducible
@@ -107,7 +100,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "iva.autorepercutido.intracomunitaria.deducible"
@@ -120,7 +112,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 # Third-country import IVA deducible (official casilla 33). IVA devengado on the
 # import is settled at customs (DUA) and never reaches M303; only the deducible
@@ -138,7 +129,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-303-iva-soportado-importaciones-cuota"
 legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "iva.cuota-devengada-total"
@@ -151,7 +141,6 @@ required = false
 input_kind = "computed"
 formula = "modelo-303-iva-cuota-devengada-total"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 export_exemption_reason = "feeds_addressed_casilla"
 
 [[revisions.2022.casillas]]
@@ -165,7 +154,6 @@ required = false
 input_kind = "computed"
 formula = "modelo-303-iva-cuota-deducible-total"
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 export_exemption_reason = "feeds_addressed_casilla"
 
 [[revisions.2022.casillas]]
@@ -180,7 +168,6 @@ input_kind = "computed"
 formula = "modelo-303-iva-resultado-regimen-general"
 form_number = "46"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "iva.prorrata-volumen-con-derecho"
@@ -192,7 +179,7 @@ continuidad_id = "iva-prorrata-volumen-con-derecho"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-102", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
@@ -209,7 +196,7 @@ continuidad_id = "iva-prorrata-volumen-total"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-102", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
@@ -227,7 +214,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-303-iva-prorrata-porcentaje"
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-102", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 export_exemption_reason = "record_block_not_modelled"
 
 [revisions.2022.casillas.constraints]
@@ -247,7 +234,7 @@ continuidad_id = "iva-regularizacion-inversiones"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [[revisions.2022.casillas]]
 id = "iva.compensacion-pendiente-periodos-anteriores"
@@ -261,12 +248,11 @@ required = false
 input_kind = "bound"
 binding = "modelo-303-compensacion-pendiente-anteriores"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-99"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "iva.compensacion-aplicada-periodo"
@@ -279,12 +265,11 @@ required = false
 input_kind = "computed"
 formula = "modelo-303-compensacion-aplicada-periodo"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-99"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "iva.compensacion-pendiente-periodos-posteriores"
@@ -298,12 +283,11 @@ required = false
 input_kind = "computed"
 formula = "modelo-303-compensacion-pendiente-periodos-posteriores"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-99"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "iva.resultado"
@@ -316,7 +300,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-303-iva-resultado"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.casillas]]
 id = "iva.compensacion-disponible-fin-periodo"
@@ -329,13 +313,12 @@ required = false
 input_kind = "computed"
 formula = "modelo-303-compensacion-disponible-fin-periodo"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 export_exemption_reason = "not_in_record_design"
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-99"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "iva.compensacion-generada-periodo"
@@ -348,13 +331,12 @@ required = false
 input_kind = "computed"
 formula = "modelo-303-compensacion-generada-periodo"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 export_exemption_reason = "not_in_record_design"
 
 [revisions.2022.casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-99"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "decl.ejercicio"
@@ -391,7 +373,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-303-iva-repercutido-super-reducido-base"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "02"
@@ -403,7 +384,6 @@ continuidad_id = "dr303-02"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "03"
@@ -415,7 +395,6 @@ continuidad_id = "dr303-03"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "04"
@@ -428,7 +407,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-303-iva-repercutido-reducido-base"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "05"
@@ -440,7 +418,6 @@ continuidad_id = "dr303-05"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "06"
@@ -452,7 +429,6 @@ continuidad_id = "dr303-06"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "07"
@@ -465,7 +441,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-303-iva-repercutido-general-base"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "08"
@@ -477,7 +452,6 @@ continuidad_id = "dr303-08"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "09"
@@ -489,7 +463,6 @@ continuidad_id = "dr303-09"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "10"
@@ -501,7 +474,6 @@ continuidad_id = "dr303-10"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "11"
@@ -513,7 +485,6 @@ continuidad_id = "dr303-11"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "12"
@@ -525,7 +496,6 @@ continuidad_id = "dr303-12"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "13"
@@ -537,7 +507,6 @@ continuidad_id = "dr303-13"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "14"
@@ -549,7 +518,6 @@ continuidad_id = "dr303-14"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "15"
@@ -561,7 +529,6 @@ continuidad_id = "dr303-15"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "16"
@@ -573,7 +540,6 @@ continuidad_id = "dr303-16"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "17"
@@ -585,7 +551,6 @@ continuidad_id = "dr303-17"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "18"
@@ -597,7 +562,6 @@ continuidad_id = "dr303-18"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "19"
@@ -609,7 +573,6 @@ continuidad_id = "dr303-19"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "20"
@@ -621,7 +584,6 @@ continuidad_id = "dr303-20"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "21"
@@ -634,7 +596,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-303-recargo-equivalencia-reducido-cuota"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions.2022.casillas]]
 id = "22"
@@ -646,4 +607,3 @@ continuidad_id = "dr303-22"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]

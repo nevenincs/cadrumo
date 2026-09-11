@@ -31,6 +31,7 @@ from __future__ import annotations
 from collections.abc import Callable
 
 import pytest
+from test_support.registry_authoring import verify_legal_catalogue
 
 from ....core.modelo import Modelo
 from ....core.resources.bundled_data import bundled_path
@@ -43,7 +44,6 @@ from ....domain.calculations.registry.applicability import (
 )
 from ....domain.calculations.registry.applicability_routes import TaxRoute
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.calculations.registry.legal import verify_legal_catalogue
 from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.deadlines.models import (
     IrpfEstimationRegime,

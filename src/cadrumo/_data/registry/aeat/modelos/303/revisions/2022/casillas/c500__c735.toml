@@ -8,13 +8,11 @@ continuidad_id = "m303-prorrata-actividad-fila-1-cnae"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions."2022".casillas.constraints]
 min_length = 3
 max_length = 3
-legal_refs = ["orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions."2022".casillas]]
 id = "501"
@@ -26,12 +24,11 @@ continuidad_id = "m303-prorrata-actividad-fila-1-operaciones-total"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions."2022".casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions."2022".casillas]]
 id = "502"
@@ -43,12 +40,11 @@ continuidad_id = "m303-prorrata-actividad-fila-1-operaciones-con-derecho"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions."2022".casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions."2022".casillas]]
 id = "503"
@@ -60,12 +56,11 @@ continuidad_id = "m303-prorrata-actividad-fila-1-tipo"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions."2022".casillas.constraints]
 enum = ["G", "E"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions."2022".casillas]]
 id = "504"
@@ -77,14 +72,13 @@ continuidad_id = "m303-prorrata-actividad-fila-1-porcentaje"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions."2022".casillas.constraints]
 sign = "non_negative"
 min_value = "0"
 max_value = "100"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions."2022".casillas]]
 id = "505"
@@ -96,13 +90,11 @@ continuidad_id = "m303-prorrata-actividad-fila-2-cnae"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions."2022".casillas.constraints]
 min_length = 3
 max_length = 3
-legal_refs = ["orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions."2022".casillas]]
 id = "506"
@@ -114,12 +106,11 @@ continuidad_id = "m303-prorrata-actividad-fila-2-operaciones-total"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions."2022".casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions."2022".casillas]]
 id = "507"
@@ -131,12 +122,11 @@ continuidad_id = "m303-prorrata-actividad-fila-2-operaciones-con-derecho"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions."2022".casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions."2022".casillas]]
 id = "508"
@@ -148,12 +138,11 @@ continuidad_id = "m303-prorrata-actividad-fila-2-tipo"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions."2022".casillas.constraints]
 enum = ["G", "E"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions."2022".casillas]]
 id = "509"
@@ -165,14 +154,13 @@ continuidad_id = "m303-prorrata-actividad-fila-2-porcentaje"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions."2022".casillas.constraints]
 sign = "non_negative"
 min_value = "0"
 max_value = "100"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions."2022".casillas]]
 id = "510"
@@ -184,13 +172,11 @@ continuidad_id = "m303-prorrata-actividad-fila-3-cnae"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions."2022".casillas.constraints]
 min_length = 3
 max_length = 3
-legal_refs = ["orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions."2022".casillas]]
 id = "511"
@@ -202,12 +188,11 @@ continuidad_id = "m303-prorrata-actividad-fila-3-operaciones-total"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions."2022".casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions."2022".casillas]]
 id = "512"
@@ -219,12 +204,11 @@ continuidad_id = "m303-prorrata-actividad-fila-3-operaciones-con-derecho"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions."2022".casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions."2022".casillas]]
 id = "513"
@@ -236,12 +220,11 @@ continuidad_id = "m303-prorrata-actividad-fila-3-tipo"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions."2022".casillas.constraints]
 enum = ["G", "E"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions."2022".casillas]]
 id = "514"
@@ -253,14 +236,13 @@ continuidad_id = "m303-prorrata-actividad-fila-3-porcentaje"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions."2022".casillas.constraints]
 sign = "non_negative"
 min_value = "0"
 max_value = "100"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions."2022".casillas]]
 id = "515"
@@ -272,13 +254,11 @@ continuidad_id = "m303-prorrata-actividad-fila-4-cnae"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions."2022".casillas.constraints]
 min_length = 3
 max_length = 3
-legal_refs = ["orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions."2022".casillas]]
 id = "516"
@@ -290,12 +270,11 @@ continuidad_id = "m303-prorrata-actividad-fila-4-operaciones-total"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions."2022".casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions."2022".casillas]]
 id = "517"
@@ -307,12 +286,11 @@ continuidad_id = "m303-prorrata-actividad-fila-4-operaciones-con-derecho"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions."2022".casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions."2022".casillas]]
 id = "518"
@@ -324,12 +302,11 @@ continuidad_id = "m303-prorrata-actividad-fila-4-tipo"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions."2022".casillas.constraints]
 enum = ["G", "E"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions."2022".casillas]]
 id = "519"
@@ -341,14 +318,13 @@ continuidad_id = "m303-prorrata-actividad-fila-4-porcentaje"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions."2022".casillas.constraints]
 sign = "non_negative"
 min_value = "0"
 max_value = "100"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions."2022".casillas]]
 id = "520"
@@ -360,13 +336,11 @@ continuidad_id = "m303-prorrata-actividad-fila-5-cnae"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions."2022".casillas.constraints]
 min_length = 3
 max_length = 3
-legal_refs = ["orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions."2022".casillas]]
 id = "521"
@@ -378,12 +352,11 @@ continuidad_id = "m303-prorrata-actividad-fila-5-operaciones-total"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions."2022".casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions."2022".casillas]]
 id = "522"
@@ -395,12 +368,11 @@ continuidad_id = "m303-prorrata-actividad-fila-5-operaciones-con-derecho"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions."2022".casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions."2022".casillas]]
 id = "523"
@@ -412,12 +384,11 @@ continuidad_id = "m303-prorrata-actividad-fila-5-tipo"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions."2022".casillas.constraints]
 enum = ["G", "E"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions."2022".casillas]]
 id = "524"
@@ -429,14 +400,13 @@ continuidad_id = "m303-prorrata-actividad-fila-5-porcentaje"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [revisions."2022".casillas.constraints]
 sign = "non_negative"
 min_value = "0"
 max_value = "100"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022"]
 
 [[revisions."2022".casillas]]
 id = "700"
@@ -448,8 +418,8 @@ continuidad_id = "m303-deducciones-sector-1-domestic-current-base"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2022"] }
+additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
 [[revisions."2022".casillas]]
 id = "701"
@@ -461,8 +431,8 @@ continuidad_id = "m303-deducciones-sector-1-domestic-current-cuota"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2022"] }
+additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
 [[revisions."2022".casillas]]
 id = "702"
@@ -474,8 +444,8 @@ continuidad_id = "m303-deducciones-sector-1-domestic-investment-base"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2022"] }
+additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
 [[revisions."2022".casillas]]
 id = "703"
@@ -487,8 +457,8 @@ continuidad_id = "m303-deducciones-sector-1-domestic-investment-cuota"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2022"] }
+additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
 [[revisions."2022".casillas]]
 id = "704"
@@ -500,8 +470,8 @@ continuidad_id = "m303-deducciones-sector-1-import-current-base"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2022"] }
+additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
 [[revisions."2022".casillas]]
 id = "705"
@@ -513,8 +483,8 @@ continuidad_id = "m303-deducciones-sector-1-import-current-cuota"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2022"] }
+additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
 [[revisions."2022".casillas]]
 id = "706"
@@ -526,8 +496,8 @@ continuidad_id = "m303-deducciones-sector-1-import-investment-base"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2022"] }
+additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
 [[revisions."2022".casillas]]
 id = "707"
@@ -539,8 +509,8 @@ continuidad_id = "m303-deducciones-sector-1-import-investment-cuota"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2022"] }
+additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
 [[revisions."2022".casillas]]
 id = "708"
@@ -552,8 +522,8 @@ continuidad_id = "m303-deducciones-sector-1-intra-eu-current-base"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2022"] }
+additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
 [[revisions."2022".casillas]]
 id = "709"
@@ -565,8 +535,8 @@ continuidad_id = "m303-deducciones-sector-1-intra-eu-current-cuota"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2022"] }
+additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
 [[revisions."2022".casillas]]
 id = "710"
@@ -578,8 +548,8 @@ continuidad_id = "m303-deducciones-sector-1-intra-eu-investment-base"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2022"] }
+additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
 [[revisions."2022".casillas]]
 id = "711"
@@ -591,8 +561,8 @@ continuidad_id = "m303-deducciones-sector-1-intra-eu-investment-cuota"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2022"] }
+additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
 [[revisions."2022".casillas]]
 id = "712"
@@ -604,8 +574,8 @@ continuidad_id = "m303-deducciones-sector-1-reagp-base"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2022"] }
+additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
 [[revisions."2022".casillas]]
 id = "713"
@@ -617,8 +587,8 @@ continuidad_id = "m303-deducciones-sector-1-reagp-cuota"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2022"] }
+additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
 [[revisions."2022".casillas]]
 id = "714"
@@ -630,7 +600,7 @@ continuidad_id = "m303-deducciones-sector-1-rectification-base"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [[revisions."2022".casillas]]
 id = "715"
@@ -642,7 +612,7 @@ continuidad_id = "m303-deducciones-sector-1-rectification-cuota"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [[revisions."2022".casillas]]
 id = "716"
@@ -654,7 +624,7 @@ continuidad_id = "m303-deducciones-sector-1-investment-regularisation"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [[revisions."2022".casillas]]
 id = "717"
@@ -666,7 +636,7 @@ continuidad_id = "m303-deducciones-sector-1-total"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [[revisions."2022".casillas]]
 id = "718"
@@ -678,8 +648,8 @@ continuidad_id = "m303-deducciones-sector-2-domestic-current-base"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2022"] }
+additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
 [[revisions."2022".casillas]]
 id = "719"
@@ -691,8 +661,8 @@ continuidad_id = "m303-deducciones-sector-2-domestic-current-cuota"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2022"] }
+additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
 [[revisions."2022".casillas]]
 id = "720"
@@ -704,8 +674,8 @@ continuidad_id = "m303-deducciones-sector-2-domestic-investment-base"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2022"] }
+additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
 [[revisions."2022".casillas]]
 id = "721"
@@ -717,8 +687,8 @@ continuidad_id = "m303-deducciones-sector-2-domestic-investment-cuota"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2022"] }
+additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
 [[revisions."2022".casillas]]
 id = "722"
@@ -730,8 +700,8 @@ continuidad_id = "m303-deducciones-sector-2-import-current-base"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2022"] }
+additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
 [[revisions."2022".casillas]]
 id = "723"
@@ -743,8 +713,8 @@ continuidad_id = "m303-deducciones-sector-2-import-current-cuota"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2022"] }
+additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
 [[revisions."2022".casillas]]
 id = "724"
@@ -756,8 +726,8 @@ continuidad_id = "m303-deducciones-sector-2-import-investment-base"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2022"] }
+additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
 [[revisions."2022".casillas]]
 id = "725"
@@ -769,8 +739,8 @@ continuidad_id = "m303-deducciones-sector-2-import-investment-cuota"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2022"] }
+additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
 [[revisions."2022".casillas]]
 id = "726"
@@ -782,8 +752,8 @@ continuidad_id = "m303-deducciones-sector-2-intra-eu-current-base"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2022"] }
+additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
 [[revisions."2022".casillas]]
 id = "727"
@@ -795,8 +765,8 @@ continuidad_id = "m303-deducciones-sector-2-intra-eu-current-cuota"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2022"] }
+additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
 [[revisions."2022".casillas]]
 id = "728"
@@ -808,8 +778,8 @@ continuidad_id = "m303-deducciones-sector-2-intra-eu-investment-base"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2022"] }
+additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
 [[revisions."2022".casillas]]
 id = "729"
@@ -821,8 +791,8 @@ continuidad_id = "m303-deducciones-sector-2-intra-eu-investment-cuota"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2022"] }
+additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
 [[revisions."2022".casillas]]
 id = "730"
@@ -834,8 +804,8 @@ continuidad_id = "m303-deducciones-sector-2-reagp-base"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2022"] }
+additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
 [[revisions."2022".casillas]]
 id = "731"
@@ -847,8 +817,8 @@ continuidad_id = "m303-deducciones-sector-2-reagp-cuota"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"], source_refs = ["aeat-dr-303-2022"] }
+additional_source_refs = ["aeat-modelo-303-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104"] }
 
 [[revisions."2022".casillas]]
 id = "732"
@@ -860,7 +830,7 @@ continuidad_id = "m303-deducciones-sector-2-rectification-base"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [[revisions."2022".casillas]]
 id = "733"
@@ -872,7 +842,7 @@ continuidad_id = "m303-deducciones-sector-2-rectification-cuota"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [[revisions."2022".casillas]]
 id = "734"
@@ -884,7 +854,7 @@ continuidad_id = "m303-deducciones-sector-2-investment-regularisation"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
 
 [[revisions."2022".casillas]]
 id = "735"
@@ -896,4 +866,4 @@ continuidad_id = "m303-deducciones-sector-2-total"
 required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure"]
+additional_source_refs = ["aeat-modelo-303-procedure"]

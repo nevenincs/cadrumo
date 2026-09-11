@@ -57,14 +57,15 @@ def category_profile_years() -> frozenset[int]:
     from ..calculations.registry.authority import bundled_authority
 
     fact = bundled_authority().catalogues.facts.facts.get(CATEGORY_PROFILE_FACT_ID)
-    if fact is None:
-        return frozenset()
     grouped: dict[str, set[int]] = {}
-    for variant in fact.variants:
-        category = next((s.value for s in variant.selectors if s.name == "category"), None)
+    for variant in () if fact is None else fact.variants:
+        category = next((str(s.value) for s in variant.selectors if s.name == "category"), None)
         if category is not None and variant.valid_to is not None:
-            grouped.setdefault(category, set()).update(range(variant.valid_from.year, variant.valid_to.year + 1))
-    return frozenset(set.intersection(*grouped.values())) if grouped else frozenset()
+            years = grouped.setdefault(category, set[int]())
+            years.update(range(variant.valid_from.year, variant.valid_to.year + 1))
+    groups = list(grouped.values())
+    covered = groups[0].intersection(*groups[1:]) if groups else set[int]()
+    return frozenset[int](covered)
 
 
 def resolve_category_profiles(year: int) -> Mapping[SpendingCategory, CategoryProfile]:
@@ -137,7 +138,7 @@ def _profile_from_authority_fact(
         and "statutory_cap_eur_per_day" not in values
     ):
         # The profile carries no amount of its own, so the cap is year-referenced
-        # and its amount for this year lives only in the dated cap fact.
+        # and its amounts live only in the dated cap fact.
         try:
             resolved_cap = authority.resolve_governed_fact(
                 ScalarFactQuery(

@@ -118,9 +118,9 @@ _CASILLA_RESULTADO_DECLARACION_ANTERIOR: CasillaId = validated_casilla_id(
 # Target/oracle casilla.
 _CASILLA_A_INGRESAR: CasillaId = validated_casilla_id("03", surface="_CASILLA_A_INGRESAR")
 
-_BINDING_INCN: BindingId = "modelo-202-2025-y-siguientes-incn-prior-12-months"
-_BINDING_CUOTA_BASE_EJERCICIO_ANTERIOR: BindingId = "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior"
-_BINDING_PAGOS_FRACCIONADOS_ANTERIORES: BindingId = "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores"
+_BINDING_INCN: BindingId = "modelo-202-incn-prior-12-months"
+_BINDING_CUOTA_BASE_EJERCICIO_ANTERIOR: BindingId = "modelo-202-cuota-base-ejercicio-anterior"
+_BINDING_PAGOS_FRACCIONADOS_ANTERIORES: BindingId = "modelo-202-pagos-fraccionados-anteriores"
 
 # INCN below the LIS art. 40.3 mandatory-modality threshold (6.000.000 EUR)
 # so the art. 40.2 lane (clave 03) is offered; the manual's Sociedad "M" is

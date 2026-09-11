@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import json
+from collections.abc import MutableMapping
 from datetime import date
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -17,6 +19,7 @@ from ..authority_artifact import (
     AuthorityArtifactIntegrityError,
     AuthorityArtifactUnavailableError,
     read_authority_artifact,
+    read_shared_authority_artifact,
     write_authority_artifact,
 )
 from ..schema import DataBindingDefinition, NoPredecessor
@@ -172,16 +175,28 @@ def test_malformed_or_unsupported_artifact_frame_is_refused(tmp_path: Path, arti
 
 
 def test_consumer_mutation_cannot_change_a_later_authority_read(tmp_path: Path) -> None:
-    """Published authority catalogues refuse consumer mutation on every read."""
+    """A read authority graph refuses mutation, so a later read, shared or fresh, observes the publication."""
     artifact_path = tmp_path / "authority.json"
     _publish(artifact_path)
     first = read_authority_artifact(artifact_path)
     with pytest.raises(TypeError):
-        first.catalogues.legal["consumer-injected"] = next(iter(first.catalogues.legal.values()))
+        cast("MutableMapping[str, object]", first.catalogues.legal)["consumer-injected"] = object()
 
     later = read_authority_artifact(artifact_path)
+    shared = read_shared_authority_artifact(artifact_path)
+    with pytest.raises(TypeError):
+        cast("MutableMapping[str, object]", shared.catalogues.legal)["consumer-injected"] = object()
 
     assert "consumer-injected" not in later.catalogues.legal
+    assert read_shared_authority_artifact(artifact_path) is shared
+    assert "consumer-injected" not in shared.catalogues.legal
+    assert shared == later == _validated_authority_payload()
+
+
+def test_shared_read_refuses_a_missing_publication(tmp_path: Path) -> None:
+    """The shared reader refuses an absent artifact exactly as the strict reader does."""
+    with pytest.raises(AuthorityArtifactUnavailableError):
+        read_shared_authority_artifact(tmp_path / "missing-authority.json")
 
 
 def test_missing_publication_refuses_without_rebuilding_from_authoring_inputs(tmp_path: Path) -> None:

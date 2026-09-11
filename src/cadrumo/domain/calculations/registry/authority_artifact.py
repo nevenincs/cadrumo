@@ -1,8 +1,10 @@
 """Versioned, digest-checked publication format for a validated registry authority.
 
 Development writes the validated authority as canonical JSON; runtime reads it
-back and reconstructs fresh typed models. The artifact is generated output. Its
-digest detects a truncated, corrupted, or hand-edited file, and its recorded
+back into deeply immutable typed models, which it may share between callers
+while the file is unchanged. The artifact is generated output, not
+a signed document: it carries no signature, key, or certificate. Its digest
+detects a truncated, corrupted, or hand-edited file, and its recorded
 ``identity_digest`` names the registry and source-evidence inputs it was
 compiled from, so development can tell when it is out of date. This module
 neither knows a registry root nor compiles, repairs, or validates authoring
@@ -203,8 +205,9 @@ class AuthorityArtifact:
 
     ``identity_digest`` is the content-addressed identity of the registry and
     source-evidence inputs development validated to produce this authority.
-    Each read rebuilds this graph from the published JSON, isolating later reads
-    from a consumer's mutation of a prior result.
+    The graph is deeply immutable: its models are frozen and its mappings are
+    frozen mappings, so a consumer cannot change what any other holder of the
+    same instance observes.
     """
 
     modelos: tuple[ModeloDefinition, ...]
@@ -234,7 +237,7 @@ def write_authority_artifact(path: Path, artifact: AuthorityArtifact) -> None:
 
 
 def read_authority_artifact(path: Path) -> AuthorityArtifact:
-    """Read a published authority or fail closed without fallback."""
+    """Read, verify and decode a published authority from disk, failing closed without fallback."""
     try:
         raw = path.read_bytes()
     except OSError as exc:
@@ -244,6 +247,8 @@ def read_authority_artifact(path: Path) -> AuthorityArtifact:
 
 @dataclass(frozen=True, slots=True)
 class _ArtifactFileIdentity:
+    """What a republication or in-place rewrite of the artifact file changes."""
+
     device: int
     inode: int
     size: int
@@ -256,7 +261,17 @@ _shared_artifacts: dict[str, tuple[_ArtifactFileIdentity, AuthorityArtifact]] = 
 
 
 def read_shared_authority_artifact(path: Path) -> AuthorityArtifact:
-    """Reuse a verified immutable artifact graph until its file identity changes."""
+    """Return the published authority at ``path``, decoding it only when the file changed.
+
+    The verified graph is deeply immutable -- every model is frozen and every
+    mapping a :class:`~cadrumo.core.frozen_mapping.FrozenMapping` -- so one
+    instance can be handed to every caller without any of them being able to
+    change what another observes. The file's identity (device, inode, size and
+    modification and change times) is read on every call, so an atomic
+    republication or an in-place rewrite is decoded and verified afresh rather
+    than served stale. A refused read is never cached: a missing or corrupt
+    artifact is refused on every call.
+    """
     key = os.path.abspath(path)
     identity = _artifact_file_identity(path)
     with _shared_artifact_lock:

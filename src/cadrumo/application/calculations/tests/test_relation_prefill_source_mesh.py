@@ -43,7 +43,7 @@ _M115_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("01")
 _M115_BASE_CASILLA: CasillaId = validated_casilla_id("02")
 _M115_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("03")
 _M130_RESULTADO_FINAL_CASILLA: CasillaId = validated_casilla_id("19")
-_M202_2023_2024_PRIOR_PAYMENTS_BINDING = "modelo-202-2023-2024-pagos-fraccionados-anteriores"
+_M202_2023_2024_PRIOR_PAYMENTS_BINDING = "modelo-202-pagos-fraccionados-anteriores"
 
 
 @cache

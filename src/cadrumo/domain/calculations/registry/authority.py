@@ -563,16 +563,28 @@ _BUNDLED_AUTHORITY_ARTIFACT_PARTS = ("registry", "authority", "authority.json")
 
 
 def bundled_authority() -> ValidatedRegistryAuthority:
-    """Return a fresh authority reconstructed from the bundled published artifact.
+    """Return an authority over the bundled published artifact.
 
-    Publication validates authoring inputs before producing this artifact.  A
-    product process never recompiles those inputs: a missing, corrupt, or
-    unsupported-version publication is refused here before a calculation or
-    filing can begin. Each call returns distinct authority state around a
-    deeply immutable, file-identity-cached artifact graph, so consumers cannot
-    mutate the authority subsequently observed by another consumer.
+    See :func:`published_authority` for the sharing and refusal contract.
     """
-    artifact_path = bundled_authority_artifact_path()
+    return published_authority(bundled_authority_artifact_path())
+
+
+def published_authority(artifact_path: Path) -> ValidatedRegistryAuthority:
+    """Return a fresh authority over the published artifact at ``artifact_path``.
+
+    Publication validates authoring inputs before producing the artifact.  A
+    product process never recompiles those inputs: a missing, corrupt, or
+    unsupported-version publication is refused here, on every call, before a
+    calculation or filing can begin.
+
+    The verified model graph is decoded once per artifact file identity and
+    shared, because it is deeply immutable: every model is frozen and every
+    mapping is a frozen mapping, so no consumer can change the modelos or
+    catalogues another consumer observes.  The authority object itself, with
+    its own snapshot cache and validation bookkeeping, is new on every call.
+    A republished artifact is detected by its file identity and decoded afresh.
+    """
     artifact = read_shared_authority_artifact(artifact_path)
     return _authority_from_published_artifact(artifact, artifact_path=artifact_path)
 

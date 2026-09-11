@@ -125,7 +125,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
-from test_support.registry_authoring import compile_validated_authority
+from test_support.registry_authoring import compile_validated_authority, oracle_declared_figures
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -138,7 +138,6 @@ from ....core.period import Period
 from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
-from ....domain.calculations.registry.tests.manual_oracle_support import oracle_declared_figures
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations, revision_id_for_observation

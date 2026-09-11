@@ -85,8 +85,10 @@ Where it stops:
 - It never authors a retirement, a repurpose, or lineage; it reads them.
 - Label text is not rewritten. Locale keys are edition-scoped and the loader
   gives an inherited row its origin edition's key as a fallback.
-- An edition whose export surface has no scenario is reported unchecked by the
-  gate, which blocks ``--apply``; the typed, order and locale proofs still run.
+- Export scenarios come from ``dev.registry.edition_export_scenarios``. An
+  edition whose export surface has no scenario there is reported unchecked by
+  the gate, which blocks ``--apply``; the typed, order and locale proofs still
+  run.
 """
 
 from __future__ import annotations
@@ -109,10 +111,11 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.identifier_lineage import identifier_lineage
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_overlap
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from dev.registry.compiler.authority import compile_validated_authority
+from dev.registry.compiler.edition_materialisation import materialise_edition
 
 from .analysis.delta_minimality import restatement_differences
-from .compiler.authority import compile_validated_authority
-from .compiler.edition_materialisation import materialise_edition
+from .edition_export_scenarios import edition_export_scenarios
 from .edition_round_trip import (
     EditionExportScenario,
     RoundTripReport,
@@ -1293,6 +1296,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             modelo_id=arguments.modelo,
             work_dir=arguments.work_dir,
             declare_blocked_roots=arguments.declare_blocked_roots,
+            export_scenarios=edition_export_scenarios(arguments.modelo),
             apply=arguments.apply,
         )
     except MigrationRefusedError as exc:

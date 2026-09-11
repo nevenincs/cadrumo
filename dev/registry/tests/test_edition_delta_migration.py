@@ -1,8 +1,8 @@
 """Real-behaviour tests for the edition-delta migration.
 
 Every proof runs the migration over a temporary copy of the bundled registry
-holding one real modelo, loads the result through the validated authority, and
-judges it with the round-trip gate. Each rule the migration applies is shown
+holding one real modelo and its dependency closure, loads the result through
+the validated authority, and judges it with the round-trip gate. Each rule the migration applies is shown
 biting: a planted defect changes the plan, or dropping a row the rule kept makes
 the gate fail, and the unplanted tree shows the normal path.
 
@@ -31,9 +31,9 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
 from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor, ModeloDefinition
+from dev.registry.compiler.authority import compile_validated_authority
 
 from ..analysis.delta_minimality import LINEAGE_CLAIM_FIELDS, definition_findings, restatement_differences
-from ..compiler.authority import compile_validated_authority
 from ..edition_delta_migration import (
     BlockedCause,
     EditionPlan,
@@ -41,9 +41,11 @@ from ..edition_delta_migration import (
     MigrationOutcome,
     MigrationRefusedError,
     PredecessorBasis,
+    main,
     migrate_modelo,
     plan_migration,
 )
+from ..edition_export_scenarios import edition_export_scenarios
 from ..edition_round_trip import RoundTripFindingKind, copy_registry_tree, edition_round_trip_report
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -498,3 +500,28 @@ def test_apply_publishes_a_modelo_whose_proof_is_clean(tmp_path: Path) -> None:
         live_registry_root=registry, reference_registry_root=pristine, modelo_id=_NO_EXPORT_SURFACE, export_scenarios={}
     )
     assert report.findings == ()
+
+
+def test_the_command_line_renders_every_successors_export_bytes_from_the_canonical_scenarios(
+    pilot_before: ModeloDefinition, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A dry run reads the declared scenarios, so every successor's bytes are compared and the proof is clean.
+
+    The successors are read from the unmigrated definition, not from the run:
+    every edition after the first is one the migration makes delta-authored,
+    and each has an export surface, so each needs a scenario.
+    """
+    successors = sorted(str(revision.id) for revision in ordered_revisions(pilot_before)[1:])
+    assert all(pilot_before.revisions[revision_id].export_layouts for revision_id in successors)
+    assert set(edition_export_scenarios(_PILOT)) == set(successors)
+    registry = _registry(tmp_path / "input", _PILOT)
+
+    exit_code = main(["--registry-root", str(registry), "--modelo", _PILOT, "--work-dir", str(tmp_path / "work")])
+
+    output = capsys.readouterr().out
+    (summary,) = [line for line in output.splitlines() if line.startswith("summary ")]
+    assert exit_code == 0, output
+    assert " gate_findings=0 " in summary, output
+    assert f" byte_compared={','.join(successors)} " in summary, output
+    assert " applied=False " in summary, output
+    assert {str(r.id) for r in _load(registry, _PILOT).revisions.values() if r.predecessor is not None} == set()
