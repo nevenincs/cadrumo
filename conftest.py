@@ -1,9 +1,9 @@
 """Repo-root pytest conftest.
 
-Hosts the hexagonal marker collection hook from the repo root so every
-item gathered under ``src/cadrumo/...`` passes through the same enforcement
-surface. The hook body lives in :mod:`cadrumo.tests._marker_hook`; this
-conftest is a thin wrapper.
+Hosts the hexagonal marker collection hook from the repo root so every item
+gathered through this root passes through the same enforcement surface. The
+hook body lives in :mod:`cadrumo.tests._marker_hook`; this conftest is a thin
+wrapper.
 
 Also hosts the project-branded ``CADRUMO_PYTEST_WORKERS`` worker-count policy
 (``pytest_xdist_auto_num_workers``), delegated to
@@ -62,7 +62,12 @@ from tempfile import TemporaryDirectory
 
 from dev.test_runs import logging as _run_logging
 
-_run_logging.prepare_environment(Path(__file__).resolve().parent)
+# Keep pytest scratch and collection-time storage outside the checkout. The
+# run logger retains its relative ``.logs`` layout under this external base.
+_run_logging.prepare_environment(Path(tempfile.gettempdir()))
+# The runner's product-log artifact is not a Cadrumo Settings override: the
+# default must be derived from the isolated storage root used by this run.
+os.environ.pop("CADRUMO_LOG_DIR", None)
 
 # Pure stdlib, deliberately not `from cadrumo.tests import collection_storage_root`
 # -- see the docstring above. Mirrors `_collection_storage_root.collection_storage_root`'s
@@ -79,7 +84,7 @@ never referenced again once overwritten.
 """
 os.environ.setdefault("CADRUMO_LOCAL_STORAGE_ROOT", str(_PURE_STDLIB_COLLECTION_ROOT))
 
-from cadrumo.tests import collection_storage_root  # noqa: E402
+from cadrumo.tests.collection_storage_root import collection_storage_root
 from cadrumo.tests.env_loader import bridge_env_file_into_environ  # noqa: E402
 
 # Bridge the operator's development-only env/.env dotfile into os.environ
@@ -97,7 +102,6 @@ from typing import TYPE_CHECKING  # noqa: E402
 
 import pytest  # noqa: E402
 
-from cadrumo.tests import register_collection_storage_root_cleanup, temporary_env  # noqa: E402
 from cadrumo.tests._deselection_hook import apply as _report_deselection  # noqa: E402
 from cadrumo.tests._deselection_hook import record_collected_markers as _record_collected_markers  # noqa: E402
 from cadrumo.tests._host_load_hook import arm_pre_timeout_stamp as _arm_host_load_stamp  # noqa: E402
@@ -105,7 +109,13 @@ from cadrumo.tests._host_load_hook import disarm_pre_timeout_stamp as _disarm_ho
 from cadrumo.tests._lost_test_hook import apply as _report_lost_tests  # noqa: E402
 from cadrumo.tests._marker_hook import apply as _apply_marker_contract  # noqa: E402
 from cadrumo.tests._marker_hook import apply_banned_live_import_policy as _apply_banned_live_import_policy  # noqa: E402
+from cadrumo.tests._marker_hook import fail_session_on_held_serials as _fail_on_held_serials  # noqa: E402
+from cadrumo.tests._marker_hook import record_held_from_node as _record_held_serials  # noqa: E402
+from cadrumo.tests._marker_hook import report_held_serials as _report_held_serials  # noqa: E402
+from cadrumo.tests._marker_hook import reset_held_serials as _reset_held_serials  # noqa: E402
 from cadrumo.tests._worker_count_hook import resolve_auto_num_workers as _resolve_auto_num_workers  # noqa: E402
+from cadrumo.tests.collection_storage_root import register_collection_storage_root_cleanup
+from cadrumo.tests.env import temporary_env
 
 if TYPE_CHECKING:
     from _pytest.terminal import TerminalReporter
@@ -122,6 +132,7 @@ register_collection_storage_root_cleanup(collection_storage_root())
 @pytest.hookimpl(trylast=True)
 def pytest_configure(config: pytest.Config) -> None:
     """Create and announce this pytest invocation's durable run log."""
+    _reset_held_serials()
     _run_logging.configure(config)
 
 
@@ -142,8 +153,16 @@ def pytest_collectreport(report: pytest.CollectReport) -> None:
 
 
 def pytest_sessionfinish(session: pytest.Session, exitstatus: int | pytest.ExitCode) -> None:
-    """Finalize the unique run metadata without changing pytest's exit status."""
-    _run_logging.finish(session.config, exitstatus)
+    """Fail incomplete serial runs, then finalize their durable metadata."""
+    del exitstatus
+    _fail_on_held_serials(session)
+    _run_logging.finish(session.config, session.exitstatus)
+
+
+def pytest_testnodedown(node: object, error: object | None) -> None:
+    """Collect serial items held inside an xdist worker."""
+    del error
+    _record_held_serials(node)
 
 
 @pytest.hookimpl(trylast=True)
@@ -217,4 +236,5 @@ def pytest_terminal_summary(
 ) -> None:
     """Delegate to the shared deselection and lost-test reporters."""
     _report_deselection(terminalreporter, exitstatus, config)
+    _report_held_serials(terminalreporter)
     _report_lost_tests(terminalreporter, exitstatus, config)

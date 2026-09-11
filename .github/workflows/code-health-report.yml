@@ -1,6 +1,6 @@
 # Code-health report (issue #416), dispatch-only.
 #
-# The workflow runs `just audit-health-report`, the composed
+# The workflow runs `just report-code-health-monthly`, the composed
 # duplication, import-layering, and complexity dashboard (`dev/audit/report.py`),
 # on demand (operator ruling 2026-07-21: no schedules, no standing compute). Both the text and the JSON output remain in the job logs
 # (zero Actions-artifact posture; the storage quota is broken on the Free
@@ -9,7 +9,7 @@
 # This workflow is deliberately non-blocking. The diagnostic dashboard
 # combines import-layering, duplication, and complexity signals.
 # The main continuous integration (CI) workflow enforces every declared
-# `.importlinter` contract through `just check-imports`; this workflow
+# `.importlinter` contract through `just check-import-boundaries`; this workflow
 # records and displays a diagnostic failure without failing the job.
 
 name: Cadrumo Code Health Report
@@ -47,11 +47,11 @@ jobs:
           enable-cache: false
 
       - name: Initialize the worktree
-        run: just init
+        run: just setup
 
       - name: Run code-health report (text)
         # Informational only: a failed diagnostic verdict must not fail this job.
         # See the workflow header and `dev/audit/report.py` for the distinction
         # between the blocking import boundary and the scheduled combined report.
-        run: just audit-health-report
+        run: just report-code-health-monthly
         continue-on-error: true

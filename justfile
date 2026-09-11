@@ -39,70 +39,42 @@ default:
 
 # PowerShell's `-Command` host exits 1 for ANY failing native command rather
 # than forwarding that command's own status, which would collapse every
-# `init` exit code onto 1 and destroy the distinction between "a host tool is
+# `setup` exit code onto 1 and destroy the distinction between "a host tool is
 # missing", "the lockfile drifted", and "an editor is holding .venv open".
 # Appending an explicit propagation is the whole remedy; it is empty on unix,
 # where `sh` already forwards the status, so no recipe needs a platform pair.
 propagate := if os_family() == "windows" { "; exit $LASTEXITCODE" } else { "" }
 
-# `init` is the one command a fresh worktree needs, and the command git
-# tooling and the worktree provisioner call after creating one. It runs on an
-# ephemeral interpreter because it must work before `.venv` exists, and every
-# step it runs delegates to `dev/env`, which already owns this repository's
-# venv provisioning, its exclusive install lock, and `env/.env`.
-#
-# `uv sync --locked` is the sole project-environment operation. It creates
-# `.venv` when absent and converges it exactly to the committed lockfile; the
-# initializer refuses first when a live process holds the environment.
-#
-# Idempotent: a second run costs a stamp comparison and touches nothing.
-# `just init-check` verifies without mutating, exiting 3 when the worktree is
-# not initialized. Set VAULTSPEC_INIT_JSON=1 for an NDJSON event stream,
-# VAULTSPEC_INIT_FORCE=1 to ignore the stamp. Every run writes
-# `.venv/init-report.json`; an environment held open by a live session exits 6.
-
-[doc('Initialize a fresh clone or worktree: Python, dev dependencies, vaultspec, and env/.env.')]
-[group('bootstrap')]
-init:
+# Canonical checkout setup. This is the minimal convergence facade: it creates
+# the pinned Python environment, installs repository tooling, and materializes
+# local environment configuration. Workstation tools and browser binaries are
+# optional capabilities and therefore have separate commands below.
+[doc('Converge a checkout with Python, repository tooling, and local environment configuration.')]
+[group('setup')]
+setup:
     uv run --no-project --python 3.13.11 -- python -m dev.init all{{propagate}}
 
-[doc('Synchronize the pinned environment exactly from uv.lock.')]
-[group('bootstrap')]
-init-python:
+[doc('Synchronize the pinned Python environment from uv.lock.')]
+[group('setup')]
+setup-python:
     uv run --no-project --python 3.13.11 -- python -m dev.init python{{propagate}}
 
-[doc('Install the Vaultspec tooling and report the resulting configuration.')]
-[group('bootstrap')]
-init-tools:
+[doc('Install repository tooling, including pinned actionlint, after the Python environment is available.')]
+[group('setup')]
+setup-repository-tools:
     uv run --no-project --python 3.13.11 -- python -m dev.init tools{{propagate}}
 
-[doc('Report whether this worktree is initialized. Mutates nothing; exits 3 if not.')]
-[group('bootstrap')]
-init-check:
+[doc('Check checkout setup state without writing a report or changing files.')]
+[group('setup')]
+setup-check:
     uv run --no-project --python 3.13.11 -- python -m dev.init check{{propagate}}
 
-# Verify the workstation for the services the active profile opts into: external
-# dependency availability (Ollama vision, provider CLIs, Playwright) + the profile's
-# capability posture, with the exact fix for any gap. Exits non-zero when an
-# opted-in capability has a missing dependency. This is the product-side
-# "is my workstation ready" check (the dev-toolchain probe is `just doctor-env`).
-[doc('Verify the workstation is ready: external dependency availability plus the active profile capability posture.')]
-[group('doctor')]
-doctor-check:
-    uv run --no-sync aeat config check
-
-# Synchronize runtime, workbook, and dev dependencies exactly from uv.lock.
-# The live-process guard refuses before uv mutates an environment in active use.
-[doc('Synchronize the project environment exactly from uv.lock.')]
-[group('setup')]
-setup-install:
-    uv run --no-sync python -m dev.env install
-
-# Workstation CLI prerequisites for non-Python audit recipes.
-[doc('Workstation CLI prerequisites for non-Python audit recipes.')]
+# Optional workstation CLI prerequisites for non-Python audit recipes. This is
+# deliberately outside the minimal checkout setup.
+[doc('Provision optional workstation CLI prerequisites for non-Python audits; mutates workstation tooling only.')]
 [group('setup')]
 setup-workstation-tools:
-    uv run --no-sync python -m dev.env workstation-tools
+    uv run --no-sync python -m dev.env workstation-tools{{propagate}}
 
 # ── Environment Setup and Doctor ─────────────────────────────────────────────
 
@@ -110,37 +82,27 @@ setup-workstation-tools:
 [doc('Copy env/.env.example to env/.env if the latter is missing; no-op otherwise.')]
 [group('setup')]
 setup-env:
-    uv run --no-sync python -m dev.env setup
+    uv run --no-sync python -m dev.env setup{{propagate}}
 
-# Verify the local venv and workstation provide the full audit toolchain and RAG status.
+[doc('Diagnose the developer toolchain by PATH inspection; does not install or write anything.')]
 [group('doctor')]
-doctor-env:
-    uv run --no-sync python -c "import cadrumo; print(cadrumo.__file__)"
-    uv run --no-sync ruff --version
-    uv run --no-sync ty --version
-    uv run --no-sync pyrefly --version
-    uv run --no-sync lint-imports --version
-    uv run --no-sync deptry --version
-    uv run --no-sync vulture --version
-    uv run --no-sync radon --version
-    uv run --no-sync complexipy --help
-    uvx --from semgrep==1.168.0 semgrep --version
-    npx --yes $(uv run --no-sync python -c "from dev.audit.duplication import _JSCPD_SPEC; print(_JSCPD_SPEC)") --version
-    just doctor-pip
-    just doctor-playwright
-    -just rag-service-status
+doctor-dev:
+    uv run --no-sync python -m dev.env doctor{{propagate}}
 
-[doc('Verify installed packages satisfy their declared dependency constraints.')]
+[doc('Verify the product capability configuration without changing it.')]
 [group('doctor')]
+doctor-product:
+    uv run --no-sync aeat config check{{propagate}}
+
+[doc('Verify Python package consistency without modifying the environment.')]
 [windows]
-doctor-pip:
-    uv pip check --python .venv/Scripts/python.exe
+doctor-python:
+    uv pip check --python .venv/Scripts/python.exe{{propagate}}
 
-[doc('Verify installed packages satisfy their declared dependency constraints.')]
-[group('doctor')]
+[doc('Verify Python package consistency without modifying the environment.')]
 [unix]
-doctor-pip:
-    uv pip check --python .venv/bin/python
+doctor-python:
+    uv pip check --python .venv/bin/python{{propagate}}
 
 # Provision both browser channels the codebase needs (the post-install step
 # `uv sync` does not perform). Bundled Chromium: some tests launch it directly
@@ -152,33 +114,23 @@ doctor-pip:
 # Google Chrome. On Linux this shells out to the OS package manager and
 # typically needs root/apt access; a non-root Linux box may need
 # `google-chrome-stable` pre-installed by an administrator, or rerun this
-# recipe with elevation. Verify the result with `just doctor-playwright`.
-[doc('Provision both Playwright browser channels the codebase needs (Chromium and the chrome channel).')]
+# recipe with elevation. Verify the result with `just doctor-browser`.
+
+[doc('Provision optional Playwright Chromium and system Chrome browser channels.')]
 [group('setup')]
-setup-playwright:
-    uv run --no-sync playwright install chromium
-    uv run --no-sync playwright install chrome
+setup-browser:
+    uv run --no-sync playwright install chromium{{propagate}}
+    uv run --no-sync playwright install chrome{{propagate}}
 
 # Verify the local environment is correctly provisioned with the CONFIGURED
 # Playwright browser channel (per `cadrumo_browser_channel`, default `chrome`)
 # and its dependencies, per ADR 2026-04-12-playwright-anti-bot-adr. Performs a
 # real headless launch-and-close of that channel (never hardcodes "chrome" —
 # reads the live setting) and prints the exact remediation command on failure.
-# Exits non-zero when the environment cannot satisfy the configured channel.
-[doc('Verify the local environment is provisioned with the configured Playwright browser channel and its dependencies.')]
+[doc('Probe the configured browser channel with a real read-only launch.')]
 [group('doctor')]
-doctor-playwright:
-    uv run --no-sync python -m dev.env.playwright_doctor
-
-# Start the background vaultspec-rag HTTP service daemon on loopback port 8766.
-[group('service')]
-rag-service-start:
-    uv run --no-sync vaultspec-rag server start --updates --port 8766
-
-# Stop the background vaultspec-rag HTTP service daemon.
-[group('service')]
-rag-service-stop:
-    uv run --no-sync vaultspec-rag server stop
+doctor-browser:
+    uv run --no-sync python -m dev.env.playwright_doctor{{propagate}}
 
 # One reclamation surface over three families that used to be three commands:
 # ignored worktree output, release-build scratch under `var/`, and the temp
@@ -226,6 +178,7 @@ rag-service-stop:
 # status carries NO information about what happened. An automated caller cannot
 # use `$?` to tell a clean tree from a tree it just emptied; it has to read the
 # output. Do not wire either recipe into a gate, a hook, or a pre-commit step.
+# Neither recipe is a dependency of any aggregate.
 
 # READ-ONLY. Report reclaimable disk across worktree output, var/ build scratch and temp storage, plus git-directory bloat. Deletes nothing, always exits 0.
 [group('maintenance')]
@@ -238,6 +191,14 @@ clean-apply *ARGS:
     uv run --no-sync python -m dev.env.clean --apply {{ARGS}}
 
 # ── Static checks (Verify, Read-only) ────────────────────────────────────────
+
+# Run every deterministic code-quality primitive to completion and report one
+# blocking code verdict. Repository/control-plane checks, hooks, and the
+# networked vulnerability check are separate surfaces below.
+[doc('Run the blocking code-quality checks as one deterministic read-only subject aggregate.')]
+[group('check')]
+check-code:
+    @uv run --no-sync python -m dev.quality.suite
 
 # Verify code style using ruff check. Silent on success; lists violations on failure.
 [group('check')]
@@ -255,12 +216,6 @@ check-format:
 [group('check')]
 check-types:
     @uv run --no-sync python -m dev.quality.types
-
-# Verify the closed import boundary, Import Linter graph, and import forms.
-# This is the sole contributor-facing import-quality verdict.
-[group('check')]
-check-imports:
-    @uv run --no-sync python -m dev.quality.import_gate
 
 # Refuse tracked identity canaries while retaining the value-free advisory report.
 [doc('Verify that tracked content contains no configured identity canary.')]
@@ -286,46 +241,20 @@ check-docs-api:
 check-docs-synonyms:
     @uv run --no-sync python -m dev.docs.terminology.synonyms validate
 
-# Verify registry integrity and the bundled parity-oracle bindings.
-# Integrity also refuses a bundled runtime authority artifact that no longer
-# records the live registry and source evidence; republish it with
-# `uv run --no-sync python -m dev.registry.pipeline publish-authority`.
-# The two commands are dependent: a failed integrity verification invalidates
-# any downstream parity claim, so this health gate stops before the audit.
-[doc('Verify registry integrity and audit every bundled parity-oracle binding.')]
+# Answer the whole-registry question once. The collector unions validity,
+# generated-target currentness, authority currency, runtime loading, and
+# oracle bindings; the run wrapper persists detail and prints one bounded JSON
+# envelope.
+[doc('Verify all registry lifecycle lanes and persist one normalized health report.')]
 [group('check')]
+[no-exit-message]
 check-registry:
-    @uv run --no-sync python -m dev.registry.conformance integrity
-    @uv run --no-sync python -m dev.registry.parity.maintenance_cli audit-oracles
+    @uv run --no-sync python -m dev.test_runs.command --family test-runs --label check-registry --signal registry-health -- uv run --no-sync python -m dev.registry.analysis.registry_status --check --json
 
-# Refuse numeric product policy embedded beside modelo-routing branches.
+[doc('Prove one named generated registry target is current without publishing it.')]
 [group('check')]
-check-modelo-regulatory-literals:
-    @uv run --no-sync python -m dev.quality.modelo_regulatory_literals
-
-[doc('Refuse regulatory literals embedded in modelo-specific registry modules.')]
-[group('check')]
-check-modelo-regulatory-embeds:
-    @uv run --no-sync python -m dev.quality.modelo_regulatory_embeds
-
-# Report every shipped module no declared product command reaches.
-[group('check')]
-check-unreachable-module-coverage:
-    @uv run --no-sync python -m dev.quality.unreachable_module_coverage
-
-# Report every exact unused symbol and orphaned test module in the live tree.
-[group('check')]
-check-unused-symbol-coverage:
-    @uv run --no-sync python -m dev.quality.unused_symbol_coverage
-
-# A store nothing fills reads as empty rather than as absent, so a count
-# rendered from it reports zero forever and an aggregation contributes a zero
-# where the source is missing. Known gaps are declared with their kind and
-# rationale in dev/quality/secure_store_write_path.toml; a new one fails.
-# Verify every encrypted store the application reads has a production writer.
-[group('check')]
-check-secure-store-write-path:
-    @uv run --no-sync python -m dev.quality.secure_store_write_path
+check-registry-target-current MODELO REVISION SOURCE_REF FILING_YEAR PERIOD:
+    @uv run --no-sync python -m dev.registry.pipeline target-current {{MODELO}} {{REVISION}} {{SOURCE_REF}} {{FILING_YEAR}} {{PERIOD}}
 
 # Verify every Sphinx cross-reference in a docstring names a symbol that
 # still exists; a dangling target fails the build.
@@ -334,28 +263,91 @@ check-secure-store-write-path:
 check-docstring-references:
     @uv run --no-sync python -m dev.quality.docstring_reference_targets
 
-# Report every name in __all__ that no non-test module imports and the live
-# reachability audit also reports unused.
-[doc('Refuse every exported name no non-test module consumes.')]
+# ── Canonical code checks ────────────────────────────────────────────────────
+
+[doc('Verify import boundaries and import forms; read-only and blocking.')]
 [group('check')]
-check-unconsumed-export-coverage:
+[no-exit-message]
+check-import-boundaries:
+    @uv run --no-sync python -m dev.test_runs.command --family test-runs --label check-import-boundaries --signal import-boundaries -- uv run --no-sync python -m dev.quality.import_gate
+
+[doc('Verify dependency declarations against the source tree; read-only and blocking.')]
+[group('check')]
+check-dependency-declarations:
+    @uv run --no-sync python -m dev.quality.quiet deptry src/cadrumo src/cadrumo_harness dev/registry --known-first-party cadrumo --known-first-party cadrumo_harness --known-first-party dev --non-dev-dependency-groups registry --extend-exclude ".*test_.*[.]py" --extend-exclude ".*_test_.*[.]py" --extend-exclude ".*[\\/]tests[\\/].*"
+
+[doc('Verify product module reachability; read-only and blocking.')]
+[group('check')]
+check-module-reachability:
+    @uv run --no-sync python -m dev.quality.unreachable_module_coverage
+
+[doc('Verify production symbol usage; read-only and blocking.')]
+[group('check')]
+check-symbol-usage:
+    @uv run --no-sync python -m dev.quality.unused_symbol_coverage
+
+[doc('Verify exported names are consumed by production code; read-only and blocking.')]
+[group('check')]
+check-export-consumption:
     @uv run --no-sync python -m dev.quality.unconsumed_export_coverage
 
-# Refuse every production-readable persistence surface with no production writer.
+[doc('Verify every secure store has a production write path; read-only and blocking.')]
 [group('check')]
-check-write-path-coverage:
+check-secure-store-write-paths:
+    @uv run --no-sync python -m dev.quality.secure_store_write_path
+
+[doc('Verify every readable persistence surface has a production writer; read-only and blocking.')]
+[group('check')]
+check-persistence-write-paths:
     @uv run --no-sync python -m dev.quality.write_path_coverage
 
-# Verify dependency declarations for drift or unused packages. Silent on success.
+# ── Repository/control-plane checks ─────────────────────────────────────────
+
+[doc('Run identity, API-stub, workflow, and gate-contract checks as one read-only repository aggregate.')]
 [group('check')]
-check-dependencies:
-    @uv run --no-sync python -m dev.quality.quiet deptry src/cadrumo src/cadrumo_harness dev/registry --known-first-party cadrumo --known-first-party cadrumo_harness --known-first-party dev --non-dev-dependency-groups registry --extend-exclude ".*test_.*[.]py" --extend-exclude ".*_test_.*[.]py" --extend-exclude ".*[\\/]tests[\\/].*"
+check-repository:
+    @uv run --no-sync python -m dev.identity
+    @uv run --no-sync python -m dev.docs.apidocs scaffold --check
+    @uv run --no-sync python -m dev.actionlint
+    @uv run --no-sync python -m dev.ci_contract
+
+[doc('Verify committed API-reference stubs without rewriting them.')]
+[group('check')]
+check-api-stubs:
+    @uv run --no-sync python -m dev.docs.apidocs scaffold --check
+
+# Verify workflow syntax and shell contracts without changing workflows. If
+# actionlint is unavailable, the check reports `just setup-repository-tools`.
+[doc('Verify workflow syntax and shell contracts without changing workflows.')]
+[group('check')]
+check-workflows:
+    @uv run --no-sync python -m dev.actionlint
+
+[doc('Verify workflow-to-recipe gate contracts without changing repository files.')]
+[group('check')]
+check-gate-contracts:
+    @uv run --no-sync python -m dev.ci_contract
+
+# Convenience replay for hooks. It is intentionally not in check-code or
+# check-repository because it duplicates the leaf checks and owns hook behavior.
+[doc('Replay all pre-commit hooks; read-only convenience check excluded from aggregates.')]
+[group('check')]
+check-hooks:
+    @uv run --no-sync python -m dev.quality.quiet uv run --no-sync prek run --all-files
+
+# Gate on published vulnerability advisories for every pinned dependency. The
+# check is read-only but needs network access; it exits 1 for findings and 7
+# when advisory data cannot be obtained, so unavailable data is never green.
+[doc('Gate on published vulnerability advisories for every pinned dependency; read-only, blocking, network required.')]
+[group('check')]
+check-dependency-vulnerabilities:
+    @uv run --no-sync python -m dev.audit.dependency_audit
 
 # Cheap dependency-surface preflight: verify pyproject, optional-extra registry,
 # and frozen core/all-extras/all-groups exports before any artifact work.
-[doc('Cheap dependency-surface preflight: verify pyproject, optional-extra registry, and frozen exports.')]
+[doc('Run the packaging dependency and lockfile preflight.')]
 [group('test')]
-test-packaging-smoke-dependencies:
+test-packaging-dependencies:
     @uv run --no-sync python -m dev.packaging.dependency_surface
 
 # Verify the packaging preflight command contracts. The marker expression is
@@ -364,36 +356,41 @@ test-packaging-smoke-dependencies:
 # the same set. `dev/packaging/tests` is mixed-marker: inheriting the default
 # `-m 'unit and ...'` expression from pyproject silently deselected every
 # integration contract in it -- including the modules named for the
-# packaging-smoke, Scoop, Homebrew, and Docker workflows the campaign runs this
+# packaging, Scoop, Homebrew, and Docker workflows the campaign runs this
 # preflight ahead of -- and still exited zero.
 # The excluded `serial` tests are not dropped silently: every one of them is
-# owned by `test-packaging-smoke-serial`, and the installed-oracle cohort
-# additionally by the narrower `test-packaging-smoke-installed-oracles`.
+# owned by `test-packaging-serial`, and the installed-oracle cohort
+# additionally by the narrower `test-installed-oracles`.
 # `serial` is excluded by MARKER rather than left to the scheduler: an item
 # selected here would be held out of the run by the collection hook behind a
 # warning, which is a green summary over a test that never executed. `perf` is
 # excluded by its registered policy, which holds it out of every per-push lane.
-# Guarded by `dev/packaging/tests/test_preflight_recipe_selection.py`.
-[doc('Verify the packaging preflight command contracts (dependency surface, source data, Docker/Scoop/Homebrew workflows).')]
+# The source-data preflight is a first-class packaging preflight concern. It
+# stays separate from dependency checks so a caller can report which input
+# failed before any cohort or artifact work begins.
+[doc('Run the packaging source-data preflight.')]
 [group('test')]
-test-packaging-smoke-preflight:
-    @uv run --no-sync pytest -v -m "(unit or integration) and not serial and not perf" dev/packaging/tests
-
-# Cheap source-data preflight: fail before wheel, venv, or Docker work if the
-# shipped-data enumeration collapses or a Renta PDF allow-list file is missing.
-# It cannot flag an arbitrary deleted data file: the enumeration reads the
-# working tree, where a deleted file is indistinguishable from one never added.
-[doc('Cheap source-data preflight: fail before wheel, venv, or Docker work if shipped-data enumeration collapses or an allow-listed PDF is missing.')]
-[group('test')]
-test-packaging-smoke-source:
+test-packaging-source:
     @uv run --no-sync python -m dev.packaging.source_preflight
 
-# Operator-run: regenerate the committed AEAT manual PDF corpus-text sidecars
+# Structural packaging tests are the portable, non-serial contract population.
+# Every marker is explicit because this directory mixes unit, integration,
+# serial, performance, and capability-qualified tests.
+[doc('Run portable non-serial packaging contract tests with explicit marker boundaries.')]
+[group('test')]
+test-packaging-contracts:
+    @uv run --no-sync pytest -v -n auto -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/packaging/tests
+
+[doc('Run packaging dependency, source, and contract preflight as independent verdicts.')]
+[group('test')]
+test-packaging-preflight: test-packaging-dependencies test-packaging-source test-packaging-contracts
+
+# Operator-run: generate the committed AEAT manual PDF corpus-text sidecars
 # after a corpus PDF changes. The sidecars are load-bearing for registry
 # evidence validation, so re-run this and commit the regenerated JSON.
-[doc('Operator-run: regenerate the committed AEAT manual PDF corpus-text sidecars after a corpus PDF changes.')]
-[group('fix')]
-fix-corpus-text:
+[doc('Generate the committed AEAT manual PDF corpus-text sidecars after a corpus PDF changes; writes committed derived state.')]
+[group('generate')]
+generate-corpus-text:
     @uv run --no-sync python -m dev.corpus.extract_manual_corpus_text
 
 # Freshness gate: fail (without writing) when any committed corpus-text sidecar
@@ -403,11 +400,11 @@ fix-corpus-text:
 check-corpus-text:
     @uv run --no-sync python -m dev.corpus.extract_manual_corpus_text --check
 
-# Operator-run: regenerate committed normative HTML and record-design workbook
+# Operator-run: generate committed normative HTML and record-design workbook
 # sidecars after their authoritative corpus sources change.
-[doc('Operator-run: regenerate committed corpus HTML and workbook sidecars after source changes.')]
-[group('fix')]
-fix-corpus-sidecars:
+[doc('Generate committed corpus HTML and workbook sidecars after source changes; writes committed derived state.')]
+[group('generate')]
+generate-corpus-sidecars:
     @uv run --no-sync python -m dev.corpus.extract_corpus_sidecars
 
 # Freshness gate: compare every enrolled HTML/workbook sidecar with the exact
@@ -421,21 +418,9 @@ check-corpus-sidecars:
 # would reject on size. Same two operations the publish workflow performs, in the
 # same order, so the local run and the hosted one can disagree only about the host.
 
-#: The artifacts a plain checkout can produce. `build-devcontainer` and
-#: `build-runner-image` are deliberately absent: both need a working Docker
-#: daemon, so an aggregate that included them would fail on a machine that is
-#: perfectly able to build every artifact this repository ships.
-full_build_lanes := "build-distributions build-python-cohort"
-
-# AGGREGATES RUN EVERY STEP and exit non-zero when any step failed; they do not
-# stop at the first failure. An aggregate is asked for a complete picture, and
-# fail-fast costs a round-trip per defect. That is why this dispatches into
-# `dev/` rather than listing its members as just dependencies: a dependency
-# chain cannot express run-all-then-report.
-[doc('Build every artifact a plain checkout can produce; continue after failures and report per-lane timings.')]
+[doc('Build exactly the distributions published to users.')]
 [group('build')]
-build-all:
-    uv run --no-sync python -m dev.test_runs lanes {{full_build_lanes}}
+build-release: build-distributions
 
 [doc('Build every published distribution and refuse any file over the index cap.')]
 [group('build')]
@@ -454,15 +439,10 @@ build-distributions:
 test-python-compatibility:
     uv run --no-sync python -m dev.ci.python_runtime_sweep
 
-[doc('Construct the temporary Python wheel cohort once for the current smoke campaign.')]
+[doc('Construct the temporary Python packaging cohort once for artifact qualification.')]
 [group('build')]
-build-python-cohort: test-packaging-smoke-source
+build-packaging-cohort: test-packaging-source
     @uv run --no-sync python -m dev.packaging.python_cohort build --output var/packaging-smoke-cohort/python
-
-# Run both installed public transports against the exact built cohort.
-[group('test')]
-test-packaging-smoke-installed-oracles: build-python-cohort
-    @uv run --no-sync pytest -v -n0 -m "integration and serial" dev/packaging/tests/test_installed_oracles.py
 
 # Own the rest of the serial contracts in this directory. The preflight lane
 # selects `not serial` because these must not run concurrently, and the oracle
@@ -479,29 +459,34 @@ test-packaging-smoke-installed-oracles: build-python-cohort
 # excluded: this recipe is the serving-path benchmark's only owner, and
 # narrowing it away from that cohort makes those tests unreachable. Guarded by
 # `dev/packaging/tests/test_preflight_recipe_selection.py`.
-[doc('Run the serial packaging contracts the preflight lane excludes.')]
+[doc('Run the portable packaging campaign against one sealed temporary cohort.')]
 [group('test')]
-test-packaging-smoke-serial: build-python-cohort
-    @uv run --no-sync pytest -v -n0 -m "serial" dev/packaging/tests
-
-# Local release-artifact smoke gates that do not need host package-manager access.
-# The campaign driver builds the cohort once and runs the flavor lanes
-# concurrently (bounded pool; lanes are disk-disjoint), then the serial
-# installed-oracles pass — same proofs as the former serial aggregate at a
-# fraction of the wall time (the Windows leg measured 26.3 min serial).
-[doc('Local release-artifact smoke gates that do not need host package-manager access (portable profile).')]
-[group('test')]
-test-packaging-smoke:
+test-packaging-portable:
     @uv run --no-sync python -m dev.packaging.campaign --profile portable
 
-# One CI invocation keeps every artifact and oracle lane on the same cohort bytes.
+[doc('Run the CI packaging campaign and the held-out performance contracts.')]
 [group('test')]
-test-packaging-smoke-ci:
+test-packaging-ci:
     @uv run --no-sync python -m dev.packaging.campaign --profile ci
+    @uv run --no-sync pytest -v -n0 -m "perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/packaging/tests
+
+[doc('Run packaging artifact qualification against one sealed temporary cohort.')]
+[group('test')]
+test-installed-oracles: build-packaging-cohort
+    @uv run --no-sync pytest -v -n0 -m "integration and serial" dev/packaging/tests/test_installed_oracles.py
+
+[doc('Run non-performance serial packaging contracts against the sealed cohort.')]
+[group('test')]
+test-packaging-serial: build-packaging-cohort
+    @uv run --no-sync pytest -v -n0 -m "serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" --ignore=dev/packaging/tests/test_installed_oracles.py dev/packaging/tests
+
+[doc('Run packaging artifact qualification: installed oracles, serial contracts, runtimes, and channels.')]
+[group('test')]
+test-packaging-artifacts: test-installed-oracles test-packaging-serial test-python-compatibility test-channel-artifacts
 
 # Per-push quick probe: cohort built once plus the single installed core smoke.
 # Deliberately minimal (ten-minute per-push budget); every other flavor lane is
-# a release-campaign proof carried by `test-packaging-smoke` / `test-packaging-smoke-ci`.
+# a release-campaign proof carried by `test-packaging-portable` / `test-packaging-ci`.
 [doc('Per-push quick probe: cohort built once plus the single installed core smoke check.')]
 [group('test')]
 test-packaging-quick:
@@ -528,6 +513,7 @@ build-devcontainer:
 [group('test')]
 test-devcontainer: build-devcontainer
     docker run --rm cadrumo-devcontainer bash -lc "python dev/containers/devcontainer_smoke.py"
+    @uv run --no-sync pytest -v -n0 -m unit --ignore=dev/containers/tests/test_runner_capabilities.py dev/containers/tests
 
 # ── Self-hosted runner image ─────────────────────────────────────────────────
 
@@ -538,6 +524,10 @@ test-devcontainer: build-devcontainer
 [group('build')]
 build-runner-image:
     docker build --target runner -t cadrumo-runner-linux -f Dockerfile .
+
+[doc('Build the explicit infrastructure images: devcontainer and runner image.')]
+[group('build')]
+build-infrastructure: build-devcontainer build-runner-image
 
 # Verify the runner image carries every capability the fleet assumes present.
 # Each check below maps to a documented outage: `gh` absent broke a release
@@ -557,27 +547,7 @@ test-runner-image: build-runner-image
     # it rather than assert it: tmpfs (unlike a named volume) does NOT seed from
     # the image, so this is the worst case a real state volume can present.
     docker run --rm --mount type=tmpfs,destination=/home/runner --entrypoint bash cadrumo-runner-linux -c 'set -e; test "$(ls -A /home/runner | wc -l)" = "0"; gh --version > /dev/null; just --version > /dev/null; brew --version > /dev/null; test -x /usr/local/bin/cadrumo-runner-entry.sh; test -x /usr/local/bin/cadrumo-cleanup-linux.sh; echo "tools, entrypoint and hygiene hook survive a volume mounted over /home/runner"'
-
-# Verify codebase security posture using semgrep scans. The runner
-# (dev.audit.security) owns the semgrep invocation AND its parsing (JSON,
-# not the text report, which renders matched code plus surrounding context --
-# 55,378 lines for 365 findings on this tree), so this recipe and audit-all's
-# security dimension cannot drift apart or disagree. Pass --full for the
-# uncapped finding list.
-[doc('Audit codebase security posture using semgrep scans; advisory and always non-blocking.')]
-[group('audit')]
-audit-security:
-    @uv run --no-sync python -m dev.audit.security
-
-# Check if the RAG service daemon is running.
-[group('service')]
-rag-service-status:
-    @uv run --no-sync vaultspec-rag server status --port 8766
-
-# Run programmatic semantic audit checks using the local RAG daemon. Silent on success.
-[group('check')]
-check-semantic:
-    @uv run --no-sync python -m dev.audit.semantic
+    @uv run --no-sync pytest -v -n0 -m unit --ignore=dev/containers/tests/test_devcontainer_smoke.py dev/containers/tests
 
 # Two questions about the same artifacts. actionlint asks whether the YAML is
 # well-formed and its expressions resolve; the CI contract asks whether a `run:`
@@ -585,119 +555,164 @@ check-semantic:
 # valid YAML and still install `just` with an unpinned `scoop install`, which
 # is what two Windows legs here did.
 
-# Lint the workflows, then hold them to the CI/justfile contract.
-[group('check')]
-check-workflow:
-    @uv run --no-sync python -m dev.actionlint
-    @uv run --no-sync python -m dev.ci_contract
-
-[doc('Mutation-prove each merge-check contract fails and passes in isolation.')]
-[group('check')]
-prove-check-set:
-    @uv run --no-sync python dev/ci/prove_check_set_guards.py
-
-# Run all pre-commit hooks via prek. Silent on success; replays hook output on failure.
-[group('check')]
-check-pre-commit:
-    @uv run --no-sync python -m dev.quality.quiet uv run --no-sync prek run --all-files
-
-# Excludes check-pre-commit (re-runs ruff + ty + architecture) and the local-only RAG/semantic checks.
-# Run every fast static gate to completion; report only failures; silent on full pass.
-[group('check')]
-check-all:
-    @uv run --no-sync python -m dev.quality.suite
-
 # ── Code mutations (Write) ──────────────────────────────────────────────────
 
-# Auto-repair every lint violation that carries a safe fix (ruff check --fix).
+# Apply deterministic mechanical source repairs owned by the quality tooling.
+# This changes source files only; committed documentation and other generated
+# derivatives have their own explicit generation commands.
+[doc('Apply deterministic mechanical source repairs; source-mutating and never a verification gate.')]
+[group('fix')]
+fix-code:
+    @uv run --no-sync python -m dev.quality.fixes
+
+# Auto-repair every lint violation that carries a safe source fix (ruff check --fix).
 [group('fix')]
 fix-style:
     @uv run --no-sync ruff check --fix .
 
-# Auto-sort imports only (ruff I-rule safe fixes).
+# Auto-sort imports only (ruff I-rule safe source fixes).
 [group('fix')]
 fix-imports:
     @uv run --no-sync ruff check --select I --fix .
 
-# Auto-format all python source files (ruff format).
+# Auto-format Python source files (ruff format).
 [group('fix')]
 fix-format:
     @uv run --no-sync ruff format .
 
-# Action every automatically-fixable issue in one pass: safe lint fixes then formatting.
-[group('fix')]
-fix-all:
-    @uv run --no-sync python -m dev.quality.fixes
+# Locale operations keep blocking observation, status reporting, generation,
+# and curated catalogue mutation separate. The blocking audit is `check-locales`.
+[doc('Report the authored, key-echo, blank, absent, and extra state of each locale catalogue; read-only.')]
+[group('locale')]
+locales-status:
+    @uv run --no-sync python -m dev.locales status
 
-# Trigger incremental vector re-indexing via the loopback service.
-[group('service')]
-rag-index:
-    @uv run --no-sync vaultspec-rag index --type all --port 8766
+[doc('Generate locale catalogue leaves from the live translation-key surface; writes catalogue source state.')]
+[group('locale')]
+locales-scaffold:
+    uv run --no-sync python -m dev.locales scaffold
 
-# Reconcile the committed API-reference stubs with the source module tree.
-[doc('Regenerate API documentation stubs; pass CLI options through unchanged.')]
-[group('docs')]
-docs-api-scaffold *ARGS:
-    @uv run --no-sync python -m dev.docs.apidocs scaffold {{ARGS}}
+[doc('Set one curated locale value through the catalogue authority; mutates the named catalogue.')]
+[group('locale')]
+locales-set LOCALE KEY VALUE:
+    uv run --no-sync python -m dev.locales set {{LOCALE}} {{KEY}} {{quote(VALUE)}}
 
-# Refresh committed CLI-sequence goldens. Scope with the underlying CLI options.
-[doc('Refresh committed documentation CLI-sequence goldens.')]
-[group('docs')]
-docs-sequences-refresh *ARGS:
-    @uv run --no-sync python -m dev.docs.sequences refresh {{ARGS}}
+[doc('Apply a locale value manifest through the catalogue authority; mutates only its named catalogues.')]
+[group('locale')]
+locales-set-batch MANIFEST:
+    uv run --no-sync python -m dev.locales set-batch {{quote(MANIFEST)}}
 
-# Run Terminology Handbook curation commands such as scaffold, set, and relate.
-[doc('Run a Terminology Handbook mutation command.')]
-[group('docs')]
-docs-terminology *ARGS:
-    @uv run --no-sync python -m dev.docs.terminology_handbook {{ARGS}}
+[doc('Move a locale key subtree through the catalogue authority; refuses conflicts by default.')]
+[group('locale')]
+locales-move SOURCE *DESTINATIONS:
+    uv run --no-sync python -m dev.locales move {{SOURCE}} {{DESTINATIONS}}
 
-# Regenerate the committed terminology coverage report.
-[doc('Regenerate the terminology coverage report.')]
-[group('docs')]
-docs-terminology-coverage *ARGS:
-    @uv run --no-sync python -m dev.docs.terminology.coverage report {{ARGS}}
+[doc('Move Modelo revision locale keys only to registry-declared destinations; refuses conflicts by default.')]
+[group('locale')]
+locales-move-revision MODELO SOURCE_REVISION *DESTINATION_REVISIONS:
+    uv run --no-sync python -m dev.locales move-revision {{MODELO}} {{SOURCE_REVISION}} {{DESTINATION_REVISIONS}}
 
-# Run the resident-RAG terminology sweep and optionally write its reviewed map.
-[doc('Run the terminology relevance sweep against the resident RAG service.')]
-[group('docs')]
-docs-terminology-sweep *ARGS:
-    @uv run --no-sync python -m dev.docs.terminology.sweep {{ARGS}}
+[doc('Canonicalize product-identity references in locale catalogues; mutates the selected catalogue set.')]
+[group('locale')]
+locales-canonicalize-product-identity LOCALE="":
+    uv run --no-sync python -m dev.locales canonicalize-product-identity {{ if LOCALE == "" { "" } else { "--locale " + LOCALE } }}
 
-# Mine or otherwise maintain the synonym ratification queue.
-[doc('Run a terminology synonym maintenance command.')]
-[group('docs')]
-docs-terminology-synonyms *ARGS:
-    @uv run --no-sync python -m dev.docs.terminology.synonyms {{ARGS}}
+[doc('Remove one exact locale key through the catalogue authority; refuses an absent key.')]
+[group('locale')]
+locales-remove LOCALE KEY:
+    uv run --no-sync python -m dev.locales remove {{LOCALE}} {{KEY}}
 
-# Route locale catalogue changes through their canonical maintenance CLI.
-[doc('Run a locale catalogue maintenance command.')]
+[doc('Remove a locale key manifest through the catalogue authority; refuses missing keys by default.')]
+[group('locale')]
+locales-remove-batch MANIFEST:
+    uv run --no-sync python -m dev.locales remove-batch {{quote(MANIFEST)}}
+
+# Registry lifecycle mutations keep authority publication, target publication,
+# and digest-bound republication as separate operator actions.
+[doc('Publish only the validated runtime registry authority artifact.')]
 [group('maintenance')]
-dev-locales *ARGS:
-    @uv run --no-sync python -m dev.locales {{ARGS}}
+registry-publish-authority:
+    @uv run --no-sync python -m dev.registry.pipeline publish-authority
 
-# Scaffold a modelo or render its contributor checklist through the owning CLI.
-[doc('Run a new-modelo scaffolding or checklist command.')]
+[doc('Publish only one named static generated registry target tree.')]
 [group('maintenance')]
-dev-newmodelo *ARGS:
-    @uv run --no-sync python -m dev.registry.newmodelo {{ARGS}}
+registry-publish-target MODELO REVISION SOURCE_REF FILING_YEAR PERIOD:
+    @uv run --no-sync python -m dev.registry.pipeline publish-target {{MODELO}} {{REVISION}} {{SOURCE_REF}} {{FILING_YEAR}} {{PERIOD}}
 
-# Check, publish, or republish a generated registry target through the owning CLI.
-[doc('Run a generated registry pipeline command.')]
+[doc('Republish one named target only with its expected reviewed manifest digest.')]
 [group('maintenance')]
-dev-registry-pipeline *ARGS:
-    @uv run --no-sync python -m dev.registry.pipeline {{ARGS}}
+registry-republish-target MODELO REVISION SOURCE_REF FILING_YEAR PERIOD EXPECTED_MANIFEST_SHA256:
+    @uv run --no-sync python -m dev.registry.pipeline republish-target {{MODELO}} {{REVISION}} {{SOURCE_REF}} {{FILING_YEAR}} {{PERIOD}} {{EXPECTED_MANIFEST_SHA256}}
 
-# Generate and maintain TUI visual-review artifacts.
-[doc('Run a TUI visual-review command.')]
+[doc('Scaffold one modelo revision through the registry-owned CLI.')]
 [group('maintenance')]
-dev-tui-review *ARGS:
+registry-modelo-scaffold MODELO REVISION:
+    @uv run --no-sync python -m dev.registry.newmodelo scaffold {{MODELO}} {{REVISION}}
+    @echo "next_currentness=check-registry-valid-and-report-registry-status next_publication=registry-publish-authority-then-registry-publish-target"
+
+[doc('Check one modelo revision scaffold without writing any skeleton files.')]
+[group('check')]
+check-registry-modelo-scaffold MODELO REVISION:
+    @uv run --no-sync python -m dev.registry.newmodelo scaffold {{MODELO}} {{REVISION}} --check
+
+[doc('Render the registry modelo contributor checklist.')]
+[group('maintenance')]
+registry-modelo-checklist:
+    @uv run --no-sync python -m dev.registry.newmodelo checklist
+
+[doc('Write declared registry governance provenance for one named revision.')]
+[group('maintenance')]
+registry-governance-stamp REGISTRY_ROOT MODELO REVISION ENGINEERED_BY="" CLEAR_ENGINEERED_BY="false" REVIEW_STATUS="" REVIEWED_BY="" REVIEWED_AT="":
+    @uv run --no-sync python -m dev.registry.conformance stamp {{MODELO}} {{REVISION}} --registry-root {{quote(REGISTRY_ROOT)}}{{ if ENGINEERED_BY == "" { "" } else { " --engineered-by " + quote(ENGINEERED_BY) } }}{{ if CLEAR_ENGINEERED_BY == "true" { " --clear-engineered-by" } else { "" } }}{{ if REVIEW_STATUS == "" { "" } else { " --review-status " + quote(REVIEW_STATUS) } }}{{ if REVIEWED_BY == "" { "" } else { " --reviewed-by " + quote(REVIEWED_BY) } }}{{ if REVIEWED_AT == "" { "" } else { " --reviewed-at " + quote(REVIEWED_AT) } }}
+    @echo "next_currentness=check-registry-valid-and-report-registry-status next_publication=registry-publish-authority-then-registry-publish-target"
+
+[doc('Apply one named modelo edition migration after its round-trip proof; scratch stays under WORK_DIR and evidence under .logs.')]
+[group('maintenance')]
+registry-edition-migrate REGISTRY_ROOT MODELO WORK_DIR DECLARE_BLOCKED_ROOTS="false":
+    @uv run --no-sync python -m dev.registry.edition_delta_migration --registry-root {{quote(REGISTRY_ROOT)}} --modelo {{MODELO}} --work-dir {{quote(WORK_DIR)}} --apply {{ if DECLARE_BLOCKED_ROOTS == "true" { "--declare-blocked-roots" } else { "" } }}
+    @echo "next_currentness=check-registry-valid-and-report-registry-status next_publication=registry-publish-authority-then-registry-publish-target"
+
+[doc('Stage one modelo edition migration under WORK_DIR and persist its report under .logs; never apply it to the registry.')]
+[group('report')]
+report-registry-edition-migration REGISTRY_ROOT MODELO WORK_DIR DECLARE_BLOCKED_ROOTS="false":
+    @uv run --no-sync python -m dev.registry.edition_delta_migration --registry-root {{quote(REGISTRY_ROOT)}} --modelo {{MODELO}} --work-dir {{quote(WORK_DIR)}} {{ if DECLARE_BLOCKED_ROOTS == "true" { "--declare-blocked-roots" } else { "" } }}
+
+[doc('Rename registry formula and binding identifiers through the owning CLI.')]
+[group('maintenance')]
+registry-binding-rename:
+    @uv run --no-sync python -m dev.registry.rename_formula_binding_identifiers --apply
+    @echo "next_currentness=check-registry-valid-and-report-registry-status next_publication=registry-publish-authority-then-registry-publish-target"
+
+[doc('Report registry formula and binding identifier rename measurements without applying them.')]
+[group('report')]
+report-registry-binding-renames:
+    @uv run --no-sync python -m dev.registry.rename_formula_binding_identifiers
+
+[doc('Generate registry result-disposition fragments through the owning CLI.')]
+[group('maintenance')]
+registry-result-fragments-generate:
+    @uv run --no-sync python -m dev.registry.result_disposition_fragment_generator --apply
+    @echo "next_currentness=check-registry-valid-and-report-registry-status next_publication=registry-publish-authority-then-registry-publish-target"
+
+[doc('Report registry result-disposition fragments that would be generated without writing them.')]
+[group('report')]
+report-registry-result-fragments:
+    @uv run --no-sync python -m dev.registry.result_disposition_fragment_generator
+
+# The dev.tui command family is limited to visual-review artefacts: inventory,
+# render, snapshot, rasterise, and diff. It has no service-control or test
+# authority, so one subject wrapper is truthful here.
+[doc('Run visual-review inventory, rendering, snapshot, rasterisation, or diff operations.')]
+[group('tui')]
+tui-review *ARGS:
     @uv run --no-sync python -m dev.tui {{ARGS}}
 
-# Drive the persistent interactive TUI harness session.
-[doc('Run an interactive TUI harness command.')]
-[group('maintenance')]
-dev-tui-harness *ARGS:
+# The harness command family owns one persistent interactive session: opening,
+# replaying, inspecting, and capturing its current walk. It is not a test lane
+# and is never an aggregate prerequisite.
+[doc('Drive the persistent interactive TUI harness session.')]
+[group('tui')]
+tui-harness *ARGS:
     @uv run --no-sync python -m dev.tui.harness {{ARGS}}
 
 # ── Testing ──────────────────────────────────────────────────────────────────
@@ -717,17 +732,11 @@ pytest_workers := env_var_or_default("CADRUMO_PYTEST_WORKERS", "auto")
 harness_worker_hook := "src/cadrumo/tests/test_worker_count_hook_harness.py"
 harness_members := harness_worker_hook
 harness_exclusions := prepend("--ignore=", harness_members)
+calculation_exclusions := "--ignore=src/cadrumo/application/calculations --ignore=src/cadrumo/domain/calculations/registry/tests"
 
-# Run the fast test-framework ratchets for discovery, markers, skip/xfail, mock/test-double, monkeypatch, broad raises, bare except, tautology drift, and the exit-code contract.
+[doc('Run the tooling-owned pytest harness verdict before product populations.')]
 [group('test')]
-test-ratchets:
-    @uv run --no-sync pytest -v -p no:cacheprovider dev/tests/test_test_inventory.py dev/tests/test_no_skip_xfail.py dev/tests/test_no_broad_exception_raises.py dev/tests/test_no_bare_except.py dev/tests/test_exit_code_contract.py
-
-# Run the worker-count hook verdict outer-serially so it can inspect the
-# installed pytest hook without nesting another worker pool.
-[doc('Run the dedicated outer-serial worker-count hook verdict.')]
-[group('test')]
-test-harness:
+test-pytest-harness:
     @uv run --no-sync pytest -q -m integration --collect-only -n0 {{harness_worker_hook}}
     @uv run --no-sync pytest -v -m integration -n0 --timeout=900 {{harness_members}}
 
@@ -758,7 +767,7 @@ test-harness:
 [doc('Run the unit test suite in parallel. Streams failure identities as they happen.')]
 [group('test')]
 test-unit durations="":
-    @uv run --no-sync pytest -v -n {{pytest_workers}} --dist=loadfile -m 'unit and not external_tool and not os_keychain and not windows_only and not tui_render' {{ if durations == "" { "" } else { "--durations=" + durations } }}
+    @uv run --no-sync pytest -v -n {{pytest_workers}} --dist=loadfile -m 'unit and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service' {{calculation_exclusions}} {{ if durations == "" { "" } else { "--durations=" + durations } }}
 
 # Focused subsystem selectors use the same explicit offline-capability boundary
 # as the full lanes. Each runs ordinary tests under xdist and isolation-sensitive
@@ -854,43 +863,54 @@ test-calculations:
 # flake under `-n auto` interleaving while passing cleanly in isolation.
 [doc('Run the integration suite in two lanes: parallel xdist, then the isolation-sensitive serial tests alone.')]
 [group('test')]
-test-integration:
-    @just test-integration-parallel
-    @just test-integration-serial
+test-integration: test-integration-parallel test-integration-serial
 
-# THIS FILE IS THE SOLE DECLARATION SITE FOR EVERY `dev/` TEST LANE.
-#
-# The list used to be declared three times -- ci.yml named four directories,
-# `test-dev-tooling` named nine, `docs-check` named two -- and the workflow's
-# set overlapped the justfile's by NOTHING. No single place answered "what runs
-# under dev/", so fifteen of sixteen directories were covered only by the
-# accident of three independently maintained lists. The workflow now invokes
-# `test-dev-ci` instead of restating paths, so a `dev/` lane is declared here or
-# nowhere. Declare a new one in a recipe below; never inline paths into a
-# workflow, which puts the answer back in two places.
-#
-# `dev/tests/test_lane_reachability.py` proves the union of these
-# recipes covers every tracked `dev/**/test_*.py` -- both that a lane NAMES the
-# path and that its marker expression SELECTS the tests -- and fails when a new
-# test lands that no lane reaches.
-
-# Run the dev/ tooling gates that no other lane reaches. `testpaths` in
-# pyproject names only `src/cadrumo` plus one packaging file, so these
-# directories were collected by NOTHING and 19 of their tests had been failing
-# unobserved, including the duplication-disposition gate and the whole shipped
-# documentation-search corpus. The marker expression is stated explicitly for
-# the reason `test-packaging-smoke-preflight` states it: these directories are
-# mixed-marker, so inheriting the default `-m 'unit and ...'` would silently
-# deselect the integration contracts and still exit zero.
-#
-[doc('Run the dev/ tooling gates that no other lane reaches (audit, deploy, env, identity, locales, sanitizer, registry, docs, agent-eval, ingest-harness, and TUI-harness subsystems).')]
+[doc('Run the pytest harness first, then the portable product unit and integration populations.')]
 [group('test')]
-test-dev-tooling:
-    @just check-corpus-sidecars
-    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not resident_service and not external_tool" dev/audit/tests dev/corpus/tests dev/deploy/tests dev/docs/tests dev/env/tests dev/identity/tests dev/locales/tests dev/readme/tests dev/tests dev/test_runs/tests dev/sanitizer/tests dev/registry/tests dev/registry/newmodelo/tests dev/registry/aeip/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests dev/agent_eval/tests dev/ingest_harness/tests dev/containers/tests dev/smoke/tests dev/tui/tests dev/tui/harness/tests dev/registry/parity/tests
+test-product: test-pytest-harness test-unit test-integration-parallel test-integration-serial
+
+[private]
+_test-registry-calculations-parallel:
+    @uv run --no-sync pytest -v -n {{ pytest_workers }} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests
+
+[private]
+_test-registry-calculations-serial:
+    @uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests
+
+[private]
+_test-registry-conformance:
+    @uv run --no-sync pytest -v -n {{ pytest_workers }} -m "(unit or integration) and not serial and not perf and not resident_service and not external_tool and not os_keychain and not windows_only and not tui_render" --timeout=300 dev/registry/tests dev/registry/conformance/tests dev/registry/aeip/tests dev/registry/newmodelo/tests dev/registry/parity/tests dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_registry_conformance_gate.py dev/tests/test_registry_identity_enrolment.py --ignore=dev/registry/tests/test_workbook_parity.py
+
+[doc('Run calculation and registry-conformance populations as one normalized registry test signal.')]
+[group('test')]
+[no-exit-message]
+test-registry:
+    @uv run --no-sync python -m dev.test_runs.command --family test-runs --label test-registry --signal pytest-summary --expected-lane _test-registry-calculations-parallel --expected-lane _test-registry-calculations-serial --expected-lane _test-registry-conformance -- uv run --no-sync python -m dev.test_runs lanes --json-events --no-evidence _test-registry-calculations-parallel _test-registry-calculations-serial _test-registry-conformance
+
+[doc('Run the tooling-owned test-policy, repository-contract, and CI-contract populations.')]
+[group('test')]
+test-tooling: test-test-policy test-repository-contracts test-ci-contracts
+
+[doc('Run repository test-policy and lane-contract tests, including the lane transport serial population.')]
+[group('test')]
+test-test-policy:
+    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/tests dev/test_runs/tests --ignore=dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py --ignore=dev/tests/test_registry_conformance_gate.py --ignore=dev/tests/test_registry_identity_enrolment.py
+    @uv run --no-sync pytest -v -n0 -m "integration and serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/tests dev/test_runs/tests --ignore=dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py --ignore=dev/tests/test_registry_conformance_gate.py --ignore=dev/tests/test_registry_identity_enrolment.py
+
+[doc('Run repository and developer-tool contract tests outside the registry, packaging, CI, and capability populations.')]
+[group('test')]
+test-repository-contracts:
+    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/agent_eval/tests dev/audit/tests dev/corpus/tests dev/docs dev/env/tests dev/identity/tests dev/ingest_harness/tests dev/locales/tests dev/quality/tests dev/readme/tests dev/sanitizer/tests dev/smoke/tests dev/tui/tests dev/tui/harness/tests --ignore=dev/docs/terminology/tests/test_sweep_live_service.py
+
+[doc('Run CI, deployment, release, and benchmark contract tests with independent scheduler verdicts.')]
+[group('test')]
+test-ci-contracts:
+    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/ci/tests dev/deploy/tests dev/release/tests
+    @uv run --no-sync pytest -v -n0 -m "serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/ci/tests dev/deploy/tests dev/release/tests
+    @uv run --no-sync pytest -v -n0 -m "perf" dev/ci/tests dev/deploy/tests dev/release/tests
 
 # Run the registry conformance suite. It sits in its own lane rather than in
-# `test-dev-tooling` because of cost, not category: a sequential local run
+# `test-registry` because of cost, not category: a sequential local run
 # measured roughly two minutes per test across 32 tests, where that whole
 # lane's other 24 directories finish in well under a minute. The composer
 # walks every revision in the bundled registry, which is the same reason
@@ -903,157 +923,17 @@ test-dev-tooling:
 [doc('Run the registry conformance suite (slow: walks every bundled revision).')]
 [group('test')]
 test-registry-conformance:
-    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not resident_service and not external_tool" --timeout=300 dev/registry/conformance/tests
-
-# Run the dev-tree workflow/tooling conformance gates that CI runs per-push
-# (workflow structural pins, evidence-transport conformance, shard-plugin
-# partition proof). ci.yml calls THIS recipe, so the paths and the marker
-# expression live in one place and the lane is reproducible locally -- it was
-# previously inline in the workflow and could not be run by hand at all.
-#
-# The marker expression is explicit for the same reason as `test-dev-tooling`:
-# the default addopts' `-m unit` deselects the integration-marked workflow pins
-# and still exits zero. `not serial` leaves the installed-oracles pass to the
-# packaging campaign that builds its cohort.
-#
-# -n 8, never -n auto: the workstation's 24 logical CPUs are shared with
-# co-resident runners from other repositories, so 8 is a working pin rather
-# than a derivation (machine-aware sizing, .github/ci-control-plane.md). The dev tree
-# carries real install/harness tests that legitimately run 300-900 s, so this
-# raises the per-test ceiling above the product suite's 300 s ini default
-# (slowest product test: 58.7 s measured); 900 s still kills a wedge in minutes.
-#
-# `dev/docs/apidocs/tests` is here because it is the ONLY gate whose subject is
-# the production MODULE TREE, and the module tree is changed by exactly the
-# pushes that could not reach it. It was previously selected only by
-# `docs-check`, which runs in docs.yml -- path-scoped to docs/, dev/docs/ and the
-# terminology data, so NO `src/cadrumo/**/*.py` change fires it -- and in the
-# dispatch-only full lane. So a module add, rename or delete, the only thing that
-# drifts the autodoc stubs, produced no verdict on any push.
-#
-# Both of its failure modes land on someone else. A deleted or renamed module
-# leaves an orphan stub whose autodoc import hard-crashes the next nitpicky
-# build, surfacing on an unrelated docs-path push in a file that author never
-# touched. An added module has no stub and SILENTLY drops out of the published
-# documentation -- no error anywhere, and that is the more common half.
-#
-# Deliberately this recipe and not a widened docs.yml trigger: this lane already
-# fires on `src/**` per-push, while widening docs.yml would pay a Playwright
-# provision and a full Sphinx build on every Python push (the ten-minute wall,
-# operator directive 2026-07-20) and would duplicate the docstring cross-link
-# gate the unit lane already runs. The path is also still named by `docs-check`;
-# that overlap is intended, because the two lanes answer to different triggers.
-# Its tests are `unit`-marked, so the marker expression below selects them --
-# checked rather than assumed, since a `docs`-only marker would have been
-# deselected here and still exited zero.
-#
-# `dev/docs/tests/test_api_stubs.py` is named too, and the pair is not
-# redundant. `dev/docs/apidocs/tests` scaffolds the real module tree into a
-# `tmp_path` and checks THAT for drift, so it proves the manager's round-trip
-# and is clean by construction -- it cannot see the committed `docs/api/` tree
-# at all. The gate whose subject is the COMMITTED tree is `test_api_stubs.py`,
-# and it ran only in `test-dev-tooling` (ci-full) and `docs-check` (path-scoped
-# to docs/, so no `src/**` push fires it). So the verdict this block argues for
-# was still not produced on a push: a module added under `src/cadrumo/` reached
-# main with no stub and silently dropped out of the published docs, which is
-# exactly the failure mode described above. Its marker was checked the same
-# way -- `unit`, `hex_core`, `docs-build` -- and it needs no browser or server, so it
-# costs the lane a directory walk.
-[doc('Run the dev-tree workflow/tooling conformance gates that CI runs per-push.')]
-[group('test')]
-test-dev-ci:
-    @uv run --no-sync pytest -v -n 8 --timeout=900 -m "unit or (integration and not serial)" dev/ci/tests dev/packaging/tests dev/quality/tests dev/release/tests dev/docs/apidocs/tests dev/docs/tests/test_api_stubs.py
-    @uv run --no-sync pytest -v -n0 --timeout=900 -m "integration and serial" dev/ci/tests dev/quality/tests dev/release/tests dev/docs/apidocs/tests
-
-# Run the four conformance gates that are correctly `integration`-marked
-# (each genuinely crosses architectural layers) but were reached by no
-# automatically-triggered workflow: the per-push lane pins `unit`, and the
-# only `integration` invocation lived in the dispatch-only full lane, so none
-# of the four had ever run on a push at any revision. ci.yml calls THIS
-# recipe so the path set and the marker expression have one declaration
-# site, same convention `test-dev-ci` established above. The marker
-# expression excludes every marker this repository ever pairs with
-# `integration` so a future addition to this path set cannot silently pull
-# in a test this lane cannot satisfy.
-[doc('Run the four cross-layer conformance gates the per-push lane needs (rule-surface, status-frontend, self-referential-string, suggestion-command).')]
-[group('test')]
-test-per-push-integration-gates:
-    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "integration and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" src/cadrumo_harness/tests/test_rule_surface_conformance.py src/cadrumo/application/user_profile/tests/test_status_projection.py src/cadrumo/entrypoints/cli/tests/test_self_referential_string_conformance.py dev/tests/test_suggestion_command_conformance.py
-
-# Enrol the tests that query the resident vaultspec-rag search service. Held out
-# of every other lane by the `resident_service` marker, because the service is a
-# separate product this project does not install and its own isolation guard
-# refuses the HTTP call under pytest -- so from a plain invocation these fail on
-# the harness before the corpus is ever consulted.
-#
-# READ BEFORE TRUSTING A GREEN RESULT. This recipe assumes a started AND fully
-# indexed service. A truncated index answers confidently rather than refusing,
-# so these gates can pass thinly against a partial corpus. Confirm the index is
-# whole before reading a pass as evidence; `just rag-service-status` reports status, and a
-# section count far below the tracked file count means the answers are worthless
-# even though nothing errored.
-[doc('Enrol the tests that query the resident vaultspec-rag search service (held out of every other lane).')]
-[group('test')]
-test-resident-service:
-    @uv run --no-sync pytest -v -n0 -m "resident_service" dev/docs/preprocess/tests dev/docs/terminology/tests
-
-# Run BOTH lanes in sequence and report them separately. The default pytest
-# invocation is pinned to the unit lane by addopts, so `just test-unit` green
-# says nothing about the ~3k integration tests; this is the recipe to reach for
-# before claiming a suite is clean.
-#
-# The harness verdict runs FIRST, and this is the only local composition that
-# reaches it. Every corpus-walking lane `--ignore`s the harness members by
-# design -- a member spawns a real child pytest, so a lane that collected one
-# would nest a worker pool inside a pool -- which left the full-corpus
-# collectability proof enrolled nowhere a routine local run could see it. A
-# module that cannot IMPORT is silently absent from a lane's summary, so both
-# lane verdicts below are claims about whatever happened to be collectable, and
-# neither can report the modules that were not. That is the whole reason this
-# runs before them rather than after: an uncollectable corpus invalidates the
-# green they produce, and `just` stops at the first failing line, so a trailing
-# position would never report on a tree whose lanes are already red.
-#
-# It is a separate `just` invocation, never folded into either lane's pytest
-# command line, so the outer-serial `-n0` contract and the per-member collect
-# preflight the harness recipe owns stay intact.
-#
-# Collectable is not passing, and this composition does not make it so: the
-# proof establishes that every discovered first-party test module IMPORTS. A
-# construction that breaks inside a deferred function-local import is invisible
-# to it, as it is to `--collect-only` generally, because no test body runs.
-[doc('Run the full-corpus harness verdict, then both lanes in sequence, reporting each separately.')]
-[group('test')]
-test-both-lanes:
-    @just test-harness
-    @just test-unit
-    @just test-integration
-
-# Execute every distinct test population through its owning recipe. Lanes run
-# sequentially because several share caches, generated artifacts, credential
-# stores, or services. A lane failure is recorded without suppressing its live
-# output, and independent later lanes still run; the final non-zero exit reports
-# the complete failure set. Capability-gated lanes deliberately remain in the
-# list: their owning recipes must report an unmet LibreOffice, desktop-keychain,
-# resident-service, or live-read precondition instead of the aggregate silently
-# claiming those tests ran. This composes tests only; it performs no environment
-# setup and no Vaultspec administration.
-full_test_lanes := "test-harness check-registry test-unit test-integration-parallel test-integration-serial test-dev-ci test-dev-tooling test-registry-conformance docs-check test-packaging-smoke-serial test-channel-artifacts test-workbook-parity test-os-keychain test-resident-service test-live"
-
-[doc('Run every test population sequentially; stream output, continue independent lanes after failures, and report per-lane timings.')]
-[group('test')]
-test-all:
-    uv run --no-sync python -m dev.test_runs lanes {{full_test_lanes}}
+    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not resident_service and not external_tool and not os_keychain and not windows_only and not tui_render" --timeout=300 dev/registry/tests dev/registry/conformance/tests dev/registry/aeip/tests dev/registry/newmodelo/tests dev/registry/parity/tests dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_registry_conformance_gate.py dev/tests/test_registry_identity_enrolment.py --ignore=dev/registry/tests/test_workbook_parity.py
 
 [doc('Run only the parallel integration lane, holding the isolation-sensitive serial tests out.')]
 [group('test')]
 test-integration-parallel:
-    @uv run --no-sync pytest -v -n {{pytest_workers}} {{harness_exclusions}} -m "integration and not serial and not os_keychain and not windows_only and not tui_render"
+    @uv run --no-sync pytest -v -n {{pytest_workers}} {{harness_exclusions}} {{calculation_exclusions}} -m "integration and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service"
 
 # Run only the serial (isolation-sensitive) integration lane, no xdist workers.
 [group('test')]
 test-integration-serial:
-    @uv run --no-sync pytest -v {{harness_exclusions}} -m "integration and serial and not perf and not os_keychain and not windows_only and not tui_render" -n0
+    @uv run --no-sync pytest -v {{harness_exclusions}} {{calculation_exclusions}} -m "integration and serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" -n0
 
 # Run the OS-credential-store custody tests. These carry `os_keychain` alongside
 # their execution marker, and EVERY lane above excludes it, so this recipe is the
@@ -1078,12 +958,9 @@ test-integration-serial:
 # expression is what scopes the directory, so a future `os_keychain` case added
 # beside them is selected the moment it lands rather than silently reading as
 # coverage.
-# Enrol the Windows-only surface. Every lane excludes `windows_only`, because on
-# a POSIX checkout the console-launcher stubs these tests read do not exist at
-# all -- there is nothing to assert about. On Windows they are ordinary tests.
-[doc('Run the tests whose subject exists only on Windows (console launcher stubs).')]
+[doc('Run the Windows-only packaging capability tests.')]
 [group('test')]
-test-windows-only:
+test-windows:
     uv run --no-sync pytest -v -n0 -m windows_only dev/packaging/tests
 
 # Render the visual inventory, then assert on it. The render is the point: these
@@ -1102,23 +979,26 @@ test-tui-render:
 test-os-keychain:
     uv run --no-sync pytest -v -n0 -m os_keychain src/cadrumo/application/user_profile/tests src/cadrumo/entrypoints/cli/tests src/cadrumo/tests/test_secure_sql.py src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/adapters/persistence/storage/master_key/tests src/cadrumo/adapters/persistence/storage/tests
 
-# Run live-read tests serially: they observe shared external state and the test
-# guide explicitly forbids xdist for live tests. Failure identities stream as
-# they occur; the shared prerequisite gate fails when live access is not opted in.
-[doc('Run the opt-in live-read test suite serially. Streams failure identities as they happen.')]
+[doc('Reindex the running resident search service, then run its retrieval contracts.')]
 [group('test')]
-test-live:
-    @uv run --no-sync pytest -v -n0 -m aeat_live
+test-resident-service:
+    uv run --no-sync vaultspec-rag index --type code --port 8766
+    uv run --no-sync pytest -v -n0 -m resident_service dev/docs/preprocess/tests/test_golden_queries.py dev/docs/terminology/tests/test_sweep_live_service.py
+
+[doc('Run the opt-in registry live-read tests serially outside portable aggregates.')]
+[group('test')]
+test-registry-live:
+    @uv run --no-sync pytest -v -n0 -m aeat_live src/cadrumo
 
 # Run the produce, verify, and export end-to-end smoke tests.
 [group('test')]
 test-smoke:
     uv run --no-sync pytest -v src/cadrumo/application/modelo/tests/test_file_flow_calculation.py src/cadrumo/application/modelo/tests/test_file_flow_verify.py src/cadrumo/application/modelo/tests/test_file_flow_filing.py src/cadrumo/application/modelo/tests/test_export.py
 
-# Run the LibreOffice workbook parity tests. These carry `external_tool` rather
-# than `unit`, so the default `-m 'unit'` in addopts must be overridden here or
-# this lane selects nothing; the explicit path also overrides the addopts
-# --ignore that keeps the directory out of the default lane.
+# Run the LibreOffice workbook parity tests. These carry `external_tool`
+# alongside the mandatory `unit` execution marker, so the default
+# `unit and not external_tool` selector holds them out until this capability
+# lane explicitly selects them.
 [doc('Run the LibreOffice workbook parity tests (external_tool marker, outside the default unit lane).')]
 [group('test')]
 test-workbook-parity:
@@ -1153,185 +1033,172 @@ test-coverage:
 
 # ── Advisory audits ──────────────────────────────────────────────────────────
 
-# List every ty + pyrefly diagnostic verbatim (advisory; always exits 0).
+# Compose the normalized advisory code scanners. Findings are rendered as
+# advisory output and do not fail this aggregate; a scanner that cannot run is
+# still reported as unavailable by the owning runner.
+[doc('Run normalized advisory code scanners; findings are non-blocking and full results are persisted.')]
+[group('audit')]
+audit-code *ARGS:
+    @uv run --no-sync python -m dev.audit.advisory {{ARGS}}
+
+# List every type diagnostic verbatim (advisory; findings do not fail the audit).
 [group('audit')]
 audit-types:
     @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label audit-types -- uv run --no-sync python -m dev.quality.types --full
 
-# Gate on published vulnerability advisories against the pinned dependency
-# tree. This repository had NO dependency vulnerability audit of any kind -- no
-# uv audit, no pip-audit, no osv-scanner -- while shipping binaries; every
-# audit-* recipe below is a code-quality dimension.
-#
-# This is the ONE audit that GATES: a published advisory against a pinned
-# version is a verdict, not a lead, so it is deliberately NOT part of
-# `audit-all`, which is advisory and always exits 0. It is not built on
-# `uv audit` either -- that preview tool exits 0 even when it prints
-# advisories, which is exactly how three sibling repositories ended up with a
-# gate that could not fail. The runner reads the committed lockfiles itself,
-# queries OSV, and derives the verdict from the finding set.
-#
-# Exits 1 on an unaccepted advisory or an expired suppression, 7 if the audit
-# could not complete (a gate that cannot run is never a pass). Accepted
-# advisories live in dependency-audit-allowlist.toml, each with a reason and an
-# expiry date; binaries no lockfile pins are declared in
-# dependency-audit-binaries.toml. `--json` emits the machine report; nothing is
-# written to disk unless VAULTSPEC_CI_REPORTS names a directory, so the
-# zero-Actions-artifact posture is preserved.
-[doc('Gate on published vulnerability advisories against every pinned dependency; the one audit that fails the build.')]
-[group('audit')]
-audit-deps *ARGS:
-    @uv run --no-sync python -m dev.audit.dependency_audit {{ARGS}}
-
-# Run complexity audits for production code.
+# Run the advisory complexity scanner for production code. Findings are
+# non-blocking; unavailable scanner data remains visible as a broken audit.
+[doc('Run the advisory complexity scanner; findings are non-blocking and unavailable data is reported.')]
 [group('audit')]
 audit-complexity:
     @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label audit-complexity -- uv run --no-sync python -m dev.audit.complexity
 
-# Scan for dead code. The whitelist clears individually-justified
+# Scan for dead code. Findings are advisory and unavailable data is reported.
+# The whitelist clears individually-justified
 # false positives (contract-fixed signature params); see its docstring.
 # The runner (dev.audit.dead_code) owns the vulture invocation AND its
-# parsing, so this recipe and audit-all's dead-code dimension cannot drift
+# parsing, so this recipe and the advisory code aggregate's dead-code dimension cannot drift
 # apart or disagree. Pass --full for the uncapped finding list.
-[doc('Scan for dead code, clearing individually-justified false positives via the whitelist.')]
-[group('audit')]
-audit-dead-code:
-    @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label audit-dead-code -- uv run --no-sync python -m dev.audit.dead_code
-
-# Audit shipped code no console-script entrypoint can reach. Unlike
-# `audit-dead-code` (vulture's name heuristics), this walks the import graph
-# from `[project.scripts]` and counts only `src/cadrumo` non-test modules as
-# use: a module or symbol that only tests or `dev/` touch is reported, with
-# that outside use shown as a label so "kept alive by its tests" reads
-# differently from "orphaned". A test whose every shipped subject is itself a
-# finding is reported too, so dead code and the tests propping it up retire
-# together.
-#
-# Every finding carries the tier it was derived at. `exact` is resolved
-# through the import graph (unreachable modules, and top-level symbols whose
-# every way in was checked); `name-match` and `name-match-data` are members
-# reached by attribute access the scan cannot bind to a type. Start a cleanup
-# from `--confidence exact`.
-#
-# Exits 3 on findings. `--full` uncaps the list, `--json` emits machine
-# output with a stable id per finding, and `--root MODULE:ATTR` admits a
-# surface the packaging does not declare (a `python -m` entry, say).
-[doc('Audit shipped code unreachable from the console-script entrypoints; test-only and dev-only use is labelled, not credited.')]
-[group('audit')]
-audit-unreachable-code *ARGS:
-    @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label audit-unreachable-code -- uv run --no-sync python -m dev.audit.unreachable_code {{ARGS}}
-
-# Audit the DATA path the reachability audit cannot see: a snapshot service
-# whose list/show/latest side a console script reaches, while its capture side
-# has no production caller anywhere. The store still imports and still tests;
-# it is simply never filled again, so the product ships a view onto nothing.
-#
-# Surfaces are found structurally, through the subclass closure of the live
-# snapshot lifecycle bases, and a caller counts only when it both imports the
-# service and spells one of its verbs outside a docstring.
-#
-# Exits 3 on findings. `--json` emits machine output with a stable id per
-# finding.
-[doc('Audit persistence surfaces a product command reads but no production code writes.')]
-[group('audit')]
-audit-write-paths *ARGS:
-    @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label audit-write-paths -- uv run --no-sync python -m dev.audit.write_path_coverage {{ARGS}}
-
-# Scan for copy-paste code duplication. Aggregate line + capped clone list.
+# Scan for copy-paste code duplication. Findings are advisory and unavailable
+# data is reported. Aggregate line + capped clone list.
 # The runner owns the jscpd invocation AND its parsing, so this recipe and the
 # health report's duplication dimension cannot drift apart or disagree.
-[doc('Scan for copy-paste code duplication; aggregate line count plus a capped clone list.')]
+[doc('Scan for duplication and dead code as one advisory dead-weight signal.')]
 [group('audit')]
-audit-duplication:
-    @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label audit-duplication -- uv run --no-sync python -m dev.audit.duplication
+audit-dead-weight:
+    @uv run --no-sync python -m dev.test_runs.command --family test-runs --label audit-dead-weight --signal audit-dead-weight -- uv run --no-sync python -m dev.audit.dead_weight
 
-# Perform an on-demand semantic search query delegating to the running RAG daemon.
-[group('service')]
-rag-search QUERY:
-    @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label audit-rag -- uv run --no-sync vaultspec-rag search "{{QUERY}}" --port 8766 --timeout 45.0
-
-# Run all retained advisory audits (complexity, dead code, duplication,
-# security) as one composed red/amber/green dashboard; tolerant of
-# individual findings (always exits 0). The runner (dev.audit.advisory) owns
-# the composition, so this recipe cannot drift from what it reports. Full,
-# uncapped results are persisted to a unique date-partitioned directory below
-# .logs/audit-runs/ every run (summary.json for machine parsing, summary.md for
-# the human-readable uncapped text); both identify the producing command.
-# Advisory-audit sibling of `check-all` (the fast static gates).
-[doc('Run all advisory audits; full command-identified results persist below .logs/audit-runs/.')]
+[doc('Scan code security posture with the normalized semgrep runner; advisory and non-blocking.')]
 [group('audit')]
-audit-all *ARGS:
-    @uv run --no-sync python -m dev.audit.advisory {{ARGS}}
+audit-code-security:
+    @uv run --no-sync python -m dev.audit.security
 
-# Monthly code-health report: duplication, import quality, and complexity,
-# each classified red/amber/green. Its import dimension consumes the result of
-# `just check-imports`; this broader report is not a second import verdict.
-# Exits 1 if any dimension is RED; AMBER dimensions are advisory debt, not a gate.
-[doc('Monthly code-health report: duplication, import quality, and complexity, each classified red/amber/green.')]
-[group('audit')]
-audit-health-report *ARGS:
+# ── Explicit reports ─────────────────────────────────────────────────────────
+
+# Finding-bearing product reports retain their scanner exit contracts:
+# reachability and persistence reports exit 3 on findings, 1 when analysis is
+# unavailable, and 0 only after a clean scan. They are never aggregate members.
+[doc('Report unreachable product modules and persist run evidence; exit 3 on findings, 1 if unavailable, 0 when clean.')]
+[group('report')]
+report-product-reachability *ARGS:
+    @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label report-product-reachability -- uv run --no-sync python -m dev.audit.unreachable_code {{ARGS}}
+
+[doc('Report product persistence write paths and persist run evidence; exit 3 on findings, 1 if unavailable, 0 when clean.')]
+[group('report')]
+report-product-write-paths *ARGS:
+    @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label report-product-write-paths -- uv run --no-sync python -m dev.audit.write_path_coverage {{ARGS}}
+
+[doc('Render and persist code-health dimensions; exit 1 on RED, 0 on AMBER or GREEN.')]
+[group('report')]
+report-code-health *ARGS:
     @uv run --no-sync python -m dev.audit.report {{ARGS}}
 
-# Show conformance status across all modelo revisions and the derived release
-# closure. Both verbs exit 0 always (screen posture): ``report`` renders every
-# axis, ``closure`` renders the temporal, source, and filing release predicate.
-# To gate on the completeness claim use ``closure --check`` directly.
-[doc('Show conformance status across all modelo revisions and the derived release closure.')]
-[group('audit')]
-audit-registry-conformance:
-    @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label audit-registry-report -- uv run --no-sync python -m dev.registry.conformance report
-    @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label audit-registry-closure -- uv run --no-sync python -m dev.registry.conformance closure
+[doc('Render and persist the uncapped monthly code-health report; exit 1 on RED, 0 otherwise.')]
+[group('report')]
+report-code-health-monthly:
+    @uv run --no-sync python -m dev.audit.report --full
 
-# Inspect AEIP continuity events, open adjudications, or the proposed plan.
-[doc('Run an AEIP continuity audit command.')]
-[group('audit')]
-audit-aeip *ARGS:
-    @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label audit-aeip -- uv run --no-sync python -m dev.registry.aeip {{ARGS}}
+# Read-only registry reports. These commands disclose their observational
+# posture; none publishes, repairs, or regenerates an artifact.
+[doc('Report registry conformance observations; always exits zero.')]
+[group('report')]
+report-registry-conformance:
+    @uv run --no-sync python -m dev.registry.conformance report
+
+[doc('Report registry closure observations; always exits zero and never requests the blocking gate.')]
+[group('report')]
+report-registry-closure:
+    @uv run --no-sync python -m dev.registry.conformance closure
+
+[doc('Report the AEIP registry continuity inventory; always exits zero.')]
+[group('report')]
+report-registry-aeip:
+    @uv run --no-sync python -m dev.registry.aeip inventory
 
 # ── Documentation ────────────────────────────────────────────────────────────
 
-# Build changed narrative and API reference documents.
+# Documentation stays under one discoverable `docs-*` namespace while each
+# recipe states whether it checks, generates committed state, writes disposable
+# local output, serves locally, provisions infrastructure, or publishes bytes.
+
+# Regenerate committed API-reference stubs through their owning generator.
+[doc('Generate committed API-reference stubs from the live source module tree; review the resulting diff.')]
+[group('docs')]
+docs-generate-api-stubs:
+    uv run --no-sync python -m dev.docs.apidocs scaffold
+
+# Regenerate committed CLI-sequence goldens through their owning runner.
+[doc('Generate committed CLI-sequence goldens through the owning sequence generator; review the resulting diff.')]
+[group('docs')]
+docs-generate-sequences:
+    uv run --no-sync python -m dev.docs.sequences refresh
+
+# Regenerate committed documentation gettext catalogues through the i18n owner.
+[doc('Generate documentation gettext catalogues through the owning i18n generator; writes committed catalogue state.')]
+[group('docs')]
+docs-generate-catalogs:
+    uv run --no-sync python -m dev.docs.i18n
+
+# Regenerate the committed terminology coverage report through its generator.
+[doc('Generate the committed terminology coverage report through its owning generator.')]
+[group('docs')]
+docs-generate-terminology-coverage:
+    uv run --no-sync python -m dev.docs.terminology.coverage report
+
+# Build changed narrative and API reference documents into disposable local output.
+[doc('Build the full documentation tree into disposable local output; uploads nothing.')]
 [group('docs')]
 docs-build:
     uv run --no-sync python -m dev.docs.build docs/conf.py
 
-# Build a single narrative page.
+# Build a single hand-authored page into disposable local output.
+[doc('Build one hand-authored documentation page into disposable local output; uploads nothing.')]
 [group('docs')]
 docs-page PAGE:
-    uv run --no-sync python -m dev.docs.build --single-page {{PAGE}}
+    uv run --no-sync python -m dev.docs.build --single-page {{quote(PAGE)}}
 
-# Serve documentation with live reload on docs/ and src/cadrumo/ edits. Binds every
-# interface on the docs' canonical port 8788, claimed strictly: attaches to a
-# healthy running server, evicts an invalid squatter, and errors rather than
-# drifting to another port. The first serve builds before opening the browser.
-[doc('Serve documentation with live reload on docs/ and src/cadrumo/ edits.')]
+# Serve the default user-scope documentation with live reload on docs/ edits.
+# The owning CLI's `--scope full` is required when API/docstring source watching
+# is needed. Binds every interface on the docs' canonical port 8788, claimed
+# strictly: attaches to a healthy running server, evicts an invalid squatter,
+# and errors rather than drifting to another port. The first serve builds
+# before opening the browser. Local resident process; its state and build output
+# are local only and it is never an aggregate prerequisite.
+[doc('Serve documentation with live reload as a local resident process; writes only disposable local state.')]
 [group('docs')]
 docs-serve PORT="":
     uv run --no-sync python -m dev.docs.serve {{ if PORT == "" { "" } else { "--port " + PORT } }} --open-browser
 
-# Extract gettext POT templates and refresh the es/ca/hu doc catalogues.
-[group('docs')]
-docs-gettext:
-    uv run --no-sync python -m dev.docs.i18n
-
 # Re-execute committed CLI sequences and report divergence without rewriting.
-[doc('Verify committed documentation CLI-sequence goldens.')]
+[doc('Run the blocking read-only documentation sequence check; never rewrite goldens.')]
 [group('docs')]
 docs-sequences-check *ARGS:
     uv run --no-sync python -m dev.docs.sequences check {{ARGS}}
 
-# Report the health of the curated Terminology Handbook.
-[doc('Audit the curated Terminology Handbook.')]
+[doc('Report the curated Terminology Handbook health; read-only and observational.')]
 [group('docs')]
-docs-terminology-audit:
-    uv run --no-sync python -m dev.test_runs.command --family audit-runs --label docs-terminology-audit -- uv run --no-sync python -m dev.docs.terminology_handbook audit
+docs-terminology-report:
+    @uv run --no-sync python -m dev.docs.terminology_handbook audit
+
+# Handbook scaffolding is the only mutation exposed here; set, relate,
+# remove-term, retire, and seed remain direct owning-CLI operations so a single
+# recipe cannot mix observation with unrelated curation verbs.
+[doc('Reconcile the Terminology Handbook with live enrolment sources; mutates curated source state.')]
+[group('docs')]
+docs-terminology-maintain:
+    uv run --no-sync python -m dev.docs.terminology_handbook scaffold
+
+[doc('Mine synonym observations into the reviewed queue; mutates the curated synonym source.')]
+[group('docs')]
+docs-synonyms-maintain OBSERVATIONS:
+    uv run --no-sync python -m dev.docs.terminology.synonyms mine {{quote(OBSERVATIONS)}}
 
 # Build the user-scope documentation in one language (es/en/ca/hu) into that
 # language's own root. `--out-dir` is what puts a build in a per-language
 # subdirectory; `--language` alone only selects the catalogue, so without it the
 # localized pages render into the canonical English root itself, leaving no
 # language root at all and an English root full of translated pages.
-[doc('Build the user-scope documentation in one language into that language own root.')]
+[doc('Build one localized documentation root into disposable local output; uploads nothing.')]
 [group('docs')]
 docs-lang LANG:
     uv run --no-sync python -m dev.docs.build --scope user --language {{LANG}} --out-dir docs/_build/html/{{LANG}}
@@ -1339,8 +1206,8 @@ docs-lang LANG:
 # Build the user-scope documentation for every translation language, each into
 # its own root beside the English one. These are plain local builds: for the
 # deploy-faithful multi-root artefact (strict, record-injected index, per-root
-# canonical URLs) use `docs-site-dry-run`.
-[doc('Build the user-scope documentation for every translation language, each into its own root.')]
+# canonical URLs) use `docs-site-preview`.
+[doc('Build every localized documentation root into disposable local output; uploads nothing.')]
 [group('docs')]
 docs-langs:
     just docs-lang es
@@ -1354,17 +1221,18 @@ docs-langs:
 # and record-index checks used to be reachable only through the publish itself,
 # so a root that would land incomplete could not be caught before bytes went to
 # the live destination.
-[doc('Build every published site root and run every pre-upload validation, uploading nothing.')]
+[doc('Build and validate every published documentation root without uploading; dry-run only.')]
 [group('docs')]
-docs-site-dry-run:
+docs-site-preview:
     uv run --no-sync python -m dev.deploy.docs_static_site dry-run
 
-# Run docstring structure and Sphinx build checks with live per-test verdicts.
+# Run blocking, read-only docstring structure and Sphinx checks with live
+# per-test verdicts.
 # `workers` bounds the pytest-xdist lane: CI passes 8 (machine-aware sizing,
 # .github/ci-control-plane.md — the 24-core box is shared with other
 # repositories' runners, and 8 is a working pin, not a derivation); local
 # development keeps the `auto` default per the same control plane.
-[doc('Run docstring structure and Sphinx build checks. Streams failure identities as they happen.')]
+[doc('Run blocking read-only documentation checks; stream failure identities as they happen.')]
 [group('docs')]
 docs-check workers="auto":
     @uv run --no-sync pytest -v -n {{workers}} dev/docs/tests dev/docs/apidocs/tests src/cadrumo/tests/test_docstring_core_struct_links.py -m "docs or unit or (integration and not serial)"
@@ -1373,18 +1241,18 @@ docs-check workers="auto":
 
 # ── Database migrations ──────────────────────────────────────────────────────
 
-# Generate a new Alembic database migration file. Identical body across
-# platforms — a single plain `uv run` invocation needs no shell preamble.
-[doc('Generate a new Alembic database migration file.')]
-[group('maintenance')]
-dev-db-migrate message:
-    uv run alembic revision --autogenerate -m "{{message}}"
+# Source-controlled migration creation and database upgrade are separate
+# mutations. Creation changes migration source; upgrade changes only the
+# database selected by the local Alembic configuration. Point that
+# configuration at an isolated local database before invoking the upgrade.
+[doc('Create a source-controlled Alembic migration from the current model; mutates migration source state.')]
+[group('database')]
+db-migration-create MESSAGE:
+    uv run alembic revision --autogenerate -m {{quote(MESSAGE)}}
 
-# Upgrade the database schema to the latest version. Identical body across
-# platforms — a single plain `uv run` invocation needs no shell preamble.
-[doc('Upgrade the database schema to the latest version.')]
-[group('maintenance')]
-dev-db-upgrade:
+[doc('Upgrade the database selected by local Alembic configuration to head; mutates database state and requires an isolated local target.')]
+[group('database')]
+db-upgrade:
     uv run alembic upgrade head
 
 # ── Deployment ───────────────────────────────────────────────────────────────
@@ -1395,61 +1263,45 @@ dev-db-upgrade:
 # only build and check verbs, and the three recipes below are the only ones in
 # this file that reach outward at all.
 #
-# The `release-publish` group is adjacent but disjoint, and nothing here re-declares
-# any of it: every release recipe is read-only (`release-publish` is a dry-run preview,
-# `release-rollback` prints a procedure, `release-readiness` audits), and
+# The release group is adjacent but disjoint, and nothing here re-declares
+# any of it: every release recipe is read-only (`release-preview` is a dry-run preview,
+# `release-rollback-plan` prints a procedure, `release-check` audits), and
 # release publication itself lives in CI behind the `pypi` environment
 # (`publish.yml`). The release lane deliberately publishes nothing.
 #
 # These three verbs do NOT share an automation posture, and this group must
 # not be read as granting one. Each states its own authority below.
 
-# Create or update the private Cadrumo docs stack. Infrastructure provisioning,
-# not publication: a one-time stack create/update that no workflow performs and
-# no release step calls. Operator-only.
-[doc('Create or update the private Cadrumo docs stack (infrastructure provisioning, operator-only).')]
-[group('deploy')]
-docs-stack-deploy:
+[doc('Provision the private Cadrumo documentation stack; external infrastructure mutation requiring explicit confirmation.')]
+[group('docs')]
+docs-stack-provision:
     uv run --no-sync python -m dev.deploy.docs_static_site provision --confirm provision-cadrumo-docs
 
-# Build and publish the complete Cadrumo docs site. The human half of a
-# two-authority verb: the publisher accepts a provisioned automated authority,
-# and `docs-publish.yml` runs the same publish on `release: published` once the
-# deploy-role variable is set (operator decision OP-3). Until then this recipe
-# is the release runbook's distribution-complete tripwire — see RELEASING.md
-# phase 4, the one post-publication step still held by a human.
-[doc('Build and publish the complete Cadrumo docs site (human half; docs-publish.yml is the automated peer).')]
-[group('deploy')]
-docs-deploy:
+[doc('Build and upload the Cadrumo documentation site; separate explicit publication confirmation required.')]
+[group('docs')]
+docs-publish:
     uv run --no-sync python -m dev.deploy.docs_static_site publish --confirm publish-cadrumo-docs
 
 # ── Release ──────────────────────────────────────────────────────────────────
 
-# Audit-state readiness gate: version-surface parity, changelog sanity, the
-# most recent packaging-smoke evidence, and (best-effort, via `gh`) no open
-# priority:P0-blocker issue. Read-only — no outward action, ever. Exits 1 on
-# a blocking failure; advisory failures (e.g. no packaging-smoke run yet,
-# `gh` unavailable) are reported but do not fail the gate. Run it before
-# merging a release pull request; nothing in CI runs it for you. See
-# docs/_release_checklist.yaml and RELEASING.md.
-[doc('Audit-state readiness gate: version-surface parity, changelog sanity, and packaging-smoke evidence.')]
+# Release preparation is read-only: readiness preserves blocking versus
+# advisory findings, preview publishes nothing, and rollback planning prints
+# recovery instructions without executing them. Release publication remains
+# outside the justfile.
+[doc('Check release readiness; blocking invariants fail while external-state findings remain advisory.')]
 [group('release')]
-release-readiness *ARGS:
-    uv run --no-sync python -m dev.release.readiness {{ARGS}}
+release-check *ARGS:
+    @uv run --no-sync python -m dev.release.readiness {{ARGS}}
 
-# Print the rollback procedure for a released version that must be pulled.
-# Read-only — never runs a destructive action; every step below is printed
-# for a human to run deliberately. See RELEASING.md#diagnose-and-recover.
-[doc('Print the rollback procedure for a released version that must be pulled (read-only, human-run).')]
+[doc('Preview the next release as a dry run; publishes nothing.')]
 [group('release')]
-release-rollback version:
-    uv run --no-sync python -m dev.release rollback {{version}}
+release-preview:
+    @uv run --no-sync python -m dev.release preview
 
-# Preview the next version release via dry-run.
-[doc('Preview the next version release via dry-run (release-please).')]
+[doc('Print recovery instructions for VERSION; performs no rollback or other mutation.')]
 [group('release')]
-release-publish:
-    uv run --no-sync python -m dev.release preview
+release-rollback-plan VERSION:
+    @uv run --no-sync python -m dev.release rollback {{VERSION}}
 
 # ===========================================================================
 #  meta
@@ -1459,7 +1311,7 @@ release-publish:
 # what a green CI run means. The composition is the fleet's, and the two
 # rulings inside it are worth stating where they are made:
 #
-#   `audit-deps` and NOTHING else from the audit group. Every other audit
+#   `check-dependency-vulnerabilities` and NOTHING else from the audit group. Every other audit
 #   dimension is advisory by construction - each finding is a lead to confirm,
 #   and a pipeline that fails on a lead teaches people to stop reading it. A
 #   published advisory against a pinned version is not a lead, it is a verdict.
@@ -1470,10 +1322,15 @@ release-publish:
 #   pass; only this one proves the artifact a user receives can still be
 #   produced from it.
 
-# Run the full local gate: static analysis, dependency audit, tests, build.
+# Run the portable local policy gate from subject-level public aggregates.
 [group('meta')]
-ci:
-    @just check-all
-    @just audit-deps
-    @just test-unit
-    @just build-all
+gate-local:
+    @just check-code
+    @just check-registry
+    @just check-repository
+    @just check-dependency-vulnerabilities
+    @just docs-check
+    @just test-product
+    @just test-registry
+    @just test-tooling
+    @just build-release

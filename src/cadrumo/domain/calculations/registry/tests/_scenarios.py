@@ -14,19 +14,24 @@ from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
-from test_support.registry_authoring import compile_validated_authority
 
-from .....core.aggregation import BindingSourceKind
-from .....core.casilla_id import CasillaId
-from .....core.models import STRICT_FROZEN_CONFIG
-from .....core.period import Period
-from ..errors import RegistrySnapshotError, RegistryValidationError
-from ..formula_runtime import RegistryCalculationEntry, RegistryCalculationResult, calculate_registry_snapshot
-from ..ids import BindingId, LegalRefId, RelationId, SourceRefId
-from ..period_selector_match import selector_period_matches_request
-from ..runtime_graph import expression_binding_refs
-from ..schema import ModeloRevision
-from ..schema_input_kind import InputKind
+from cadrumo.core.aggregation import BindingSourceKind
+from cadrumo.core.casilla_id import CasillaId
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
+from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
+from cadrumo.domain.calculations.registry.formula_runtime import (
+    RegistryCalculationEntry,
+    RegistryCalculationResult,
+    calculate_registry_snapshot,
+)
+from cadrumo.domain.calculations.registry.ids import BindingId, LegalRefId, RelationId, SourceRefId
+from cadrumo.domain.calculations.registry.period_selector_match import selector_period_matches_request
+from cadrumo.domain.calculations.registry.runtime_graph import expression_binding_refs
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+
+from ..compiler.authority import compile_validated_authority
 
 ScenarioStatus = Literal["match", "mismatch"]
 

@@ -22,7 +22,7 @@ type = layers
 name = Every cadrumo source package has a declared lane
 containers = cadrumo
 layers =
-    _data : adapters : application : conftest : core : domain : entrypoints : (llm) : tests : (locales)
+    _data : adapters : application : conftest : core : domain : entrypoints : tests : (locales)
 exhaustive = True
 
 [importlinter:contract:closed-harness-classification]
@@ -91,7 +91,6 @@ forbidden_modules =
     cadrumo.application
     cadrumo.adapters
     cadrumo.entrypoints
-    cadrumo.llm
     cadrumo_harness
     dev
     docs
@@ -107,7 +106,6 @@ forbidden_modules =
     cadrumo.application
     cadrumo.adapters
     cadrumo.entrypoints
-    cadrumo.llm
     cadrumo_harness
     dev
     docs
@@ -122,7 +120,6 @@ source_modules =
 forbidden_modules =
     cadrumo.adapters
     cadrumo.entrypoints
-    cadrumo.llm
     cadrumo_harness
     dev
     docs
@@ -139,7 +136,6 @@ forbidden_modules =
     cadrumo.application
     cadrumo.adapters
     cadrumo.entrypoints
-    cadrumo.llm
     cadrumo_harness
     dev
     docs
@@ -157,7 +153,6 @@ forbidden_modules =
     cadrumo.application
     cadrumo.adapters
     cadrumo.entrypoints
-    cadrumo.llm
     cadrumo_harness
     dev
     docs

@@ -100,14 +100,14 @@ jobs:
           enable-cache: false
 
       - name: Initialize the worktree
-        run: just init
+        run: just setup
 
       - name: Provision Playwright Chromium
         # The docs lane genuinely needs a browser: the search-page gates
         # (palette ranking, inline ladder, query-param, full-text class ranking,
         # pagefind injection, deployment parity) drive the built page in
         # Chromium. Without this they fail on the harness, not on the content.
-        run: just setup-playwright
+        run: just setup-browser
 
       - name: Build the documentation site
         # THE GATES READ A BUILT ARTEFACT, so the build is a precondition and not

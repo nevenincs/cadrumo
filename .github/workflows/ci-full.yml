@@ -64,10 +64,10 @@ jobs:
             prek-${{ runner.os }}-
 
       - name: Initialize the worktree
-        run: just init
+        run: just setup
 
       - name: Provision Playwright Chromium
-        run: just setup-playwright
+        run: just setup-browser
 
       - name: Lint
         run: |
@@ -81,7 +81,7 @@ jobs:
           just check-format
 
       - name: Import architecture
-        run: just check-imports
+        run: just check-import-boundaries
 
       - name: Typecheck
         run: just check-types
@@ -108,7 +108,7 @@ jobs:
       - name: Tooling and workflow conformance gates
         # Dev-tree ceiling raised over the 300 s ini default: real install/
         # harness tests legitimately run 300-900 s (see ci.yml).
-        run: just test-dev-ci
+        run: just test-ci-contracts
 
       - name: Test (integration)
         # NOTHING RAN THE src/ INTEGRATION SUITE. Every lane in this repository
@@ -250,7 +250,7 @@ jobs:
         #
         # NOT "TEMPORARY" -- A NAMED CONDITION, stated by count so it is
         # checkable rather than a judgement: this flag flips OFF when a run of
-        # `just test-dev-tooling` measures ZERO failures and ZERO errors. It is
+        # `just test-tooling` measures ZERO failures and ZERO errors. It is
         # not there yet and it is not trending there. Measured sequentially
         # (-n0, 38m49s) on 2026-08-13: 83 failed, 1694 passed, 48 errors,
         # against 70 and then 68 failures measured on 2026-08-12 -- the backlog
@@ -271,7 +271,7 @@ jobs:
         # one population moves under peer commits.
         env:
           CADRUMO_PYTEST_WORKERS: "8"
-        run: just test-dev-tooling
+        run: just test-tooling
         continue-on-error: true
 
       - name: Registry conformance suite
@@ -331,7 +331,7 @@ jobs:
         # aborting in their fixtures, so this step is minutes of genuine work
         # rather than seconds of fast failure. A red verdict here is a real
         # binding or oracle regression.
-        run: just test-packaging-smoke-serial
+        run: just test-packaging-serial
 
       - name: Documentation conformance
         # The docs-marked tests (nitpicky warnings-as-errors Sphinx build,
@@ -353,7 +353,7 @@ jobs:
           uvx pip-audit --strict -r /tmp/audit-reqs.txt
 
       - name: Hooks
-        run: just check-pre-commit
+        run: just check-hooks
 
       - name: Vault structural drift (informational)
         # The vault audit carries a standing backlog of status-token drift, so

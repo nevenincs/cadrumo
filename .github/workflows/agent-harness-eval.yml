@@ -57,7 +57,7 @@ jobs:
           tool: just@1.38.0
 
       - name: Initialize the worktree
-        run: just init
+        run: just setup
 
       - name: Cadrumo agent-harness eval surface
         # -n 8, never -n auto: this machine's 24 logical CPUs are shared with

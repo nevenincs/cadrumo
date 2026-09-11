@@ -113,7 +113,7 @@ jobs:
           enable-cache: false
 
       - name: Initialize the worktree
-        run: just init
+        run: just setup
 
       - name: Cadrumo quick packaging probe
         run: just test-packaging-quick
@@ -146,7 +146,7 @@ jobs:
           enable-cache: false
 
       - name: Initialize the worktree
-        run: just init
+        run: just setup
 
       - name: Cadrumo quick packaging probe
         run: just test-packaging-quick
@@ -176,7 +176,7 @@ jobs:
           enable-cache: false
 
       - name: Initialize the worktree
-        run: just init
+        run: just setup
 
       - name: Cadrumo quick packaging probe
         run: just test-packaging-quick

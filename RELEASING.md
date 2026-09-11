@@ -72,7 +72,7 @@ release. Work from a clean `main` checkout with an authenticated GitHub CLI:
 ```console
 git status --short
 gh auth status
-just release-readiness
+just release-check
 ```
 
 Stop if the checkout is dirty, the repository identity is not `nevenincs/cadrumo`, or a
@@ -95,7 +95,7 @@ that no workflow claims is residue: delete it, then check separately whether any
 publisher registration still names it, which is neither in this repository nor on this
 forge.
 
-`just release-readiness` also blocks on a distribution-evidence set that cannot be
+`just release-check` also blocks on a distribution-evidence set that cannot be
 satisfied before a first release: every row in it is an acquisition proof that installs
 the product from a channel that does not serve it yet. Read those two checks as
 reporting, not as authorisation, until the first release exists.
@@ -150,7 +150,7 @@ independent reproducibility coordinate.
 
 ## Release-candidate evidence
 
-The channel descriptors declare distribution evidence rows, and the release-readiness
+The channel descriptors declare distribution evidence rows, and the release readiness
 gate refuses a release until every declared row is present and passing. Those rows come
 from one place: the `Cadrumo Packaging Smoke` workflow, dispatched by hand. It never runs
 on push, because the three-OS matrix is the most expensive workflow in the repository.
@@ -257,7 +257,7 @@ version and release a corrected one. The recipe prints the procedure and runs no
 destructive itself.
 
 ```console
-just release-rollback <VERSION>
+just release-rollback-plan <VERSION>
 ```
 
 The conditions that oblige a rollback, the hotfix cycle times they must be answered

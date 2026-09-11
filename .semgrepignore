@@ -1,6 +1,6 @@
 # Production security scan policy.
 #
-# `just audit-security` scans `src/cadrumo` with Semgrep's stock security
+# `just audit-code-security` scans `src/cadrumo` with Semgrep's stock security
 # rules. Keep that lane focused on production source. Mirrored legal data,
 # tests, and explicit test-support files are audited through separate
 # provenance, redaction, fixture, and test-hygiene gates instead of the stock
