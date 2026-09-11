@@ -27,6 +27,7 @@ from pathlib import Path
 from typing import cast
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.application.operator_surface.command_ports import cli_argv_for
 from cadrumo.core.errors.error_codes import ErrorEnvelope
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.i18n.render import tr
@@ -40,7 +41,6 @@ from cadrumo.core.json_contract import (
 )
 from cadrumo.core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
-from cadrumo.entrypoints.cli.command_api import cli_argv_for
 
 from ._call_runtime import CallTier, run_supervised, tier_for, timeout_seconds
 from ._inprocess import (
@@ -86,9 +86,10 @@ def _terminal_transport_projection(
 ) -> ResolvedPreconditionAction:
     """Resolve one transport-owned terminal observation through shared authority."""
     from cadrumo.application.operator_actions.preconditions import no_action_precondition_verdict
-    from cadrumo.entrypoints.cli.main import resolve_cli_precondition_action
 
-    return resolve_cli_precondition_action(
+    from .command_surface import resolve_precondition_action
+
+    return resolve_precondition_action(
         no_action_precondition_verdict(
             condition_id=condition_id,
             facts=facts,
@@ -118,7 +119,7 @@ def _transport_error_envelope(
     That is a constraint rather than an observation, because the surface is
     otherwise safe only by accident of its current content. The MCP transport has
     no writer-level redaction the way the CLI does — the CLI funnels inside
-    :func:`~entrypoints.cli.errors.write_stderr`, so everything it emits is
+    CLI error writer, so everything it emits is
     filtered on the way out, and this builder has no equivalent chokepoint.
 
     APPLICATION errors never arrive here. Both MCP transports capture the CLI's

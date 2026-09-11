@@ -1,5 +1,3 @@
-"""Inert namespace for the MCP composition modules."""
+"""Namespace for the independent MCP composition modules."""
 
 from __future__ import annotations
-
-__all__: tuple[str, ...] = ()

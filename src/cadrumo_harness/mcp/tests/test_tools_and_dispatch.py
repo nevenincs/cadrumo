@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.entrypoints.cli.command_api import (
+from cadrumo.application.live.snapshot_base import SnapshotStateFilter
+from cadrumo.application.operator_surface.command_ports import (
     JsonType,
     ParameterKind,
     SchemaResolutionError,
@@ -12,15 +13,17 @@ from cadrumo.entrypoints.cli.command_api import (
     VerbLeafResolutionFailure,
     VerbParameter,
     assert_schema_coverage,
-    build_verb_input_schemas,
     cli_argv_for,
-    is_exposable_command,
 )
+from cadrumo.application.review.enums import ReviewState
+from cadrumo.core.telemetry.tier import TelemetryTier
+from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
 
 from .._annotations import annotation_coverage_gaps
 from .._dispatch import command_key_for_tool, tool_name_for_command
 from .._tools import build_tool_descriptors
 from .._toolsets import Toolset, build_toolsets
+from ..command_surface import command_surface
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -32,9 +35,7 @@ def _live_authentication_contract():
     booleans are policy, so a copy here would be a second declaration of a
     product invariant and free to drift from the one that governs.
     """
-    from cadrumo.entrypoints.cli._command_schema import command_registration_projection
-
-    return command_registration_projection().profile_authentication_contract
+    return command_surface().command_registration_projection().profile_authentication_contract
 
 
 def test_every_exposable_command_has_a_descriptor() -> None:
@@ -76,7 +77,7 @@ def test_every_descriptor_carries_the_freshly_derived_verb_schema() -> None:
     argv the server reconstructs is the argv the CLI declares.
     """
     descriptors = build_tool_descriptors()
-    raw = build_verb_input_schemas(tuple(sorted(d.command_key for d in descriptors)))
+    raw = command_surface().build_verb_input_schemas(tuple(sorted(d.command_key for d in descriptors)))
     for descriptor in descriptors:
         derived = raw[descriptor.command_key]
         assert (
@@ -196,7 +197,7 @@ def test_retired_commands_are_not_exposable_or_registered() -> None:
     """A retired key is absent from both the exposability policy and descriptors."""
     exposed = {descriptor.command_key for descriptor in build_tool_descriptors()}
     for retired in _RETIRED_COMMAND_KEYS:
-        assert is_exposable_command(retired) is False
+        assert command_surface().is_exposable_command(retired) is False
         assert retired not in exposed
 
 
@@ -284,13 +285,13 @@ def test_schema_coverage_gate_raises_on_a_resolution_failure() -> None:
 
 def test_schema_coverage_gate_passes_on_the_real_command_set() -> None:
     keys = tuple(descriptor.command_key for descriptor in build_tool_descriptors())
-    schemas = build_verb_input_schemas(keys)  # must not trip the coverage gate
+    schemas = command_surface().build_verb_input_schemas(keys)  # must not trip the coverage gate
     assert len(schemas) == len(keys)
 
 
 def test_schema_coverage_gate_rejects_a_key_missing_from_the_real_command_tree() -> None:
     with pytest.raises(SchemaResolutionError, match=r"app\.not-a-real-command"):
-        build_verb_input_schemas(("app.not-a-real-command",))
+        command_surface().build_verb_input_schemas(("app.not-a-real-command",))
 
 
 # --- Provider enum + one-of identifier fidelity --------------------------------
@@ -356,7 +357,7 @@ def test_invoice_operation_type_renders_as_a_json_enum_on_every_writing_verb() -
         (
             "modelo.filing_record.import",
             "evidence_kind",
-            "domain.modelos._filing_record:ExternalEvidenceKind",
+            "domain.modelos.filing_record:ExternalEvidenceKind",
         ),
         ("app.review.queue", "state", "application.review:ReviewState"),
         (
@@ -384,17 +385,20 @@ def test_closed_value_axes_reach_the_mcp_schema_as_enums(
     member cannot leave this gate asserting a stale list; the assertion that still
     bites is that the schema and the enum agree.
     """
-    import importlib
-
-    module_path, _, class_name = enum_import.partition(":")
-    enum_class = getattr(importlib.import_module(f"cadrumo.{module_path}"), class_name)
+    enum_types = {
+        "core.telemetry:TelemetryTier": TelemetryTier,
+        "domain.modelos.filing_record:ExternalEvidenceKind": ExternalEvidenceKind,
+        "application.review:ReviewState": ReviewState,
+        "application.live.snapshot_base:SnapshotStateFilter": SnapshotStateFilter,
+    }
+    enum_class = enum_types[enum_import]
     expected = [member.value for member in enum_class]
 
     by_key = {descriptor.command_key: descriptor for descriptor in build_tool_descriptors()}
     schema_property = by_key[command_key].input_schema["properties"][parameter_name]
     assert schema_property["type"] == "string"
     assert schema_property["enum"] == expected
-    assert expected, f"{class_name} must declare at least one member"
+    assert expected, f"{enum_import} must declare at least one member"
 
 
 def test_every_modelo_work_verb_pins_the_registry_eligible_modelo_set() -> None:

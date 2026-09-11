@@ -8,8 +8,6 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.entrypoints.cli.command_api import command_schema_refs, is_exposable_command
-
 from .._toolsets import (
     Toolset,
     ToolsetGroup,
@@ -17,6 +15,7 @@ from .._toolsets import (
     build_toolsets,
     toolset_for_command,
 )
+from ..command_surface import command_surface
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -72,8 +71,8 @@ def test_membership_is_derived_completely_from_the_live_surface() -> None:
     family_map = _family_domain_map()
     wallet_keys = {
         ref.command
-        for ref in command_schema_refs()
-        if is_exposable_command(ref.command) and "iva_wallet" in ref.command.split(".")
+        for ref in command_surface().command_schema_refs()
+        if command_surface().is_exposable_command(ref.command) and "iva_wallet" in ref.command.split(".")
     }
     iva = set(_members()[Toolset.IVA])
     assert wallet_keys

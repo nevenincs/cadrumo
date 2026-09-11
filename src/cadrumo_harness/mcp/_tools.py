@@ -2,9 +2,8 @@
 
 Each operator-callable graph command becomes one SDK-independent
 :class:`McpToolDescriptor`: a namespaced tool name, a description drawn from the
-family's operator intent, a per-verb input schema derived from the command's own
-click parameters (via :func:`~entrypoints.cli._verb_input_schema.build_verb_input_schemas`),
-the command's graph-authored result model inside the shared CLI envelope as the output
+family's operator intent, a per-verb input schema supplied by the application
+command port, the command's graph-authored result model inside the shared CLI envelope as the output
 schema, and the mutability annotations. The server shell adapts these into the MCP
 SDK's ``Tool`` / ``ToolAnnotations`` types. This module owns no protocol detail and
 is unit-tested.
@@ -18,18 +17,19 @@ from typing import Any, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from cadrumo.application.operator_surface.command_ports import VerbInputSchema
 from cadrumo.application.operator_surface.manifest import CommandSchemaRef
 from cadrumo.application.operator_surface.models import OperatorMutability
 from cadrumo.core.errors.error_codes import ErrorEnvelope
 from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION, Notice
-from cadrumo.entrypoints.cli.command_api import VerbInputSchema, command_schema_type, is_exposable_command
 
 from ._action_capabilities import build_mcp_action_input_schemas
 from ._annotations import McpAnnotations, annotations_for_command
-from ._capability_manifest import build_operator_surface_manifest
 from ._command_policy import CommandPolicyProjection, project_command_policy
 from ._dispatch import tool_name_for_command
 from ._result_thinning import thin_output_schema
+from .capability_manifest import build_operator_surface_manifest
+from .command_surface import command_surface
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -129,9 +129,8 @@ def build_tool_descriptors() -> tuple[McpToolDescriptor, ...]:
     Returns:
         Tuple of exposed :class:`McpToolDescriptor` entries.
     """
-    from cadrumo.entrypoints.cli.command_api import command_schema_refs
-
-    refs: tuple[CommandSchemaRef, ...] = command_schema_refs()
+    surface = command_surface()
+    refs: tuple[CommandSchemaRef, ...] = surface.command_schema_refs()
     family_map = _family_mutability()
     contract = build_operator_surface_manifest(
         envelope_schema_version=ENVELOPE_SCHEMA_VERSION,
@@ -139,7 +138,7 @@ def build_tool_descriptors() -> tuple[McpToolDescriptor, ...]:
     ).contract
     intent_map = {family.child.replace("-", "_"): family.operator_question for family in contract.command_families}
 
-    exposable_refs = tuple(ref for ref in refs if is_exposable_command(ref.command))
+    exposable_refs = tuple(ref for ref in refs if surface.is_exposable_command(ref.command))
     exposable_keys = tuple(ref.command for ref in exposable_refs)
     verb_schemas = build_mcp_action_input_schemas(exposable_refs)
 
@@ -152,11 +151,9 @@ def build_tool_descriptors() -> tuple[McpToolDescriptor, ...]:
         # operator intent, while every executable identity is carried only by
         # the resolver-backed capability projection on ``verb_schema``.
         description = intent or f"Cadrumo tool for {key}."
-        from cadrumo.entrypoints.cli.main import command_execution_policy_for_cli_path
-
         execution_policy = project_command_policy(
             key,
-            command_execution_policy_for_cli_path(verb_schema.cli_path),
+            surface.command_execution_policy_for_cli_path(verb_schema.cli_path),
         )
         annotations = annotations_for_command(
             command_key=key,
@@ -180,7 +177,7 @@ def build_tool_descriptors() -> tuple[McpToolDescriptor, ...]:
 
 
 def _output_schema_for(command_key: str) -> dict[str, Any]:
-    schema = command_schema_type(command_key)
+    schema = command_surface().command_schema_type(command_key)
     # A thinned verb moves its bulk arrays to resource_link URIs, so its result
     # schema drops those properties before being wrapped in the shared envelope.
     # The advertised output and emitted structuredContent therefore stay

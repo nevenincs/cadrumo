@@ -1,24 +1,17 @@
-"""Warm in-process CLI verb execution for the MCP serving path.
+"""Bounded command-process execution for the MCP serving path.
 
 Every MCP tool call historically spawns a fresh ``aeat`` subprocess, so every
 per-process cost - interpreter start, the pydantic application-import floor, the
 registry fingerprint walk, TOML parse, and validation - is re-paid per call, a
 hard floor above one second on Windows regardless of caching (research option
-R6). This module serves a verb through ONE warm in-process runtime instead: the
-server process already imported the CLI package (the tool descriptors are built
-from it) and warmed the registry authority ``lru_cache``, so a repeat call pays
-only the calculation engine, storage, and envelope emit.
+R6). The retained harness is an independent outer composition root, so command
+execution crosses the installed CLI process boundary and never imports the
+command entrypoint in this process.
 
 The load-bearing guarantee is byte-identical envelope parity with the subprocess
-transport. :func:`run_cli_in_process` invokes the EXACT command the subprocess
-would - ``get_command(app).main(..., standalone_mode=True)`` - so the same
-command functions, the same ``emit_envelope`` / ``emit_json_success`` builders,
-and the same per-callback error boundary produce the same stdout success
-document and the same stderr error document; the ONLY difference from the
-subprocess is that the terminating ``SystemExit`` is caught here rather than
-ending a process. Envelope assembly is never re-implemented
-(``aeat-architecture-boundaries``); this module only chooses where
-the CLI runs, never what it emits. :func:`parse_cli_envelope` is the single
+transport. The child owns command functions, envelope builders, and its error
+boundary, while this module only captures the resulting streams.
+Envelope assembly is never re-implemented; :func:`parse_cli_envelope` is the single
 transport-neutral parser both paths feed their completed run through, so the two
 transports cannot fork the result shape.
 
@@ -32,19 +25,17 @@ in-process.
 
 from __future__ import annotations
 
-import contextlib
-import io
 import json
-import sys
+import shutil
+import subprocess
 import threading
 import time
-from collections.abc import Iterator, Sequence
+from collections.abc import Sequence
 
 from pydantic import BaseModel, ConfigDict
 
+from cadrumo.application.operator_surface.command_ports import VerbInputSchema, cli_argv_for
 from cadrumo.core.json_contract import OutputSchemaError, validate_registered_envelope_document
-from cadrumo.core.product_identity import PRODUCT_IDENTITY
-from cadrumo.entrypoints.cli.command_api import VerbInputSchema, cli_argv_for
 
 from ._call_runtime import CallTier
 
@@ -69,17 +60,6 @@ _CAPTURE_LOCK = threading.Lock()
 # supervised subprocess transport rather than queuing behind the wedge forever.
 _HOLDER_SINCE: float | None = None
 _STATE_LOCK = threading.Lock()
-
-
-@contextlib.contextmanager
-def _redirect_stdin(stream: io.TextIOWrapper) -> Iterator[None]:
-    """Temporarily bind process stdin while the global capture lock is held."""
-    previous = sys.stdin
-    sys.stdin = stream
-    try:
-        yield
-    finally:
-        sys.stdin = previous
 
 
 def warm_capture_holder_age() -> float | None:
@@ -149,19 +129,12 @@ def run_cli_in_process(
     acquire_timeout_s: float,
     stdin_payload: str | None = None,
 ) -> CompletedCliRun | None:
-    """Run the real ``aeat`` Typer app in-process, capturing its output streams.
+    """Run the installed ``aeat`` command process under the transport lock.
 
-    ``argv_tail`` is the argv the subprocess transport would pass after the
-    executable - ``["--format", "json", *cli_path, *positional, *options]`` from
-    :func:`~entrypoints.cli._verb_input_schema.cli_argv_for`. The command is dispatched
-    exactly as the console entry point does
-    (``get_command(app).main(..., standalone_mode=True)``), so the whole CLI
-    pipeline - root callback, bucket-session activation, the verb body, the
-    envelope emit, and the error boundary - runs identically; the terminating
-    ``SystemExit`` (which would end the subprocess) is caught and its code
-    returned instead. stdout and stderr are captured under the module capture lock
-    so no CLI output reaches the MCP JSON-RPC pipe and concurrent calls cannot
-    interleave their redirects.
+    ``argv_tail`` is the argv the command process receives after its executable -
+    ``["--format", "json", *cli_path, *positional, *options]`` from the
+    application command port. stdout and stderr are captured from the child so
+    no command output reaches the MCP JSON-RPC pipe.
 
     When ``stdin_payload`` is supplied, it is bound to the process-global stdin
     under the same capture lock, so the canonical CLI machine-secret reader sees
@@ -183,34 +156,27 @@ def run_cli_in_process(
         return None
     with _STATE_LOCK:
         _HOLDER_SINCE = time.monotonic()
-    from typer.main import get_command
-
-    from cadrumo.entrypoints.cli.main import app
-
-    command = get_command(app)
-    out = io.StringIO()
-    err = io.StringIO()
-    returncode = 0
     try:
-        stdin = (
-            contextlib.nullcontext()
-            if stdin_payload is None
-            else _redirect_stdin(io.TextIOWrapper(io.BytesIO(stdin_payload.encode("utf-8")), encoding="utf-8"))
+        executable = shutil.which("aeat")
+        if executable is None:
+            raise RuntimeError("the installed aeat executable is required for command dispatch")
+        completed = subprocess.run(  # noqa: S603 - fixed installed executable and validated argv projection
+            [executable, *argv_tail],
+            check=False,
+            capture_output=True,
+            input=stdin_payload,
+            text=True,
+            encoding="utf-8",
         )
-        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err), stdin:
-            try:
-                command.main(
-                    args=list(argv_tail),
-                    prog_name=PRODUCT_IDENTITY.cli_executable,
-                    standalone_mode=True,
-                )
-            except SystemExit as exit_request:
-                returncode = _exit_code(exit_request.code)
+        return CompletedCliRun(
+            stdout=completed.stdout,
+            stderr=completed.stderr,
+            returncode=completed.returncode,
+        )
     finally:
         with _STATE_LOCK:
             _HOLDER_SINCE = None
         _CAPTURE_LOCK.release()
-    return CompletedCliRun(stdout=out.getvalue(), stderr=err.getvalue(), returncode=returncode)
 
 
 def dispatch_verb_in_process(
@@ -224,7 +190,7 @@ def dispatch_verb_in_process(
 
     The argv is reconstructed from the per-verb input schema and the named
     ``arguments`` through the same
-    :func:`~entrypoints.cli._verb_input_schema.cli_argv_for` the subprocess transport
+    application command-port encoder the subprocess transport
     uses, so both transports dispatch the identical command line. Returns ``None``
     when the capture could not be acquired within ``acquire_timeout_s``.
     """
@@ -259,11 +225,13 @@ def parse_cli_envelope(run: CompletedCliRun) -> tuple[dict[str, object], bool]:
     except json.JSONDecodeError:
         return {"status": "error", "raw": raw}, True
     try:
-        from cadrumo.entrypoints.cli.command_api import command_schema_type
+        from .command_surface import command_surface
 
         command = envelope.get("command") if isinstance(envelope, dict) else None
         schema = (
-            command_schema_type(command) if isinstance(command, str) and envelope.get("status") != "error" else None
+            command_surface().command_schema_type(command)
+            if isinstance(command, str) and envelope.get("status") != "error"
+            else None
         )
         validated = validate_registered_envelope_document(envelope, schema)
     except OutputSchemaError:

@@ -56,8 +56,8 @@ from pydantic import BaseModel, ConfigDict, Field
 from cadrumo.application.operator_surface.models import OperatorMutability
 from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION
 
-from ._capability_manifest import build_operator_surface_manifest
 from ._command_policy import CommandPolicyProjection, command_policy
+from .capability_manifest import build_operator_surface_manifest
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 

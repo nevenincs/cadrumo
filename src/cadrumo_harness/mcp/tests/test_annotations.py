@@ -11,8 +11,6 @@ import importlib.util
 
 import pytest
 
-from cadrumo.entrypoints.cli.main import command_execution_policy_for_cli_path
-
 from .._annotations import (
     McpAnnotations,
     annotation_coverage_gaps,
@@ -26,6 +24,7 @@ from .._hitl import (
 )
 from .._server import build_sdk_tools
 from .._tools import build_tool_descriptors
+from ..command_surface import command_surface
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -41,7 +40,7 @@ def test_open_world_hint_covers_exactly_the_sede_family_over_the_real_surface() 
     # key/path naming heuristic.
     descriptors = build_tool_descriptors()
     for descriptor in descriptors:
-        raw = command_execution_policy_for_cli_path(descriptor.verb_schema.cli_path)
+        raw = command_surface().command_execution_policy_for_cli_path(descriptor.verb_schema.cli_path)
         expected = "network" in raw.classification.expanded_capabilities
         assert descriptor.annotations.open_world_hint is expected, descriptor.command_key
     assert any(descriptor.annotations.open_world_hint for descriptor in descriptors)

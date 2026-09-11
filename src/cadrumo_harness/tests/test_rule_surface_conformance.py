@@ -23,7 +23,6 @@ allowlist to keep in sync.
 
 from __future__ import annotations
 
-import functools
 import re
 from collections.abc import Sequence
 from typing import Any
@@ -42,7 +41,8 @@ from cadrumo.core.json_contract import (
 )
 from cadrumo.core.operator_action_enums import ActionArgumentStatus, ActionConditionality, NoRecoveryOutcome
 
-from ..mcp._capability_manifest import build_operator_surface_manifest
+from ..mcp.capability_manifest import build_operator_surface_manifest
+from ..mcp.command_surface import command_surface
 from ..resources import iter_operator_rules, iter_personas, iter_skill_documents
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -92,11 +92,9 @@ def _valid_command_paths() -> frozenset[str]:
 
 
 def _command_schema_refs_via_cli() -> tuple[CommandSchemaRef, ...]:
-    # Reuse the CLI's own payload-discovery + projection so the gate sees exactly
+    # Reuse the installed command-surface projection so the gate sees exactly
     # the registered command surface the capability manifest reports.
-    from cadrumo.entrypoints.cli.command_api import command_schema_refs
-
-    return command_schema_refs()
+    return command_surface().command_schema_refs()
 
 
 def _command_path_from_invocation(invocation: str) -> str | None:
@@ -118,46 +116,34 @@ def _command_path_from_invocation(invocation: str) -> str | None:
     return ".".join(command_tokens)
 
 
-@functools.lru_cache(maxsize=1)
-def _live_root_command() -> Any:
-    """Materialise the full live Click command tree (all lazy subtrees loaded)."""
-    from typer.main import get_command
-
-    from cadrumo.entrypoints.cli.main import app
-
-    return get_command(app)
-
-
-def _flags_of(command: Any) -> frozenset[str]:
-    """Return every option string declared on ``command`` (incl. secondary opts)."""
+def _flags_of(schema: Any) -> frozenset[str]:
+    """Return every option string declared by one application input schema."""
     flags: set[str] = set()
-    for param in getattr(command, "params", ()):
-        for opt in (*getattr(param, "opts", ()), *getattr(param, "secondary_opts", ())):
-            if opt.startswith("-"):
-                flags.add(opt)
+    for parameter in schema.parameters:
+        for option in (parameter.cli_flag, parameter.off_flag):
+            if option.startswith("-"):
+                flags.add(option)
     return frozenset(flags)
 
 
 def _resolve_command(tokens: Sequence[str]) -> Any | None:
-    """Descend the live tree by ``tokens`` (sans ``aeat``); return the command or None."""
-    import click
+    """Resolve one documented command path against the process projection."""
+    target = tuple(tokens)
+    return next(
+        (
+            schema
+            for schema in command_surface()
+            .build_verb_input_schemas(tuple(reference.command for reference in command_surface().command_schema_refs()))
+            .values()
+            if schema.cli_path == target
+        ),
+        None,
+    )
 
-    command = _live_root_command()
-    for token in tokens:
-        is_group = callable(getattr(command, "list_commands", None)) and callable(getattr(command, "get_command", None))
-        if not is_group:
-            return None
-        with click.Context(command, info_name=command.name or None) as ctx:
-            command = command.get_command(ctx, token)
-        if command is None:
-            return None
-    return command
 
-
-@functools.lru_cache(maxsize=1)
 def _global_flags() -> frozenset[str]:
-    """Root-level options valid on any command (``--format``, ``--language``, ...)."""
-    return _flags_of(_live_root_command()) | {"--help", "-h"}
+    """Return root-level options valid on any command."""
+    return command_surface().global_flags() | {"--help", "-h"}
 
 
 def _invocation_tokens(invocation: str) -> tuple[list[str], list[str]] | None:

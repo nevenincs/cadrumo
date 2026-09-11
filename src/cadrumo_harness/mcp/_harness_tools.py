@@ -289,14 +289,14 @@ def build_whoami_identity() -> WhoamiIdentity:
     ensure_profile_keys_registered()
     health = assess_active_profile_health()
     tax_id_present = health.profile_record_present and _TAX_ID_FACT_PATH not in health.missing_required
-    from cadrumo.entrypoints.cli.main import resolve_cli_precondition_action
+    from .command_surface import resolve_precondition_action
 
     return WhoamiIdentity(
         active_profile=health.active_profile_label,
         tax_id_present=tax_id_present,
         readiness=health.status,
         precondition_action=(
-            resolve_cli_precondition_action(health.precondition_verdict)
+            resolve_precondition_action(health.precondition_verdict)
             if health.precondition_verdict is not None
             else None
         ),

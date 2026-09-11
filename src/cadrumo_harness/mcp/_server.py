@@ -48,7 +48,7 @@ from importlib.metadata import version as distribution_version
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from cadrumo.adapters.persistence.storage.master_key.active_session import close_all_live_bucket_sessions
+from cadrumo.adapters.persistence.storage.master_key.live_sessions import close_all_live_bucket_sessions
 from cadrumo.application.wizard.compiler import ensure_profile_keys_registered
 from cadrumo.core.config_state_root import FormerProductStateError
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
@@ -636,7 +636,7 @@ def _ensure_adapter_composition() -> None:
     global _ADAPTER_COMPOSITION_ENTERED
     if _ADAPTER_COMPOSITION_ENTERED:
         return
-    from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
+    from ._composition import profile_adapter_composition
 
     _ADAPTER_COMPOSITION.enter_context(profile_adapter_composition())
     _ADAPTER_COMPOSITION_ENTERED = True

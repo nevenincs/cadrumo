@@ -54,8 +54,6 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import close
 from cadrumo.application.user_profile.login_session import close_profile_session_artefacts
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.config import DEV_TEST_DATABASE_PASSWORD
-from cadrumo.tests.env import temporary_env
-from cadrumo.tests.profile_persistence import composed_profile_persistence_ports
 
 from .._call_runtime import tier_for
 from .._dispatch import tool_name_for_command
@@ -66,6 +64,7 @@ from .._server import build_server
 from .._tools import build_tool_descriptors
 from ._profile import PROFILE_PASSPHRASE, READY_PROFILE_FACTS, verify_recovery_handover
 from ._session import connected_server_and_client_session as connect
+from ._support import composed_profile_persistence_ports, temporary_env
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
