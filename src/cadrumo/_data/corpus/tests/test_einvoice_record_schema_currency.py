@@ -30,9 +30,9 @@ from pathlib import Path
 from typing import cast
 
 import pytest
-from test_support.registry_authoring import load_registry_tree
 
 from ....core.resources.bundled_data import bundled_path
+from ....domain.calculations.registry.authority import bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -75,8 +75,7 @@ def _asserted_through() -> int:
 
 def _master_supported_filing_years() -> tuple[int, ...]:
     """Return the years the one writable master declaration carries."""
-    _modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    declaration = catalogues.supported_filing_years
+    declaration = bundled_authority().catalogues.supported_filing_years
     assert declaration is not None, (
         "the bundled registry declares no supported_filing_years catalogue; "
         "this gate has no master window to measure against"

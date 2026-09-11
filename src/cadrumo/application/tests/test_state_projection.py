@@ -34,7 +34,8 @@ from ...adapters.persistence.storage.custody.kdf_supervision import unlock_profi
 from ...adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ...adapters.persistence.storage.master_key.bucket_session import BucketSession
 from ...adapters.persistence.storage.sql.engine import dispose_engine
-from ...core.config import SecretStoreBackend, Settings, override_settings
+from ...core.config import Settings, override_settings
+from ...core.config_support import SecretStoreBackend
 from ...core.period import Period
 from ...domain.categories.spending_category import SpendingCategory
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection

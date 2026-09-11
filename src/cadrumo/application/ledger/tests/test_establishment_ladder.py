@@ -73,7 +73,7 @@ from ..regime_contradiction import draft_prints_a_repercutido_line
 #: The defining module itself, for the attribute scoping below. Named through
 #: `import_module` rather than `from .. import`: the ledger package facade is
 #: inert and its tests may not import through it.
-ladder_module = import_module("cadrumo.application.ledger.establishment_ladder")
+ladder_module = import_module("..establishment_ladder", __package__)
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 

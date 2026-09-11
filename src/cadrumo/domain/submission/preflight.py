@@ -22,9 +22,9 @@ from datetime import date
 
 from ...core.errors.hierarchy import CadrumoError
 from ...core.errors.severity import BaseSeverity
-from ...core.i18n import describe_auth_provider_operator_impact
+from ...core.i18n.auth_provider import describe_auth_provider_operator_impact
 from ...core.logging import get_logger
-from ...core.parsing import enum_value as _enum_value
+from ...core.parsing.utils import enum_value as _enum_value
 from .errors import SubmissionPreflightError
 from .models import ModeloDraftStatus
 from .protocols import AuthProviderProbe, DeadlineWindowChecker, ModeloDraftLike

@@ -31,11 +31,12 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from test_support.registry_authoring import _committed_snapshot
 
-from .....core.authority_grade import RegistryAuthorityGrade
-from .....core.money.rounding import round_to_cents
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.core.money.rounding import round_to_cents
+
 from ..formula_runtime import calculate_registry_snapshot
+from ._published_authority import artifact_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -122,7 +123,7 @@ def _run_modulos_engine_2026(
     modulo_3: Decimal = Decimal("0"),
     modulo_4: Decimal = Decimal("0"),
 ) -> tuple[Decimal, Decimal, Decimal, Decimal]:
-    snapshot = _committed_snapshot("131", 2026, "1T", grade=RegistryAuthorityGrade.CALCULATION)
+    snapshot = artifact_snapshot("131", 2026, "1T", grade=RegistryAuthorityGrade.CALCULATION)
     assert snapshot.filing_period is not None
     text_inputs = {"modulos-epigrafe": epigrafe} if epigrafe else {}
     result = calculate_registry_snapshot(
@@ -228,7 +229,7 @@ class TestModulos2026PartialTableCoverageDoesNotSilentlyMisattribute:
         that the 2026 replication did not silently drift from its 2025 source
         (aeat-calculation-aggregation).
         """
-        snapshot_2025 = _committed_snapshot("131", 2025, "1T", grade=RegistryAuthorityGrade.CALCULATION)
+        snapshot_2025 = artifact_snapshot("131", 2025, "1T", grade=RegistryAuthorityGrade.CALCULATION)
         assert snapshot_2025.filing_period is not None
         result_2025 = calculate_registry_snapshot(
             snapshot_2025,

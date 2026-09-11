@@ -3,8 +3,8 @@
 This module implements the public :func:`~core.config.classify_storage_route`
 and :func:`~core.config.settings_for_active_profile_bucket` facades. It
 classifies :class:`~core.config.Settings` into a
-:class:`~core.config.StorageRouteClassification` whose
-:class:`~core.config.StorageRouteKind` distinguishes explicit database
+:class:`~core.config_support.StorageRouteClassification` whose
+:class:`~core.config_support.StorageRouteKind` distinguishes explicit database
 URLs, root-fallback SQLite databases, and active-profile bucket databases.
 
 Application write guards such as
@@ -20,10 +20,12 @@ from urllib.parse import unquote
 
 from .config_state_root import PRODUCT_DATABASE_FILENAME
 from .errors.hierarchy import CoreValidationError
-from .storage_taxonomy import StorageCategory, storage_location, storage_path
+from .storage_taxonomy import StorageCategory
+from .storage_taxonomy_locations import storage_location, storage_path
 
 if TYPE_CHECKING:
-    from .config import Settings, StorageRouteClassification
+    from .config import Settings
+    from .config_support import StorageRouteClassification
 
 
 def classify_storage_route_for_settings(settings: Settings) -> StorageRouteClassification:
@@ -35,11 +37,11 @@ def classify_storage_route_for_settings(settings: Settings) -> StorageRouteClass
             route.
 
     Returns:
-        A :class:`~core.config.StorageRouteClassification` carrying the
-        effective :class:`~core.config.StorageRouteKind`, database URL,
+        A :class:`~core.config_support.StorageRouteClassification` carrying the
+        effective :class:`~core.config_support.StorageRouteKind`, database URL,
         filesystem path when SQLite-backed, and active bucket id when present.
     """
-    from .config import StorageRouteClassification, StorageRouteKind
+    from .config_support import StorageRouteClassification, StorageRouteKind
 
     database_url = settings.cadrumo_database_url
     database_path = _sqlite_database_path(database_url)

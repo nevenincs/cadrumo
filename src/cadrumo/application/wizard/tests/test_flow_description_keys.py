@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.i18n import tr
+from ....core.i18n.render import tr
 from ..catalogue import WIZARD_FLOWS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

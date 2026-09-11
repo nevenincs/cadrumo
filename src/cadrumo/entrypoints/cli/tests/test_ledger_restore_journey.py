@@ -22,9 +22,9 @@ from collections.abc import Sequence
 import pytest
 from click.testing import Result
 
-from ....tests.cli_runner import invoke_cached_cli
-from ....tests.ledger_cli import list_ledger_rows_via_cli as _list_rows
 from ._ledger_seeded_profile_fixture import _isolated_backend
+from .cli_runner import invoke_cached_cli
+from .ledger_cli import list_ledger_rows_via_cli as _list_rows
 
 __all__ = ["_isolated_backend"]
 

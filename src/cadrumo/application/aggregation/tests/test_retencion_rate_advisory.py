@@ -26,13 +26,13 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.aggregation import BindingSourceKind
+from ....core.aggregation import BindingSourceKind, RetencionScheme
 from ....core.directory_scan import scan_directory
 from .._retencion_rate_advisory import (
     ADMINISTRADOR_RETENCION_RATE_SOURCE_KIND,
     administrador_retencion_rate_advisory_observations,
 )
-from .._retenciones import RetencionObservation, RetencionScheme
+from ..retenciones import RetencionObservation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

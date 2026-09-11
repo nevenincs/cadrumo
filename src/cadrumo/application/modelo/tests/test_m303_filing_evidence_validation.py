@@ -13,6 +13,7 @@ from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.deadlines.models import M303RegimeComposition
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva.regimen_simplificado_rows import (
@@ -36,7 +37,6 @@ from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from .._m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
 from ..action_errors import M303FilingEvidenceError

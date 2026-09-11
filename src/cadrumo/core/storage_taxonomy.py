@@ -35,9 +35,9 @@ diagnostic logs, and the durable outputs keep bare, self-describing leaf names.
 See Also:
     :class:`~core.config.Settings`
         Central settings aggregate whose path fields these members name.
-    :func:`storage_path`
+    :func:`~core.storage_taxonomy_locations.storage_path`
         Resolver for a root-scoped member.
-    :func:`bucket_scoped_storage_path`
+    :func:`~core.storage_taxonomy_locations.bucket_scoped_storage_path`
         Resolver for a bucket- or keystore-scoped member.
 """
 
@@ -398,29 +398,8 @@ class StorageLocation(BaseModel):
         return Path(*self.subpath.split("/"))
 
 
-# Deliberately not at module top: this closes a circular import.
-# ``storage_taxonomy_locations`` imports the axis enums and ``StorageLocation``
-# from THIS module, so it can only be imported back here once those names are
-# already bound -- i.e. after the class definitions above, not before them.
-from .storage_taxonomy_locations import (  # noqa: E402 - see comment above
-    FINGERPRINT_EXCLUDED_STORAGE_FIELDS,
-    ROOT_DERIVED_STORAGE_FIELDS,
-    ROOT_DERIVED_STORAGE_LOCATIONS,
-    STORAGE_FIELD_CATEGORIES,
-    STORAGE_TAXONOMY,
-    bucket_scoped_storage_path,
-    storage_location,
-    storage_path,
-    storage_tree_targets,
-)
-
 __all__ = [
-    "FINGERPRINT_EXCLUDED_STORAGE_FIELDS",
-    "ROOT_DERIVED_STORAGE_FIELDS",
-    "ROOT_DERIVED_STORAGE_LOCATIONS",
-    "STORAGE_FIELD_CATEGORIES",
     "STORAGE_ROOT_SETTINGS_FIELD",
-    "STORAGE_TAXONOMY",
     "FingerprintParticipation",
     "StorageArea",
     "StorageCategory",
@@ -431,8 +410,4 @@ __all__ = [
     "StorageNodeKind",
     "StorageOverridePolicy",
     "StorageScope",
-    "bucket_scoped_storage_path",
-    "storage_location",
-    "storage_path",
-    "storage_tree_targets",
 ]

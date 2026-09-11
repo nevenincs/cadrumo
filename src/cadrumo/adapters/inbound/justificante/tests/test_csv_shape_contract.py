@@ -12,7 +12,7 @@ import pytest
 
 from .....core.aeat_csv import AEAT_CSV_MAX_LENGTH, is_aeat_csv
 from .....core.config import Settings
-from .....domain.justificante import JustificanteCsvNotFoundError
+from .....domain.justificante.errors import JustificanteCsvNotFoundError
 from .._extract import _extract_csv
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

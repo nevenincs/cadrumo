@@ -51,7 +51,7 @@ LIVE_PORTALS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="category",
                 declarations=("--category",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.portals.categories", "PortalCategory")),
+                value=ValueContract(DeferredTarget("...domain.portals.categories", "PortalCategory", __package__)),
                 default=ParameterDefault.value(None),
                 help_key=_key("cli.app.live.portals.category_help"),
                 multiple=False,
@@ -62,7 +62,7 @@ LIVE_PORTALS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="modelo",
                 declarations=("--modelo",),
-                value=ValueContract(DeferredTarget("cadrumo.core.modelo", "Modelo")),
+                value=ValueContract(DeferredTarget("...core.modelo", "Modelo", __package__)),
                 default=ParameterDefault.value(None),
                 help_key=_key("cli.app.live.portals.modelo_help"),
                 multiple=False,
@@ -72,10 +72,10 @@ LIVE_PORTALS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_METADATA_POLICY,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._app_live_portals_cli", "portals_list")),
+        handler=LazyBinding.available(DeferredTarget("._app_live_portals_cli", "portals_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_portals_payloads", "PortalsListResult"),
+            target=DeferredTarget("._app_live_portals_payloads", "PortalsListResult", __package__),
             identity="app.live.portals.list",
         ),
     ),
@@ -97,10 +97,10 @@ LIVE_PORTALS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_METADATA_POLICY,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._app_live_portals_cli", "portals_show")),
+        handler=LazyBinding.available(DeferredTarget("._app_live_portals_cli", "portals_show", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_portals_payloads", "PortalsViewResult"),
+            target=DeferredTarget("._app_live_portals_payloads", "PortalsViewResult", __package__),
             identity="app.live.portals.view",
         ),
     ),

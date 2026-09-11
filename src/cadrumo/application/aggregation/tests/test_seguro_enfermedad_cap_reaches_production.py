@@ -32,7 +32,7 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from .._renta_ledger import (
+from ..renta_ledger import (
     _SEGURO_DISCAPACIDAD_VARIANT,
     _SEGURO_GENERAL_VARIANT,
     aggregate_renta_ledger_expenses,

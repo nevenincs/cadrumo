@@ -40,7 +40,7 @@ from ....core.directory_scan import DirectoryEntryKind, scan_directory
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-bundled_path = importlib.import_module("cadrumo.core.resources").bundled_path
+bundled_path = importlib.import_module("cadrumo.core.resources.bundled_data").bundled_path
 _AEAT_ROOT = bundled_path("corpus", "aeat_official")
 _CORPUS_ROOT = _AEAT_ROOT / "instructions"
 

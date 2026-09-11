@@ -20,7 +20,7 @@ import pytest
 from ....adapters.outbound.llm.run_telemetry import LLMRunTelemetryRecorder
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....domain.transactions.enums import TransactionDirection
-from ....domain.transactions.llm import LLMClassifierError
+from ....domain.transactions.errors import LLMClassifierError
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile

@@ -54,10 +54,10 @@ MODELO_NONWORK_CALCULATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _boolean_flag_option("explain", ("--explain",), "cli.app.modelo.formulas.explain_help"),
         ),
         policy=_REGISTRY_READ,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._modelo_discovery_cli", "formulas")),
+        handler=LazyBinding.available(DeferredTarget("._modelo_discovery_cli", "formulas", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_payloads", "FormulasResult"),
+            DeferredTarget("._modelo_payloads", "FormulasResult", __package__),
             identity="modelo.formulas",
         ),
     ),
@@ -71,12 +71,10 @@ MODELO_NONWORK_CALCULATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(),
         policy=_REGISTRY_READ,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_discovery_cli", "support_matrix")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._modelo_discovery_cli", "support_matrix", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_support_matrix_payloads", "ModeloSupportMatrixResult"),
+            DeferredTarget("._modelo_support_matrix_payloads", "ModeloSupportMatrixResult", __package__),
             identity="modelo.support_matrix",
         ),
     ),
@@ -119,12 +117,10 @@ MODELO_NONWORK_CALCULATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_CALCULATION_WRITE,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_aggregate_cli", "aggregate_modelo")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._modelo_aggregate_cli", "aggregate_modelo", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_payloads", "ModeloAggregateResult"),
+            DeferredTarget("._modelo_payloads", "ModeloAggregateResult", __package__),
             identity="modelo.aggregate",
         ),
     ),
@@ -158,12 +154,10 @@ MODELO_NONWORK_CALCULATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             *FILING_ELECTION_OPTIONS,
         ),
         policy=_MODEL_HANDOFF,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_export_cli", "modelo_export_verb")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._modelo_export_cli", "modelo_export_verb", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_payloads", "ModeloExportPayload"),
+            DeferredTarget("._modelo_payloads", "ModeloExportPayload", __package__),
             identity="modelo.export",
         ),
     ),

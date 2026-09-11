@@ -61,6 +61,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
@@ -70,10 +71,9 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....tests import general_m303_filing_evidence
 from ....tests.bucket_aggregation_calculate import calculate_modelo_revision_from_bucket_aggregation
+from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ...calculations.observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
 from ...invoices.catalogue_creation import build_catalogue_invoice
 from ...invoices.transaction_linking import link_invoice_transaction_catalogues

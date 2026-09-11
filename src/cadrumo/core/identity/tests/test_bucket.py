@@ -21,7 +21,7 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from .. import BucketId, canonical_bucket_id
+from ..bucket import BucketId, canonical_bucket_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

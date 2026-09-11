@@ -42,10 +42,10 @@ LEDGER_RATIOS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _RATIOS_OUTPUT_LANGUAGE_OPTION,
         ),
         policy=_POLICY_6,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._ledger_ratios_cli", "ratios_eligible")),
+        handler=LazyBinding.available(DeferredTarget("._ledger_ratios_cli", "ratios_eligible", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_ratios_payloads", "RatiosEligibleResult"),
+            target=DeferredTarget("._ledger_ratios_payloads", "RatiosEligibleResult", __package__),
             identity="ledger.ratios.eligible",
         ),
     ),
@@ -62,10 +62,10 @@ LEDGER_RATIOS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _RATIOS_OUTPUT_LANGUAGE_OPTION,
         ),
         policy=_POLICY_5,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._ledger_ratios_cli", "ratios_list")),
+        handler=LazyBinding.available(DeferredTarget("._ledger_ratios_cli", "ratios_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_ratios_payloads", "RatiosListResult"),
+            target=DeferredTarget("._ledger_ratios_payloads", "RatiosListResult", __package__),
             identity="ledger.ratios.list",
         ),
     ),
@@ -81,7 +81,9 @@ LEDGER_RATIOS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _RATIOS_YEAR_OPTION,
             ArgumentSpec(
                 name="category",
-                value=ValueContract(DeferredTarget("cadrumo.domain.categories.spending_category", "SpendingCategory")),
+                value=ValueContract(
+                    DeferredTarget("...domain.categories.spending_category", "SpendingCategory", __package__)
+                ),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.ledger.ratios.category_help"),
                 metavar=None,
@@ -102,10 +104,10 @@ LEDGER_RATIOS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _RATIOS_OUTPUT_LANGUAGE_OPTION,
         ),
         policy=_POLICY_4,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._ledger_ratios_cli", "ratios_set")),
+        handler=LazyBinding.available(DeferredTarget("._ledger_ratios_cli", "ratios_set", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_ratios_payloads", "RatiosSetResult"),
+            target=DeferredTarget("._ledger_ratios_payloads", "RatiosSetResult", __package__),
             identity="ledger.ratios.set",
         ),
     ),
@@ -120,7 +122,9 @@ LEDGER_RATIOS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         parameters=(
             ArgumentSpec(
                 name="category",
-                value=ValueContract(DeferredTarget("cadrumo.domain.categories.spending_category", "SpendingCategory")),
+                value=ValueContract(
+                    DeferredTarget("...domain.categories.spending_category", "SpendingCategory", __package__)
+                ),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.ledger.ratios.unset_category_help"),
                 metavar=None,
@@ -131,10 +135,10 @@ LEDGER_RATIOS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _RATIOS_OUTPUT_LANGUAGE_OPTION,
         ),
         policy=_POLICY_4,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._ledger_ratios_cli", "ratios_unset")),
+        handler=LazyBinding.available(DeferredTarget("._ledger_ratios_cli", "ratios_unset", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_ratios_payloads", "RatiosUnsetResult"),
+            target=DeferredTarget("._ledger_ratios_payloads", "RatiosUnsetResult", __package__),
             identity="ledger.ratios.unset",
         ),
     ),
@@ -148,10 +152,10 @@ LEDGER_RATIOS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=_LEDGER_RULE_RATIO_LEAF_INVOCATION,
         parameters=(_RATIOS_OUTPUT_LANGUAGE_OPTION,),
         policy=_POLICY_6,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._ledger_ratios_cli", "ratios_validate")),
+        handler=LazyBinding.available(DeferredTarget("._ledger_ratios_cli", "ratios_validate", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_ratios_payloads", "RatiosValidateResult"),
+            target=DeferredTarget("._ledger_ratios_payloads", "RatiosValidateResult", __package__),
             identity="ledger.ratios.validate",
         ),
     ),

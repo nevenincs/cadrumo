@@ -8,7 +8,7 @@ from decimal import Decimal, InvalidOperation
 
 from ...core.casilla_id import CasillaId
 from ...core.estado_casilla_oficial import EstadoCasillaOficial
-from ...core.identity import BucketId
+from ...core.identity.bucket import BucketId
 from ...core.modelo_work_progress_state import ModeloWorkProgressState
 from ...core.period import Period
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
@@ -60,9 +60,9 @@ from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..calculations.verification_report_gate import require_verification_report_coordinates_current
 from ._row_source_identity_replay import revision_row_source_fingerprints_for_review
+from ._work_selection import ModeloWorkSelectorRequest, ModeloWorkSelectorState, select_modelo_work_resolution
 from .action_errors import CalculationRevisionNotFoundError, StoredCalculationDriftError, WorkUnitNotFoundError
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
-from .work_addressing import ModeloWorkSelectorRequest, ModeloWorkSelectorState, select_modelo_work_resolution
 from .work_review import (
     BlockerRef,
     ModeloWorkBindingOrigin,

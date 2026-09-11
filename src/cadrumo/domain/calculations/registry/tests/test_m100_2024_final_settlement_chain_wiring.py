@@ -51,7 +51,7 @@ import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
-from ._modelo_100_registry_support import _m100_2024_deduccion_maternidad_bindings
+from .....domain.contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
 from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -59,6 +59,12 @@ from ._scenarios import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_M100_2024_MATERNIDAD_BINDINGS = {
+    "renta-2024-profile-deduccion-maternidad": Decimal(
+        compute_deduccion_maternidad_0611([], filing_year=2024),
+    ),
+}
 
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
 _SOURCE_ROOT = bundled_path()
@@ -86,7 +92,7 @@ def _bindings(*, retencion: str) -> dict[str, Decimal]:
         # Art. 81.1 is profile-derived at the application boundary. This
         # direct registry scenario has no profile facts, so it supplies the
         # resolved no-descendant scalar just as the profile resolver would.
-        **_m100_2024_deduccion_maternidad_bindings(),
+        **_M100_2024_MATERNIDAD_BINDINGS,
         "renta-2024-profile-incremento-guarderia": Decimal("0"),
         "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
         "renta-2024-profile-descendientes-guarderia": Decimal("0"),

@@ -59,7 +59,7 @@ from pydantic import (
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
-from ...core.identity import CalculationRevisionId, SnapshotId, WorkUnitId
+from ...core.identity.hex_ids import CalculationRevisionId, SnapshotId, WorkUnitId
 from ...core.irnr import M210_TIPO_RENTA_CODE_PROJECTION, M210GrossIncomeSourceMode
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import validate_utc_aware
@@ -323,7 +323,7 @@ class CalculationSourceRef(BaseModel):
     this source object's resolution feeds -- and nothing else on the revision
     carries it for the general (non-row-materialized) case; dropping it here
     was an omission the application-side
-    :class:`~cadrumo.application.aggregation.CalculationSourceProvenance` did
+    :class:`~cadrumo.application.aggregation.source_mesh.CalculationSourceProvenance` did
     not itself make (it already carries the field). An empty tuple is honest
     when the originating resolver call site did not associate this row with a
     casilla â€” it is not fabricated as a claim of "no subject", only carried as
@@ -345,7 +345,7 @@ class CalculationSourceRef(BaseModel):
         source_casilla_ids: Casilla identities this source object's resolution
             feeds, when the originating resolver associated one; empty when it
             did not. Carried straight from
-            :attr:`~cadrumo.application.aggregation.CalculationSourceProvenance.source_casilla_ids`.
+    :attr:`~cadrumo.application.aggregation.source_mesh.CalculationSourceProvenance.source_casilla_ids`.
         dependency_treatment: The registry's declared dependency treatment for
             this carry, empty when the revision declares none. Unlike
             ``legal_refs`` / ``source_refs`` this carries no grounding duplicated

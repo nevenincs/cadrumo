@@ -24,8 +24,8 @@ from .command_spec import (
     ValueContract,
 )
 
-_OUTPUT_LANGUAGE = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
-_OUTPUT_FORMAT = ValueContract(DeferredTarget("cadrumo.core.output_rendering", "OutputFormat"))
+_OUTPUT_LANGUAGE = ValueContract(DeferredTarget("...core.external_constants", "OutputLanguage", __package__))
+_OUTPUT_FORMAT = ValueContract(DeferredTarget("...core.output_rendering", "OutputFormat", __package__))
 _STATE_FREE = ExecutionPolicySpec(
     capabilities=frozenset({"state-free"}),
     side_effects=frozenset({"none"}),
@@ -148,17 +148,18 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_ROOT_STATUS,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._root_cli", "root_command")),
+        handler=LazyBinding.available(DeferredTarget("._root_cli", "root_command", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._root_payloads", "RootStatusResult"),
+            target=DeferredTarget("._root_payloads", "RootStatusResult", __package__),
             identity="root.status",
         ),
         profile_secret=ProfileSecretSpec(
             fields=(MachineSecretFieldSpec("profile_passphrase"),),
             model=DeferredTarget(
-                "cadrumo.entrypoints.cli._profile_authentication_contract",
+                "._profile_authentication_contract",
                 "ProfileAuthenticationSecrets",
+                __package__,
             ),
         ),
     ),
@@ -187,10 +188,10 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_STATE_FREE,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._root_cli", "app_root")),
+        handler=LazyBinding.available(DeferredTarget("._root_cli", "app_root", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._root_payloads", "AppRootResult"),
+            target=DeferredTarget("._root_payloads", "AppRootResult", __package__),
             identity="root.app",
         ),
     ),
@@ -204,7 +205,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter=None),
         parameters=(),
         policy=_STATE_FREE,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli.tui_launcher", "launch_tui")),
+        handler=LazyBinding.available(DeferredTarget(".tui_launcher", "launch_tui", __package__)),
         result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
     ),
     CommandSpec(
@@ -233,10 +234,10 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_STATE_FREE,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli.config._root_cli", "config_root")),
+        handler=LazyBinding.available(DeferredTarget(".config._root_cli", "config_root", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._config_help_payloads", "ConfigRootResult"),
+            target=DeferredTarget("._config_help_payloads", "ConfigRootResult", __package__),
             identity="root.config",
         ),
     ),

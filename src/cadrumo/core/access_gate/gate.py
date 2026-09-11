@@ -35,7 +35,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel
 
 from ...core.models import STRICT_FROZEN_CONFIG
-from ..config import LIVE_READ_TEST_OPT_IN_ENV_VAR as _LIVE_READ_TEST_OPT_IN_ENV_VAR
+from ..config_live_tests import LIVE_READ_TEST_OPT_IN_ENV_VAR as _LIVE_READ_TEST_OPT_IN_ENV_VAR
 from .errors import (
     AeatLiveReadNotEnabledError,
     LiveSubmitForbiddenError,

@@ -228,7 +228,7 @@ def test_profile_readiness_reports_no_profile_configured_when_genuinely_absent()
     report absence, or a fix that widened the locked branch too far would
     silently swallow this case instead.
     """
-    from ...core.i18n import tr
+    from ...core.i18n.render import tr
 
     report = build_config_repair_report()
     profile_readiness = next(check for check in report.checks if check.name == "profile.readiness")
@@ -244,7 +244,7 @@ def test_profile_readiness_reports_the_lock_rather_than_no_profile_configured(tm
     through to the same summary a cold environment with no profile at all
     gets -- true of the second, false of the first.
     """
-    from ...core.i18n import tr
+    from ...core.i18n.render import tr
 
     with isolated_runtime_profile(tmp_path=tmp_path), suspend_active_session():
         assert not has_active_bucket_session()
@@ -277,7 +277,7 @@ def test_config_repair_report_contains_setup_checks(config_repair_report: Config
 
 def test_render_config_repair_text_is_operator_readable(config_repair_report: ConfigRepairReport) -> None:
     rendered = render_config_repair_text(config_repair_report)
-    from ...core.i18n import tr
+    from ...core.i18n.render import tr
 
     assert f"{tr('cli.diagnostics.repair.overall_label')}\t" in rendered
     assert f"{tr('cli.diagnostics.repair.logs_label')}\t" in rendered
@@ -909,7 +909,7 @@ def test_render_config_repair_text_marks_internal_problems_distinctly() -> None:
     thinking they forgot a field; operator-fixable rows carry no tag.
     """
 
-    from ...core.i18n import tr
+    from ...core.i18n.render import tr
 
     rendered = render_config_repair_text(_internal_repair_report())
     internal_label = tr("cli.diagnostics.repair.audience_internal")

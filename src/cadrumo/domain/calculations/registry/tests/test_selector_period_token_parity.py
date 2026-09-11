@@ -26,7 +26,7 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from .....core.period import RegistrySelectorPeriodCode
-from .registry_tree import bundled_registry_tree
+from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 

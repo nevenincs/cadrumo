@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 
+from .....tests.inventory import FIXTURES_DIR
+from ..parser import parse_declaracion
 from ._parser_boundary_m100_support import (
     _M100_CORPUS_IDS,
     _M100_CORPUS_PARAMS,
@@ -11,10 +15,7 @@ from ._parser_boundary_m100_support import (
     _M100_EXPECTED_VALUES_BY_STEM,
 )
 from ._parser_boundary_support import (
-    FIXTURES_DIR,
-    Decimal,
     _expected_period,
-    parse_declaracion,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

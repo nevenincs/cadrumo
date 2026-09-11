@@ -31,18 +31,20 @@ from .command_spec import (
 )
 from .command_spec import translation_key as _key
 
-_LANGUAGE = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
+_LANGUAGE = ValueContract(DeferredTarget("...core.external_constants", "OutputLanguage", __package__))
 _MODELO = ValueContract(
     DeferredTarget("builtins", "str"),
-    click_type=DeferredTarget("cadrumo.entrypoints.cli._common", "MODELO_CODE_CHOICE"),
+    click_type=DeferredTarget("._common", "MODELO_CODE_CHOICE", __package__),
 )
-_M210_SOURCE = ValueContract(DeferredTarget("cadrumo.core.irnr", "M210GrossIncomeSourceMode"))
-_RESCATE_TYPE = ValueContract(DeferredTarget("cadrumo.core.rescate_type", "RescateType"))
-_VERIFY_SELECTOR = ValueContract(DeferredTarget("cadrumo.application.modelo.verify_selector", "ModeloVerifySelector"))
-_REFUND = ValueContract(DeferredTarget("cadrumo.core.refund_election", "RefundElection"))
-_PAYMENT = ValueContract(DeferredTarget("cadrumo.core.payment_election", "PaymentElection"))
+_M210_SOURCE = ValueContract(DeferredTarget("...core.irnr", "M210GrossIncomeSourceMode", __package__))
+_RESCATE_TYPE = ValueContract(DeferredTarget("...core.rescate_type", "RescateType", __package__))
+_VERIFY_SELECTOR = ValueContract(
+    DeferredTarget("...application.modelo.verify_selector", "ModeloVerifySelector", __package__)
+)
+_REFUND = ValueContract(DeferredTarget("...core.refund_election", "RefundElection", __package__))
+_PAYMENT = ValueContract(DeferredTarget("...core.payment_election", "PaymentElection", __package__))
 _DOMICILIATION = ValueContract(
-    DeferredTarget("cadrumo.core.prior_domiciliation_election", "PriorDomiciliationElection")
+    DeferredTarget("...core.prior_domiciliation_election", "PriorDomiciliationElection", __package__)
 )
 
 
@@ -172,10 +174,10 @@ def _leaf(
         InvocationSpec(context_parameter="ctx"),
         parameters,
         policy,
-        LazyBinding.available(DeferredTarget(module, handler_name or f"work_{name}")),
+        LazyBinding.available(DeferredTarget(module, handler_name or f"work_{name}", __package__)),
         ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget(schema_module, schema_name),
+            DeferredTarget(schema_module, schema_name, __package__),
             identity=f"modelo.work.{name}",
         ),
     )
@@ -226,15 +228,15 @@ _REVISION_ADDRESS = (
 MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     _leaf(
         "calculate",
-        "cadrumo.entrypoints.cli._modelo_work_calculate_cli",
+        "._modelo_work_calculate_cli",
         _CALCULATE_PARAMETERS,
         _CALC_WRITE,
-        "cadrumo.entrypoints.cli._modelo_payloads",
+        "._modelo_payloads",
         "WorkCalculateResult",
     ),
     _leaf(
         "create",
-        "cadrumo.entrypoints.cli._modelo_work_lifecycle_cli",
+        "._modelo_work_lifecycle_cli",
         (
             _o("modelo", "--modelo", TEXT_VALUE, required=True),
             _o("year", "--year", WHOLE_NUMBER_VALUE, required=True),
@@ -248,12 +250,12 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _LANG,
         ),
         _CREATE,
-        "cadrumo.entrypoints.cli._modelo_payloads",
+        "._modelo_payloads",
         "WorkCreateResult",
     ),
     _leaf(
         "dependencies",
-        "cadrumo.entrypoints.cli._modelo_work_verification_cli",
+        "._modelo_work_verification_cli",
         (
             _o("year", "--year", WHOLE_NUMBER_VALUE, required=True),
             _o("modelo", "--modelo", _MODELO),
@@ -261,12 +263,12 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _LANG,
         ),
         _CALC_READ,
-        "cadrumo.entrypoints.cli._modelo_payloads",
+        "._modelo_payloads",
         "WorkDependenciesResult",
     ),
     _leaf(
         "discard",
-        "cadrumo.entrypoints.cli._modelo_work_lifecycle_cli",
+        "._modelo_work_lifecycle_cli",
         (
             _a("work_unit_id"),
             *_ADDRESS,
@@ -281,60 +283,60 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             CommandWriteRoute.PROFILE_BOUND,
             destructive=True,
         ),
-        "cadrumo.entrypoints.cli._modelo_payloads",
+        "._modelo_payloads",
         "WorkDiscardResult",
     ),
     _leaf(
         "list",
-        "cadrumo.entrypoints.cli._modelo_work_lifecycle_cli",
+        "._modelo_work_lifecycle_cli",
         (_o("bucket_id", "--bucket-id"), _o("include_discarded", "--include-discarded", FLAG_VALUE, flag=True), _LANG),
         _MODEL_READ,
-        "cadrumo.entrypoints.cli._modelo_payloads",
+        "._modelo_payloads",
         "WorkListResult",
     ),
     _leaf(
         "select",
-        "cadrumo.entrypoints.cli._modelo_work_select_cli",
+        "._modelo_work_select_cli",
         (_o("bucket_id", "--bucket-id"), _o("include_discarded", "--include-discarded", FLAG_VALUE, flag=True), _LANG),
         _MODEL_READ,
-        "cadrumo.entrypoints.cli._modelo_payloads",
+        "._modelo_payloads",
         "WorkSelectResult",
     ),
     _leaf(
         "rename",
-        "cadrumo.entrypoints.cli._modelo_work_lifecycle_cli",
+        "._modelo_work_lifecycle_cli",
         (_a("work_unit_id"), *_ADDRESS, _o("name", "--name"), _o("actor", "--by")),
         _MODEL_WRITE,
-        "cadrumo.entrypoints.cli._modelo_payloads",
+        "._modelo_payloads",
         "WorkRenameResult",
     ),
     _leaf(
         "status",
-        "cadrumo.entrypoints.cli._modelo_work_lifecycle_cli",
+        "._modelo_work_lifecycle_cli",
         (_a("work_unit_id"), *_ADDRESS, _LANG),
         _MODEL_READ,
-        "cadrumo.entrypoints.cli._modelo_payloads",
+        "._modelo_payloads",
         "WorkStatusResult",
     ),
     _leaf(
         "review",
-        "cadrumo.entrypoints.cli._modelo_work_review_cli",
+        "._modelo_work_review_cli",
         (_a("work_unit_id"), *_ADDRESS, _LANG),
         _MODEL_READ,
-        "cadrumo.entrypoints.cli._modelo_payloads",
+        "._modelo_payloads",
         "WorkReviewResult",
     ),
     _leaf(
         "revisions",
-        "cadrumo.entrypoints.cli._modelo_work_revision_cli",
+        "._modelo_work_revision_cli",
         (_a("work_unit_id"), *_ADDRESS, _LANG),
         _MODEL_READ,
-        "cadrumo.entrypoints.cli._modelo_payloads",
+        "._modelo_payloads",
         "WorkRevisionsResult",
     ),
     _leaf(
         "revision",
-        "cadrumo.entrypoints.cli._modelo_work_revision_cli",
+        "._modelo_work_revision_cli",
         (
             _a("calculation_revision_id"),
             *_REVISION_ADDRESS,
@@ -342,44 +344,44 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _LANG,
         ),
         _MODEL_READ,
-        "cadrumo.entrypoints.cli._modelo_work_revision_payloads",
+        "._modelo_work_revision_payloads",
         "WorkRevisionResult",
     ),
     _leaf(
         "observations",
-        "cadrumo.entrypoints.cli._modelo_work_revision_cli",
+        "._modelo_work_revision_cli",
         (_a("calculation_revision_id"), *_REVISION_ADDRESS, _LANG),
         _MODEL_READ,
-        "cadrumo.entrypoints.cli._modelo_work_revision_payloads",
+        "._modelo_work_revision_payloads",
         "WorkObservationsResult",
     ),
     _leaf(
         "run",
-        "cadrumo.entrypoints.cli._modelo_work_runs_cli",
+        "._modelo_work_runs_cli",
         (_a("run_id", required=True), _LANG),
         _MODEL_READ,
-        "cadrumo.entrypoints.cli.modelo_aux_payloads",
+        ".modelo_aux_payloads",
         "WorkRunResult",
     ),
     _leaf(
         "run-details",
-        "cadrumo.entrypoints.cli._modelo_work_runs_cli",
+        "._modelo_work_runs_cli",
         (_a("run_id", required=True), _LANG),
         _MODEL_READ,
-        "cadrumo.entrypoints.cli.modelo_aux_payloads",
+        ".modelo_aux_payloads",
         "WorkRunDetailsResult",
     ),
     _leaf(
         "runs",
-        "cadrumo.entrypoints.cli._modelo_work_runs_cli",
+        "._modelo_work_runs_cli",
         (_LANG,),
         _MODEL_READ,
-        "cadrumo.entrypoints.cli.modelo_aux_payloads",
+        ".modelo_aux_payloads",
         "WorkRunsResult",
     ),
     _leaf(
         "resume",
-        "cadrumo.entrypoints.cli._modelo_work_runs_cli",
+        "._modelo_work_runs_cli",
         (
             _a("target", help_name="resume_target"),
             *_ADDRESS[:4],
@@ -390,12 +392,12 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _LANG,
         ),
         _MODEL_READ,
-        "cadrumo.entrypoints.cli._modelo_payloads",
+        "._modelo_payloads",
         "WorkResumeResult",
     ),
     _leaf(
         "verify",
-        "cadrumo.entrypoints.cli._modelo_work_verification_cli",
+        "._modelo_work_verification_cli",
         (
             _a("calculation_revision_id"),
             *_ADDRESS[:4],
@@ -406,12 +408,12 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _LANG,
         ),
         _CALC_WRITE,
-        "cadrumo.entrypoints.cli._modelo_payloads",
+        "._modelo_payloads",
         "WorkVerifyResult",
     ),
     _leaf(
         "file",
-        "cadrumo.entrypoints.cli._modelo_work_verification_cli",
+        "._modelo_work_verification_cli",
         (
             _a("calculation_revision_id"),
             *_ADDRESS[:4],
@@ -426,12 +428,12 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _LANG,
         ),
         _FILE,
-        "cadrumo.entrypoints.cli._modelo_payloads",
+        "._modelo_payloads",
         "WorkFileResult",
     ),
     _leaf(
         "wizard",
-        "cadrumo.entrypoints.cli._modelo_work_wizard_cli",
+        "._modelo_work_wizard_cli",
         (
             _a("work_unit_id"),
             *_ADDRESS,
@@ -439,7 +441,7 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _o("output_language_opt", "--output-language", _LANGUAGE, help_name="output_language"),
         ),
         _WIZARD,
-        "cadrumo.entrypoints.cli._modelo_work_wizard_payloads",
+        "._modelo_work_wizard_payloads",
         "WorkWizardResult",
     ),
 )

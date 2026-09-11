@@ -46,7 +46,7 @@ from ..deterministic_findings import (
 #: The defining module itself, for the attribute scoping below. Named through
 #: `import_module` rather than `from .. import`: the ledger package facade is
 #: inert and its tests may not import through it.
-deterministic_findings_module = import_module("cadrumo.application.ledger.deterministic_findings")
+deterministic_findings_module = import_module("..deterministic_findings", __package__)
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _INVOICE_ID_1 = "c" * 64

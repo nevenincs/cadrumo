@@ -46,7 +46,7 @@ from ...domain.calculations.registry.schema import (
 )
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.modelos.errors import ModeloError
-from ..aggregation import CalculationSourceResolution
+from ..aggregation.source_mesh import CalculationSourceResolution
 from .borrador_binding import Modelo100BorradorSourceResolver
 from .calculation_route import require_calculation_route_resolver
 
@@ -122,7 +122,7 @@ def resolve_profile_source_tier(
     higher-precedence source already supplied.
 
     See Also:
-        :class:`~cadrumo.application.aggregation.ProfileSourceResolver`:
+        :class:`~cadrumo.application.aggregation.source_profile.ProfileSourceResolver`:
             Source resolver that reads the stored user profile facts.
         :func:`~cadrumo.application.modelo.calculation_resolution.resolve_calculation_binding_channels`:
             Places this profile tier below backend, borrador, and caller tiers.
@@ -132,7 +132,8 @@ def resolve_profile_source_tier(
         carrying the profile-owned bindings not already claimed by
         higher-precedence tiers.
     """
-    from ..aggregation import CalculationSourceContext, ProfileSourceResolver
+    from ..aggregation.source_mesh import CalculationSourceContext
+    from ..aggregation.source_profile import ProfileSourceResolver
 
     caller_owned = (
         set(caller_binding_values)
@@ -297,7 +298,7 @@ def _resolve_borrador_bindings_for_calculation(
     the typed ``borrador_provenance`` (snapshot id + sourced-binding trace) the
     persistence boundary consumes.
     """
-    from ..aggregation import CalculationSourceContext
+    from ..aggregation.source_mesh import CalculationSourceContext
 
     resolver = Modelo100BorradorSourceResolver(
         borrador_snapshot_id=borrador_snapshot_id,

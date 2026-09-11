@@ -24,9 +24,13 @@ from ....domain.prorrata_register.register import (
     ProrrataRegisterEntry,
     SectorDefinition,
 )
-from .. import (
+from ..errors import (
     AggregationValidationError,
+)
+from ..iva_ledger import (
     IvaLedgerAggregation,
+)
+from ..m303_arrivals import (
     M303ProrrataTransitionArrival,
     M303SupplierRegimeArrival,
     resolve_m303_prorrata_transition_arrival,

@@ -5,13 +5,16 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from decimal import Decimal
 
+from ...core.i18n.translatable import Translatable as t
 from ...core.period import Period
 from ...domain.calculations.registry.ids import BindingId
-from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
+from ...domain.calculations.registry.ledger_iva_bindings import (
+    IvaLedgerObservation,
+    invoice_ledger_screen_binding_ids,
+)
 from ...domain.invoices.models import Invoice
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ._modelo_bindings_invoice_iva import (
-    INVOICE_LEDGER_SCREEN_BINDINGS,
     M303_INVOICE_EVIDENCE_SAMPLE_LIMIT,
     InvoiceIvaSilenceReport,
     ScreenedInvoiceIva,
@@ -19,13 +22,13 @@ from ._modelo_bindings_invoice_iva import (
     screened_invoice_iva_observations,
 )
 from ._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
-from ._source_mesh import (
-    CalculationSourceContext,
-)
-from .errors import AggregationValidationError, t
+from .errors import AggregationValidationError
 from .iva_ledger import (
     IvaLedgerProrrataApportionment,
     resolve_iva_ledger_binding_values,
+)
+from .source_mesh import (
+    CalculationSourceContext,
 )
 
 
@@ -77,6 +80,7 @@ def raise_if_invoice_iva_would_be_silent(
     ledger_observations: Sequence[IvaLedgerObservation] = (),
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
     prorrata_apportionment: IvaLedgerProrrataApportionment | None,
+    screened_bindings: tuple[BindingId, ...] | None = None,
 ) -> InvoiceIvaSilenceReport:
     """Refuse a filing whose invoice IVA would be absent from its ledger totals.
 
@@ -89,13 +93,13 @@ def raise_if_invoice_iva_would_be_silent(
     operator to link and classify the transactions that feed the canonical
     ledger path.
 
-    **Applies to every modelo in the screened-binding table, by design.** M390
-    declares the same seven concepts M303 does under its own id prefix, so it
-    is an entry in that table rather than a second screen. Two implementations
-    of one comparison would be free to drift, and a widening applied to one and
-    not the other is invisible until a filing is wrong -- which is exactly how
-    the ES-only counterparty filter and the missing recargo tiers survived on
-    the M303 side.
+    **Applies to M303 and M390 revisions whose typed screen shapes resolve the
+    seven conceptual slots.** M390 declares the same seven concepts M303 does
+    under its own id prefix, so the selected revision supplies the IDs rather
+    than a second Python table. Two implementations of one comparison would be
+    free to drift, and a widening applied to one and not the other is invisible
+    until a filing is wrong -- which is exactly how the ES-only counterparty
+    filter and the missing recargo tiers survived on the M303 side.
 
     The annual modelo needs this more than the quarterly one, not less. Its
     390-to-303 reconciliation BLOCKING_RULE compares two figures that both root
@@ -115,9 +119,18 @@ def raise_if_invoice_iva_would_be_silent(
         The second element survives the early return below: a period whose
         every invoice was withheld produces no observations at all, and that is
         precisely the case where staying silent would be worst.
+
+    screened_bindings may be supplied by the source-mesh resolver after it
+    resolves the selected revision. Direct callers that omit it receive the
+    same typed revision-selected query here; no static model-to-binding table
+    is consulted.
     """
-    screened_bindings = INVOICE_LEDGER_SCREEN_BINDINGS.get(str(context.modelo))
     if screened_bindings is None:
+        screened_bindings = invoice_ledger_screen_binding_ids(
+            context.revision,
+            modelo=str(context.modelo),
+        )
+    if not screened_bindings:
         return InvoiceIvaSilenceReport()
     screened = screened_invoice_iva_observations(
         context=context,

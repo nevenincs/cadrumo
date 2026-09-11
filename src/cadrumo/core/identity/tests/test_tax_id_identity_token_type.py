@@ -1,4 +1,4 @@
-"""Real-behavior tests for the :data:`~core.identity.TaxIdIdentityToken` alias.
+"""Real-behavior tests for the :data:`~core.identity.tax_id.TaxIdIdentityToken` alias.
 
 Guards the direction of the ``SubjectTaxId`` / ``TaxIdIdentityToken`` split this
 campaign applied: ``SubjectTaxId`` is checksum-enforced and Spanish-only,
@@ -9,12 +9,12 @@ tells the two aliases apart — a case-only fixture passes under either and
 proves nothing about which alias a given field actually carries.
 
 Uses the German VAT-shape example already established as canonical in
-:mod:`core.identity._nif_iva` (``DE + 9 digits``), not an invented value.
+:mod:`core.identity.nif_iva` (``DE + 9 digits``), not an invented value.
 
 See Also:
-    :data:`~core.identity.TaxIdIdentityToken`
+    :data:`~core.identity.tax_id.TaxIdIdentityToken`
         Alias under test.
-    :data:`~core.identity.SubjectTaxId`
+    :data:`~core.identity.tax_id.SubjectTaxId`
         The checksum-enforced sibling this suite proves rejects the same value.
     :mod:`core.identity.tests.test_tax_id_comparison`
         The comparison-function-level suite guarding the same split's two
@@ -27,7 +27,7 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from ....tests.fixtures.identity_holder import single_field_holder
-from .. import SubjectTaxId, TaxIdIdentityToken
+from ..tax_id import SubjectTaxId, TaxIdIdentityToken
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -36,7 +36,7 @@ _SubjectHolder = single_field_holder("tax_id", SubjectTaxId)
 
 #: A real EU VAT-shaped counterparty identifier: the German pattern
 #: (``^DE\\d{9}$``) already carried as the canonical worked example in
-#: ``core.identity._nif_iva``'s own prefix specification table, not a value
+#: ``core.identity.nif_iva``'s own prefix specification table, not a value
 #: invented for this suite.
 _EU_VAT_SHAPED_ID = "DE123456789"
 

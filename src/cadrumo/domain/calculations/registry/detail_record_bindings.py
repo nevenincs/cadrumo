@@ -13,7 +13,7 @@ from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.country_code import CountryCodeAlpha2
 from ....core.external_constants import DEFAULT_CURRENCY
 from ....core.foreign_asset_obligation import M720AssetClassCode
-from ....core.identity import TaxIdIdentityToken
+from ....core.identity.tax_id import TaxIdIdentityToken
 from ....core.modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada
 from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_aggregation import binding_aggregation_op

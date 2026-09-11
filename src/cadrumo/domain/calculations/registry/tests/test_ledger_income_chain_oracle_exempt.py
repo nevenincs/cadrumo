@@ -48,7 +48,7 @@ from pathlib import Path
 
 import pytest
 
-from .....application.aggregation import aggregate_renta_income_ledger
+from .....application.aggregation.renta_income_ledger import aggregate_renta_income_ledger
 from .....core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
@@ -59,13 +59,19 @@ from ....transactions.enums import BusinessClassification, TransactionDirection,
 from ....transactions.models import Transaction, TransactionCatalogue
 from ....transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....transactions.retencion_facts import load_retencion_actividades_rates
+from ..authority import bundled_authority
 from ..ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
 )
-from ._ledger_income_chain_oracle_support import modelo_130_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def modelo_130_revision():
+    """Resolve the shipped Modelo 130 revision used by this runtime oracle."""
+    return bundled_authority().snapshot("130", filing_year=2026, period="1T").revision
+
 
 # The invoice, stated once from the document and the cited rate.
 _BASE = Decimal("1000.00")

@@ -22,7 +22,7 @@ from .....adapters.outbound.storage.mirror_manifest import (
 from .....adapters.outbound.storage.records import ProviderKind, RemoteMirrorNamespaceManifest
 from .....adapters.persistence.storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from .....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from .....core.i18n import tr
+from .....core.i18n.render import tr
 from .....tests.path_obstruction import obstructed_path
 from .....tests.secure_sql import isolated_runtime_profile
 from .._google_payloads import GoogleSyncProbeResult

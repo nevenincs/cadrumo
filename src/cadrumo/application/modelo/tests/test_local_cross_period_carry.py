@@ -51,12 +51,15 @@ from ....domain.calculations.registry.iva_wallet_relation_targets import (
     MODELO_303_IVA_COMPENSATION_BINDING_ID,
     iva_wallet_owned_binding_ids_for_revision,
 )
+from ....domain.calculations.registry.tests.registry_observations import (
+    registry_grounded_observations,
+    revision_id_for_observation,
+)
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....tests import general_m303_filing_evidence
+from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation import CalculationSourceProvenance, CalculationSourceResolution
+from ...aggregation.source_mesh import CalculationSourceProvenance, CalculationSourceResolution
 from ...aggregation.source_resolution_operations import merge_source_resolutions
 from ...calculations.observations_repository import CalculationObservationRepository
 from ..calculation_actions import (
@@ -393,7 +396,7 @@ def test_same_year_locally_filed_upstream_admitted_with_advisory(repos: _Repos) 
     from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
     from ....domain.modelos.calculation_repository import upsert_calculation_revision
     from ....domain.modelos.calculation_revision import CalculationRevisionState
-    from ...calculations.cross_period_clean_state import CrossPeriodCleanStateBlocker
+    from ...calculations.cross_period_models import CrossPeriodCleanStateBlocker
     from ..verification_actions import _cross_period_clean_state_verdict_for_work_unit
 
     wu_repo, cr_repo, fr_repo, _vr_repo, bv_repo = repos
@@ -510,7 +513,7 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> 
     ``excluded_binding_ids`` so the iva-wallet decision remains the sole owner.
     """
     from ....core.period import Period
-    from ...aggregation import CalculationSourceContext
+    from ...aggregation.source_mesh import CalculationSourceContext
     from ...calculations.multi_year import PreviousFilingSourceResolver
 
     wu_repo = repos[0]

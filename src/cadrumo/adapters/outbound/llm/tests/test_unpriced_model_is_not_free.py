@@ -28,7 +28,7 @@ from decimal import Decimal
 
 import pytest
 
-from ..models import LLMProvider
+from .....core.config_support import LLMProvider
 from ..pricing import estimate_cost_usd
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -10,10 +10,10 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, ValidationError
 
-from ....adapters.outbound.aeat.sede._iva_compensation_wallet_parsing import WALLET_URL
 from ....adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation, IvaCompensationWalletRow
 from ....core.aggregation import BindingSourceKind
 from ....core.errors.error_codes import build_error_envelope
+from ....core.external_constants import load_external_constants
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
@@ -27,7 +27,7 @@ from ....domain.iva_compensation.reconciliation import (
     IvaCompensationWalletObservationProtocol,
 )
 from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
-from ...aggregation import CalculationSourceContext
+from ...aggregation.source_mesh import CalculationSourceContext
 from ..binding_prefill import BindingPrefillReport, extract_modelo_303_local_iva_compensation_recurrence
 from ..iva_compensation_history import IvaCompensationHistoryRepository
 from ..iva_wallet_reconciliation import (
@@ -36,6 +36,9 @@ from ..iva_wallet_reconciliation import (
     reconcile_modelo_303_iva_compensation,
 )
 from ..observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
+
+_EXTERNAL = load_external_constants()
+WALLET_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

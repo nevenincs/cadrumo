@@ -31,11 +31,13 @@ notes and all reproduced by the author against the extraction before use:
 from __future__ import annotations
 
 from decimal import Decimal
+from pathlib import Path
 from typing import Any
 
 import pytest
-from test_support.registry_authoring import read_manual_worked_example
+from pydantic import BaseModel, ConfigDict
 
+from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.contribuyente.renta_codes import RentaMaritalStatus
@@ -54,9 +56,28 @@ _VALENCIANA_ORACLE = "modelo-100-2024-minimo-descendientes-declaracion-propia-va
 _RIOJA_ORACLE = "modelo-100-2024-minimo-descendientes-adopcion-mayor-de-tres-rioja.json"
 
 
+class _ManualWorkedExample(BaseModel):
+    """Strict local view of the committed manual-oracle payload used by this test."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    modelo: str
+    filing_year: int
+    source_kind: str
+    scenario_id: str
+    raw_evidence_locator: str
+    notes: str
+    expected_by_casilla_id: dict[str, str]
+
+
+def _read_manual_worked_example(name: str) -> _ManualWorkedExample:
+    path = Path(bundled_path("corpus", "manual_oracles")) / name
+    return _ManualWorkedExample.model_validate_json(path.read_text(encoding="utf-8"))
+
+
 def _expected(name: str, casilla_id: str) -> Decimal:
     """Return the AEAT-printed figure for *casilla_id*, from the fixture on disk."""
-    return Decimal(read_manual_worked_example(name).expected_by_casilla_id[casilla_id])
+    return Decimal(_read_manual_worked_example(name).expected_by_casilla_id[casilla_id])
 
 
 def _snapshot() -> RegistrySnapshot:
@@ -93,7 +114,7 @@ def _aggregates(facts: dict[str, UserProfileFactValue]) -> tuple[Decimal, Decima
 
 def test_both_oracle_fixtures_load_and_declare_their_provenance() -> None:
     for name in (_ASTURIAS_ORACLE, _VALENCIANA_ORACLE):
-        payload = read_manual_worked_example(name)
+        payload = _read_manual_worked_example(name)
         assert payload.modelo == "100", name
         assert payload.filing_year == _ORACLE_YEAR, name
         assert payload.source_kind == "aeat_manual_worked_example", name
@@ -110,8 +131,8 @@ def test_the_valenciana_oracle_grounds_only_the_estatal_casilla() -> None:
     point: the omission must stay deliberate rather than decay into an
     oversight.
     """
-    assert set(read_manual_worked_example(_VALENCIANA_ORACLE).expected_by_casilla_id) == {"0513"}
-    assert set(read_manual_worked_example(_ASTURIAS_ORACLE).expected_by_casilla_id) == {"0513", "0514"}
+    assert set(_read_manual_worked_example(_VALENCIANA_ORACLE).expected_by_casilla_id) == {"0513"}
+    assert set(_read_manual_worked_example(_ASTURIAS_ORACLE).expected_by_casilla_id) == {"0513", "0514"}
 
 
 # ---------------------------------------------------------------------------
@@ -164,7 +185,7 @@ def test_asturias_oracle_does_not_assert_the_artefacted_contribuyente_row() -> N
     estatal column against 5.550 in the autonómico one. Neither figure belongs
     to casilla 0513/0514, and this asserts the fixture never smuggled one in.
     """
-    expected = read_manual_worked_example(_ASTURIAS_ORACLE).expected_by_casilla_id.values()
+    expected = _read_manual_worked_example(_ASTURIAS_ORACLE).expected_by_casilla_id.values()
     assert Decimal("5500") not in {Decimal(value) for value in expected}
     assert Decimal("5550") not in {Decimal(value) for value in expected}
 
@@ -335,7 +356,7 @@ def test_the_printed_conjunta_total_is_a_recorded_gap_not_an_expectation() -> No
     silent one. The moment membership becomes expressible, this test is what
     says the fixture may claim it.
     """
-    payload = read_manual_worked_example(_VALENCIANA_ORACLE)
+    payload = _read_manual_worked_example(_VALENCIANA_ORACLE)
     assert set(payload.expected_by_casilla_id) == {"0513"}
     assert Decimal(payload.expected_by_casilla_id["0513"]) == Decimal("2550"), (
         "the grounded expectation is the individual case"

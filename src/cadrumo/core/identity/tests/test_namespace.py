@@ -1,8 +1,8 @@
 """Real-behavior tests for AEAT document-identifier aliases.
 
-Covers the AEAT-issued aliases :data:`~core.identity.AeatExpedienteId`,
-:data:`~core.identity.AeatClaveLiquidacion`, and
-:data:`~core.identity.AeatPresentationId`.
+Covers the AEAT-issued aliases :data:`~core.identity.aeat_expediente.AeatExpedienteId`,
+:data:`~core.identity.aeat_clave_liquidacion.AeatClaveLiquidacion`, and
+:data:`~core.identity.aeat_presentation.AeatPresentationId`.
 
 Two things are worth stating about what this suite proves, because a reader
 could reasonably assume more.
@@ -26,7 +26,8 @@ published, deliberately wider than the captures on both sides. A refusal here
 is evidence about this app's contract, never about AEAT's grammar.
 
 See Also:
-    :mod:`~core.identity._namespace`
+    :mod:`~core.identity.aeat_expediente`, :mod:`~core.identity.aeat_clave_liquidacion`,
+    and :mod:`~core.identity.aeat_presentation`
         Alias definitions under test.
 """
 
@@ -36,11 +37,9 @@ import pytest
 from pydantic import ValidationError
 
 from ....tests.fixtures.identity_holder import single_field_holder
-from .. import (
-    AeatClaveLiquidacion,
-    AeatExpedienteId,
-    AeatPresentationId,
-)
+from ..aeat_clave_liquidacion import AeatClaveLiquidacion
+from ..aeat_expediente import AeatExpedienteId
+from ..aeat_presentation import AeatPresentationId
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

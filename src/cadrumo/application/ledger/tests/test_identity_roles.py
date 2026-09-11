@@ -21,7 +21,8 @@ import pytest
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
-from ....core.identity import IdentityError, validate_spanish_tax_id
+from ....core.identity.documents import IdentityError
+from ....core.identity.tax_id import validate_spanish_tax_id
 from ..identity_roles import (
     IdentityCandidate,
     canonical_identity_token,

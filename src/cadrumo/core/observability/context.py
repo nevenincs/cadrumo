@@ -22,7 +22,7 @@ from datetime import datetime
 from pydantic import BaseModel
 
 from ..config import load_settings
-from ..identity import ContentDigest, ContentDigestOrAbsent
+from ..identity.digest import ContentDigest, ContentDigestOrAbsent
 from ..logging import attach_run_sink, detach_run_sink, get_logger
 from ..models import STRICT_FROZEN_CONFIG
 from ..time.clock import now

@@ -13,11 +13,12 @@ import pytest
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....core.identity import nif_check_letter
+from ....core.identity.documents import nif_check_letter
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.deadlines.models import (
     IVARegime,
     M303RegimeComposition,
@@ -37,7 +38,6 @@ from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import open_test_profile_session
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...workflow.persistence import workflow_state_repository

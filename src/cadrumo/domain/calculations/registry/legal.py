@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from cadrumo.core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES
 
-from ._citation_blocklist import CitationSource, find_known_bad
+from .citation_blocklist import CitationSource, find_known_bad
 from .errors import RegistryValidationError
 from .schema_references import LegalReference
 

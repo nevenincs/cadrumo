@@ -20,7 +20,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....domain.justificante import JustificanteParseError
+from .....domain.justificante.errors import JustificanteParseError
 from .._extract import _parse_datetime, _parse_decimal, _strip_accents
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

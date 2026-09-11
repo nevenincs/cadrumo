@@ -27,20 +27,20 @@ _MODEL = OptionSpec(
 _ROLE = OptionSpec(
     name="role",
     declarations=("--role",),
-    value=ValueContract(DeferredTarget("cadrumo.core.model_catalogue", "ModelRole")),
+    value=ValueContract(DeferredTarget("....core.model_catalogue", "ModelRole", __package__)),
     default=ParameterDefault.value(None),
     help_key=TranslationKey("cli.config.provision.role_help"),
 )
 
 
 def _handler(name: str) -> LazyBinding:
-    return LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli.config.provision_cli", name))
+    return LazyBinding.available(DeferredTarget(".provision_cli", name, __package__))
 
 
 def _schema(name: str, identity: str) -> ResultSchemaSpec:
     return ResultSchemaSpec(
         SchemaState.TARGET,
-        target=DeferredTarget("cadrumo.entrypoints.cli.config._provision_payloads", name),
+        target=DeferredTarget("._provision_payloads", name, __package__),
         identity=identity,
     )
 

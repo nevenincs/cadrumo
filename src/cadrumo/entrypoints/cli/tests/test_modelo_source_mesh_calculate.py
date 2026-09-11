@@ -18,6 +18,7 @@ from ....core.period import Period
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
@@ -29,12 +30,11 @@ from ....domain.usage_ratios.model import UsageRatioProfile
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
-from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from ....tests.user_profile import register_cli_profile
 from ._m303_filing_evidence_support import write_m303_filing_evidence
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

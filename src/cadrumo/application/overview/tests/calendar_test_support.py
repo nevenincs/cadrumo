@@ -17,11 +17,12 @@ from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.engine import DeadlineEngine
 from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ....domain.iva_compensation.filed_derivation import M303CompensationBasis
-from ....domain.justificante import Justificante
+from ....domain.justificante.schema import Justificante
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import (
     ExternalEvidence,
@@ -31,7 +32,6 @@ from ....domain.modelos.filing_record import (
     derive_filing_record_id,
 )
 from ....tests.aeat_literal_fixtures import aeat_url, justificante_cotejo_url
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ...calculations.observations_repository import ObservationEnvelopePayload, ResultDispositionProjection
 from ..calendar import build_overview_calendar
 from ..calendar_models import (

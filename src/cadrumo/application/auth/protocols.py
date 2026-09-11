@@ -14,7 +14,7 @@ from collections.abc import Generator, Mapping
 from contextlib import contextmanager
 from contextvars import ContextVar
 from pathlib import Path
-from typing import TYPE_CHECKING, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, TypedDict, runtime_checkable
 
 if TYPE_CHECKING:
     from ...core.config import Settings
@@ -62,6 +62,30 @@ class BrowserPagePort(Protocol):
         ...
 
 
+class BrowserContextKwargs(TypedDict, total=False):
+    """Subset of Playwright ``Browser.new_context()`` keyword arguments.
+
+    Only the kwargs that AEAT auth provisioners currently supply are
+    declared here. ``total=False`` makes every key optional so callers
+    can return a partial mapping.
+    """
+
+    client_certificates: list[dict[str, str | bytes]]
+
+
+@runtime_checkable
+class BrowserContextProvisioner(Protocol):
+    """Hook that decorates browser-context creation for auth providers.
+
+    Concrete outbound auth provisioners implement this protocol to add
+    Playwright ``new_context()`` kwargs.
+    """
+
+    def build_context_kwargs(self) -> BrowserContextKwargs:
+        """Return the provider-owned browser context arguments."""
+        ...
+
+
 @runtime_checkable
 class BrowserContextPort(Protocol):
     """Minimal browser context used by authentication providers."""
@@ -86,7 +110,7 @@ class BrowserSessionPort(Protocol):
     async def create_context(
         self,
         *,
-        provisioner: object | None = None,
+        provisioner: BrowserContextProvisioner | None = None,
         storage_state: Mapping[str, object] | None = None,
     ) -> BrowserContextPort:
         """Create a context with optional provider or persisted state."""
@@ -108,6 +132,11 @@ class BrowserSessionFactoryPort(Protocol):
 @runtime_checkable
 class PersistedSessionDataProtocol(Protocol):
     """Minimal surface the application layer reads from a persisted session record."""
+
+    @property
+    def storage_state(self) -> Mapping[str, object]:
+        """Playwright browser storage state for the persisted session."""
+        ...
 
     @property
     def metadata(self) -> Mapping[str, object]:
@@ -162,7 +191,9 @@ def session_store() -> SessionStoreProtocol:
 
 
 __all__ = [
+    "BrowserContextKwargs",
     "BrowserContextPort",
+    "BrowserContextProvisioner",
     "BrowserPagePort",
     "BrowserResponsePort",
     "BrowserSessionFactoryPort",

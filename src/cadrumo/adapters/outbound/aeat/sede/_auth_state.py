@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .....core.i18n import tr
-from ..auth import session_store as session_store
+from .....application.auth.protocols import session_store
+from .....core.i18n.render import tr
 from .errors import SedeNavigationError
 
 if TYPE_CHECKING:
@@ -19,7 +19,7 @@ def storage_state_for_session(session: AeatSession) -> dict[str, object]:
             "AeatSession has no persisted auth session; run `aeat config auth status` first",
             translated_message=tr("adapters.sede.errors.no_auth_session"),
         )
-    persisted = session_store.load(session.storage_state_path)
+    persisted = session_store().load(session.storage_state_path)
     if persisted is None:
         raise SedeNavigationError(
             "AEAT auth session is not persisted; run `aeat config auth status` first",

@@ -22,7 +22,7 @@ import pytest
 import yaml
 
 from ..directory_scan import DirectoryEntryKind, scan_directory
-from ..i18n import tr
+from ..i18n.render import tr
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

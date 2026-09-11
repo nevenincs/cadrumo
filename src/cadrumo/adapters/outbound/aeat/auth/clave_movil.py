@@ -60,10 +60,10 @@ from .....application.auth.session_types import (
 )
 from .....core.auth_provider import AuthProviderDescription, AuthProviderKind
 from .....core.config import Settings as _Settings
-from .....core.config import unwrap_optional_secret
+from .....core.config_support import unwrap_optional_secret
 from .....core.errors.hierarchy import AeatLoginAssertionError, AuthError
-from .....core.i18n import tr
-from .....core.identity import same_tax_identifier, tax_id_identity_token
+from .....core.i18n.render import tr
+from .....core.identity.tax_id import same_tax_identifier, tax_id_identity_token
 from .....core.logging import get_logger
 from .....core.remote_authority import canonical_remote_hostname
 from .....core.time.clock import now

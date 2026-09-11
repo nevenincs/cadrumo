@@ -9,24 +9,28 @@ from functools import cache
 import pytest
 from pydantic import AnyHttpUrl
 
-from ....adapters.outbound.aeat.sede._iva_compensation_wallet_parsing import WALLET_URL
 from ....adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation, IvaCompensationWalletRow
 from ....core.aggregation import CalculationSourceLineageRole
 from ....core.authority_grade import RegistryAuthorityGrade
+from ....core.config import Settings
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.iva_compensation.reconciliation import reconcile_iva_compensation_wallet
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ...calculations.iva_wallet_reconciliation import IvaWalletDecisionSourceResolver, reconcile_iva_compensation_wallet
+from ...calculations.iva_wallet_reconciliation import IvaWalletDecisionSourceResolver
 from ...modelo.profile_binding import resolve_profile_sourced_bindings
-from .. import CalculationSourceContext, ProfileSourceResolver
+from ..source_mesh import CalculationSourceContext
+from ..source_profile import ProfileSourceResolver
 from ._secure_objects_fixtures import secure_profile_backend  # noqa: F401
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CLOCK = datetime(2026, 5, 21, 10, 0, 0, tzinfo=UTC)
 _PROFILE_ID = "10010010-0100-4100-8100-100100100100"
+_EXTERNAL = Settings.external_constants()
+WALLET_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
 _BUCKET_ID = _PROFILE_ID
 _CCAA_BINDING = "renta-2025-profile-tax-residence-ccaa"
 # Derived-fact profile bindings that unconditionally resolve a grounded value

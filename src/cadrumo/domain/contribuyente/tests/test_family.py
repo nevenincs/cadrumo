@@ -50,7 +50,7 @@ def test_renta_family_member_rejects_blank_optional_text() -> None:
 
 
 def test_renta_family_member_tax_id_rejects_blank_via_the_checksum_validator() -> None:
-    """``tax_id`` is typed :class:`~core.identity.SubjectTaxId`, so a blank
+    """``tax_id`` is typed :class:`~core.identity.tax_id.SubjectTaxId`, so a blank
     value is refused by the checksum validator rather than by
     ``_optional_text_not_blank`` -- the same accept/reject boundary as every
     other optional text field, reached through a different validator.

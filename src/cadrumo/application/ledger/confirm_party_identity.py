@@ -32,7 +32,7 @@ value a confirm is about to persist.
 
 from __future__ import annotations
 
-from ...core.identity import same_tax_identifier
+from ...core.identity.tax_id import same_tax_identifier
 from ...domain.iva.classification import InvoiceKind
 from .evidence_errors import PurchaseInvoiceEvidenceInputError
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
@@ -91,7 +91,7 @@ def agreed_counterparty_tax_id(
     That matters past tidiness. A received invoice's supplier tax id drives
     deductibility and feeds Modelo 347 per counterparty, so a wrong one reaches
     a filing a human submits. The checksum on
-    :func:`~core.identity.validate_spanish_tax_id` is the PRIMARY
+    :func:`~core.identity.tax_id.validate_spanish_tax_id` is the PRIMARY
     defence and it is a strong one -- a transposed digit breaks the check
     character and is refused outright. What it cannot catch is a misread that
     happens to be a different VALID identifier, which belongs to a different
@@ -108,7 +108,7 @@ def agreed_counterparty_tax_id(
     printing either would put a tax identity into a pasteable artefact for no
     gain.
 
-    Comparison is on :func:`~cadrumo.core.identity.same_tax_identifier`, the
+    Comparison is on :func:`~cadrumo.core.identity.tax_id.same_tax_identifier`, the
     canonical "are these the same identifier" predicate. It deliberately asserts
     no checksum -- a counterparty may be non-resident and carry a foreign
     identifier -- which is exactly right here: this answers "same identifier?",
@@ -119,7 +119,7 @@ def agreed_counterparty_tax_id(
     whatever an on-host extractor read off a printed document, and printed
     identifiers carry hyphens and spaces routinely, so the comparison must
     normalise them away: ``B-1234567-4`` and ``B12345674`` are one identifier.
-    :func:`~cadrumo.core.identity.tax_id_identity_token` would NOT match those
+    :func:`~cadrumo.core.identity.tax_id.tax_id_identity_token` would NOT match those
     two -- it stays trim-and-uppercase because it keys stored objects and must
     never merge two characters-differ identifiers into one row. Keying and
     comparing are different questions, and this one is comparing.

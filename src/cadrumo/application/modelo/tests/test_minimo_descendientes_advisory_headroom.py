@@ -40,7 +40,7 @@ from ....core.casilla_id import validated_casilla_id
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
-from ...aggregation import DIAGNOSTIC_MESSAGE_MAX_LENGTH, CalculationSourceDiagnostic
+from ...aggregation.source_mesh import DIAGNOSTIC_MESSAGE_MAX_LENGTH, CalculationSourceDiagnostic
 from .._minimo_descendientes_advisory import (
     _count_desync_advisory,
     _dependencia_assimilated_advisory,

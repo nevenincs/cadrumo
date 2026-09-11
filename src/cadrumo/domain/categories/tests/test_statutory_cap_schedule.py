@@ -21,7 +21,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core.i18n import Translatable as tr
+from ....core.i18n.translatable import Translatable as tr
 from ..proportionality import (
     CategoryCitation,
     CategoryCitationSource,

@@ -21,8 +21,10 @@ from ....domain.iva.schema import (
     IvaLedgerObservationRole,
     IvaRateKind,
 )
-from .. import (
+from ..errors import (
     AggregationValidationError,
+)
+from ..iva_ledger import (
     IvaLedgerCandidate,
     aggregate_iva_ledger_candidate_bindings,
     aggregate_iva_ledger_candidates,

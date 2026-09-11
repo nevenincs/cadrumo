@@ -17,7 +17,7 @@ from ..command_spec import DeferredTarget, ResultSchemaSpec, SchemaState
 
 __all__ = ["config_payload_schema"]
 
-_CONFIG_PAYLOADS_MODULE = "cadrumo.entrypoints.cli.config_payloads"
+_CONFIG_PAYLOADS_MODULE = "..config_payloads"
 
 
 def config_payload_schema(name: str, identity: str) -> ResultSchemaSpec:
@@ -28,6 +28,6 @@ def config_payload_schema(name: str, identity: str) -> ResultSchemaSpec:
     """
     return ResultSchemaSpec(
         SchemaState.TARGET,
-        target=DeferredTarget(_CONFIG_PAYLOADS_MODULE, name),
+        target=DeferredTarget(_CONFIG_PAYLOADS_MODULE, name, __package__),
         identity=identity,
     )

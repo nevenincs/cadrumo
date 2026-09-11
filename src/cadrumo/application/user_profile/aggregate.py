@@ -12,7 +12,9 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, field_validator
 
-from ...core.identity import ContentDigest, PrefixedContentDigest, ProfileId, ProfileLabel
+from ...core.identity.digest import ContentDigest, PrefixedContentDigest
+from ...core.identity.profile import ProfileId
+from ...core.identity.profile_label import ProfileLabel
 from ...core.profile_publication import ProfilePublicationKindValue
 from ...core.time.utc import validate_utc_aware
 from ...domain.user_profile.values import ProfileSetupState

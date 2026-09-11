@@ -712,7 +712,7 @@ def select_filesystem_retention_survivors[EntryT, TimestampT: _RetentionTimestam
 ) -> tuple[list[EntryT], list[EntryT]]:
     """Select survivors/removals under composable age, count, and byte bounds.
 
-    Mirrors :func:`~cadrumo.llm.select_retention_removal_keys`'s
+    Mirrors :func:`~cadrumo.adapters.outbound.llm.retention.select_retention_removal_keys`'s
     pure rank-and-bound shape, generalized to a filesystem entry (a run
     directory, a dump file, a telemetry file, a compiled-cache pickle)
     instead of a secure-object key, and widened from that primitive's fixed
@@ -741,7 +741,7 @@ def select_filesystem_retention_survivors[EntryT, TimestampT: _RetentionTimestam
         combine: ``"sequential"`` (default) applies ``cutoff``, then
             ``max_count``, then ``max_total_bytes`` as successive stages,
             each narrowing the previous stage's survivors — mirrors
-            :func:`~cadrumo.llm.select_retention_removal_keys`'s
+            :func:`~cadrumo.adapters.outbound.llm.retention.select_retention_removal_keys`'s
             cutoff-then-count shape, extended with a byte-total stage.
             ``"union"`` evaluates ``cutoff`` and ``max_count`` independently
             against the full (unstaged) ranking and removes an entry

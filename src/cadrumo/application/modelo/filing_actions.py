@@ -47,7 +47,7 @@ from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogue
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core.config import Settings
-from ...core.identity import CalculationRevisionId
+from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.payment_election import PaymentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
@@ -69,7 +69,7 @@ from ...domain.modelos.protocols import (
 from ...domain.modelos.verification_report import VerificationReport
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ..calculations.cross_period_clean_state import CrossPeriodExpectedMemberSet
+from ..calculations.cross_period_models import CrossPeriodExpectedMemberSet
 from ..calculations.m303_regimen_simplificado_annual_summary import (
     validate_m303_regimen_simplificado_annual_summary_target_revision,
 )

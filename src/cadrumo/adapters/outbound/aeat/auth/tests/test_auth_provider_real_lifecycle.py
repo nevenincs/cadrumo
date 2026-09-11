@@ -21,7 +21,8 @@ from ......application.auth_credentials import unnamed_certificate_credentials
 from ......core.async_cleanup import AsyncResourceCleanupError
 from ......core.auth_provider import AuthProviderKind
 from ......core.auth_session_keys import aeat_auth_session_storage_state_path
-from ......core.config import AEAT_CERTIFICATE_PROTECTED_URL, Settings
+from ......core.config import Settings
+from ......core.config_support import AEAT_CERTIFICATE_PROTECTED_URL
 from ......core.errors.hierarchy import AeatLoginAssertionError, AuthError
 from ......tests.secure_sql import isolated_runtime_profile
 from ...browser.tests.real_http_boundary import LocalHttpBoundary, opened_http_boundary, real_browser_factory

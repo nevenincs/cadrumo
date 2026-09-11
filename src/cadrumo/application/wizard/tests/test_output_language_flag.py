@@ -21,7 +21,8 @@ import click
 import pytest
 
 from ....core.config import override_settings
-from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, clear_output_language_cache, tr
+from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+from ....core.i18n.render import clear_output_language_cache, tr
 from ....tests.clean_install_fixtures import _clean_install
 from ..catalogue import SETUP_FLOW
 from ..commands import _SETUP_OPTION_INFOS

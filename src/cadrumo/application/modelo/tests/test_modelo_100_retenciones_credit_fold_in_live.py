@@ -64,9 +64,12 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.tests.registry_observations import (
+    registry_grounded_observations,
+    revision_id_for_observation,
+)
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations, revision_id_for_observation
 from ...calculations.observations_repository import CalculationObservationRepository
 from ..calculation_actions import (
     BucketAggregationCalculationResult,

@@ -29,8 +29,10 @@ from ..command_spec import translation_key as _key
 from ._command_spec_schema import config_payload_schema as _schema
 from ._spec_policies import ENCRYPTED_DESTRUCTIVE, ENCRYPTED_READ, ENCRYPTED_WRITE, state_free_group_spec
 
-_OUTPUT_LANGUAGE = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
-_PHONE_STATE = ValueContract(DeferredTarget("cadrumo.application.auth.diagnostics", "AuthDiagnosticPhoneState"))
+_OUTPUT_LANGUAGE = ValueContract(DeferredTarget("....core.external_constants", "OutputLanguage", __package__))
+_PHONE_STATE = ValueContract(
+    DeferredTarget("....application.auth.diagnostics", "AuthDiagnosticPhoneState", __package__)
+)
 
 
 def _option(
@@ -77,15 +79,15 @@ _OUTPUT_LANGUAGE_OPTION = _option(
 # these modules read as orphaned while backing live verbs. A wrong key now raises
 # at spec-build time instead of failing lazily on first invocation.
 _HANDLER_MODULES: Final[dict[str, str]] = {
-    "_apoderado": "cadrumo.entrypoints.cli.config._apoderado",
-    "_auth": "cadrumo.entrypoints.cli.config._auth",
-    "_auth_diagnostics": "cadrumo.entrypoints.cli.config._auth_diagnostics",
-    "_certificate": "cadrumo.entrypoints.cli.config._certificate",
+    "_apoderado": "._apoderado",
+    "_auth": "._auth",
+    "_auth_diagnostics": "._auth_diagnostics",
+    "_certificate": "._certificate",
 }
 
 
 def _handler(module: str, name: str) -> LazyBinding:
-    return LazyBinding.available(DeferredTarget(_HANDLER_MODULES[module], name))
+    return LazyBinding.available(DeferredTarget(_HANDLER_MODULES[module], name, __package__))
 
 
 def _leaf(
@@ -441,8 +443,9 @@ AUTH_COMMAND_SPECS = (
                     "certificate",
                     (MachineSecretFieldSpec("certificate_passphrase"),),
                     DeferredTarget(
-                        "cadrumo.entrypoints.cli.config._certificate",
+                        "._certificate",
                         "CertificateSecretSetSecrets",
+                        __package__,
                     ),
                 ),
             )

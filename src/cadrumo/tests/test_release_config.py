@@ -1,6 +1,6 @@
 """Tripwire tests for the release-please LOCAL-only workflow.
 
-These tests validate the project-meta files that drive `just release-publish`:
+These tests validate the project-meta files checked by `just release-check`:
 
 - ``release-please-config.json``
 - ``.release-please-manifest.json``
@@ -25,7 +25,7 @@ See Also:
         Human release procedure that cites the same checklist, soak, and
         rollback surfaces validated here.
     ``docs/_release_checklist.yaml``
-        Machine-readable release-readiness contract parsed into strict models
+        Machine-readable release readiness contract parsed into strict models
         by this module.
     ``docs/_release_notes_template.md``
         Human release-body template required by the checklist.
@@ -361,8 +361,8 @@ def test_releasing_doc_matches_the_executable_release_entry_and_recovery() -> No
 
     # Live local surfaces the guide must still route the operator to.
     assert "## Diagnose and recover" in text
-    assert "just release-readiness" in text
-    assert "just release-rollback" in text
+    assert "just release-check" in text
+    assert "just release-rollback-plan" in text
     assert "docs/_release_checklist.yaml" in text
 
     # Retired ceremony. The orchestrator workflow, its dry-run flag and its

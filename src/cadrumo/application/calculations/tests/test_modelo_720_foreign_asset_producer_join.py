@@ -4,7 +4,7 @@ The re-declaration advisory reads its independent current-year valuation
 evidence from ``CalculationRevision.row_binding_values``, joining the two
 ``foreign_asset`` row bindings it discovers from the registry revision by their
 selector ``row_field``. Those rows are written by the enrolled
-:class:`~application.aggregation.ForeignAssetsAggregationSourceResolver` on the
+:class:`~application.aggregation.foreign_assets.ForeignAssetsAggregationSourceResolver` on the
 bucket-aggregation calculate path.
 
 That single link had only ever been exercised from the CONSUMER side: the
@@ -36,7 +36,7 @@ of Orden HAP/72/2013 art. 2.1):
 See Also:
     :func:`~application.calculations.modelo_720_evidence_observation`
         The consumer whose join shape this module measures from the producer side.
-    :class:`~application.aggregation.ForeignAssetsAggregationSourceResolver`
+    :class:`~application.aggregation.foreign_assets.ForeignAssetsAggregationSourceResolver`
         The enrolled producer under test.
     :mod:`~application.calculations.tests.test_modelo_720_prior_year_baseline_fidelity`
         Prior-year baseline continuity for the same scenario.
@@ -67,15 +67,15 @@ from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ....domain.calculations.registry.schema import ModeloRevision
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ....domain.deadlines.models import FiscalResidency, IVARegime, TaxpayerProfile
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.verification_report import VerificationReport
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.bucket_aggregation_calculate import calculate_modelo_revision_from_bucket_aggregation
 from ....tests.profile_capsule import seed_test_profile_record
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation import ForeignAssetIngestObservation
+from ...aggregation.foreign_assets import ForeignAssetIngestObservation
 from ...modelo.verification_actions import verify_modelo_revision
 from ...modelo.work_lifecycle import create_work_unit
 from ..foreign_asset_redeclaration import modelo_720_evidence_observation

@@ -188,13 +188,11 @@ def test_core_survives_settings_construction_while_resolving_a_facade_name() -> 
         def find_spec(self, fullname: str, path: object = None, target: object = None) -> None:
             if fullname == "cadrumo.core.secure_object_write" and not _MidInitSettingsTrigger.fired:
                 _MidInitSettingsTrigger.fired = True
-                # Absolute, string-form import by necessity: this hook fires
-                # DURING `cadrumo.core`'s own init with every `cadrumo.*` entry
-                # cleared from `sys.modules`. A relative import would resolve
-                # through this test module's own package and re-enter the very
-                # init under measurement, so `import_module` is what preserves
-                # the absolute semantics the assertion depends on.
-                importlib.import_module("cadrumo.core.config").load_settings()
+                # String-form import by necessity: this hook fires DURING
+                # `cadrumo.core`'s own init with every `cadrumo.*` entry
+                # cleared from `sys.modules`. Resolve the owning module with
+                # relative spelling while keeping the same package identity.
+                importlib.import_module(".config", package="cadrumo.core").load_settings()
             return None
 
     trigger = _MidInitSettingsTrigger()

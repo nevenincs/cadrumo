@@ -47,7 +47,7 @@ from .....domain.calculations.registry.remote_state_guard import (
     assert_remote_operation_allowed as _assert_remote_operation_allowed,
 )
 from .....domain.calculations.registry.schema_base import EvidenceTier as _EvidenceTier
-from .....domain.justificante import JustificanteVerificationError as _JustificanteVerificationError
+from .....domain.justificante.errors import JustificanteVerificationError as _JustificanteVerificationError
 from .._html import parse_html as _parse_html
 from .._playwright import PlaywrightError as _PlaywrightError
 from ..sede.errors import BrowserAdapterTypeError as _BrowserAdapterTypeError

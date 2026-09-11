@@ -13,8 +13,9 @@ from typing import Final, cast
 
 from ...core.decimal.coercion import coerce_decimal
 from ...core.errors.hierarchy import CoreValidationError
-from ...core.identity import IdentityError, tax_id_identity_token
-from ...core.parsing import normalise_iso_4217_currency
+from ...core.identity.documents import IdentityError
+from ...core.identity.tax_id import tax_id_identity_token
+from ...core.parsing.codes import normalise_iso_4217_currency
 from ...core.parsing.dates import parse_iso8601_date as _parse_iso8601_date
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ..iva.classification import InvoiceKind

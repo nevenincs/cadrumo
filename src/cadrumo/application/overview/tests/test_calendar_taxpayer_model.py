@@ -447,7 +447,7 @@ def test_undeclared_profile_message_resolves_to_real_localised_text() -> None:
     supported language (es / en / ca / hu).
     """
 
-    from ....core.i18n import tr
+    from ....core.i18n.render import tr
 
     key = "cli.overview.taxpayer_model_undeclared"
     for locale in ("es", "en", "ca", "hu"):

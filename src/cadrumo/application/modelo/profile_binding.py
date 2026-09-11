@@ -74,7 +74,7 @@ from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.registry_contract import profile_binding_selectors
 from ...domain.user_profile.schema import ProfileSchemaDefinition, derived_selector_for_path
 from ...domain.user_profile.values import UserProfileFactValue
-from ..aggregation import (
+from ..aggregation.source_mesh import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,

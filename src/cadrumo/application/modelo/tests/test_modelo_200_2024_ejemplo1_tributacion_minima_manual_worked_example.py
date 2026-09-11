@@ -123,9 +123,10 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
-from test_support.registry_authoring import compile_validated_authority, oracle_declared_figures
+from pydantic import BaseModel, ConfigDict
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -138,9 +139,12 @@ from ....core.period import Period
 from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.tests.registry_observations import (
+    registry_grounded_observations,
+    revision_id_for_observation,
+)
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations, revision_id_for_observation
 from ...calculations.observations_repository import CalculationObservationRepository
 from ..calculation_actions import (
     BucketAggregationCalculationResult,
@@ -168,6 +172,39 @@ _FILING_YEAR = 2024
 # and its locator cites both statements. That box choice predates this
 # declaration and is unchanged by it.
 _ORACLE_PAYLOAD_NAME = "modelo-200-2024-ejemplo1-tributacion-minima-empresa-grande.json"
+
+
+class _DeclaredInputs(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    corpus_locator: str
+    by_casilla_id: dict[str, str]
+    locator_by_casilla_id: dict[str, str]
+
+
+class _ManualWorkedExample(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    modelo: str
+    filing_year: int
+    source_kind: str
+    scenario_id: str
+    raw_evidence_locator: str
+    notes: str
+    expected_by_casilla_id: dict[str, str]
+    declared_inputs: _DeclaredInputs | None = None
+
+
+def _oracle_declared_figures(oracle_payload_name: str) -> dict[CasillaId, Decimal]:
+    path = Path(bundled_path("corpus", "manual_oracles")) / oracle_payload_name
+    payload = _ManualWorkedExample.model_validate_json(path.read_text(encoding="utf-8"))
+    declared = payload.declared_inputs
+    assert declared is not None, f"{oracle_payload_name} must declare its scenario inputs"
+    return {
+        validated_casilla_id(casilla_id, surface=casilla_id): Decimal(value)
+        for casilla_id, value in declared.by_casilla_id.items()
+    }
+
 
 _CASILLA_RESULTADO_CTA_PYG: CasillaId = validated_casilla_id("00501", surface="_CASILLA_RESULTADO_CTA_PYG")
 _CASILLA_DEDUCCION_DI_INTERNACIONAL: CasillaId = validated_casilla_id(
@@ -201,8 +238,6 @@ _M202_PAGO_OUTPUT: CasillaId = validated_casilla_id("34", surface="_M202_PAGO_OU
 _M202_PAGO_OUTPUT_40_2: CasillaId = validated_casilla_id("03", surface="_M202_PAGO_OUTPUT_40_2")
 _M202_PAGO_PERIODS = ("1P", "2P", "3P")
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
-_SOURCE_ROOT = bundled_path()
 
 _CUOTA_INTEGRA_EXPECTED = Decimal("500000.00")
 _CUOTA_INTEGRA_AJUSTADA_POSITIVA_EXPECTED = Decimal("350000.00")
@@ -320,7 +355,7 @@ def _calculate_m200(
     return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         casilla_inputs={
-            **oracle_declared_figures(_ORACLE_PAYLOAD_NAME),
+            **_oracle_declared_figures(_ORACLE_PAYLOAD_NAME),
             # Not declared: the cuota líquida mínima is what this scenario ASSERTS
             # (casillas 00592 and 00611), so supplying it as a declared input would
             # have the oracle check the figure it was handed.
@@ -424,7 +459,7 @@ def test_m200_2024_manual_grounding_is_enrolled_and_raises_independently_grounde
     and validated data, never hand-computed or asserted from a synthetic
     fixture.
     """
-    authority = compile_validated_authority(_REGISTRY_ROOT, _SOURCE_ROOT)
+    authority = bundled_authority()
     snapshot = authority.snapshot(
         _M200,
         filing_year=_FILING_YEAR,

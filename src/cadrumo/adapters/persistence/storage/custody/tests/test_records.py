@@ -20,6 +20,7 @@ from ......core.storage_taxonomy import StorageCategory
 from ......core.storage_taxonomy_locations import storage_location
 from ... import __all__ as storage_exports
 from .. import __all__ as custody_exports
+from .. import records
 from ..errors import (
     ProfileCustodyPasswordError,
     ProfileCustodyRecordError,
@@ -38,7 +39,6 @@ from ..records import (
     encode_profile_password,
     parse_profile_custody_envelope,
 )
-from ..records import __all__ as record_exports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -204,7 +204,7 @@ def test_obsolete_custody_password_policy_symbols_are_absent_from_every_facade()
         "validate_profile_password",
     }
 
-    assert obsolete.isdisjoint(record_exports)
+    assert all(not hasattr(records, name) for name in obsolete)
     assert obsolete.isdisjoint(custody_exports)
     assert obsolete.isdisjoint(storage_exports)
 

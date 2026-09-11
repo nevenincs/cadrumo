@@ -56,7 +56,7 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from ...aggregation import CalculationSourceDiagnostic
+from ...aggregation.source_mesh import CalculationSourceDiagnostic
 from ...calculations.observations_repository import CalculationObservationRepository
 from ...prorrata_register.service import ProrrataRegisterService
 from .._calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics

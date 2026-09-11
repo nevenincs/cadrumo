@@ -52,8 +52,6 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.justificante.schema import Justificante
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from ....tests.cli_runner import invoke_cached_cli
-from ....tests.modelo_cli import create_modelo_work_unit_via_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401
 from ....tests.user_profile import register_cli_profile
@@ -71,6 +69,8 @@ from .._modelo_amend_wizard_cli import (
     _values_kind_reason_definition,
 )
 from ._modelo_work_ux_support import _create_m130_work_unit, _create_m303_work_unit
+from .cli_runner import invoke_cached_cli
+from .modelo_cli import create_modelo_work_unit_via_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

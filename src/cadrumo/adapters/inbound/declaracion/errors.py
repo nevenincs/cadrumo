@@ -12,7 +12,7 @@ callers should inspect those fields rather than parsing localized messages.
 
 from __future__ import annotations
 
-from ....domain.justificante import PdfExtractionCoverageMixin, PdfModeloImportError
+from ....domain.justificante.errors import PdfExtractionCoverageMixin, PdfModeloImportError
 
 
 class DeclaracionParseError(PdfExtractionCoverageMixin, PdfModeloImportError):

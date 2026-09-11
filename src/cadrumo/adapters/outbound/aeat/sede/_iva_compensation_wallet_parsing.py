@@ -27,7 +27,7 @@ from .....core.decimal.coercion import normalize_decimal_separators
 from .....core.decimal.printed_money import AEAT_THOUSANDS_SEPARATORS, is_aeat_printed_money
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import sha256_hex
-from .....core.i18n import tr
+from .....core.i18n.render import tr
 from .....core.period import Period
 from .....core.url_validation import ANY_HTTP_URL_ADAPTER
 from .....domain.calculations.registry.errors import RegistryValidationError

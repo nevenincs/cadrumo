@@ -7,9 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from .. import tr
 from .._lazy_catalogue import LazyLocaleCatalogue
-from ..render import override_locales_root
+from ..render import override_locales_root, tr
 from ..routing import route_key_to_shard
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

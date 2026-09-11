@@ -28,7 +28,8 @@ from decimal import Decimal
 
 import pytest
 
-from ..models import CachedEntry, LLMProvider, LLMResponse, UsageRecord
+from .....core.config_support import LLMProvider
+from ..models import CachedEntry, LLMResponse, UsageRecord
 from ..retention import select_retention_removal_keys
 from ..run_telemetry import LLMRunRecord
 

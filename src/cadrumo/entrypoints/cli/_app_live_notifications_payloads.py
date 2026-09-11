@@ -11,13 +11,11 @@ from pydantic import (
 )
 
 from ...application.live.notification_documents import NotificationParseRefusal
-from ...core.identity import (
-    AeatCertificadoId,
-    AeatClaveLiquidacion,
-    BucketId,
-    ContentDigest,
-    SnapshotId,
-)
+from ...core.identity.aeat_certificado import AeatCertificadoId
+from ...core.identity.aeat_clave_liquidacion import AeatClaveLiquidacion
+from ...core.identity.bucket import BucketId
+from ...core.identity.digest import ContentDigest
+from ...core.identity.hex_ids import SnapshotId
 from ...core.json_contract import OutputSchema
 from ...core.text_bounds import NonEmptyStr, PositiveCount
 

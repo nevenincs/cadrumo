@@ -72,7 +72,7 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.errors import RegistryValidationError
 from .....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from .....tests import FIXTURES_DIR
+from .....tests.inventory import FIXTURES_DIR
 from ..errors import BorradorParseError
 from ..parser import parse_borrador
 from ..schema import ArtefactKind, BorradorParseMode

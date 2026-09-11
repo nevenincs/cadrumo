@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import pytest
 
-from ......domain.justificante import JustificanteVerificationError
+from ......domain.justificante.errors import JustificanteVerificationError
 from ......tests.live_gate import requires_live_enabled
 from ..contract import verify_csv
 

@@ -19,29 +19,31 @@ from pydantic import BaseModel
 from ....application.operations.composition import OperationComposedServices, OperationSubmission
 from ....application.operations.event_replay import OperationEventCursor
 from ....application.operations.frontend_contracts import (
-    OperationCancellationRequestV1,
     OperationCancellationResultV1,
-    OperationDetachRequestV1,
     OperationDetachResultV1,
-    OperationObservationRequestV1,
     OperationObservationResultV1,
-    OperationResponseApplyRequestV1,
-    OperationResponseControlRequestV1,
     OperationResponseControlResultV1,
     OperationResponseMutationResultV1,
-    OperationResponseRejectRequestV1,
-    OperationReviewProjectionReferenceV1,
-    OperationReviewProjectionRequestV1,
     OperationReviewProjectionResultV1,
-    OperationWorkspaceRefreshTargetRequestV1,
     OperationWorkspaceRefreshTargetResultV1,
+)
+from ....application.operations.frontend_projection import OperationReviewProjectionReferenceV1
+from ....application.operations.frontend_requests import (
+    OperationCancellationRequestV1,
+    OperationDetachRequestV1,
+    OperationObservationRequestV1,
+    OperationResponseApplyRequestV1,
+    OperationResponseControlRequestV1,
+    OperationResponseRejectRequestV1,
+    OperationReviewProjectionRequestV1,
+    OperationWorkspaceRefreshTargetRequestV1,
 )
 from ....application.operations.interactions import OperationActorReference
 from ....application.operations.models import OperationId, OperationRevision
 from ....application.operations.persistence.replay import OperationReplayLimit
 from ....application.operations.projection_services import OperationResponseControlService
 from ....application.operations.registry import OperationSchemaIdentityV1
-from ....core.identity import ContentDigest
+from ....core.identity.digest import ContentDigest
 
 _DEFAULT_PAGE_LIMIT: OperationReplayLimit = 256
 

@@ -2,7 +2,7 @@
 
 The installed-hook subprocess proof lives in
 :mod:`cadrumo.tests.test_worker_count_hook_harness`, the explicit member of
-the outer-serial ``just test-harness`` verdict. Keeping the bounded detector
+the outer-serial ``just test-pytest-harness`` verdict. Keeping the bounded detector
 logic here preserves routine unit coverage without starting nested xdist
 pools.
 """

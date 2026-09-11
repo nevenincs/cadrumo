@@ -19,7 +19,8 @@ from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 from ...core.casilla_id import CasillaId
 from ...core.filing_year import FilingYear
 from ...core.identifier_grammar import NamespacedId
-from ...core.identity import BucketId, CalculationRevisionId, FilingRecordId, WorkUnitId
+from ...core.identity.bucket import BucketId
+from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.time.utc import UtcInstant

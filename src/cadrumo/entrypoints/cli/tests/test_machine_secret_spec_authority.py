@@ -99,7 +99,7 @@ def test_duplicate_machine_secret_contract_is_refused() -> None:
     variant = MachineSecretVariantSpec(
         "passphrase",
         (MachineSecretFieldSpec("passphrase"),),
-        DeferredTarget("cadrumo.entrypoints.cli.config.custody", "LoginSecrets"),
+        DeferredTarget("..config.custody", "LoginSecrets", __package__),
     )
     with pytest.raises(ValueError, match="variant keys must be unique"):
         MachineSecretSpec((variant, variant))

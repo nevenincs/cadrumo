@@ -40,7 +40,7 @@ from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import set_active_test_profile_facts
-from ...aggregation import CalculationSourceDiagnostic
+from ...aggregation.source_mesh import CalculationSourceDiagnostic
 from .._minimo_descendientes_advisory import (
     collect_minimo_descendientes_entry_date_missing_diagnostics,
     collect_minimo_descendientes_rentas_undeclared_diagnostics,

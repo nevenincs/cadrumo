@@ -36,7 +36,7 @@ import pdfplumber
 import pytest
 
 from .....adapters.inbound.declaracion.errors import DeclaracionParseError
-from .....adapters.inbound.declaracion.parser import _extract_tax_id
+from .....adapters.inbound.declaracion.parser import parse_declaracion
 from .....core.directory_scan import scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -136,12 +136,5 @@ def test_specimen_yields_no_extractable_nif(pdf_path: Path) -> None:
     a facsimile has none to substitute. A specimen that DID yield a NIF would be
     a filing mis-filed here, and this assertion is what catches that.
     """
-    with pdfplumber.open(str(pdf_path)) as pdf:
-        text = "\n".join(page.extract_text() or "" for page in pdf.pages)
-
     with pytest.raises(DeclaracionParseError):
-        extracted = _extract_tax_id(text)
-        pytest.fail(
-            f"{pdf_path.name}: extracted NIF {extracted!r}; a specimen carrying a taxpayer identity is a "
-            f"filing, not an {_EXPECTED_PROVENANCE}, and belongs in the justificantes corpus instead",
-        )
+        parse_declaracion(pdf_path)

@@ -6,7 +6,7 @@ from collections.abc import Mapping
 
 from ...adapters.persistence.profile.justificante import JustificanteRepository
 from ...core.aeat_csv import normalise_aeat_csv
-from ...domain.justificante import Justificante
+from ...domain.justificante.schema import Justificante
 from ...domain.modelos.filing_record import (
     ExternalEvidenceKind,
     ModeloRecord,

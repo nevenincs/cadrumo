@@ -218,7 +218,7 @@ def _option_from_application_contract(contract: OperatorInputContract, help_key:
     return OptionSpec(
         name=contract.name,
         declarations=contract.tokens,
-        value=ValueContract(DeferredTarget(contract.value_module, contract.value_name)),
+        value=ValueContract(DeferredTarget(contract.value_module, contract.value_name, __package__)),
         default=ParameterDefault.required() if contract.required else ParameterDefault.value(None),
         help_key=TranslationKey(help_key) if help_key is not None else None,
         metavar=None,

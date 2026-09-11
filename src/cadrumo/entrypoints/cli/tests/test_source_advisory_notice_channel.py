@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....application.aggregation import CalculationSourceDiagnostic
+from ....application.aggregation.source_mesh import CalculationSourceDiagnostic
 from .._modelo_rendering import source_diagnostic_notice
 from .._modelo_work_calculate_cli import _work_calculate_source_advisory_output
 

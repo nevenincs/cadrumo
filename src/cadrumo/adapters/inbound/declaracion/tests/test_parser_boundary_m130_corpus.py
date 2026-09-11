@@ -16,12 +16,14 @@ from __future__ import annotations
 
 import pytest
 
+from .....tests.inventory import FIXTURES_DIR
+from ..parser import parse_declaracion
 from ._parser_boundary_m130_support import (
     _M130_CORPUS_GROUND_TRUTH,
     _M130_CORPUS_IDS,
     _M130_CORPUS_PARAMS,
 )
-from ._parser_boundary_support import FIXTURES_DIR, _expected_period, parse_declaracion
+from ._parser_boundary_support import _expected_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

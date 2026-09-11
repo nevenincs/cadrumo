@@ -17,9 +17,9 @@ from typing import TypedDict, Unpack
 
 import pytest
 from pydantic import ValidationError
-from test_support.registry_authoring import load_registry_tree
 
 from ....core.casilla_id import CasillaId
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.detail_record_bindings import (
     AtributionMemberObservation,
     resolve_atribucion_binding_row_values,
@@ -39,10 +39,7 @@ _REVISION = "2025-y-siguientes"
 
 
 def _revision():
-    from ....core.resources.bundled_data import bundled_path
-
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    return next(modelo for modelo in modelos if modelo.id == "184").revisions[_REVISION]
+    return bundled_authority().modelo("184").revisions[_REVISION]
 
 
 def _socio_record(revision) -> ExportRecordDefinition:

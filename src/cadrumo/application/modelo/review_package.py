@@ -53,7 +53,8 @@ from ...core.corpus_manifest.manifest import build_corpus_bundle, verify_corpus_
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.filing_year import FilingYear
-from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
+from ...core.identity.bucket import BucketId
+from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.time.clock import now as _utc_now

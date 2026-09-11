@@ -53,7 +53,8 @@ from ...adapters.persistence.storage.secure_object_namespaces import (
 from ...core.classification.policies import SensitivityClass
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
-from ...core.identity import FilingRecordId, same_tax_identifier, tax_id_identity_token
+from ...core.identity.hex_ids import FilingRecordId
+from ...core.identity.tax_id import same_tax_identifier, tax_id_identity_token
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.observed_header_fact import ObservedHeaderFact
 from ...core.period import Period
@@ -419,7 +420,7 @@ def member_observation_key(modelo: str, period: Period, member_nif: str | None) 
     fan-in the 353<-322 ``per_grupo_member`` aggregation enumerates and sums.
 
     That segment is the sha256 of the member's
-    :func:`~core.identity.tax_id_identity_token`, the same normalise-then-digest
+    :func:`~core.identity.tax_id.tax_id_identity_token`, the same normalise-then-digest
     step every other identifier-bearing object key in the registry takes. The
     normalisation is the load-bearing half: appending the declared value
     verbatim made two spellings of ONE member address two rows, so a member

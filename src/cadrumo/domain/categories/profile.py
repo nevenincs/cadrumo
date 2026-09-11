@@ -10,7 +10,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, model_validator
 
-from ...core.i18n import Translatable as tr
+from ...core.i18n.translatable import Translatable as tr
 from ...core.models import STRICT_FROZEN_CONFIG
 from .errors import CategoryValidationError
 from .proportionality import ProportionalityRule

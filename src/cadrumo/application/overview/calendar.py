@@ -35,10 +35,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import date
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol
 
-from ...core.i18n import tr as _tr
-from ...core.identity import same_tax_identifier
+from ...core.i18n.render import tr as _tr
+from ...core.identity.tax_id import same_tax_identifier
 from ...core.logging import get_logger as _get_logger
 from ...core.modelo import Modelo as _Modelo
 from ...core.notificacion_estado_servicio import NotificacionEstadoServicio as _NotificacionEstadoServicio
@@ -138,13 +138,62 @@ from .coverage import build_obligation_coverage
 from .next_actions import declare_next_action as _declare_next_action
 
 if TYPE_CHECKING:
-    from ...adapters.outbound.aeat.sede.notifications import RemoteNotification
     from ...domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition
-    from ...domain.justificante import Justificante
+    from ...domain.justificante.schema import Justificante
     from ...domain.modelos.filing_record import ModeloRecord
     from ..live.expedientes import PersistedExpedientesSnapshot
     from ..live.justificante import JustificanteCaptureSnapshot
     from ..live.notifications import PersistedNotificationsSnapshot
+
+
+class _RemoteNotification(Protocol):
+    """Minimum notification-row surface consumed by the calendar projection."""
+
+    @property
+    def certificado_id(self) -> str:
+        """Notification certificate identifier."""
+        ...
+
+    @property
+    def tipo(self) -> str:
+        """Notification type token."""
+        ...
+
+    @property
+    def concepto(self) -> str:
+        """Notification subject or concept."""
+        ...
+
+    @property
+    def titular_nif(self) -> str:
+        """Tax identity associated with the notification."""
+        ...
+
+    @property
+    def destinatario_nif(self) -> str:
+        """Recipient tax identity associated with the notification."""
+        ...
+
+    @property
+    def fecha_emision(self) -> date:
+        """Notification issue date."""
+        ...
+
+    @property
+    def fecha_notificacion(self) -> date | None:
+        """Notification delivery date, when delivered."""
+        ...
+
+    @property
+    def leida(self) -> bool | None:
+        """Whether the notification has been read, when known."""
+        ...
+
+    @property
+    def source_url(self) -> object:
+        """Source URL carried by the notification, when present."""
+        ...
+
 
 _log = _get_logger(__name__)
 _DEFAULT_LOCAL_WORK_UNIT_DUE_SOON_DAYS = 14
@@ -456,7 +505,7 @@ def calendar_events_from_notification_snapshots(
 
 def _calendar_event_from_notification(
     snapshot: PersistedNotificationsSnapshot,
-    row: RemoteNotification,
+    row: _RemoteNotification,
     *,
     calendar_range: _OverviewCalendarRange,
     as_of: date,

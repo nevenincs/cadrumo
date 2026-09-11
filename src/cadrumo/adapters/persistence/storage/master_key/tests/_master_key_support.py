@@ -4,7 +4,8 @@ import base64
 from pathlib import Path
 from uuid import UUID, uuid4
 
-from ......core.config import SecretStoreBackend, Settings
+from ......core.config import Settings
+from ......core.config_support import SecretStoreBackend
 from ......core.profile_publication import ProfilePublicationKind
 from ...custody.capsule import publish_profile_custody_capsule
 from ...custody.records import ProfileCustodyEnvelope, ProfileCustodyKdfParameters, ProfileCustodyWrappedDek

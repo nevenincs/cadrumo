@@ -44,15 +44,15 @@ from typing import TYPE_CHECKING, Final, Literal, get_args, override
 from pydantic import BaseModel, Field, TypeAdapter
 
 from ...core.directory_scan import scan_directory
-from ...core.identity import ContentDigest
+from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.provenance_stamp import LOCAL_TRANSPORT_LABEL
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.iva.classification import InvoiceKind
 from ..operator_actions.models import PreconditionVerdict
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
 if TYPE_CHECKING:
-    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ...core.config import Settings
     from ..provisioning import HardwareProfile
     from .evidence import PurchaseInvoiceEvidenceService
@@ -537,7 +537,7 @@ def run_evidence_batch(
     sources: Iterable[Path | str],
     direction: InvoiceKind,
     settings: Settings | None = None,
-    bucket_event_repository: BucketEventHistoryRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     on_item: Callable[[BatchItemResult], None] | None = None,
     profile: HardwareProfile | None = None,
 ) -> BatchRunResult:

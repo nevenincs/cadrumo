@@ -47,7 +47,7 @@ from ...application.calculations.observations_repository import (
 )
 from ...core.aeat_csv import normalise_aeat_csv
 from ...core.hashing import sha256_hex
-from ...core.identity import same_tax_identifier
+from ...core.identity.tax_id import same_tax_identifier
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
@@ -56,7 +56,7 @@ from ...core.period import Period, PeriodKind
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import emit_bucket_event
 from ...domain.iva_compensation.carry_forward import iva_compensation_period_sort_key
-from ...domain.justificante import Justificante
+from ...domain.justificante.schema import Justificante
 from ...domain.modelos.filing_record import (
     ExternalEvidence,
     ExternalEvidenceKind,

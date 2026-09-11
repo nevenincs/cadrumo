@@ -31,7 +31,8 @@ from typing import Final, Literal
 from pydantic import BaseModel, Field, NonNegativeInt, computed_field, field_serializer, field_validator
 
 from ...core.external_constants import DEFAULT_CURRENCY
-from ...core.identity import BucketId, TransactionId
+from ...core.identity.bucket import BucketId
+from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.operator_action_enums import OperatorActionAxis
 from ...core.period import Period
@@ -54,7 +55,7 @@ from ...domain.transactions.irpf_categories import has_employment_irpf_category
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.usage_ratios.errors import CensoRatioMismatchError
-from ..aggregation import (
+from ..aggregation.iva_ledger import (
     IVA_LEDGER_COUNTERPARTY_GATE_REASONS,
     IVA_LEDGER_MISSING_FACT_REASONS,
     IvaLedgerAggregationIssueReason,

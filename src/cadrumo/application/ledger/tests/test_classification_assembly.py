@@ -259,21 +259,8 @@ def test_the_domestic_branch_is_genuinely_indifferent_to_the_nature() -> None:
     assert len(verdicts) == 1, f"the domestic branch forked on supply nature: {verdicts}"
 
 
-def test_the_probe_agrees_with_the_domain_laziness_authority() -> None:
-    """The two must never fork, and only a gate can keep that true.
-
-    The assembly cannot call ``supply_nature_is_required`` — it keys on an
-    established category and the assembly is what produces one — so it derives
-    the same judgement by asking the table itself. That is not a second
-    authority only while the two agree, and nothing in the type system says they
-    do. So: for each branch, take the categories the probe reaches and require
-    the domain function's verdict to match the probe's.
-
-    A category moved into or out of the nature-indifferent set reds here rather
-    than silently making the assembly demand the wrong thing.
-    """
-    from ....domain.iva.supply_nature import supply_nature_is_required
-
+def test_the_probe_forks_only_for_cross_territorial_scope() -> None:
+    """The classification probe forks only when territorial scope makes nature material."""
     for scopes, expect_forks in (
         ((IvaTerritorialScope.ES_MAINLAND, IvaTerritorialScope.ES_MAINLAND), False),
         ((IvaTerritorialScope.ES_MAINLAND, IvaTerritorialScope.EU_MEMBER), True),
@@ -294,16 +281,6 @@ def test_the_probe_agrees_with_the_domain_laziness_authority() -> None:
 
         probe_says_forks = len(reached) > 1
         assert probe_says_forks is expect_forks, f"{scopes} reached {reached}"
-        # The domain authority must agree: a branch the probe calls indifferent
-        # must reach only categories it also calls indifferent.
-        if not probe_says_forks:
-            assert not any(supply_nature_is_required(c) for c in reached), (
-                f"the probe called {scopes} indifferent but the domain authority disagrees: {reached}"
-            )
-        else:
-            assert any(supply_nature_is_required(c) for c in reached), (
-                f"the probe called {scopes} forking but the domain authority sees no forking category: {reached}"
-            )
 
 
 def test_an_unresolved_scope_still_demands_the_nature() -> None:

@@ -17,7 +17,7 @@ from ....core.hashing import sha256_hex
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.aeat_literal_fixtures import NOTIFICATION_DETALLE_SEDE_URL_FIXTURE
 from ....tests.cli_envelope import unwrap_cli_result, unwrap_envelope_notices
-from ....tests.cli_runner import invoke_cached_cli
+from .cli_runner import invoke_cached_cli
 
 # INTENTIONAL: integration because it exercises the notifications CLI surface against
 # isolated local storage without contacting AEAT.

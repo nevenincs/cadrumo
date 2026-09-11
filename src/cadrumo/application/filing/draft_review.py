@@ -35,7 +35,7 @@ from typing import Final, Protocol, cast
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core.hashing import content_hash_hex
-from ...core.i18n import tr
+from ...core.i18n.render import tr
 from ...core.logging import get_logger
 from ...core.time.clock import now
 from ...domain.calculations.registry.bindings import RegistryModeloObservation

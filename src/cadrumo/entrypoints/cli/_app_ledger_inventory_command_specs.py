@@ -75,12 +75,10 @@ LEDGER_INVENTORY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_4,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._ledger_inventory_cli", "inventory_create")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._ledger_inventory_cli", "inventory_create", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli.ledger_business_payloads", "InventoryCreateResult"),
+            target=DeferredTarget(".ledger_business_payloads", "InventoryCreateResult", __package__),
             identity="ledger.inventory.create",
         ),
     ),
@@ -94,12 +92,10 @@ LEDGER_INVENTORY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(),
         policy=_POLICY_5,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._ledger_inventory_cli", "inventory_list")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._ledger_inventory_cli", "inventory_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli.ledger_business_payloads", "InventoryListResult"),
+            target=DeferredTarget(".ledger_business_payloads", "InventoryListResult", __package__),
             identity="ledger.inventory.list",
         ),
     ),
@@ -136,13 +132,14 @@ LEDGER_INVENTORY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_POLICY_4,
         handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._ledger_inventory_cli", "inventory_closing_authority_record")
+            DeferredTarget("._ledger_inventory_cli", "inventory_closing_authority_record", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget(
-                "cadrumo.entrypoints.cli.ledger_business_payloads",
+                ".ledger_business_payloads",
                 "InventoryClosingAuthorityRecordResult",
+                __package__,
             ),
             identity="ledger.inventory.closing-authority.record",
         ),

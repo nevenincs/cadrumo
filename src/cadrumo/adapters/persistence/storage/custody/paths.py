@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Final
 from uuid import UUID
 
-from .....core.identity import canonical_profile_bucket_id
+from .....core.identity.profile import canonical_profile_bucket_id
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import bucket_scoped_storage_path, storage_location
 from ..errors import PathContainmentError

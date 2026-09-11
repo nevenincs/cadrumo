@@ -56,7 +56,9 @@ LEDGER_RULE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="classification",
                 declarations=("--classification",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.transactions.enums", "BusinessClassification")),
+                value=ValueContract(
+                    DeferredTarget("...domain.transactions.enums", "BusinessClassification", __package__)
+                ),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.ledger.rule.classification_help"),
                 metavar=None,
@@ -104,10 +106,10 @@ LEDGER_RULE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _RULE_ACTOR_OPTION,
         ),
         policy=_POLICY_4,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._ledger_rules_cli", "rule_add")),
+        handler=LazyBinding.available(DeferredTarget("._ledger_rules_cli", "rule_add", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_rule_payloads", "RuleAddResult"),
+            target=DeferredTarget("._ledger_rule_payloads", "RuleAddResult", __package__),
             identity="ledger.rule.add",
         ),
     ),
@@ -155,10 +157,10 @@ LEDGER_RULE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _RULE_ACTOR_OPTION,
         ),
         policy=_POLICY_3,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._ledger_rules_cli", "rule_apply")),
+        handler=LazyBinding.available(DeferredTarget("._ledger_rules_cli", "rule_apply", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_rule_payloads", "RuleApplyResult"),
+            target=DeferredTarget("._ledger_rule_payloads", "RuleApplyResult", __package__),
             identity="ledger.rule.apply",
         ),
     ),
@@ -172,10 +174,10 @@ LEDGER_RULE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=_LEDGER_RULE_RATIO_LEAF_INVOCATION,
         parameters=(),
         policy=_POLICY_5,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._ledger_rules_cli", "rule_list")),
+        handler=LazyBinding.available(DeferredTarget("._ledger_rules_cli", "rule_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_rule_payloads", "RuleListResult"),
+            target=DeferredTarget("._ledger_rule_payloads", "RuleListResult", __package__),
             identity="ledger.rule.list",
         ),
     ),

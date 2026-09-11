@@ -6,7 +6,7 @@ import pytest
 
 from ....core.config import override_settings
 from ....core.flows import CheckpointAvailability, FlowMode, FlowWidgetKind
-from ....core.i18n import tr
+from ....core.i18n.render import tr
 from ...flows.copy import assemble_page_copy
 from ...flows.definition import FlowPage
 from ...flows.engine import answer, start_flow

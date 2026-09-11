@@ -8,7 +8,7 @@ from typing import ClassVar, Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, model_validator
 
-from ....core.identity import ContentDigest
+from ....core.identity.digest import ContentDigest
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import (
     OperationEffect,

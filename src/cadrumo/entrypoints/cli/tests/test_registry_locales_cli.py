@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from ....tests.cli_runner import invoke_cached_cli
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

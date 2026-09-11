@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .....core.casilla_id import validated_casilla_id
-from ._parser_boundary_support import _MODELO_232_2016_SYNTHETIC_FIXTURE, _MODELO_232_2018_SYNTHETIC_FIXTURE, CasillaId
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from ._parser_boundary_support import _MODELO_232_2016_SYNTHETIC_FIXTURE, _MODELO_232_2018_SYNTHETIC_FIXTURE
 
 _DECL_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(
     "decl.ejercicio", surface="declaracion_parser_boundary.casilla"

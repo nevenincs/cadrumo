@@ -14,7 +14,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-from ....core.identity import tax_id_identity_token
+from ....core.identity.tax_id import tax_id_identity_token
 from ....core.models import STRICT_FROZEN_CONFIG
 from .errors import RegistryValidationError
 

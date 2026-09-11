@@ -47,7 +47,7 @@ from ....domain.contribuyente.family_types import GuarderiaMonthSpend
 from ....domain.contribuyente.guarderia_mensual import parse_guarderia_mensual
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import set_active_test_profile_facts
-from ...aggregation import CalculationSourceDiagnostic
+from ...aggregation.source_mesh import CalculationSourceDiagnostic
 from .._calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
 from .._minimo_descendientes_advisory import collect_guarderia_spend_shape_diagnostics
 from ._advisory_bucket_fixture import _bucket  # noqa: F401

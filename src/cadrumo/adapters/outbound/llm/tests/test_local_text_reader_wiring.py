@@ -26,7 +26,7 @@ import inspect
 
 import pytest
 
-from ..models import LLMProvider
+from .....core.config_support import LLMProvider
 from ..text_classifier import LocalTextLLMClassifier
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

@@ -72,7 +72,11 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....core.aggregation import AggregationCaptureKind, BindingSourceKind
+from ....core.aggregation import (
+    AggregationCaptureKind,
+    BindingSourceKind,
+    RetencionScheme,
+)
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
@@ -93,17 +97,16 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....tests import general_m303_filing_evidence
+from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation import (
-    CalculationSourceContext,
-    LedgerIvaAggregationSourceResolver,
-    RetencionObservation,
-    RetencionObservationRepository,
-    RetencionScheme,
-)
+from ...aggregation.modelo_bindings import LedgerIvaAggregationSourceResolver
 from ...aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
+from ...aggregation.retencion_observations_repository import RetencionObservationRepository
+from ...aggregation.retenciones import RetencionObservation
+from ...aggregation.source_mesh import (
+    CalculationSourceContext,
+)
 from ...modelo.binding_resolution import resolve_declaration_period_inputs
 from ...modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from ...modelo.work_lifecycle import create_work_unit

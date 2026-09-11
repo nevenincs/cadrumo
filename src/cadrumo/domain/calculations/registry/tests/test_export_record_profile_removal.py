@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import pytest
 
-from .registry_tree import bundled_registry_tree
+from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

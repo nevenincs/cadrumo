@@ -31,7 +31,7 @@ from ...core.operator_action_enums import (
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
 )
-from ...core.parsing import enum_value as _enum_value
+from ...core.parsing.utils import enum_value as _enum_value
 from ...core.period import Period
 from ...core.time.clock import now as _utcnow
 from ...core.time.clock import today_madrid

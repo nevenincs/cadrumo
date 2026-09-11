@@ -376,9 +376,9 @@ def test_noisy_pdf_library_logger_levels_are_governed_by_dictconfig() -> None:
             f"after configure_logging(); got {logger.level}"
         )
 
-    from ...adapters.inbound.pdf.page_text_extraction import __all__ as page_text_extraction_all
+    from ...adapters.inbound.pdf import page_text_extraction
 
-    assert "suppress_pdfminer_debug_logging" not in page_text_extraction_all, (
+    assert not hasattr(page_text_extraction, "suppress_pdfminer_debug_logging"), (
         "suppress_pdfminer_debug_logging still exported from page_text_extraction; "
         "it should have been deleted (centralized in dictConfig)"
     )

@@ -21,6 +21,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import (
     CrossPeriodGroupMemberRoster,
@@ -50,12 +51,11 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.env_scope import ready_clave_settings
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations.cross_period_clean_state import (
+from ...calculations.cross_period_clean_state import cross_period_dependency_requirements
+from ...calculations.cross_period_models import (
     CrossPeriodExpectedMemberSet,
     NoPriorObligationProvenanceKind,
-    cross_period_dependency_requirements,
 )
 from ...calculations.observations_repository import (
     CalculationObservationRepository,

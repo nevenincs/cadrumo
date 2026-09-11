@@ -90,20 +90,20 @@ from ...domain.modelos.row_models import (
 )
 from ...domain.modelos.sal_reserva_especial import compute_sal_reserva_especial_dotacion
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
-from ..aggregation import CalculationSourceDiagnostic
+from ..aggregation.source_mesh import CalculationSourceDiagnostic
 
 # Intra-package reuse of a sibling module's cap, permitted by the architecture
 # rule; only cross-package private reaches are barred, and that gate is separate.
 from ._minimo_descendientes_advisory import MAX_NAMED_DESCENDANTS
 from ._registry_helpers import validate_casilla_input_ids
-from .profile_binding import MaternidadMesesResolution
-from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_revision_semantic_role
-from .work_addressing import (
+from ._work_selection import (
     ModeloWorkSelectorRequest,
     ModeloWorkSelectorState,
     resolve_modelo_work_bucket,
     select_modelo_work_resolution,
 )
+from .profile_binding import MaternidadMesesResolution
+from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_revision_semantic_role
 from .work_plazo import M210PlazoResolution
 
 _AUTOCONSUMO_PROMOTOR_BINDING: BindingId = "modelo-303-autoconsumo-promotor-base"

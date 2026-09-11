@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...calculations.registry.tests.registry_tree import bundled_registry_tree
+from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ..loader import load_user_profile_schema
 from ..schema import ProfileSchemaDefinition
 

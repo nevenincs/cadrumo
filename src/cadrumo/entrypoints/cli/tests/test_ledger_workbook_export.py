@@ -16,9 +16,9 @@ import pytest
 from click.testing import Result
 from openpyxl import load_workbook
 
-from ....tests import FIXTURES_DIR
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
-from ....tests.cli_runner import invoke_cached_cli
+from ....tests.inventory import FIXTURES_DIR
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

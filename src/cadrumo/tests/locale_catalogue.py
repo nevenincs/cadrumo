@@ -14,7 +14,7 @@ every audit follows; it cannot leave one gate reading a path that no longer
 exists.
 
 This is audit machinery for tests. Runtime translation goes through
-:func:`~core.i18n.tr`, which resolves a single key through the lazy catalogue
+:func:`~cadrumo.core.i18n.render.tr`, which resolves a single key through the lazy catalogue
 rather than loading a whole shard.
 """
 

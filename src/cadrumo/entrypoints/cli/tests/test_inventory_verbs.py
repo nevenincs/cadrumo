@@ -21,8 +21,8 @@ from ....domain.contribuyente.inventory.records import (
     fingerprint_prior_authoritative_closing,
 )
 from ....domain.filing_evidence import FilingEvidenceReference
-from ....tests.cli_runner import invoke_cached_cli
 from ._strict_cli_fixture_support import inventory_isolated_backend
+from .cli_runner import invoke_cached_cli
 
 __all__ = ["inventory_isolated_backend"]
 

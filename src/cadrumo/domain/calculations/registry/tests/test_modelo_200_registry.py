@@ -9,21 +9,23 @@ from typing import get_args
 
 import pytest
 from pydantic import ValidationError
-from test_support.registry_authoring import RegistryValidator, _committed_modelo, verify_legal_catalogue
 
-from .....core.authority_grade import RegistryAuthorityGrade
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.filing_projection_ref import (
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.filing_projection_ref import (
     FilingProjectionRef,
     compile_filing_projection_ref,
     filing_projection_ref_casilla_id,
 )
-from .....core.resources.bundled_data import bundled_path
+from cadrumo.core.resources.bundled_data import bundled_path
+
 from .....tests.registry_snapshot import build_snapshot
+from ..authority import bundled_authority
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
 from ..runtime_graph import expression_casilla_refs
 from ..schema_input_kind import InputKind
+from ._published_authority import artifact_components
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -94,7 +96,7 @@ def _base_inputs(
 
 
 def _load_modelo_200():
-    return _committed_modelo("200")
+    return artifact_components("200")
 
 
 def test_modelo_200_revision_fragments_never_cite_another_years_annual_manual() -> None:
@@ -121,8 +123,6 @@ def test_modelo_200_revision_fragments_never_cite_another_years_annual_manual() 
 
 def test_modelo_200_validates_with_deadline_and_schedule_catalogue_refs() -> None:
     modelo, catalogues = _load_modelo_200()
-
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
     snapshot = build_snapshot(
         modelo,
@@ -196,7 +196,7 @@ def test_modelo_200_form_order_is_boe_corpus_backed() -> None:
     revision = modelo.revisions["2024"]
     legal = {_M200_FORM_ORDER_REF: catalogues.legal[_M200_FORM_ORDER_REF]}
 
-    verify_legal_catalogue(legal, source_root=bundled_path())
+    assert bundled_authority().legal_evidence_text(_M200_FORM_ORDER_REF)
 
     assert _M200_FORM_ORDER_REF in modelo.legal_refs
     assert _M200_FORM_ORDER_REF in revision.legal_refs

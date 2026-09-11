@@ -21,7 +21,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core.identity import IdentityError
+from ....core.identity.documents import IdentityError
 from ...iva.classification import InvoiceKind
 from ..enums import IvaRate, PaymentStatus
 from ..errors import InvoiceValidationError

@@ -13,7 +13,8 @@ from pydantic import BaseModel, Field, field_serializer, field_validator, model_
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.estado_casilla_oficial import EstadoCasillaOficial
-from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
+from ...core.identity.bucket import BucketId
+from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.modelo_work_progress_state import ModeloWorkProgressState
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import OperatorActionAxis

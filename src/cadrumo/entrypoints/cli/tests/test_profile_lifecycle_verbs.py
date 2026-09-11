@@ -49,11 +49,11 @@ from click.testing import Result
 from ....core.config import load_settings
 from ....core.i18n.render import tr
 from ....core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
-from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.profile_storage_root_fixture import profile_storage_root_fixture
 from ....tests.user_profile import register_cli_profile
 from ._profile_lifecycle_support import seed
+from .cli_runner import invoke_cached_cli
 
 __all__ = ["profile_storage_root_fixture"]
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.errors.error_codes import build_error_envelope
-from ....core.i18n import Translatable as tr
+from ....core.i18n.translatable import Translatable as tr
 from ....core.requirement import Requirement
 from ..errors import ProfileKeysRegistrationError
 from ..keys import (

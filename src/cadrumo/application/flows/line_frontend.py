@@ -30,8 +30,8 @@ import questionary
 from pydantic import TypeAdapter
 
 from ...core.flows import DEFER_TOKEN, FlowMode, FlowWidgetKind, PageStatus
-from ...core.i18n import tr
-from ...core.parsing import parse_bool
+from ...core.i18n.render import tr
+from ...core.parsing.utils import parse_bool
 from ...core.tty import stdin_is_tty
 from .capability import NO_CONSOLE_ERRORS as _NO_CONSOLE_ERRORS
 from .checkpoint import CheckpointStore, checkpoint_available, discard_checkpoint, save_checkpoint

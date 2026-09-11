@@ -14,8 +14,8 @@ from pathlib import Path
 import pytest
 
 from ....core.directory_scan import scan_directory
-from ....tests.cli_runner import invoke_cached_cli
 from ._isolated_profile_storage_fixtures import _isolated_state
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["_isolated_state"]
@@ -188,7 +188,7 @@ _SPELLING_EXEMPTIONS: tuple[tuple[str, str, str], ...] = (
 
 def _retired_spelling_scan_corpus() -> list[Path]:
     """Source, the four locale catalogues, the operator docs, and the contracts."""
-    from ....tests import REPO_ROOT
+    from ....tests.inventory import REPO_ROOT
 
     scanned: list[Path] = []
     src_root = REPO_ROOT / "src" / "cadrumo"
@@ -237,7 +237,7 @@ def _enclosing_function(path: Path, offset: int) -> str | None:
 
 def _retired_spelling_citations() -> list[tuple[str, str | None, str]]:
     """Every ``(repo-relative path, enclosing function, spelling)`` citation found."""
-    from ....tests import REPO_ROOT
+    from ....tests.inventory import REPO_ROOT
 
     # This module is the enforcement: every spelling is declared here by
     # construction, so scanning it would report the list against itself.
@@ -415,7 +415,7 @@ def test_retired_reset_and_sandbox_spellings_absent_from_source_and_docs() -> No
     and the removed `config profile sandbox use` door. A dead spelling in any of
     those surfaces would hand a downstream caller an instruction
     the live CLI refuses."""
-    from ....tests import REPO_ROOT
+    from ....tests.inventory import REPO_ROOT
 
     scanned: list[Path] = []
     src_root = REPO_ROOT / "src" / "cadrumo"

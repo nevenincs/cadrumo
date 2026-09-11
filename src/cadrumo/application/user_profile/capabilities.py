@@ -31,7 +31,7 @@ from pydantic import BaseModel
 from ...core.capabilities import ServiceCapability
 from ...core.config import Settings, load_settings
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.parsing import parse_bool
+from ...core.parsing.utils import parse_bool
 from ...domain.user_profile.values import UserProfileRecord
 from .custody_ports import profile_is_persistence_failure
 from .login_session_port import profile_current_bucket_session

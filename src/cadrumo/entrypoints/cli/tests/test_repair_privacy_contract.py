@@ -19,9 +19,9 @@ from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.classification.policies import SensitivityClass
 from ....core.config import override_settings
 from ....core.logging import default_log_file_path
-from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_cli_profile
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

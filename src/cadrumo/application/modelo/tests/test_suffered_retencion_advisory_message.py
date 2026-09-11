@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.i18n import tr
+from ....core.i18n.render import tr
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from .._verification_predicates import _advisory_predicate_finding

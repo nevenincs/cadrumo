@@ -35,7 +35,7 @@ import inspect
 
 import pytest
 
-from .....tests import aeat_relative, production_python_files
+from .....tests.inventory import aeat_relative, production_python_files
 from ..column_role_mapping import build_column_role_mapping_prompt
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

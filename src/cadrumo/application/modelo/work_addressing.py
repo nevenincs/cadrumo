@@ -36,7 +36,7 @@ from threading import RLock
 
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
-from ...core.identity import CalculationRevisionId, WorkUnitId
+from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.period import Period
 from ...domain.calculations.registry.authority import RegistryAuthorityCapture, bundled_authority

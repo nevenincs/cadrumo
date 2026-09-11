@@ -24,7 +24,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.filing_year import FilingYear
-from ...core.identity import TransactionId
+from ...core.identity.transaction_ids import TransactionId
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
@@ -122,14 +122,14 @@ class RentaDeductibilityContext(_RentaStrictFrozenModel):
     especial) makes ``1 - iva_deduction_ratio`` of ``iva_amount`` join the
     deductible base. See :func:`evaluate_renta_deductibility`.
 
-    Populated by :func:`~application.aggregation._renta_ledger.aggregate_renta_ledger_expenses_from_repositories`
+    Populated by :func:`~application.aggregation.renta_ledger.aggregate_renta_ledger_expenses_from_repositories`
     for the M100 annual first slice, via
-    ``application.aggregation._renta_ledger.resolve_iva_deduction_ratio``: a
+    ``application.aggregation.renta_ledger.resolve_iva_deduction_ratio``: a
     wholly ``EXENTO`` ``iva.regime`` profile fact resolves to ``0`` outright;
     otherwise the bucket's ``domain.prorrata_register.ProrrataRegister``
     whole-entity entry for the ejercicio contributes its in-force provisional
     percentage under ``GENERAL`` or ``ESPECIAL``. The M130 quarterly pagos
-    fraccionados gasto path (``application.aggregation._renta_gasto_ledger``)
+    fraccionados gasto path (``application.aggregation.renta_gasto_ledger``)
     does not construct a :class:`RentaDeductibilityContext` at all and is not
     wired to this axis -- a named follow-up, not silently covered here.
     """

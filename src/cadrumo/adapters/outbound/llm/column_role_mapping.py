@@ -51,16 +51,21 @@ from functools import cache
 
 from pydantic import BaseModel, Field
 
+from ....application.ledger.column_roles import ColumnRoleMappingPort
 from ....core.config import Settings, load_settings
+from ....core.config_support import LLMProvider
+from ....core.errors.hierarchy import CadrumoError
 from ....core.field_role import FieldRole
+from ....core.logging import get_logger
 from ....core.model_catalogue import ModelRole
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operator_action_enums import ActionEvidenceProvenance
-from ....core.optional_extras import LLM_EXTRA, require_optional_extra
+from ....core.optional_extras import LLM_EXTRA, MissingOptionalExtraError, require_optional_extra
 from ....core.provenance_stamp import build_provenance_stamp
+from ....core.tabular import NormalizedTable
 from .client import LLMClient
 from .errors import LLMConfigError, LLMValidationError
-from .models import LLMProvider, LLMRequest
+from .models import LLMRequest
 from .preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 from .response_json import first_json_object as _first_json_object
 
@@ -76,6 +81,8 @@ _MAX_REPLY_TOKENS = 1024
 #: Temperature for the mapping call. Role assignment has one right answer per
 #: column; sampling variety buys nothing and costs determinism.
 _MAPPING_TEMPERATURE = 0.0
+
+_logger = get_logger(__name__)
 
 
 class ObservedColumn(BaseModel):
@@ -671,3 +678,29 @@ def map_column_roles(
         The positional mapping plus every column that was not established.
     """
     return SemanticColumnRoleMapper(model=model, provider=provider, settings=settings).map(headers)
+
+
+def resolve_column_roles(table: NormalizedTable) -> ColumnRoleMappingPort | None:
+    """Resolve a normalized table for the inward column-role port.
+
+    The concrete mapper stays owned by this outbound adapter.  Composition
+    roots bind this function to the application port, while inbound financial
+    providers consume only the inward contract.  Missing optional capability
+    remains a typed refusal; an installed mapper that cannot establish roles
+    declines the table.
+    """
+    try:
+        proposal = SemanticColumnRoleMapper().map(table.headers)
+    except MissingOptionalExtraError:
+        raise
+    except CadrumoError:
+        _logger.warning("semantic column-role mapping could not establish roles for this table", exc_info=True)
+        return None
+    for rejected in proposal.rejected_role_proposals:
+        _logger.warning(
+            "column %d %r was proposed the role %r, which is not a permitted role",
+            rejected.column_index,
+            rejected.header,
+            rejected.proposed_role,
+        )
+    return proposal

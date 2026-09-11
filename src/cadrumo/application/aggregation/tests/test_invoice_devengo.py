@@ -23,13 +23,15 @@ from ....core.period import Period
 from ....domain.invoices.enums import InvoiceOperationDateRole, IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
-from .. import (
-    DIAGNOSTIC_MESSAGE_MAX_LENGTH,
+from ..invoice_devengo import (
+    devengo_proxy_attribution_diagnostics,
     invoice_devengo_in_period,
     proxy_attributed_invoice_ids,
     resolve_invoice_devengo,
 )
-from .._invoice_devengo import devengo_proxy_attribution_diagnostics
+from ..source_mesh import (
+    DIAGNOSTIC_MESSAGE_MAX_LENGTH,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

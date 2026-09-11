@@ -41,7 +41,7 @@ from typing import TYPE_CHECKING
 
 import typer
 
-from ....core.i18n import tr
+from ....core.i18n.render import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from .._common import current_workflow_state, emit_envelope
 from ._censo_payloads import CensoFactPayload, CensoFileIngestResult, CensoPullDivergencePayload, CensoPullResult

@@ -30,7 +30,6 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -38,6 +37,7 @@ from ...adapters.persistence.profile.modelos_edit_receipts import ModeloEditRece
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core.casilla_id import CasillaId
 from ...core.hashing import content_hash_hex
+from ...core.secure_object_write import SecureObjectWrite
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ...domain.modelos.errors import ModeloError
@@ -73,9 +73,6 @@ from .edit_services import (
     validate_scalar_intent,
     writable_scalar_entry,
 )
-
-if TYPE_CHECKING:
-    from ...adapters.persistence.storage.sql.secure_objects import SecureObjectWrite
 
 _UNSUPPORTED_RECONSIDERATION = "resubmit without this intent once its follow-on Step lands, or split the submission"
 

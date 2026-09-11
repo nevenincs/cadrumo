@@ -13,7 +13,9 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from ...core.decimal.constants import MONEY_ZERO
-from ...core.identity import AeatCertificadoId, AeatClaveLiquidacion, ContentDigest
+from ...core.identity.aeat_certificado import AeatCertificadoId
+from ...core.identity.aeat_clave_liquidacion import AeatClaveLiquidacion
+from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 
 

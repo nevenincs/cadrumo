@@ -43,7 +43,9 @@ from ...core.config import Settings
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin
 from ...core.hashing import content_hash_hex
-from ...core.identity import BucketId, ContentDigest, InvoiceId
+from ...core.identity.bucket import BucketId
+from ...core.identity.digest import ContentDigest
+from ...core.identity.hex_ids import InvoiceId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from ...core.time.utc import UtcInstant

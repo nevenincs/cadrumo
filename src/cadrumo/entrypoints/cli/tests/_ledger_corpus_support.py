@@ -10,8 +10,8 @@ from typing import Any
 from click.testing import Result
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....tests.cli_runner import invoke_cached_cli
-from ....tests.ledger_cli import list_ledger_rows_via_cli
+from .cli_runner import invoke_cached_cli
+from .ledger_cli import list_ledger_rows_via_cli
 
 _CORPUS = Path(__file__).resolve().parents[3] / "tests" / "fixtures" / "financial" / "ledger-corpus"
 _FILES = (

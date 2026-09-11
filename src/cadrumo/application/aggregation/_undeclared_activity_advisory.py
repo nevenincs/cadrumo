@@ -51,8 +51,8 @@ from typing import Final, NamedTuple
 from ...core.casilla_id import CasillaId
 from ...domain.calculations.registry.ids import BindingId, LegalRefId, SourceRefId
 from ...domain.calculations.registry.schema import ModeloRevision
-from ._renta_income_ledger import RentaIncomeLedgerAggregation
-from ._source_mesh import CalculationSourceDiagnostic
+from .renta_income_ledger import RentaIncomeLedgerAggregation
+from .source_mesh import CalculationSourceDiagnostic
 
 #: Diagnostic ``source_kind`` for a casilla emptied entirely by an activity
 #: narrowing over income whose activity nobody declared.
@@ -108,7 +108,7 @@ def undeclared_activity_income_advisory_observations(
 
     Args:
         aggregation: The income aggregation whose
-            :attr:`~._renta_income_ledger.RentaIncomeLedgerAggregation.unadmitted_activity_income`
+            :attr:`~.renta_income_ledger.RentaIncomeLedgerAggregation.unadmitted_activity_income`
             census measures what the narrowing kept out. ``None`` there means no
             narrowing ran and the advisory is silent.
         revision: The :class:`~domain.calculations.registry.ModeloRevision` being

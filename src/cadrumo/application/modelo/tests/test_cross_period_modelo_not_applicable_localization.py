@@ -7,7 +7,7 @@ import pytest
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.ids import SourceRefId
-from ...calculations.cross_period_clean_state import (
+from ...calculations.cross_period_models import (
     CrossPeriodCleanStateVerdict,
     CrossPeriodDependencyEvidence,
     CrossPeriodDependencyOrigin,

@@ -6,8 +6,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from .. import UnmatchedPlaceholderError, extract_placeholders
-from .. import tr as render_translation
+from ..render import UnmatchedPlaceholderError, extract_placeholders
+from ..render import tr as render_translation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

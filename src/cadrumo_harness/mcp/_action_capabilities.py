@@ -1,9 +1,9 @@
-"""MCP action capabilities projected onto the CLI's per-verb input schemas.
+"""MCP action capabilities projected onto the application command port.
 
-``cadrumo`` is the CLI implementation, not an MCP facade: it owns the click-tree
-projection (:class:`~cadrumo.entrypoints.cli.VerbInputSchema` and
-:func:`~cadrumo.entrypoints.cli.build_verb_input_schemas`) and nothing about this
-protocol. Everything that makes those schemas an MCP surface -- the capability
+The application owns the protocol-neutral input-schema contract. The installed
+CLI process supplies the graph projection through the harness command-surface
+adapter; nothing in this module imports that process's implementation. Everything
+that makes those schemas an MCP surface -- the capability
 DTO, the capability-bearing schema, the resolver that binds catalogue actions to
 live verbs, and the ``x-cadrumo-action-capabilities`` JSON-Schema extension --
 lives here in the harness that serves them.
@@ -25,6 +25,7 @@ from cadrumo.application.operator_actions.catalogue import (
     ActionArgumentBindingSpecification,
     ActionCatalogue,
 )
+from cadrumo.application.operator_surface.command_ports import VerbInputSchema
 from cadrumo.application.operator_surface.manifest import (
     CommandSchemaRef,
     InputSchemaInventoryRow,
@@ -34,10 +35,8 @@ from cadrumo.application.operator_surface.manifest import (
     ResultSchemaInventoryRow,
     resolve_action_catalogue,
 )
-from cadrumo.entrypoints.cli.command_api import (
-    VerbInputSchema,
-    build_verb_input_schemas,
-)
+
+from .command_surface import command_surface
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 _ACTION_CAPABILITIES_SCHEMA_KEY = "x-cadrumo-action-capabilities"
@@ -219,7 +218,9 @@ def build_mcp_action_input_schemas(
     catalogue: ActionCatalogue = OPERATOR_ACTION_CATALOGUE,
 ) -> dict[str, McpVerbInputSchema]:
     """Build live MCP input schemas enriched by resolver-backed capabilities."""
-    verb_schemas = build_verb_input_schemas(tuple(schema_ref.command for schema_ref in command_schemas))
+    verb_schemas = command_surface().build_verb_input_schemas(
+        tuple(schema_ref.command for schema_ref in command_schemas)
+    )
     capabilities_by_target = resolve_mcp_action_capabilities(
         catalogue=catalogue,
         command_schemas=command_schemas,

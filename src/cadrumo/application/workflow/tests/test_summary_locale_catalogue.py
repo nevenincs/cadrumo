@@ -6,7 +6,8 @@ import string
 
 import pytest
 
-from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, lookup_translation_entry
+from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+from ....core.i18n.render import lookup_translation_entry
 from ..run_models import WORKFLOW_SUMMARY_LOCALE_KEYS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

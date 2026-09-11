@@ -174,7 +174,7 @@ def test_aeat_sede_paths_are_absolute_paths() -> None:
 
 def test_certificate_protected_resource_authority_is_exact_and_composed() -> None:
     """Certificate authentication has one non-configurable www6 protected resource."""
-    from ..config import (
+    from ..config_support import (
         AEAT_CERTIFICATE_PROTECTED_ORIGIN,
         AEAT_CERTIFICATE_PROTECTED_PATH,
         AEAT_CERTIFICATE_PROTECTED_URL,

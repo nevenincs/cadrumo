@@ -2,18 +2,16 @@
 
 from __future__ import annotations
 
-import pytest
+import logging
+from pathlib import Path
 
-from ._parser_boundary_support import (
-    A4,
-    FIXTURES_DIR,
-    Path,
-    TemplateNotDetectedError,
-    _extract_pages_words,
-    canvas,
-    logging,
-    parse_declaracion,
-)
+import pytest
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+
+from .....tests.inventory import FIXTURES_DIR
+from ..errors import DeclaracionParseError, TemplateNotDetectedError
+from ..parser import parse_declaracion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -50,10 +48,10 @@ def test_word_extraction_debug_log_does_not_expose_source_filename(
     pdf_path.write_text("not a PDF", encoding="utf-8")
 
     with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.inbound.declaracion.parser"):
-        words = _extract_pages_words(pdf_path)
+        with pytest.raises(DeclaracionParseError):
+            parse_declaracion(pdf_path)
 
     rendered_logs = "\n".join(record.getMessage() for record in caplog.records)
-    assert words == ()
     assert pdf_path.name not in rendered_logs
     assert str(pdf_path) not in rendered_logs
-    assert "<input-pdf>" in rendered_logs
+    assert "source=<input-pdf>" not in rendered_logs

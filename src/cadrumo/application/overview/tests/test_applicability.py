@@ -31,10 +31,8 @@ from __future__ import annotations
 from collections.abc import Callable
 
 import pytest
-from test_support.registry_authoring import verify_legal_catalogue
 
 from ....core.modelo import Modelo
-from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
@@ -696,7 +694,8 @@ def test_seed_legal_refs_resolve_against_the_registry() -> None:
     law-only slug would fail loudly here.
     """
 
-    registered_legal_ids = set(bundled_authority().catalogues.legal)
+    authority = bundled_authority()
+    registered_legal_ids = set(authority.catalogues.legal)
     assert registered_legal_ids, "registry legal catalogue is empty"
 
     seed_refs: set[str] = set()
@@ -718,5 +717,6 @@ def test_seed_legal_refs_resolve_against_the_registry() -> None:
     for ref in sorted(seed_refs):
         assert ":" in ref, f"seed legal_ref is not in scoped article form: {ref!r}"
 
-    legal_refs = {ref: bundled_authority().catalogues.legal[ref] for ref in sorted(seed_refs)}
-    verify_legal_catalogue(legal_refs, source_root=bundled_path())
+    legal_refs = {ref: authority.catalogues.legal[ref] for ref in sorted(seed_refs)}
+    for ref in sorted(legal_refs):
+        assert authority.legal_evidence_text(ref).strip(), f"published legal evidence is empty for {ref!r}"

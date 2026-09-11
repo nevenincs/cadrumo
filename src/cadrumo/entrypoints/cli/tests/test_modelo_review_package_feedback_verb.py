@@ -55,9 +55,9 @@ from ....domain.buckets.event import BucketEventType
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
 from ._modelo_review_package_support import build_review_package_via_cli
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

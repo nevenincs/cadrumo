@@ -19,7 +19,7 @@ from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....core.i18n import Translatable as tr
+from ....core.i18n.translatable import Translatable as tr
 from ....core.period import Period
 from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
@@ -43,16 +43,22 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ....domain.usage_ratios.model import UsageRatioProfile
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import RENTA_REGIMEN_CITATION_URL_FIXTURE
-from .. import (
+from ..errors import (
     AggregationValidationError,
-    CalculationSourceContext,
+)
+from ..modelo_bindings_renta_expenses import (
     LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
+)
+from ..renta_gasto_ledger import aggregate_renta_gasto_ledger_from_repositories
+from ..renta_ledger import (
     RentaLedgerAggregationIssueReason,
     RentaLedgerExpenseAggregation,
     aggregate_renta_ledger_expenses,
     aggregate_renta_ledger_expenses_from_repositories,
 )
-from .._renta_gasto_ledger import aggregate_renta_gasto_ledger_from_repositories
+from ..source_mesh import (
+    CalculationSourceContext,
+)
 from .renta_income_aggregation_support import _period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -69,7 +69,8 @@ from typing import Self
 from pydantic import BaseModel, Field, model_validator
 
 from ....application.ledger.models import ManualLedgerTransactionResult
-from ....core.identity import BucketId, TransactionId
+from ....core.identity.bucket import BucketId
+from ....core.identity.transaction_ids import TransactionId
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.iva.schema import IvaCategory

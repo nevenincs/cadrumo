@@ -31,14 +31,15 @@ __all__ = ["isolated_profile_storage"]
 from .... import __version__
 from ....application.operator_surface.help import build_help_document
 from ....core.bucket_pointer import BucketPointer, write_pointer
-from ....core.config import SecretStoreBackend, Settings, load_settings
+from ....core.config import Settings, load_settings
+from ....core.config_support import SecretStoreBackend
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....core.product_identity import PRODUCT_IDENTITY
 from ....core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
-from ....tests.cli_runner import invoke_cached_cli
 from ....tests.user_profile import register_minimal_profile
 from ._isolated_profile_storage_fixtures import _isolated_state
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["_isolated_state"]
@@ -443,7 +444,8 @@ def test_installed_console_honors_isolated_storage_env(tmp_path: Path) -> None:
     cli_executable = _installed_cli_executable()
     env = _console_env(tmp_path)
 
-    from ....core.config import SecretStoreBackend, load_settings, override_settings
+    from ....core.config import load_settings, override_settings
+    from ....core.config_support import SecretStoreBackend
     from ....tests.user_profile import register_cli_profile
 
     with override_settings(

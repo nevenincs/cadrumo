@@ -33,12 +33,12 @@ from decimal import Decimal
 from pathlib import Path
 from typing import override
 
+from .....application.ledger.column_roles import resolve_column_roles
 from .....core.errors.error_codes import resolve_error_message
-from .....core.errors.hierarchy import CadrumoError, CoreValidationError
+from .....core.errors.hierarchy import CoreValidationError
 from .....core.field_role import FieldRole
 from .....core.logging import get_logger
-from .....core.optional_extras import MissingOptionalExtraError
-from .....core.parsing import normalise_iso_4217_currency
+from .....core.parsing.codes import normalise_iso_4217_currency
 from .....core.tabular import NormalizedTable, TabularSourceError, normalize_tabular_bytes
 from .....domain.transactions.raw_transaction import SourceFormat
 from ._constants import CSV_EXTENSIONS
@@ -89,56 +89,14 @@ class _MappedRowFields:
 def _resolve_roles_semantically(table: NormalizedTable) -> ColumnRoleMapping | None:
     """Establish ``table``'s column roles with the semantic column-role mapper.
 
-    The import is deferred to call time for two reasons: ``cadrumo.adapters.outbound.llm`` is an
-    optional extra, and it is a SIBLING of this package in the layering
-    contract rather than an inner tier. Reaching it here, only once a file has
-    actually arrived at this lane, keeps a host without the extra able to
-    detect and parse every exact-layout file as before.
-
-    A host that cannot map resolves to ``None``, which the lane reports as
-    "column roles could not be established". That is the right answer when the
-    mapper is installed and declined: reaching a model is not the only way this
-    can go, because the client consults its profile-bound response cache first,
-    so an operator who has not unlocked a profile gets a storage refusal well
-    before any request is built. Detecting a file must not depend on being
-    logged in, and a genuine programming fault still raises.
-
-    **A missing extra is not that case, and must not resolve to ``None``.**
-    ``MissingOptionalExtraError`` is both a :class:`CadrumoError` and an
-    :class:`ImportError`, so the broad guards below would otherwise swallow it
-    and report the operator's FILE as unreadable when what is actually absent is
-    a capability of their INSTALL -- pointing them at a CSV they cannot fix
-    instead of the capability that resolves it. It is re-raised so the lane
-    surfaces the extra's typed machine identity, which is what the governing
-    decision requires of the tabular split: a known fixed-layout file imports
-    with no extra, and an unknown header vocabulary refuses here, carrying the
-    ``llm`` extra's identity rather than a rendered installation command.
+    The application-owned port is bound by an outer composition root. This
+    inbound adapter never reaches across to the concrete outbound LLM adapter;
+    a host without a bound optional capability receives ``None`` and reports
+    that no role mapping was established. A composed LLM implementation keeps
+    the typed missing-extra refusal at its own boundary.
     """
-    try:
-        from ....outbound.llm.column_role_mapping import SemanticColumnRoleMapper
-    except MissingOptionalExtraError:
-        raise
-    except ImportError:
-        _logger.debug("semantic column-role mapping is unavailable: the llm extra is not installed")
-        return None
-    try:
-        proposal = SemanticColumnRoleMapper().map(table.headers)
-    except MissingOptionalExtraError:
-        raise
-    except CadrumoError:
-        _logger.warning("semantic column-role mapping could not establish roles for this table", exc_info=True)
-        return None
-    for rejected in proposal.rejected_role_proposals:
-        # The positional mapping carries roles only, so a token the allow-list
-        # refused would otherwise vanish between here and the operator, who
-        # sees the column reported unmapped but not what was proposed for it.
-        _logger.warning(
-            "column %d %r was proposed the role %r, which is not a permitted role",
-            rejected.column_index,
-            rejected.header,
-            rejected.proposed_role,
-        )
-    return ColumnRoleMapping(roles=proposal.roles)
+    proposal = resolve_column_roles(table)
+    return None if proposal is None else ColumnRoleMapping(roles=tuple(proposal.roles))
 
 
 def default_tabular_mapping_resolver() -> TabularMappingResolver | None:

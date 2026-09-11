@@ -44,7 +44,7 @@ from ...core.period import Period
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from ..modelo.work_addressing import (
+from ..modelo._work_selection import (
     ModeloWorkSelectionMode,
     ModeloWorkSelectorRequest,
     ModeloWorkSelectorState,

@@ -45,7 +45,7 @@ from ...domain.modelos.protocols import (
 )
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ..aggregation import CalculationSourceContext, CalculationSourceProvenance, CalculationSourceResolution
+from ..aggregation.source_mesh import CalculationSourceContext, CalculationSourceProvenance, CalculationSourceResolution
 from .revision_carry_gate import revision_carry_outcome
 
 _SOURCE_KIND = BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY

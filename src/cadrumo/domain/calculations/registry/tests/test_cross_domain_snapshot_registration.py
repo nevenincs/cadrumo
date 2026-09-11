@@ -6,7 +6,7 @@ renta first-slice routing check lives in
 ``cadrumo.domain.renta.first_slice_routing_integrity`` and registers itself
 as an import side effect.
 
-That registration must NOT depend on import order. ``_build_validated_snapshot``
+That registration must NOT depend on import order. ``build_validated_snapshot``
 calls ``_install_cross_domain_snapshot_checks`` before the referential-
 integrity gate runs; the installer imports every peer-domain check module
 named in ``_CROSS_DOMAIN_CHECK_MODULES`` by name. The registry never

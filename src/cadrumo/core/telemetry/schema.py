@@ -31,7 +31,7 @@ from types import MappingProxyType
 
 from pydantic import BaseModel, Field
 
-from ..identity import ContentDigest
+from ..identity.digest import ContentDigest
 from ..models import STRICT_FROZEN_CONFIG
 from .errors import TelemetrySchemaError
 

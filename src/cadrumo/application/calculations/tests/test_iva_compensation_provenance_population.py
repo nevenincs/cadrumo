@@ -65,6 +65,7 @@ from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -74,7 +75,6 @@ from ....domain.modelos.calculation_revision import (
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.filing_evidence import general_m303_filing_evidence
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...live.filed_observation_persistence import persist_filed_calculation_observation
 from ...modelo.filed_revision_observation import persist_filed_revision_observation

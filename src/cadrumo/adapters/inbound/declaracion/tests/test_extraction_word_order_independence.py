@@ -53,7 +53,7 @@ from pathlib import Path
 import pytest
 
 from .....domain.calculations.registry.authority import bundled_authority
-from .....tests import FIXTURES_DIR
+from .....tests.inventory import FIXTURES_DIR
 from ..parser import (
     _classify_target,
     _extract_pages_words,

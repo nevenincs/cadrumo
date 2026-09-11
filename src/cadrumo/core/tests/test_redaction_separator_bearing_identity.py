@@ -28,7 +28,8 @@ from __future__ import annotations
 
 import pytest
 
-from ..identity import IdentityError, normalise_nif_iva, validate_identity
+from ..identity.documents import IdentityError, validate_identity
+from ..identity.nif_iva import normalise_nif_iva
 from ..redaction.rules import redact_for_cli_output, redact_for_log
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

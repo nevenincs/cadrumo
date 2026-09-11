@@ -9,7 +9,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ...calculations.registry._m347_threshold import resolve_m347_counterparty_annual_threshold
+from ...calculations.registry.m347_threshold import resolve_m347_counterparty_annual_threshold
 from ..calculation_revision import derive_calculation_revision_id
 from ..row_models import (
     Modelo184MemberRow,

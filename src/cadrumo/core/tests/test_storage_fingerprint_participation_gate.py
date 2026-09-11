@@ -42,12 +42,11 @@ import pytest
 from ..config import override_settings
 from ..observability.fingerprint import compute_data_root_sha256, data_root_cache_exclusions
 from ..storage_taxonomy import (
-    FINGERPRINT_EXCLUDED_STORAGE_FIELDS,
-    STORAGE_TAXONOMY,
     FingerprintParticipation,
     StorageCategory,
     StorageScope,
 )
+from ..storage_taxonomy_locations import FINGERPRINT_EXCLUDED_STORAGE_FIELDS, STORAGE_TAXONOMY
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

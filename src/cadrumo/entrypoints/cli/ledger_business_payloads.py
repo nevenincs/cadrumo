@@ -31,9 +31,11 @@ from pydantic import AfterValidator, NonNegativeInt, field_validator
 
 from ...core.decimal.constants import ZERO
 from ...core.decimal.grammar import is_non_negative_canonical_decimal
-from ...core.identity import BucketId, InvoiceId, TaxIdIdentityToken
+from ...core.identity.bucket import BucketId
+from ...core.identity.hex_ids import InvoiceId
+from ...core.identity.tax_id import TaxIdIdentityToken
 from ...core.json_contract import OutputSchema
-from ...core.parsing import IsoCurrencyCode
+from ...core.parsing.codes import IsoCurrencyCode
 from ...core.percentage import PERCENTAGE_MAX, PERCENTAGE_MIN
 from ...core.text_bounds import NonEmptyStr, PositiveCount
 from ...core.unit_proportion import UNIT_PROPORTION_MAX, UNIT_PROPORTION_MIN

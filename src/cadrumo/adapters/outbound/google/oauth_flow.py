@@ -10,7 +10,7 @@ Two policy gates fire before any network IO happens:
 
 1. The caller must pass a profile identity resolved by
    :func:`adapters.outbound.google.resolve_active_profile`.
-2. When :class:`core.config.SecretStoreBackend` is configured as
+2. When :class:`core.config_support.SecretStoreBackend` is configured as
    ``UNSECURED`` and that profile carries a real Spanish NIF / NIE / CIF,
    :func:`adapters.outbound.google.oauth_flow.check_unsecured_mode_safety`
    refuses with
@@ -31,7 +31,8 @@ from collections.abc import Mapping
 from datetime import datetime
 from typing import NoReturn, Protocol, cast
 
-from ....core.config import SecretStoreBackend, load_settings
+from ....core.config import load_settings
+from ....core.config_support import SecretStoreBackend
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.time.clock import now
 from ....core.tty import stdin_is_tty
@@ -91,7 +92,7 @@ def check_unsecured_mode_safety(profile: str, tax_id: str) -> None:
 
     The guard mirrors the storage substrate's NIF-canary rule: real taxpayer
     identifiers must not enter OAuth token setup while
-    :class:`core.config.SecretStoreBackend` is running in unsecured mode.
+    :class:`core.config_support.SecretStoreBackend` is running in unsecured mode.
 
     Args:
         profile: Active profile UUID resolved by

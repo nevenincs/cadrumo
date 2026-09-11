@@ -19,7 +19,8 @@ from __future__ import annotations
 from collections import OrderedDict
 from pathlib import Path
 
-from .....domain.justificante import JustificanteParseError, JustificanteParserBackend
+from .....domain.justificante.errors import JustificanteParseError
+from .....domain.justificante.schema import JustificanteParserBackend
 from ...pdf.redaction import INPUT_PDF_SOURCE_LABEL as _INPUT_PDF_SOURCE_LABEL
 from ...pdf.source_provenance import sha256_file
 

@@ -27,7 +27,7 @@ from ....adapters.outbound.llm.models import LLMRequest, PromptDefinition
 from ....adapters.persistence.storage.master_key.active_session import NoActiveBucketSessionError
 from ....core.errors.error_codes import build_error_envelope, render_error_text
 from ....core.errors.hierarchy import CadrumoError
-from ....core.i18n.render import SUPPORTED_OUTPUT_LANGUAGES
+from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ..errors import (
     CliUnexpectedBoundaryError,
     _unwrap_cadrumo_error,

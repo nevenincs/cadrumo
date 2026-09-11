@@ -13,7 +13,8 @@ from pydantic import SecretStr
 from ......application.auth.session_types import AeatSession, CertificateSessionDetail
 from ......application.auth_credentials import ActiveCertificateCredentials, unnamed_certificate_credentials
 from ......core.auth_session_keys import aeat_auth_session_storage_state_path
-from ......core.config import AEAT_CERTIFICATE_PROTECTED_URL, Settings
+from ......core.config import Settings
+from ......core.config_support import AEAT_CERTIFICATE_PROTECTED_URL
 from ......core.errors.hierarchy import AeatLoginAssertionError
 from ......tests.secure_sql import isolated_runtime_profile
 from ...browser.factory import DefaultBrowserSession

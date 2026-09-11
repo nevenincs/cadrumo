@@ -94,10 +94,10 @@ MODELO_NONWORK_BINDINGS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _AS_OF_OPTION,
         ),
         policy=_REGISTRY_MODEL_READ,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._modelo_discovery_cli", "bindings_list")),
+        handler=LazyBinding.available(DeferredTarget("._modelo_discovery_cli", "bindings_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_bindings_payloads", "ModeloBindingsListResult"),
+            DeferredTarget("._modelo_bindings_payloads", "ModeloBindingsListResult", __package__),
             identity="modelo.bindings.list",
         ),
     ),
@@ -125,12 +125,10 @@ MODELO_NONWORK_BINDINGS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _AS_OF_OPTION,
         ),
         policy=_REGISTRY_MODEL_READ,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_discovery_cli", "bindings_resolve")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._modelo_discovery_cli", "bindings_resolve", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_bindings_payloads", "ModeloBindingsPreviewResult"),
+            DeferredTarget("._modelo_bindings_payloads", "ModeloBindingsPreviewResult", __package__),
             identity="modelo.bindings.resolve",
         ),
     ),

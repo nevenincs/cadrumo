@@ -10,9 +10,9 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from ....tests.cli_runner import invoke_cached_cli
 from ....tests.pdf_fixtures import text_pdf_bytes
 from ._ledger_validation_support import open_bucket_session
+from .cli_runner import invoke_cached_cli
 
 _N26_HEADER = "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
 

@@ -8,9 +8,9 @@ from pathlib import Path
 import pytest
 
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from ....tests.cli_runner import invoke_cached_cli
 from ._modelo_empty_profile_fixture import _isolated_backend
 from ._profile_cli_support import seed_profile
+from .cli_runner import invoke_cached_cli
 
 __all__ = ["_isolated_backend"]
 

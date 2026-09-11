@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import os
 
-from ...core.config import coerce_output_language_setting
+from ...core.config_support import coerce_output_language_setting
 from ...core.external_constants import OUTPUT_LANGUAGE_ENV_VAR, OutputLanguage
 
 _LANGUAGE_FLAGS: tuple[str, ...] = ("--language", "--lang", "--output-language")

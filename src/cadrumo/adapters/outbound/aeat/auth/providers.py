@@ -13,36 +13,11 @@ Playwright contexts.
 
 from __future__ import annotations
 
-from typing import Protocol, TypedDict, runtime_checkable
-
-from .....core.config import AEAT_CERTIFICATE_PROTECTED_ORIGIN
+from .....application.auth.protocols import BrowserContextKwargs
+from .....core.config_support import AEAT_CERTIFICATE_PROTECTED_ORIGIN
 from .certificate import (
     LoadedCertificate,
 )
-
-
-class BrowserContextKwargs(TypedDict, total=False):
-    """Subset of Playwright ``Browser.new_context()`` keyword arguments.
-
-    Only the kwargs that AEAT auth provisioners currently supply are
-    declared here. ``total=False`` makes every key optional so callers
-    can return a partial mapping.
-    """
-
-    client_certificates: list[dict[str, str | bytes]]
-
-
-@runtime_checkable
-class BrowserContextProvisioner(Protocol):
-    """Hook that decorates browser-context creation for auth providers.
-
-    :class:`CertificateContextProvisioner` implements this protocol to add
-    Playwright ``new_context()`` kwargs.
-    """
-
-    def build_context_kwargs(self) -> BrowserContextKwargs:
-        """Return the provider-owned browser context arguments."""
-        ...
 
 
 class CertificateContextProvisioner:
@@ -86,6 +61,5 @@ class CertificateContextProvisioner:
 
 
 __all__ = [
-    "BrowserContextProvisioner",
     "CertificateContextProvisioner",
 ]

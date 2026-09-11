@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 
+from .....core.casilla_id import CasillaId
+from ..parser import parse_declaracion
 from ._parser_boundary_casillas import (
     _M349_IMPORTE_OPERACIONES_CASILLA,
     _M349_IMPORTE_RECTIFICACIONES_CASILLA,
@@ -12,10 +16,7 @@ from ._parser_boundary_casillas import (
 )
 from ._parser_boundary_support import (
     _MODELO_349_SYNTHETIC_FIXTURE,
-    CasillaId,
-    Decimal,
     _expected_period,
-    parse_declaracion,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

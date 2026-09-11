@@ -35,9 +35,9 @@ import pytest
 
 from ....core.bucket_pointer import pointer_path
 from ....tests.cli_envelope import require_error_document
-from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_sessionless_storage_root
 from ._sessionless_root_fixtures import _sessionless_root
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

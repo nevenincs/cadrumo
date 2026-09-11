@@ -15,7 +15,7 @@ from typing import Self
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
 from ...core.filing_year import FilingYear
-from ...core.identity import WorkUnitId
+from ...core.identity.hex_ids import WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...domain.calculations.registry.ids import ModeloId, RevisionId

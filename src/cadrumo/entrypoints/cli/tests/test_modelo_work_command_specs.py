@@ -8,9 +8,12 @@ import inspect
 import sys
 import types
 from collections.abc import Callable
+from dataclasses import dataclass
 from enum import Enum
+from functools import cache
+from importlib.util import find_spec, resolve_name
 from pathlib import Path
-from typing import cast, get_args, get_origin, get_type_hints
+from typing import cast, get_args, get_origin
 
 import pytest
 from typer.main import get_command
@@ -53,11 +56,117 @@ def _graph() -> CommandSpecGraph:
     )
 
 
-def _resolve(module_name: str, qualname: str) -> object:
-    value: object = importlib.import_module(module_name)
-    for part in qualname.split("."):
-        value = getattr(value, part)
-    return value
+@dataclass(frozen=True)
+class _StaticTarget:
+    module: str
+    qualname: str
+    node: ast.AST | None
+
+    def __call__(self, *args: object, **kwargs: object) -> None:
+        raise TypeError(f"static target {self.module}:{self.qualname} is not executable")
+
+    @property
+    def __signature__(self) -> inspect.Signature:
+        if not isinstance(self.node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            return inspect.Signature()
+        names = [argument.arg for argument in (*self.node.args.posonlyargs, *self.node.args.args)]
+        names.extend(argument.arg for argument in self.node.args.kwonlyargs)
+        if self.node.args.vararg is not None:
+            names.insert(len(self.node.args.posonlyargs) + len(self.node.args.args), self.node.args.vararg.arg)
+        if self.node.args.kwarg is not None:
+            names.append(self.node.args.kwarg.arg)
+        return inspect.Signature(inspect.Parameter(name, inspect.Parameter.POSITIONAL_OR_KEYWORD) for name in names)
+
+
+def _source(module_name: str) -> tuple[Path, ast.Module] | None:
+    try:
+        spec = find_spec(module_name)
+    except (ImportError, ModuleNotFoundError, ValueError):
+        return None
+    origin = None if spec is None else spec.origin
+    if origin is None or origin in {"built-in", "frozen"}:
+        return None
+    path = Path(origin)
+    if not path.is_file():
+        return None
+    try:
+        return path, ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    except (OSError, SyntaxError):
+        return None
+
+
+def _target_node(module_name: str, qualname: str, seen: frozenset[str] = frozenset()) -> ast.AST | None:
+    if module_name in seen:
+        return None
+    loaded = _source(module_name)
+    if loaded is None:
+        return None
+    _, tree = loaded
+    part, _, remainder = qualname.partition(".")
+    for node in tree.body:
+        if getattr(node, "name", None) == part:
+            return _target_node(module_name, remainder, seen | {module_name}) if remainder else node
+        if isinstance(node, ast.ImportFrom):
+            for alias in node.names:
+                if (alias.asname or alias.name) != part:
+                    continue
+                imported = node.module or ""
+                if node.level:
+                    package = module_name if loaded[0].name == "__init__.py" else module_name.rpartition(".")[0]
+                    imported = resolve_name("." * node.level + imported, package)
+                return _target_node(imported, alias.name, seen | {module_name})
+    return None
+
+
+@cache
+def _resolve(module_name: str, qualname: str) -> _StaticTarget:
+    if _source(module_name) is None and module_name != "builtins":
+        raise ImportError(module_name)
+    node = _target_node(module_name, qualname)
+    if node is None and module_name != "builtins":
+        raise AttributeError(f"{module_name}.{qualname}")
+    return _StaticTarget(module_name, qualname, node)
+
+
+def _annotation_target(module_name: str, node: ast.AST, imports: dict[str, tuple[str, str]]) -> _StaticTarget | None:
+    if isinstance(node, ast.Name):
+        target_module, target_name = imports.get(node.id, ("builtins", node.id))
+        return _resolve(target_module, target_name)
+    if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id in imports:
+        target_module, target_name = imports[node.value.id]
+        return _resolve(target_module, f"{target_name}.{node.attr}" if target_name else node.attr)
+    if isinstance(node, ast.Subscript):
+        child = node.slice.elts[0] if isinstance(node.slice, ast.Tuple) and node.slice.elts else node.slice
+        return _annotation_target(module_name, child, imports)
+    if isinstance(node, ast.BinOp):
+        return _annotation_target(module_name, node.left, imports) or _annotation_target(
+            module_name, node.right, imports
+        )
+    return None
+
+
+def _static_type_hints(target: _StaticTarget) -> dict[str, object]:
+    if not isinstance(target.node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+        return {}
+    loaded = _source(target.module)
+    if loaded is None:
+        return {}
+    _, tree = loaded
+    imports: dict[str, tuple[str, str]] = {}
+    for node in tree.body:
+        if isinstance(node, ast.ImportFrom):
+            imported = node.module or ""
+            if node.level:
+                package = target.module if loaded[0].name == "__init__.py" else target.module.rpartition(".")[0]
+                imported = resolve_name("." * node.level + imported, package)
+            for alias in node.names:
+                if alias.name != "*":
+                    imports[alias.asname or alias.name] = (imported, alias.name)
+    return {
+        argument.arg: hint
+        for argument in (*target.node.args.posonlyargs, *target.node.args.args, *target.node.args.kwonlyargs)
+        if (hint := _annotation_target(target.module, argument.annotation, imports)) is not None
+    }
 
 
 def _semantic_annotation(annotation: object) -> object:
@@ -104,7 +213,7 @@ def test_modelo_work_parameter_types_and_defaults_match_behavior_contracts() -> 
             _resolve(spec.handler.target.module, spec.handler.target.qualname),
         )
         signature = inspect.signature(handler)
-        hints = get_type_hints(handler)
+        hints = _static_type_hints(handler)
         for parameter in spec.parameters:
             behavior_parameter = signature.parameters[parameter.name]
             expected_type = _resolve(parameter.value.annotation.module, parameter.value.annotation.qualname)

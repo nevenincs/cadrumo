@@ -38,9 +38,9 @@ from ..domain.calculations.registry.bindings import RegistryModeloObservation
 from ..domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
 from ..domain.calculations.registry.relations import relation_source_requirements
 from ..domain.calculations.registry.temporal import select_revision
+from ..domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from ..domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ..domain.modelos.filing_record import ExternalEvidenceKind
-from .registry_observations import registry_grounded_observations
-from .registry_tree import bundled_registry_tree
 
 if TYPE_CHECKING:
     from ..domain.calculations.registry.schema import ModeloRevision

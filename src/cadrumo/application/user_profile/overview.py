@@ -44,8 +44,8 @@ from pydantic import BaseModel, Field
 
 from ...core.auth_provider import ClaveMovilRoute
 from ...core.classification.policies import SensitivityClass
-from ...core.i18n import tr
-from ...core.identity import ProfileId
+from ...core.i18n.render import tr
+from ...core.identity.profile import ProfileId
 from ...core.json_contract import Notice
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.redaction.rules import ALWAYS_REDACT_KEY_TERMS

@@ -8,19 +8,20 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.tax_domain import TaxDomain
-from cadrumo.domain.calculations.registry.schema import (
+
+from ..schema import (
     DataBindingDefinition,
     ModeloDefinition,
     ModeloRevision,
     RegistryCatalogues,
 )
-from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
-from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.schema_references import LegalReference, PeriodSelector, SourceReference
-from cadrumo.domain.calculations.registry.schema_revision_members import ApplicationLinkDefinition
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-from cadrumo.domain.calculations.registry.schema_verification import WorkbookParityReference
+from ..schema_base import EvidenceTier
+from ..schema_exports import ExportLayoutDefinition
+from ..schema_input_kind import InputKind
+from ..schema_references import LegalReference, PeriodSelector, SourceReference
+from ..schema_revision_members import ApplicationLinkDefinition
+from ..schema_surfaces import CasillaDefinition
+from ..schema_verification import WorkbookParityReference
 
 _LEGAL_ID = "ley-35-2006:art-1"
 _SOURCE_ID = "aeat-dr-130-2019-v12"

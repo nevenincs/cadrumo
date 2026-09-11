@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import ast
+from importlib.resources import files
 from pathlib import Path
 
 import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_TESTS_ROOT = Path(__file__).parent
+_REGISTRY_TESTS_ROOT = Path(files("dev.registry.tests"))
 _BINDING_PREFIX = "renta-2024-profile-"
 _BINDING_SUFFIX = "deduccion-maternidad"
 _SHARED_HELPER = _REGISTRY_TESTS_ROOT / "_modelo_100_registry_support.py"

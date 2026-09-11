@@ -23,7 +23,7 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from ......core.hashing import sha256_hex
-from ......core.identity import ContentDigest
+from ......core.identity.digest import ContentDigest
 from ......core.product_identity import PRODUCT_IDENTITY
 from ..export_archive_header import ARCHIVE_SCHEMA_VERSION, ExportArchiveHeader
 

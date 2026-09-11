@@ -38,7 +38,8 @@ import pytest
 from ..classification.policies import RedactionRule, SensitivityClass
 from ..hashing import sha256_hex
 from ..iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
-from ..identity import IdentityError, nif_iva_format_for_country, normalise_nif_iva, validate_identity
+from ..identity.documents import IdentityError, validate_identity
+from ..identity.nif_iva import nif_iva_format_for_country, normalise_nif_iva
 from ..redaction.rules import (
     _NIF_PATTERN,
     default_rules_for_class,

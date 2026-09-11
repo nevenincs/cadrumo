@@ -28,7 +28,7 @@ _CALCULATION_READ = ExecutionPolicySpec(
 )
 _MODELO = ValueContract(
     DeferredTarget("builtins", "str"),
-    click_type=DeferredTarget("cadrumo.entrypoints.cli._common", "MODELO_CODE_CHOICE"),
+    click_type=DeferredTarget("._common", "MODELO_CODE_CHOICE", __package__),
 )
 
 
@@ -74,12 +74,10 @@ MODELO_READINESS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_CALCULATION_READ,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_readiness_cli", "modelo_readiness")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._modelo_readiness_cli", "modelo_readiness", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._modelo_payloads", "ModeloReadinessResult"),
+            target=DeferredTarget("._modelo_payloads", "ModeloReadinessResult", __package__),
             identity="modelo.readiness",
         ),
     ),

@@ -19,7 +19,7 @@ from collections.abc import Mapping
 from pydantic import Field, model_validator
 
 from ....application.preflight import HealthSeverity
-from ....core.identity import ProfileId
+from ....core.identity.profile import ProfileId
 from ....core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ....core.text_bounds import NonEmptyStr
 

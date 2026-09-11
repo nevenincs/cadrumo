@@ -92,7 +92,7 @@ __all__ = [
     "verify_model_ready",
 ]
 
-from ._provisioning_contracts import (
+from .provisioning_contracts import (
     OLLAMA_PROBE_CACHE_TTL_S,
     OLLAMA_PROBE_TIMEOUT_S,
     ProvisioningFactValue,
@@ -101,7 +101,7 @@ from ._provisioning_contracts import (
     provisioning_no_recovery_verdict,
     require_provisioning_verdict,
 )
-from ._provisioning_runtime import (
+from .provisioning_runtime import (
     ContentionSnapshot,
     InstalledModel,
     PullOutcome,

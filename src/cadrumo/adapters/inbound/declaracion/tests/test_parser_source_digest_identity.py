@@ -23,8 +23,9 @@ from pathlib import Path
 import pytest
 
 from .....core.hashing import sha256_hex
+from .....tests.inventory import FIXTURES_DIR
 from ..parser import parse_declaracion, parse_declaracion_bytes
-from ._parser_boundary_support import FIXTURES_DIR, _modelo_snapshot, _write_declaration_pdf
+from ._parser_boundary_support import _modelo_snapshot, _write_declaration_pdf
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

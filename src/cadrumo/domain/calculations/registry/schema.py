@@ -38,12 +38,6 @@ from ....core.period import Period, RegistrySelectorPeriodCode
 from ....core.revision_review import RevisionReviewStatus
 from ....core.tax_domain import TaxDomain
 from ....core.toml import freeze_toml_value
-from ._schema_governance import (
-    validate_attribution_names_somebody,
-    validate_governance_stamp_coherence,
-    validate_review_scope,
-    validate_reviewed_at_within_horizon,
-)
 from ._toml_helpers import as_toml_table as _as_toml_table
 from .errors import RegistryValidationError
 from .ids import (
@@ -64,6 +58,12 @@ from .ids import (
 )
 from .m303_orden_projection_models import M303AnnualOrdenAuthority
 from .period_selector_match import selector_period_matches_request
+from .schema_governance import (
+    validate_attribution_names_somebody,
+    validate_governance_stamp_coherence,
+    validate_review_scope,
+    validate_reviewed_at_within_horizon,
+)
 from .schema_input_kind import InputKind
 from .schema_references import RegistryExternalLink, RegistrySnapshotRef
 from .schema_rounding import RegistryRoundingCode as RegistryRoundingCode
@@ -854,7 +854,7 @@ class ModeloRevision(RegistryModel):
     and refused everywhere else. Like ``predecessor`` it is excluded from
     serialisation when absent, so a revision without it dumps exactly as it did
     before the key existed. Its
-    rules and the reasoning behind them live in :mod:`.._schema_governance`,
+    rules and the reasoning behind them live in :mod:`..schema_governance`,
     which the validators below delegate to.
 
     ``authority_grade`` is the revision's *declared* authority reach, a separate
@@ -877,7 +877,7 @@ class ModeloRevision(RegistryModel):
     161 derived ones against a design sheet requiring 161; modelo 390's
     ``page-05`` is 6 and 105. Any consumer comparing a layout against an official
     record design MUST resolve through that function, which is the stage
-    :func:`~._validate_export_layout_coverage.validate_export_layout_record_coverage`
+    :func:`~dev.registry.compiler.validate_export_layout_coverage.validate_export_layout_record_coverage`
     measures. Reading this attribute for that purpose reports every materialised
     field as an unwritten position: it produced 22 confident false
     silent-data-loss findings across modelos 369, 390 and 131, twice, in trees
@@ -1159,7 +1159,7 @@ REVISION_GOVERNANCE_FIELDS: frozenset[str] = governance_stamp_fields(ModeloRevis
 
 Derived from the :data:`GOVERNANCE_STAMP` marker on the field declarations rather
 than hand-listed, and the sole input to the loader's placement refusal. See
-:mod:`.._schema_governance` for why the stamp must be readable in the manifest
+:mod:`..schema_governance` for why the stamp must be readable in the manifest
 alone and why marking the field is the whole of enrolling it.
 
 This set is the stamp VOCABULARY, narrower than
@@ -1189,7 +1189,7 @@ governance stamp it carries the legally load-bearing scalars ``legal_refs``,
 hazard and raise its stakes, ``casilla_source_refs``, which grounds rows in
 every fragment of the edition, and ``authority_grade``, which is a claim about how
 far the whole revision's authority reaches and so belongs in the one file a
-reviewer opens; :mod:`.._schema_governance` records how a deep
+reviewer opens; :mod:`..schema_governance` records how a deep
 fragment can otherwise supply a revision's legal grounding while
 ``revision.toml`` reads as though it did not.
 """

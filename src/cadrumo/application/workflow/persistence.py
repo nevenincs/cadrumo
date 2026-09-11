@@ -38,7 +38,8 @@ from pathlib import Path
 from typing import Protocol
 
 from ...core.classification.policies import SensitivityClass
-from ...core.config import Settings, StorageRouteKind, classify_storage_route, load_settings
+from ...core.config import Settings, classify_storage_route, load_settings
+from ...core.config_support import StorageRouteKind
 from ...core.logging import get_logger
 from ...core.secure_object_write import SecureObjectWrite
 from ...domain.buckets.event import BucketEvent

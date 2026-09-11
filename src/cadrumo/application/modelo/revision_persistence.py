@@ -40,7 +40,6 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING
 
 from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
@@ -50,6 +49,7 @@ from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.modelo import Modelo
 from ...core.prorrata_register import ProrrataRegisterRegime
 from ...core.result_disposition import ResultDisposition
+from ...core.secure_object_write import SecureObjectWrite
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import bucket_event_history_write
 from ...domain.buckets.event_repository import build_bucket_event as _build_domain_bucket_event
@@ -104,9 +104,6 @@ from ..prorrata_register.service import require_prorrata_register_coordinates_cu
 from ._m303_filing_evidence import m303_filing_evidence_failure
 from .action_errors import M303FilingEvidenceError
 from .filed_revision_observation import persist_filed_revision_observation, require_filing_result_disposition
-
-if TYPE_CHECKING:  # pragma: no cover - typing-only storage boundary import
-    from ...adapters.persistence.storage.sql.secure_objects import SecureObjectWrite
 
 _BUCKET_EVENT_PAYLOAD_VERSION = 2
 """Schema version for the bucket-event payload dict emitted by modelo actions."""

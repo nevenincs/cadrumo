@@ -18,7 +18,8 @@ from typing import Annotated, Final, NamedTuple
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
-from .identity import ContentDigest, SubjectTaxId
+from .identity.digest import ContentDigest
+from .identity.tax_id import SubjectTaxId
 from .models import STRICT_FROZEN_CONFIG
 
 

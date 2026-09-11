@@ -20,7 +20,7 @@ from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from .. import IvaLedgerAggregationIssueReason
+from ..iva_ledger import IvaLedgerAggregationIssueReason
 from .iva_authority_support import aggregate_iva_ledger_observations
 from .renta_income_aggregation_support import _period
 

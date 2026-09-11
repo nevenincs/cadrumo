@@ -1,6 +1,6 @@
 """Tests for the EU NIF-IVA per-country format authority.
 
-Exercises the central :data:`cadrumo.core.identity.NIF_IVA_FORMATS` table and its
+Exercises the central :data:`cadrumo.core.identity.nif_iva.NIF_IVA_FORMATS` table and its
 resolution helpers: every Member State accepts a well-formed IVA number and
 rejects a structurally malformed one, the Greek ISO/IVA prefix mismatch
 (``GR`` -> ``EL``) resolves correctly, and non-EU / Spanish codes carry no
@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import pytest
 
-from .. import (
+from ..nif_iva import (
     NIF_IVA_FORMATS,
     NifIvaPrefix,
     nif_iva_format_for_country,

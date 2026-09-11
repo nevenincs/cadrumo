@@ -27,7 +27,7 @@ from ....core.errors.hierarchy import CadrumoError as _CadrumoError
 from ....core.errors.hierarchy import CoreValidationError as _CoreValidationError
 from ....core.filing_year import FilingYear
 from ....core.hashing import content_hash_hex as _content_hash_hex
-from ....core.identity import ContentDigest
+from ....core.identity.digest import ContentDigest
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ....core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ....core.money.rounding import round_to_cents as _quantize

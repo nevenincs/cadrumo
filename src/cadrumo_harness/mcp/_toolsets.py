@@ -29,9 +29,9 @@ from pydantic import BaseModel, ConfigDict
 
 from cadrumo.application.operator_surface.models import MountedCommandDomain
 from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION
-from cadrumo.entrypoints.cli.command_api import is_exposable_command
 
-from ._capability_manifest import build_operator_surface_manifest
+from .capability_manifest import build_operator_surface_manifest
+from .command_surface import command_surface
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -131,13 +131,12 @@ def build_toolsets() -> tuple[ToolsetGroup, ...]:
     Returns:
         One :class:`ToolsetGroup` per toolset, in :class:`Toolset` order.
     """
-    from cadrumo.entrypoints.cli.command_api import command_schema_refs
-
     family_map = _family_domain_map()
     members: dict[Toolset, list[str]] = {toolset: [] for toolset in Toolset}
-    for ref in command_schema_refs():
+    surface = command_surface()
+    for ref in surface.command_schema_refs():
         key = ref.command
-        if not is_exposable_command(key):
+        if not surface.is_exposable_command(key):
             continue
         toolset = toolset_for_command(key, family_map=family_map)
         if toolset is not None:

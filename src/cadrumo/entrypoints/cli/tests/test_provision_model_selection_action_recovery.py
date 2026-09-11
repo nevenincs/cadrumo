@@ -12,7 +12,7 @@ import typer.main
 
 from ....application.provisioning import ProvisioningPreconditionCondition
 from ....core.config import override_settings
-from ....core.i18n.render import SUPPORTED_OUTPUT_LANGUAGES
+from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ..config.provision_cli import _emit_provision_pull, _emit_provision_verify
 

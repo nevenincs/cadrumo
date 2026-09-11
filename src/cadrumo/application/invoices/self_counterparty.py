@@ -49,7 +49,7 @@ See Also:
 
 from __future__ import annotations
 
-from ...core.identity import same_tax_identifier
+from ...core.identity.tax_id import same_tax_identifier
 from ...domain.deadlines.models import TaxpayerProfile
 
 __all__ = ["counterparty_is_the_filer"]
@@ -58,7 +58,7 @@ __all__ = ["counterparty_is_the_filer"]
 def counterparty_is_the_filer(*, counterparty_tax_id: str | None, profile: TaxpayerProfile) -> bool:
     """Return whether ``counterparty_tax_id`` names the taxpayer in ``profile``.
 
-    Compares on :func:`~core.identity.same_tax_identifier`, the one shared
+    Compares on :func:`~core.identity.tax_id.same_tax_identifier`, the one shared
     "these name the same bearer" predicate -- the same one the evidence reader's
     own-identity exclusion consumes, so a document that evades one cannot evade
     the other. That helper deliberately asserts no checksum, which is right

@@ -1,6 +1,6 @@
 """Real-subprocess proof of the installed ``CADRUMO_PYTEST_WORKERS`` hook.
 
-This module is an explicit outer-serial ``just test-harness`` member, rather
+This module is an explicit outer-serial ``just test-pytest-harness`` member, rather
 than routine unit work: each case boots a real pytest-xdist pool. It proves
 the installed hook rather than replacing it with a direct helper call.
 """

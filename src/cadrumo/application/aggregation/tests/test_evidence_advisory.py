@@ -32,7 +32,7 @@ from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from .._evidence_advisory import (
+from ..evidence_advisory import (
     MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND,
     MISSING_OUTPUT_IVA_EVIDENCE_SOURCE_KIND,
     missing_evidence_advisory_observations,

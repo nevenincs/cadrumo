@@ -13,7 +13,8 @@ from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 from pydantic import SecretStr
 
-from ......core.config import AEAT_CERTIFICATE_PROTECTED_ORIGIN, Settings
+from ......core.config import Settings
+from ......core.config_support import AEAT_CERTIFICATE_PROTECTED_ORIGIN
 from ...browser.factory import create_browser_session
 from ...browser.profile import Profile
 from ..certificate import (

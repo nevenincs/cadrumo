@@ -19,7 +19,7 @@ from ....domain.calculations.registry.ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
 )
 from ....domain.transactions.models import TransactionCatalogue
-from .._renta_income_ledger import (
+from ..renta_income_ledger import (
     RentaIncomeLedgerAggregationIssueReason,
     aggregate_renta_income_ledger,
     aggregate_renta_m100_income_ledger,

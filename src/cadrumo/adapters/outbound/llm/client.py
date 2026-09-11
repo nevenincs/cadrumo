@@ -50,12 +50,14 @@ if TYPE_CHECKING:
     # The headroom measurements the contention authority consumes. Type-only
     # for the same reason as the stores above: the runtime edge into the
     # application package stays deferred to the one call site that needs it.
-    from ....application.provisioning import HardwareProfile, RuntimeResident
+    from ....application.provisioning import HardwareProfile
+    from ....application.provisioning_runtime import RuntimeResident
     from .cache import LLMCache
     from .consent_ledger import EvidenceConsentLedger
     from .run_telemetry import LLMRunTelemetryRecorder
     from .usage import UsageRecorder
-from .models import LLMProvider, LLMRequest, LLMResponse, PromptRegistry
+from ....core.config_support import LLMProvider
+from .models import LLMRequest, LLMResponse, PromptRegistry
 from .pricing import estimate_cost_usd
 from .providers.base import ProviderAdapter, ProviderCompletion, ProviderRequest
 from .providers.gemini import GeminiAdapter
@@ -558,7 +560,7 @@ class LLMClient:
         """
         if provider_reads_off_host(provider):
             return
-        from ....application.provisioning import assess_model_load_contention
+        from ....application.provisioning_runtime import assess_model_load_contention
         from ....core.model_catalogue import model_candidate
 
         candidate = model_candidate(model)

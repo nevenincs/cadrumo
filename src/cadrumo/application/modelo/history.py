@@ -53,7 +53,8 @@ from ...adapters.persistence.profile.modelos_calculation import CalculationRevis
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...core.identity import BucketId, WorkUnitId
+from ...core.identity.bucket import BucketId
+from ...core.identity.hex_ids import WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.buckets.event import (
     BucketEvent,
@@ -74,14 +75,14 @@ from ...domain.modelos.protocols import (
 from ...domain.modelos.verification_report import VerificationReport
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ..calculations.verification_report_gate import require_verification_report_coordinates_current
-from .action_errors import WorkUnitNotFoundError
-from .work_addressing import (
+from ._work_selection import (
     ModeloWorkResolution,
     ModeloWorkSelectorRequest,
     ModeloWorkSelectorState,
     resolve_modelo_work_bucket,
     select_modelo_work_resolution,
 )
+from .action_errors import WorkUnitNotFoundError
 
 
 class WorkUnitHistory(BaseModel):

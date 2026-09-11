@@ -7,11 +7,11 @@ from datetime import date
 from decimal import Decimal
 from functools import lru_cache
 
-from test_support.registry_authoring import _committed_modelo
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
+from cadrumo.core.resources.bundled_data import bundled_path
 
-from .....core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
-from .....core.resources.bundled_data import bundled_path
 from ..ids import LegalRefId, SourceRefId
+from ._published_authority import artifact_components
 from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -75,7 +75,7 @@ _HAND_TYPED_DIRECT_ESTIMATION_WITH_INVENTORY_2025: dict[CasillaId, str] = {
 
 @lru_cache(maxsize=1)
 def _m100_2025_refs_by_target() -> dict[CasillaId, tuple[tuple[LegalRefId, ...], tuple[SourceRefId, ...]]]:
-    modelo, _catalogues = _committed_modelo("100")
+    modelo, _catalogues = artifact_components("100")
     revision = modelo.revisions["2025"]
     refs: dict[CasillaId, tuple[tuple[LegalRefId, ...], tuple[SourceRefId, ...]]] = {
         casilla.id: (

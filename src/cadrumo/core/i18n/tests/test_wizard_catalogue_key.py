@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .. import tr
+from ..render import tr
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

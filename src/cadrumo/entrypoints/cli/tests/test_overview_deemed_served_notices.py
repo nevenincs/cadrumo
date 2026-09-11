@@ -73,16 +73,13 @@ def test_deemed_served_notifications_emit_one_warning_notice_with_legal_provenan
 
 def test_deemed_served_legal_ref_resolves_against_the_registry_catalogue() -> None:
     """The provenance the notice hands the operator is a real, corpus-backed entry."""
-    from test_support.registry_authoring import verify_legal_catalogue
-
-    from ....core.resources.bundled_data import bundled_path
-
-    catalogue = bundled_authority().catalogues.legal
+    authority = bundled_authority()
+    catalogue = authority.catalogues.legal
     assert DEEMED_SERVED_LEGAL_REF in catalogue, (
         f"the notice cites {DEEMED_SERVED_LEGAL_REF!r}, absent from the registry legal catalogue"
     )
     reference = catalogue[DEEMED_SERVED_LEGAL_REF]
-    verify_legal_catalogue({DEEMED_SERVED_LEGAL_REF: reference}, source_root=bundled_path())
+    assert authority.legal_evidence_text(DEEMED_SERVED_LEGAL_REF).strip()
     assert reference.article == "43.2"
 
 

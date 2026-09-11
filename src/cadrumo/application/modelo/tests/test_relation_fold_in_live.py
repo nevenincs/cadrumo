@@ -42,7 +42,11 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....core.aggregation import AggregationCaptureKind, BindingSourceKind
+from ....core.aggregation import (
+    AggregationCaptureKind,
+    BindingSourceKind,
+    RetencionScheme,
+)
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
@@ -54,19 +58,20 @@ from ....domain.calculations.registry.bindings import (
 )
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.temporal import select_revision
+from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
+from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from ....tests.registry_snapshot import build_snapshot
-from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation import (
+from ...aggregation.errors import (
     AggregationValidationError,
+)
+from ...aggregation.retencion_observations_repository import RetencionObservationRepository
+from ...aggregation.retenciones import RetencionObservation
+from ...aggregation.source_mesh import (
     CalculationSourceContext,
     CalculationSourceResolution,
-    RetencionObservation,
-    RetencionObservationRepository,
-    RetencionScheme,
 )
 from ...aggregation.source_resolution_operations import merge_source_resolutions
 from ...calculations.observations_repository import CalculationObservationRepository

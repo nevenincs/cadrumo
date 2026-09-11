@@ -10,7 +10,7 @@ import typer
 from pydantic import SecretStr
 
 from ....core.external_constants import OutputLanguage
-from ....core.i18n import tr
+from ....core.i18n.render import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._common import active_profile_label, emit_envelope
@@ -39,7 +39,8 @@ class LoginSecrets(MachineSecretPayload):
 
 def _settings_has_explicit_output_language() -> bool:
     """Return whether the operator pinned a supported output language explicitly."""
-    from ....core.config import coerce_output_language_setting, load_settings
+    from ....core.config import load_settings
+    from ....core.config_support import coerce_output_language_setting
 
     try:
         settings = load_settings()
@@ -97,7 +98,7 @@ def _pin_render_language_to_target_bucket(ctx: typer.Context, *, bucket_id: str)
 
     from ....application.user_profile.language_resolver import resolve_profile_output_language_hint
     from ....core.config import override_settings
-    from ....core.i18n import clear_output_language_cache
+    from ....core.i18n.render import clear_output_language_cache
 
     language = resolve_profile_output_language_hint(bucket_id)
     if language is None:

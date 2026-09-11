@@ -17,6 +17,7 @@ from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepo
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -28,8 +29,14 @@ from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
+from .._work_selection import (
+    ModeloWorkSelectionMode,
+    ModeloWorkSelectorRequest,
+    ModeloWorkSelectorState,
+    resolve_modelo_work_bucket,
+    select_modelo_work_resolution,
+)
 from ..action_errors import CalculationRevisionStateError, WorkUnitRevisionDivergenceError
 from ..selectors import (
     ModeloCalculationRevisionSelector,
@@ -43,16 +50,11 @@ from ..selectors import (
 from ..work_addressing import (
     ModeloWorkAddress,
     ModeloWorkRevisionConflictError,
-    ModeloWorkSelectionMode,
     ModeloWorkSelectorContradictionError,
-    ModeloWorkSelectorRequest,
-    ModeloWorkSelectorState,
     ModeloWorkVisibleTargetAmbiguousError,
     resolve_exportable_modelo_calculation_revision_address,
     resolve_fileable_modelo_calculation_revision_address,
-    resolve_modelo_work_bucket,
     resolve_verifiable_modelo_calculation_revision_address,
-    select_modelo_work_resolution,
 )
 from ..work_lifecycle import create_work_unit
 

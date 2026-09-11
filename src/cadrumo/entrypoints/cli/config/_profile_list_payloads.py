@@ -9,7 +9,8 @@ authenticated profile aggregate, into a listing that authenticates nothing.
 
 from __future__ import annotations
 
-from ....core.identity import BucketId, ProfileLabel
+from ....core.identity.bucket import BucketId
+from ....core.identity.profile_label import ProfileLabel
 from ....core.json_contract import OutputSchema
 
 

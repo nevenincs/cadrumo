@@ -4,12 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from ._parser_boundary_support import (
-    CadrumoError,
-    DeclaracionParseError,
-    PdfModeloImportError,
-    TemplateNotDetectedError,
-)
+from .....core.errors.hierarchy import CadrumoError
+from .....domain.justificante.errors import PdfModeloImportError
+from ..errors import DeclaracionParseError, TemplateNotDetectedError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

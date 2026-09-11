@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 
 from pydantic import BaseModel, TypeAdapter
 
-from .frontend_contracts import OperationResponseControlRequestV1, OperationSubmissionReceiptV1
+from .frontend_requests import OperationResponseControlRequestV1, OperationSubmissionReceiptV1
 from .interactions import OperationActorReference
 from .models import OperationId, OperationRequest
 from .observation import OperationObservationService

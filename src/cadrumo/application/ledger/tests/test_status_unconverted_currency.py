@@ -21,7 +21,7 @@ import pytest
 
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
-from ...modelo.tests.test_modelo_303_deductible_evidence_gate import _iva_transaction
+from ...modelo.tests.test_modelo_303_deductible_evidence_gate import iva_transaction
 from ..actions_manual import summarize_manual_transactions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -30,7 +30,7 @@ _BUCKET = "fx0f0f0f-0000-4000-8000-00000000fx01"
 
 
 def _eur_income(label: str, *, base: Decimal) -> Transaction:
-    return _iva_transaction(label, direction=TransactionDirection.INCOMING, taxable_base=base)
+    return iva_transaction(label, direction=TransactionDirection.INCOMING, taxable_base=base)
 
 
 def _foreign(

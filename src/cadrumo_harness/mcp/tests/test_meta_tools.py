@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.entrypoints.cli.command_api import VerbInputSchema, command_registration_projection, command_schema_refs
+from cadrumo.application.operator_surface.command_ports import VerbInputSchema
 
 from .._annotations import McpAnnotations
 from .._command_policy import CommandPolicyProjection
@@ -32,6 +32,7 @@ from .._server import (
 )
 from .._tools import McpToolDescriptor, build_tool_descriptors
 from .._transport import _run_subprocess_tool
+from ..command_surface import command_surface
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -66,7 +67,9 @@ def _blocked_descriptor() -> McpToolDescriptor:
             # are policy, so a fixture copy would be a second declaration of a
             # product invariant, free to drift from the one that governs.
             profile_authentication="not-applicable",
-            profile_authentication_contract=(command_registration_projection().profile_authentication_contract),
+            profile_authentication_contract=(
+                command_surface().command_registration_projection().profile_authentication_contract
+            ),
         ),
     )
 
@@ -288,7 +291,7 @@ def test_capability_manifest_carries_the_live_families_lifecycle_and_schemas() -
         assert family["operator_question"].strip(), f"family {family['child']!r} carries no operator question"
     assert payload["contract"]["lifecycle"]["steps"], "manifest carries no lifecycle ordering"
 
-    live_keys = {ref.command for ref in command_schema_refs()}
+    live_keys = {ref.command for ref in command_surface().command_schema_refs()}
     assert {entry["command"] for entry in payload["command_schemas"]} == live_keys
 
 

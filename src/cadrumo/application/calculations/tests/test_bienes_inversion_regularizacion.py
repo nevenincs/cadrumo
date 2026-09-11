@@ -31,7 +31,7 @@ from ....domain.calculations.registry.bindings import CasillaObservation, Regist
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_base import ThresholdComparison
 from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
-from ...aggregation import CalculationSourceContext
+from ...aggregation.source_mesh import CalculationSourceContext
 from ..bienes_inversion_regularizacion import (
     CASILLA_M390_REGULARIZACION_BIENES_INVERSION,
     CASILLA_REGULARIZACION_BIENES_INVERSION,

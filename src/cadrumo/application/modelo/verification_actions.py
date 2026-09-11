@@ -36,7 +36,7 @@ See Also:
     :class:`~cadrumo.domain.filing.ModeloValidator`:
         Draft-construction structural validator reached through the workflow
         gate's draft builder; owns :class:`ModeloValidationFinding`.
-    :func:`~cadrumo.application.calculations.evaluate_cross_period_clean_state`:
+    :func:`~cadrumo.application.calculations.cross_period_clean_state.evaluate_cross_period_clean_state`:
         Shared cross-period gate used by verify, file, and export.
     :mod:`~cadrumo.application.modelo._calculation_diagnostics`:
         Calculate-path diagnostics that feed advisory observations before verify.
@@ -63,9 +63,10 @@ from ...adapters.persistence.profile.transactions import TransactionCatalogueRep
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.config import Settings
-from ...core.identity import CalculationRevisionId
+from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
+from ...core.secure_object_write import SecureObjectWrite
 from ...core.time.clock import now as _utc_now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
@@ -111,16 +112,18 @@ from ...domain.modelos.verification_report import (
 from ...domain.modelos.verification_repository import upsert_verification_report
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ..aggregation import (
+from ..aggregation.evidence_advisory import (
     MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND,
-    CalculationSourceDiagnostic,
     missing_evidence_advisory_observations,
 )
 from ..aggregation.ledger_filing_snapshot import (
     assert_evidence_covers_snapshot,
     compute_ledger_filing_snapshot,
 )
-from ..calculations.cross_period_clean_state import CrossPeriodDependencyEvidence, CrossPeriodExpectedMemberSet
+from ..aggregation.source_mesh import (
+    CalculationSourceDiagnostic,
+)
+from ..calculations.cross_period_models import CrossPeriodDependencyEvidence, CrossPeriodExpectedMemberSet
 from ..calculations.iva_compensation_casillas import M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA
 from ..calculations.m303_regimen_simplificado_annual_summary import (
     validate_m303_regimen_simplificado_annual_summary_target_revision,
@@ -201,7 +204,6 @@ from .workflow_gate import build_revision_workflow_engine as _build_revision_wor
 from .workflow_gate import run_revision_workflow_gate as _run_revision_workflow_gate
 
 if TYPE_CHECKING:
-    from ...adapters.persistence.storage.sql.secure_objects import SecureObjectWrite
     from ..calculations.observations_repository import IvaWalletDecisionRepository
 
 from ._verification_predicates import (

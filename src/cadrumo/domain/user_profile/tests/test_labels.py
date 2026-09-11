@@ -14,7 +14,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.config import override_settings
-from ....core.i18n import tr
+from ....core.i18n.render import tr
 from ..labels import (
     profile_field_label,
     profile_field_label_key,

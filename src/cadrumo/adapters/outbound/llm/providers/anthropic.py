@@ -17,9 +17,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, NoReturn, NotRequired, TypedDict, override
 
+from .....core.config_support import LLMProvider
 from .....core.operator_action_enums import ActionEvidenceProvenance
 from ..errors import LLMConfigError, LLMProviderError, LLMTransientTransportError
-from ..models import LLMProvider
 from ..preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 from .base import ProviderAdapter, ProviderCompletion, ProviderRequest, raise_rate_limit
 

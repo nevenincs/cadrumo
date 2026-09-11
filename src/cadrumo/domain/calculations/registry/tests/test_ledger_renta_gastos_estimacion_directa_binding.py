@@ -8,20 +8,20 @@ from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
-from test_support.registry_authoring import (
+
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.categories.registry import resolve_category_profiles
+from cadrumo.domain.categories.spending_category import SpendingCategory
+from cadrumo.domain.renta.ledger_expenses import (
     RentaDeductibilityContext,
     RentaDeductibleExpenseFact,
     RentaExpenseDirection,
-    _committed_modelo,
     build_renta_deductible_expense_observation,
     evaluate_renta_deductibility,
 )
 
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_snapshot import build_snapshot
-from ....categories.registry import resolve_category_profiles
-from ....categories.spending_category import SpendingCategory
 from ..binding_selector_utils import selector_as_dict
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
@@ -31,6 +31,7 @@ from ..ledger_renta_gastos_estimacion_directa_bindings import (
     validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definition,
 )
 from ..schema import DataBindingDefinition, ModeloRevision, RegistrySnapshot
+from ._published_authority import artifact_components
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -57,7 +58,7 @@ _UNKNOWN_RENTA_EXPENSE_CASILLA: CasillaId = validated_casilla_id(
 
 
 def _modelo_100_snapshot(filing_year: int):
-    modelo, catalogues = _committed_modelo("100")
+    modelo, catalogues = artifact_components("100")
     return build_snapshot(
         modelo,
         catalogues,

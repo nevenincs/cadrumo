@@ -29,7 +29,8 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ...core.identity import AeatCsv, SubjectTaxId
+from ...core.identity.aeat_csv import AeatCsv
+from ...core.identity.tax_id import SubjectTaxId
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period

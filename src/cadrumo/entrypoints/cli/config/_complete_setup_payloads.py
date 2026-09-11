@@ -11,7 +11,7 @@ idempotent no-op.
 
 from __future__ import annotations
 
-from ....core.identity import ProfileId
+from ....core.identity.profile import ProfileId
 from ....core.json_contract import OutputSchema
 
 

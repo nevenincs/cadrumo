@@ -7,7 +7,7 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
-from test_support.tui_frame import geometry_band
+from dev.tui.harness.frame import geometry_band
 from textual.containers import VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Button, DataTable, Input, Select, Static

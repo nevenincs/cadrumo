@@ -75,7 +75,12 @@ FORBIDDEN_OPERATION_SCHEMA_FORMATS = frozenset({"binary", "byte", "password"})
 HEX64_DIGEST_PATTERN = HEX_PATTERN_64
 
 
-def is_hex64_shaped_schema(value: object) -> bool:
+def is_hex64_shaped_schema(
+    value: object,
+    *,
+    definitions: dict[str, object] | None = None,
+    _seen_refs: frozenset[str] = frozenset(),
+) -> bool:
     """Report whether one field's JSON-schema fragment matches Hex64 shape.
 
     ``ContentDigest`` is a bare assignment to ``Hex64Str`` (``ContentDigest
@@ -84,17 +89,42 @@ def is_hex64_shaped_schema(value: object) -> bool:
     ``CalculationRevisionId``, ``SnapshotId``, ``TransactionId``). There is
     therefore no runtime type-identity test for ``ContentDigest`` specifically
     - only a SHAPE test for ``64 lowercase hex characters``. Recurses through
-    ``anyOf`` (an ``X | None`` field) and ``items`` (a ``tuple[X, ...]`` field)
-    to reach the underlying string schema.
+    local ``$defs`` references, ``anyOf`` (an ``X | None`` field), and
+    ``items`` (a ``tuple[X, ...]`` field) to reach the underlying string
+    schema.
     """
     if not isinstance(value, dict):
         return False
     mapping = cast(dict[str, object], value)
+    resolved = _resolve_local_schema_ref(mapping, definitions)
+    if resolved is not None:
+        ref, target = resolved
+        if ref in _seen_refs:
+            return False
+        return is_hex64_shaped_schema(target, definitions=definitions, _seen_refs=_seen_refs | {ref})
     if is_hex64_string_schema(mapping):
         return True
-    if is_hex64_any_of_schema(mapping):
+    if is_hex64_any_of_schema(mapping, definitions=definitions, _seen_refs=_seen_refs):
         return True
-    return is_hex64_items_schema(mapping)
+    return is_hex64_items_schema(mapping, definitions=definitions, _seen_refs=_seen_refs)
+
+
+def _resolve_local_schema_ref(
+    mapping: dict[str, object],
+    definitions: dict[str, object] | None,
+) -> tuple[str, dict[str, object]] | None:
+    """Resolve one local ``$defs`` reference without following external schemas."""
+    ref = mapping.get("$ref")
+    if definitions is None or not isinstance(ref, str) or not ref.startswith("#/$defs/"):
+        return None
+    encoded_name = ref.removeprefix("#/$defs/")
+    if "/" in encoded_name:
+        return None
+    definition_name = encoded_name.replace("~1", "/").replace("~0", "~")
+    target = definitions.get(definition_name)
+    if not isinstance(target, dict):
+        return None
+    return ref, cast(dict[str, object], target)
 
 
 def is_hex64_string_schema(mapping: dict[str, object]) -> bool:
@@ -107,27 +137,43 @@ def is_hex64_string_schema(mapping: dict[str, object]) -> bool:
     )
 
 
-def is_hex64_any_of_schema(mapping: dict[str, object]) -> bool:
+def is_hex64_any_of_schema(
+    mapping: dict[str, object],
+    *,
+    definitions: dict[str, object] | None = None,
+    _seen_refs: frozenset[str] = frozenset(),
+) -> bool:
     """Search non-null branches of an optional JSON-schema value for Hex64."""
     any_of = mapping.get("anyOf")
     if not isinstance(any_of, list):
         return False
-    return any(
-        is_hex64_shaped_schema(cast(dict[str, object], item))
-        for item in cast(list[object], any_of)
-        if isinstance(item, dict) and cast(dict[str, object], item).get("type") != "null"
+    non_null_branches: list[dict[str, object]] = []
+    for item in cast(list[object], any_of):
+        if not isinstance(item, dict):
+            return False
+        branch = cast(dict[str, object], item)
+        if branch.get("type") == "null":
+            continue
+        non_null_branches.append(branch)
+    return bool(non_null_branches) and all(
+        is_hex64_shaped_schema(branch, definitions=definitions, _seen_refs=_seen_refs) for branch in non_null_branches
     )
 
 
-def is_hex64_items_schema(mapping: dict[str, object]) -> bool:
+def is_hex64_items_schema(
+    mapping: dict[str, object],
+    *,
+    definitions: dict[str, object] | None = None,
+    _seen_refs: frozenset[str] = frozenset(),
+) -> bool:
     """Search a homogeneous tuple/array item schema for Hex64."""
     items = mapping.get("items")
     if isinstance(items, dict):
-        return is_hex64_shaped_schema(cast(dict[str, object], items))
+        return is_hex64_shaped_schema(cast(dict[str, object], items), definitions=definitions, _seen_refs=_seen_refs)
     return False
 
 
-def validate_credential_free_schema(schema: object) -> None:
+def validate_credential_free_schema(schema: object, *, definitions: dict[str, object] | None = None) -> None:
     """Reject request schemas capable of carrying credentials or transports.
 
     A field name matching ONLY the ``digest`` forbidden token (no other
@@ -138,22 +184,28 @@ def validate_credential_free_schema(schema: object) -> None:
     the exemption never widens any token but ``digest`` and never overrides a
     second, independently-matched forbidden token on the same field.
     """
+    root_document = definitions is None
+    if definitions is None:
+        definitions = {}
     if isinstance(schema, list):
-        validate_credential_free_schema_items(cast(list[object], schema))
+        validate_credential_free_schema_items(cast(list[object], schema), definitions=definitions)
         return
     if not isinstance(schema, dict):
         return
     mapping = cast(dict[str, object], schema)
+    local_definitions = mapping.get("$defs")
+    if root_document and isinstance(local_definitions, dict):
+        definitions = cast(dict[str, object], local_definitions)
     validate_credential_free_schema_format(mapping)
-    validate_credential_free_schema_properties(mapping)
+    validate_credential_free_schema_properties(mapping, definitions=definitions)
     for value in mapping.values():
-        validate_credential_free_schema(value)
+        validate_credential_free_schema(value, definitions=definitions)
 
 
-def validate_credential_free_schema_items(items: list[object]) -> None:
+def validate_credential_free_schema_items(items: list[object], *, definitions: dict[str, object] | None = None) -> None:
     """Recursively inspect every branch in a JSON-schema list container."""
     for item in items:
-        validate_credential_free_schema(item)
+        validate_credential_free_schema(item, definitions=definitions)
 
 
 def validate_credential_free_schema_format(mapping: dict[str, object]) -> None:
@@ -162,7 +214,9 @@ def validate_credential_free_schema_format(mapping: dict[str, object]) -> None:
         raise ValueError("credential-free journal request schema contains a secret-capable format")
 
 
-def validate_credential_free_schema_properties(mapping: dict[str, object]) -> None:
+def validate_credential_free_schema_properties(
+    mapping: dict[str, object], *, definitions: dict[str, object] | None = None
+) -> None:
     """Reject forbidden names while admitting only digest-shaped exceptions."""
     properties = mapping.get("properties")
     if not isinstance(properties, dict):
@@ -172,7 +226,7 @@ def validate_credential_free_schema_properties(mapping: dict[str, object]) -> No
         matched = parts & FORBIDDEN_CREDENTIAL_FREE_FIELD_PARTS
         if not matched:
             continue
-        if matched == {"digest"} and is_hex64_shaped_schema(field_schema):
+        if matched == {"digest"} and is_hex64_shaped_schema(field_schema, definitions=definitions):
             continue
         raise ValueError(f"credential-free journal request field {field_name!r} has a forbidden security meaning")
 

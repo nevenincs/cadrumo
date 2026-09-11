@@ -42,8 +42,9 @@ import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.money.rounding import round_to_cents
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.tests._modelo_131_modulos_engine_support import (
+
+from ..formula_runtime import calculate_registry_snapshot
+from ._modelo_131_modulos_engine_support import (
     _ALIMENTACION_647_1,
     _AUTOTAXI_721_2,
     _CAFETERIAS_672_1,
@@ -58,8 +59,7 @@ from cadrumo.domain.calculations.registry.tests._modelo_131_modulos_engine_suppo
     _expected_modulos_generales,
     _run_modulos_engine,
 )
-
-from ._registry_schema_support import _committed_snapshot
+from ._published_authority import artifact_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -427,7 +427,7 @@ class TestModulosIndicesGeneralesAdvisoryFlags:
     """The pequeña-dimensión-ignorado and temporada/inicio-conflicto advisory-support flags."""
 
     def test_pequena_dimension_ignorado_flag_fires_on_especial_epigrafe(self) -> None:
-        snapshot = _committed_snapshot("131", 2025, "1T", grade=RegistryAuthorityGrade.CALCULATION)
+        snapshot = artifact_snapshot("131", 2025, "1T", grade=RegistryAuthorityGrade.CALCULATION)
         assert snapshot.filing_period is not None
         result = calculate_registry_snapshot(
             snapshot,
@@ -442,7 +442,7 @@ class TestModulosIndicesGeneralesAdvisoryFlags:
         assert result.values["modulos-pequena-dimension-ignorado-flag"] == Decimal("1")
 
     def test_pequena_dimension_ignorado_flag_stays_zero_on_ordinary_epigrafe(self) -> None:
-        snapshot = _committed_snapshot("131", 2025, "1T", grade=RegistryAuthorityGrade.CALCULATION)
+        snapshot = artifact_snapshot("131", 2025, "1T", grade=RegistryAuthorityGrade.CALCULATION)
         assert snapshot.filing_period is not None
         result = calculate_registry_snapshot(
             snapshot,
@@ -456,7 +456,7 @@ class TestModulosIndicesGeneralesAdvisoryFlags:
         assert result.values["modulos-pequena-dimension-ignorado-flag"] == Decimal("0")
 
     def test_pequena_dimension_ignorado_flag_stays_zero_when_not_declared(self) -> None:
-        snapshot = _committed_snapshot("131", 2025, "1T", grade=RegistryAuthorityGrade.CALCULATION)
+        snapshot = artifact_snapshot("131", 2025, "1T", grade=RegistryAuthorityGrade.CALCULATION)
         assert snapshot.filing_period is not None
         result = calculate_registry_snapshot(
             snapshot,
@@ -467,7 +467,7 @@ class TestModulosIndicesGeneralesAdvisoryFlags:
         assert result.values["modulos-pequena-dimension-ignorado-flag"] == Decimal("0")
 
     def test_temporada_inicio_conflicto_flag_fires_when_both_declared(self) -> None:
-        snapshot = _committed_snapshot("131", 2025, "1T", grade=RegistryAuthorityGrade.CALCULATION)
+        snapshot = artifact_snapshot("131", 2025, "1T", grade=RegistryAuthorityGrade.CALCULATION)
         assert snapshot.filing_period is not None
         result = calculate_registry_snapshot(
             snapshot,
@@ -482,7 +482,7 @@ class TestModulosIndicesGeneralesAdvisoryFlags:
         assert result.values["modulos-temporada-inicio-actividad-conflicto-flag"] == Decimal("1")
 
     def test_temporada_inicio_conflicto_flag_stays_zero_when_only_one_declared(self) -> None:
-        snapshot = _committed_snapshot("131", 2025, "1T", grade=RegistryAuthorityGrade.CALCULATION)
+        snapshot = artifact_snapshot("131", 2025, "1T", grade=RegistryAuthorityGrade.CALCULATION)
         assert snapshot.filing_period is not None
         result = calculate_registry_snapshot(
             snapshot,

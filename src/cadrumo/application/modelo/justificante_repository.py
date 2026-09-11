@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import Protocol
 
-from ...domain.justificante import JustificanteRepositoryProtocol
+from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 
 
 class JustificanteRepositoryFactory(Protocol):

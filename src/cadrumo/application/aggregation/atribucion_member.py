@@ -1,0 +1,401 @@
+"""Modelo 184 attribution-member source resolver.
+
+See Also:
+    :class:`UserProfileRecord`
+        Active taxpayer profile the resolver reads attribution-entity socio
+        facts from.
+"""
+
+from __future__ import annotations
+
+import re
+from collections.abc import Mapping
+from dataclasses import dataclass
+from datetime import date
+from decimal import Decimal, InvalidOperation
+from typing import ClassVar
+
+from pydantic import TypeAdapter
+
+from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...core.hashing import content_hash_hex
+from ...core.identity.tax_id import tax_id_identity_token
+from ...domain.calculations.registry.detail_record_bindings import (
+    AtributionMemberObservation,
+    resolve_atribucion_binding_row_values,
+)
+from ...domain.modelos.row_models import (
+    M184Clave,
+    M184ClaveDeclarado,
+    M184NaturalezaInmueble,
+    M184SituacionInmueble,
+    M184Subclave,
+    Modelo184MemberRow,
+)
+from ...domain.user_profile.errors import ProfileNotFoundError
+from ...domain.user_profile.loader import load_user_profile_schema
+from ...domain.user_profile.schema import numeric_value_refusal
+from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
+from ..user_profile.profile_record_repository import ProfileRecordRepository
+from .source_mesh import (
+    CalculationSourceContext,
+    CalculationSourceDiagnostic,
+    CalculationSourceProvenance,
+    CalculationSourceResolution,
+)
+
+_OWNED_SOURCES: tuple[BindingSourceKind, ...] = (BindingSourceKind.ATRIBUCION_MEMBER,)
+_SOCIO_FACT_RE = re.compile(r"^attribution_entity_socios\.(?P<index>[0-9]+)\.(?P<field>[a-z][a-z0-9_]*)$")
+_REQUIRED_FIELDS = frozenset({"nif", "name", "share_pct", "base_imponible_assigned", "clave"})
+_SOCIOS_SECTION_KEY = "attribution_entity_socios"
+
+
+@dataclass(frozen=True, slots=True)
+class _SocioFacts:
+    index: int
+    values: Mapping[str, object]
+
+
+@dataclass(frozen=True, slots=True)
+class _AtribucionSocioProjection:
+    complete: tuple[_SocioFacts, ...]
+    diagnostics: tuple[CalculationSourceDiagnostic, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class _SharedMemberValues:
+    """Values represented identically by the calculation and filing projections."""
+
+    codigo_provincia: str | None
+    dias_miembro: int | None
+    domicilio_fiscal: str | None
+    referencia_catastral: str | None
+    porcentaje_titularidad_inmueble: Decimal | None
+    dias_arrendamiento: int | None
+    reduccion: Decimal | None
+    rendimiento_neto_previo_eo: Decimal | None
+    rendimiento_neto_minorado_agricola_eo: Decimal | None
+
+
+class AtribucionMemberSourceResolver:
+    """Resolve M184 member rows from the active attribution-entity profile."""
+
+    resolver_id: ClassVar[str] = "atribucion_member_profile"
+    owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = _OWNED_SOURCES
+
+    def __init__(self, *, profile_record: UserProfileRecord | None = None) -> None:
+        self._profile_record = profile_record
+
+    def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        if not _revision_uses_atribucion_member(context):
+            return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
+
+        record = self._profile_record
+        if record is None:
+            try:
+                record = ProfileRecordRepository.for_current_session(context.bucket_id).load(context.bucket_id)
+            except ProfileNotFoundError:
+                return CalculationSourceResolution(
+                    resolver_id=self.resolver_id,
+                    owned_sources=self.owned_sources,
+                    diagnostics=(
+                        _diagnostic("active attribution-entity profile is missing; M184 member rows cannot resolve"),
+                    ),
+                )
+
+        projection = _project_attribution_socio_facts(_attribution_entity_socio_facts(record.facts))
+        observations = tuple(
+            _observation_from_socio(socio, filing_year=context.filing_year) for socio in projection.complete
+        )
+        row_binding_values = resolve_atribucion_binding_row_values(context.revision, observations)
+        detail_rows = tuple(_detail_row_from_socio(socio) for socio in projection.complete)
+        fingerprint = _profile_record_fingerprint(record) if projection.complete else None
+        return CalculationSourceResolution(
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+            row_binding_values=row_binding_values,
+            detail_rows=detail_rows,
+            diagnostics=projection.diagnostics,
+            provenance=tuple(
+                CalculationSourceProvenance(
+                    resolver_id=self.resolver_id,
+                    resolved_binding_source=BindingSourceKind.ATRIBUCION_MEMBER,
+                    contributor_source_kind=BindingSourceKind.ATRIBUCION_MEMBER.value,
+                    contributor_binding_source=BindingSourceKind.ATRIBUCION_MEMBER,
+                    lineage_role=CalculationSourceLineageRole.PRIMARY,
+                    source_ref=f"profile:{context.bucket_id}:attribution_entity_socios:{socio.index}",
+                    parent_source_ref=None,
+                    fingerprint=fingerprint,
+                )
+                for socio in projection.complete
+            ),
+        )
+
+
+def _revision_uses_atribucion_member(context: CalculationSourceContext) -> bool:
+    return any(binding.source == BindingSourceKind.ATRIBUCION_MEMBER for binding in context.revision.bindings)
+
+
+def _attribution_entity_socio_facts(facts: tuple[UserProfileFact, ...]) -> tuple[_SocioFacts, ...]:
+    grouped: dict[int, dict[str, object]] = {}
+    for fact in facts:
+        match = _SOCIO_FACT_RE.match(fact.path)
+        if match is None or fact.value is None:
+            continue
+        index = int(match.group("index"))
+        grouped.setdefault(index, {})[match.group("field")] = fact.value
+    return tuple(_SocioFacts(index=index, values=grouped[index]) for index in sorted(grouped))
+
+
+def _project_attribution_socio_facts(socio_facts: tuple[_SocioFacts, ...]) -> _AtribucionSocioProjection:
+    # A row that is PRESENT but carries a value its declaration refuses is
+    # not usable, and used to be treated as though it were: an out-of-range
+    # share percentage reached the attribution calculation unchallenged, and
+    # a malformed one crashed inside it. Both now stop here, as a visible
+    # diagnostic naming the row -- never a silent number and never a
+    # domain-less traceback.
+    invalid = {socio.index: _invalid_value_refusals(socio) for socio in socio_facts}
+    diagnostics = (
+        *(_missing_field_diagnostic(socio) for socio in socio_facts if _missing_fields(socio)),
+        *(_invalid_value_diagnostic(socio, invalid[socio.index]) for socio in socio_facts if invalid[socio.index]),
+    )
+    complete = tuple(
+        sorted(
+            (socio for socio in socio_facts if not _missing_fields(socio) and not invalid[socio.index]),
+            key=_socio_sort_key,
+        ),
+    )
+    return _AtribucionSocioProjection(complete=complete, diagnostics=diagnostics)
+
+
+def _missing_fields(socio: _SocioFacts) -> frozenset[str]:
+    return frozenset(field for field in _REQUIRED_FIELDS if _blank(socio.values.get(field)))
+
+
+def _socio_sort_key(socio: _SocioFacts) -> tuple[str, str]:
+    return ("ES", tax_id_identity_token(str(socio.values.get("nif", ""))))
+
+
+def _blank(value: object) -> bool:
+    return value is None or (isinstance(value, str) and not value.strip())
+
+
+def _invalid_value_refusals(socio: _SocioFacts) -> tuple[str, ...]:
+    """Report why any of this row's values fail their own declaration.
+
+    Asks the schema's own
+    :func:`~cadrumo.domain.user_profile.schema.numeric_value_refusal` rather than
+    re-deciding what a legal share percentage is. The write door admits
+    values under that same rule, so a row this resolver refuses is one the
+    door would not have written -- which keeps the two from disagreeing
+    about the same stored fact.
+    """
+    section = load_user_profile_schema().section(_SOCIOS_SECTION_KEY)
+    declared = {field.key: field for field in section.fields}
+    return tuple(
+        refusal
+        for key, value in sorted(socio.values.items())
+        if (field := declared.get(key)) is not None and (refusal := numeric_value_refusal(field, value)) is not None
+    )
+
+
+def _invalid_value_diagnostic(socio: _SocioFacts, refusals: tuple[str, ...]) -> CalculationSourceDiagnostic:
+    return _diagnostic(
+        f"{_SOCIOS_SECTION_KEY}.{socio.index} is not usable for M184; {'; '.join(refusals)}. "
+        "Correct the value on the profile before calculating.",
+    )
+
+
+def _missing_field_diagnostic(socio: _SocioFacts) -> CalculationSourceDiagnostic:
+    missing = ", ".join(sorted(_missing_fields(socio)))
+    return _diagnostic(
+        f"attribution_entity_socios.{socio.index} is incomplete for M184; missing {missing}. "
+        "Declare an explicit assigned base for each socio instead of deriving it from share percentage.",
+    )
+
+
+def _diagnostic(message: str) -> CalculationSourceDiagnostic:
+    return CalculationSourceDiagnostic(
+        reason="source_issue",
+        source_kind=BindingSourceKind.ATRIBUCION_MEMBER.value,
+        resolver_id=AtribucionMemberSourceResolver.resolver_id,
+        message=message,
+    )
+
+
+def _observation_from_socio(socio: _SocioFacts, *, filing_year: int) -> AtributionMemberObservation:
+    shared = _shared_member_values(socio)
+    return AtributionMemberObservation(
+        source_id=f"profile:attribution_entity_socios:{socio.index}",
+        member_tax_id=tax_id_identity_token(str(socio.values["nif"])),
+        member_legal_name=str(socio.values["name"]).strip(),
+        transaction_date=date(filing_year, 1, 1),
+        share_percentage=_decimal(socio.values["share_pct"]),
+        base_imponible_assigned=_decimal(socio.values["base_imponible_assigned"]),
+        clave=str(socio.values["clave"]),
+        subclave=_optional_str(socio.values.get("subclave")),
+        codigo_provincia=shared.codigo_provincia,
+        miembro_a_31_diciembre=_x_flag(_optional_bool(socio.values.get("miembro_a_31_diciembre"))),
+        dias_miembro=shared.dias_miembro,
+        domicilio_fiscal=shared.domicilio_fiscal,
+        naturaleza_inmueble=_optional_str(socio.values.get("naturaleza_inmueble")),
+        situacion_inmueble=_optional_str(socio.values.get("situacion_inmueble")),
+        referencia_catastral=shared.referencia_catastral,
+        clave_declarado=_optional_str(socio.values.get("clave_declarado")),
+        porcentaje_titularidad_inmueble=shared.porcentaje_titularidad_inmueble,
+        dias_arrendamiento=shared.dias_arrendamiento,
+        reduccion=shared.reduccion,
+        rendimiento_neto_previo_eo=shared.rendimiento_neto_previo_eo,
+        rendimiento_neto_minorado_agricola_eo=shared.rendimiento_neto_minorado_agricola_eo,
+    )
+
+
+def _x_flag(value: bool | None) -> str | None:
+    """Render a boolean profile fact as the diseño's own "X"/blank text flag."""
+    return "X" if value else None
+
+
+def _detail_row_from_socio(socio: _SocioFacts) -> Modelo184MemberRow:
+    shared = _shared_member_values(socio)
+    return Modelo184MemberRow(
+        nif=tax_id_identity_token(str(socio.values["nif"])),
+        nombre=str(socio.values["name"]).strip(),
+        porcentaje=_decimal(socio.values["share_pct"]),
+        importe=_decimal(socio.values["base_imponible_assigned"]),
+        clave=_clave(socio.values["clave"]),
+        subclave=_optional_subclave(socio.values.get("subclave")),
+        codigo_provincia=shared.codigo_provincia,
+        miembro_a_31_diciembre=_optional_bool(socio.values.get("miembro_a_31_diciembre")),
+        dias_miembro=shared.dias_miembro,
+        domicilio_fiscal=shared.domicilio_fiscal,
+        naturaleza_inmueble=_optional_naturaleza_inmueble(socio.values.get("naturaleza_inmueble")),
+        situacion_inmueble=_optional_situacion_inmueble(socio.values.get("situacion_inmueble")),
+        referencia_catastral=shared.referencia_catastral,
+        clave_declarado=_optional_clave_declarado(socio.values.get("clave_declarado")),
+        porcentaje_titularidad_inmueble=shared.porcentaje_titularidad_inmueble,
+        dias_arrendamiento=shared.dias_arrendamiento,
+        reduccion=shared.reduccion,
+        rendimiento_neto_previo_eo=shared.rendimiento_neto_previo_eo,
+        rendimiento_neto_minorado_agricola_eo=shared.rendimiento_neto_minorado_agricola_eo,
+    )
+
+
+def _shared_member_values(socio: _SocioFacts) -> _SharedMemberValues:
+    """Normalize the shared profile facts once for both downstream authorities."""
+    return _SharedMemberValues(
+        codigo_provincia=_optional_str(socio.values.get("codigo_provincia")),
+        dias_miembro=_optional_int(socio.values.get("dias_miembro")),
+        domicilio_fiscal=_optional_str(socio.values.get("domicilio_fiscal")),
+        referencia_catastral=_optional_str(socio.values.get("referencia_catastral")),
+        porcentaje_titularidad_inmueble=_optional_decimal(socio.values.get("porcentaje_titularidad_inmueble")),
+        dias_arrendamiento=_optional_int(socio.values.get("dias_arrendamiento")),
+        reduccion=_optional_decimal(socio.values.get("reduccion")),
+        rendimiento_neto_previo_eo=_optional_decimal(socio.values.get("rendimiento_neto_previo_eo")),
+        rendimiento_neto_minorado_agricola_eo=_optional_decimal(
+            socio.values.get("rendimiento_neto_minorado_agricola_eo"),
+        ),
+    )
+
+
+def _optional_str(value: object) -> str | None:
+    if value is None:
+        return None
+    return str(value).strip() or None
+
+
+_CLAVE_ADAPTER: TypeAdapter[M184Clave] = TypeAdapter(M184Clave)
+_SUBCLAVE_ADAPTER: TypeAdapter[M184Subclave] = TypeAdapter(M184Subclave)
+_NATURALEZA_INMUEBLE_ADAPTER: TypeAdapter[M184NaturalezaInmueble] = TypeAdapter(M184NaturalezaInmueble)
+_SITUACION_INMUEBLE_ADAPTER: TypeAdapter[M184SituacionInmueble] = TypeAdapter(M184SituacionInmueble)
+_CLAVE_DECLARADO_ADAPTER: TypeAdapter[M184ClaveDeclarado] = TypeAdapter(M184ClaveDeclarado)
+
+
+def _clave(value: object) -> M184Clave:
+    return _CLAVE_ADAPTER.validate_python(str(value).strip())
+
+
+def _optional_subclave(value: object) -> M184Subclave | None:
+    if value is None:
+        return None
+    return _SUBCLAVE_ADAPTER.validate_python(str(value).strip())
+
+
+def _optional_naturaleza_inmueble(value: object) -> M184NaturalezaInmueble | None:
+    if value is None:
+        return None
+    return _NATURALEZA_INMUEBLE_ADAPTER.validate_python(str(value).strip())
+
+
+def _optional_situacion_inmueble(value: object) -> M184SituacionInmueble | None:
+    if value is None:
+        return None
+    return _SITUACION_INMUEBLE_ADAPTER.validate_python(str(value).strip())
+
+
+def _optional_clave_declarado(value: object) -> M184ClaveDeclarado | None:
+    if value is None:
+        return None
+    return _CLAVE_DECLARADO_ADAPTER.validate_python(str(value).strip())
+
+
+def _optional_bool(value: object) -> bool | None:
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in {"true", "1", "yes", "x"}
+    raise ValueError(f"attribution member boolean profile fact must be bool-compatible; got {type(value).__name__}")
+
+
+def _optional_int(value: object) -> int | None:
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        raise ValueError("attribution member integer profile fact must not be a bool")
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str):
+        try:
+            return int(value.strip())
+        except ValueError:
+            raise ValueError(f"attribution member integer profile fact must be int-compatible; got {value!r}") from None
+    raise ValueError(f"attribution member integer profile fact must be int-compatible; got {type(value).__name__}")
+
+
+def _optional_decimal(value: object) -> Decimal | None:
+    if value is None:
+        return None
+    return _decimal(value)
+
+
+def _decimal(value: object) -> Decimal:
+    """Convert a numeric profile fact, refusing anything that is not one.
+
+    The string branch catches its own parse failure. It used to hand the
+    text straight to :class:`~decimal.Decimal`, so a malformed value raised
+    a bare :exc:`~decimal.InvalidOperation` from inside a calculation --
+    naming neither the field nor the profile -- while this function's own
+    instructive refusal only ever fired for a wrong TYPE, which is the case
+    that does not occur in practice. The message below was therefore dead
+    code for the one input that reaches it.
+    """
+    if isinstance(value, Decimal):
+        return value
+    if isinstance(value, int) and not isinstance(value, bool):
+        return Decimal(value)
+    if isinstance(value, str):
+        try:
+            return Decimal(value.strip())
+        except InvalidOperation:
+            raise ValueError(
+                f"attribution member numeric profile fact must be Decimal-compatible; got {value!r}",
+            ) from None
+    raise ValueError(f"attribution member numeric profile fact must be Decimal-compatible; got {type(value).__name__}")
+
+
+def _profile_record_fingerprint(record: UserProfileRecord) -> str:
+    return f"sha256:{content_hash_hex(record.model_dump(mode='json'))}"
+
+
+__all__ = ["AtribucionMemberSourceResolver"]

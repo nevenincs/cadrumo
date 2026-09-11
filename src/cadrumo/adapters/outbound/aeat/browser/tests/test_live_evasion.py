@@ -145,7 +145,7 @@ async def test_live_bot_detection_probe() -> None:
 
     Gated by the ``aeat_live`` module-level marker (excluded from the default
     ``just test`` selection) and by ``CADRUMO_LIVE_TESTS_ENABLED`` when invoked
-    via ``just test-live``.
+    via ``just test-registry-live``.
     """
     requires_live_enabled()
 

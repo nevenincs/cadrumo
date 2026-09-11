@@ -33,7 +33,9 @@ from ._spec_policies import (
     state_free_group_spec,
 )
 
-_CREDENTIAL_KIND = ValueContract(DeferredTarget("cadrumo.core.google_credential_source", "GoogleCredentialSourceKind"))
+_CREDENTIAL_KIND = ValueContract(
+    DeferredTarget("....core.google_credential_source", "GoogleCredentialSourceKind", __package__)
+)
 
 
 # Every dynamically resolved handler module is named here as a WHOLE dotted path.
@@ -42,23 +44,23 @@ _CREDENTIAL_KIND = ValueContract(DeferredTarget("cadrumo.core.google_credential_
 # these modules read as orphaned while backing live verbs. A wrong key now raises
 # at spec-build time instead of failing lazily on first invocation.
 _HANDLER_MODULES: Final[dict[str, str]] = {
-    "_google": "cadrumo.entrypoints.cli.config.google",
-    "_google_credential_source_cli": "cadrumo.entrypoints.cli.config._google_credential_source_cli",
-    "_google_credential_source_payloads": "cadrumo.entrypoints.cli.config._google_credential_source_payloads",
-    "_google_folder": "cadrumo.entrypoints.cli.config._google_folder",
-    "_google_folder_payloads": "cadrumo.entrypoints.cli.config._google_folder_payloads",
-    "_google_payloads": "cadrumo.entrypoints.cli.config._google_payloads",
+    "_google": ".google",
+    "_google_credential_source_cli": "._google_credential_source_cli",
+    "_google_credential_source_payloads": "._google_credential_source_payloads",
+    "_google_folder": "._google_folder",
+    "_google_folder_payloads": "._google_folder_payloads",
+    "_google_payloads": "._google_payloads",
 }
 
 
 def _handler(module: str, name: str) -> LazyBinding:
-    return LazyBinding.available(DeferredTarget(_HANDLER_MODULES[module], name))
+    return LazyBinding.available(DeferredTarget(_HANDLER_MODULES[module], name, __package__))
 
 
 def _schema(module: str, name: str, identity: str) -> ResultSchemaSpec:
     return ResultSchemaSpec(
         SchemaState.TARGET,
-        target=DeferredTarget(_HANDLER_MODULES[module], name),
+        target=DeferredTarget(_HANDLER_MODULES[module], name, __package__),
         identity=identity,
     )
 

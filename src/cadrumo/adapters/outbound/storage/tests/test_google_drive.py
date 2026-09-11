@@ -16,7 +16,7 @@ from urllib.parse import parse_qs
 import pytest
 
 from .....core.errors.error_codes import resolve_error_message
-from .....core.i18n import tr
+from .....core.i18n.render import tr
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....tests.google_credentials import unused_google_credentials
 from ...google.tests.drive_media_server import drive_files_list_endpoint

@@ -11,7 +11,6 @@ compensation came from.
 from __future__ import annotations
 
 import ast
-import importlib
 from pathlib import Path
 from types import ModuleType
 
@@ -129,8 +128,8 @@ def _discover_token_naming_modules() -> tuple[ModuleType, ...]:
     see a tenth twin appear in a module nobody thought to add.
 
     The sweep parses rather than imports, so a module is discovered whether or
-    not importing it is cheap, and only the discovered few are then imported for
-    the identity verdict.
+    not importing it is cheap; the already-parsed source tree is then projected
+    into the static namespace used by the identity verdict.
     """
     # A bare-numeric token is excluded from LITERAL discovery: "71" collides with
     # any unrelated module that happens to contain that string, and because
@@ -147,6 +146,11 @@ def _discover_token_naming_modules() -> tuple[ModuleType, ...]:
     authority_names = {
         *_iva_compensation_casillas.__all__,
         *(name for name in dir(iva_compensation_policy) if name.startswith("M303_COMPENSATION_")),
+    }
+    authority_by_name = {
+        name: getattr(_iva_compensation_casillas, name)
+        for name in _iva_compensation_casillas.__all__
+        if isinstance(getattr(_iva_compensation_casillas, name, None), str)
     }
     discovered: dict[str, ModuleType] = {}
     for package in _SWEPT_PACKAGES:
@@ -169,7 +173,41 @@ def _discover_token_naming_modules() -> tuple[ModuleType, ...]:
             if not (literal or imported):
                 continue
             name = _module_name_for(source, package=package)
-            discovered[name] = importlib.import_module(name)
+            if name == _iva_compensation_casillas.__name__:
+                discovered[name] = _iva_compensation_casillas
+                continue
+            static_tree = tree
+            static_module = ModuleType(name)
+            for statement in static_tree.body:
+                if isinstance(statement, ast.ImportFrom):
+                    for alias in statement.names:
+                        if alias.name in authority_names and alias.name in authority_by_name:
+                            setattr(static_module, alias.asname or alias.name, authority_by_name[alias.name])
+                    continue
+                if not isinstance(statement, (ast.Assign, ast.AnnAssign)):
+                    continue
+                value = statement.value
+                token_values = [
+                    node.value
+                    for node in ast.walk(value)
+                    if isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value in authority
+                ]
+                if not token_values:
+                    continue
+                target = statement.targets[0] if isinstance(statement, ast.Assign) else statement.target
+                if not isinstance(target, ast.Name):
+                    continue
+                if isinstance(value, (ast.Tuple, ast.List, ast.Set, ast.Dict)):
+                    entries = tuple(
+                        item.value
+                        if isinstance(item, ast.Constant) and isinstance(item.value, str) and item.value in authority
+                        else object()
+                        for item in (value.elts if hasattr(value, "elts") else ())
+                    )
+                    setattr(static_module, target.id, entries)
+                else:
+                    setattr(static_module, target.id, token_values[0][:1] + token_values[0][1:])
+            discovered[name] = static_module
     return tuple(discovered.values())
 
 

@@ -37,7 +37,7 @@ its own copy of the limit stops agreeing with reality the moment the model
 moves, and would then be measuring against a number nothing enforces.
 
 See Also:
-    :mod:`cadrumo.application.aggregation._source_mesh`
+    :mod:`cadrumo.application.aggregation.source_mesh`
         Carries the one eliding validator, which retires the variable-length
         shape for its own model by making the cap a property of the type.
 """
@@ -45,14 +45,11 @@ See Also:
 from __future__ import annotations
 
 import ast
-import importlib
-import inspect
-import pkgutil
-import warnings
 from typing import TYPE_CHECKING, NamedTuple
 
 import pytest
-from pydantic import BaseModel
+
+from .inventory import production_ast_items
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -98,41 +95,81 @@ class _Builder(NamedTuple):
         return self.cap - self.static_floor
 
 
-def _prose_caps() -> Mapping[tuple[str, str], int]:
-    """Return ``(model name, field name) -> max_length`` for every capped prose field.
+def _literal_int(node: ast.AST, constants: Mapping[str, int]) -> int | None:
+    if isinstance(node, ast.Constant) and isinstance(node.value, int):
+        return node.value
+    if isinstance(node, ast.Name):
+        return constants.get(node.id)
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub):
+        value = _literal_int(node.operand, constants)
+        return -value if value is not None else None
+    if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Add, ast.Sub, ast.Mult)):
+        left, right = _literal_int(node.left, constants), _literal_int(node.right, constants)
+        if left is None or right is None:
+            return None
+        return (
+            left + right
+            if isinstance(node.op, ast.Add)
+            else left - right
+            if isinstance(node.op, ast.Sub)
+            else left * right
+        )
+    return None
 
-    Read from the live pydantic models so the gate and the constraint can never
-    disagree. Keyed on the bare class name because the AST scan sees a call
-    target, not an import path; a name collision across modules would merely
-    make the gate stricter, never blinder.
-    """
-    warnings.filterwarnings("ignore")
-    from .. import __path__ as cadrumo_path
 
+def _max_length(node: ast.AST, constants: Mapping[str, int]) -> int | None:
+    if isinstance(node, ast.Call):
+        target = node.func.attr if isinstance(node.func, ast.Attribute) else getattr(node.func, "id", None)
+        for keyword in node.keywords:
+            if keyword.arg == "max_length":
+                value = _literal_int(keyword.value, constants)
+                if value is not None:
+                    return value
+        if target == "elided_prose" and node.args:
+            return _literal_int(node.args[0], constants)
+    for child in ast.iter_child_nodes(node):
+        value = _max_length(child, constants)
+        if value is not None:
+            return value
+    return None
+
+
+def _prose_caps(source_tree_ast: Mapping[Path, ast.AST] | None = None) -> Mapping[tuple[str, str], int]:
+    """Return caps from Pydantic field declarations in the production source AST."""
+    trees = source_tree_ast or dict(production_ast_items())
     caps: dict[tuple[str, str], int] = {}
-    for module_info in pkgutil.walk_packages(cadrumo_path, "cadrumo."):
-        if ".tests" in module_info.name:
-            continue
-        try:
-            module = importlib.import_module(module_info.name)
-        except Exception:  # noqa: S112 - see below
-            # A module that will not import carries no discoverable cap, and an
-            # optional-dependency import error is not this gate's business.
-            # Swallowed rather than logged because the corpus-population and
-            # multi-model controls above already fail loudly if enough modules
-            # drop out for the scan to stop being tree-wide -- which is the only
-            # consequence that matters here.
-            continue
-        for obj in vars(module).values():
-            if not (inspect.isclass(obj) and issubclass(obj, BaseModel) and obj is not BaseModel):
+    for _path, tree in sorted(trees.items()):
+        constants: dict[str, int] = {}
+        for statement in tree.body:
+            if (
+                isinstance(statement, ast.Assign)
+                and len(statement.targets) == 1
+                and isinstance(statement.targets[0], ast.Name)
+            ):
+                value = _literal_int(statement.value, constants)
+                if value is not None:
+                    constants[statement.targets[0].id] = value
+            elif (
+                isinstance(statement, ast.AnnAssign)
+                and isinstance(statement.target, ast.Name)
+                and statement.value is not None
+            ):
+                value = _literal_int(statement.value, constants)
+                if value is not None:
+                    constants[statement.target.id] = value
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.ClassDef):
                 continue
-            for field_name, field in obj.model_fields.items():
-                if field_name not in _PROSE_FIELDS:
+            for field in node.body:
+                if not isinstance(field, ast.AnnAssign) or not isinstance(field.target, ast.Name):
                     continue
-                for meta in getattr(field, "metadata", []) or []:
-                    max_length = getattr(meta, "max_length", None)
-                    if max_length is not None:
-                        caps[(obj.__name__, field_name)] = max_length
+                if field.target.id not in _PROSE_FIELDS:
+                    continue
+                cap = _max_length(field.annotation, constants)
+                if cap is None and field.value is not None:
+                    cap = _max_length(field.value, constants)
+                if cap is not None:
+                    caps[(node.name, field.target.id)] = cap
     return caps
 
 
@@ -182,7 +219,7 @@ def _builders(source_tree_ast: Mapping[Path, ast.AST]) -> Iterator[_Builder]:
     than the call sites that pass one around. A call site handling an
     already-built string cannot tell you whether it was buildable.
     """
-    caps = _prose_caps()
+    caps = _prose_caps(source_tree_ast)
     for path, tree in sorted(source_tree_ast.items()):
         if "/tests/" in path.as_posix() or path.name.startswith("test_"):
             continue

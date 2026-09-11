@@ -18,8 +18,8 @@ from collections.abc import Sequence
 import pytest
 from click.testing import Result
 
-from ....tests.cli_runner import invoke_cached_cli
 from ....tests.live_gate import requires_live_enabled
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_entrypoint]
 

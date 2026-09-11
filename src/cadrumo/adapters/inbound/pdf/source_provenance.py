@@ -13,7 +13,7 @@ import logging
 from pathlib import Path
 
 from ....core.hashing import sha256_file as _core_sha256_file
-from ....domain.justificante import PdfModeloImportError
+from ....domain.justificante.errors import PdfModeloImportError
 from .redaction import INPUT_PDF_SOURCE_LABEL as _INPUT_PDF_SOURCE_LABEL
 
 _logger = logging.getLogger(__name__)

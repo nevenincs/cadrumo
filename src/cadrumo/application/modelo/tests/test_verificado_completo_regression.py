@@ -41,8 +41,9 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
-from ....domain.justificante import Justificante
+from ....domain.justificante.schema import Justificante
 from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, VerificationCompletenessStatus
 from ....domain.modelos.work_unit import WorkUnit
@@ -50,7 +51,6 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.env_scope import ready_clave_settings
 from ....tests.profile_capsule import seed_test_profile_record
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.cross_period_clean_state import cross_period_dependency_requirements
 from ...calculations.observations_repository import CalculationObservationRepository

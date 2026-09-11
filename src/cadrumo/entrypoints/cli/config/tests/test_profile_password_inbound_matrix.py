@@ -14,8 +14,8 @@ from .....adapters.persistence.storage.custody.errors import ProfileCustodyPassw
 from .....adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
 from .....application.workflow.profile_bucket_scan import list_profile_buckets
 from .....core.config import override_settings
-from .....core.i18n import tr
-from .....tests.cli_runner import invoke_cached_cli
+from .....core.i18n.render import tr
+from ...tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

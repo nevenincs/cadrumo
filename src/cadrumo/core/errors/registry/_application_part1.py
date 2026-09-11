@@ -298,7 +298,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.aggregation._source_mesh.SourceMeshError",
+        "cadrumo.application.aggregation.source_mesh.SourceMeshError",
         ErrorCode(
             code="REFUSED_SOURCE_MESH_INVARIANT",
             category=ErrorCategory.REFUSED,

@@ -55,7 +55,10 @@ from ....domain.calculations.registry.bindings import (
     resolve_available_bound_inputs_by_casilla_id,
 )
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation, revision_id_for_observation
+from ....domain.calculations.registry.tests.registry_observations import (
+    registry_grounded_modelo_observation,
+    revision_id_for_observation,
+)
 from ....tests.secure_sql import isolated_runtime_profile
 from ..binding_prefill import resolve_bindings_from_local_store
 from ..observations_repository import CalculationObservationRepository

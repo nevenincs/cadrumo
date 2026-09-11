@@ -64,12 +64,12 @@ from ....domain.calculations.registry.ledger_iva_bindings import (
     resolve_ledger_iva_aggregation_binding_values,
 )
 from ....domain.calculations.registry.relations import materialize_relation_binding_values
+from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
-from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation import CalculationSourceContext
+from ...aggregation.source_mesh import CalculationSourceContext
 from ..iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
 from ..observations_repository import CalculationObservationRepository, ResultDispositionProjection
 from ..relation_prefill import resolve_relations_from_local_store

@@ -20,6 +20,7 @@ from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionAmendmentIdentity,
@@ -36,7 +37,6 @@ from ....domain.modelos.filing_record import (
 )
 from ....domain.modelos.filing_repository import upsert_filing_record
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.m303_carry_ingress import M303_DECLARATION_TYPE_HEADER_KEY
 from .._prior_domiciliation import resolve_prior_domiciliation_election

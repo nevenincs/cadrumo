@@ -18,7 +18,7 @@ from ....adapters.persistence.storage.errors import SecureObjectRowIdentityError
 from ....adapters.persistence.storage.secure_object_namespaces import LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE
 from ....core.auth_provider import AuthProviderKind
 from ....core.config import Settings
-from ....core.identity import nif_check_letter
+from ....core.identity.documents import nif_check_letter
 from ....core.period import Period
 from ....tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 from ....tests.secure_sql import isolated_runtime_profile, isolated_sessionless_storage_root, read_db_at_rest_bytes

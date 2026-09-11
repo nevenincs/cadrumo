@@ -38,10 +38,11 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from ...application.operator_actions.catalogue import next_action
-from ...core.i18n import tr
+from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.period import Period as _Period
 from ...domain.calculations.registry.applicability_routes import TaxRoute
+from ..calculations._ports import FiledDeclaracionObservationProtocol
 from ..calculations.observations_repository import ObservationSourceKind
 from ._calendar_evidence_sources import (
     authenticated_identity_matches_expected as _authenticated_identity_matches_expected,
@@ -82,8 +83,7 @@ from .calendar_models import (
 )
 
 if TYPE_CHECKING:
-    from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionObservation
-    from ...domain.justificante import Justificante
+    from ...domain.justificante.schema import Justificante
     from ...domain.modelos.filing_record import ModeloRecord
     from ..calculations.observations_repository import ObservationEnvelopePayload
     from ..live.justificante import JustificanteCaptureSnapshot
@@ -223,7 +223,7 @@ def calendar_filing_evidence_from_sources(
     *,
     filing_records: tuple[ModeloRecord, ...] = (),
     observed_events: tuple[OverviewCalendarEvent, ...] = (),
-    filed_declaration_observations: tuple[FiledDeclaracionObservation, ...] = (),
+    filed_declaration_observations: tuple[FiledDeclaracionObservationProtocol, ...] = (),
     verified_filed_declaration_artefact_refs: tuple[str, ...] = (),
     verified_filed_declaration_artefact_csvs: Mapping[str, str] | None = None,
     calculation_observations: tuple[ObservationEnvelopePayload, ...] = (),
@@ -277,7 +277,7 @@ def _collect_calendar_filing_evidence(
     context: _CalendarFilingEvidenceContext,
     filing_records: tuple[ModeloRecord, ...],
     observed_events: tuple[OverviewCalendarEvent, ...],
-    filed_declaration_observations: tuple[FiledDeclaracionObservation, ...],
+    filed_declaration_observations: tuple[FiledDeclaracionObservationProtocol, ...],
     calculation_observations: tuple[ObservationEnvelopePayload, ...],
     justificante_capture_snapshots: tuple[JustificanteCaptureSnapshot, ...],
 ) -> tuple[
@@ -348,7 +348,7 @@ def _merge_projected_evidence(
 
 
 def _filed_declaration_evidence_from_sources(
-    observations: tuple[FiledDeclaracionObservation, ...],
+    observations: tuple[FiledDeclaracionObservationProtocol, ...],
     *,
     expected_tax_id: str | None,
     verified_artefact_refs: frozenset[str],

@@ -52,7 +52,7 @@ from typing import Annotated, Protocol, runtime_checkable
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator
 
 from ....core.hex import HEX_PATTERN_64
-from ....core.identity import BucketId
+from ....core.identity.bucket import BucketId
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.sync_surface import SyncSurface
 from ....core.time.utc import validate_utc_aware

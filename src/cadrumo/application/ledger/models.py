@@ -28,17 +28,13 @@ from ...core.external_constants import (
 )
 from ...core.filing_year import FilingYear
 from ...core.hex import Hex64Str
-from ...core.identity import (
-    BucketId,
-    CalculationRevisionId,
-    ContentDigest,
-    TransactionId,
-    TransactionIdReference,
-    WorkUnitId,
-)
+from ...core.identity.bucket import BucketId
+from ...core.identity.digest import ContentDigest
+from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
+from ...core.identity.transaction_ids import TransactionId, TransactionIdReference
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.parsing import (
+from ...core.parsing.codes import (
     IsoCurrencyCode,
     normalise_iso_3166_alpha2_jurisdiction,
     normalise_iso_4217_currency,

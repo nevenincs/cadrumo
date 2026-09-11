@@ -67,24 +67,29 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....core.aggregation import AggregationCaptureKind, BindingSourceKind, RetencionClave
+from ....core.aggregation import (
+    AggregationCaptureKind,
+    BindingSourceKind,
+    RetencionClave,
+    RetencionScheme,
+)
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.tests.registry_observations import (
+    registry_grounded_observations,
+    revision_id_for_observation,
+)
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
 from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record, seed_test_profile_record
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation import (
-    PercepcionObservationRepository,
-    RetencionObservation,
-    RetencionObservationRepository,
-    RetencionScheme,
-)
+from ...aggregation.percepciones_observations_repository import PercepcionObservationRepository
+from ...aggregation.retencion_observations_repository import RetencionObservationRepository
+from ...aggregation.retenciones import RetencionObservation
 from ...calculations.observations_repository import CalculationObservationRepository
 from ..calculation_actions import (
     BucketAggregationCalculationResult,

@@ -22,7 +22,8 @@ from typing import Final, NamedTuple, cast
 from ...adapters.persistence.profile.justificante import JustificanteRepository
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
-from ...core.identity import CalculationRevisionId, same_tax_identifier
+from ...core.identity.hex_ids import CalculationRevisionId
+from ...core.identity.tax_id import same_tax_identifier
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.calculations.registry.applicability_modelo202 import Modelo202Modality
@@ -1411,16 +1412,6 @@ def _combined_source_kind(source_kinds: Iterable[ObservationSourceKind]) -> Obse
 
 
 __all__ = [
-    "CrossPeriodCleanStateBlocker",
-    "CrossPeriodCleanStateVerdict",
-    "CrossPeriodDependencyEvidence",
-    "CrossPeriodDependencyInventory",
-    "CrossPeriodDependencyInventoryItem",
-    "CrossPeriodDependencyOrigin",
-    "CrossPeriodDependencyRequirement",
-    "CrossPeriodExpectedMemberSet",
-    "NoPriorObligationProvenance",
-    "NoPriorObligationProvenanceKind",
     "cross_period_dependency_inventory",
     "cross_period_dependency_requirements",
     "evaluate_cross_period_clean_state",

@@ -22,9 +22,10 @@ from pydantic import BaseModel, Field, field_validator
 from ...core.casilla_id import CasillaId
 from ...core.country_code import CountryCodeAlpha2
 from ...core.hashing import sha256_hex
-from ...core.identity import SnapshotId, TransactionId
+from ...core.identity.hex_ids import SnapshotId
+from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.parsing import IsoCurrencyCode
+from ...core.parsing.codes import IsoCurrencyCode
 from ...core.time.utc import UtcInstant
 from ...core.unit_proportion import UnitProportion
 from ..calculations.registry.ids import LegalRefId, SourceRefId

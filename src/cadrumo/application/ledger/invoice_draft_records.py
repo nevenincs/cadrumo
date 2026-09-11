@@ -5,7 +5,7 @@ repository handle of its own. Their previous home, ``evidence_draft``, also
 wires :class:`~cadrumo.adapters.persistence.profile.invoices.InvoiceCatalogueRepository`
 and :class:`~cadrumo.adapters.persistence.storage.AttachmentStore`, so importing
 a draft record pulled the whole persistence subtree into every consumer that
-only wanted the shape -- including ``cadrumo.llm``, whose distance from
+only wanted the shape -- including the outbound LLM adapter, whose distance from
 persistence is what the operator's in-memory inference exemption rests on.
 
 This module therefore imports neither persistence nor the inference package,
@@ -24,7 +24,8 @@ from ...adapters.inbound.einvoice.parsers import FacturaeInvoiceClass
 from ...core.draft_discrepancy import DraftDiscrepancyKind
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin
-from ...core.identity import ContentDigest, TaxIdIdentityToken
+from ...core.identity.digest import ContentDigest
+from ...core.identity.tax_id import TaxIdIdentityToken
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.supply_nature import SupplyNature

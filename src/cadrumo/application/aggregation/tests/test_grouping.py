@@ -13,9 +13,9 @@ from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.transactions.models import TransactionCatalogue
 from .._grouping import cumulative_year_to_date_window, fold_casilla_observations, group_and_collect_names
-from .._renta_income_ledger import RentaIncomeObservation
-from .._retenciones import RetencionObservation
 from ..errors import AggregationPeriodError
+from ..renta_income_ledger import RentaIncomeObservation
+from ..retenciones import RetencionObservation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -378,8 +378,8 @@ def test_cumulative_year_to_date_window_is_the_one_the_m130_halves_share() -> No
     They agreed, but nothing made them agree -- a one-sided edit would have
     desynchronised the base without any test noticing.
     """
-    from .._renta_gasto_ledger import aggregate_renta_gasto_ledger
-    from .._renta_income_ledger import aggregate_renta_income_ledger
+    from ..renta_gasto_ledger import aggregate_renta_gasto_ledger
+    from ..renta_income_ledger import aggregate_renta_income_ledger
 
     period = Period.from_year_and_code(2026, "3T")
     window = cumulative_year_to_date_window(period)

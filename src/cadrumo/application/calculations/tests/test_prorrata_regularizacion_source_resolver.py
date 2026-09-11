@@ -37,10 +37,13 @@ from ....core.resources.bundled_data import bundled_path
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.registry_observations import (
+    registry_grounded_modelo_observation,
+    revision_id_for_observation,
+)
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
-from ...aggregation import CalculationSourceContext
+from ...aggregation.source_mesh import CalculationSourceContext
 from ..iva_compensation_casillas import M303_RESULTADO_CASILLA
 from ..observations_repository import CalculationObservationRepository, ResultDispositionProjection
 from ..prorrata_regularizacion import ProrrataRegularizacionSourceResolver

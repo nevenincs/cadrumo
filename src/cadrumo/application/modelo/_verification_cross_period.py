@@ -1,6 +1,6 @@
 """Cross-period clean-state findings for modelo verification gates.
 
-This module adapts :func:`~application.calculations.evaluate_cross_period_clean_state`
+This module adapts :func:`~application.calculations.cross_period_clean_state.evaluate_cross_period_clean_state`
 into :class:`~ModeloVerificationFinding` rows. It can inspect
 the target :class:`~CalculationRevision` for explicit zero
 previous-filing binding overrides before deciding whether a prior-year carry
@@ -45,13 +45,13 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
 )
 from ...domain.modelos.work_unit import WorkUnit
-from ..calculations.cross_period_clean_state import (
+from ..calculations.cross_period_clean_state import evaluate_cross_period_clean_state
+from ..calculations.cross_period_models import (
     CrossPeriodCleanStateBlocker,
     CrossPeriodCleanStateVerdict,
     CrossPeriodDependencyEvidence,
     CrossPeriodDependencyRequirement,
     CrossPeriodExpectedMemberSet,
-    evaluate_cross_period_clean_state,
 )
 from ..calculations.m111_no_retenciones import M111_NO_RETENCIONES_PROFILE_PATH, m111_no_retenciones_periods_for_bucket
 from ..calculations.observations_repository import CalculationObservationRepository

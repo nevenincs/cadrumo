@@ -45,7 +45,10 @@ from ...core.errors.error_codes import resolve_error_message
 from ...core.export_layout_format import ExportLayoutFormat
 from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.hex import Hex64Str
-from ...core.identity import BucketId, ContentDigest, IdentityError, validate_spanish_tax_id
+from ...core.identity.bucket import BucketId
+from ...core.identity.digest import ContentDigest
+from ...core.identity.documents import IdentityError
+from ...core.identity.tax_id import validate_spanish_tax_id
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now

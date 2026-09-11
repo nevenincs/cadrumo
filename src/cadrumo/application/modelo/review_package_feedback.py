@@ -59,7 +59,8 @@ from pydantic import BaseModel, Field
 
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
-from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
+from ...core.identity.bucket import BucketId
+from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.clock import now as _utc_now
 from ...core.time.utc import UtcInstant

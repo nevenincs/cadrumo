@@ -5,8 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.operator_action_enums import OperatorActionAxis
-from ..cross_period_clean_state import CrossPeriodCleanStateBlocker
-from ..cross_period_models import OPERATOR_ACTION_BY_CROSS_PERIOD_CLEAN_STATE_BLOCKER
+from ..cross_period_models import OPERATOR_ACTION_BY_CROSS_PERIOD_CLEAN_STATE_BLOCKER, CrossPeriodCleanStateBlocker
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

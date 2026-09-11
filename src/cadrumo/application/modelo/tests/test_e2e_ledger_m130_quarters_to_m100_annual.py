@@ -65,6 +65,10 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.tests.registry_observations import (
+    registry_grounded_observations,
+    revision_id_for_observation,
+)
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
@@ -80,8 +84,7 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.bucket_aggregation_calculate import calculate_modelo_revision_from_bucket_aggregation
 from ....tests.env_scope import ready_clave_settings
 from ....tests.profile_capsule import seed_test_profile_record
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations, revision_id_for_observation
-from ...aggregation import CallerOverrideDisposition, precedence_ladder_sources
+from ...aggregation.source_mesh import CallerOverrideDisposition, precedence_ladder_sources
 from ...calculations.observations_repository import CalculationObservationRepository
 from ..action_errors import ModeloAggregationBindingError
 from ..export import ModeloExportCommand, ModeloExportError, export_modelo_revision

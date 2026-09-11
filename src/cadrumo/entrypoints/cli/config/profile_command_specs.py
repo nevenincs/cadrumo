@@ -47,8 +47,8 @@ from ._spec_policies import (
     STATE_FREE,
 )
 
-_LANG = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
-_CAPABILITY = ValueContract(DeferredTarget("cadrumo.core.capabilities", "ServiceCapability"))
+_LANG = ValueContract(DeferredTarget("....core.external_constants", "OutputLanguage", __package__))
+_CAPABILITY = ValueContract(DeferredTarget("....core.capabilities", "ServiceCapability", __package__))
 _TOGGLE = ValueContract(
     DeferredTarget("builtins", "str"),
     choices=("on", "off"),
@@ -61,28 +61,28 @@ _TOGGLE = ValueContract(
 # these modules read as orphaned while backing live verbs. A wrong key now raises
 # at spec-build time instead of failing lazily on first invocation.
 _HANDLER_MODULES: Final[dict[str, str]] = {
-    "_archive_cli": "cadrumo.entrypoints.cli.config._archive_cli",
-    "_archive_reconcile": "cadrumo.entrypoints.cli.config._archive_reconcile",
-    "_bucket_history": "cadrumo.entrypoints.cli.config._bucket_history",
-    "_capabilities_cli": "cadrumo.entrypoints.cli.config._capabilities_cli",
-    "_censo_transport": "cadrumo.entrypoints.cli.config._censo_transport",
-    "_complete_setup_cli": "cadrumo.entrypoints.cli.config._complete_setup_cli",
-    "_descendiente": "cadrumo.entrypoints.cli.config.descendiente",
-    "_google": "cadrumo.entrypoints.cli.config.google",
-    "_manager_dispatch": "cadrumo.entrypoints.cli.config._manager_dispatch",
-    "_profile_delete": "cadrumo.entrypoints.cli.config._profile_delete",
-    "_profile_inspect": "cadrumo.entrypoints.cli.config._profile_inspect",
-    "_profile_repeatable_row": "cadrumo.entrypoints.cli.config._profile_repeatable_row",
-    "_restore_cli": "cadrumo.entrypoints.cli.config._restore_cli",
+    "_archive_cli": "._archive_cli",
+    "_archive_reconcile": "._archive_reconcile",
+    "_bucket_history": "._bucket_history",
+    "_capabilities_cli": "._capabilities_cli",
+    "_censo_transport": "._censo_transport",
+    "_complete_setup_cli": "._complete_setup_cli",
+    "_descendiente": ".descendiente",
+    "_google": ".google",
+    "_manager_dispatch": "._manager_dispatch",
+    "_profile_delete": "._profile_delete",
+    "_profile_inspect": "._profile_inspect",
+    "_profile_repeatable_row": "._profile_repeatable_row",
+    "_restore_cli": "._restore_cli",
 }
 
 
 def _handler(module: str, name: str) -> LazyBinding:
-    return LazyBinding.available(DeferredTarget(_HANDLER_MODULES[module], name))
+    return LazyBinding.available(DeferredTarget(_HANDLER_MODULES[module], name, __package__))
 
 
 def _schema(module: str, name: str, identity: str) -> ResultSchemaSpec:
-    return ResultSchemaSpec(SchemaState.TARGET, DeferredTarget(module, name), identity=identity)
+    return ResultSchemaSpec(SchemaState.TARGET, DeferredTarget(module, name, __package__), identity=identity)
 
 
 def _option(
@@ -182,14 +182,14 @@ def _leaf(
     )
 
 
-_PAYLOADS = "cadrumo.entrypoints.cli.config_payloads"
-_PAYLOADS_ARCHIVE_RECONCILE = "cadrumo.entrypoints.cli.config._archive_reconcile_payloads"
-_PAYLOADS_ARCHIVE_PUSH = "cadrumo.entrypoints.cli.config._archive_push_payloads"
-_CONFIG = "cadrumo.entrypoints.cli.config"
+_PAYLOADS = "..config_payloads"
+_PAYLOADS_ARCHIVE_RECONCILE = "._archive_reconcile_payloads"
+_PAYLOADS_ARCHIVE_PUSH = "._archive_push_payloads"
+_CONFIG = "..config"
 #: Both wizard result schemas are defined in this module. The package
 #: namespace above it is inert and re-exports nothing, so naming the package
 #: leaves the spec pointing at an attribute that does not exist.
-_WIZARD = "cadrumo.application.wizard.results"
+_WIZARD = "....application.wizard.results"
 
 _WIZARD_CONFIRM_FIELDS = frozenset(
     """new-entity-first-two-profit-periods ley-49-2002-option-declared
@@ -236,11 +236,19 @@ bienes-extranjero-above-threshold monedas-virtuales-extranjero-above-threshold l
 #: validator upper-cases the token before constructing the enum, so it accepts
 #: lowercase input a Choice would refuse.
 _WIZARD_ENUM_FIELDS: dict[str, ValueContract] = {
-    "entity-type": ValueContract(DeferredTarget("cadrumo.domain.contribuyente.entity_type", "EntityType")),
-    "legal-entity-form": ValueContract(DeferredTarget("cadrumo.domain.contribuyente.entity_type", "LegalEntityForm")),
-    "irpf-estimation-regime": ValueContract(DeferredTarget("cadrumo.domain.deadlines.models", "IrpfEstimationRegime")),
-    "irpf-special-regime": ValueContract(DeferredTarget("cadrumo.domain.deadlines.models", "IrpfSpecialRegime")),
-    "fiscal-residency": ValueContract(DeferredTarget("cadrumo.domain.contribuyente.renta_codes", "FiscalResidency")),
+    "entity-type": ValueContract(DeferredTarget("....domain.contribuyente.entity_type", "EntityType", __package__)),
+    "legal-entity-form": ValueContract(
+        DeferredTarget("....domain.contribuyente.entity_type", "LegalEntityForm", __package__)
+    ),
+    "irpf-estimation-regime": ValueContract(
+        DeferredTarget("....domain.deadlines.models", "IrpfEstimationRegime", __package__)
+    ),
+    "irpf-special-regime": ValueContract(
+        DeferredTarget("....domain.deadlines.models", "IrpfSpecialRegime", __package__)
+    ),
+    "fiscal-residency": ValueContract(
+        DeferredTarget("....domain.contribuyente.renta_codes", "FiscalResidency", __package__)
+    ),
 }
 
 
@@ -331,7 +339,7 @@ PROFILE_COMMAND_SPECS = (
         ENCRYPTED_READ,
         _handler("_descendiente", "descendiente_door"),
         _schema(
-            "cadrumo.entrypoints.cli._config_descendiente_payloads",
+            ".._config_descendiente_payloads",
             "ConfigProfileDescendienteListResult",
             "config.profile.descendiente",
         ),
@@ -554,8 +562,9 @@ PROFILE_COMMAND_SPECS = (
                         MachineSecretFieldSpec("passphrase_confirmation"),
                     ),
                     DeferredTarget(
-                        "cadrumo.entrypoints.cli.config._scripted_registration",
+                        "._scripted_registration",
                         "ProfileCreationSecrets",
+                        __package__,
                     ),
                 ),
             )
@@ -600,7 +609,7 @@ PROFILE_COMMAND_SPECS = (
         "cli.config.profile.descendiente.add_help",
         "_descendiente",
         "descendiente_add",
-        "cadrumo.entrypoints.cli._config_descendiente_payloads",
+        ".._config_descendiente_payloads",
         "ConfigProfileDescendienteAddResult",
         ENCRYPTED_WRITE,
         (
@@ -622,7 +631,7 @@ PROFILE_COMMAND_SPECS = (
         "cli.config.profile.descendiente.list_help",
         "_descendiente",
         "descendiente_list",
-        "cadrumo.entrypoints.cli._config_descendiente_payloads",
+        ".._config_descendiente_payloads",
         "ConfigProfileDescendienteListResult",
         ENCRYPTED_READ,
         (_LANGUAGE,),
@@ -634,7 +643,7 @@ PROFILE_COMMAND_SPECS = (
         "cli.config.profile.descendiente.remove_help",
         "_descendiente",
         "descendiente_remove",
-        "cadrumo.entrypoints.cli._config_descendiente_payloads",
+        ".._config_descendiente_payloads",
         "ConfigProfileDescendienteRemoveResult",
         ENCRYPTED_DESTRUCTIVE,
         (_argument("index", WHOLE_NUMBER_VALUE, "cli.config.profile.descendiente.remove_index_help"), _LANGUAGE),
@@ -658,7 +667,7 @@ PROFILE_COMMAND_SPECS = (
         "cli.config.profile.history_help",
         "_bucket_history",
         "profile_history",
-        "cadrumo.entrypoints.cli._config_bucket_history_payloads",
+        ".._config_bucket_history_payloads",
         "BucketHistoryResult",
         ENCRYPTED_READ,
         (
@@ -730,13 +739,13 @@ PROFILE_COMMAND_SPECS = (
                 MachineSecretVariantSpec(
                     "passphrase",
                     (MachineSecretFieldSpec("passphrase"),),
-                    DeferredTarget("cadrumo.entrypoints.cli.config._restore_cli", "RestorePassphraseSecrets"),
+                    DeferredTarget("._restore_cli", "RestorePassphraseSecrets", __package__),
                     MachineSecretConditionSpec("artifact", MachineSecretPresence.ABSENT),
                 ),
                 MachineSecretVariantSpec(
                     "recovery",
                     (MachineSecretFieldSpec("recovery_secret"),),
-                    DeferredTarget("cadrumo.entrypoints.cli.config._restore_cli", "RestoreRecoverySecrets"),
+                    DeferredTarget("._restore_cli", "RestoreRecoverySecrets", __package__),
                     MachineSecretConditionSpec("artifact", MachineSecretPresence.PRESENT),
                 ),
             )

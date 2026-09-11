@@ -14,9 +14,10 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from ...core.aeat_csv import normalise_aeat_csv
-from ...core.identity import same_tax_identifier
+from ...core.identity.tax_id import same_tax_identifier
 from ...core.period import Period as _Period
 from ...domain.modelos.filing_record import is_justificante_backed_external_evidence
+from ..calculations._ports import FiledDeclaracionObservationProtocol
 from ..calculations.observations_repository import (
     ObservationSourceKind,
     is_official_aeat_observation_source,
@@ -30,8 +31,7 @@ from .calendar_models import (
 )
 
 if TYPE_CHECKING:
-    from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionObservation
-    from ...domain.justificante import Justificante
+    from ...domain.justificante.schema import Justificante
     from ...domain.modelos.filing_record import ModeloRecord
     from ..calculations.observations_repository import ObservationEnvelopePayload
     from ..live.justificante import JustificanteCaptureSnapshot
@@ -247,7 +247,7 @@ def _authenticated_identity_matches_expected(
 
 
 def _filing_evidence_from_filed_declaration_observation(
-    observation: FiledDeclaracionObservation,
+    observation: FiledDeclaracionObservationProtocol,
     *,
     expected_tax_id: str | None,
     verified_artefact_refs: frozenset[str],
@@ -289,7 +289,7 @@ def _filing_evidence_from_filed_declaration_observation(
 
 
 def _filed_declaration_verified_csv(
-    observation: FiledDeclaracionObservation,
+    observation: FiledDeclaracionObservationProtocol,
     *,
     verified_artefact_refs: frozenset[str],
     verified_artefact_csv_by_ref: Mapping[str, str],

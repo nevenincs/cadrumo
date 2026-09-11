@@ -14,7 +14,7 @@ from collections.abc import Iterable
 from pydantic import HttpUrl, TypeAdapter
 
 from ....core.config import Settings
-from ....core.i18n import Translatable as tr
+from ....core.i18n.translatable import Translatable as tr
 from ..categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from ..codes import Portal
 from ..errors import PortalValidationError

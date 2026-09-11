@@ -7,7 +7,7 @@ from uuid import UUID, uuid4
 
 from pydantic import Field, field_validator, model_validator
 
-from .....core.identity import PrefixedContentDigest
+from .....core.identity.digest import PrefixedContentDigest
 from .capsule_records import ProfileCustodyCapsuleLabel
 from .digest_model import CustodyDigestModel
 from .errors import ProfileCustodyRecordError

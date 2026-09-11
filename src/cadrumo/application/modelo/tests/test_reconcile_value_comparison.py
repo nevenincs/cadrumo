@@ -30,7 +30,8 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
-from ....domain.justificante import Justificante
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from ....domain.justificante.schema import Justificante
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -41,7 +42,6 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.inventory import FIXTURES_DIR
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ...workflow.persistence import workflow_state_repository
 from ..reconciliation import (
     _reconcile_parsed_justificante,

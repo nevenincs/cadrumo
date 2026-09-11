@@ -22,7 +22,7 @@ the filer standing in the issuing party's block means they issued it.
 
 **Identity is normalised, attribution is by containment.** Two authorities, each
 asked the question it owns. Whether a printed identifier names the filer goes to
-:func:`~core.identity.same_tax_identifier`, so a document printing
+:func:`~core.identity.tax_id.same_tax_identifier`, so a document printing
 ``B-1234567-4`` is recognised against a stored ``B12345674``; a raw text search
 for the stored form would miss every punctuated print. Whether that value belongs
 to the party the reader filed it under goes to
@@ -57,7 +57,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from ...core.identity import same_tax_identifier
+from ...core.identity.tax_id import same_tax_identifier
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.iva.classification import InvoiceKind
 from .grounding_anchor import printed_excerpt_occurs_in_text

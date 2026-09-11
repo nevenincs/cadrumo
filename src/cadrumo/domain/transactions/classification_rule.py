@@ -17,7 +17,7 @@ from typing import Annotated
 from pydantic import BaseModel, Field, StringConstraints, field_validator
 
 from ...core.hashing import sha256_hex
-from ...core.identity import ContentDigest
+from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.clock import now
 from ...core.time.utc import UtcInstant

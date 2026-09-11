@@ -26,8 +26,6 @@ from uuid import UUID
 import pytest
 from sqlalchemy.exc import DatabaseError as SqlDatabaseError
 
-from cadrumo.tests._os_keychain_hook import require_os_credential_store
-
 from ....adapters.persistence.storage.custody.acceleration_receipt import profile_session_path, resume_profile_session
 from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from ....adapters.persistence.storage.custody.errors import ProfileCustodyRecordError
@@ -49,6 +47,7 @@ from ....core.directory_scan import iter_directory
 from ....core.profile_session import ProfileSessionRefusalReason
 from ....core.time.clock import now as _now
 from ....domain.buckets.event_repository import BucketEventHistoryPersistenceError
+from ....tests.os_keychain_hook import require_os_credential_store
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..authentication import ProfileAuthenticationRefusedError
 from ..custody_ports import bind_profile_custody_port

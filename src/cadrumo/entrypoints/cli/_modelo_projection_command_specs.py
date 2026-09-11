@@ -26,7 +26,7 @@ _CALCULATION_READ = ExecutionPolicySpec(
 )
 _MODELO = ValueContract(
     DeferredTarget("builtins", "str"),
-    click_type=DeferredTarget("cadrumo.entrypoints.cli._common", "MODELO_CODE_CHOICE"),
+    click_type=DeferredTarget("._common", "MODELO_CODE_CHOICE", __package__),
 )
 
 
@@ -68,10 +68,10 @@ def _leaf(
         InvocationSpec(context_parameter="ctx"),
         parameters,
         _CALCULATION_READ,
-        LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._modelo_projection_cli", handler)),
+        LazyBinding.available(DeferredTarget("._modelo_projection_cli", handler, __package__)),
         ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_payloads", schema_name),
+            DeferredTarget("._modelo_payloads", schema_name, __package__),
             identity=f"modelo.{token}",
         ),
     )

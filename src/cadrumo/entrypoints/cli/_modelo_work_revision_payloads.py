@@ -19,7 +19,7 @@ these split schemas so modelo work emitters keep one payload import surface.
 
 from __future__ import annotations
 
-from ...core.identity import CalculationRevisionId, WorkUnitId
+from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.json_contract import OutputSchema
 from ._modelo_revision_payload_parts import CalculationRevisionProjectionFields, ObservationPayload
 

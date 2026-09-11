@@ -14,6 +14,7 @@ from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -22,7 +23,6 @@ from ....domain.modelos.calculation_revision import (
 )
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ..result_disposition_resolution import resolve_modelo_result_disposition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

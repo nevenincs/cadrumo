@@ -19,13 +19,12 @@ materialization with the OAuth payload boundary it shares.
 
 from __future__ import annotations
 
-import importlib
-import json
 import pathlib
-import subprocess
-import sys
 
 import pytest
+
+from ..application import storage as application_storage
+from ..domain import calculations as domain_calculations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -59,7 +58,7 @@ def _wizard_descriptor_translation_keys() -> set[str]:
 
 def test_wizard_catalogue_materializes_bounded_dynamic_choice_keys() -> None:
     """Enum- and language-derived choice labels must be concrete descriptor keys."""
-    from ..core.i18n.render import SUPPORTED_OUTPUT_LANGUAGES
+    from ..core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
     from ..domain.contribuyente.entity_type import EntityType
     from ..domain.deadlines.models import FiscalResidency, IrpfIncomeCategory
 
@@ -91,39 +90,18 @@ def test_wizard_catalogue_materializes_bounded_dynamic_choice_keys() -> None:
 
 
 @pytest.mark.parametrize(
-    "module_name",
-    [
-        "cadrumo.application.storage",
-        "cadrumo.domain.calculations",
-    ],
+    "module",
+    (application_storage, domain_calculations),
 )
-def test_namespace_init_modules_document_intent_without_reexports(module_name: str) -> None:
+def test_namespace_init_modules_document_intent_without_reexports(module: object) -> None:
     """Namespace package roots must document intent and expose no public aggregation API."""
-    module = importlib.import_module(module_name)
-
-    assert "namespace" in (module.__doc__ or "").lower(), f"{module_name} must document its namespace-container intent"
-    probe = subprocess.run(  # noqa: S603 - static module list under this test's control.
-        [
-            sys.executable,
-            "-c",
-            (
-                "import importlib, json, __future__; "
-                f"module = importlib.import_module({module_name!r}); "
-                # `from __future__ import annotations` binds the name
-                # `annotations` in the module namespace, and it is a compiler
-                # directive rather than a re-export. Excluded by TYPE, not by
-                # name: a module genuinely re-exporting something called
-                # `annotations` is still caught.
-                "print(json.dumps(sorted("
-                "name for name, value in vars(module).items() "
-                "if not name.startswith('_') "
-                "and not isinstance(value, __future__._Feature)"
-                ")))"
-            ),
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
+    module_name = module.__name__
+    assert "namespace" in (getattr(module, "__doc__", None) or "").lower(), (
+        f"{module_name} must document its namespace-container intent"
     )
-    public_exports = json.loads(probe.stdout)
+    public_exports = sorted(
+        name
+        for name, value in vars(module).items()
+        if not name.startswith("_") and value.__class__.__module__ != "__future__"
+    )
     assert public_exports == [], f"{module_name} unexpectedly re-exports public names: {public_exports}"

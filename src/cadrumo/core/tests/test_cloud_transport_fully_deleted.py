@@ -63,7 +63,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 if TYPE_CHECKING:
     from ...application.ledger.invoice_extraction_authority import InvoiceExtractionAuthorityValues
-    from ..config import LLMProvider
+    from ..config_support import LLMProvider
 
 _DELETED_CLOUD_SYMBOL_FAMILIES: dict[str, tuple[str, ...]] = {
     "transport and provider builders": (
@@ -385,7 +385,7 @@ def _pinned_authority_values() -> InvoiceExtractionAuthorityValues:
 
 def _text_extractor_transport(provider: LLMProvider | None = None) -> str:
     from ...adapters.outbound.llm.evidence_draft_text import TextInvoiceFieldExtractor
-    from ..config import LLMProvider
+    from ..config_support import LLMProvider
 
     resolved = provider if provider is not None else LLMProvider.LOCAL
     model = "qwen3:1.7b" if resolved is LLMProvider.LOCAL else "gpt-4.1"
@@ -399,7 +399,7 @@ def _text_extractor_transport(provider: LLMProvider | None = None) -> str:
 
 def _vision_transcriber_transport(provider: LLMProvider | None = None) -> str:
     from ...adapters.outbound.llm.evidence_draft_vision import LocalVisionDocumentTranscriber
-    from ..config import LLMProvider
+    from ..config_support import LLMProvider
 
     resolved = provider if provider is not None else LLMProvider.LOCAL
     model = "qwen2.5vl:3b" if resolved is LLMProvider.LOCAL else "claude-haiku-4-5-20251001"
@@ -408,7 +408,7 @@ def _vision_transcriber_transport(provider: LLMProvider | None = None) -> str:
 
 def _column_role_mapper_transport(provider: LLMProvider | None = None) -> str:
     from ...adapters.outbound.llm.column_role_mapping import SemanticColumnRoleMapper
-    from ..config import LLMProvider
+    from ..config_support import LLMProvider
 
     resolved = provider if provider is not None else LLMProvider.LOCAL
     model = "qwen3:1.7b" if resolved is LLMProvider.LOCAL else "gpt-4.1"
@@ -420,7 +420,7 @@ def _column_role_mapper_transport(provider: LLMProvider | None = None) -> str:
 
 def _supply_nature_proposer_transport(provider: LLMProvider | None = None) -> str:
     from ...adapters.outbound.llm.supply_nature_proposal import SupplyNatureProposer
-    from ..config import LLMProvider
+    from ..config_support import LLMProvider
 
     resolved = provider if provider is not None else LLMProvider.LOCAL
     model = "qwen3:1.7b" if resolved is LLMProvider.LOCAL else "gpt-4.1"
@@ -523,7 +523,7 @@ def test_a_reader_reachable_only_under_consent_stamps_the_transport_it_actually_
     reader that assembled a hardcoded label would satisfy any source-level
     pattern while storing the same lie.
     """
-    from ..config import LLMProvider
+    from ..config_support import LLMProvider
     from ..provenance_stamp import LOCAL_TRANSPORT_LABEL
 
     off_host = {

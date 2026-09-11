@@ -54,14 +54,21 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from ...core.errors.hierarchy import CadrumoError
-from ...core.identity import BucketId, WorkUnitId, same_tax_identifier, tax_id_identity_token
+from ...core.identity.bucket import BucketId
+from ...core.identity.hex_ids import WorkUnitId
+from ...core.identity.tax_id import same_tax_identifier, tax_id_identity_token
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.clock import now
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.filing.reconciliation.errors import ReconciliationDeclaracionParseError
-from ...domain.justificante import JustificanteParseError
+from ...domain.justificante.errors import JustificanteParseError
 from ._reconcile_casilla import CasillaDivergence, CasillaDivergenceKind, detect_casilla_divergences
+from ._work_selection import (
+    ModeloWorkSelectorRequest,
+    ModeloWorkSelectorState,
+    select_modelo_work_resolution,
+)
 from .action_errors import WorkUnitNotFoundError
 from .calculation_repository import calculation_revision_catalogue_repository
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
@@ -78,12 +85,7 @@ from .reconciliation_records import (
     ModeloReconciliationVerdict,
     modelo_reconciliation_persistence,
 )
-from .work_addressing import (
-    ModeloWorkSelectorRequest,
-    ModeloWorkSelectorState,
-    ModeloWorkUnitNotFoundError,
-    select_modelo_work_resolution,
-)
+from .work_addressing import ModeloWorkUnitNotFoundError
 from .work_unit_repository import work_unit_catalogue_repository
 
 #: Width of a bucket-event payload value. Mirrors the constraint declared on the
@@ -101,7 +103,7 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
     from ...domain.calculations.registry.schema_verification import RegistryVerificationPolicy
-    from ...domain.justificante import Justificante
+    from ...domain.justificante.schema import Justificante
     from ...domain.modelos.calculation_revision import CalculationRevision
     from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 
@@ -1220,10 +1222,10 @@ def _normalise_tax_id(value: object) -> str:
     """Coerce an untyped profile value to the canonical storage-keying token.
 
     This helper owns only the ``object`` coercion that
-    :func:`~core.identity.tax_id_identity_token` deliberately does not accept;
+    :func:`~core.identity.tax_id.tax_id_identity_token` deliberately does not accept;
     the normal form itself is the canonical one. Its result is a display and
     presence value, never a comparison key -- two identifiers are compared with
-    :func:`~core.identity.same_tax_identifier`, which strips separators so a
+    :func:`~core.identity.tax_id.same_tax_identifier`, which strips separators so a
     printed ``B-1234567-4`` matches a stored ``B12345674``.
     """
     return tax_id_identity_token(str(value or ""))

@@ -21,7 +21,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict
 
-from ...core.identity import ProfileId, ProfileLabel
+from ...core.identity.profile import ProfileId
+from ...core.identity.profile_label import ProfileLabel
 from ...core.paths import effective_storage_root
 from ...core.profile_discovery import ProfileSummaryOutcome
 from ...core.profile_publication import ProfilePublicationKindValue

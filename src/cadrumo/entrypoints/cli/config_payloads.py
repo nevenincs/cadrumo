@@ -40,7 +40,9 @@ from ...application.workflow.events import WorkflowReasonClass
 from ...application.workflow.profile_health import ProfileHealthStatusValue, ProfileSource
 from ...core.errors.severity import BaseSeverity
 from ...core.hex import Hex64Str
-from ...core.identity import BucketId, ProfileId, ProfileLabel
+from ...core.identity.bucket import BucketId
+from ...core.identity.profile import ProfileId
+from ...core.identity.profile_label import ProfileLabel
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ...core.requirement import RequirementValue
 from ...core.text_bounds import NonEmptyStr, PositiveCount

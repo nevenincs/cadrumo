@@ -1,9 +1,9 @@
-"""Tests for :func:`cadrumo.core.identity.validate_identity` and friends.
+"""Tests for :func:`cadrumo.core.identity.documents.validate_identity` and friends.
 
 Covers the three accepted shapes (NIF / NIE / CIF) including check-letter
 disambiguation across digit-only, letter-only, and mixed CIF kinds, plus
 every documented rejection mode (empty / non-string / arbitrary garbage).
-A final test pins the :class:`cadrumo.core.identity.IdentityError` registry
+A final test pins the :class:`cadrumo.core.identity.documents.IdentityError` registry
 binding so removing the bound error code is a CI failure.
 """
 
@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from .. import IdentityDocument, IdentityError, validate_identity
+from ..documents import IdentityDocument, IdentityError, validate_identity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -143,13 +143,13 @@ class TestCifKindCatalogue:
     """Pin the distinction between NIF prefixes and CIF kind letters."""
 
     def test_nif_prefix_absent_from_cif_kind_letters(self) -> None:
-        from .._documents import CIF_KIND_LETTERS
+        from ..documents import CIF_KIND_LETTERS
 
         for nif_prefix in ("K", "L", "M"):
             assert nif_prefix not in CIF_KIND_LETTERS
 
     def test_current_prefixed_nif_variants_validate_as_nif(self) -> None:
-        from .._tax_id import validate_spanish_tax_id
+        from ..tax_id import validate_spanish_tax_id
 
         for candidate in ("K1234567L", "L1234567L", "M1234567L"):
             assert validate_spanish_tax_id(candidate) == candidate

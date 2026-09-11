@@ -24,9 +24,9 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
-from ...core.identity import (
+from ...core.identity.digest import ContentDigest
+from ...core.identity.hex_ids import (
     CalculationRevisionId,
-    ContentDigest,
     ModeloEditBaselineId,
     ModeloEditMutationResultReceiptId,
     WorkUnitId,

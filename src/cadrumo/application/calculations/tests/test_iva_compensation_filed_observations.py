@@ -14,6 +14,10 @@ from ....core.errors.error_codes import build_error_envelope
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.period import Period
+from ....domain.calculations.registry.tests.registry_observations import (
+    registry_grounded_modelo_observation,
+    revision_id_for_observation,
+)
 from ....domain.iva_compensation.carry_forward import (
     IvaCompensationExpiryReviewState,
     build_iva_compensation_carry_forward_report,
@@ -23,7 +27,6 @@ from ....domain.iva_compensation.errors import (
     IvaCompensationSeedConflictError,
     IvaCompensationYearRangeError,
 )
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ..errors import IvaCompensationModeloError
 from ..iva_compensation_history import (

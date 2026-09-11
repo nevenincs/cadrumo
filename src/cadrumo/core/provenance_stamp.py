@@ -21,7 +21,7 @@ lives in the test suite, because a sixth producer that hand-formats a sixth
 string is the failure this module exists to prevent, not the one it can fix.
 
 See Also:
-    :class:`~core.config.LLMProvider`
+    :class:`~core.config_support.LLMProvider`
         The transport axis a stamp's first segment names.
 """
 

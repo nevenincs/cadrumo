@@ -20,9 +20,10 @@ from pathlib import Path
 
 import pytest
 
+from .....core.config_support import LLMProvider
 from .....tests.secure_sql import TestRuntimeProfile, mutate_encrypted_secure_object_json
 from ..cache import LLMCache
-from ..models import LLMProvider, LLMRequest, LLMResponse
+from ..models import LLMRequest, LLMResponse
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

@@ -55,8 +55,7 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.secure_sql import isolated_runtime_profile
 from ...prorrata_register.service import ProrrataRegisterService
-from .. import aggregate_iva_ledger_observations_from_repositories
-from ..iva_ledger import resolve_iva_ledger_binding_values
+from ..iva_ledger import aggregate_iva_ledger_observations_from_repositories, resolve_iva_ledger_binding_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

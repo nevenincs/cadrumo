@@ -15,7 +15,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.citation_grounding import CitationGrounding
-from ....core.i18n import Translatable as tr
+from ....core.i18n.translatable import Translatable as tr
 from ....tests.aeat_literal_fixtures import CITATION_MANUAL_PDF_URL_FIXTURE
 from ..profile import CategoryProfile
 from ..proportionality import (

@@ -26,8 +26,8 @@ from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.export import ResolvedExportLayout, resolve_export_layout
 from ....domain.calculations.registry.schema_exports import ExportFieldDefinition
-from ....tests.registry_snapshot import build_snapshot
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+from ....tests.registry_snapshot import build_snapshot
 from ....tests.secure_sql import isolated_runtime_profile
 from ..m145_communication_records import (
     M145CommunicationCreateCommand,

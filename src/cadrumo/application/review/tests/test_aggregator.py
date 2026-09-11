@@ -14,7 +14,7 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.config import Settings
 from ....core.errors.severity import BaseSeverity
-from ....core.i18n import Translatable as tr
+from ....core.i18n.translatable import Translatable as tr
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.filing.schema import (

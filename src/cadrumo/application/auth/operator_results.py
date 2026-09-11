@@ -27,7 +27,7 @@ from collections.abc import Mapping
 from pydantic import BaseModel, model_validator
 
 from ...core.errors.hierarchy import CadrumoError
-from ...core.identity import BucketId
+from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..operator_actions.models import PreconditionVerdict
 from .catalogue import AuthProviderListing

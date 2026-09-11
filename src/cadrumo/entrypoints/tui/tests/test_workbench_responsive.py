@@ -165,8 +165,8 @@ async def test_home_keeps_a_gutter_between_its_two_columns(scenario: str, size: 
     whether or not the gutter exists. Verified by removing the gutter: the
     live-session form still passed, these fail.
     """
-    from test_support.tui_frame import screen_text
-    from test_support.tui_home_fixtures import HomeFixtureScenario, build_home_projection_fixture
+    from dev.tui.harness.frame import screen_text
+    from dev.tui.harness.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 
     width, height = size
     screen = HomeScreen(build_home_projection_fixture(HomeFixtureScenario(scenario)))
@@ -199,8 +199,8 @@ async def test_no_table_header_is_clipped_while_the_row_has_width_to_spare(surfa
     Measured before the fix: `Disponibilidad` painted as `Disponibilid` while
     the row stopped near column 78 of 120.
     """
-    from test_support.tui_frame import screen_text
-    from test_support.tui_workbench import resolve_workbench_fixture
+    from dev.tui.harness.frame import screen_text
+    from dev.tui.harness.workbench_fixtures import resolve_workbench_fixture
     from textual.widgets import DataTable
 
     width, height = TERMINAL_ORDINARY
@@ -256,8 +256,8 @@ async def test_every_section_heading_is_separated_from_the_content_it_owns(surfa
     happens to paint on that row -- which says nothing about the rhythm the
     operator sees in that column.
     """
-    from test_support.tui_frame import screen_text
-    from test_support.tui_workbench import resolve_workbench_fixture
+    from dev.tui.harness.frame import screen_text
+    from dev.tui.harness.workbench_fixtures import resolve_workbench_fixture
 
     width, height = size
     app = resolve_workbench_fixture(surface).build()
@@ -363,8 +363,8 @@ async def test_no_cell_is_truncated_while_its_row_still_has_room(surface: str) -
     legitimately fills its row, and shortening is then the correct behaviour
     rather than a misallocation.
     """
-    from test_support.tui_frame import screen_text
-    from test_support.tui_workbench import resolve_workbench_fixture
+    from dev.tui.harness.frame import screen_text
+    from dev.tui.harness.workbench_fixtures import resolve_workbench_fixture
 
     width, height = TERMINAL_ORDINARY
     app = resolve_workbench_fixture(surface).build()
@@ -403,8 +403,8 @@ async def test_a_heading_shares_its_left_edge_with_the_rows_it_owns(surface: str
     other's defect -- correct gaps above and below a heading say nothing about
     whether it lines up with the rows it introduces.
     """
-    from test_support.tui_frame import screen_text
-    from test_support.tui_workbench import resolve_workbench_fixture
+    from dev.tui.harness.frame import screen_text
+    from dev.tui.harness.workbench_fixtures import resolve_workbench_fixture
 
     width, height = TERMINAL_ORDINARY
     app = resolve_workbench_fixture(surface).build()
@@ -469,7 +469,7 @@ async def test_every_control_can_be_brought_into_view(surface: str) -> None:
     watching all twelve parametrisations still pass. Forcing the fold above the
     controls is what makes the reachability claim testable at all.
     """
-    from test_support.tui_workbench import resolve_workbench_fixture
+    from dev.tui.harness.workbench_fixtures import resolve_workbench_fixture
     from textual.widgets import Button
 
     width, height = 80, 10

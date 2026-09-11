@@ -22,10 +22,11 @@ from ...core.concepto_ingreso import ConceptoIngreso
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.external_constants import CLASSIFIED_BY_AUTO, DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex
-from ...core.identity import BucketId, TransactionId
+from ...core.identity.bucket import BucketId
+from ...core.identity.transaction_ids import TransactionId
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.parsing import normalise_iso_3166_alpha2_jurisdiction
+from ...core.parsing.codes import normalise_iso_3166_alpha2_jurisdiction
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.prorrata_exclusions import ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS, Art104TresExclusion
 from ...core.text_fold import fold_diacritics

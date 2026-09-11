@@ -28,7 +28,8 @@ from pydantic import (
 from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import CoreSchema
 
-from ....core.identity import ContentDigest, WorkUnitId
+from ....core.identity.digest import ContentDigest
+from ....core.identity.hex_ids import WorkUnitId
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import (
     OperationCancellation,
@@ -899,6 +900,49 @@ def test_credential_free_schema_admits_hex64_shaped_sibling_concept_named_digest
     """Pins the accepted residual risk rather than leaving it undiscovered."""
     schema = _strict_model_json_schema(_DigestNamedSiblingConceptPayload)
     _validate_credential_free_schema(schema)
+
+
+def test_credential_free_schema_refuses_digest_field_with_unconstrained_any_of_branch() -> None:
+    """Every non-null branch must preserve the digest field's Hex64 constraint."""
+    schema = {
+        "properties": {
+            "permitted_surface_digest": {
+                "anyOf": [
+                    {"type": "string", "pattern": "^[0-9a-f]{64}$", "minLength": 64, "maxLength": 64},
+                    {"type": "string"},
+                ]
+            }
+        }
+    }
+
+    with pytest.raises(ValueError, match="forbidden security meaning"):
+        _validate_credential_free_schema(schema)
+
+
+def test_credential_free_schema_refs_use_root_defs_not_nested_shadow_defs() -> None:
+    """A local JSON-schema reference resolves against its root document."""
+    schema = {
+        "$defs": {
+            "Digest": {"type": "string"},
+            "Nested": {
+                "$defs": {
+                    "Digest": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$",
+                        "minLength": 64,
+                        "maxLength": 64,
+                    }
+                },
+                "type": "object",
+                "properties": {"permitted_surface_digest": {"$ref": "#/$defs/Digest"}},
+            },
+        },
+        "type": "object",
+        "properties": {"payload": {"$ref": "#/$defs/Nested"}},
+    }
+
+    with pytest.raises(ValueError, match="forbidden security meaning"):
+        _validate_credential_free_schema(schema)
 
 
 def test_public_schema_identity_refuses_computed_fields_absent_from_validation_schema() -> None:

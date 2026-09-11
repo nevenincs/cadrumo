@@ -44,8 +44,8 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.secure_sql import isolated_runtime_profile
-from .._modelo_bindings import LedgerIvaAggregationSourceResolver as _LedgerIvaAggregationSourceResolver
-from .._source_mesh import CalculationSourceContext
+from ..modelo_bindings import LedgerIvaAggregationSourceResolver as _LedgerIvaAggregationSourceResolver
+from ..source_mesh import CalculationSourceContext
 from .iva_authority_support import aggregate_iva_ledger_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

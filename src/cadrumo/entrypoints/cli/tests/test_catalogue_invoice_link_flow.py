@@ -36,9 +36,9 @@ from ....core.aggregation import IntracomOperationType
 from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
-from ....tests.cli_runner import invoke_cached_cli
 from ._cli_text_output_support import _line_value
 from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["active_profile_isolated_backend"]

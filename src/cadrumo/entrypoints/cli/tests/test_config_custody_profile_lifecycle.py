@@ -29,10 +29,10 @@ import pytest
 from ....core.config import load_settings, override_settings
 from ....core.directory_scan import DirectoryEntryKind, scan_directory
 from ....core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
-from ....tests import REPO_ROOT
-from ....tests._os_keychain_hook import require_os_credential_store
-from ....tests.subprocess_cli import run_cadrumo_subprocess
+from ....tests.inventory import REPO_ROOT
+from ....tests.os_keychain_hook import require_os_credential_store
 from ....tests.user_profile import register_cli_profile
+from .subprocess_cli import run_cadrumo_subprocess
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

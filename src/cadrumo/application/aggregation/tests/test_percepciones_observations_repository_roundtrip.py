@@ -31,7 +31,7 @@ from ....core.external_constants import UTF_8_ENCODING
 from ....core.period import Period
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation, aggregate_withholding_by_clave
 from ....tests.secure_sql import isolated_runtime_profile
-from .._percepciones_observations_repository import (
+from ..percepciones_observations_repository import (
     PercepcionObservationRepository,
     percepcion_observation_key,
     persist_percepcion_observations,
@@ -174,7 +174,7 @@ def test_anti_tautology_strict_payload_rejects_dropped_field() -> None:
     """The envelope payload is strict: a dropped required field raises, never silently defaults."""
     from datetime import UTC, datetime
 
-    from .._percepciones_observations_repository import _PercepcionObservationEnvelopePayload
+    from ..percepciones_observations_repository import _PercepcionObservationEnvelopePayload
 
     full = {
         "modelo": "190",
@@ -417,7 +417,7 @@ def test_envelope_refuses_a_capture_instant_without_utc(captured_at: datetime) -
     against UTC-aware instants silently answered a different question. All three
     now use the one canonical UtcInstant.
     """
-    from .._percepciones_observations_repository import _PercepcionObservationEnvelopePayload
+    from ..percepciones_observations_repository import _PercepcionObservationEnvelopePayload
 
     with pytest.raises(ValidationError):
         _PercepcionObservationEnvelopePayload(
@@ -432,7 +432,7 @@ def test_envelope_refuses_a_capture_instant_without_utc(captured_at: datetime) -
 
 def test_envelope_accepts_a_utc_capture_instant() -> None:
     """The positive control for the refusal above."""
-    from .._percepciones_observations_repository import _PercepcionObservationEnvelopePayload
+    from ..percepciones_observations_repository import _PercepcionObservationEnvelopePayload
 
     payload = _PercepcionObservationEnvelopePayload(
         modelo="190",

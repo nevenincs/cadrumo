@@ -43,8 +43,9 @@ from pathlib import Path
 
 import pytest
 
-from ....core.config import SecretStoreBackend, Settings
-from ....tests import REPO_ROOT
+from ....core.config import Settings
+from ....core.config_support import SecretStoreBackend
+from ....tests.inventory import REPO_ROOT
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

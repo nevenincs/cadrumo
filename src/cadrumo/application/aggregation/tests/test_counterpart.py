@@ -2,23 +2,15 @@
 
 from __future__ import annotations
 
-from datetime import date
 from decimal import Decimal
 
 import pytest
 
-from ....core.aggregation import BindingSourceKind
+from ....core.aggregation import BindingSourceKind, CounterpartSourceKind, OperationKind347, OperationKind349
 from ....core.period import Period
-from ....domain.calculations.registry._m347_threshold import (
-    m347_threshold_decimal,
-    resolve_m347_counterparty_annual_threshold,
-)
-from .._counterpart import (
+from ..counterpart import (
     CounterpartAggregation,
     CounterpartObservation,
-    CounterpartSourceKind,
-    OperationKind347,
-    OperationKind349,
     aggregate_counterpart_347,
     aggregate_counterpart_349,
     declarable_for_347,
@@ -28,9 +20,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _P_2025_Q1 = Period.from_year_and_code(2025, "1T")
 _P_2025_ANNUAL = Period.from_year_and_code(2025, "0A")
-_M347_THRESHOLD = m347_threshold_decimal(
-    resolve_m347_counterparty_annual_threshold(effective_date=date(2025, 12, 31)),
-)
 
 
 def _obs(
@@ -117,7 +106,33 @@ class TestAggregate347:
 
 class TestThreshold347:
     def test_threshold_is_canonical_3005_06(self) -> None:
-        assert Decimal("3005.06") == _M347_THRESHOLD
+        at_floor = aggregate_counterpart_347(
+            (
+                _obs(
+                    nif="X1",
+                    op_kind=OperationKind347.DELIVERY.value,
+                    base="0",
+                    invoice_total="3005.06",
+                    source_id="floor",
+                ),
+            ),
+            period=_P_2025_ANNUAL,
+        )
+        just_above = aggregate_counterpart_347(
+            (
+                _obs(
+                    nif="X2",
+                    op_kind=OperationKind347.DELIVERY.value,
+                    base="0",
+                    invoice_total="3005.07",
+                    source_id="above-floor",
+                ),
+            ),
+            period=_P_2025_ANNUAL,
+        )
+
+        assert declarable_for_347(at_floor, counterparty_nif="X1") is False
+        assert declarable_for_347(just_above, counterparty_nif="X2") is True
 
     def test_declarable_when_above_threshold(self) -> None:
         observations = (

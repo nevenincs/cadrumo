@@ -27,11 +27,10 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core.aggregation import BindingSourceKind
+from ....core.aggregation import BindingSourceKind, OperationKind349
 from ....core.period import Period
-from .._counterpart import (
+from ..counterpart import (
     CounterpartObservation,
-    OperationKind349,
     aggregate_counterpart_349,
 )
 

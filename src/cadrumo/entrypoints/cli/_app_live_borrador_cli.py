@@ -63,7 +63,7 @@ def borrador_100_import(ctx: typer.Context, file: Path, filing_year: int, period
     """
     from ...adapters.inbound.borrador.parser import parse_borrador
     from ...adapters.inbound.borrador.schema import BorradorParseMode
-    from ...core.i18n import tr
+    from ...core.i18n.render import tr
     from ...core.period import Period
     from ...domain.calculations.registry.authority import bundled_authority
     from ...domain.calculations.registry.schema_extraction import ExtractionSurface

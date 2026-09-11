@@ -22,7 +22,7 @@ import pytest
 
 from ....entrypoints.cli.command_specs import COMMAND_SPECS
 from ....tests.cli_envelope import parse_json_object
-from ....tests.cli_runner import invoke_cached_cli
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

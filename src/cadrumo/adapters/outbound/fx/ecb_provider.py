@@ -44,7 +44,7 @@ import httpx
 from ....core.config import load_settings
 from ....core.errors.hierarchy import CoreValidationError
 from ....core.external_constants import DEFAULT_CURRENCY, UTF_8_ENCODING
-from ....core.parsing import normalise_iso_4217_currency
+from ....core.parsing.codes import normalise_iso_4217_currency
 from ....core.parsing.dates import parse_iso8601_date
 from ....domain.currency.errors import ExchangeRateProviderError
 

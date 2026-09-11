@@ -21,7 +21,7 @@ from ....adapters.persistence.storage.errors import StorageValidationError
 from ....adapters.persistence.storage.runtime_readiness import StorageRuntimeReadinessCode
 from ....core.classification.policies import SensitivityClass
 from ....core.directory_scan import scan_directory
-from ....core.identity import BucketId
+from ....core.identity.bucket import BucketId
 from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_path
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile

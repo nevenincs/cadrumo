@@ -20,7 +20,7 @@ from pydantic import BaseModel, BeforeValidator, Field, NonNegativeInt, field_va
 from ...core.aggregation import ThirdPartyDeclarationRole
 from ...core.filing_year import FilingYear
 from ...core.iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
-from ...core.identity import SubjectTaxId
+from ...core.identity.tax_id import SubjectTaxId
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period

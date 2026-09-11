@@ -38,8 +38,10 @@ source but present on the module object.
 
 from __future__ import annotations
 
-import importlib
+import ast
 import re
+from importlib.util import find_spec, resolve_name
+from pathlib import Path
 
 import pytest
 
@@ -67,45 +69,82 @@ def _resolves(target: str) -> bool:
     """
     parts = target.split(".")
     for cut in range(len(parts), 0, -1):
-        try:
-            obj = importlib.import_module(".".join(parts[:cut]))
-        except ImportError:
-            # A shorter prefix of a dotted reference is not always an importable
-            # module -- resolving ``pkg.mod.Class.attr`` walks prefixes until one
-            # imports. A prefix that does not is the normal case, not an error to
-            # report, so the walk continues to the next-shorter candidate.
+        module = ".".join(parts[:cut])
+        source = _module_source(module)
+        if source is None:
             continue
-        for attr in parts[cut:]:
-            resolved = _member(obj, attr)
-            if resolved is None:
-                return False
-            obj = resolved
-        return True
+        return _source_path_resolves(source, module, parts[cut:])
     return False
 
 
-def _member(owner: object, attr: str) -> object | None:
-    """Return ``owner.attr``, counting declared fields as present.
+def _module_source(module: str) -> Path | None:
+    """Return a module's source path through import metadata only."""
+    try:
+        spec = find_spec(module)
+    except (ImportError, ModuleNotFoundError, ValueError):
+        return None
+    origin = None if spec is None else spec.origin
+    if origin is None or origin in {"built-in", "frozen"}:
+        return None
+    path = Path(origin)
+    return path if path.is_file() else None
 
-    A pydantic v2 field is NOT a class attribute -- it lives in
-    ``model_fields`` and ``getattr`` on the class returns nothing -- so a plain
-    attribute walk calls every ``:attr:`SomeModel.some_field``` reference
-    dangling. That would make this gate fail on correct docstrings, which is a
-    worse outcome than the staleness it exists to catch: a gate that cries wolf
-    gets its scope narrowed until it stops meaning anything.
 
-    Declared-but-unset annotations are accepted for the same reason.
-    """
-    found = getattr(owner, attr, None)
-    if found is not None:
-        return found
-    fields = getattr(owner, "model_fields", None)
-    if isinstance(fields, dict) and attr in fields:
-        return fields[attr]
-    annotations = getattr(owner, "__annotations__", None)
-    if isinstance(annotations, dict) and attr in annotations:
-        return annotations[attr]
+def _literal_string(node: ast.AST) -> str | None:
+    return node.value if isinstance(node, ast.Constant) and isinstance(node.value, str) else None
+
+
+def _lazy_target(tree: ast.Module, name: str) -> tuple[str, str | None] | None:
+    """Read the source mapping used by a module-level ``__getattr__`` hook."""
+    has_getattr = any(
+        isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == "__getattr__" for node in tree.body
+    )
+    if not has_getattr:
+        return None
+    for node in tree.body:
+        value = node.value if isinstance(node, ast.Assign) else node.value if isinstance(node, ast.AnnAssign) else None
+        if not isinstance(value, ast.Dict):
+            continue
+        for key, item in zip(value.keys, value.values, strict=False):
+            if _literal_string(key) != name:
+                continue
+            if isinstance(item, (ast.Tuple, ast.List)) and item.elts:
+                module = _literal_string(item.elts[0])
+                symbol = _literal_string(item.elts[1]) if len(item.elts) > 1 else None
+            else:
+                module, symbol = _literal_string(item), None
+            if module is not None:
+                return module, symbol
     return None
+
+
+def _source_path_resolves(path: Path, module: str, attrs: list[str]) -> bool:
+    try:
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    except (OSError, SyntaxError):
+        return False
+    owner: ast.AST = tree
+    for index, attr in enumerate(attrs):
+        candidates = [node for node in ast.iter_child_nodes(owner) if getattr(node, "name", None) == attr]
+        if not candidates:
+            candidates = [
+                node
+                for node in ast.walk(owner)
+                if isinstance(node, (ast.Import, ast.ImportFrom))
+                and any((alias.asname or alias.name.split(".", 1)[0]) == attr for alias in node.names)
+            ]
+        if not candidates:
+            lazy = _lazy_target(tree, attr) if owner is tree else None
+            if lazy is None:
+                return False
+            target_module, target_name = lazy
+            if target_module.startswith("."):
+                package = module if path.name == "__init__.py" else module.rpartition(".")[0]
+                target_module = resolve_name(target_module, package)
+            target = ".".join(part for part in (target_module, target_name, *attrs[index + 1 :]) if part)
+            return _resolves(target)
+        owner = candidates[0]
+    return True
 
 
 def _references() -> list[tuple[str, int, str]]:

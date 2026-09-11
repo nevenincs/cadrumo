@@ -11,8 +11,8 @@ That second step is the whole point. The reading model is probabilistic and a
 fabricated taxable base or supplier identifier would flow into a Modelo 303/390
 filing looking exactly like a read one. Every field here is therefore checked
 against an independent authority -- the AEAT checksum algorithm
-(:func:`~core.identity.validate_spanish_tax_id`), the EU VIES structural format
-table (:data:`~core.identity.NIF_IVA_FORMATS`), the date parser
+(:func:`~core.identity.tax_id.validate_spanish_tax_id`), the EU VIES structural format
+table (:data:`~core.identity.nif_iva.NIF_IVA_FORMATS`), the date parser
 (:func:`~core.parsing.parse_date`), the finite European-decimal authority
 (:func:`~core.decimal.coerce_finite_european_decimal`) -- and a field that fails
 its check becomes ``None``. ``None`` is safe because the confirm path treats a
@@ -25,9 +25,9 @@ it lives here rather than beside either reader.
 See Also:
     :class:`~application.ledger.invoice_draft_records.InvoiceDraft`
         Typed draft every grounded reader returns.
-    :func:`~core.identity.validate_spanish_tax_id`
+    :func:`~core.identity.tax_id.validate_spanish_tax_id`
         Spanish NIF/NIE/CIF checksum authority.
-    :func:`~core.identity.nif_iva_format_for_country`
+    :func:`~core.identity.nif_iva.nif_iva_format_for_country`
         EU intra-community NIF-IVA structural format authority.
 """
 
@@ -49,12 +49,9 @@ from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.errors.hierarchy import CoreValidationError
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
-from ....core.identity import (
-    IdentityError,
-    nif_iva_format_for_country,
-    normalise_nif_iva,
-    validate_spanish_tax_id,
-)
+from ....core.identity.documents import IdentityError
+from ....core.identity.nif_iva import nif_iva_format_for_country, normalise_nif_iva
+from ....core.identity.tax_id import validate_spanish_tax_id
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operator_action_enums import ActionEvidenceProvenance
 from ....core.parsing.codes import normalise_iso_4217_currency

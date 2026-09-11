@@ -109,7 +109,7 @@ def test_auth_diagnostic_payload_error_raised_on_non_object_json() -> None:
 def test_source_mesh_error_raised_on_blank_owned_source() -> None:
     from pydantic import ValidationError
 
-    from ..aggregation import CalculationSourceResolution, SourceMeshError
+    from ..aggregation.source_mesh import CalculationSourceResolution, SourceMeshError
 
     with pytest.raises((SourceMeshError, ValidationError)):
         CalculationSourceResolution(
@@ -121,7 +121,7 @@ def test_source_mesh_error_raised_on_blank_owned_source() -> None:
 def test_source_mesh_error_raised_on_duplicate_owned_source() -> None:
     from pydantic import ValidationError
 
-    from ..aggregation import CalculationSourceResolution, SourceMeshError
+    from ..aggregation.source_mesh import CalculationSourceResolution, SourceMeshError
 
     with pytest.raises((SourceMeshError, ValidationError)):
         CalculationSourceResolution(

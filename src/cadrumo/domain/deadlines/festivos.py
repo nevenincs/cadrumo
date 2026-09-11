@@ -47,6 +47,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, StringConstraints
 
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
+from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import EventFactQuery, ResolvedEventFact
 from ..calculations.registry.schema_base import DateAxis
 from .errors import DeadlineValidationError
@@ -198,6 +199,7 @@ MODELOS_WITHOUT_SHIFT: tuple[str, ...] = (Modelo.M369,)
 # ---------------------------------------------------------------------------
 
 
+@lru_cache(maxsize=64)
 def load_holiday_calendar(year: int) -> HolidayCalendar:
     """Return the published calendar from the installed authority artifact.
 
@@ -210,7 +212,6 @@ def load_holiday_calendar(year: int) -> HolidayCalendar:
     return holiday_calendar_from_authority(year, authority=bundled_authority())
 
 
-@lru_cache(maxsize=64)
 def holiday_calendar_from_authority(
     year: int,
     *,
@@ -224,13 +225,16 @@ def holiday_calendar_from_authority(
     through exact event queries, retaining the authority's provenance.
     """
     coordinate = date(year, 7, 1)
-    publication = authority.resolve_governed_fact(
-        EventFactQuery(
-            fact_id=HOLIDAY_CALENDAR_PUBLICATION_EVENT_FACT_ID,
-            date_axis=DateAxis.SUBMISSION_DATE,
-            effective_date=coordinate,
+    try:
+        publication = authority.resolve_governed_fact(
+            EventFactQuery(
+                fact_id=HOLIDAY_CALENDAR_PUBLICATION_EVENT_FACT_ID,
+                date_axis=DateAxis.SUBMISSION_DATE,
+                effective_date=coordinate,
+            )
         )
-    )
+    except RegistryValidationError as exc:
+        raise DeadlineValidationError(f"holiday calendar publication for {year} could not be resolved") from exc
     if not isinstance(publication, ResolvedEventFact):
         raise DeadlineValidationError("holiday calendar publication must resolve to an event fact")
     publication_outputs = {output.name: output.value for output in publication.payload.outputs}

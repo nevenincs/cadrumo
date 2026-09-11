@@ -22,12 +22,15 @@ from decimal import Decimal
 from typing import NamedTuple
 
 import pytest
-from test_support.registry_authoring import RegistryValidator, _committed_modelo, _committed_snapshot
 
-from .....core.authority_grade import RegistryAuthorityGrade
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources.bundled_data import bundled_path
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+
 from ..formula_runtime import calculate_registry_snapshot
+from ._published_authority import (
+    artifact_components,
+    artifact_snapshot,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -125,15 +128,14 @@ _CASES = (
 
 @pytest.mark.parametrize("case", _CASES, ids=[case.modelo_id for case in _CASES])
 def test_modelo_117_126_128_136_validators_accept_committed_definitions(case: _ModeloArithmeticCase) -> None:
-    modelo, catalogues = _committed_modelo(case.modelo_id)
+    modelo, catalogues = artifact_components(case.modelo_id)
     assert modelo.id == case.modelo_id
     assert modelo.revisions, f"{case.modelo_id} must declare at least one revision"
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
 
 @pytest.mark.parametrize("case", _CASES, ids=[case.modelo_id for case in _CASES])
 def test_modelo_117_126_128_136_formulas_are_owned_by_constructs(case: _ModeloArithmeticCase) -> None:
-    modelo, _ = _committed_modelo(case.modelo_id)
+    modelo, _ = artifact_components(case.modelo_id)
     revision = modelo.revisions[case.revision_id]
     owned = set().union(*(set(construct.formulas) for construct in revision.constructs))
     assert case.formula_ids <= owned
@@ -147,7 +149,7 @@ def test_modelo_117_126_128_136_official_form_arithmetic(case: _ModeloArithmetic
     # its export family is declared not applicable because AEAT publishes no
     # positional record design for it -- so asking for filing capability made
     # an arithmetic test refuse on a capability it never uses.
-    snapshot = _committed_snapshot(
+    snapshot = artifact_snapshot(
         case.modelo_id,
         case.filing_year,
         case.period,

@@ -103,12 +103,10 @@ LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             handoff=False,
             live_write=False,
         ),
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._app_live_borrador_cli", "borrador_100_import")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._app_live_borrador_cli", "borrador_100_import", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_borrador_payloads", "Borrador100ImportResult"),
+            target=DeferredTarget("._app_live_borrador_payloads", "Borrador100ImportResult", __package__),
             identity="app.live.borrador.100.import",
         ),
     ),
@@ -124,7 +122,9 @@ LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="state",
                 declarations=("--state",),
-                value=ValueContract(DeferredTarget("cadrumo.application.live.snapshot_base", "SnapshotStateFilter")),
+                value=ValueContract(
+                    DeferredTarget("...application.live.snapshot_base", "SnapshotStateFilter", __package__)
+                ),
                 default=ParameterDefault.value("active"),
                 help_key=_key("cli.app.live.borrador.state_help"),
                 multiple=False,
@@ -134,12 +134,10 @@ LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_ENCRYPTED_LOCAL_READ_POLICY,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._app_live_borrador_cli", "borrador_100_list")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._app_live_borrador_cli", "borrador_100_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_borrador_payloads", "Borrador100ListResult"),
+            target=DeferredTarget("._app_live_borrador_payloads", "Borrador100ListResult", __package__),
             identity="app.live.borrador.100.list",
         ),
     ),
@@ -161,12 +159,10 @@ LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_ENCRYPTED_LOCAL_READ_POLICY,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._app_live_borrador_cli", "borrador_100_show")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._app_live_borrador_cli", "borrador_100_show", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_borrador_payloads", "Borrador100ViewResult"),
+            target=DeferredTarget("._app_live_borrador_payloads", "Borrador100ViewResult", __package__),
             identity="app.live.borrador.100.view",
         ),
     ),
@@ -180,12 +176,10 @@ LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=_LEAF_INVOCATION,
         parameters=(_REQUIRED_FILING_YEAR_OPTION,),
         policy=_ENCRYPTED_LOCAL_READ_POLICY,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._app_live_borrador_cli", "borrador_100_latest")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._app_live_borrador_cli", "borrador_100_latest", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_borrador_payloads", "Borrador100LatestResult"),
+            target=DeferredTarget("._app_live_borrador_payloads", "Borrador100LatestResult", __package__),
             identity="app.live.borrador.100.latest",
         ),
     ),

@@ -19,7 +19,7 @@ from __future__ import annotations
 from pydantic import field_validator
 
 from ...core.decimal.grammar import try_parse_canonical_decimal
-from ...core.identity import BucketId
+from ...core.identity.bucket import BucketId
 from ...core.json_contract import OutputSchema
 from ...core.text_bounds import NonEmptyStr
 from ...domain.categories.proportionality import ProportionalityKind

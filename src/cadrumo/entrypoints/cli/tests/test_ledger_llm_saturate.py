@@ -25,10 +25,10 @@ from click.testing import Result
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.iva.schema import IvaCategory
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
-from ....tests.cli_runner import invoke_cached_cli
 from ._cli_json_support import _json_object
 from ._isolated_profile_storage_fixtures import llm_profile_isolated_backend
 from ._ledger_llm_support import _import_one_transaction as _shared_import_one_transaction
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["llm_profile_isolated_backend"]

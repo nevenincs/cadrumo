@@ -61,13 +61,11 @@ LIVE_NOTIFICATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         parameters=(),
         policy=_PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
         handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._app_live_notifications_cli", "notifications_pull")
+            DeferredTarget("._app_live_notifications_cli", "notifications_pull", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget(
-                "cadrumo.entrypoints.cli._app_live_notifications_payloads", "NotificationsCaptureResult"
-            ),
+            target=DeferredTarget("._app_live_notifications_payloads", "NotificationsCaptureResult", __package__),
             identity="app.live.notifications.pull",
         ),
     ),
@@ -82,13 +80,11 @@ LIVE_NOTIFICATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         parameters=(),
         policy=_ENCRYPTED_LOCAL_READ_POLICY,
         handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._app_live_notifications_cli", "notifications_list")
+            DeferredTarget("._app_live_notifications_cli", "notifications_list", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget(
-                "cadrumo.entrypoints.cli._app_live_notifications_payloads", "NotificationsListResult"
-            ),
+            target=DeferredTarget("._app_live_notifications_payloads", "NotificationsListResult", __package__),
             identity="app.live.notifications.list",
         ),
     ),
@@ -111,13 +107,11 @@ LIVE_NOTIFICATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_ENCRYPTED_LOCAL_READ_POLICY,
         handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._app_live_notifications_cli", "notifications_show")
+            DeferredTarget("._app_live_notifications_cli", "notifications_show", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget(
-                "cadrumo.entrypoints.cli._app_live_notifications_payloads", "NotificationsViewResult"
-            ),
+            target=DeferredTarget("._app_live_notifications_payloads", "NotificationsViewResult", __package__),
             identity="app.live.notifications.view",
         ),
     ),
@@ -132,13 +126,11 @@ LIVE_NOTIFICATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         parameters=(),
         policy=_ENCRYPTED_LOCAL_READ_POLICY,
         handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._app_live_notifications_cli", "notifications_latest")
+            DeferredTarget("._app_live_notifications_cli", "notifications_latest", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget(
-                "cadrumo.entrypoints.cli._app_live_notifications_payloads", "NotificationsLatestResult"
-            ),
+            target=DeferredTarget("._app_live_notifications_payloads", "NotificationsLatestResult", __package__),
             identity="app.live.notifications.latest",
         ),
     ),
@@ -166,13 +158,11 @@ LIVE_NOTIFICATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         parameters=(_NOTIFICATION_CERTIFICADO_ID_ARGUMENT,),
         policy=_PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
         handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._app_live_notifications_cli", "notifications_document_pull")
+            DeferredTarget("._app_live_notifications_cli", "notifications_document_pull", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget(
-                "cadrumo.entrypoints.cli._app_live_notifications_payloads", "NotificationDocumentPullResult"
-            ),
+            target=DeferredTarget("._app_live_notifications_payloads", "NotificationDocumentPullResult", __package__),
             identity="app.live.notifications.document.pull",
         ),
     ),
@@ -187,13 +177,11 @@ LIVE_NOTIFICATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         parameters=(_NOTIFICATION_CERTIFICADO_ID_ARGUMENT,),
         policy=_ENCRYPTED_LOCAL_READ_POLICY,
         handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._app_live_notifications_cli", "notifications_document_view")
+            DeferredTarget("._app_live_notifications_cli", "notifications_document_view", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget(
-                "cadrumo.entrypoints.cli._app_live_notifications_payloads", "NotificationDocumentViewResult"
-            ),
+            target=DeferredTarget("._app_live_notifications_payloads", "NotificationDocumentViewResult", __package__),
             identity="app.live.notifications.document.view",
         ),
     ),
@@ -208,12 +196,12 @@ LIVE_NOTIFICATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         parameters=(),
         policy=_ENCRYPTED_LOCAL_READ_POLICY,
         handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._app_live_notifications_cli", "notifications_document_history")
+            DeferredTarget("._app_live_notifications_cli", "notifications_document_history", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget(
-                "cadrumo.entrypoints.cli._app_live_notifications_payloads", "NotificationDocumentHistoryResult"
+                "._app_live_notifications_payloads", "NotificationDocumentHistoryResult", __package__
             ),
             identity="app.live.notifications.document.history",
         ),

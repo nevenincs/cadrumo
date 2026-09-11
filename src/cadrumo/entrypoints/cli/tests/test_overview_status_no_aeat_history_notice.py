@@ -16,9 +16,9 @@ from __future__ import annotations
 import pytest
 
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage
+from .cli_runner import invoke_cached_cli
 
 __all__ = ["isolated_profile_storage"]
 from ....tests.cli_envelope import unwrap_envelope_notices

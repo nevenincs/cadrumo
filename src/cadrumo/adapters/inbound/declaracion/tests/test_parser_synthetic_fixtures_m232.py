@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
+from ..parser import parse_declaracion
 from ._parser_boundary_support import (
     _expected_period,
-    parse_declaracion,
 )
 from ._parser_synthetic_m232_support import (
     _DECL_CNAE_CASILLA,

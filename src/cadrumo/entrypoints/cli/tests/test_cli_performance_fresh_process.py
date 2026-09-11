@@ -8,7 +8,7 @@ from textwrap import dedent
 
 import pytest
 
-from ....tests.cli_performance import (
+from .cli_performance import (
     CliPerformanceObservation,
     CliPerformanceProfile,
     profile_cli_path,

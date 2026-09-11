@@ -561,7 +561,7 @@ def test_no_parallel_work_unit_model_outside_canonical_module() -> None:
     other module that declares a Pydantic class named
     ``WorkUnit`` competes with the canonical surface."""
 
-    from ....tests import REPO_ROOT
+    from ....tests.inventory import REPO_ROOT
 
     source_root = REPO_ROOT / "src" / "cadrumo"
     canonical = source_root / "domain" / "modelos" / "work_unit.py"
@@ -588,7 +588,7 @@ def test_no_parallel_work_unit_storage_namespace() -> None:
     module referencing a competing namespace string is a shadow
     storage location."""
 
-    from ....tests import REPO_ROOT
+    from ....tests.inventory import REPO_ROOT
 
     source_root = REPO_ROOT / "src" / "cadrumo"
     canonical = source_root / "domain" / "modelos" / "_repository.py"

@@ -49,8 +49,8 @@ from ....domain.contribuyente.inventory.records import (
 from ....domain.contribuyente.inventory.valuation import compute_inventory_anexo_d_projection
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
-from .._inventory import _VALUE_ATTRIBUTE_BY_OPERATION, InventorySourceResolver
-from .._source_mesh import CalculationSourceContext
+from ..inventory import _VALUE_ATTRIBUTE_BY_OPERATION, InventorySourceResolver
+from ..source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -73,12 +73,6 @@ def _ref(value: str) -> FilingEvidenceReference:
 
 
 def _ledger(actividad_id: str, *, physical_closing: Decimal | None = None) -> InventoryLedger:
-    from ....domain.contribuyente.inventory._closing_authority_records import (
-        InventoryClosingAuthorityDecision,
-        InventoryClosingAuthorityRecord,
-        PriorAuthoritativeClosingLink,
-    )
-
     continuity = (PriorClosingContinuityEvidence(reference=_ref(f"prior-{actividad_id}"), content_digest="f" * 64),)
     acquisition = InventoryAcquisitionCost(
         consideration_excluding_iva=Decimal("100.00"),
@@ -141,25 +135,6 @@ def _ledger(actividad_id: str, *, physical_closing: Decimal | None = None) -> In
                 ),
             ),
         )
-    decision = InventoryClosingAuthorityDecision(
-        decision_id=f"decision-{actividad_id}",
-        actividad_id=actividad_id,
-        filing_year=2025,
-        authority=InventoryClosingAuthority.MOVEMENT_DERIVED,
-        physical_observation_id=None if observation is None else observation.observation_id,
-        physical_observation_fingerprint=None if observation is None else observation.fingerprint,
-        reason="Reviewed movement authority.",
-        actor="reviewer-secret",
-        source_command="inventory-secret-command",
-        decided_at=datetime(2026, 1, 2, tzinfo=UTC),
-        evidence=(
-            InventoryClosingDecisionEvidence(
-                reference=_ref(f"decision-{actividad_id}"),
-                role=InventoryClosingDecisionEvidenceRole.AUTHORITY_RECONCILIATION,
-                content_digest="d" * 64,
-            ),
-        ),
-    )
     prior_fingerprint = fingerprint_prior_authoritative_closing(
         actividad_id=actividad_id,
         filing_year=2024,
@@ -167,27 +142,46 @@ def _ledger(actividad_id: str, *, physical_closing: Decimal | None = None) -> In
         authoritative_source_fingerprint="e" * 64,
         evidence=continuity,
     )
-    record = InventoryClosingAuthorityRecord(
-        decision=decision,
-        physical_observation=observation,
-        prior_closing_link=PriorAuthoritativeClosingLink(
-            actividad_id=actividad_id,
-            current_filing_year=2025,
-            prior_filing_year=2024,
-            prior_authoritative_closing_value=Decimal("100.00"),
-            current_opening_value=Decimal("100.00"),
-            prior_authoritative_source_fingerprint="e" * 64,
-            prior_authoritative_closing_fingerprint=prior_fingerprint,
-            evidence=continuity,
-        ),
-    )
-    return InventoryLedger(
-        actividad_id=actividad_id,
-        year=2025,
-        valuation_method=ValuationMethod.FIFO,
-        opening_stock=Decimal("100.00"),
-        period_movements=(movement,),
-        closing_authority_record=record,
+    return InventoryLedger.model_validate(
+        {
+            "actividad_id": actividad_id,
+            "year": 2025,
+            "valuation_method": ValuationMethod.FIFO,
+            "opening_stock": Decimal("100.00"),
+            "period_movements": (movement,),
+            "closing_authority_record": {
+                "decision": {
+                    "decision_id": f"decision-{actividad_id}",
+                    "actividad_id": actividad_id,
+                    "filing_year": 2025,
+                    "authority": InventoryClosingAuthority.MOVEMENT_DERIVED,
+                    "physical_observation_id": None if observation is None else observation.observation_id,
+                    "physical_observation_fingerprint": None if observation is None else observation.fingerprint,
+                    "reason": "Reviewed movement authority.",
+                    "actor": "reviewer-secret",
+                    "source_command": "inventory-secret-command",
+                    "decided_at": datetime(2026, 1, 2, tzinfo=UTC),
+                    "evidence": (
+                        InventoryClosingDecisionEvidence(
+                            reference=_ref(f"decision-{actividad_id}"),
+                            role=InventoryClosingDecisionEvidenceRole.AUTHORITY_RECONCILIATION,
+                            content_digest="d" * 64,
+                        ),
+                    ),
+                },
+                "physical_observation": observation,
+                "prior_closing_link": {
+                    "actividad_id": actividad_id,
+                    "current_filing_year": 2025,
+                    "prior_filing_year": 2024,
+                    "prior_authoritative_closing_value": Decimal("100.00"),
+                    "current_opening_value": Decimal("100.00"),
+                    "prior_authoritative_source_fingerprint": "e" * 64,
+                    "prior_authoritative_closing_fingerprint": prior_fingerprint,
+                    "evidence": continuity,
+                },
+            },
+        },
     )
 
 

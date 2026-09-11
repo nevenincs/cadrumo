@@ -10,7 +10,7 @@ import pytest
 
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
-from ....tests import general_m303_filing_evidence
+from ....tests.filing_evidence import general_m303_filing_evidence
 from ...calculations.binding_prefill import extract_modelo_303_local_iva_compensation_recurrence
 from ...calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
 from ...calculations.observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository

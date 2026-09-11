@@ -38,7 +38,7 @@ from ....domain.renta.ledger_expenses import (
     evaluate_renta_deductibility,
 )
 from ....domain.resources.registry import resources
-from .._renta_ledger import _casilla_aggregation
+from ..renta_ledger import _casilla_aggregation
 from .renta_income_aggregation_support import _period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

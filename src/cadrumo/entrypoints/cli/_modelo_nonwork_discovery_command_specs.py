@@ -84,7 +84,7 @@ MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="domain",
                 declarations=("--domain",),
-                value=ValueContract(DeferredTarget("cadrumo.core.tax_domain", "TaxDomain")),
+                value=ValueContract(DeferredTarget("...core.tax_domain", "TaxDomain", __package__)),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.modelo.list.domain_help"),
                 multiple=False,
@@ -94,10 +94,10 @@ MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_REGISTRY_READ,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._modelo_discovery_cli", "list_modelos")),
+        handler=LazyBinding.available(DeferredTarget("._modelo_discovery_cli", "list_modelos", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("cadrumo.entrypoints.cli.modelo_aux_payloads", "ModeloListResult"),
+            DeferredTarget(".modelo_aux_payloads", "ModeloListResult", __package__),
             identity="modelo.list",
         ),
     ),
@@ -141,12 +141,10 @@ MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_REGISTRY_READ,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_discovery_cli", "describe_modelo")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._modelo_discovery_cli", "describe_modelo", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("cadrumo.entrypoints.cli.modelo_aux_payloads", "ModeloDescribeResult"),
+            DeferredTarget(".modelo_aux_payloads", "ModeloDescribeResult", __package__),
             identity="modelo.describe",
         ),
     ),
@@ -164,7 +162,7 @@ MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 name="input_kind",
                 declarations=("--input-kind",),
                 value=ValueContract(
-                    DeferredTarget("cadrumo.domain.calculations.registry.schema_input_kind", "InputKind")
+                    DeferredTarget("...domain.calculations.registry.schema_input_kind", "InputKind", __package__)
                 ),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.modelo.casillas.input_kind_help"),
@@ -219,10 +217,10 @@ MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_REGISTRY_READ,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._modelo_discovery_cli", "casillas")),
+        handler=LazyBinding.available(DeferredTarget("._modelo_discovery_cli", "casillas", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_payloads", "ModeloCasillasResult"),
+            DeferredTarget("._modelo_payloads", "ModeloCasillasResult", __package__),
             identity="modelo.casillas",
         ),
     ),
@@ -245,10 +243,10 @@ MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             *CASILLA_LOOKUP_SCOPE[1:],
         ),
         policy=_REGISTRY_READ,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._modelo_discovery_cli", "casilla")),
+        handler=LazyBinding.available(DeferredTarget("._modelo_discovery_cli", "casilla", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_payloads", "ModeloCasillaResult"),
+            DeferredTarget("._modelo_payloads", "ModeloCasillaResult", __package__),
             identity="modelo.casilla",
         ),
     ),
@@ -291,10 +289,10 @@ MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_REGISTRY_MODEL_READ,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._modelo_discovery_cli", "requires")),
+        handler=LazyBinding.available(DeferredTarget("._modelo_discovery_cli", "requires", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_payloads", "ModeloRequiresResult"),
+            DeferredTarget("._modelo_payloads", "ModeloRequiresResult", __package__),
             identity="modelo.requires",
         ),
     ),

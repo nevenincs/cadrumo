@@ -6,10 +6,8 @@ from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
-from test_support.registry_authoring import verify_legal_catalogue
 
 from ....core.classification.policies import SensitivityClass
-from ....core.resources.bundled_data import bundled_path
 from ...calculations.registry.authority import bundled_authority
 from ..errors import SCHEMA_LOAD_MESSAGE_KEY, UserProfileNotFoundError, UserProfileSchemaLoadError
 from ..loader import CONDITION_SCHEMA_PATH_STAT, CONDITION_SCHEMA_TABLE_PRESENT, load_user_profile_schema
@@ -128,7 +126,8 @@ def test_committed_user_profile_schema_exposes_profile_lookup_metadata() -> None
 
 def test_committed_user_profile_schema_legal_refs_resolve_against_catalogue_and_corpus() -> None:
     schema = load_user_profile_schema()
-    catalogues = bundled_authority().catalogues
+    authority = bundled_authority()
+    catalogues = authority.catalogues
     refs_by_field = {
         f"{section.key}.{field.key}": field.legal_refs
         for section in schema.sections
@@ -140,7 +139,9 @@ def test_committed_user_profile_schema_legal_refs_resolve_against_catalogue_and_
     assert refs_by_field, "committed user-profile schema carries no field legal_refs"
     missing = sorted(ref for ref in refs if ref not in catalogues.legal)
     assert not missing, f"user-profile schema legal_refs absent from registry legal catalogue: {missing}"
-    verify_legal_catalogue({ref: catalogues.legal[ref] for ref in refs}, source_root=bundled_path())
+    for ref in refs:
+        assert authority.legal_evidence_text(ref).strip(), f"published legal evidence is empty for {ref!r}"
+        assert catalogues.legal[ref].corpus_ref, f"published legal reference {ref!r} has no corpus anchor"
 
 
 def test_no_grounded_profile_key_regresses_to_a_schema_field_with_no_legal_refs() -> None:

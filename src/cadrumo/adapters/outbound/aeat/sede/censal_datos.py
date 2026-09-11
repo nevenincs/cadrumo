@@ -50,9 +50,9 @@ from .....application.user_profile.censal_observation import (
 )
 from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
-from .....core.i18n import tr
+from .....core.i18n.render import tr
 from .....core.logging import get_logger
-from .....core.parsing import parse_date
+from .....core.parsing.dates import parse_date
 from .....core.text_fold import fold_diacritics
 from .....core.time.clock import now
 from .....domain.calculations.registry.remote_state_guard import (

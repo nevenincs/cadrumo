@@ -127,7 +127,9 @@ LEDGER_BIENES_INVERSION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="kind",
                 declarations=("--kind",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.bienes_inversion.register", "BienInversionKind")),
+                value=ValueContract(
+                    DeferredTarget("...domain.bienes_inversion.register", "BienInversionKind", __package__)
+                ),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.ledger.bienes_inversion.kind_help"),
                 metavar=None,
@@ -207,11 +209,11 @@ LEDGER_BIENES_INVERSION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_POLICY_4,
         handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._bienes_inversion_cli", "bienes_inversion_declare")
+            DeferredTarget("._bienes_inversion_cli", "bienes_inversion_declare", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._bienes_inversion_payloads", "BienesInversionDeclareResult"),
+            target=DeferredTarget("._bienes_inversion_payloads", "BienesInversionDeclareResult", __package__),
             identity="ledger.bienes_inversion.declare",
         ),
     ),
@@ -225,12 +227,10 @@ LEDGER_BIENES_INVERSION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(),
         policy=_POLICY_5,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._bienes_inversion_cli", "bienes_inversion_list")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._bienes_inversion_cli", "bienes_inversion_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._bienes_inversion_payloads", "BienesInversionListResult"),
+            target=DeferredTarget("._bienes_inversion_payloads", "BienesInversionListResult", __package__),
             identity="ledger.bienes_inversion.list",
         ),
     ),

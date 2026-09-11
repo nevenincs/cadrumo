@@ -75,9 +75,12 @@ per function, so a module can hold both labelled and unlabelled cases.
 | `perf` | Performance acceptance gates. | the dispatch-only ci-full lane |
 | `external_tool` | Tests needing a binary the dependency set does not install (LibreOffice). | `just test-workbook-parity` |
 | `os_keychain` | Tests whose assertion subject is the OS credential store itself. | `just test-os-keychain` |
+| `windows_only` | Tests whose subject is a Windows console launcher stub. | `just test-windows` |
+| `tui_render` | Tests that consume the rendered Textual visual inventory. | `just test-tui-render` |
+| `resident_service` | Tests that query the running resident search service. | `just test-resident-service` |
 
-Every lane excludes `external_tool` and `os_keychain`, so the label -
-not a path `--ignore` - is what holds those tests out.
+Ordinary lanes exclude the capability labels, so the label—not a path
+`--ignore`—is what holds those tests out.
 
 Read `os_keychain` as a capability of the **logon session**, not of the
 dependency set. A headless continuous-integration runner, and an agent
@@ -94,8 +97,8 @@ every automated lane.
 
 #### `os_keychain` is a standing coverage hole
 
-Say it plainly, because no lane will: **the six `os_keychain` cases have
-never been observed green.** CI cannot run them, no agent host can run
+Say it plainly, because no automated lane will: **the `os_keychain` cases
+require a separate interactive-desktop verdict.** CI cannot run them, no agent host can run
 them, and they were excluded from every lane precisely because a host
 that cannot custody a session key can never pass them. Nothing in the
 automated suite covers profile-session custody today.
@@ -194,7 +197,7 @@ documented rationale.
 - `uv run pytest -m "unit and hex_domain"` - unit tests for the domain layer.
 - `uv run pytest -m "integration and hex_entrypoint"` - CLI integration tests.
 - `just test-coverage` - unit suite with coverage.
-- `uv run pytest -n auto -m unit` - unit suite under xdist. Never use for live tests.
+- `just test-resident-service` - resident-service retrieval contracts after an incremental reindex.
 - `just check-style` - ruff, including the banned-import rule.
 - `just check-pre-commit` - full pre-commit sweep.
 

@@ -14,7 +14,7 @@ from ...core.casilla_id import CasillaId
 from ...core.export_layout_format import ExportLayoutFormat
 from ...core.hashing import SHA256_HEX_LENGTH as _SHA256_HEX_LENGTH
 from ...core.hashing import hash_file, sha256_file, sha256_hex
-from ...core.identity import ContentDigest
+from ...core.identity.digest import ContentDigest
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period

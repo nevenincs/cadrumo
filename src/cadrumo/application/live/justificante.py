@@ -57,7 +57,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 if TYPE_CHECKING:
     from ...adapters.outbound.aeat.sede.declarations_schema import Declaracion
     from ...adapters.outbound.aeat.sede.schema import Expediente
-    from ...domain.justificante import Justificante
+    from ...domain.justificante.schema import Justificante
     from ...domain.modelos.filing_record import ModeloRecord
     from ..modelo.reconciliation import ModeloReconciliationReport
 
@@ -79,7 +79,12 @@ from ...core.aeat_csv import normalise_aeat_csv
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex, sha256_hex
-from ...core.identity import AeatCsv, AeatExpedienteId, BucketId, ContentDigest, SnapshotId, tax_id_identity_token
+from ...core.identity.aeat_csv import AeatCsv
+from ...core.identity.aeat_expediente import AeatExpedienteId
+from ...core.identity.bucket import BucketId
+from ...core.identity.digest import ContentDigest
+from ...core.identity.hex_ids import SnapshotId
+from ...core.identity.tax_id import tax_id_identity_token
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
@@ -663,7 +668,7 @@ def register_capture_justificante_metadata(
     snapshot cannot be parsed into one.
     """
     from ...adapters.persistence.profile.justificante import JustificanteRepository
-    from ...domain.justificante import JustificanteParseError
+    from ...domain.justificante.errors import JustificanteParseError
 
     if snapshot.state is not SnapshotLifecycleState.ACTIVE:
         raise LiveApplicationInputError(
@@ -994,7 +999,7 @@ def stamp_capture_evidence_if_filed(snapshot: JustificanteCaptureSnapshot) -> Mo
     propagate to the caller.
     """
     from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-    from ...domain.justificante import JustificanteParseError
+    from ...domain.justificante.errors import JustificanteParseError
 
     catalogue = ModeloRecordCatalogueRepository().load()
     current = catalogue.current_for(

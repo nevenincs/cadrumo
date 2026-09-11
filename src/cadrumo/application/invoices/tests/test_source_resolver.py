@@ -9,7 +9,6 @@ from types import SimpleNamespace
 from typing import Any
 
 import pytest
-from test_support.registry_authoring import load_modelo_directory
 
 from ....adapters.outbound.fx.ecb_provider import ECB_RATE_SOURCE_ID
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -24,13 +23,14 @@ from ....core.aggregation import (
 from ....core.errors.error_codes import get_registered_error_code, resolve_error_message
 from ....core.errors.hierarchy import CadrumoError
 from ....core.period import Period
-from ....core.resources.bundled_data import bundled_path
-from ....domain.calculations.registry._m347_threshold import (
+from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.m347_threshold import (
     m347_threshold_decimal,
     resolve_m347_counterparty_annual_threshold,
 )
-from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.temporal import select_revision
+from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
@@ -38,9 +38,8 @@ from ....domain.iva.schema import IvaCategory
 from ....domain.modelos.row_models import Modelo349ClaveOperacion, Modelo349CountryPrefixContextError
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import TestRuntimeProfile, isolated_two_bucket_runtime
-from ...aggregation import CalculationSourceContext
+from ...aggregation.source_mesh import CalculationSourceContext
 from ..source_resolver import (
     _OWNED_SOURCES,
     M349_CLAVE_INFERRED_REASON,
@@ -83,8 +82,7 @@ _M347_THRESHOLD = m347_threshold_decimal(
 
 
 def _modelo_revision(modelo_id: str, revision_id: str):
-    modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", modelo_id))
-    return modelo.revisions[revision_id]
+    return bundled_authority().modelo(modelo_id).revisions[revision_id]
 
 
 secure_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="secure_profile")

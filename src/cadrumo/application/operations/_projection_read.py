@@ -9,26 +9,28 @@ from typing import TYPE_CHECKING, TypeGuard, cast
 
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
-from ...core.identity import ContentDigest
+from ...core.identity.digest import ContentDigest
 from ...core.operations import OperationInteractionKind, OperationLifecycle, OperationTerminalCondition
 from .frontend_contracts import (
+    OperationResultProjectionResultV1,
+    OperationReviewProjectionResultV1,
+    OperationWorkspaceRefreshTargetResultV1,
+)
+from .frontend_projection import OperationReviewProjectionReferenceV1
+from .frontend_requests import (
     OperationResultProjectionRefusalCode,
     OperationResultProjectionRefusalV1,
     OperationResultProjectionRequestV1,
-    OperationResultProjectionResultV1,
     OperationResultProjectionSuccessV1,
     OperationResultProjectionVersionHeader,
-    OperationReviewProjectionReferenceV1,
     OperationReviewProjectionRefusalCode,
     OperationReviewProjectionRefusalV1,
     OperationReviewProjectionRequestV1,
-    OperationReviewProjectionResultV1,
     OperationReviewProjectionSuccessV1,
     OperationReviewProjectionVersionHeader,
     OperationWorkspaceRefreshTargetRefusalCode,
     OperationWorkspaceRefreshTargetRefusalV1,
     OperationWorkspaceRefreshTargetRequestV1,
-    OperationWorkspaceRefreshTargetResultV1,
     OperationWorkspaceRefreshTargetSuccessV1,
     OperationWorkspaceRefreshTargetVersionHeader,
 )

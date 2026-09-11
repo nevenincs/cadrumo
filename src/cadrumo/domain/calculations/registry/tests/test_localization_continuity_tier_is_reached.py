@@ -37,7 +37,7 @@ from typing import NamedTuple
 
 import pytest
 
-from .....core.i18n import lookup_translation, lookup_translation_entry
+from .....core.i18n.render import lookup_translation, lookup_translation_entry
 from ..authority import bundled_authority
 from ..modelo_localization import resolve_modelo_localization
 from ..schema_surfaces import CasillaDefinition

@@ -12,9 +12,8 @@ gates on the PROPERTY (every draft field reaches the payload, carrying its
 value) rather than on a field tally, which would encode today's shape and then
 detect nothing.
 
-This module reaches across into ``entrypoints.cli`` deliberately: the parity
-being asserted is precisely between the application-layer draft and the CLI
-payload, and a gate that could not see both ends could not assert it.
+The parity is asserted against the application-owned projection contract, so
+the transport can render it without owning or widening the draft shape.
 """
 
 from __future__ import annotations
@@ -24,7 +23,7 @@ import json
 import pytest
 from pydantic import BaseModel
 
-from ....entrypoints.cli.ledger_business_payloads import (
+from ..invoice_draft_payloads import (
     EvidenceDraftDiscrepancyPayload,
     EvidenceDraftLinePayload,
     EvidenceDraftRateBreakdownPayload,

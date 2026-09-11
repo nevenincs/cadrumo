@@ -1,0 +1,19 @@
+[fact]
+fact_id = "liva-art-99-compensation-carry-window-years"
+family = "scalar"
+
+[[fact.variants]]
+variant_id = "liva-art-99-compensation-carry-window-years:1993-01-01"
+date_axis = "filing_period"
+valid_from = 1993-01-01
+legal_refs = ["ley-37-1992:art-99"]
+source_refs = ["boe-liva-art-99-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-liva-art-99-statutory-facts"
+required_text = ["siempre que no hubiesen transcurrido cuatro años contados a partir de la presentación de la declaración-liquidación en que se origine dicho exceso"]
+[fact.variants.payload]
+kind = "scalar"
+value = 4
+unit = "years"

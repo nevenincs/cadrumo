@@ -1,4 +1,4 @@
-"""Real-behavior tests for the :data:`~core.identity.SnapshotId` alias.
+"""Real-behavior tests for the :data:`~core.identity.hex_ids.SnapshotId` alias.
 
 The suite pins ``SnapshotId`` as a lowercase hex-64 content-addressed identity
 for live snapshot records that are persisted by application services and read by
@@ -6,7 +6,7 @@ storage adapters. It accepts the canonical SHA-256 digest shape and rejects
 uppercase, wrong-length, and non-hex values at the pydantic boundary.
 
 See Also:
-    :data:`~core.identity.SnapshotId`
+    :data:`~core.identity.hex_ids.SnapshotId`
         Alias definition under test.
     :class:`~application.live.PersistedNotificationsSnapshot`
         Bucket-scoped live snapshot payload that stores a ``SnapshotId``.
@@ -22,7 +22,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....tests.fixtures.identity_holder import single_field_holder
-from .. import SnapshotId
+from ..hex_ids import SnapshotId
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

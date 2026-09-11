@@ -13,14 +13,15 @@ from typing import override
 
 import pytest
 
-import cadrumo.application.aggregation.modelo_bindings_retenciones as modelo_bindings_retenciones_module
-
 from ....core.aggregation import BindingSourceKind
 from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
+from ....domain.calculations.registry.ledger_iva_bindings import (
+    IvaLedgerObservation,
+    invoice_ledger_screen_binding_ids,
+)
 from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.invoices.enums import IvaRate, PaymentStatus
@@ -31,14 +32,17 @@ from ....domain.iva.schema import IvaCashAccountingTreatment, IvaCategory, IvaLe
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import _modelo_bindings_invoice_iva as modelo_bindings_module
 from .. import _modelo_bindings_invoice_iva_refusal as modelo_bindings_refusal_module
-from .. import _service as service_module
+from .. import _preconditions as preconditions_module
+from .. import errors as errors_module
+from .. import modelo_bindings_retenciones as modelo_bindings_retenciones_module
+from .. import service as service_module
 from .._modelo_bindings_invoice_iva_refusal import _raise_if_screened_invoice_iva_would_be_silent
 from .._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
-from .._retencion_observations_repository import RetencionObservationRepository
-from .._service import _supported_per_modelo_modelos, provider_for_modelo
-from .._source_mesh import CalculationSourceContext
 from ..errors import AggregationError, AggregationUnsupportedModeloError, AggregationValidationError
 from ..modelo_bindings_retenciones import RetencionesAggregationSourceResolver
+from ..retencion_observations_repository import RetencionObservationRepository
+from ..service import _supported_per_modelo_modelos, provider_for_modelo
+from ..source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -67,11 +71,11 @@ def _contract(
 # retenciones terminal attachments.  Fact values are AST expressions rather
 # than just keys, so a dynamic calculation or boolean polarity cannot drift.
 _AGGREGATION_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
-    "_service:provider_for_modelo:1": _contract(
+    "service:provider_for_modelo:1": _contract(
         AggregationPreconditionCondition.PER_MODELO_MODELO_SUPPORTED,
         (("modelo", "modelo"), ("supported_modelos", "'|'.join(supported)")),
     ),
-    "_service:provider_for_modelo:2": _contract(
+    "service:provider_for_modelo:2": _contract(
         AggregationPreconditionCondition.PER_MODELO_MODELO_SUPPORTED,
         (("modelo", "modelo"), ("supported_modelos", "'|'.join(supported)")),
     ),
@@ -216,7 +220,7 @@ def _normalized_outcome(precondition: ast.Call) -> NoRecoveryOutcome:
 
 
 def _helper_provenance() -> ActionEvidenceProvenance:
-    tree = ast.parse(inspect.getsource(__import__("cadrumo.application.aggregation._preconditions", fromlist=["*"])))
+    tree = ast.parse(inspect.getsource(preconditions_module))
     calls = [
         node
         for node in ast.walk(tree)
@@ -267,8 +271,6 @@ def test_aggregation_terminal_attachment_totality_is_exact_and_mutation_sensitiv
 
 def test_aggregation_preconditions_use_the_shared_mixin_and_single_canonical_constructor() -> None:
     assert issubclass(AggregationError, TerminalPreconditionErrorMixin)
-    preconditions_module = __import__("cadrumo.application.aggregation._preconditions", fromlist=["*"])
-    errors_module = __import__("cadrumo.application.aggregation.errors", fromlist=["*"])
     modules = (*_ATTACHMENT_MODULES, preconditions_module, errors_module)
     for module in modules:
         tree = ast.parse(inspect.getsource(module))
@@ -377,7 +379,10 @@ def test_invoice_ledger_refusals_have_exact_application_state_operator_decision_
     with pytest.raises(AggregationValidationError) as raised:
         _raise_if_screened_invoice_iva_would_be_silent(
             context=context,
-            screened_bindings=modelo_bindings_module.INVOICE_LEDGER_SCREEN_BINDINGS["303"],
+            screened_bindings=invoice_ledger_screen_binding_ids(
+                context.revision,
+                modelo=context.modelo,
+            ),
             screened=screened,
             transaction_binding_values={},
             prorrata_apportionment=None,

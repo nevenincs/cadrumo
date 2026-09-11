@@ -63,7 +63,7 @@ _AEAT_LAYOUT_PARSERS = (
 #: The defining module itself, for the attribute scoping below. Named through
 #: `import_module` rather than `from .. import`: the ledger package facade is
 #: inert and its tests may not import through it.
-invoice_draft_extraction_module = import_module("cadrumo.application.ledger.invoice_draft_extraction")
+invoice_draft_extraction_module = import_module("..invoice_draft_extraction", __package__)
 
 
 def _compiled_patterns(module_path: Path) -> tuple[str, ...]:

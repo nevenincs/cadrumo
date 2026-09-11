@@ -44,13 +44,13 @@ from typing import Annotated, Literal, get_args
 from pydantic import BaseModel, BeforeValidator, Field, StringConstraints, field_validator, model_validator
 
 from ...core.errors.hierarchy import CadrumoError
-from ...core.identity import nif_iva_format_for_country
+from ...core.identity.nif_iva import nif_iva_format_for_country
 from ...core.irnr import M210_TIPO_RENTA_CODE_PROJECTION, M210PayerMode
 from ...core.modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada, TipoVinculacion
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.unit_proportion import UnitProportion
-from ..calculations.registry._m347_threshold import m347_threshold_decimal, resolve_m347_counterparty_annual_threshold
 from ..calculations.registry.facts.resolution import ResolvedScalarFact
+from ..calculations.registry.m347_threshold import m347_threshold_decimal, resolve_m347_counterparty_annual_threshold
 
 # ---------------------------------------------------------------------------
 # Shared type aliases
@@ -332,7 +332,7 @@ class Modelo232VinculadaRow(BaseModel):
 
 # Country-specific NIF-IVA format patterns for Modelo 349. Every current EU
 # Member State (plus post-Brexit Northern Ireland ``XI``) routes through the
-# canonical :data:`cadrumo.core.identity.NIF_IVA_FORMATS` authority so the
+# canonical :data:`cadrumo.core.identity.nif_iva.NIF_IVA_FORMATS` authority so the
 # structural pattern lives in exactly one place (per the
 # aeat-registry-bindings discipline: a per-family collection is
 # derived from the core table, never hand-maintained as a parallel literal
@@ -572,7 +572,7 @@ def validate_m349_nif_format(nif: str, pais: str) -> bool:
     """Return True when ``nif`` matches the expected NIF-IVA format for ``pais``.
 
     Every current EU Member State (plus ``XI``) resolves its structural
-    pattern from the canonical :func:`cadrumo.core.identity.nif_iva_format_for_country`
+    pattern from the canonical :func:`cadrumo.core.identity.nif_iva.nif_iva_format_for_country`
     authority. ``GB`` is validated against Modelo 349's own Brexit-transition
     pattern (see :data:`_M349_GB_NIF_PATTERN`), since post-Brexit UK carries no
     entry in the general EU NIF-IVA authority. Unsupported country prefixes

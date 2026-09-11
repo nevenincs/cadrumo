@@ -39,9 +39,10 @@ from pydantic import BaseModel, Field, field_serializer, model_validator
 
 from ....core.casilla_id import CasillaId
 from ....core.filing_year import FilingYear
-from ....core.identity import ContentDigest, TransactionId
+from ....core.identity.digest import ContentDigest
+from ....core.identity.transaction_ids import TransactionId
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ....core.parsing import IsoCurrencyCode
+from ....core.parsing.codes import IsoCurrencyCode
 from ....core.period import Period
 from ....core.time.clock import now as _utc_now
 from ....core.time.utc import validate_utc_aware

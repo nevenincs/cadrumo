@@ -11,7 +11,6 @@ import pytest
 from ....core.config import override_settings
 from ....core.external_constants import OutputLanguage
 from ....core.profile_session import ProfileSessionRefusalReason
-from ....tests.cli_runner import invoke_cached_cli
 from .._profile_authentication_gate import _preflight_sources
 from .._profile_authentication_notice import (
     drain_profile_authentication_notices,
@@ -28,6 +27,7 @@ from ..config.secure_input import (
     ProfileSecretSelection,
 )
 from ..errors import CliRefusedBoundaryError, render_error_payload
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

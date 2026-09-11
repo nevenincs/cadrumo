@@ -44,13 +44,12 @@ def test_application_overview_applicability_shim_is_absent() -> None:
     the shim (an accidental restore) must be flagged at the structural
     boundary, not silently re-introduced.
     """
-    with pytest.raises(ModuleNotFoundError):
-        importlib.import_module("cadrumo.application.overview._applicability")
+    assert importlib.util.find_spec("cadrumo.application.overview._applicability") is None
 
 
 def test_annual_withholding_summary_applicability_uses_art_108_not_art_109() -> None:
     """M180/M190 filing duty is RIRPF art. 108, not pago-fraccionado art. 109."""
-    domain_mod = importlib.import_module("cadrumo.domain.calculations.registry.applicability")
+    domain_mod = importlib.import_module("..applicability", package=__package__)
     core_mod = importlib.import_module("cadrumo.core.modelo")
     rules_by_modelo = {rule.modelo: rule for rule in domain_mod.iter_modelo_applicability_rules()}
 

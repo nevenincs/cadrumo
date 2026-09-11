@@ -14,10 +14,10 @@ from ....core.period import Period
 from ....domain.buckets.event import BucketEventType
 from ....domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
 from ....domain.modelos.filing_record import ExternalEvidenceKind
-from ...calculations.cross_period_clean_state import CrossPeriodCleanStateBlocker
 from ...calculations.cross_period_external_evidence import (
     filing_external_evidence_blockers as _filing_external_evidence_blockers,
 )
+from ...calculations.cross_period_models import CrossPeriodCleanStateBlocker
 from ...calculations.observations_repository import (
     CalculationObservationRepository,
     ObservationEnvelopePayload,

@@ -20,7 +20,7 @@ from click.testing import Result
 from ....adapters.outbound.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
-from ....tests.cli_runner import invoke_cached_cli
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

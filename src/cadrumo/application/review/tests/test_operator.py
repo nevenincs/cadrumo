@@ -9,7 +9,7 @@ from pydantic import ValidationError
 
 from ....core.config import Settings
 from ....core.errors.error_codes import resolve_error_message
-from ....core.i18n import tr
+from ....core.i18n.render import tr
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
 from ..enums import ReviewSeverity, ReviewState

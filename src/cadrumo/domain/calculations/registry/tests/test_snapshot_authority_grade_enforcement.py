@@ -7,11 +7,11 @@ from dataclasses import replace
 import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
-from .registry_tree import bundled_registry_tree
-from .._snapshot_internals import _build_validated_snapshot
+from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ..authority import ValidatedRegistryAuthority
 from ..errors import RegistryValidationError
 from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from ..snapshot import build_validated_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -35,7 +35,7 @@ def _snapshot(
     catalogues: RegistryCatalogues,
     grade: RegistryAuthorityGrade,
 ):
-    return _build_validated_snapshot(
+    return build_validated_snapshot(
         modelo,
         catalogues,
         filing_year=_YEAR,

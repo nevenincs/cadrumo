@@ -12,7 +12,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from cadrumo.entrypoints.cli.command_api import build_verb_input_schemas, command_schema_refs
+from .command_surface import command_surface
 
 _MAX_PAYLOAD_BYTES = 8_192
 _profile_passphrase: str | None = None
@@ -30,10 +30,11 @@ def _resume_active_profile(passphrase: str) -> None:
 
 
 def _authoritative_fields() -> tuple[str, ...]:
-    command_keys = tuple(reference.command for reference in command_schema_refs())
+    surface = command_surface()
+    command_keys = tuple(reference.command for reference in surface.command_schema_refs())
     contracts = {
         tuple(field.name for field in schema.profile_authentication_contract.fields)
-        for schema in build_verb_input_schemas(command_keys).values()
+        for schema in surface.build_verb_input_schemas(command_keys).values()
         if schema.profile_authentication != "not-applicable"
     }
     if len(contracts) != 1 or len(next(iter(contracts))) != 1:

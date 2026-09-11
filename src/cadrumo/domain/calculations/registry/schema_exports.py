@@ -22,7 +22,7 @@ from ....core.filing_projection_ref import (
     hydrate_filing_projection_ref,
 )
 from ....core.frozen_mapping import FROZEN_MAPPING
-from ....core.identity import ContentDigest
+from ....core.identity.digest import ContentDigest
 from ..export_field_kind import CasillaFieldKind, CasillaFieldKindValue
 from .errors import RegistryValidationError
 from .export_semantics import (

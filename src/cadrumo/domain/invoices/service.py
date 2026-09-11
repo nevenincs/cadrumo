@@ -17,7 +17,8 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from ...core.identity import InvoiceId, TransactionId
+from ...core.identity.hex_ids import InvoiceId
+from ...core.identity.transaction_ids import TransactionId
 from ...core.invoice_link import LinkInconsistencyDirection
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN

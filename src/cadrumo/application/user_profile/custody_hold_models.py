@@ -8,7 +8,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core.identity import PrefixedContentDigest
+from ...core.identity.digest import PrefixedContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import validate_utc_aware
 from ..profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection, ProfileDeletionHoldOwnerValue

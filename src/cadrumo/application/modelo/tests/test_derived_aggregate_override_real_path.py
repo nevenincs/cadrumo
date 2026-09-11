@@ -61,7 +61,7 @@ from ....tests.profile_capsule import (
 )
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from ...aggregation import CallerOverrideDisposition, precedence_ladder_sources
+from ...aggregation.source_mesh import CallerOverrideDisposition, precedence_ladder_sources
 from ...user_profile.projections import record_to_path_values
 from ...user_profile.validation import reject_invalid_profile_facts
 from ..work_lifecycle import create_work_unit

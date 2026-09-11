@@ -64,7 +64,8 @@ from ...core.config import Settings
 from ...core.external_constants import PDF_EXTENSION, PDF_MIME_TYPE, XML_MIME_TYPE
 from ...core.hashing import content_hash_hex
 from ...core.hex import Hex64Str
-from ...core.identity import BucketId, ContentDigest
+from ...core.identity.bucket import BucketId
+from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.percentage import Percentage
 from ...core.text_bounds import NonNegativeDecimal

@@ -1,7 +1,7 @@
 """Shared currency predicates for aggregation gates.
 
-Used by :mod:`~.iva_ledger`, :mod:`~._renta_ledger`,
-:mod:`~._renta_income_ledger`, and :mod:`~._renta_gasto_ledger` to gate
+Used by :mod:`~.iva_ledger`, :mod:`~.renta_ledger`,
+:mod:`~.renta_income_ledger`, and :mod:`~.renta_gasto_ledger` to gate
 non-EUR rows and extract effective EUR amounts.
 
 Provides two predicates that replace independent
@@ -13,8 +13,9 @@ from __future__ import annotations
 from decimal import Decimal
 
 from ...core.external_constants import DEFAULT_CURRENCY
+from ...core.i18n.translatable import Translatable as t
 from ...domain.transactions.models import Transaction
-from .errors import AggregationConfigError, t
+from .errors import AggregationConfigError
 
 
 def is_non_eur_without_conversion(transaction: Transaction) -> bool:

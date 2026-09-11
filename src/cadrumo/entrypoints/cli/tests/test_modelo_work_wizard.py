@@ -41,7 +41,6 @@ from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.flows import FlowMode
 from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401
 from ....tests.user_profile import register_cli_profile
@@ -50,6 +49,7 @@ from .._modelo_behavior_support import resolve_work_unit_for_cli
 from .._modelo_work_wizard_payloads import WizardPromptedCasillaPayload
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
 from ._modelo_work_ux_support import _create_m130_work_unit
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

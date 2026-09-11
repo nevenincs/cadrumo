@@ -16,7 +16,7 @@ Scope: this record is the standard-case construction path for
 derives it from an :class:`IvaRate` plus the invoice direction (issued /
 received), and :func:`invoice_line_to_iva_observation` is the sole
 production caller, feeding the invoice-derived Modelo 303 observations in
-:mod:`cadrumo.application.aggregation._modelo_bindings`. For
+:mod:`cadrumo.application.aggregation.modelo_bindings`. For
 reverse-charge, intra-community, OSS / IOSS, and other non-domestic
 invoice cases, callers construct the record directly with the appropriate
 :class:`IvaCategory` from the substrate's classifier output

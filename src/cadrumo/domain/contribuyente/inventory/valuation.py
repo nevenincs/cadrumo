@@ -16,7 +16,7 @@ from pydantic import ValidationError
 
 from ....core.decimal.constants import MONEY_ZERO
 from ....core.hashing import content_hash_hex as _content_hash_hex
-from ....core.identity import ContentDigest
+from ....core.identity.digest import ContentDigest
 from ....core.money.rounding import round_to_cents as _quantize
 from ...identifiers import canonical_decimal_string as _canonical_decimal_string
 

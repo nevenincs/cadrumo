@@ -33,11 +33,11 @@ from pydantic import BaseModel, ConfigDict, Field
 from cadrumo.application.command_search.index import CommandDoc, CommandIndex, build_command_index
 from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION
 
-from ._capability_manifest import OperatorSurfaceManifest, build_operator_surface_manifest
 from ._hitl import ConfirmationPolicy, confirmation_for_policy
 from ._persona_scope import AgentPersona, handoff_denial_message, is_handoff_denied, is_tool_in_persona_scope
 from ._tools import McpToolDescriptor
 from ._toolsets import MAX_ACTIVE_TOOLSETS, Toolset, _family_domain_map, build_toolsets, toolset_for_command
+from .capability_manifest import OperatorSurfaceManifest, build_operator_surface_manifest
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -112,14 +112,14 @@ def _command_doc(descriptor: McpToolDescriptor) -> CommandDoc:
     """
     key_tokens = descriptor.command_key.replace(".", " ").replace("_", " ")
     key_and_name = f"{descriptor.command_key} {key_tokens} {descriptor.name}"
-    from cadrumo.entrypoints.cli.main import command_search_terms
+    from .command_surface import command_surface
 
     return CommandDoc(
         command_key=descriptor.command_key,
         tool_name=descriptor.name,
         key_and_name=key_and_name,
         description=descriptor.description,
-        aliases=" ".join(command_search_terms(descriptor.command_key)),
+        aliases=" ".join(command_surface().command_search_terms(descriptor.command_key)),
         help=descriptor.verb_schema.help,
     )
 
@@ -321,17 +321,17 @@ def build_capability_manifest() -> OperatorSurfaceManifest:
     intent and mutability, the lifecycle ordering, and the registered per-command
     result-schema references. Composed here from the application layer's
     :func:`~application.operator_surface.build_operator_surface_manifest` and the
-    CLI's own :func:`~entrypoints.cli.command_schema_refs`, so the manifest is a
+    installed command-surface projection, so the manifest is a
     first-class MCP tool rather than a projection of any one CLI verb.
 
     Returns:
         The validated :class:`~application.operator_surface.OperatorSurfaceManifest`.
     """
-    from cadrumo.entrypoints.cli.command_api import command_schema_refs
+    from .command_surface import command_surface
 
     return build_operator_surface_manifest(
         envelope_schema_version=ENVELOPE_SCHEMA_VERSION,
-        command_schemas=command_schema_refs(),
+        command_schemas=command_surface().command_schema_refs(),
     )
 
 

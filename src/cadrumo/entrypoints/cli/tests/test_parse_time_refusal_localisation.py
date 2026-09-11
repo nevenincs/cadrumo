@@ -20,7 +20,7 @@ import pytest
 
 from ....core.i18n.render import tr
 from ....tests.cli_envelope import require_error_document
-from ....tests.cli_runner import invoke_cached_cli
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

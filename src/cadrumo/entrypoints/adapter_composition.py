@@ -1,15 +1,14 @@
-"""The one adapter composition every Cadrumo frontend enters.
+"""The adapter composition shared by the CLI and TUI entrypoints.
 
 A frontend process must bind the persistence and outbound adapters the
 application layer resolves through explicitly composed ports before it serves
 any work. That inventory is a property of the product, not of the frontend, so
-it is declared once here and entered by the CLI root, the TUI devtools fixture
-and the ``cadrumo-mcp`` server alike.
+it is declared once here and entered by the CLI root and the TUI devtools
+fixture. The separately shipped MCP harness owns its independent composition
+root and does not import this entrypoint module.
 
-Keeping a copy per frontend is what let the MCP server ship with none at all:
-nothing named the inventory, so nothing could observe that one entrypoint was
-missing it. A frontend that forgets this scope fails on every custody-touching
-verb, which is exactly the symptom that made the gap visible.
+An entrypoint that forgets this scope fails on every custody-touching verb,
+which is exactly the symptom that made the original MCP gap visible.
 """
 
 from __future__ import annotations
@@ -31,6 +30,7 @@ def profile_adapter_composition() -> Generator[None]:
     from ..adapters.inbound.reconciliation_parser import InboundReconciliationEvidenceParser
     from ..adapters.outbound.aeat.auth.provider_selection import select_provider as select_outbound_auth_provider
     from ..adapters.outbound.aeat.auth.session_store import build_session_store
+    from ..adapters.outbound.llm.column_role_mapping import resolve_column_roles as resolve_outbound_column_roles
     from ..adapters.persistence.profile.buckets import build_bucket_event_history_repository
     from ..adapters.persistence.profile.confirmation_records import ConfirmationRecordRepository
     from ..adapters.persistence.profile.extraction_drafts import ExtractionDraftRepository
@@ -53,6 +53,7 @@ def profile_adapter_composition() -> Generator[None]:
     from ..application.auth.protocols import bind_session_store
     from ..application.auth.providers import bind_auth_provider_selector
     from ..application.bucket_event_repository import bind_bucket_event_history_repository_factory
+    from ..application.ledger.column_roles import bind_column_role_mapping_resolver
     from ..application.ledger.confirmation_record import bind_confirmation_record_repository_factory
     from ..application.ledger.extraction_draft_store import bind_extraction_draft_repository_factory
     from ..application.ledger.participation_read import bind_transaction_participation_index_repository_factory
@@ -79,6 +80,7 @@ def profile_adapter_composition() -> Generator[None]:
         composition.enter_context(bind_workflow_persistence_port(build_workflow_persistence_port()))
         composition.enter_context(bind_bucket_event_history_repository_factory(build_bucket_event_history_repository))
         composition.enter_context(bind_confirmation_record_repository_factory(ConfirmationRecordRepository))
+        composition.enter_context(bind_column_role_mapping_resolver(resolve_outbound_column_roles))
         composition.enter_context(bind_extraction_draft_repository_factory(ExtractionDraftRepository))
         composition.enter_context(
             bind_transaction_participation_index_repository_factory(TransactionParticipationIndexRepository)

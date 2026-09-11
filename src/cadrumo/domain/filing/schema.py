@@ -28,8 +28,9 @@ from ...core.casilla_id import CasillaId
 from ...core.errors.severity import BaseSeverity
 from ...core.hashing import content_hash_hex
 from ...core.hex import Hex16Str
-from ...core.i18n import Translatable as tr
-from ...core.identity import ContentDigest, SubjectTaxId
+from ...core.i18n.translatable import Translatable as tr
+from ...core.identity.digest import ContentDigest
+from ...core.identity.tax_id import SubjectTaxId
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
 from ...core.time.utc import UtcInstant
@@ -378,7 +379,7 @@ class ModeloDraft(BaseModel):
         ``profile_tax_id`` and ``subject_tax_id`` are two axes of one taxpayer
         identity, not two independent parties: the builder copies a single
         validated profile identity into both, and no consumer distinguishes
-        them. Typing each as :data:`~core.identity.SubjectTaxId` only checks the
+        them. Typing each as :data:`~core.identity.tax_id.SubjectTaxId` only checks the
         AEAT checksum of each value in isolation, so two *individually valid*
         but different NIFs pass — a draft naming one taxpayer in the profile
         axis and another in the filing-subject axis, preserved intact across the

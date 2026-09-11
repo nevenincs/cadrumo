@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
 
-from ...core.i18n import Translatable as tr
+from ...core.i18n.translatable import Translatable as tr
 from ...core.requirement import Requirement
 from ...domain.contribuyente.keys import ProfileKey
 from .errors import WizardCompileError

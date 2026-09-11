@@ -40,7 +40,7 @@ import pytest
 
 from ....core.modelo import Modelo
 from ....domain.calculations.registry.authority import bundled_authority
-from .._modelo_bindings_invoice_iva import INVOICE_LEDGER_SCREEN_BINDINGS
+from ....domain.calculations.registry.ledger_iva_bindings import invoice_ledger_screen_binding_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -74,8 +74,8 @@ def test_the_invoice_versus_ledger_screen_now_covers_m390() -> None:
     screen, because what matters is that M390 has an ENTRY -- a screen that ran
     but compared an empty binding set would pass this call and guard nothing.
     """
-    assert Modelo.M390.value in INVOICE_LEDGER_SCREEN_BINDINGS
-    assert INVOICE_LEDGER_SCREEN_BINDINGS[Modelo.M390.value]
+    revision = _revision(Modelo.M390.value, "0A")
+    assert invoice_ledger_screen_binding_ids(revision, modelo=Modelo.M390.value)
 
 
 def test_the_two_screened_modelos_cover_the_same_concepts() -> None:
@@ -87,9 +87,16 @@ def test_the_two_screened_modelos_cover_the_same_concepts() -> None:
     a wrong filing -- which is how the ES-only counterparty filter and the
     missing recargo tiers survived on the M303 side for as long as they did.
     """
+    revisions = {
+        Modelo.M303.value: _revision(Modelo.M303.value, "1T"),
+        Modelo.M390.value: _revision(Modelo.M390.value, "0A"),
+    }
     stripped = {
-        modelo: sorted(str(binding).removeprefix(f"modelo-{modelo}-").removeprefix("iva-") for binding in bindings)
-        for modelo, bindings in INVOICE_LEDGER_SCREEN_BINDINGS.items()
+        modelo: sorted(
+            str(binding).removeprefix(f"modelo-{modelo}-").removeprefix("iva-")
+            for binding in invoice_ledger_screen_binding_ids(revision, modelo=modelo)
+        )
+        for modelo, revision in revisions.items()
     }
 
     assert stripped[Modelo.M303.value] == stripped[Modelo.M390.value]

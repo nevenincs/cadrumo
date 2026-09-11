@@ -28,7 +28,7 @@ from textual.containers import Vertical
 from textual.screen import Screen
 from textual.theme import Theme
 
-from ....core.config import TuiAppearance
+from ....core.config_support import TuiAppearance
 from ....core.directory_scan import scan_directory
 from ....entrypoints.tui.secret.registration import RegistrationScreen
 from ..components.host import ScreenHostApp

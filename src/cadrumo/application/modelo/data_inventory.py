@@ -32,7 +32,7 @@ from typing import TYPE_CHECKING
 
 from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingSourceKind
 from ...core.casilla_id import CasillaId
-from ...core.i18n import output_language
+from ...core.i18n.render import output_language
 from ...core.period import Period
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids

@@ -22,7 +22,7 @@ from __future__ import annotations
 from typing import cast
 
 import pytest
-from test_support.tui_home_fixtures import HomeFixtureScenario, build_home_projection_fixture
+from dev.tui.harness.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from textual.widgets import DataTable, Static
 
 from ....application.ledger.workspace import (

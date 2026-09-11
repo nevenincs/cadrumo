@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core.identity import BucketId
+from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.retention.floor import RetentionFloorAssessment
 from ...domain.user_profile.values import ProfileSetupState

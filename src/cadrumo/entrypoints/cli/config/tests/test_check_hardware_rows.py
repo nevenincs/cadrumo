@@ -24,7 +24,7 @@ from .....application.provisioning import (
 )
 from .....core.config import override_settings
 from .....core.hardware import AcceleratorKind, ContentionCause
-from .....tests.cli_runner import invoke_cached_cli
+from ...tests.cli_runner import invoke_cached_cli
 from .._check_hardware_rows import CONTENTION_ROW_ID, contention_row
 from .._check_payloads import CheckDependencyPayload
 from .isolated_storage_fixture import config_check_backend, config_check_isolated_backend

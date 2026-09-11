@@ -2,8 +2,14 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 
+from .....tests.inventory import FIXTURES_DIR
+from ...pdf.source_provenance import source_pdf_reference_path
+from ..errors import DeclaracionParseError
+from ..parser import parse_declaracion
 from ._parser_boundary_casillas import (
     _M130_RENDIMIENTO_NETO_CASILLA,
     _M130_RESULTADO_CASILLA,
@@ -11,12 +17,7 @@ from ._parser_boundary_casillas import (
 from ._parser_boundary_support import (
     _MODELO_130_EXPECTED_TARGETS,
     _MODELO_130_SYNTHETIC_FIXTURE,
-    FIXTURES_DIR,
-    Decimal,
-    DeclaracionParseError,
     _modelo_130_snapshot,
-    parse_declaracion,
-    source_pdf_reference_path,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

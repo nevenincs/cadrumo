@@ -117,10 +117,10 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_3,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._ledger", "ledger_link")),
+        handler=LazyBinding.available(DeferredTarget("._ledger", "ledger_link", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_payloads", "LedgerLinkResult"),
+            target=DeferredTarget("._ledger_payloads", "LedgerLinkResult", __package__),
             identity="ledger.link",
         ),
     ),
@@ -218,7 +218,7 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="sort_by",
                 declarations=("--sort-by",),
-                value=ValueContract(DeferredTarget("cadrumo.core.ledger_sort", "LedgerSortField")),
+                value=ValueContract(DeferredTarget("...core.ledger_sort", "LedgerSortField", __package__)),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.ledger.list.sort_by_help"),
                 metavar=None,
@@ -234,7 +234,7 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="sort_order",
                 declarations=("--sort-order",),
-                value=ValueContract(DeferredTarget("cadrumo.core.ledger_sort", "LedgerSortOrder")),
+                value=ValueContract(DeferredTarget("...core.ledger_sort", "LedgerSortOrder", __package__)),
                 default=ParameterDefault.value("asc"),
                 help_key=TranslationKey("cli.ledger.list.sort_order_help"),
                 metavar=None,
@@ -265,10 +265,10 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_5,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._ledger_read_cli", "ledger_list")),
+        handler=LazyBinding.available(DeferredTarget("._ledger_read_cli", "ledger_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_payloads", "LedgerListResult"),
+            target=DeferredTarget("._ledger_payloads", "LedgerListResult", __package__),
             identity="ledger.list",
         ),
     ),
@@ -331,12 +331,10 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_5,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._ledger_read_cli", "ledger_llm_diagnostics")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._ledger_read_cli", "ledger_llm_diagnostics", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_rule_payloads", "LedgerLlmDiagnosticsResult"),
+            target=DeferredTarget("._ledger_rule_payloads", "LedgerLlmDiagnosticsResult", __package__),
             identity="ledger.llm_diagnostics",
         ),
     ),
@@ -400,10 +398,10 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_9,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli.ledger_lifecycle_cli", "ledger_merge")),
+        handler=LazyBinding.available(DeferredTarget(".ledger_lifecycle_cli", "ledger_merge", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_payloads", "LedgerMergeResult"),
+            target=DeferredTarget("._ledger_payloads", "LedgerMergeResult", __package__),
             identity="ledger.merge",
         ),
     ),
@@ -433,12 +431,10 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_5,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._participation_cli", "participation_lookup")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._participation_cli", "participation_lookup", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_payloads", "LedgerTransactionParticipationPayload"),
+            target=DeferredTarget("._ledger_payloads", "LedgerTransactionParticipationPayload", __package__),
             identity="ledger.participation",
         ),
     ),
@@ -485,10 +481,10 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_6,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._ledger_read_cli", "ledger_preflight")),
+        handler=LazyBinding.available(DeferredTarget("._ledger_read_cli", "ledger_preflight", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_payloads", "LedgerPreflightResult"),
+            target=DeferredTarget("._ledger_payloads", "LedgerPreflightResult", __package__),
             identity="ledger.preflight",
         ),
     ),
@@ -551,12 +547,10 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_8,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli.ledger_lifecycle_cli", "ledger_evidence_pull_all")
-        ),
+        handler=LazyBinding.available(DeferredTarget(".ledger_lifecycle_cli", "ledger_evidence_pull_all", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_payloads", "LedgerEvidencePullAllResult"),
+            target=DeferredTarget("._ledger_payloads", "LedgerEvidencePullAllResult", __package__),
             identity="ledger.evidence.pull_all",
         ),
     ),

@@ -2,7 +2,7 @@
 
 This module owns the repository-backed Renta expense projection and the
 provenance it emits.  The remaining modelo-binding resolvers stay in
-:mod:`._modelo_bindings`; shared source-mesh helpers remain there until their
+:mod:`.modelo_bindings`; shared source-mesh helpers remain there until their
 own owning concern moves.
 """
 
@@ -20,17 +20,14 @@ from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProt
 from ...domain.renta.ledger_expenses import RentaDeductibleExpenseObservation
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..user_profile.usage_ratio_resolution import resolve_effective_usage_ratios
-from ._modelo_bindings import (
-    aggregation_period_for_modelo,
-    sorted_ids,
-)
 from ._modelo_bindings_support import (
     STORAGE_DEGRADATION_ERRORS,
     empty_source_resolution,
     revision_has_binding_source,
 )
-from ._renta_ledger import aggregate_renta_ledger_expenses_from_repositories
-from ._source_mesh import (
+from .modelo_bindings import aggregation_period_for_modelo
+from .renta_ledger import aggregate_renta_ledger_expenses_from_repositories
+from .source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
@@ -39,6 +36,7 @@ from ._source_mesh import (
 from .source_resolution_operations import (
     flatten_source_provenance_for as _flattened_provenance_for,
 )
+from .source_resolution_operations import sorted_source_ids as sorted_ids
 from .source_resolution_operations import (
     source_issue_diagnostics,
     storage_degradation_resolution,
@@ -50,9 +48,9 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
 
     Owns :attr:`BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION` and folds
     transaction rows plus purchase-invoice evidence through
-    :func:`~._renta_ledger.aggregate_renta_ledger_expenses_from_repositories`.
+    :func:`~.renta_ledger.aggregate_renta_ledger_expenses_from_repositories`.
     It reports source issues and unrouted deductible expenses on the returned
-    :class:`~._source_mesh.CalculationSourceResolution`.
+    :class:`~.source_mesh.CalculationSourceResolution`.
     """
 
     resolver_id: ClassVar[str] = "ledger_renta_gastos_estimacion_directa_aggregation"
@@ -78,7 +76,7 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
         Returns:
             An empty resolution when the revision declares no such binding
             source, a degraded resolution on repository failure, or the
-            aggregated :class:`~._source_mesh.CalculationSourceResolution`
+            aggregated :class:`~.source_mesh.CalculationSourceResolution`
             with its binding values, diagnostics, and provenance.
         """
         if not revision_has_binding_source(context.revision, "ledger_renta_gastos_estimacion_directa_aggregation"):

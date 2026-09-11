@@ -24,7 +24,7 @@ import pytest
 from pydantic import ValidationError
 
 from ......core.auth_session_keys import aeat_auth_session_storage_state_path
-from ......core.config import AEAT_CERTIFICATE_PROTECTED_URL
+from ......core.config_support import AEAT_CERTIFICATE_PROTECTED_URL
 from ......core.time.clock import now
 from ......tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED, aeat_url
 from ......tests.secure_sql import isolated_runtime_profile

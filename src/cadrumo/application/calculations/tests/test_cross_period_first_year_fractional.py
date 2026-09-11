@@ -25,14 +25,16 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.applicability_modelo202 import Modelo202Modality
 from ..cross_period_clean_state import (
+    _qualifies_for_first_year_fractional_suppression,
+    _suppressed_first_year_fractional_evidence,
+    _suppressed_pre_activity_evidence,
+)
+from ..cross_period_models import (
     CrossPeriodCleanStateVerdict,
     CrossPeriodDependencyEvidence,
     CrossPeriodDependencyOrigin,
     CrossPeriodDependencyRequirement,
     NoPriorObligationProvenanceKind,
-    _qualifies_for_first_year_fractional_suppression,
-    _suppressed_first_year_fractional_evidence,
-    _suppressed_pre_activity_evidence,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -15,7 +15,7 @@ Companion to the currency-conversion fix in ``test_currency_conversion_pipeline_
 that module proves the CONVERTED-figure path (a resolved fx_rate) is correct.
 This module proves the UNRESOLVED-rate path is now a hard stop, for both
 invoice-line-reading resolvers this defect class touched: the M303 general
-IVA screen (``_modelo_bindings.py``) and Modelo 369 OSS/IOSS
+IVA screen (``modelo_bindings.py``) and Modelo 369 OSS/IOSS
 (``_oss_ioss.py``). OSS/IOSS also gets a second refusal for the same
 "real declarable operation, one required fact missing" shape: an
 unclassifiable IVA rate tier (``rate_kind``).
@@ -42,8 +42,8 @@ from ....domain.iva.classification import InvoiceKind, TransactionKind
 from ....domain.iva.oss import OssIossRegime
 from ....domain.iva.schema import IvaRateKind
 from .._modelo_bindings_invoice_iva import _screened_invoice_line_observations
-from .._oss_ioss import _candidate_for_invoice_line
 from ..errors import AggregationValidationError
+from ..oss_ioss import _candidate_for_invoice_line
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

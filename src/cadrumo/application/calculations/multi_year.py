@@ -9,7 +9,7 @@ from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import RegistrySnapshot
-from ..aggregation import (
+from ..aggregation.source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,

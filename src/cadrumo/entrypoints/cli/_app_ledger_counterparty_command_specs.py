@@ -42,7 +42,7 @@ LEDGER_COUNTERPARTY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="scope",
                 declarations=("--scope",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.iva.classification", "IvaTerritorialScope")),
+                value=ValueContract(DeferredTarget("...domain.iva.classification", "IvaTerritorialScope", __package__)),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.counterparty.scope_help"),
                 metavar=None,
@@ -58,7 +58,7 @@ LEDGER_COUNTERPARTY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="identification_state",
                 declarations=("--identification-state",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.iva.schema", "EUMemberState")),
+                value=ValueContract(DeferredTarget("...domain.iva.schema", "EUMemberState", __package__)),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.counterparty.identification_state_help"),
                 metavar=None,
@@ -76,12 +76,10 @@ LEDGER_COUNTERPARTY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _optional_text_option("actor", ("--actor",), "cli.app.ledger.counterparty.actor_help"),
         ),
         policy=_POLICY_4,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._ledger_counterparty_cli", "counterparty_confirm")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._ledger_counterparty_cli", "counterparty_confirm", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_counterparty_payloads", "CounterpartyConfirmResult"),
+            target=DeferredTarget("._ledger_counterparty_payloads", "CounterpartyConfirmResult", __package__),
             identity="ledger.counterparty.confirm",
         ),
     ),
@@ -99,7 +97,7 @@ LEDGER_COUNTERPARTY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="evidenced_scope",
                 declarations=("--evidenced-scope",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.iva.classification", "IvaTerritorialScope")),
+                value=ValueContract(DeferredTarget("...domain.iva.classification", "IvaTerritorialScope", __package__)),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.counterparty.evidenced_scope_help"),
                 metavar=None,
@@ -114,12 +112,10 @@ LEDGER_COUNTERPARTY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_5,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._ledger_counterparty_cli", "counterparty_view")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._ledger_counterparty_cli", "counterparty_view", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_counterparty_payloads", "CounterpartyViewResult"),
+            target=DeferredTarget("._ledger_counterparty_payloads", "CounterpartyViewResult", __package__),
             identity="ledger.counterparty.view",
         ),
     ),
@@ -137,13 +133,11 @@ LEDGER_COUNTERPARTY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_POLICY_4,
         handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._ledger_counterparty_cli", "counterparty_withdraw")
+            DeferredTarget("._ledger_counterparty_cli", "counterparty_withdraw", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget(
-                "cadrumo.entrypoints.cli._ledger_counterparty_payloads", "CounterpartyWithdrawResult"
-            ),
+            target=DeferredTarget("._ledger_counterparty_payloads", "CounterpartyWithdrawResult", __package__),
             identity="ledger.counterparty.withdraw",
         ),
     ),

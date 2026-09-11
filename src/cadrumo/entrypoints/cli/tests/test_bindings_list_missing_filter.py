@@ -23,9 +23,9 @@ from datetime import date
 import pytest
 
 from ....domain.user_profile.values import UserProfileFact
-from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import set_active_test_profile_facts
 from ._strict_cli_fixture_support import binding_isolated_backend
+from .cli_runner import invoke_cached_cli
 
 __all__ = ["binding_isolated_backend"]
 

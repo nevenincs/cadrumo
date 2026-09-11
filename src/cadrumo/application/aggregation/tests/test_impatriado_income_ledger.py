@@ -21,12 +21,12 @@ are in scope), not by re-running the aggregation arithmetic — a scope/structur
 assertion, per aeat-quality-gates.
 
 See Also:
-    :mod:`~application.aggregation._impatriado_income_ledger`
+    :mod:`~application.aggregation.impatriado_income_ledger`
         Application classifier that consumes ``source_jurisdiction`` for Modelo
         151 Spanish-source income.
-    :func:`~application.aggregation._impatriado_income_ledger.aggregate_impatriado_income_ledger`
+    :func:`~application.aggregation.impatriado_income_ledger.aggregate_impatriado_income_ledger`
         Pure aggregation entry point exercised by the source-scope cases.
-    :func:`~application.aggregation._impatriado_income_ledger.aggregate_impatriado_income_ledger_from_repositories`
+    :func:`~application.aggregation.impatriado_income_ledger.aggregate_impatriado_income_ledger_from_repositories`
         Repository-backed entry point covered by the bucket roundtrip cases.
     :func:`~domain.calculations.registry.resolve_ledger_impatriado_income_aggregation_binding_values`
         Registry binding resolver that turns source-scoped observations into
@@ -57,13 +57,13 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.secure_sql import isolated_runtime_profile
-from .._impatriado_income_ledger import (
+from ..impatriado_income_ledger import (
     ImpatriadoIncomeLedgerAggregation,
     ImpatriadoIncomeLedgerAggregationIssueReason,
     aggregate_impatriado_income_ledger,
     aggregate_impatriado_income_ledger_from_repositories,
 )
-from .._renta_income_ledger import (
+from ..renta_income_ledger import (
     RentaIncomeLedgerAggregationIssueReason,
     aggregate_renta_m100_income_ledger,
 )

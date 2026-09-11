@@ -48,7 +48,8 @@ from ...adapters.persistence.storage.runtime_repository import secure_object_rep
 from ...adapters.persistence.storage.secure_object_namespaces import LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE
 from ...core.config import Settings, load_settings
 from ...core.hashing import content_hash_hex, sha256_hex
-from ...core.identity import BucketId, SnapshotId
+from ...core.identity.bucket import BucketId
+from ...core.identity.hex_ids import SnapshotId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from .errors import LiveApplicationInputError

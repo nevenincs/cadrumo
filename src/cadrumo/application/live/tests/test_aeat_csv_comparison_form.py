@@ -9,7 +9,7 @@ survived: a second form only shows itself the day it stops agreeing.
 The case variance these assert on is real rather than hypothetical, and the
 reason is worth naming, because it is not uniform. ``Justificante.csv`` and
 ``JustificanteCaptureSnapshot.csv`` both carry the canonical
-:data:`~core.identity.AeatCsv` alias, which normalises at the model boundary, so
+:data:`~core.identity.aeat_csv.AeatCsv` alias, which normalises at the model boundary, so
 those two can never present a variant spelling. The values that CAN are the ones
 crossing a boundary that only trims: ``ExternalEvidence.reference_id``, and the
 CSV recovered out of a cotejo URL. Those are the surfaces exercised below,
@@ -32,7 +32,7 @@ from pydantic import AnyHttpUrl, TypeAdapter
 
 from ....adapters.inbound.pdf.source_provenance import source_pdf_reference_path
 from ....core.period import Period
-from ....domain.justificante import Justificante
+from ....domain.justificante.schema import Justificante
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import (
     ExternalEvidence,

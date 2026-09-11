@@ -40,11 +40,12 @@ from pydantic import AnyHttpUrl, BaseModel, Field
 from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
 from .....core.hashing import sha256_hex
-from .....core.i18n import tr
-from .....core.identity import AeatCertificadoId, ContentDigest
+from .....core.i18n.render import tr
+from .....core.identity.aeat_certificado import AeatCertificadoId
+from .....core.identity.digest import ContentDigest
 from .....core.logging import get_logger
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .....core.parsing import parse_date
+from .....core.parsing.dates import parse_date
 from .....core.time.clock import now
 from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
 from .....domain.calculations.registry.schema_base import EvidenceTier
@@ -164,7 +165,7 @@ class RemoteNotification(BaseModel):
 
     Attributes:
         certificado_id: ``Nº de certificado`` — AEAT's per-notification
-            identifier, typed :data:`~core.identity.AeatCertificadoId`.
+            identifier, typed :data:`~core.identity.aeat_certificado.AeatCertificadoId`.
         tipo: Row class — ``"notificacion"`` | ``"comunicacion"`` |
             ``"pendiente"`` | ``"unknown"``.
         concepto: Free-text concepto / subject line (may be empty for

@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 import typer
 
-from ....tests.cli_runner import invoke_cached_cli
 from ._modelo_fixtures import active_cli_profile_fixture
+from .cli_runner import invoke_cached_cli
 
 __all__ = ["active_cli_profile_fixture"]
 

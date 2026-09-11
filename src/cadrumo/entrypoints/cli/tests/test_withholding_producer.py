@@ -16,14 +16,16 @@ import pytest
 import typer
 from pydantic import ValidationError
 
-from ....application.aggregation import (
+from ....application.aggregation.percepciones_observations_repository import (
     PercepcionObservationRepository,
-    PerModeloAggregationCommand,
-    WithholdingObservation,
     persist_percepcion_observations,
 )
+from ....application.aggregation.service import PerModeloAggregationCommand
 from ....core.modelo import Modelo
 from ....core.period import Period
+from ....domain.calculations.registry.withholding_bindings import (
+    WithholdingObservation,
+)
 from ....tests.secure_sql import isolated_runtime_profile
 from .._modelo_aggregate_cli import _parse_typed_cli_observations
 

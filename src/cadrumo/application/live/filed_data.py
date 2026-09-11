@@ -21,7 +21,7 @@ from datetime import datetime
 from pydantic import BaseModel
 
 from ...adapters.outbound.aeat.sede.declarations_schema import Declaracion
-from ...core.identity import AeatExpedienteId
+from ...core.identity.aeat_expediente import AeatExpedienteId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from .errors import LiveApplicationInputError

@@ -1,6 +1,6 @@
 """Continuity grounding is a one-way ratchet: the ungrounded backlog only shrinks.
 
-``_validate_cross_revision.py`` scopes strict continuity to *declared* surfaces:
+``validate_cross_revision.py`` scopes strict continuity to *declared* surfaces:
 a casilla id repeated across non-overlapping revisions hard-fails on drift only
 once someone has stamped it with a ``continuidad_id``. That is deliberate — the
 validator refuses to infer continuity from a repeated numeric id, because AEAT

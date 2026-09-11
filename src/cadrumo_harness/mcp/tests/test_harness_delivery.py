@@ -34,7 +34,7 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import (
 )
 from cadrumo.adapters.persistence.storage.master_key.bucket_session import BucketSession
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
-from cadrumo.tests.profile_persistence import composed_profile_persistence_ports
+from cadrumo.application.workflow.profile_health import ProfileHealthStatus
 
 from ...resources import iter_operator_rules, iter_personas, iter_skill_documents, operator_rules_text
 from .._harness_tools import (
@@ -58,6 +58,7 @@ from .._resources import (
 from .._tools import build_tool_descriptors
 from ._profile import PROFILE_PASSPHRASE, READY_PROFILE_FACTS, verify_recovery_handover
 from ._session import connected_server_and_client_session as connect
+from ._support import composed_profile_persistence_ports, isolated_profile_storage_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -281,8 +282,6 @@ def test_floor_tool_call_returns_the_active_persona_payload() -> None:
 
 def test_whoami_identity_resolves_the_active_profile_label(tmp_path: Any) -> None:
     """The identity probe reads an explicitly authenticated current capsule."""
-    from cadrumo.tests.secure_sql import isolated_profile_storage_root
-
     with (
         isolated_profile_storage_root(tmp_path=tmp_path) as storage_root,
         composed_profile_persistence_ports(),
@@ -307,9 +306,7 @@ def test_whoami_identity_resolves_the_active_profile_label(tmp_path: Any) -> Non
 
 
 def test_whoami_identity_is_null_when_no_profile_is_active(tmp_path: Any) -> None:
-    from cadrumo.tests.secure_sql import isolated_profile_storage_root
-
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    with isolated_profile_storage_root(tmp_path=tmp_path), composed_profile_persistence_ports():
         identity = build_whoami_identity()
 
     assert identity.active_profile is None
@@ -326,7 +323,7 @@ def test_render_whoami_identity_names_the_label_and_readiness() -> None:
         WhoamiIdentity(
             active_profile="Erika",
             tax_id_present=True,
-            readiness="ready",
+            readiness=ProfileHealthStatus.READY,
             precondition_action=None,
         ),
     )
@@ -363,8 +360,6 @@ def test_whoami_is_always_advertised_and_never_persona_scoped_away() -> None:
 
 
 def test_whoami_tool_call_returns_the_active_profile_label(tmp_path: Any) -> None:
-    from cadrumo.tests.secure_sql import isolated_profile_storage_root
-
     from .._server import build_server
 
     descriptors = build_tool_descriptors()
@@ -407,8 +402,6 @@ def test_whoami_tool_call_returns_the_active_profile_label(tmp_path: Any) -> Non
 
 
 def test_floor_response_carries_the_active_identity_block(tmp_path: Any) -> None:
-    from cadrumo.tests.secure_sql import isolated_profile_storage_root
-
     from .._server import build_server
 
     descriptors = build_tool_descriptors()

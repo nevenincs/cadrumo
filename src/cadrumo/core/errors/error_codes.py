@@ -67,7 +67,7 @@ class ErrorCategory(StrEnum):
 
 def _category_text_prefix(category: ErrorCategory) -> str:
     """Return the sentence-case stderr prefix for ``category``."""
-    from ..i18n import tr
+    from ..i18n.render import tr
 
     return tr(f"errors.prefix.{category.value.lower()}")
 
@@ -386,7 +386,7 @@ def render_error_text(
 
 def _text_context_label(key: str) -> str:
     """Localize common human-facing context labels without changing JSON keys."""
-    from ..i18n import tr
+    from ..i18n.render import tr
 
     return tr(f"errors.context_labels.{key}", default=key)
 
@@ -394,7 +394,7 @@ def _text_context_label(key: str) -> str:
 def _text_context_value(key: str, value: str) -> str:
     """Localize stable storage tokens in text mode without changing JSON values."""
     if key == "area":
-        from ..i18n import tr
+        from ..i18n.render import tr
 
         return tr(f"cli.config.storage.values.area.{value}", default=value)
     return value
@@ -492,7 +492,7 @@ def resolve_error_message(error: BaseException, code: ErrorCode | None = None, *
     no matching translation exists.
     """
     resolved_code = code or get_registered_error_code(error)
-    from ..i18n import tr
+    from ..i18n.render import tr
 
     interpolation = _coerce_interpolation_kwargs(getattr(error, "context", None))
     translated_message = getattr(error, "translated_message", None)

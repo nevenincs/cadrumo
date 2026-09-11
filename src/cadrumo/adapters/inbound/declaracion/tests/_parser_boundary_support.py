@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Mapping
 from decimal import Decimal
 from pathlib import Path
@@ -12,15 +11,10 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.errors.hierarchy import CadrumoError
 from .....core.money.rounding import round_to_cents
 from .....core.period import Period
 from .....domain.calculations.registry.authority import bundled_authority
-from .....domain.justificante import PdfModeloImportError
-from .....tests import FIXTURES_DIR
-from ...pdf.source_provenance import source_pdf_reference_path
-from ..errors import DeclaracionParseError, TemplateNotDetectedError
-from ..parser import _extract_pages_words, parse_declaracion
+from .....tests.inventory import FIXTURES_DIR
 
 pytestmark = [
     pytest.mark.unit,
@@ -28,8 +22,6 @@ pytestmark = [
 ]
 
 __all__ = [
-    "A4",
-    "FIXTURES_DIR",
     "_MODELO_036_SYNTHETIC_FIXTURE",
     "_MODELO_111_EXPECTED_TARGETS",
     "_MODELO_115_SYNTHETIC_FIXTURE",
@@ -53,23 +45,11 @@ __all__ = [
     "_MODELO_369_SYNTHETIC_FIXTURE",
     "_MODELO_720_SYNTHETIC_FIXTURE",
     "_MODELO_840_SYNTHETIC_FIXTURE",
-    "CadrumoError",
-    "CasillaId",
-    "Decimal",
-    "DeclaracionParseError",
-    "Path",
-    "PdfModeloImportError",
-    "TemplateNotDetectedError",
     "_expected_casilla_values",
     "_expected_period",
-    "_extract_pages_words",
     "_modelo_130_snapshot",
     "_modelo_snapshot",
     "_write_declaration_pdf",
-    "canvas",
-    "logging",
-    "parse_declaracion",
-    "source_pdf_reference_path",
 ]
 
 # Named for what it is. This fixture was previously called

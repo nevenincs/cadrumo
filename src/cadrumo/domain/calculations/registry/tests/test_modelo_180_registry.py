@@ -7,17 +7,24 @@ from decimal import Decimal
 from typing import get_args
 
 import pytest
-from test_support.registry_authoring import RegistryValidator, _committed_modelo, _committed_snapshot
 
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources.bundled_data import bundled_path
-from .registry_observations import registry_grounded_modelo_observation
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.resources.bundled_data import bundled_path
+
 from .....tests.registry_snapshot import build_snapshot
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
-from ..relations import relation_source_requirements, resolve_relation_values_from_observations
+from ..relations import (
+    relation_source_requirements,
+    resolve_relation_values_from_observations,
+)
 from ..schema_revision_members import ApplicationLinkDefinition
+from ._published_authority import (
+    artifact_components,
+    artifact_snapshot,
+)
+from .registry_observations import registry_grounded_modelo_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -61,7 +68,7 @@ def _nested_legal_refs(value: object) -> set[str]:
 
 
 def test_modelo_180_2023_amendment_is_scoped_to_2023_revision() -> None:
-    modelo, _ = _committed_modelo("180")
+    modelo, _ = artifact_components("180")
     historical_refs = _nested_legal_refs(modelo.revisions["2019-2022"].model_dump(mode="python"))
     current_refs = _nested_legal_refs(modelo.revisions["2023-y-siguientes"].model_dump(mode="python"))
 
@@ -70,7 +77,7 @@ def test_modelo_180_2023_amendment_is_scoped_to_2023_revision() -> None:
 
 
 def test_modelo_180_guidance_and_layout_sources_are_separated() -> None:
-    modelo, catalogues = _committed_modelo("180")
+    modelo, catalogues = artifact_components("180")
 
     summary_help = catalogues.sources["aeat-modelo-180-ayuda-resumen-datos"]
     assert "aeat-modelo-180-ayuda-resumen-datos" in modelo.source_refs
@@ -104,7 +111,7 @@ def test_modelo_180_extraction_profile_legal_refs_match_target_casillas(
     revision_id: str,
     expected_refs: frozenset[str],
 ) -> None:
-    modelo, _ = _committed_modelo("180")
+    modelo, _ = artifact_components("180")
     revision = modelo.revisions[revision_id]
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
 
@@ -124,9 +131,8 @@ def test_modelo_180_validated_snapshot_gates_workflow_surfaces_for_annual_summar
     filing_year: int,
     period: str,
 ) -> None:
-    modelo, catalogues = _committed_modelo("180")
+    modelo, catalogues = artifact_components("180")
 
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
     snapshot = build_snapshot(
         modelo,
         catalogues,
@@ -172,8 +178,8 @@ def test_modelo_180_validated_snapshot_gates_workflow_surfaces_for_annual_summar
 
 
 def test_modelo_180_relations_resolve_against_modelo_115_registry() -> None:
-    snapshot = _committed_snapshot("180", 2025, "0A")
-    snapshot_115 = _committed_snapshot("115", 2025, "1T")
+    snapshot = artifact_snapshot("180", 2025, "0A")
+    snapshot_115 = artifact_snapshot("115", 2025, "1T")
 
     modelo_115_outputs = {casilla.id for casilla in snapshot_115.revision.casillas}
     relation_source_casilla_ids = {relation.source_casilla_id for relation in snapshot.revision.relations}
@@ -182,8 +188,8 @@ def test_modelo_180_relations_resolve_against_modelo_115_registry() -> None:
 
 
 def test_modelo_180_calculation_aggregates_modelo_115_quarterly_observations() -> None:
-    snapshot = _committed_snapshot("180", 2025, "0A")
-    snapshot_115 = _committed_snapshot("115", 2025, "1T")
+    snapshot = artifact_snapshot("180", 2025, "0A")
+    snapshot_115 = artifact_snapshot("115", 2025, "1T")
     source_casilla_ids = {casilla.id: casilla for casilla in snapshot_115.revision.casillas}
     requirements = relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
     observed_by_period: dict[str, dict[CasillaId, Decimal]] = {}
@@ -225,7 +231,7 @@ def test_modelo_180_calculation_aggregates_modelo_115_quarterly_observations() -
 
 
 def test_modelo_180_rejects_incomplete_modelo_115_observation_chain() -> None:
-    snapshot = _committed_snapshot("180", 2025, "0A")
+    snapshot = artifact_snapshot("180", 2025, "0A")
     incomplete_observations = (
         registry_grounded_modelo_observation(
             modelo="115",

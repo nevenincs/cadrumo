@@ -11,7 +11,7 @@ to a base by accident.
 Everyone else has a declared residency, and for them Spain is the ordinary
 answer -- but only once a residency HAS been declared. A profile that has
 declared none resolves to ``None``, which is the unresolved state rather than a
-missing one: :mod:`~application.aggregation._impatriado_income_ledger`
+missing one: :mod:`~application.aggregation.impatriado_income_ledger`
 segregates such a row with a typed unresolved-jurisdiction issue, on the stated
 invariant that an unresolved jurisdiction "is NEVER silently coerced to ES".
 
@@ -28,7 +28,7 @@ too. What a surface still owns is how it ASKS and how it words a refusal, which
 is why this returns a typed outcome rather than raising a presentation error.
 
 See Also:
-    :mod:`~application.aggregation._impatriado_income_ledger`
+    :mod:`~application.aggregation.impatriado_income_ledger`
         The aggregation that segregates an unresolved jurisdiction rather than
         admitting it to the Spanish base.
 """

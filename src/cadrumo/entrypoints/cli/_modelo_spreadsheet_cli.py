@@ -240,7 +240,7 @@ def execute_google_sheets_export(
         GoogleSheetsExportOperationRequest,
         GoogleSheetsExportPublicResultV1,
     )
-    from ...application.operations.frontend_contracts import (
+    from ...application.operations.frontend_requests import (
         OperationObservationRequestV1,
         OperationObservationSuccessV1,
         OperationResultProjectionRefusalV1,

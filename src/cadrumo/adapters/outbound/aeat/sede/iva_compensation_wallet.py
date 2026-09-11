@@ -25,7 +25,7 @@ from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings, load_settings
 from .....core.directory_scan import scan_directory
 from .....core.external_constants import UTF_8_ENCODING
-from .....core.i18n import tr
+from .....core.i18n.render import tr
 from .....core.logging import get_logger
 from .....core.paths import select_filesystem_retention_survivors
 from .....core.period import Period

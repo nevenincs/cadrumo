@@ -41,7 +41,7 @@ from pydantic import BaseModel, Field, NonNegativeInt
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
 from ....core.filing_year import FilingYear
-from ....core.identity import AeatBoxNumber
+from ....core.identity.aeat_box import AeatBoxNumber
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import Period, RegistrySelectorPeriodCode
 from ....core.text_bounds import PositiveCount

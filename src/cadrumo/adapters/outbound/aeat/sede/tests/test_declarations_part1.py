@@ -2,40 +2,40 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+from decimal import Decimal
+from pathlib import Path
+
 import pytest
 
 from ......core.casilla_id import CasillaId, validated_casilla_id
+from ......core.config import Settings
+from ......core.period import Period
+from ......domain.calculations.registry.export import resolve_export_layout
+from ......domain.calculations.registry.export_parse import parse_export_payload
+from ...browser.factory import opened_browser_page, shared_playwright_runtime
+from ...browser.profile import Profile
+from .._declarations_diagnostics import declarations_page_shape_context as _declarations_page_shape_context
+from .._declarations_listbox import _parse_listbox, _parse_presented_at
+from ..declarations import _select_combobox_value
+from ..declarations_observations import (
+    _verify_submitted_file_context,
+    _with_derived_303_compensation_available_observation,
+    registry_observation_from_filed_declaration,
+)
+from ..declarations_remote import extract_csv_from_url as _extract_csv_from_url
+from ..declarations_schema import Declaracion
+from ..errors import SedeParseError
 from ._declarations_support import (
     _COTEJO_QUERY_URL,
     _DECLARATIONS_LISTING_URL,
     _FIXTURE_ROOT,
-    UTC,
-    Decimal,
-    Declaracion,
-    Path,
-    Period,
-    Profile,
-    SedeParseError,
-    Settings,
     _declaration_row,
-    _declarations_page_shape_context,
-    _extract_csv_from_url,
     _filed_observation,
     _modelo_130_snapshot,
     _modelo_snapshot,
-    _parse_listbox,
-    _parse_presented_at,
     _select_authoritative_declaration,
-    _select_combobox_value,
     _submitted_file_payload,
-    _verify_submitted_file_context,
-    _with_derived_303_compensation_available_observation,
-    datetime,
-    opened_browser_page,
-    parse_export_payload,
-    registry_observation_from_filed_declaration,
-    resolve_export_layout,
-    shared_playwright_runtime,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

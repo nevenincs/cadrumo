@@ -15,8 +15,8 @@ from pydantic import BaseModel, Field
 
 from ...core.aggregation import COUNTERPART_SOURCE_KINDS, BindingSourceKind
 from ...core.config import Settings
-from ...core.i18n import tr
-from ...core.identity import BucketId
+from ...core.i18n.render import tr
+from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.utc import UtcInstant
 from ...domain.calculations.registry.ids import LegalRefId

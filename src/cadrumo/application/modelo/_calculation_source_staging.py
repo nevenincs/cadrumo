@@ -49,7 +49,7 @@ from ...domain.calculations.registry.schema import (
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
-from ..aggregation import (
+from ..aggregation.source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
     CalculationSourceResolution,

@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import pytest
 
+from .....core.casilla_id import CasillaId
+from ..parser import parse_declaracion
 from ._parser_boundary_casillas import _M036_EVENT_KIND_CASILLA
 from ._parser_boundary_support import (
     _MODELO_036_SYNTHETIC_FIXTURE,
-    CasillaId,
     _expected_period,
-    parse_declaracion,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

@@ -61,6 +61,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ....domain.calculations.registry.schema import DataBindingDefinition
 from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ....domain.deadlines.models import FiscalResidency, IVARegime, TaxpayerProfile
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.verification_report import (
@@ -71,7 +72,6 @@ from ....domain.modelos.verification_report import (
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.foreign_asset_redeclaration import modelo_720_prior_baseline_observation
 from ...calculations.observations_repository import CalculationObservationRepository

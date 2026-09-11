@@ -66,7 +66,7 @@ from ....domain.prorrata_register.register import (
 )
 from ....domain.submission.models import ModeloDraftStatus
 from ....tests.filing_evidence import regimen_simplificado_filing_evidence
-from ...aggregation import (
+from ...aggregation.m303_arrivals import (
     M303ProrrataTransitionArrival,
     M303SupplierRegimeArrival,
     resolve_m303_prorrata_transition_arrival,

@@ -24,10 +24,10 @@ from .command_spec import translation_key as _key
 _METADATA = ExecutionPolicySpec(frozenset({"state-free"}), frozenset({"none"}), "metadata", CommandWriteRoute.NONE)
 _READ = ExecutionPolicySpec(frozenset({"encrypted-facts"}), frozenset({"none"}), "local-io", CommandWriteRoute.NONE)
 _FLOAT = ValueContract(DeferredTarget("builtins", "float"))
-_LANG = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
+_LANG = ValueContract(DeferredTarget("...core.external_constants", "OutputLanguage", __package__))
 _STATE = ValueContract(
-    DeferredTarget("cadrumo.application.review.enums", "ReviewState"),
-    parser=DeferredTarget("cadrumo.entrypoints.cli._review", "parse_review_state"),
+    DeferredTarget("...application.review.enums", "ReviewState", __package__),
+    parser=DeferredTarget("._review", "parse_review_state", __package__),
 )
 
 
@@ -96,10 +96,10 @@ REVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         _READ,
-        LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._review", "review_queue")),
+        LazyBinding.available(DeferredTarget("._review", "review_queue", __package__)),
         ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("cadrumo.entrypoints.cli._review_payloads", "ReviewQueueResult"),
+            DeferredTarget("._review_payloads", "ReviewQueueResult", __package__),
             identity="app.review.queue",
         ),
     ),
@@ -122,10 +122,10 @@ REVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         _READ,
-        LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._review", "review_view")),
+        LazyBinding.available(DeferredTarget("._review", "review_view", __package__)),
         ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("cadrumo.entrypoints.cli._review_payloads", "ReviewViewResult"),
+            DeferredTarget("._review_payloads", "ReviewViewResult", __package__),
             identity="app.review.view",
         ),
     ),

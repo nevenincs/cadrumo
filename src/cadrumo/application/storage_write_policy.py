@@ -3,7 +3,7 @@
 The CLI root asks :func:`inspect_storage_write_policy` before opening
 profile-bound storage. The returned :class:`StorageWritePolicyDecision`
 combines the matched :class:`StorageWritePolicyCode` with the
-:class:`~cadrumo.core.config.StorageRouteKind` derived from
+:class:`~cadrumo.core.config_support.StorageRouteKind` derived from
 :class:`~cadrumo.core.config.Settings`.
 
 This module is the application-side route query, not the session opener.
@@ -20,7 +20,7 @@ See Also:
         policy, and opens active bucket sessions only after the policy allows
         dispatch.
     :func:`cadrumo.core.config.classify_storage_route`
-        Produces the :class:`~cadrumo.core.config.StorageRouteClassification`
+        Produces the :class:`~cadrumo.core.config_support.StorageRouteClassification`
         inspected for guarded mutation paths.
     :mod:`cadrumo.application.operator_actions`
         Canonical failed-condition, evidence, action, and no-recovery records
@@ -35,12 +35,11 @@ from pydantic import BaseModel, model_validator
 
 from ..core.config import (
     Settings,
-    StorageRouteClassification,
-    StorageRouteKind,
     classify_storage_route,
     load_settings,
     settings_for_active_profile_bucket,
 )
+from ..core.config_support import StorageRouteClassification, StorageRouteKind
 from ..core.i18n.render import tr
 from ..core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..core.operator_action_enums import (
@@ -100,7 +99,7 @@ class StorageWritePolicyDecision(BaseModel):
             storage write route.
         bootstrap_exempt: Whether callback policy declares a bootstrap-root
             write route that is permitted before an active bucket exists.
-        route_kind: Effective :class:`~cadrumo.core.config.StorageRouteKind` for
+        route_kind: Effective :class:`~cadrumo.core.config_support.StorageRouteKind` for
             guarded writes, or ``None`` when no route was inspected.
         message_key: Locale key for a refusal message rendered at the CLI
             boundary.
@@ -130,7 +129,7 @@ class StorageWritePolicyDecision(BaseModel):
         return self
 
     def render_refusal_message(self, *, locale: str | None = None) -> str:
-        """Render the translated user-facing refusal message through :func:`~cadrumo.core.i18n.tr`."""
+        """Render the translated user-facing refusal message through :func:`~cadrumo.core.i18n.render.tr`."""
         if self.allowed or not self.message_key:
             return ""
         if self.detail_message_key:
@@ -150,7 +149,7 @@ def inspect_storage_write_policy(
     storage route is an active bucket; root fallback and explicit database
     routes return refusing :class:`StorageWritePolicyDecision` values before
     the CLI opens a bucket session. The effective route comes from
-    :class:`~cadrumo.core.config.StorageRouteClassification` so root dispatch does
+    :class:`~cadrumo.core.config_support.StorageRouteClassification` so root dispatch does
     not duplicate storage-routing logic.
 
     Unknown values fail closed. The caller obtains the value from validated,

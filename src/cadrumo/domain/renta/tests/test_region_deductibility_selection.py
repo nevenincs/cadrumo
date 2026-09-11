@@ -16,7 +16,7 @@ See Also:
         Closed ordinary-residence comunidad enum used as the selector key.
     :class:`~domain.categories.CategoryProfile`
         Deductibility profile selected from state law or a regional override.
-    :func:`~application.aggregation._renta_ledger.aggregate_renta_ledger_expenses`
+    :func:`~application.aggregation.renta_ledger.aggregate_renta_ledger_expenses`
         Application aggregation caller that forwards the region axis into Renta.
 """
 
@@ -27,7 +27,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.i18n import Translatable as tr
+from ....core.i18n.translatable import Translatable as tr
 from ....tests.aeat_literal_fixtures import RENTA_DEDUCIBILIDAD_CITATION_URL_FIXTURE
 from ...categories.profile import CategoryProfile
 from ...categories.proportionality import (

@@ -8,7 +8,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
 from ....core.hex import Hex64Str
-from ....core.identity import ContentDigest
+from ....core.identity.digest import ContentDigest
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import OperationEffect, OperationEventKind
 from ....core.time.utc import validate_utc_aware

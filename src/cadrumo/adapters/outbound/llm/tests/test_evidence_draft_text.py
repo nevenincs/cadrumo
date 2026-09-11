@@ -11,7 +11,7 @@ See Also:
         Reader under test.
     :func:`~llm.invoice_field_grounding.ground_extracted_fields`
         Grounded re-validation shared with the vision reader.
-    :func:`~core.identity.nif_iva_format_for_country`
+    :func:`~core.identity.nif_iva.nif_iva_format_for_country`
         EU NIF-IVA structural authority the tax-id grounding now consults.
 """
 
@@ -25,6 +25,7 @@ from pydantic import ValidationError
 
 from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from .....core.config import load_settings
+from .....core.config_support import LLMProvider
 from .....core.field_origin import FieldOrigin
 from .....core.operator_action_enums import NoRecoveryOutcome
 from ..errors import LLMConfigError, LLMValidationError
@@ -39,7 +40,7 @@ from ..invoice_field_grounding import (
     ground_extracted_fields,
     parse_invoice_extraction_response,
 )
-from ..models import LLMProvider, LLMRequest
+from ..models import LLMRequest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

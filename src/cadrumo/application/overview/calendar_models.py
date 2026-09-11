@@ -24,7 +24,8 @@ from typing import Annotated, Literal, Protocol, Self, cast
 from pydantic import BaseModel, BeforeValidator, Field, NonNegativeInt, PlainSerializer, model_validator
 
 from ...core.filing_year import FilingYear
-from ...core.identity import AeatCsv, CalculationRevisionId, FilingRecordId, SnapshotId, WorkUnitId
+from ...core.identity.aeat_csv import AeatCsv
+from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, SnapshotId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.notificacion_estado_servicio import NotificacionEstadoServicio as _NotificacionEstadoServicio
 from ...core.period import Period as _Period

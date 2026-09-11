@@ -42,8 +42,10 @@ from ....adapters.inbound.notificacion.document_reader import NotificationDocume
 from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.storage.crypto.encrypted_columns import encrypt_secure_object_payload
 from ....core.hex import Hex64Str
-from ....core.i18n import tr
-from ....core.identity import AeatCertificadoId, BucketId, ContentDigest
+from ....core.i18n.render import tr
+from ....core.identity.aeat_certificado import AeatCertificadoId
+from ....core.identity.bucket import BucketId
+from ....core.identity.digest import ContentDigest
 from ....domain.attachments.enums import AttachmentKind
 from ....domain.attachments.models import Attachment
 from ....domain.notifications.sancion import SancionLiquidacion

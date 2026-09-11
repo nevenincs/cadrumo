@@ -36,7 +36,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field, field_validator
 
 from ...core.errors.severity import BaseSeverity
-from ...core.i18n import Translatable as tr
+from ...core.i18n.translatable import Translatable as tr
 from ...core.models import STRICT_FROZEN_CONFIG
 
 
@@ -80,7 +80,7 @@ class LedgerImportDiagnostic(BaseModel):
     @classmethod
     def _require_authoritative_message(cls, value: str) -> str:
         """Reject diagnostics without an authoritative Spanish message."""
-        from ...core.i18n import tr
+        from ...core.i18n.render import tr
 
         if not value or not str(value).strip():
             raise ValueError("message must be a non-empty Translatable key")

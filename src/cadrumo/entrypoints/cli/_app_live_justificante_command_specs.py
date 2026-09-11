@@ -57,14 +57,10 @@ LIVE_JUSTIFICANTE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _REQUIRED_PERIOD_OPTION,
         ),
         policy=_PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._app_live_justificante_cli", "justificante_pull")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._app_live_justificante_cli", "justificante_pull", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget(
-                "cadrumo.entrypoints.cli._app_live_justificante_payloads", "JustificanteCaptureResult"
-            ),
+            target=DeferredTarget("._app_live_justificante_payloads", "JustificanteCaptureResult", __package__),
             identity="app.live.justificante.pull",
         ),
     ),
@@ -78,12 +74,10 @@ LIVE_JUSTIFICANTE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=_LEAF_INVOCATION,
         parameters=(),
         policy=_ENCRYPTED_LOCAL_READ_POLICY,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._app_live_justificante_cli", "justificante_list")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._app_live_justificante_cli", "justificante_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_justificante_payloads", "JustificanteListResult"),
+            target=DeferredTarget("._app_live_justificante_payloads", "JustificanteListResult", __package__),
             identity="app.live.justificante.list",
         ),
     ),
@@ -105,12 +99,10 @@ LIVE_JUSTIFICANTE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_ENCRYPTED_LOCAL_READ_POLICY,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._app_live_justificante_cli", "justificante_view")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._app_live_justificante_cli", "justificante_view", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_justificante_payloads", "JustificanteViewResult"),
+            target=DeferredTarget("._app_live_justificante_payloads", "JustificanteViewResult", __package__),
             identity="app.live.justificante.view",
         ),
     ),

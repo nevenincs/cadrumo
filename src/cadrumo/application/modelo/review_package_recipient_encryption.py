@@ -127,7 +127,7 @@ from ...adapters.persistence.storage.secure_object_namespaces import (
 )
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hex import HEX_PATTERN_64 as _HEX_PATTERN_64
-from ...core.identity import BucketId, canonical_bucket_id
+from ...core.identity.bucket import BucketId, canonical_bucket_id
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.clock import now as _utc_now
 from ...core.time.utc import UtcInstant

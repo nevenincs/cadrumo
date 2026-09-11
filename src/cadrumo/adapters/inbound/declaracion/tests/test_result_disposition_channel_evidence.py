@@ -37,7 +37,7 @@ from pathlib import Path
 
 import pytest
 
-from .....tests import FIXTURES_DIR
+from .....tests.inventory import FIXTURES_DIR
 from .._parsers.pdfplumber_backend import extract_pages_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -189,7 +189,7 @@ def test_the_justificante_record_cannot_carry_the_disposition() -> None:
     disposition field is ever added, this test fails and the channel verdict above
     must be revisited rather than silently outliving its evidence.
     """
-    from .....domain.justificante import Justificante
+    from .....domain.justificante.schema import Justificante
 
     fields = set(Justificante.model_fields)
 

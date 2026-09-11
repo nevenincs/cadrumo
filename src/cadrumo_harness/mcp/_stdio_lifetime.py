@@ -327,6 +327,16 @@ def _walk_ancestor_pids(
     return chain
 
 
+def _snapshot_processes() -> tuple[dict[int, int], dict[int, str]]:
+    """Declare the platform-specific process snapshot seam for static consumers."""
+    raise OSError("process snapshots are only available on Windows")
+
+
+def resolve_stdin_client_pid() -> int | None:
+    """Return no pipe owner until the platform-specific implementation is selected."""
+    return None
+
+
 if sys.platform == "win32":
     import ctypes
     from ctypes import wintypes

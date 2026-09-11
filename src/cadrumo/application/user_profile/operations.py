@@ -9,7 +9,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, NonNegativeInt, SecretStr, field_validator
 
 from ...core.bucket_pointer import require_active_bucket_id
-from ...core.identity import ContentDigest
+from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import (
     EFFECTS_WITHOUT_PARTIAL_COMMIT,

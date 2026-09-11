@@ -30,7 +30,7 @@ from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Final
 
 from .....core.config import Settings
-from .....core.i18n import tr
+from .....core.i18n.render import tr
 from .....core.logging import get_logger
 from .....core.time.clock import now
 from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy

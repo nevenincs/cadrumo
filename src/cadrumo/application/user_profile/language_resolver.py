@@ -10,7 +10,7 @@ when it composes profile persistence. That function registers
 
 from __future__ import annotations
 
-from ...core.i18n import register_profile_language_resolver
+from ...core.i18n.render import register_profile_language_resolver
 from ...core.logging import get_logger
 from ...core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from .custody_ports import (

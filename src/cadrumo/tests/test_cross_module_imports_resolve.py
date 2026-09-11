@@ -25,8 +25,8 @@ names are never bound at runtime; everything else is in scope.
 from __future__ import annotations
 
 import ast
-import importlib
 from collections.abc import Iterator, Mapping
+from importlib.util import find_spec
 from pathlib import Path
 
 import pytest
@@ -131,24 +131,133 @@ def _check_triple(triple: tuple[Path, str, str]) -> str | None:
     true broken-import finding.
     """
     source, module, name = triple
-    try:
-        target = importlib.import_module(module)
-    except ImportError as exc:
+    target_path = _module_source_path(module)
+    if target_path is None:
         return (
-            f"{source.relative_to(SRC_CADRUMO.parent).as_posix()}::{module}::{name}  "
-            f"(target module raised ImportError: {exc})"
+            f"{source.relative_to(SRC_CADRUMO.parent).as_posix()}::{module}::{name}  (target module is not importable)"
         )
-    if hasattr(target, name):
+    if _module_exports(target_path, name, module=module):
         return None
     # Submodule import path — ``from pkg import mod`` succeeds if
     # ``pkg.mod`` is a real importable module, regardless of whether
     # ``pkg.__init__`` binds ``mod`` as an attribute.
-    try:
-        importlib.import_module(f"{module}.{name}")
+    if _module_source_path(f"{module}.{name}") is not None:
         return None
-    except ImportError:
-        pass
     return f"{source.relative_to(SRC_CADRUMO.parent).as_posix()}::{module}::{name}"
+
+
+def _module_source_path(module: str) -> Path | None:
+    """Return an importable module's source without executing its module body."""
+    try:
+        spec = find_spec(module)
+    except (ImportError, ModuleNotFoundError, ValueError):
+        return None
+    origin = None if spec is None else spec.origin
+    if origin is None or origin in {"built-in", "frozen"}:
+        return None
+    path = Path(origin)
+    return path if path.is_file() else None
+
+
+def _bound_names(tree: ast.AST) -> frozenset[str]:
+    """Return names statically bound by a module, including conditional imports."""
+    names: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            names.add(node.name)
+        elif isinstance(node, ast.Import):
+            names.update(alias.asname or alias.name.split(".", 1)[0] for alias in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            names.update(alias.asname or alias.name for alias in node.names if alias.name != "*")
+        elif isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    names.add(target.id)
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            names.add(node.target.id)
+    return frozenset(names)
+
+
+def _literal_string(node: ast.AST) -> str | None:
+    return node.value if isinstance(node, ast.Constant) and isinstance(node.value, str) else None
+
+
+def _lazy_export_targets(tree: ast.AST) -> dict[str, tuple[str, str | None]]:
+    """Read a PEP 562 export map, retaining its module-and-symbol contract."""
+    maps: dict[str, dict[str, tuple[str, str | None]]] = {}
+    for node in tree.body if isinstance(tree, ast.Module) else ():
+        value: ast.AST | None = None
+        target: ast.AST | None = None
+        if isinstance(node, ast.Assign):
+            value = node.value
+            target = node.targets[0] if len(node.targets) == 1 else None
+        elif isinstance(node, ast.AnnAssign):
+            value = node.value
+            target = node.target
+        if not isinstance(target, ast.Name) or not isinstance(value, ast.Dict):
+            continue
+        entries: dict[str, tuple[str, str | None]] = {}
+        for key, item in zip(value.keys, value.values, strict=False):
+            name = _literal_string(key)
+            if name is None:
+                continue
+            if isinstance(item, (ast.Tuple, ast.List)) and item.elts:
+                module = _literal_string(item.elts[0])
+                symbol = _literal_string(item.elts[1]) if len(item.elts) > 1 else None
+            else:
+                module, symbol = _literal_string(item), None
+            if module is not None:
+                entries[name] = (module, symbol)
+        if entries:
+            maps[target.id] = entries
+
+    lazy_names = (
+        {
+            node.name
+            for node in tree.body
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == "__getattr__"
+        }
+        if isinstance(tree, ast.Module)
+        else set()
+    )
+    if not lazy_names:
+        return {}
+    referenced = {
+        name.id
+        for node in tree.body
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == "__getattr__"
+        for name in ast.walk(node)
+        if isinstance(name, ast.Name) and isinstance(name.ctx, ast.Load)
+    }
+    result: dict[str, tuple[str, str | None]] = {}
+    for map_name in referenced:
+        result.update(maps.get(map_name, {}))
+    return result
+
+
+def _module_exports(path: Path, name: str, *, module: str, seen: frozenset[str] = frozenset()) -> bool:
+    """Resolve a module attribute from source bindings or its declared lazy map."""
+    try:
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    except (OSError, SyntaxError):
+        return False
+    if name in _bound_names(tree):
+        return True
+    if module in seen:
+        return False
+    lazy = _lazy_export_targets(tree).get(name)
+    if lazy is None:
+        return False
+    target_module, target_name = lazy
+    if target_module.startswith("."):
+        package = module if path.name == "__init__.py" else module.rpartition(".")[0]
+        from importlib.util import resolve_name
+
+        target_module = resolve_name(target_module, package)
+    target_path = _module_source_path(target_module)
+    if target_path is None:
+        return False
+    return target_name is None or _module_exports(target_path, target_name, module=target_module, seen=seen | {module})
 
 
 def test_cadrumo_cross_module_imports_resolve(

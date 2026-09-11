@@ -25,11 +25,9 @@ from ...core.country_code import CountryCodeAlpha2
 from ...core.decimal.coercion import coerce_decimal
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex
-from ...core.identity import (
-    BucketId,
-    InvoiceId,
-    TaxIdIdentityToken,
-)
+from ...core.identity.bucket import BucketId
+from ...core.identity.hex_ids import InvoiceId
+from ...core.identity.tax_id import TaxIdIdentityToken
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.money.rounding import CENT, round_to_cents
 from ...core.time.utc import UtcInstant
@@ -53,7 +51,7 @@ from .errors import InvoiceValidationError
 
 if TYPE_CHECKING:
     pass
-from ...core.parsing import IsoCurrencyCode
+from ...core.parsing.codes import IsoCurrencyCode
 from .validators import (
     is_eu_member_state_code,
 )

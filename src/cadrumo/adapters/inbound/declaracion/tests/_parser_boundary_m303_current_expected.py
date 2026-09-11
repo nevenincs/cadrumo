@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
-from .....core.casilla_id import validated_casilla_id
-from ._parser_boundary_support import CasillaId, Decimal, _expected_casilla_values
+from decimal import Decimal
+
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from ._parser_boundary_support import _expected_casilla_values
 
 _M303_CASILLA_C46: CasillaId = validated_casilla_id("c46", surface="declaracion_parser_boundary.casilla")
 _M303_CASILLA_C69: CasillaId = validated_casilla_id("c69", surface="declaracion_parser_boundary.casilla")

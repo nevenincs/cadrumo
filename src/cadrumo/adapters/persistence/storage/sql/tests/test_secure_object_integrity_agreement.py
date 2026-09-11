@@ -17,18 +17,17 @@ from __future__ import annotations
 
 import ast
 import inspect
+import sqlite3
 import textwrap
+from datetime import UTC, datetime
+from pathlib import Path
 
 import pytest
 
+from ......core.classification.policies import SensitivityClass
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ._secure_objects_support import (
-    UTC,
-    Path,
-    SensitivityClass,
     _repo_at,
-    datetime,
-    sqlite3,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

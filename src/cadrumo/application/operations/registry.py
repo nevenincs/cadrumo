@@ -16,7 +16,7 @@ from pydantic import (
 )
 
 from ...core.hashing import content_hash_hex
-from ...core.identity import ContentDigest
+from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import (
     OperationCancellation,

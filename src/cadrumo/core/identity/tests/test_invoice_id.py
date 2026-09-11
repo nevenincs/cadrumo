@@ -1,4 +1,4 @@
-"""Real-behavior tests for the :data:`~core.identity.InvoiceId` alias.
+"""Real-behavior tests for the :data:`~core.identity.hex_ids.InvoiceId` alias.
 
 Moved here with the symbol itself. ``InvoiceId`` was declared in the invoice
 domain until it was relocated onto the shared hex-64 primitive, and a test for
@@ -14,7 +14,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....tests.fixtures.identity_holder import single_field_holder
-from .. import InvoiceId
+from ..hex_ids import InvoiceId
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

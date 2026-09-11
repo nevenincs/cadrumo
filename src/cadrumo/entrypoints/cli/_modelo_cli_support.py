@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, cast, get_args
 import typer
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
+from ...application.modelo._work_selection import ModeloWorkUnitCandidate
 from ...application.modelo.action_errors import WorkUnitNotFoundError
 from ...application.modelo.calculate_input import (
     WorkCalculateInputBundle,
@@ -31,7 +32,6 @@ from ...application.modelo.selectors import (
 from ...application.modelo.work_addressing import (
     ModeloWorkAddressNotFoundError,
     ModeloWorkRevisionConflictError,
-    ModeloWorkUnitCandidate,
     ModeloWorkVisibleTargetAmbiguousError,
 )
 from ...application.modelo.work_create_policy import modelo_work_create_refusal_locale_key
@@ -42,7 +42,7 @@ from ...core.errors.error_codes import resolve_error_message
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hex import HEX_PATTERN_64
 from ...core.i18n.render import tr
-from ...core.identity import CalculationRevisionId
+from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.logging import get_logger
 from ...core.modelo import Modelo

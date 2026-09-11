@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.i18n import tr
+from ....core.i18n.render import tr
 from ..draft_review import ModeloApprovalStaleReason, describe_stale_reason
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -33,7 +33,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _PACKAGE = Path(__file__).resolve().parent.parent
 
 #: The module that owns the algorithm and the kind partition.
-_AUTHORITY = "_documents.py"
+_AUTHORITY = "documents.py"
 
 #: Values whose second declaration would be a second policy. Each is a table or
 #: partition the AEAT algorithm reads; a module that spells one out is deciding
@@ -113,7 +113,7 @@ def test_the_checksum_arithmetic_has_one_home() -> None:
 def test_the_authority_still_owns_what_the_gate_pins() -> None:
     """A rename must not leave this gate passing over an empty package.
 
-    Without this, moving the tables out of ``_documents.py`` makes every
+    Without this, moving the tables out of ``documents.py`` makes every
     assertion above vacuously true: no module would restate a table the gate
     can no longer find anywhere.
     """

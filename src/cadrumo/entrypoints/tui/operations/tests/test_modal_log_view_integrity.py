@@ -23,7 +23,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from .....application.operations.frontend_contracts import OperationPublicEventPageV1
+from .....application.operations.frontend_requests import OperationPublicEventPageV1
 from .....application.operations.persistence.replay import OperationReplayStatus
 from .....core.operations import OperationEventKind
 from ..logs import OperationModalLogRowV1, OperationModalLogViewV1, build_initial_log_view, fold_event_page

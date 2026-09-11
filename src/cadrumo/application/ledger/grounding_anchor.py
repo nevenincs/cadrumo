@@ -79,7 +79,7 @@ from __future__ import annotations
 import re
 from collections.abc import Callable, Mapping
 from decimal import Decimal
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, Protocol
 
 from pydantic import BaseModel
 
@@ -94,8 +94,15 @@ from .document_transcription import DocumentTranscription
 from .invoice_draft_records import FieldAmbiguityCandidate, FieldProvenance
 
 if TYPE_CHECKING:
-    from ...adapters.inbound.einvoice.parsers import ParsedEInvoice
     from .evidence_input import EvidenceInput
+
+
+class _ParsedEInvoice(Protocol):
+    """Structured-document facts consumed by the application grounding step."""
+
+    record_text: str
+    shape: DocumentShape
+
 
 __all__ = [
     "AnchorEvaluation",
@@ -713,7 +720,7 @@ def _structured_element_path(field: str, *, shape: DocumentShape) -> str:
 
 def structured_provenance(
     *,
-    parsed: ParsedEInvoice,
+    parsed: _ParsedEInvoice,
     evidence: EvidenceInput,
     derived: Mapping[str, tuple[str, str] | None],
 ) -> tuple[FieldProvenance, ...]:

@@ -33,7 +33,7 @@ from ....domain.iva.schema import EUMemberState, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ...aggregation import (
+from ...aggregation.iva_ledger import (
     IVA_LEDGER_COUNTERPARTY_GATE_REASONS,
     IVA_LEDGER_MISSING_FACT_REASONS,
     IvaLedgerAggregationIssueReason,
@@ -44,7 +44,7 @@ from ...aggregation import (
 #: The defining module itself, for the attribute scoping below. Named through
 #: `import_module` rather than `from .. import`: the ledger package facade is
 #: inert and its tests may not import through it.
-preflight_module = import_module("cadrumo.application.ledger.preflight")
+preflight_module = import_module("..preflight", __package__)
 # The MODULE object, not names from it: the tests below scope an attribute
 # on it. `from .. import <module>` is the relative form that yields one.
 

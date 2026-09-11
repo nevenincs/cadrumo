@@ -3,7 +3,7 @@
 Covers the parsing/grounding primitives directly (adversarial JSON, hallucinated
 tax ids, unparsable dates/amounts) and the full transport against a real loopback
 Ollama HTTP server (no mocks) -- exactly the harness
-``_llm_vision_evidence_support._run_against_loopback_ollama`` already uses for the
+``llm_vision_evidence_support.run_against_loopback_ollama`` already uses for the
 classification vision path.
 
 The vision reader's own tests assert what it must NOT do as much as what it
@@ -45,10 +45,10 @@ from .....core.decimal.coercion import coerce_finite_european_decimal
 from .....core.field_origin import FieldOrigin
 from .....core.image_media_type import ImageMediaType
 from .....tests.llm_vision_evidence_support import (
-    _json_array,
-    _json_object,
-    _png_image,
-    _run_against_loopback_ollama,
+    json_array,
+    json_object,
+    png_image,
+    run_against_loopback_ollama,
 )
 from ..evidence_draft_vision import (
     VISION_TRANSCRIPTION_PROMPT,
@@ -296,13 +296,13 @@ class TestLocalVisionDocumentTranscriber:
         self,
     ) -> None:
         """Text in, text out, stamped with the reader that produced it."""
-        images = (MultimodalImageInput.from_base64(base64.b64encode(_png_image()).decode("ascii"), ImageMediaType.PNG),)
+        images = (MultimodalImageInput.from_base64(base64.b64encode(png_image()).decode("ascii"), ImageMediaType.PNG),)
 
         def _call() -> DocumentTranscription:
             transcriber = LocalVisionDocumentTranscriber(model="qwen-test")
             return transcriber.transcribe(evidence_images=images, source_content_sha256=_SOURCE_SHA)
 
-        observed, transcription = _run_against_loopback_ollama(_TRANSCRIBED_PAGE, _call)
+        observed, transcription = run_against_loopback_ollama(_TRANSCRIBED_PAGE, _call)
 
         assert transcription.text == _TRANSCRIBED_PAGE.strip()
         assert transcription.page_count == 1
@@ -311,9 +311,9 @@ class TestLocalVisionDocumentTranscriber:
         assert "qwen-test" in transcription.transcriber.name
 
         # The base64 image genuinely rode the Ollama request payload.
-        body = _json_object(observed["body"])
-        messages = _json_array(body["messages"])
-        user_message = _json_object(messages[-1])
+        body = json_object(observed["body"])
+        messages = json_array(body["messages"])
+        user_message = json_object(messages[-1])
         assert user_message["images"] == [image.base64_data for image in images]
 
     def test_the_prompt_that_rode_the_request_asks_for_no_invoice_field(
@@ -327,15 +327,15 @@ class TestLocalVisionDocumentTranscriber:
         transcription steered toward an expected answer is no longer an
         independent reading for the anchor check to run against.
         """
-        images = (MultimodalImageInput.from_base64(base64.b64encode(_png_image()).decode("ascii"), ImageMediaType.PNG),)
+        images = (MultimodalImageInput.from_base64(base64.b64encode(png_image()).decode("ascii"), ImageMediaType.PNG),)
 
         def _call() -> DocumentTranscription:
             return transcribe_document_images(images, source_content_sha256=_SOURCE_SHA, model="qwen-test")
 
-        observed, _transcription = _run_against_loopback_ollama(_TRANSCRIBED_PAGE, _call)
-        body = _json_object(observed["body"])
-        messages = _json_array(body["messages"])
-        user_message = _json_object(messages[-1])
+        observed, _transcription = run_against_loopback_ollama(_TRANSCRIBED_PAGE, _call)
+        body = json_object(observed["body"])
+        messages = json_array(body["messages"])
+        user_message = json_object(messages[-1])
         content = user_message["content"]
         assert isinstance(content, str)
 
@@ -352,13 +352,13 @@ class TestLocalVisionDocumentTranscriber:
         document it would honestly report as carrying no fields, converting a
         reader failure into a confident statement about the taxpayer's paper.
         """
-        images = (MultimodalImageInput.from_base64(base64.b64encode(_png_image()).decode("ascii"), ImageMediaType.PNG),)
+        images = (MultimodalImageInput.from_base64(base64.b64encode(png_image()).decode("ascii"), ImageMediaType.PNG),)
 
         def _call() -> DocumentTranscription:
             return transcribe_document_images(images, source_content_sha256=_SOURCE_SHA, model="qwen-test")
 
         with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
-            _run_against_loopback_ollama("   \n  ", _call)
+            run_against_loopback_ollama("   \n  ", _call)
         verdict = raised.value.terminal_precondition_verdict
         assert verdict is not None
         assert verdict.failed_condition_id == "llm.evidence.transcription_nonempty"

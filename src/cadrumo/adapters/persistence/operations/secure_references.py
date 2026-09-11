@@ -10,7 +10,7 @@ from pydantic import BaseModel, ValidationError
 from ....core.classification.policies import AtRestTreatment, SensitivityClass, default_policy_for
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
-from ....core.identity import ContentDigest
+from ....core.identity.digest import ContentDigest
 from ....core.time.utc import validate_utc_aware
 from ..storage.errors import RepositoryError
 from ..storage.runtime_repository import secure_object_repository_for_active_bucket

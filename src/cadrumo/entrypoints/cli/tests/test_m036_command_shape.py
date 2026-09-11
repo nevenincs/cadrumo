@@ -22,12 +22,12 @@ from ....application.modelo.reconciliation_records import (
     ModeloReconciliationEvidenceKind,
     ModeloReconciliationVerdict,
 )
-from ....tests.cli_runner import invoke_cached_cli
 from .._modelo_m036_cli import m036_alta, m036_baja, m036_modificacion
 from .._modelo_payloads_m036 import (
     ModeloReconciliationHistoryResult,
     ModeloReconciliationHistoryRowPayload,
 )
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

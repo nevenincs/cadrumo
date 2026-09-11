@@ -9,10 +9,9 @@ application evaluates :class:`~domain.transactions.LedgerClassificationRule`
 instances over active transactions and returns
 :class:`~application.ledger.models.ApplyRulesResult`.
 
-Batch persistence uses the concrete
-:class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository`
-so the end-of-batch save can compose the catalogue write with bucket events in
-one secure-object unit of work.
+Batch persistence uses the application co-commit ports so the end-of-batch save
+can compose the catalogue write with bucket events in one secure-object unit of
+work.
 """
 
 from __future__ import annotations
@@ -27,8 +26,6 @@ from pydantic import ValidationError
 if TYPE_CHECKING:
     from datetime import datetime
 
-    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...domain.transactions.classification_rule import LedgerClassificationRule
     from ...domain.transactions.models import TransactionCatalogue
     from .models import LedgerRemovalBlocker
@@ -74,6 +71,10 @@ from .models import (
     BulkClassifyResult,
     BulkClassifyRow,
     ManualLedgerTransactionPatch,
+)
+from .protocols import (
+    BucketEventHistoryCoCommitWriterProtocol,
+    TransactionCatalogueCoCommitWriterProtocol,
 )
 
 _BULK_CLASSIFY_NON_PATCH_COLUMNS = frozenset({"transaction_id"})
@@ -310,14 +311,11 @@ def _apply_bulk_classify_rows(
     bucket_id: str,
     actor: str,
     source_command: str,
-    # concrete, not Protocol: the accumulated end-of-batch save below calls
-    # ``save_transaction_catalogue_and_events``, which needs the adapter-only
-    # ``save_with_secure_object_writes`` / ``to_secure_object_write`` methods
-    # absent from the Protocol. The sole caller always passes already-narrowed
-    # concrete repositories (see ``resolve_transaction_repository`` /
-    # ``resolve_bucket_event_repository`` at the call site).
-    repository: TransactionCatalogueRepository,
-    event_repo: BucketEventHistoryRepository,
+    # The accumulated end-of-batch save uses the application co-commit ports.
+    # The resolver validates the concrete implementation at the composition
+    # boundary, while this worker stays typed against the inward contract.
+    repository: TransactionCatalogueCoCommitWriterProtocol,
+    event_repo: BucketEventHistoryCoCommitWriterProtocol,
     parsed_rows: list[_ParsedBulkClassifyRow],
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,

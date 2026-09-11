@@ -50,6 +50,11 @@ class FiledDeclaracionArtefactProtocol(Protocol):
         """SHA-256 hex digest of the artefact, when available."""
         ...
 
+    @property
+    def storage_ref(self) -> str | None:
+        """Secure-object reference for a persisted artefact, when available."""
+        ...
+
 
 @runtime_checkable
 class ObservedCasillaValueProtocol(Protocol):

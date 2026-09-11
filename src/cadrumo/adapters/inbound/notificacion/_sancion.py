@@ -51,7 +51,7 @@ from typing import Final, Literal
 from pydantic import BaseModel
 
 from ....core.decimal.printed_money import is_aeat_printed_money
-from ....core.i18n import tr
+from ....core.i18n.render import tr
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.money.rounding import CENT, round_to_cents
 from ....core.text_fold import fold_diacritics

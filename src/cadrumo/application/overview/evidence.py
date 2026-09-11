@@ -11,13 +11,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
+from ..calculations._ports import FiledDeclaracionObservationProtocol
 from .calendar_evidence import calendar_filing_evidence_from_sources, merge_calendar_filing_evidence
 from .calendar_models import OverviewAeatSubmissionState, OverviewCalendarFilingEvidence, OverviewLocalFilingState
 from .home import HomeAvailability, HomeZoneState
 
 if TYPE_CHECKING:
-    from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionObservation
-    from ...domain.justificante import Justificante
+    from ...domain.justificante.schema import Justificante
     from ...domain.modelos.filing_record import ModeloRecord
     from ..calculations.observations_repository import ObservationEnvelopePayload
     from ..live.justificante import JustificanteCaptureSnapshot
@@ -41,7 +41,7 @@ class AeatCalendarEvidenceSources:
 
     filing_records: tuple[ModeloRecord, ...] = ()
     observed_events: tuple[OverviewCalendarEvent, ...] = ()
-    filed_declaration_observations: tuple[FiledDeclaracionObservation, ...] = ()
+    filed_declaration_observations: tuple[FiledDeclaracionObservationProtocol, ...] = ()
     verified_filed_declaration_artefact_refs: tuple[str, ...] = ()
     verified_filed_declaration_artefact_csvs: tuple[tuple[str, str], ...] = ()
     calculation_observations: tuple[ObservationEnvelopePayload, ...] = ()

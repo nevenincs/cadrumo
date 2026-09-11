@@ -16,6 +16,7 @@ from ....adapters.inbound.pdf.source_provenance import source_pdf_reference_path
 from ....application.user_profile.censo_sync import CENSO_SOURCE_TAG
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.justificante.schema import Justificante
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import (
@@ -28,7 +29,6 @@ from ....domain.modelos.filing_record import (
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.aeat_literal_fixtures import aeat_url, justificante_cotejo_url
 from ....tests.profile_capsule import load_test_profile_record, open_test_profile_session, replace_test_profile_record
-from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 

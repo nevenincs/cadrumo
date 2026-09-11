@@ -5,7 +5,7 @@ from __future__ import annotations
 import typer
 
 from ....application.user_profile.censal_operation import CensalReviewProjectionV1
-from ....core.i18n import tr
+from ....core.i18n.render import tr
 from .._common import emit_progress_line
 
 

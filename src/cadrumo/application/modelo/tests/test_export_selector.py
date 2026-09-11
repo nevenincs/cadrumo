@@ -15,6 +15,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -22,7 +23,6 @@ from ....domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from ....domain.modelos.repository import upsert_work_unit
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ..selectors import ModeloCalculationRevisionSelectorStateError, select_exportable_revision
 from ..work_lifecycle import create_work_unit
 from ._export_test_support import _M130_INPUT_CASILLA, _seed_profile

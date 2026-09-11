@@ -46,7 +46,9 @@ from pydantic import BaseModel, Field, StringConstraints, model_validator
 from ...core.config import Settings
 from ...core.external_constants import PDF_MIME_TYPE
 from ...core.hex import Hex64Str
-from ...core.identity import AeatCertificadoId, BucketId, ContentDigest
+from ...core.identity.aeat_certificado import AeatCertificadoId
+from ...core.identity.bucket import BucketId
+from ...core.identity.digest import ContentDigest
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now

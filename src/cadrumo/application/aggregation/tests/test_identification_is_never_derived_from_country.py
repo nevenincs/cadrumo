@@ -40,7 +40,7 @@ _PERIOD = Period.from_year_and_code(2026, "2T")
 #: Aggregation modules the sweep reads. The gate is scoped to the layer that
 #: owns the art. 25 decision; the domain models it reads from are covered by
 #: the behavioural half, which exercises them for real.
-_SWEPT_MODULES = ("_iva_ledger.py", "_modelo_bindings.py", "_oss_ioss.py", "_counterpart.py")
+_SWEPT_MODULES = ("iva_ledger.py", "modelo_bindings.py", "oss_ioss.py", "counterpart.py")
 
 #: The country-shaped sources an identification must never be built from.
 _COUNTRY_SOURCES = frozenset(

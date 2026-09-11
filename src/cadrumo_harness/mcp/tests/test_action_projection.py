@@ -13,11 +13,6 @@ from cadrumo.application.operator_actions.catalogue import (
 )
 from cadrumo.application.operator_surface.errors import OperatorSurfaceContractError
 from cadrumo.core.json_contract import Notice
-from cadrumo.entrypoints.cli.command_api import (
-    build_verb_input_schemas,
-    command_schema_refs,
-    is_exposable_command,
-)
 
 from .._action_capabilities import (
     build_mcp_action_input_schemas,
@@ -25,6 +20,7 @@ from .._action_capabilities import (
 )
 from .._server import build_sdk_tools
 from .._tools import build_tool_descriptors
+from ..command_surface import command_surface
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -32,12 +28,15 @@ _ACTION_CAPABILITIES_KEY = "x-cadrumo-action-capabilities"
 
 
 def _exposable_refs():
-    return tuple(schema_ref for schema_ref in command_schema_refs() if is_exposable_command(schema_ref.command))
+    surface = command_surface()
+    return tuple(
+        schema_ref for schema_ref in surface.command_schema_refs() if surface.is_exposable_command(schema_ref.command)
+    )
 
 
 def _refs_for(*command_keys: str):
     selected = set(command_keys)
-    return tuple(schema_ref for schema_ref in command_schema_refs() if schema_ref.command in selected)
+    return tuple(schema_ref for schema_ref in command_surface().command_schema_refs() if schema_ref.command in selected)
 
 
 def _catalogue_entry(action_id: str) -> ActionCatalogueEntry:
@@ -94,7 +93,7 @@ def test_action_capabilities_reach_the_real_sdk_tools_list_projection() -> None:
 
 def test_mcp_action_projection_refuses_a_duplicate_result_schema_identity() -> None:
     refs = _refs_for("config.profile.create")
-    schemas = build_verb_input_schemas(("config.profile.create",))
+    schemas = command_surface().build_verb_input_schemas(("config.profile.create",))
     catalogue = build_action_catalogue((_catalogue_entry("operator.profile.create"),))
 
     with pytest.raises(ValueError, match="duplicate MCP result-schema identity"):
@@ -107,7 +106,7 @@ def test_mcp_action_projection_refuses_a_duplicate_result_schema_identity() -> N
 
 def test_mcp_action_projection_refuses_a_schema_stored_under_the_wrong_identity() -> None:
     refs = _refs_for("config.profile.create")
-    overview_schema = build_verb_input_schemas(("overview.status",))["overview.status"]
+    overview_schema = command_surface().build_verb_input_schemas(("overview.status",))["overview.status"]
     catalogue = build_action_catalogue((_catalogue_entry("operator.profile.create"),))
 
     with pytest.raises(ValueError, match="MCP input-schema identity mismatch"):
@@ -120,7 +119,7 @@ def test_mcp_action_projection_refuses_a_schema_stored_under_the_wrong_identity(
 
 def test_distinct_action_ids_sharing_one_target_remain_distinct_and_ordered() -> None:
     refs = _refs_for("config.profile.edit")
-    schemas = build_verb_input_schemas(("config.profile.edit",))
+    schemas = command_surface().build_verb_input_schemas(("config.profile.edit",))
     existing = _catalogue_entry("operator.profile.edit")
     second = ActionCatalogueEntry(
         action_id="operator.profile.edit_alternative",
@@ -152,7 +151,7 @@ def test_mcp_action_projection_refuses_an_orphan_target_and_insufficient_sources
     # the insufficient case targets ``config.auth.certificate.remove``,
     # whose ``name`` argument is genuinely schema-required.
     refs = _refs_for("config.profile.edit", "config.auth.certificate.remove")
-    schemas = build_verb_input_schemas(("config.profile.edit", "config.auth.certificate.remove"))
+    schemas = command_surface().build_verb_input_schemas(("config.profile.edit", "config.auth.certificate.remove"))
     orphan_catalogue = build_action_catalogue(
         (
             ActionCatalogueEntry(
@@ -187,7 +186,7 @@ def test_mcp_action_projection_refuses_an_orphan_target_and_insufficient_sources
 def test_mcp_action_projection_refuses_an_ambiguous_live_click_path() -> None:
     command_keys = ("config.profile.create", "overview.status")
     refs = _refs_for(*command_keys)
-    live_schemas = build_verb_input_schemas(command_keys)
+    live_schemas = command_surface().build_verb_input_schemas(command_keys)
     create_schema = live_schemas["config.profile.create"]
     overview_schema = live_schemas["overview.status"]
     ambiguous_schemas = {

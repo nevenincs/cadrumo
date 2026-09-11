@@ -14,7 +14,7 @@ from ....domain.modelos.filing_record import ExternalEvidence, ModeloRecord, Mod
 from ....domain.modelos.filing_repository import upsert_filing_record
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....tests import FIXTURES_DIR
+from ....tests.inventory import FIXTURES_DIR
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile

@@ -25,7 +25,7 @@ from typing import TYPE_CHECKING, ClassVar, Literal
 
 from pydantic import ConfigDict, Field, NonNegativeInt, computed_field, field_validator, model_validator
 
-from ...application.aggregation import (
+from ...application.aggregation.service import (
     PerModeloAggregationContributor,
     PerModeloAggregationResult,
 )
@@ -42,15 +42,10 @@ from ...application.modelo.work_review import (
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.filing_year import FilingYear
-from ...core.identity import (
-    BucketId,
-    CalculationRevisionId,
-    FilingRecordId,
-    ProfileId,
-    TransactionId,
-    VerificationReportId,
-    WorkUnitId,
-)
+from ...core.identity.bucket import BucketId
+from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, VerificationReportId, WorkUnitId
+from ...core.identity.profile import ProfileId
+from ...core.identity.transaction_ids import TransactionId
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ...core.payment_election import PaymentElection
 from ...core.period import Period

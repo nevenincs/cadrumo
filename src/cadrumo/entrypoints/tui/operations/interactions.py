@@ -19,14 +19,16 @@ from typing import Literal, assert_never
 
 from pydantic import BaseModel
 
-from ....application.operations.frontend_contracts import (
+from ....application.operations.frontend_contracts import OperationReviewProjectionResultV1
+from ....application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,
-    OperationResponseControlSuccessV1,
     OperationReviewAvailableInteractionV1,
-    OperationReviewProjectionResultV1,
-    OperationReviewProjectionSuccessV1,
     OperationUnsupportedInteractionV1,
+)
+from ....application.operations.frontend_requests import (
+    OperationResponseControlSuccessV1,
+    OperationReviewProjectionSuccessV1,
 )
 from ....application.operations.interactions import OperationResponseIntentValue
 from .controller import OperationBoundResponseControl, OperationController

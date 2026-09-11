@@ -11,7 +11,7 @@ from pydantic import BaseModel, ValidationError, field_validator, model_validato
 
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import reject_duplicate_json_members, reject_json_constant
-from .....core.identity import canonical_profile_bucket_id
+from .....core.identity.profile import canonical_profile_bucket_id
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..crypto.aead import GCM_TAG_SIZE, NONCE_SIZE, EncryptedBlob, decrypt_record
 from ._kdf_codec import (

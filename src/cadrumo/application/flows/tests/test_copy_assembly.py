@@ -90,7 +90,7 @@ def _catalogue_leaf(key: str) -> str:
     equality assertion against it proves the resolver reached the shipped
     catalogue rather than merely agreeing with itself.
     """
-    from ....core.i18n import output_language
+    from ....core.i18n.render import output_language
 
     leaf: object = shard_payload(output_language(), key)
     for segment in key.split("."):

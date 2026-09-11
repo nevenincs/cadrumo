@@ -6,7 +6,9 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
 
-from ...core.identity import BucketId, InvoiceId, TransactionId
+from ...core.identity.bucket import BucketId
+from ...core.identity.hex_ids import InvoiceId
+from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.clock import now as utc_now
 from ...core.time.utc import validate_utc_aware

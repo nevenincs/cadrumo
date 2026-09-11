@@ -22,14 +22,14 @@ def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
         yield runtime
 
 
-def _scan_only_pdf() -> bytes:
+def scan_only_pdf() -> bytes:
     """Return a one-page raster, text-layer-free PDF."""
     buffer = BytesIO()
     Image.new("RGB", (260, 160), "white").save(buffer, format="PDF")
     return buffer.getvalue()
 
 
-def _add_evidence(profile: TestRuntimeProfile, tmp_path: Path, *, name: str, data: bytes) -> str:
+def add_evidence(profile: TestRuntimeProfile, tmp_path: Path, *, name: str, data: bytes) -> str:
     path = tmp_path / name
     path.write_bytes(data)
     service = PurchaseInvoiceEvidenceService(

@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import pytest
 
+from ..parser import parse_declaracion
 from ._parser_boundary_support import (
     _MODELO_115_SYNTHETIC_FIXTURE,
     _MODELO_131_SYNTHETIC_FIXTURE,
     _expected_period,
-    parse_declaracion,
 )
 from ._parser_synthetic_quarterly_support import _M115_EXPECTED_VALUES, _M131_EXPECTED_VALUES
 

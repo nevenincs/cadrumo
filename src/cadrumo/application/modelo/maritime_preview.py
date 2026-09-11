@@ -38,7 +38,7 @@ from ...application.calculations.maritime_exemption_service import (
     retmar_mandatory_filing,
 )
 from ...application.user_profile.projections import fact_value
-from ...core.parsing import parse_bool
+from ...core.parsing.utils import parse_bool
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.renta.maritime_exemption import (
     MaritimeWorkerFacts,

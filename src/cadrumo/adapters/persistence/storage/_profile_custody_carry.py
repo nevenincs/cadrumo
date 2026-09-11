@@ -9,7 +9,8 @@ from types import MappingProxyType
 
 from pydantic import BaseModel
 
-from ....application.aggregation import PercepcionObservationRepository, RetencionObservationRepository
+from ....application.aggregation.percepciones_observations_repository import PercepcionObservationRepository
+from ....application.aggregation.retencion_observations_repository import RetencionObservationRepository
 from ....application.calculations.iva_compensation_history import IvaCompensationHistoryRepository
 from ....application.calculations.observations_repository import (
     CalculationObservationRepository,

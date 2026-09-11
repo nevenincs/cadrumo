@@ -44,7 +44,9 @@ def test_cadrumo_package_imports_in_process() -> None:
     the eager chain raises here.
     """
 
-    __import__("cadrumo")
+    from .. import __version__
+
+    assert __version__
 
 
 def test_cadrumo_package_imports_in_subprocess() -> None:

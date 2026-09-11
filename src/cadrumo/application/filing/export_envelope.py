@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.hashing import sha256_hex
-from ...core.identity import ContentDigest
+from ...core.identity.digest import ContentDigest
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period

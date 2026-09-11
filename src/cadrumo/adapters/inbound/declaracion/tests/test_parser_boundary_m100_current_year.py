@@ -28,12 +28,12 @@ from decimal import Decimal
 
 import pytest
 
+from .....tests.inventory import FIXTURES_DIR
+from ..parser import parse_declaracion
 from ._parser_boundary_m100_current_support import M100_CURRENT_YEAR_EXPECTED_CASILLAS
 from ._parser_boundary_support import (
-    FIXTURES_DIR,
     _expected_period,
     _modelo_snapshot,
-    parse_declaracion,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

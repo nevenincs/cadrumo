@@ -87,7 +87,7 @@ from ....adapters.persistence.storage.sql.secure_object_crypto import verify_rev
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRawRow, SecureObjectRepository
 from ....core.config import load_settings
 from ....core.hashing import sha256_hex
-from ....core.i18n import tr
+from ....core.i18n.render import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from ....core.models import STRICT_FROZEN_CONFIG
 from .._common import emit_envelope

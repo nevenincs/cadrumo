@@ -81,7 +81,7 @@ def _first_party_roots() -> frozenset[str]:
     """Top-level ``cadrumo`` subpackages, read from the tree.
 
     Roles in this codebase omit the distribution root -- ``:class:`~llm.
-    LLMClient``` rather than ``cadrumo.llm.LLMClient`` -- so a target is
+    LLMClient``` rather than a package-qualified target -- so a target is
     first-party when its head segment is a real subpackage. Derived rather
     than listed, so a new subpackage is judged the day it appears.
     """

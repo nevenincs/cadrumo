@@ -2,8 +2,13 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
+from pathlib import Path
+
 import pytest
 
+from .....core.casilla_id import CasillaId
+from ..parser import parse_declaracion
 from ._parser_boundary_m123_support import (
     _M123_CORPUS_CASE_IDS,
     _M123_CORPUS_CASES,
@@ -11,13 +16,9 @@ from ._parser_boundary_m123_support import (
     _M123_PROFILE_TARGET_CASES,
 )
 from ._parser_boundary_support import (
-    CasillaId,
-    Decimal,
-    Path,
     _expected_period,
     _modelo_snapshot,
     _write_declaration_pdf,
-    parse_declaracion,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

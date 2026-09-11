@@ -15,10 +15,10 @@ __all__ = ["isolated_profile_storage"]
 from click.testing import Result
 
 from ....core.directory_scan import scan_directory
-from ....tests import REPO_ROOT, leaf_name
-from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
+from ....tests.inventory import REPO_ROOT, leaf_name
 from ....tests.user_profile import register_cli_profile
 from ._runtime_profile_cli_fixture import _isolated_cli_state
+from .cli_runner import cadrumo_click_command, invoke_cached_cli
 
 __all__ = ["_isolated_cli_state"]
 

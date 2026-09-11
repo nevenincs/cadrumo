@@ -27,7 +27,10 @@ from ....core.casilla_id import validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings_previous_filing import resolve_previous_filing_binding_values
 from ....domain.calculations.registry.errors import RegistryValidationError
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation, revision_id_for_observation
+from ....domain.calculations.registry.tests.registry_observations import (
+    registry_grounded_modelo_observation,
+    revision_id_for_observation,
+)
 from ....tests.secure_sql import isolated_runtime_profile
 from ..binding_prefill import resolve_bindings_from_local_store
 from ..observations_repository import CalculationObservationRepository

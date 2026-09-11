@@ -29,12 +29,10 @@ LEDGER_PARTICIPATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(),
         policy=_POLICY_3,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._participation_cli", "participation_rebuild")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._participation_cli", "participation_rebuild", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_payloads", "LedgerParticipationRebuildResult"),
+            target=DeferredTarget("._ledger_payloads", "LedgerParticipationRebuildResult", __package__),
             identity="ledger.participation.rebuild",
         ),
     ),

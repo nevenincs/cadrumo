@@ -13,9 +13,10 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from .....core.config_support import LLMProvider
 from .....core.operator_action_enums import NoRecoveryOutcome
 from ..errors import LLMValidationError
-from ..models import LLMProvider, LLMRequest, LLMResponse, PromptDefinition
+from ..models import LLMRequest, LLMResponse, PromptDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

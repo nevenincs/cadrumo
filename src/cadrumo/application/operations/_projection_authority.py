@@ -9,8 +9,8 @@ from threading import RLock
 from typing import TYPE_CHECKING, Any, cast
 
 from ...core.hashing import content_hash_hex
-from ...core.identity import ContentDigest
-from .frontend_contracts import OperationResponseControlRequestV1
+from ...core.identity.digest import ContentDigest
+from .frontend_requests import OperationResponseControlRequestV1
 from .interactions import (
     OperationActorReference,
     OperationInteractionId,

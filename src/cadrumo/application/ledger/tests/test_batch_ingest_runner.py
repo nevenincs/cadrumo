@@ -27,10 +27,10 @@ from ....application.provisioning import (
     AcceleratorDevice,
     AcceleratorReading,
     HardwareProfile,
-    ProvisioningPreconditionCondition,
     SystemMemoryReading,
     probe_hardware_profile,
 )
+from ....application.provisioning_contracts import ProvisioningPreconditionCondition
 from ....core.config import load_settings, override_settings
 from ....core.directory_scan import scan_directory
 from ....core.hardware import AcceleratorKind

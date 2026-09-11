@@ -34,15 +34,17 @@ from ..capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..events import OperationLogSeverity
-from ..frontend_contracts import (
+from ..frontend_projection import (
+    OperationReviewAvailableInteractionV1,
+    OperationUnsupportedInteractionV1,
+)
+from ..frontend_requests import (
     OperationObservationRefusalCode,
     OperationObservationRefusalV1,
     OperationObservationRequestV1,
     OperationObservationSuccessV1,
     OperationObservationVersionHeader,
     OperationPublicProgressEventV1,
-    OperationReviewAvailableInteractionV1,
-    OperationUnsupportedInteractionV1,
 )
 from ..interactions import OperationInteractionRequest, OperationPendingInteraction
 from ..models import (

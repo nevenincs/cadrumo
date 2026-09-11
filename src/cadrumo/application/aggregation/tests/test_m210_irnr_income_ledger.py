@@ -4,10 +4,8 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
-from test_support.registry_authoring import load_modelo_directory
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -31,7 +29,7 @@ from ...modelo.calculation_actions import calculate_modelo_revision_from_bucket_
 from ...modelo.verification_actions import verify_modelo_revision
 from ...modelo.work_lifecycle import create_work_unit
 from ...tests.wizard_catalogue_fixtures import register_wizard_catalogue
-from .._irnr_income_ledger import (
+from ..irnr_income_ledger import (
     IrnrIncomeLedgerAggregation,
     IrnrIncomeLedgerAggregationIssueReason,
     aggregate_irnr_income_ledger_from_repositories,
@@ -47,9 +45,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BUCKET_ID = "d210d210-d210-4210-8210-d210d210d210"
 _CLOCK = datetime(2026, 7, 10, 10, 0, tzinfo=UTC)
 _PERIOD = Period.from_year_and_code(2025, "0A")
-_M210_REGISTRY_DIR = Path(__file__).resolve().parents[3] / "_data" / "registry" / "aeat" / "modelos" / "210"
-
-
 __all__ = ["register_wizard_catalogue"]
 
 
@@ -204,7 +199,7 @@ def test_secure_store_keeps_explicit_classification_and_source_mutation_changes_
     the admitted source evidence; code ``03`` remains excluded from a code
     ``01`` calculation despite sharing the same conceptual general-rate path.
     """
-    revision = load_modelo_directory(_M210_REGISTRY_DIR).revisions["2025"]
+    revision = bundled_authority().modelo("210").revisions["2025"]
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
         transaction_repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=runtime.repository)
         event_repository = BucketEventHistoryRepository(objects=runtime.repository)

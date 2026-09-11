@@ -14,7 +14,7 @@ from pydantic import BaseModel, model_validator
 
 from ....application.operations.event_replay import OperationEventCursor
 from ....application.operations.events import OperationEventCode, OperationLogSeverity
-from ....application.operations.frontend_contracts import (
+from ....application.operations.frontend_requests import (
     OperationPublicDiagnosticEventV1,
     OperationPublicEventPageV1,
     OperationPublicEventV1,

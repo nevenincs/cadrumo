@@ -42,7 +42,8 @@ from pydantic import BaseModel, Field, PrivateAttr, SecretStr
 
 from .....core.errors.hierarchy import AuthError
 from .....core.external_constants import UTF_8_ENCODING
-from .....core.identity import IdentityError, validate_spanish_tax_id
+from .....core.identity.documents import IdentityError
+from .....core.identity.tax_id import validate_spanish_tax_id
 from .....core.logging import get_logger
 from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.time.utc import coerce_utc_aware
@@ -612,7 +613,7 @@ def _persona_fisica_identifier(candidate: str) -> str | None:
 
     The shape gate admits a DNI written without its leading zero, so the
     candidate is zero-padded to the canonical nine characters before
-    :func:`~core.identity.validate_spanish_tax_id` verifies the checksum
+    :func:`~core.identity.tax_id.validate_spanish_tax_id` verifies the checksum
     letter. A shape-valid candidate whose checksum fails is not an identifier
     this subject can be trusted to carry, so it is skipped and the caller
     continues to the next attribute.

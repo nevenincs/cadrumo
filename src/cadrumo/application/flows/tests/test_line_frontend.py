@@ -40,7 +40,7 @@ from ....core.flows import (
     FlowMode,
     FlowWidgetKind,
 )
-from ....core.i18n import tr
+from ....core.i18n.render import tr
 from ..copy import assemble_section_titles
 from ..definition import CopyRef, FlowChoice, FlowCondition, FlowDefinition, FlowLegalRef, FlowPage, FlowSection
 from ..engine import FlowState, answer, start_flow

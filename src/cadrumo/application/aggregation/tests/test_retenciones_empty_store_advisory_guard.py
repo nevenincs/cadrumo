@@ -21,9 +21,9 @@ from ....domain.calculations.registry.schema import DataBindingDefinition, Model
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....tests.secure_sql import isolated_runtime_profile
 from .._preconditions import AggregationPreconditionCondition
-from .._source_mesh import CalculationSourceContext
 from ..errors import AggregationValidationError
 from ..modelo_bindings_retenciones import RetencionesAggregationSourceResolver
+from ..source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

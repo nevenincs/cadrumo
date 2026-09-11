@@ -70,7 +70,8 @@ from pathlib import Path
 import pytest
 
 from ..directory_scan import scan_directory
-from ..storage_taxonomy import STORAGE_TAXONOMY, StorageLocation
+from ..storage_taxonomy import StorageLocation
+from ..storage_taxonomy_locations import STORAGE_TAXONOMY
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

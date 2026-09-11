@@ -14,7 +14,7 @@ import pytest
 
 from ......core.config import override_settings
 from ......core.errors.error_codes import build_error_envelope, render_error_text
-from ......core.i18n import clear_output_language_cache
+from ......core.i18n.render import clear_output_language_cache
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ...bucket.errors import BucketLockedError
 from ..errors import MasterKeyReentrantError

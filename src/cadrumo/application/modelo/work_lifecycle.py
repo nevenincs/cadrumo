@@ -38,7 +38,7 @@ from pydantic import BaseModel, field_validator, model_validator
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core.identifier_grammar import NamespacedId
-from ...core.identity import CalculationRevisionId
+from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import (
     ActionArgumentSource,

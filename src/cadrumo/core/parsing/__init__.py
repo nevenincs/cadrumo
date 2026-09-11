@@ -1,44 +1,10 @@
-"""Shared parsing primitives for the AEAT application layer.
+"""Temporary protected forwards for the shared parsing primitives.
 
-Public surface
---------------
-
-* :func:`parse_bool` — parse a raw string token into ``True``, ``False``,
-  or ``None`` (absent / unrecognised).
-* :func:`parse_date` — unified date parser with format and error-policy axes.
-* :func:`parse_iso8601_date` — parse an ISO-8601 date string (``YYYY-MM-DD``).
-* :func:`require_iso8601_date` and :data:`IsoDateString` — the strict admission
-  authority for a required wire date that must name a real calendar date.
-* :func:`parse_ddmmyyyy_date` — parse a Spanish day-first date string
-  (``DD-MM-YYYY`` or ``DD/MM/YYYY``).
-* :func:`normalise_iso_4217_currency` — normalise a raw currency token to its
-  uppercase ISO 4217 code.
-* :func:`normalise_iso_3166_alpha2_jurisdiction` — validate a source
-  jurisdiction as an ISO 3166-1 alpha-2 code.
-* :func:`enum_value` — coerce an enum member (or any value) to its wire
-  string, mapping ``None`` to ``""``.
-
-The implementation modules still own underscore-prefixed helpers for
-package-local tests and tightly scoped internal consumers. This package
-initializer exposes only public parser names so cross-package callers cannot
-accidentally depend on private compatibility aliases.
+Cross-package consumers import from :mod:`codes`, :mod:`dates`, or
+:mod:`utils` directly. The two date names below remain here only for the
+protected aggregation consumers that still depend on this package path.
 """
 
 from __future__ import annotations
 
-from .codes import IsoCurrencyCode, normalise_iso_3166_alpha2_jurisdiction, normalise_iso_4217_currency
-from .dates import IsoDateString, parse_date, parse_ddmmyyyy_date, parse_iso8601_date, require_iso8601_date
-from .utils import enum_value, parse_bool
-
-__all__ = [
-    "IsoCurrencyCode",
-    "IsoDateString",
-    "enum_value",
-    "normalise_iso_3166_alpha2_jurisdiction",
-    "normalise_iso_4217_currency",
-    "parse_bool",
-    "parse_date",
-    "parse_ddmmyyyy_date",
-    "parse_iso8601_date",
-    "require_iso8601_date",
-]
+from .dates import IsoDateString, require_iso8601_date

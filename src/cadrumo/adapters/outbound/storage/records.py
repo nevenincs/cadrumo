@@ -26,7 +26,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
-from ....core.identity import ContentDigest
+from ....core.identity.digest import ContentDigest
 from ....core.models import STRICT_FROZEN_CONFIG
 
 # Every identifier below is a SHA-256 hex digest produced by

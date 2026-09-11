@@ -43,7 +43,7 @@ from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.iva.classification import InvoiceKind
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....tests.llm_vision_evidence_support import _json_array, _run_against_loopback_ollama
+from ....tests.llm_vision_evidence_support import json_array, run_against_loopback_ollama
 from ....tests.pdf_fixtures import text_pdf_bytes
 from ....tests.profile_capsule import seed_test_profile_record
 from ..evidence import MediaKind
@@ -328,7 +328,7 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback:
                 settings=isolated_settings,
             )
 
-        observed, draft = _run_against_loopback_ollama(self._extraction_json(), _call)
+        observed, draft = run_against_loopback_ollama(self._extraction_json(), _call)
 
         assert draft.supplier_tax_id == _SUPPLIER_CIF
         assert draft.invoice_number == "2026-0142"
@@ -340,7 +340,7 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback:
 
         # The request genuinely carried a rasterised image, not inlined text.
         body = STR_KEYED_MAPPING_ADAPTER.validate_python(observed["body"])
-        messages = _json_array(body["messages"])
+        messages = json_array(body["messages"])
         user_message = STR_KEYED_MAPPING_ADAPTER.validate_python(messages[-1])
         assert user_message.get("images")
 
@@ -363,7 +363,7 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback:
                 settings=isolated_settings,
             )
 
-        _observed, draft = _run_against_loopback_ollama(self._extraction_json(), _call)
+        _observed, draft = run_against_loopback_ollama(self._extraction_json(), _call)
         assert draft.taxable_base == Decimal("100.00")
         assert draft.grand_total == Decimal("121.00")
 
@@ -388,7 +388,7 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback:
                 settings=isolated_settings,
             )
 
-        _run_against_loopback_ollama(self._extraction_json(), _call)
+        run_against_loopback_ollama(self._extraction_json(), _call)
         assert scan_directory(empty_dir) == ()
 
     def test_llm_vision_disabled_refuses_instructively_not_silently(

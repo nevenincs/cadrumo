@@ -12,7 +12,7 @@ from typing import Annotated, ClassVar, Final, Literal
 
 from pydantic import BaseModel, StringConstraints, model_validator
 
-from ...core.identity import SubjectTaxId
+from ...core.identity.tax_id import SubjectTaxId
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.payment_election import PaymentElection
@@ -42,8 +42,10 @@ from ...domain.modelos.calculation_revision_m303_evidence import (
 )
 from ...domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoFilingEvidence
 from ...domain.prorrata_register.register import ProrrataRegister
-from ..aggregation import (
+from ..aggregation.iva_ledger import (
     IvaDifferentiatedDeductionContribution,
+)
+from ..aggregation.m303_arrivals import (
     M303ProrrataTransitionArrival,
     M303SupplierRegimeArrival,
 )

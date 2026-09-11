@@ -26,10 +26,9 @@ corpus. Each test states whether it is DISCRIMINATING or SUPPORTING.
 from __future__ import annotations
 
 import pytest
-from test_support.registry_authoring import legal_reference_quotes_corpus, load_catalogue_file
 
 from ....core.citation_grounding import CitationGrounding
-from ....core.resources.bundled_data import bundled_path
+from ...calculations.registry.authority import bundled_authority
 from ..proportionality import CategoryCitation
 from ..registry import load_category_profiles
 from ..spending_category import SpendingCategory
@@ -39,7 +38,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def _legal_catalogue():
     """Return the real IRPF legal catalogue the citations resolve against."""
-    return load_catalogue_file(bundled_path() / "registry" / "aeat" / "legal" / "irpf.toml").legal
+    return bundled_authority().catalogues.legal
 
 
 def _shipped_citations() -> list[CategoryCitation]:
@@ -72,7 +71,8 @@ def test_every_verified_quotation_is_contained_in_its_own_provision() -> None:
     the moment someone adjusted the number, and says nothing about which
     citation is grounded.
     """
-    catalogue = _legal_catalogue()
+    authority = bundled_authority()
+    catalogue = authority.catalogues.legal
     uncontained: list[tuple[str, str]] = []
     for citation in _shipped_citations():
         if citation.grounding is not CitationGrounding.VERIFIED:
@@ -81,7 +81,7 @@ def test_every_verified_quotation_is_contained_in_its_own_provision() -> None:
             f"verified citation {citation.locator!r} carries no legal_ref to be checked against"
         )
         reference = catalogue[citation.legal_ref]
-        if not legal_reference_quotes_corpus(reference, citation.quote, source_root=bundled_path()):
+        if not authority.legal_quotation_is_grounded(citation.legal_ref, citation.quote):
             uncontained.append((citation.legal_ref, citation.locator))
 
     assert not uncontained, (

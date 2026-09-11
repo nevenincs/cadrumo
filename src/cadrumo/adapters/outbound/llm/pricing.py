@@ -11,8 +11,8 @@ from __future__ import annotations
 
 from decimal import ROUND_HALF_UP, Decimal
 
+from ....core.config_support import LLMProvider
 from ....core.decimal.constants import ZERO
-from .models import LLMProvider
 
 _PRICING_PER_MILLION: tuple[tuple[LLMProvider, str, Decimal, Decimal], ...] = (
     (LLMProvider.ANTHROPIC, "claude-opus-4-6", Decimal("5.00"), Decimal("25.00")),

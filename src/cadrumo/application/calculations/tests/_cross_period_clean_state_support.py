@@ -24,7 +24,13 @@ from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.applicability_modelo202 import Modelo202Modality
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.justificante import Justificante
+from ....domain.calculations.registry.tests.registry_observations import (
+    registry_grounded_modelo_observation,
+    registry_grounded_observations,
+    revision_id_for_observation,
+)
+from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+from ....domain.justificante.schema import Justificante
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -45,25 +51,21 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
-from ....domain.calculations.registry.tests.registry_observations import (
-    registry_grounded_modelo_observation,
-    registry_grounded_observations,
-    revision_id_for_observation,
-)
 from ....tests.registry_snapshot import build_snapshot
-from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ...modelo.external_import_actions import import_external_filing_evidence
 from ...modelo.work_lifecycle import create_work_unit
 from ..cross_period_clean_state import (
+    cross_period_dependency_requirements,
+    evaluate_cross_period_clean_state,
+)
+from ..cross_period_external_evidence import filing_external_evidence_blockers
+from ..cross_period_models import (
     CrossPeriodCleanStateBlocker,
     CrossPeriodCleanStateVerdict,
     CrossPeriodDependencyEvidence,
     CrossPeriodDependencyRequirement,
     CrossPeriodExpectedMemberSet,
-    cross_period_dependency_requirements,
-    evaluate_cross_period_clean_state,
 )
-from ..cross_period_external_evidence import filing_external_evidence_blockers
 from ..iva_compensation_casillas import M303_RESULTADO_CASILLA
 from ..observations_repository import CalculationObservationRepository, ObservationSourceKind
 

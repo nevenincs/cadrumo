@@ -15,9 +15,9 @@ See Also:
     :func:`cadrumo.application.modelo.binding_resolution.resolve_borrador_source_tier`
         Binding-resolution tier that inserts this resolver before backend mesh
         and caller-value overlay.
-    :class:`cadrumo.application.aggregation._source_mesh.CalculationSourceResolution`
+    :class:`cadrumo.application.aggregation.source_mesh.CalculationSourceResolution`
         Typed source-resolution envelope carrying the resolved borrador values.
-    :class:`cadrumo.application.aggregation._source_mesh.BorradorSourceProvenance`
+    :class:`cadrumo.application.aggregation.source_mesh.BorradorSourceProvenance`
         Snapshot id and sourced-binding trace persisted onto the calculation
         revision.
     :class:`cadrumo.application.live.borrador_100.Borrador100SnapshotRepository`
@@ -39,7 +39,7 @@ from ...adapters.persistence.storage.errors import (
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.filing_year import FilingYear
 from ...core.hashing import sha256_hex
-from ...core.identity import BucketId
+from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.period import Period
@@ -50,7 +50,7 @@ from ...domain.calculations.registry.schema import (
     RegistrySnapshot,
 )
 from ...domain.modelos.errors import ModeloError
-from ..aggregation import (
+from ..aggregation.source_mesh import (
     BorradorSourceProvenance,
     CalculationSourceContext,
     CalculationSourceProvenance,

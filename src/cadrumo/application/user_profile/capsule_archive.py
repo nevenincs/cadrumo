@@ -46,7 +46,7 @@ from pydantic import BaseModel
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import bounded_canonical_json_bytes, sha256_hex
-from ...core.identity import BucketId
+from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.product_identity import PRODUCT_IDENTITY
 from ...core.time.clock import now as _now

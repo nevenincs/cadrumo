@@ -15,7 +15,7 @@ Administrador/consejero rows (RECEIVED side)
 --------------------------------------------
 
 Modelo 111 aggregates operator-supplied per-perceptor retención rows: each
-:class:`~._retenciones.RetencionObservation` carries both the ``taxable_base``
+:class:`~.retenciones.RetencionObservation` carries both the ``taxable_base``
 and the withheld ``retencion_amount``. For ordinary empleados
 (:attr:`~core.aggregation.RetencionScheme.WORK_INCOME`) the withholding is a
 personalised progressive computation (LIRPF art. 101.1), so no single rate can be
@@ -29,7 +29,7 @@ The engine does not compute the withheld amount (the operator enters it from the
 payroll), so the fixed rate could previously go unverified: an administrador row
 carrying, say, the ordinary empleado rate would fold into the trabajo block and
 file silently. This module surfaces that as a non-blocking
-:class:`~._source_mesh.CalculationSourceDiagnostic` on the calculate path,
+:class:`~.source_mesh.CalculationSourceDiagnostic` on the calculate path,
 grounded in the registry-backed
 :func:`~domain.transactions.load_administrador_retencion_rates` rate set
 (``no-silent-under-declaration``). :class:`~core.aggregation.WorkIncomeRetencionTreatment`
@@ -141,9 +141,9 @@ from ...domain.transactions.retencion_facts import (
     rirpf_art95_retencion_legal_refs,
     statutory_activity_retencion_rates,
 )
-from ._renta_income_ledger import RentaIncomeObservation
-from ._retenciones import RetencionObservation
-from ._source_mesh import CalculationSourceDiagnostic
+from .renta_income_ledger import RentaIncomeObservation
+from .retenciones import RetencionObservation
+from .source_mesh import CalculationSourceDiagnostic
 
 if TYPE_CHECKING:
     from ...domain.deadlines.models import TaxpayerProfile
@@ -237,7 +237,7 @@ def administrador_retencion_rate_advisory_observations(
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Return advisories for administrador rows inconsistent with art. 101.2.
 
-    A :class:`~._source_mesh.CalculationSourceDiagnostic` (reason
+    A :class:`~.source_mesh.CalculationSourceDiagnostic` (reason
     ``administrador_retencion_rate_mismatch``) is emitted for each
     :attr:`~core.aggregation.RetencionScheme.WORK_INCOME_DIRECTOR`
     observation with a strictly-positive ``taxable_base`` whose withheld

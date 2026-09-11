@@ -40,7 +40,7 @@ from pathlib import Path
 
 import pytest
 
-from .....tests import FIXTURES_DIR
+from .....tests.inventory import FIXTURES_DIR
 from . import _parser_boundary_support
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

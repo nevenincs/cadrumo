@@ -25,7 +25,8 @@ from pydantic import BaseModel, Field
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.flows import DEFER_TOKEN, FlowWidgetKind
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.parsing import parse_bool, parse_date
+from ...core.parsing.dates import parse_date
+from ...core.parsing.utils import parse_bool
 from ...core.redaction.rules import redact_validation_context
 from .definition import FlowPage
 from .errors import FlowValidatorRegistryError

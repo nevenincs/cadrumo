@@ -40,20 +40,22 @@ from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegi
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from .. import (
-    AggregationValidationError,
-    CalculationSourceContext,
-    IvaLedgerAggregationIssueReason,
-    LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
-    OssIossLedgerCandidate,
-    OssIossLedgerSourceResolver,
-    aggregate_oss_ioss_bindings,
-)
-from .. import (
-    LedgerIvaAggregationSourceResolver as _LedgerIvaAggregationSourceResolver,
-)
 from .._preconditions import AggregationPreconditionCondition
-from .._source_mesh import CalculationSourceResolution
+from ..errors import (
+    AggregationValidationError,
+)
+from ..iva_ledger import (
+    IvaLedgerAggregationIssueReason,
+)
+from ..modelo_bindings import LedgerIvaAggregationSourceResolver as _LedgerIvaAggregationSourceResolver
+from ..modelo_bindings_renta_expenses import (
+    LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
+)
+from ..oss_ioss import OssIossLedgerCandidate, OssIossLedgerSourceResolver, aggregate_oss_ioss_bindings
+from ..source_mesh import (
+    CalculationSourceContext,
+    CalculationSourceResolution,
+)
 from ..source_resolution_operations import merge_source_resolutions
 from .iva_authority_support import aggregate_iva_ledger_observations
 
@@ -908,7 +910,7 @@ def test_iva_source_mesh_resolver_degrades_on_unreadable_storage(
             {"namespace": TRANSACTION_CATALOGUE_NAMESPACE.namespace},
         )
 
-    with caplog.at_level(logging.DEBUG, logger="cadrumo.application.aggregation._source_mesh"):
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.application.aggregation.source_mesh"):
         resolution = LedgerIvaAggregationSourceResolver(transaction_repository=tx_repo).resolve(
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,

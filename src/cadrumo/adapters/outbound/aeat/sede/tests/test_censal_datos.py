@@ -20,13 +20,13 @@ import pytest
 
 from ......application.user_profile.censal_observation import CensalObservation
 from ......core.config import Settings
-from ......core.i18n import tr
-from ......tests import FIXTURES_DIR
+from ......core.i18n.render import tr
 from ......tests.aeat_literal_fixtures import (
     CENSAL_WRITE_SURFACE_PATH_CANARIES,
     PROCEDIMIENTOINI_PATH_PREFIX_FIXTURE,
     aeat_url,
 )
+from ......tests.inventory import FIXTURES_DIR
 from ..censal_datos import (
     _FORBIDDEN_LANDING_MARKERS,
     _assert_read_http,

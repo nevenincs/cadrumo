@@ -4,7 +4,7 @@ Every copy slot on a flow definition is a :class:`CopyRef`, never a
 literal string; this module resolves those references against the
 bundled sources at render time and composes the per-page copy bundle
 both frontends consume. Locale keys resolve through the canonical
-:func:`~cadrumo.core.i18n.tr` catalogue lookup built in; the
+:func:`~cadrumo.core.i18n.render.tr` catalogue lookup built in; the
 ``SCHEMA_FIELD`` and ``TERMINOLOGY_CONCEPT`` kinds resolve through
 resolvers a domain flow registers at import time, keeping the substrate
 blind to which schema or concept corpus backs them.
@@ -22,7 +22,7 @@ from typing import Final
 from pydantic import BaseModel
 
 from ...core.flows import CopyRefKind
-from ...core.i18n import tr
+from ...core.i18n.render import tr
 from ...core.models import STRICT_FROZEN_CONFIG
 from .definition import CopyRef, FlowDefinition, FlowPage
 from .errors import FlowCopyResolutionError

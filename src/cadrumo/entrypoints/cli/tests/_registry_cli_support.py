@@ -11,8 +11,8 @@ from typer.core import TyperGroup
 
 from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.authority import bundled_authority
-from ....tests.cli_runner import cadrumo_click_command
-from ....tests.cli_runner import invoke_cached_cli as _invoke_cached_cli
+from .cli_runner import cadrumo_click_command
+from .cli_runner import invoke_cached_cli as _invoke_cached_cli
 
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
 _WORKBOOK_ROOT = bundled_path("corpus", "aeat_official", "disenos_registro")

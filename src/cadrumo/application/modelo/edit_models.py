@@ -24,13 +24,9 @@ from pydantic import Field, field_validator, model_validator
 
 from ...core.casilla_id import CasillaId
 from ...core.filing_year import FilingYear
-from ...core.identity import (
-    BucketId,
-    CalculationRevisionId,
-    ContentDigest,
-    ModeloEditBaselineId,
-    WorkUnitId,
-)
+from ...core.identity.bucket import BucketId
+from ...core.identity.digest import ContentDigest
+from ...core.identity.hex_ids import CalculationRevisionId, ModeloEditBaselineId, WorkUnitId
 from ...core.period import Period
 from ...core.time.utc import validate_utc_aware
 from ...domain.calculations.registry.ids import BindingId, RevisionId

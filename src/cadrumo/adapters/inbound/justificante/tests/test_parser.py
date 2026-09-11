@@ -22,21 +22,23 @@ from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 from .....core.aeat_csv import is_aeat_csv
 from .....core.directory_scan import scan_directory
 from .....core.period import Period
-from .....domain.justificante import (
-    Justificante,
+from .....domain.justificante.errors import (
     JustificanteCsvNotFoundError,
     JustificanteError,
     JustificanteParseError,
+)
+from .....domain.justificante.schema import (
+    Justificante,
     JustificanteParserBackend,
 )
-from .....tests import FIXTURES_DIR as _FIXTURES_ROOT
-from .....tests import parse_committed_justificante_fixture
 from .....tests.aeat_literal_fixtures import (
     JUSTIFICANTE_AYUDA_PATH_FIXTURE,
     JUSTIFICANTE_VERIFY_PATH_FIXTURE,
     aeat_host,
     aeat_url,
 )
+from .....tests.inventory import FIXTURES_DIR as _FIXTURES_ROOT
+from .....tests.justificante_parse_cache import parse_committed_justificante_fixture
 from .....tests.pdf_fixtures import text_pdf_bytes
 from ...pdf.source_provenance import source_pdf_reference_path
 from .._parsers.text_extraction import _TEXT_CACHE, extract_text

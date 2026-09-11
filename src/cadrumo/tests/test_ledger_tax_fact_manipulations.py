@@ -24,12 +24,12 @@ from pathlib import Path
 
 import pytest
 
-from ..application.aggregation import (
+from ..application.aggregation.iva_ledger import (
     IvaLedgerAggregationIssueReason,
     aggregate_iva_ledger_observations,
-    aggregate_renta_income_ledger,
-    aggregate_renta_ledger_expenses,
 )
+from ..application.aggregation.renta_income_ledger import aggregate_renta_income_ledger
+from ..application.aggregation.renta_ledger import aggregate_renta_ledger_expenses
 from ..core.period import Period
 from ..domain.bienes_inversion.register import BienesInversionIvaRegister
 from ..domain.categories.spending_category import SpendingCategory
@@ -166,7 +166,7 @@ def test_business_pct_change_scales_deductible_base_proportionally() -> None:
 
 
 def test_business_proportion_primitive_drives_deductible_scaling() -> None:
-    from ..application.aggregation import business_proportion
+    from ..application.aggregation.business_proportion import business_proportion
 
     # The proportionality primitive the aggregation applies per row.
     assert business_proportion(BusinessClassification.BUSINESS, None) == Decimal("1")

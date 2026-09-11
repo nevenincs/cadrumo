@@ -58,20 +58,26 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....core.aggregation import AggregationCaptureKind, BindingSourceKind
+from ....core.aggregation import (
+    AggregationCaptureKind,
+    BindingSourceKind,
+    RetencionScheme,
+)
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.tests.registry_observations import (
+    registry_grounded_observations,
+    revision_id_for_observation,
+)
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations, revision_id_for_observation
-from ...aggregation import (
+from ...aggregation.retencion_observations_repository import RetencionObservationRepository
+from ...aggregation.retenciones import RetencionObservation
+from ...aggregation.source_mesh import (
     CallerOverrideDisposition,
-    RetencionObservation,
-    RetencionObservationRepository,
-    RetencionScheme,
     precedence_ladder_sources,
 )
 from ...calculations.observations_repository import CalculationObservationRepository

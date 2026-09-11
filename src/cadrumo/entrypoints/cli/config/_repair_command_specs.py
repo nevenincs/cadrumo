@@ -37,13 +37,13 @@ from ._spec_policies import (
 # these modules read as orphaned while backing live verbs. A wrong key now raises
 # at spec-build time instead of failing lazily on first invocation.
 _HANDLER_MODULES: Final[dict[str, str]] = {
-    "_repair_cli": "cadrumo.entrypoints.cli.config._repair_cli",
-    "_repair_profile": "cadrumo.entrypoints.cli.config._repair_profile",
+    "_repair_cli": "._repair_cli",
+    "_repair_profile": "._repair_profile",
 }
 
 
 def _handler(module: str, name: str) -> LazyBinding:
-    return LazyBinding.available(DeferredTarget(_HANDLER_MODULES[module], name))
+    return LazyBinding.available(DeferredTarget(_HANDLER_MODULES[module], name, __package__))
 
 
 def _flag(

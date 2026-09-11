@@ -9,14 +9,8 @@ from typing import cast
 
 import pytest
 
-from cadrumo.entrypoints.cli.command_api import (
-    command_schema_refs,
-    command_schema_type,
-    command_schema_types,
-    is_exposable_command,
-)
-
 from .._tools import build_tool_descriptors
+from ..command_surface import command_surface
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -49,12 +43,13 @@ def test_harness_has_no_core_schema_registry_dependency_or_fallback() -> None:
 
 
 def test_graph_schema_types_are_the_exact_descriptor_authority() -> None:
-    refs = command_schema_refs()
-    graph_types = command_schema_types()
+    surface = command_surface()
+    refs = surface.command_schema_refs()
+    graph_types = surface.command_schema_types()
     assert set(graph_types) == {ref.command for ref in refs}
     descriptors = build_tool_descriptors()
-    exposable = cast(Callable[[str], bool], is_exposable_command)
+    exposable = cast(Callable[[str], bool], surface.is_exposable_command)
     expected_exposable = {ref.command for ref in refs if exposable(ref.command)}
     assert {descriptor.command_key for descriptor in descriptors} == expected_exposable
     for descriptor in descriptors:
-        assert command_schema_type(descriptor.command_key) is graph_types[descriptor.command_key]
+        assert surface.command_schema_type(descriptor.command_key) is graph_types[descriptor.command_key]

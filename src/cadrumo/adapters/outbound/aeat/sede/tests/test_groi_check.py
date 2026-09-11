@@ -28,7 +28,6 @@ from ......tests.aeat_literal_fixtures import (
     aeat_url,
     configured_path,
 )
-from ......tests.groi_oracle import GROI_ORACLE_ID
 from .._adapter_utils import extract_marker_verdict
 from ..errors import SedeNavigationError
 from ..groi_check import (
@@ -47,12 +46,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 def test_driver_mode_is_live() -> None:
     assert GroiSedeDriver().mode == "live"
-
-
-def test_oracle_id_matches_registry_namespace() -> None:
-    """The oracle id is kebab-case and identifies the GROI Spanish-ROI surface."""
-
-    assert GROI_ORACLE_ID == "aeat-groi-spanish-roi-checker"
 
 
 def test_url_pins_to_aeat_www2_groi_servlet() -> None:

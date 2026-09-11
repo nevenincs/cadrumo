@@ -16,7 +16,7 @@ So the two strings are separated by job, and each has exactly one home:
 - The locale catalogues own the short operator-facing label, keyed per
   section and per field.
 
-The label is resolved through :func:`~cadrumo.core.i18n.tr` with the schema
+The label is resolved through :func:`~cadrumo.core.i18n.render.tr` with the schema
 prose as the ``default``, which makes the fallback truthful rather than
 decorative: a field whose key no catalogue carries renders its declared
 description -- true, if verbose -- instead of a raw dotted path or a
@@ -40,7 +40,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ...core.i18n import tr
+from ...core.i18n.render import tr
 
 if TYPE_CHECKING:
     from .schema import ProfileFieldDefinition, ProfileSchemaDefinition, ProfileSectionDefinition

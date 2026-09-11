@@ -17,7 +17,7 @@ import pytest
 from ......core.decimal.grammar import DecimalSeparator
 from ......core.tabular import coerce_cell_text
 from ......domain.transactions.raw_transaction import RawTransaction, SourceFormat
-from ......tests import FIXTURES_DIR
+from ......tests.inventory import FIXTURES_DIR
 from ..base import (
     BankStatementParseError,
     FinancialValidationError,

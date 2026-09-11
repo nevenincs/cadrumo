@@ -32,8 +32,8 @@ from pydantic import BaseModel, ConfigDict, Field, SecretStr, SkipValidation, Ty
 from ...core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from ...core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from ...core.errors.hierarchy import AeatLoginAssertionError, CadrumoError
-from ...core.identity import (
-    IdentityError,
+from ...core.identity.documents import IdentityError
+from ...core.identity.tax_id import (
     same_tax_identifier,
     tax_id_identity_token,
     validate_spanish_tax_id,
@@ -573,10 +573,10 @@ def _normalise_tax_identity(value: object) -> str:
     This helper owns only what the canonical function deliberately does not
     accept: an ``object`` rather than a ``str``, and a :class:`SecretStr`
     wrapper. The normal form itself is
-    :func:`~core.identity.tax_id_identity_token`.
+    :func:`~core.identity.tax_id.tax_id_identity_token`.
 
     Its result is a keying and presence value, never a comparison key. Two
-    identifiers are compared with :func:`~core.identity.same_tax_identifier`,
+    identifiers are compared with :func:`~core.identity.tax_id.same_tax_identifier`,
     which strips separators so a printed ``B-1234567-4`` matches a stored
     ``B12345674``; this form deliberately does not, because it keys stored
     objects and must never merge two characters-differ identifiers into one
@@ -834,7 +834,7 @@ def _assert_active_profile_identity_matches_provider(
     and the caller supplies the profile identity as the expectation.
 
     Both sides are compared in the CANONICAL form
-    :func:`~core.identity.validate_spanish_tax_id` returns, not as raw
+    :func:`~core.identity.tax_id.validate_spanish_tax_id` returns, not as raw
     strings. Both fields are unconstrained ``str``, so a bare ``!=`` was wrong
     in two opposite directions at once: ``12345678-Z`` against ``12345678Z``
     REFUSED a session the operator legitimately owns, while two equal-but-

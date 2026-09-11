@@ -835,7 +835,7 @@ def resolve_applicability_rule_from_authority(
     validation defect elsewhere in the tree break every taxpayer's
     applicability answer. The fragment was already validated once, at
     registry build time, by
-    :func:`~._validate_applicability_section.validate_applicability_section`.
+    :func:`~dev.registry.compiler.validate_applicability_section.validate_applicability_section`.
 
     This is a deliberate asymmetry with :class:`~._schema.RegistrySnapshot`,
     which carries a same-shaped projection for every OTHER schema family:
@@ -881,7 +881,7 @@ def _resolve_registry_applicability_rule(
     The import is function-local by necessity, not preference: ``_authority``
     transitively imports THIS module already, through the build-validation
     dispatch chain (``_authority`` -> ``_snapshot`` -> ``_validate`` ->
-    ``_validate_revision_sections`` -> ``_validate_applicability_section`` ->
+    ``_validate_revision_sections`` -> ``validate_applicability_section`` ->
     here), so a module-level import of :func:`~._authority.bundled_authority`
     would close a real cycle. Resolving on first call, long after both
     modules have finished importing, is the same discipline

@@ -23,7 +23,7 @@ from .inventory import SRC_CADRUMO, ast_for_path, leaf_name, non_test_python_fil
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_LLM_PACKAGE = SRC_CADRUMO / "llm"
+_LLM_PACKAGE = SRC_CADRUMO / "adapters" / "outbound" / "llm"
 _RUN_HEALTH = SRC_CADRUMO / "application" / "diagnostics_run_health.py"
 
 # Emitting a bucket event is the act of recording a state change in the
@@ -84,8 +84,8 @@ def test_core_run_health_diagnostics_does_not_depend_on_the_optional_subpackage(
 
     reaches: list[str] = []
     for node in ast.walk(tree):
-        # `adapters.outbound.llm` is the CORE-side store package and is fine;
-        # the bare `llm` top-level package is the optional one and is not.
+        # `adapters.outbound.llm` is the canonical outbound LLM package and is
+        # fine; no displaced top-level package may be reached.
         if isinstance(node, ast.ImportFrom) and node.module:
             parts = node.module.split(".")
             if "llm" in parts and "adapters" not in parts:
@@ -94,7 +94,7 @@ def test_core_run_health_diagnostics_does_not_depend_on_the_optional_subpackage(
             reaches.extend(
                 f"line {node.lineno}: import {alias.name}"
                 for alias in node.names
-                if alias.name.startswith("cadrumo.llm")
+                if alias.name.startswith("cadrumo.adapters.outbound.llm")
             )
     assert reaches == [], (
         "core run-health diagnostics must not import the optional inference subpackage; "
@@ -119,10 +119,8 @@ def test_every_model_talking_class_lives_in_the_inference_package() -> None:
     """
     import ast
 
-    from . import SRC_CADRUMO, ast_for_path, non_test_python_files_under, repo_relative
-
     ledger = SRC_CADRUMO / "application" / "ledger"
-    package = SRC_CADRUMO / "llm"
+    package = SRC_CADRUMO / "adapters" / "outbound" / "llm"
 
     # A model-talking class is one that constructs an LLM request.
     def _builds_a_model_request(path) -> bool:
@@ -159,8 +157,6 @@ def test_the_review_workflow_does_not_import_across_the_boundary_inward() -> Non
     """
     import ast
 
-    from . import SRC_CADRUMO, ast_for_path, repo_relative
-
     workflow = SRC_CADRUMO / "application" / "ledger" / "llm_review_workflow.py"
     tree = ast_for_path(workflow)
     assert tree is not None, f"{repo_relative(workflow)} must be parseable"
@@ -180,7 +176,7 @@ def test_the_review_workflow_does_not_import_across_the_boundary_inward() -> Non
             resolved = ".".join([*base, node.module]) if node.module else ".".join(base)
         else:
             resolved = node.module or ""
-        if resolved == "cadrumo.llm" or resolved.startswith("cadrumo.llm."):
+        if resolved == "cadrumo.adapters.outbound.llm" or resolved.startswith("cadrumo.adapters.outbound.llm."):
             from_llm.extend(alias.name for alias in node.names)
 
     assert from_llm, "the workflow does consume the interchange DTOs; this assertion must not pass vacuously"

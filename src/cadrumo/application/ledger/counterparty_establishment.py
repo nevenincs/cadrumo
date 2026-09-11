@@ -64,7 +64,7 @@ from ...core.classification.policies import SensitivityClass
 from ...core.classifier_input_source import ClassifierInputSource
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import sha256_hex
-from ...core.identity import ContentDigest
+from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from ...domain.iva.classification import IvaTerritorialScope

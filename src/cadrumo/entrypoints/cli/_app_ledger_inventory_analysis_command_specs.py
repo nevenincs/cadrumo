@@ -74,7 +74,9 @@ LEDGER_INVENTORY_ANALYSIS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="kind",
                 declarations=("--kind",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.contribuyente.inventory.records", "MovementKind")),
+                value=ValueContract(
+                    DeferredTarget("...domain.contribuyente.inventory.records", "MovementKind", __package__)
+                ),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.ledger.inventory.movement_kind_help"),
                 metavar=None,
@@ -153,12 +155,10 @@ LEDGER_INVENTORY_ANALYSIS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_4,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._ledger_inventory_cli", "inventory_movement_add")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._ledger_inventory_cli", "inventory_movement_add", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli.ledger_business_payloads", "InventoryMovementAddResult"),
+            target=DeferredTarget(".ledger_business_payloads", "InventoryMovementAddResult", __package__),
             identity="ledger.inventory.movement.add",
         ),
     ),
@@ -176,13 +176,11 @@ LEDGER_INVENTORY_ANALYSIS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_POLICY_6,
         handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._ledger_inventory_cli", "inventory_valuation_preview")
+            DeferredTarget("._ledger_inventory_cli", "inventory_valuation_preview", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget(
-                "cadrumo.entrypoints.cli.ledger_business_payloads", "InventoryValuationPreviewPayload"
-            ),
+            target=DeferredTarget(".ledger_business_payloads", "InventoryValuationPreviewPayload", __package__),
             identity="ledger.inventory.valuation.preview",
         ),
     ),

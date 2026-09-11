@@ -27,15 +27,15 @@ from .command_spec import (
     ValueContract,
 )
 
-_PRORRATA_REGISTER_MODULE: Final[str] = "cadrumo.core.prorrata_register"
-_PRORRATA_CLI_MODULE: Final[str] = "cadrumo.entrypoints.cli._prorrata_register_cli"
-_PRORRATA_PAYLOAD_MODULE: Final[str] = "cadrumo.entrypoints.cli._prorrata_register_payloads"
+_PRORRATA_REGISTER_MODULE: Final[str] = "...core.prorrata_register"
+_PRORRATA_CLI_MODULE: Final[str] = "._prorrata_register_cli"
+_PRORRATA_PAYLOAD_MODULE: Final[str] = "._prorrata_register_payloads"
 
 _PROVENANCE_VALUE: Final[ValueContract] = ValueContract(
-    DeferredTarget(_PRORRATA_REGISTER_MODULE, "ProrrataProvisionalProvenance")
+    DeferredTarget(_PRORRATA_REGISTER_MODULE, "ProrrataProvisionalProvenance", __package__)
 )
 _SECTOR_LETTER_VALUE: Final[ValueContract] = ValueContract(
-    DeferredTarget(_PRORRATA_REGISTER_MODULE, "SectorDiferenciadoLetra")
+    DeferredTarget(_PRORRATA_REGISTER_MODULE, "SectorDiferenciadoLetra", __package__)
 )
 
 _REQUIRED: Final[ParameterDefault] = ParameterDefault.required()
@@ -80,14 +80,14 @@ def _option(
 
 def _handler(name: str) -> LazyBinding:
     """Bind one prorrata leaf to its public command handler."""
-    return LazyBinding.available(DeferredTarget(_PRORRATA_CLI_MODULE, name))
+    return LazyBinding.available(DeferredTarget(_PRORRATA_CLI_MODULE, name, __package__))
 
 
 def _result_schema(model: str, identity: str) -> ResultSchemaSpec:
     """Declare one prorrata leaf's public result payload."""
     return ResultSchemaSpec(
         SchemaState.TARGET,
-        target=DeferredTarget(_PRORRATA_PAYLOAD_MODULE, model),
+        target=DeferredTarget(_PRORRATA_PAYLOAD_MODULE, model, __package__),
         identity=identity,
     )
 

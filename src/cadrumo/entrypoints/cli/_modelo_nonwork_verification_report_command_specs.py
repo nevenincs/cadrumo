@@ -44,12 +44,10 @@ MODELO_NONWORK_VERIFICATION_REPORT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_MODEL_READ,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_records_cli", "verification_report_list")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._modelo_records_cli", "verification_report_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_payloads", "VerificationReportListResult"),
+            DeferredTarget("._modelo_payloads", "VerificationReportListResult", __package__),
             identity="modelo.verification_report.list",
         ),
     ),
@@ -70,12 +68,10 @@ MODELO_NONWORK_VERIFICATION_REPORT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_MODEL_READ,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_records_cli", "verification_report_show")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._modelo_records_cli", "verification_report_show", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_payloads", "VerificationReportShowResult"),
+            DeferredTarget("._modelo_payloads", "VerificationReportShowResult", __package__),
             identity="modelo.verification_report.view",
         ),
     ),

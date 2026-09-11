@@ -42,11 +42,13 @@ from .....application.operations.composition import (
     OperationSubmission,
     compose_operation_services,
 )
-from .....application.operations.frontend_contracts import (
-    OperationObservationSuccessV1,
+from .....application.operations.frontend_projection import (
     OperationPublicProjectionV1,
-    OperationResponseApplyRequestV1,
     OperationReviewAvailableInteractionV1,
+)
+from .....application.operations.frontend_requests import (
+    OperationObservationSuccessV1,
+    OperationResponseApplyRequestV1,
 )
 from .....application.operations.interactions import OperationActorReference
 from .....application.operations.models import OperationRequest

@@ -9,7 +9,7 @@ from enum import StrEnum
 from typing import Final, Literal, cast
 
 from ....core.external_constants import UTF_8_ENCODING
-from ....core.i18n import MissingTranslationError, lookup_translation
+from ....core.i18n.render import MissingTranslationError, lookup_translation
 from ....core.modelo import Modelo
 from ....core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ._toml_helpers import as_toml_table as _as_toml_table

@@ -56,8 +56,8 @@ from .....application.auth.session_types import (
 from .....application.auth_credentials import ActiveCertificateCredentials
 from .....core.async_cleanup import close_async_resources
 from .....core.auth_provider import AuthProviderDescription, AuthProviderKind
-from .....core.config import AEAT_CERTIFICATE_PROTECTED_URL
 from .....core.config import Settings as _Settings
+from .....core.config_support import AEAT_CERTIFICATE_PROTECTED_URL
 from .....core.errors.hierarchy import AeatLoginAssertionError
 from .....core.logging import get_logger
 from .....core.time.clock import now
@@ -576,7 +576,7 @@ class AeatAuthenticator:
           ``True`` and severity reflects the certificate's expiry
           health.
         """
-        from .....core.i18n import tr
+        from .....core.i18n.render import tr
 
         if self._credentials.certificate_path is None:
             return AuthProviderDescription(

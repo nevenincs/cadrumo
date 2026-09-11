@@ -43,7 +43,7 @@ from __future__ import annotations
 
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_input_kind import InputKind
-from ..aggregation import CalculationSourceDiagnostic
+from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from .settlement_casilla import SETTLEMENT_SEMANTIC_ROLES
 
 __all__ = ["SETTLEMENT_SEMANTIC_ROLES", "collect_settlement_not_computed_diagnostics"]

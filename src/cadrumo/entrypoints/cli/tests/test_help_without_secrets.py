@@ -144,7 +144,8 @@ def _provision_profile(tmp_path: Path, passphrase: str) -> None:
     the caller -- which cannot pass against an empty root -- is what carries
     that guarantee now.
     """
-    from ....core.config import SecretStoreBackend, override_settings
+    from ....core.config import override_settings
+    from ....core.config_support import SecretStoreBackend
     from ....tests.user_profile import register_cli_profile
 
     with override_settings(

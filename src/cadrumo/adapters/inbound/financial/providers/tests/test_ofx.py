@@ -15,7 +15,7 @@ import pytest
 
 from ......core.optional_extras import OFX_EXTRA, optional_extra_available
 from ......domain.transactions.enums import TransactionDirection
-from ......tests import FIXTURES_DIR
+from ......tests.inventory import FIXTURES_DIR
 from ..base import InvalidFinancialSourceError
 from ..ofx import OfxProvider
 

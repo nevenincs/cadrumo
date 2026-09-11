@@ -49,7 +49,7 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.prorrata_register.register import ProrrataActivityRow, ProrrataRegister, ProrrataRegisterEntry
-from ....tests import general_m303_filing_evidence
+from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.secure_sql import isolated_runtime_profile
 from ..revision_persistence import persist_filed_revision
 

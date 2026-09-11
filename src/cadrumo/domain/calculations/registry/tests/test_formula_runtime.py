@@ -171,7 +171,7 @@ def test_casilla_constraint_violation_message_interpolates_with_raise_site_conte
     asserts no ``{name}`` placeholder survives. The AST placeholder-parity gate
     does not cover error ``context=`` dicts, so this guard is explicit.
     """
-    from .....core.i18n import tr
+    from .....core.i18n.render import tr
 
     # Mirror the context built at the raise site (keep in sync with
     # _formula_runtime.calculate_registry_snapshot).

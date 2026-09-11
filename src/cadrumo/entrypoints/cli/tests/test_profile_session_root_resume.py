@@ -45,12 +45,12 @@ from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core.config import load_settings, override_settings
 from ....core.profile_session import ProfileSessionRefusalReason
 from ....core.time.clock import now as _now
-from ....tests._os_keychain_hook import require_os_credential_store
-from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli, semantic_cli_output
+from ....tests.os_keychain_hook import require_os_credential_store
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from .._common import cli_policy_refusal_projection
 from ..errors import CliRefusedBoundaryError, suspend_error_boundary
+from .cli_runner import cadrumo_click_command, invoke_cached_cli, semantic_cli_output
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

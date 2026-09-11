@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Any, cast
 from pydantic import BaseModel
 
 from ...core.hashing import content_hash_hex
-from ...core.identity import ContentDigest
+from ...core.identity.digest import ContentDigest
 from ...core.operations import OperationInteractionKind
 from ._model_contract import require_strict_frozen_operation_model_graph
 

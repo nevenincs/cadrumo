@@ -22,9 +22,10 @@ from pathlib import Path
 
 import pytest
 
+from .....core.config_support import LLMProvider
 from ..cache import _CACHE_NAMESPACE, LLMCache
 from ..errors import LLMCacheError
-from ..models import LLMProvider, LLMRequest, LLMResponse
+from ..models import LLMRequest, LLMResponse
 from ._engine_binding_fixtures import _ENGINE_HOLDER, _bind_engine  # noqa: F401
 
 # The encrypted-SQL substrate is imported inside the helpers below, matching

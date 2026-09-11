@@ -60,9 +60,9 @@ from collections.abc import Collection, Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
 
-from ._snapshot_internals import _legal_window_covers_devengo
 from .schema import ModeloDefinition, ModeloRevision
 from .schema_references import LegalReference, governed_period_span
+from .snapshot import _legal_window_covers_devengo
 
 __all__ = (
     "CasillaCitationKey",

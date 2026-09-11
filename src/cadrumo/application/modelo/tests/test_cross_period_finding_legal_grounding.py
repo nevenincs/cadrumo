@@ -16,16 +16,14 @@ import re
 from pathlib import Path
 
 import pytest
-from test_support.registry_authoring import verify_legal_catalogue
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.directory_scan import scan_directory
 from ....core.period import Period
-from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind
-from ...calculations.cross_period_clean_state import (
+from ...calculations.cross_period_models import (
     CrossPeriodCleanStateBlocker,
     CrossPeriodCleanStateVerdict,
     CrossPeriodDependencyEvidence,
@@ -131,7 +129,10 @@ def test_application_legal_refs_resolve_to_bundled_corpus() -> None:
     missing = sorted(ref_ids - set(catalogues.legal))
     assert missing == [], f"application legal_refs absent from the registry: {missing}"
     references = {ref_id: catalogues.legal[ref_id] for ref_id in sorted(ref_ids)}
-    verify_legal_catalogue(references, source_root=bundled_path())
+    for ref_id in sorted(references):
+        assert bundled_authority().legal_evidence_text(ref_id).strip(), (
+            f"published legal evidence is empty for {ref_id!r}"
+        )
 
     assert set(_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS) <= ref_ids
     assert set(_CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS) <= ref_ids

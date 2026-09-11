@@ -7,30 +7,34 @@ from typing import ClassVar, cast
 
 from ...core.operations import OperationCancellation, OperationInteractionKind, OperationLifecycle
 from .frontend_contracts import (
+    OperationObservationResultV1,
+    OperationPublicEventV1,
+    OperationPublicPendingInteractionV1,
+)
+from .frontend_projection import (
     OperationNoPendingInteractionV1,
+    OperationPublicProgressV1,
+    OperationPublicProjectionV1,
+    OperationReviewAvailableInteractionV1,
+    OperationReviewProjectionReferenceV1,
+    OperationUnsupportedInteractionV1,
+)
+from .frontend_requests import (
     OperationObservationRefusalCode,
     OperationObservationRefusalV1,
     OperationObservationRequestV1,
-    OperationObservationResultV1,
     OperationObservationSuccessV1,
     OperationObservationVersionHeader,
     OperationPublicDiagnosticEventV1,
     OperationPublicEffectEventV1,
     OperationPublicEventPageV1,
-    OperationPublicEventV1,
     OperationPublicInteractionEventV1,
     OperationPublicLogEventV1,
     OperationPublicNoticeEventV1,
-    OperationPublicPendingInteractionV1,
     OperationPublicPhaseEventV1,
     OperationPublicProgressEventV1,
-    OperationPublicProgressV1,
-    OperationPublicProjectionV1,
     OperationPublicReconciliationEventV1,
     OperationPublicTerminalEventV1,
-    OperationReviewAvailableInteractionV1,
-    OperationReviewProjectionReferenceV1,
-    OperationUnsupportedInteractionV1,
 )
 from .interactions import OperationPendingInteraction
 from .persistence.events import (

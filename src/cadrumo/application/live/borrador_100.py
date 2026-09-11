@@ -32,7 +32,8 @@ from ...adapters.persistence.storage.secure_object_namespaces import (
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
-from ...core.identity import BucketId, SnapshotId
+from ...core.identity.bucket import BucketId
+from ...core.identity.hex_ids import SnapshotId
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period

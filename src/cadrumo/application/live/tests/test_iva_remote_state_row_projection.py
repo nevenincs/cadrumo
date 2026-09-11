@@ -13,7 +13,7 @@ from decimal import Decimal
 import pytest
 
 from ....adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation
-from ....core.identity import tax_id_identity_token
+from ....core.identity.tax_id import tax_id_identity_token
 from ....core.period import Period
 from ....domain.iva_compensation.carry_forward import IvaCompensationCarryForwardLot, IvaCompensationExpiryReviewState
 from ....tests.aeat_literal_fixtures import IVA_WALLET_SOURCE_URL_FIXTURE

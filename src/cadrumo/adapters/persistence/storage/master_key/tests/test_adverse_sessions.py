@@ -8,7 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from ......core.config import SecretStoreBackend, Settings, override_settings
+from ......core.config import Settings, override_settings
+from ......core.config_support import SecretStoreBackend
 from ...bucket.errors import BucketLockedError
 from ...errors import MasterKeyUnavailableError
 from ..active_session import (

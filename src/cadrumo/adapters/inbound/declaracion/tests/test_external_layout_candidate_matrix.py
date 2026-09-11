@@ -17,13 +17,13 @@ import pytest
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.modelo import Modelo
 from .....domain.calculations.registry.authority import bundled_authority
-from .....tests import FIXTURES_DIR
 from .....tests.fixtures.external_layout_candidates.models import (
     ExternalLayoutCandidate,
     ExternalLayoutCandidateKind,
     ExternalLayoutRegistryApplicabilityVerdict,
     load_external_layout_candidate,
 )
+from .....tests.inventory import FIXTURES_DIR
 from ...pdf.extracted_casilla import ExtractedCasilla
 from ..parser import (
     _classify_target,

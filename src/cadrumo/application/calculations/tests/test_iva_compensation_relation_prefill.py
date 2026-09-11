@@ -25,7 +25,7 @@ from ....domain.calculations.registry.tests.registry_observations import (
     revision_id_for_observation,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation import CalculationSourceContext
+from ...aggregation.source_mesh import CalculationSourceContext
 from ..iva_compensation_annual_partition import (
     IvaCompensationAnnualPartitionSourceResolver,
     resolve_iva_compensation_annual_partition_binding_values,

@@ -29,12 +29,12 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from test_support.registry_authoring import compile_registered_fact_providers
 
 from ....core.directory_scan import scan_directory
 from ....core.resources.bundled_data import bundled_path
-from ....domain.calculations.registry.facts.resolution import ScalarFactQuery, resolve_governed_fact
+from ....domain.calculations.registry.facts.resolution import ScalarFactQuery
 from ....domain.calculations.registry.schema_base import DateAxis
+from ...calculations.registry.authority import bundled_authority
 from ..retencion_facts import (
     AdministradorRetencionRates,
     administrador_retencion_legal_refs,
@@ -52,16 +52,13 @@ _CURRENT_EFFECTIVE_DATE = date(2026, 4, 1)
 
 
 def _resolved_fact(fact_id: str):
-    """Resolve one authored administrator fact through the development compiler."""
-    catalogue = compile_registered_fact_providers(bundled_path("registry", "aeat"))
-    return resolve_governed_fact(
-        catalogue,
+    """Resolve one published administrator fact through the runtime authority."""
+    return bundled_authority().resolve_governed_fact(
         ScalarFactQuery(
             fact_id=fact_id,
             date_axis=DateAxis.FILING_PERIOD,
             effective_date=_CURRENT_EFFECTIVE_DATE,
         ),
-        authority_digest="0" * 64,
     )
 
 

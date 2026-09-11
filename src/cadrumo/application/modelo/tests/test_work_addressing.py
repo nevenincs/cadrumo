@@ -18,6 +18,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.operator_action_enums import ActionArgumentSource, ActionConditionality, NoRecoveryOutcome
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -28,8 +29,12 @@ from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
+from .._work_selection import (
+    ModeloWorkSelectorRequest,
+    ModeloWorkSelectorState,
+    select_modelo_work_resolution,
+)
 from ..action_errors import CalculationRevisionNotFoundError
 from ..selectors import ModeloCalculationRevisionSelector
 from ..work_addressing import (
@@ -39,13 +44,10 @@ from ..work_addressing import (
     ModeloWorkCapture,
     ModeloWorkCaptureError,
     ModeloWorkCurrentCoordinate,
-    ModeloWorkSelectorRequest,
-    ModeloWorkSelectorState,
     capture_modelo_work_resolution,
     read_modelo_work_current_coordinate,
     resolve_modelo_revision_for_operator_target,
     resolve_modelo_revision_pick,
-    select_modelo_work_resolution,
 )
 from ..work_lifecycle import (
     create_work_unit,

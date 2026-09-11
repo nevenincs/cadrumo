@@ -36,7 +36,7 @@ from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core.aggregation import IntracomOperationType
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents
-from ...core.parsing import normalise_iso_4217_currency
+from ...core.parsing.codes import normalise_iso_4217_currency
 from ...core.time.clock import now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import emit_bucket_event

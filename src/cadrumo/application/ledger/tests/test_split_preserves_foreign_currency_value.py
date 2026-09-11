@@ -26,7 +26,7 @@ from ....application.aggregation.currency_predicates import is_non_eur_without_c
 from ....core.money.rounding import round_to_cents
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction
-from ...modelo.tests.test_modelo_303_deductible_evidence_gate import _iva_transaction
+from ...modelo.tests.test_modelo_303_deductible_evidence_gate import iva_transaction
 from ..actions_split_merge import _split_child_eur_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -39,7 +39,7 @@ _CHILD_AMOUNTS = (Decimal("403.33"), Decimal("403.33"), Decimal("403.34"))
 
 
 def _domestic_parent() -> Transaction:
-    return _iva_transaction("split-fx", direction=TransactionDirection.OUTGOING, taxable_base=Decimal("1000.00"))
+    return iva_transaction("split-fx", direction=TransactionDirection.OUTGOING, taxable_base=Decimal("1000.00"))
 
 
 def _converted_parent(*, rate: Decimal = _RATE) -> Transaction:
@@ -117,7 +117,7 @@ def test_a_child_built_from_a_converted_parent_is_not_an_unconverted_row() -> No
     values = _split_child_eur_values(parent=parent, child_amounts=_CHILD_AMOUNTS)
     assert values is not None
 
-    child = _iva_transaction("split-fx-child", direction=TransactionDirection.OUTGOING, taxable_base=Decimal("300.00"))
+    child = iva_transaction("split-fx-child", direction=TransactionDirection.OUTGOING, taxable_base=Decimal("300.00"))
     converted_child = child.model_copy(
         update={
             "raw": child.raw.model_copy(update={"currency": parent.raw.currency}),

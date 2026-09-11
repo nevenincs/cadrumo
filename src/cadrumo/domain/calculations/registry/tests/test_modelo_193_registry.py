@@ -6,25 +6,32 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from test_support.registry_authoring import RegistryValidator, _committed_modelo, _committed_snapshot
 
-from .....core.aggregation import BindingAggregationOp, BindingSourceKind
-from .....core.casilla_id import CasillaId
-from .....core.resources.bundled_data import bundled_path
-from .....domain.deadlines.errors import DeadlineValidationError
-from .....domain.deadlines.festivos import shift_deadline
-from .registry_observations import registry_grounded_modelo_observation
+from cadrumo.core.aggregation import BindingAggregationOp, BindingSourceKind
+from cadrumo.core.casilla_id import CasillaId
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.deadlines.errors import DeadlineValidationError
+from cadrumo.domain.deadlines.festivos import shift_deadline
+
 from .....tests.registry_snapshot import build_snapshot
 from ..authority import bundled_authority
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
-from ..relations import relation_source_requirements, resolve_relation_values_from_observations
+from ..relations import (
+    relation_source_requirements,
+    resolve_relation_values_from_observations,
+)
+from ._published_authority import (
+    artifact_components,
+    artifact_snapshot,
+)
+from .registry_observations import registry_grounded_modelo_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_modelo_193_guidance_and_layout_sources_are_separated() -> None:
-    modelo, catalogues = _committed_modelo("193")
+    modelo, catalogues = artifact_components("193")
     note = catalogues.sources["aeat-modelo-193-296-note-2025"]
 
     assert "aeat-modelo-193-296-note-2025" in modelo.source_refs
@@ -52,9 +59,8 @@ def test_modelo_193_guidance_and_layout_sources_are_separated() -> None:
 
 
 def test_modelo_193_validates_and_gates_workflow_surfaces_through_snapshot() -> None:
-    modelo, catalogues = _committed_modelo("193")
+    modelo, catalogues = artifact_components("193")
 
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
     snapshot = build_snapshot(
         modelo,
         catalogues,
@@ -83,7 +89,7 @@ def test_modelo_193_validates_and_gates_workflow_surfaces_through_snapshot() -> 
 @pytest.mark.parametrize("revision_id", ["2024", "2025-y-siguientes"])
 def test_modelo_193_gastos_total_is_explicit_while_rows_keep_their_own_source(revision_id: str) -> None:
     """No scalar source claim exists without a secure contributor observation owner."""
-    modelo, _catalogues = _committed_modelo("193")
+    modelo, _catalogues = artifact_components("193")
     revision = modelo.revisions[revision_id]
     total = next(casilla for casilla in revision.casillas if casilla.id == "decl.gastos-total")
     gasto_bindings = tuple(
@@ -100,9 +106,8 @@ def test_modelo_193_gastos_total_is_explicit_while_rows_keep_their_own_source(re
 
 
 def test_modelo_193_annual_deadline_is_grounded_to_current_revision() -> None:
-    modelo, catalogues = _committed_modelo("193")
+    modelo, catalogues = artifact_components("193")
 
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
     snapshot = build_snapshot(
         modelo,
         catalogues,
@@ -185,7 +190,7 @@ def test_modelo_193_deadline_identity_is_the_tax_year(
     opens_on: date,
     closes_on: date,
 ) -> None:
-    modelo, _catalogues = _committed_modelo("193")
+    modelo, _catalogues = artifact_components("193")
     (window,) = modelo.revisions[revision_id].deadline_windows
 
     assert window.filing_year == window.period.filing_year == filing_year
@@ -202,8 +207,8 @@ def test_modelo_193_deadline_identity_is_the_tax_year(
 
 
 def test_modelo_193_relations_resolve_against_modelo_123_registry() -> None:
-    snapshot = _committed_snapshot("193", 2025, "0A")
-    snapshot_123 = _committed_snapshot("123", 2025, "1T")
+    snapshot = artifact_snapshot("193", 2025, "0A")
+    snapshot_123 = artifact_snapshot("123", 2025, "1T")
 
     modelo_123_outputs = {casilla.id for casilla in snapshot_123.revision.casillas}
     relation_source_casilla_ids = {relation.source_casilla_id for relation in snapshot.revision.relations}
@@ -212,8 +217,8 @@ def test_modelo_193_relations_resolve_against_modelo_123_registry() -> None:
 
 
 def test_modelo_193_calculation_aggregates_modelo_123_quarterly_observations() -> None:
-    snapshot = _committed_snapshot("193", 2025, "0A")
-    snapshot_123 = _committed_snapshot("123", 2025, "1T")
+    snapshot = artifact_snapshot("193", 2025, "0A")
+    snapshot_123 = artifact_snapshot("123", 2025, "1T")
     source_casilla_ids = {casilla.id: casilla for casilla in snapshot_123.revision.casillas}
     requirements = relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
     observed_by_period: dict[str, dict[CasillaId, Decimal]] = {}

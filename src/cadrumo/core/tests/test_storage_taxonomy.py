@@ -20,10 +20,6 @@ from ..bucket_pointer import pointer_path
 from ..config import Settings, override_settings
 from ..errors.hierarchy import CoreValidationError
 from ..storage_taxonomy import (
-    FINGERPRINT_EXCLUDED_STORAGE_FIELDS,
-    ROOT_DERIVED_STORAGE_FIELDS,
-    STORAGE_FIELD_CATEGORIES,
-    STORAGE_TAXONOMY,
     FingerprintParticipation,
     StorageCategory,
     StorageGrouping,
@@ -32,6 +28,12 @@ from ..storage_taxonomy import (
     StorageNodeKind,
     StorageOverridePolicy,
     StorageScope,
+)
+from ..storage_taxonomy_locations import (
+    FINGERPRINT_EXCLUDED_STORAGE_FIELDS,
+    ROOT_DERIVED_STORAGE_FIELDS,
+    STORAGE_FIELD_CATEGORIES,
+    STORAGE_TAXONOMY,
     bucket_scoped_storage_path,
     storage_location,
     storage_path,

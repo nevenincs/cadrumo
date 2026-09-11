@@ -23,7 +23,7 @@ from pydantic import AnyHttpUrl
 from sqlalchemy import select
 
 from .....core.period import Period
-from .....domain.justificante import Justificante
+from .....domain.justificante.schema import Justificante
 from .....tests.aeat_literal_fixtures import justificante_wlpl_cotejo_url
 from .....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ....persistence.storage.sql.engine import get_engine

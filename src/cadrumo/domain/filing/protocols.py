@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 if TYPE_CHECKING:  # pragma: no cover — type-only import
     from ...core.casilla_id import CasillaId
-    from ...core.identity import SubjectTaxId
+    from ...core.identity.tax_id import SubjectTaxId
     from ...core.period import Period
     from ..calculations.registry.ids import BindingId, FormulaId, LegalRefId, RelationId, SourceRefId
     from ..calculations.registry.schema_surfaces import CasillaConstraints

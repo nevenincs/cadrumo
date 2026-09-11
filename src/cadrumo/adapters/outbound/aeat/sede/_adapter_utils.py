@@ -24,8 +24,8 @@ from urllib.parse import urlsplit
 
 from .....core.config import Settings
 from .....core.external_constants import PDF_MIME_TYPE
-from .....core.i18n import tr
-from .....core.identity import tax_id_identity_token
+from .....core.i18n.render import tr
+from .....core.identity.tax_id import tax_id_identity_token
 from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.text_fold import fold_for_matching
 

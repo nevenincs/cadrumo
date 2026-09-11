@@ -10,7 +10,7 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
-from ....core.identity import CalculationRevisionId, FilingRecordId, WorkUnitId
+from ....core.identity.hex_ids import CalculationRevisionId, FilingRecordId, WorkUnitId
 from ....core.period import Period
 from ....domain.deadlines.models import ObligationStatus
 from ...overview.calendar_models import (

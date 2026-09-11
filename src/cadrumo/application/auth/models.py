@@ -9,7 +9,7 @@ from typing import Annotated
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from ...core.hex import Hex64Str
-from ...core.identity import BucketId
+from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import validate_utc_aware
 

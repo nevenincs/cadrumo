@@ -21,7 +21,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....application.calculations.cross_period_clean_state import CrossPeriodCleanStateBlocker
+from ....application.calculations.cross_period_models import CrossPeriodCleanStateBlocker
 from ....application.calculations.observations_repository import CalculationObservationRepository
 from ....application.prorrata_register.service import ProrrataRegisterService
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -32,8 +32,8 @@ from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRe
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ....domain.prorrata_register.register import ProrrataRegisterEntry
-from ....tests.registry_observations import registry_grounded_modelo_observation
 from ._cli_surface_profile_fixture import _isolated_backend
 from ._cli_surface_support import _invoke, _json
 

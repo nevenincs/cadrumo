@@ -18,6 +18,7 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.iva_compensation.reconciliation import (
     IvaCompensationAuthoritySource,
@@ -40,7 +41,6 @@ from ....domain.modelos.filing_repository import upsert_filing_record
 from ....domain.modelos.repository import upsert_work_unit
 from ....tests.env_scope import ready_clave_settings
 from ....tests.filing_evidence import general_m303_filing_evidence
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ...calculations.cross_period_clean_state import cross_period_dependency_requirements
 from ...calculations.observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
 from .._calculation_helpers import external_filing_observations

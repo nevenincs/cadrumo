@@ -29,20 +29,19 @@ real AEAD, real raw-SQL tampering of stored columns. Nothing is mocked.
 from __future__ import annotations
 
 import inspect
+import sqlite3
+from datetime import UTC, datetime
+from pathlib import Path
 from typing import TypedDict
 
 import pytest
 
+from ......core.classification.policies import SensitivityClass
 from ......tests.master_key import EphemeralMasterKeyProvider
+from ...errors import SecureObjectUnreadableError
 from ..secure_object_crypto import derive_revision_id
 from ._secure_objects_support import (
-    UTC,
-    Path,
-    SecureObjectUnreadableError,
-    SensitivityClass,
     _repo_at,
-    datetime,
-    sqlite3,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

@@ -29,10 +29,10 @@ from ....core.modelo import Modelo
 from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.prorrata_register.register import ProrrataRegisterEntry
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
+from ....domain.prorrata_register.register import ProrrataRegisterEntry
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations.cross_period_clean_state import CrossPeriodCleanStateBlocker
+from ...calculations.cross_period_models import CrossPeriodCleanStateBlocker
 from ...calculations.observations_repository import CalculationObservationRepository
 from ..seed import cross_check_prorrata_entry_against_prior_observation
 from ..service import ProrrataRegisterService

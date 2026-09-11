@@ -58,7 +58,9 @@ from ...core.export_layout_format import ExportLayoutFormat
 from ...core.filing_producer_key import FilingProducerKey
 from ...core.filing_year import FilingYear
 from ...core.hashing import sha256_hex
-from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, PrefixedContentDigest, WorkUnitId
+from ...core.identity.bucket import BucketId
+from ...core.identity.digest import ContentDigest, PrefixedContentDigest
+from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.operator_action_enums import ActionEvidenceProvenance
@@ -90,7 +92,7 @@ from ...domain.filing.errors import FilingExportError
 from ...domain.filing.protocols import ModeloInputs
 from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
 from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
-from ...domain.justificante import JustificanteRepositoryProtocol
+from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevision
 from ...domain.modelos.errors import ModeloError, ModeloExportError
 from ...domain.modelos.protocols import (
@@ -100,15 +102,17 @@ from ...domain.modelos.protocols import (
 )
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.prorrata_register.register import ProrrataRegister
-from ..aggregation import (
+from ..aggregation.iva_ledger import (
     IvaDifferentiatedDeductionContribution,
     IvaLedgerAggregation,
     aggregate_iva_ledger_observations_from_repositories,
     resolve_iva_differentiated_deduction_contributions,
+)
+from ..aggregation.m303_arrivals import (
     resolve_m303_prorrata_transition_arrival,
     resolve_m303_supplier_regime_arrival,
 )
-from ..calculations.cross_period_clean_state import CrossPeriodExpectedMemberSet
+from ..calculations.cross_period_models import CrossPeriodExpectedMemberSet
 from ..calculations.m303_regimen_simplificado_annual_summary import (
     validate_m303_regimen_simplificado_annual_summary_target_revision,
 )

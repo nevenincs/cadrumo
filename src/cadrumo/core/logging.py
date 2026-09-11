@@ -107,7 +107,7 @@ class LogExtra(RootModel[dict[str, LogExtraValue]]):
 
     Upgrades the historical ``Mapping[str, object]`` return annotation on
     service-layer ``as_extra()`` log-field helpers (e.g.
-    :class:`~cadrumo.application.aggregation.PerModeloAggregationLogFields`,
+    :class:`~cadrumo.application.aggregation.service.PerModeloAggregationLogFields`,
     :class:`~cadrumo.application.operator_surface.OperatorSurfaceContract`'s
     ``log_fields``): every current emitter only ever writes flat, non-secret
     scalars into :meth:`logging.Logger.debug`'s ``extra=`` mapping, so
@@ -623,7 +623,8 @@ def default_log_file_path() -> Path:
     The filename itself is read off the taxonomy's ``LOG_FILE`` member rather
     than declared as an untethered string literal here.
     """
-    from .storage_taxonomy import StorageCategory, storage_location, storage_path
+    from .storage_taxonomy import StorageCategory
+    from .storage_taxonomy_locations import storage_location, storage_path
 
     filename = Path(storage_location(StorageCategory.LOG_FILE).subpath).name
     return storage_path(StorageCategory.LOGS).expanduser() / filename

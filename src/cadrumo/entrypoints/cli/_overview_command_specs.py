@@ -26,9 +26,9 @@ _METADATA = ExecutionPolicySpec(frozenset({"state-free"}), frozenset({"none"}), 
 _READ = ExecutionPolicySpec(
     frozenset({"calculation", "encrypted-facts"}), frozenset({"none"}), "compute", CommandWriteRoute.NONE
 )
-_LANG = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
-_MODULE = "cadrumo.entrypoints.cli._overview"
-_PAYLOADS = "cadrumo.entrypoints.cli._overview_payloads"
+_LANG = ValueContract(DeferredTarget("...core.external_constants", "OutputLanguage", __package__))
+_MODULE = "._overview"
+_PAYLOADS = "._overview_payloads"
 
 
 def _option(
@@ -66,10 +66,10 @@ def _leaf(
         InvocationSpec(context_parameter="ctx"),
         parameters,
         _READ,
-        LazyBinding.available(DeferredTarget(_MODULE, key.removeprefix("app_"))),
+        LazyBinding.available(DeferredTarget(_MODULE, key.removeprefix("app_"), __package__)),
         ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget(_PAYLOADS, schema),
+            DeferredTarget(_PAYLOADS, schema, __package__),
             identity=key.removeprefix("app_").replace("_", "."),
         ),
     )

@@ -53,7 +53,7 @@ from .....application.user_profile.censal_operation import (
 )
 from .....core.config import override_settings
 from .....core.i18n.render import I18N_STRICT_MISSING_KEYS, tr
-from .....core.identity import BucketId
+from .....core.identity.bucket import BucketId
 from .....core.period import Period
 from .....domain.modelos.codes import ModeloCode
 from ...components.host import ScreenHostApp

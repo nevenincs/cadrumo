@@ -26,9 +26,12 @@ from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.handoffs import relation_consumption_channels, relation_consumption_index
 from ....domain.calculations.registry.relations import RegistryFoldRequirement
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation, revision_id_for_observation
+from ....domain.calculations.registry.tests.registry_observations import (
+    registry_grounded_modelo_observation,
+    revision_id_for_observation,
+)
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation import CalculationSourceContext, CalculationSourceResolution
+from ...aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
 from ..observations_repository import CalculationObservationRepository
 from ..relation_prefill import (
     RelationPrefillSourceResolver,

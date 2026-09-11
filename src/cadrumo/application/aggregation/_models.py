@@ -26,10 +26,11 @@ from pydantic import (
 )
 
 from ...core.casilla_id import CasillaId
+from ...core.i18n.translatable import Translatable as t
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...domain.categories.spending_category import SpendingCategory
-from .errors import AggregationValidationError, t
+from .errors import AggregationValidationError
 
 
 def _coerce_spending_category(value: object) -> object:
