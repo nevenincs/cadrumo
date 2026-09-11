@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#registry-edition-authoring'
 date: '2026-09-09'
-modified: '2026-09-10'
+modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:16133b5895146c9c5c36c93a294c9c9a24a282e961242211692f93f0774ec1d7'
+body_hash: 'sha256:a98f100f926267268277f1f618efd01b916a5c11657cb6bf0ee840ef2a8b40b9'
 related:
   - '[[2026-09-09-registry-edition-authoring-W01-P01-S01]]'
   - '[[2026-09-09-registry-edition-authoring-W01-P01-S02]]'
@@ -45,6 +45,7 @@ related:
   - '[[2026-09-09-registry-edition-authoring-W03-P05-S17]]'
   - '[[2026-09-09-registry-edition-authoring-W03-P05-S31]]'
   - '[[2026-09-09-registry-edition-authoring-W03-P05-S62]]'
+  - '[[2026-09-09-registry-edition-authoring-W03-P05-S63]]'
   - '[[2026-09-09-registry-edition-authoring-W03-P05-S64]]'
   - '[[2026-09-09-registry-edition-authoring-W03-P07-S24]]'
   - '[[2026-09-09-registry-edition-authoring-W04-P09-S53]]'
@@ -107,6 +108,7 @@ Auto-generated index of all documents tagged with `#registry-edition-authoring`.
 - `2026-09-09-registry-edition-authoring-W03-P05-S64` - [M | opus-medium] Translate the continuity-key locale entries that copy the Spanish source text, before the live pilot. The 303 dry run showed inherited rows resolving a predecessor's real translation where the full copy fell through to a continuity-key entry holding untranslated Spanish in ca, en and hu (84 casillas per 303 edition). A copied source string does not satisfy locale coverage, so this is a catalogue defect that inheritance exposes, not a migration error. Through the canonical locale workflow only, give each affected continuity key a real translation in every supported locale, grounded in the lineage's existing translations, and add a locale-coverage check that fails when a continuity-key entry equals its Spanish source in a non-Spanish locale unless it is classified as untranslatable. Proof: the round-trip gate's locale identity passes on the migrated 303 dry run; the new check fails on a planted copied entry.
 - `2026-09-09-registry-edition-authoring-W03-P07-S24` - [M | opus-medium] Add the legal-reference period-correctness gate: a casilla's citations must resolve to the dated reference rows governing its own edition window. This refuses the residual authoring drift and must land before modelo 100 migrates, or its delta will show drift as though it were law. Proof: the known drifting rows are refused by name and the rest of the corpus passes.
 - `2026-09-09-registry-edition-authoring-W04-P09-S53` - [S | opus-medium] Rule on what a governance review stamp covers once editions inherit. The stamp writes declared scalars into the declaring file and is therefore still literally true after migration — but a reviewer signs off on a delta while the compiled edition carries inherited rows the reviewer never saw, so the stamp's SCOPE shrinks silently while its wording does not. Either the stamp states what it covers, or review is defined over the materialised edition. Silence here converts an honest attestation into a misleading one without anyone changing it. The same shape has already been confirmed once on a neighbouring gate: the type-column gate reads derivation records out of a generation manifest, so a hand-authored revision's 1,220 shipped fields are not explained, not pinned and not failing — they are invisible, and the gate covers 32 of 94 shipped revisions while reading as clean. Delta authoring produces stated rather than generated editions, so any gate keyed on manifest presence will read a migrated edition as absent rather than as unchecked. Rule on that too, or migration silently widens the blind spot. Proof: a migrated edition is distinguishable from an unreviewed one by what the stamp says, not by what a reader infers.
+- `2026-09-09-registry-edition-authoring-W03-P05-S63` - [M | opus-medium] Unblock the successor edges that fail for missing lineage rather than order: of 67 successor edges, 33 are blocked because a predecessor row carries no continuidad_id, 2 by a lineage withdrawn without a retirement record, and 1 by a lower authority grade (that one correctly stays full-copy). For each lineage-blocked edge, seed or ground the missing predecessor-row lineage through the existing seeder and rulings (seeded marked apart from grounded, no identity from a byte span or box number alone), and declare each real withdrawal as a retirement evolution grounded in the official design. Rows that cannot be grounded stay unresolved in the lineage ledger, never guessed. Proof: the migration script reports each unblocked edge as migratable, the lineage totality gate stays at zero uncovered and zero stale, and every edge still blocked is listed with its reason.
 
 ### plan
 
