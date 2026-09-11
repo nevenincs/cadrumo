@@ -43,8 +43,8 @@ release-please.yml:Refuse a deadlocked release state
 #                          version pinned in YAML rather than in the toolchain
 #   check-vault            `vaultspec-core vault check all`, called raw; every
 #                          other repo in the fleet reaches the vault by recipe
-#   audit-deps             ci-full exports the lock and pipes it to `pip-audit`
-#                          while `just audit-deps` runs the fleet's own
+#   check-dependency-vulnerabilities  ci-full exports the lock and pipes it to `pip-audit`
+#                          while `just check-dependency-vulnerabilities` runs the fleet's own
 #                          dependency_audit.py - two different answers to one
 #                          question, in one repository
 #   test-roundtrip         a four-path pytest invocation with a `-k` filter
@@ -60,12 +60,12 @@ docs-publish.yml:Publish the documentation site
 
 # --- pending - the packaging and release lanes ---------------------------------
 # ~700 lines of bash and pwsh across four workflows, none of it runnable by a
-# developer. `just test-packaging-smoke`, `just build-python-cohort` and
+# developer. `just test-packaging-portable`, `just build-packaging-cohort` and
 # `just test-python-compatibility` already exist and cover parts of this, which
 # is what makes the rest visible as duplication rather than as necessary
 # scaffolding: python-runtime-compatibility.yml re-implements the compatibility
 # recipe wholesale, and packaging-smoke.yml's Linux leg inlines a campaign its
-# own Windows and macOS legs invoke as `just test-packaging-smoke`.
+# own Windows and macOS legs invoke as `just test-packaging-portable`.
 #
 # Recipes needed: `release-publish-pypi`, `packaging-evidence`,
 # `test-channel-homebrew`, `test-channel-scoop`, plus calling the three that

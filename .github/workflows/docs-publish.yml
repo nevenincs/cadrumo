@@ -99,7 +99,7 @@ jobs:
           tool: just@1.38.0
 
       - name: Initialize the worktree
-        run: just init
+        run: just setup
 
       - name: Publish the documentation site
         env:

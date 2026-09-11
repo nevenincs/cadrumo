@@ -90,7 +90,7 @@ docs/_static/cli-tree.json
 docs/_static/download-latest.json
 # The compiled Pagefind search index is uncommitted and regenerated with the
 # documentation site under docs/_build/, which is ignored above.
-# Gettext POT message templates for docs localization (`just docs-gettext`),
+# Gettext POT message templates for docs localization (`just docs-generate-catalogs`),
 # extracted fresh from the user-scope pages on every run. The per-language .po
 # catalogues under docs/locales/<lang>/ ARE committed; only these templates are
 # a regenerated build product.

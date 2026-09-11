@@ -81,7 +81,7 @@ jobs:
           enable-cache: false
 
       - name: Initialize the worktree
-        run: just init
+        run: just setup
 
       # The dependency/source/preflight-command checks run INSIDE the campaign
       # driver (dev.packaging.campaign) within the synced environment, so they
@@ -92,7 +92,7 @@ jobs:
       # Reclaim the preinstalled toolchains the job never uses, and sample
       # disk/memory every minute during the one-invocation campaign so a
       # resource death names its lane in the interleaved output. The campaign
-      # stays a single `just test-packaging-smoke-ci` invocation so every lane
+      # stays a single `just test-packaging-ci` invocation so every lane
       # consumes the same cohort bytes built once.
       # NOTE: this lane performs no disk reclamation. A GitHub-hosted-only
       # reclaim step stood here, and under the self-hosted-only fleet policy
@@ -114,7 +114,7 @@ jobs:
           ( while true; do echo "[resources $(date -u +%H:%M:%S)] $(df -h --output=avail / | tail -1 | tr -d ' ') free disk, $(free -m | sed -n 2p | awk '{print $7}') MiB avail mem"; sleep 60; done ) &
           sampler=$!
           status=0
-          just test-packaging-smoke-ci || status=$?
+          just test-packaging-ci || status=$?
           kill "$sampler" 2>/dev/null || true
           exit "$status"
 
@@ -200,7 +200,7 @@ jobs:
           enable-cache: false
 
       - name: Initialize the worktree
-        run: just init
+        run: just setup
 
       # The dependency/source/preflight-command checks run INSIDE the campaign
       # driver (dev.packaging.campaign), so they are not repeated as workflow
@@ -214,7 +214,7 @@ jobs:
         env:
           CADRUMO_TEST_WORKERS: "8"
           CADRUMO_PACKAGING_LANE_CONCURRENCY: "2"
-        run: just test-packaging-smoke
+        run: just test-packaging-portable
 
       - name: Checkpoint packaging evidence
         if: always()
@@ -295,7 +295,7 @@ jobs:
           enable-cache: false
 
       - name: Initialize the worktree
-        run: just init
+        run: just setup
 
       # The dependency/source/preflight-command checks run INSIDE the campaign
       # driver (dev.packaging.campaign), so they are not repeated as workflow
@@ -307,7 +307,7 @@ jobs:
         env:
           CADRUMO_TEST_WORKERS: "2"
           CADRUMO_PACKAGING_LANE_CONCURRENCY: "2"
-        run: just test-packaging-smoke
+        run: just test-packaging-portable
 
       - name: Checkpoint packaging evidence
         if: always()
@@ -380,7 +380,7 @@ jobs:
           enable-cache: false
 
       - name: Initialize the worktree
-        run: just init
+        run: just setup
 
       - name: Refuse to seal a version the world may already hold bytes under
         run: |
@@ -440,7 +440,7 @@ jobs:
           # jobs; the GitHub cache round-trip only adds network time here.
           enable-cache: false
       - name: Initialize the worktree
-        run: just init
+        run: just setup
       - name: Download the immutable release cohort
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -486,7 +486,7 @@ jobs:
           # jobs; the GitHub cache round-trip only adds network time here.
           enable-cache: false
       - name: Initialize the worktree
-        run: just init
+        run: just setup
       - name: Download the immutable release cohort
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -531,7 +531,7 @@ jobs:
           # jobs; the GitHub cache round-trip only adds network time here.
           enable-cache: false
       - name: Initialize the worktree
-        run: just init
+        run: just setup
       - name: Download the immutable release cohort
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:

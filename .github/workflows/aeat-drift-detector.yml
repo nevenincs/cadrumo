@@ -63,10 +63,10 @@ jobs:
           enable-cache: false
 
       - name: Initialize the worktree
-        run: just init
+        run: just setup
 
       - name: Provision Playwright Chromium
-        run: just setup-playwright
+        run: just setup-browser
 
       - name: Run GROI live drift tests
         env:

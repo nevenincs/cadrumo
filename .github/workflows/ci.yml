@@ -127,7 +127,7 @@ jobs:
           enable-cache: false
 
       - name: Initialize the worktree
-        run: just init
+        run: just setup
 
       # actionlint AND the CI/justfile contract, both through the recipe. The
       # per-architecture pinned download this step used to carry now lives in
@@ -136,8 +136,8 @@ jobs:
       # finding on a push. vaultspec-dashboard carried a second copy of the
       # same 30 lines, already at a different version; both now read the same
       # deployed module.
-      - name: Workflow lint and CI contract (just check-workflow)
-        run: just check-workflow
+      - name: Workflow lint and CI contract (just check-workflows)
+        run: just check-workflows
 
   cadrumo-static:
     name: "Check: Source conformance (Linux)"
@@ -167,7 +167,7 @@ jobs:
           enable-cache: false
 
       - name: Initialize the worktree
-        run: just init
+        run: just setup
 
       - name: Lint
         # `check-format` joins the two style gates here because until now
@@ -188,7 +188,7 @@ jobs:
           just check-format
 
       - name: Import architecture
-        run: just check-imports
+        run: just check-import-boundaries
 
       - name: Typecheck
         run: just check-types
@@ -233,7 +233,7 @@ jobs:
         # The import architecture check is already wired above and is not
         # repeated here.
         run: |
-          just check-unreachable-module-coverage
+          just check-module-reachability
           just check-docstring-references
 
       - name: Tooling and workflow conformance gates
@@ -241,7 +241,7 @@ jobs:
         # evidence-transport conformance, shard-plugin partition proof). This is
         # their one per-push home.
         #
-        # The paths and the marker expression live in the `test-dev-ci` recipe,
+        # The paths and the marker expression live in the `test-ci-contracts` recipe,
         # NOT here. Every `dev/` lane is declared in the justfile and nowhere
         # else: this step previously restated four directories inline while the
         # justfile declared eleven more, the two sets overlapped by nothing, and
@@ -250,34 +250,15 @@ jobs:
         # `dev/tests/test_lane_reachability.py` exists to catch.
         # Routing through the recipe also makes the lane reproducible locally,
         # which it was not while it lived here.
-        run: just test-dev-ci
+        run: just test-ci-contracts
 
-      - name: Per-push integration conformance gates (rule-surface, status-frontend, self-referential-string, suggestion-command)
-        # These four are correctly `integration`-marked -- each genuinely
-        # crosses architectural layers -- but the only `integration`
-        # invocation lived in the dispatch-only full lane, so none of them
-        # had ever run on a push at any revision. Re-marking any of them
-        # `unit` would assert something false in exchange for routing
-        # convenience; giving them a lane is the fix. Routed through the
-        # recipe so the path set and marker expression have one declaration
-        # site, same convention as the step above.
-        #
-        # The action-envelope campaign is audited complete. The historical
-        # first-enrolment baseline on 2026-08-12 was 6 failures among the then
-        # 48 selected tests; the current authoritative same-four-module recipe
-        # is 46/46 green. The recipe owns its live path and marker selection,
-        # so this historical count is evidence, not a future pass criterion.
-        #
-        # -n 8, never the recipe's local `auto` default: this machine's 24
-        # logical CPUs are shared with co-resident runners from other
-        # repositories (machine-aware sizing, .github/ci-control-plane.md), and
-        # the step above in this same job pins the identical count. The
-        # override rides the calling line rather than the recipe so the
-        # recipe keeps a workstation-friendly default, the same split the
-        # unit job already uses.
+      - name: Product integration parallel population
+        # These cross-layer tests belong to the product integration population.
+        # The canonical aggregate owns the marker expression and keeps this
+        # workflow from creating a second policy-specific population.
         env:
           CADRUMO_PYTEST_WORKERS: "8"
-        run: just test-per-push-integration-gates
+        run: just test-integration-parallel
 
   cadrumo-unit:
     name: "Test: Core behavior (Linux)"
@@ -310,7 +291,7 @@ jobs:
           enable-cache: false
 
       - name: Initialize the worktree
-        run: just init
+        run: just setup
 
       - name: Provision Node for the duplication scan
         # The duplication gate shells out to `npx jscpd`; the stock self-hosted
@@ -322,7 +303,7 @@ jobs:
           node-version: "20"
 
       - name: Provision Playwright Chromium
-        run: just setup-playwright
+        run: just setup-browser
 
       - name: Test (unit)
         # --durations keeps a rolling public profile of the suite's heaviest
@@ -366,10 +347,10 @@ jobs:
           enable-cache: false
 
       - name: Initialize the worktree
-        run: just init
+        run: just setup
 
       - name: Test (harness)
         # The recipe owns the explicit `-n0` outer-serial selection and its
         # non-vacuous membership contract. Its own job gives installed-hook and
         # full-corpus proofs a verdict separate from unit and integration runs.
-        run: just test-harness
+        run: just test-pytest-harness

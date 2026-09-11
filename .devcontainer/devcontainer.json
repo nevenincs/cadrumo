@@ -41,12 +41,12 @@
   ],
 
   // uv sync + Playwright + vault tooling are already pre-baked at image
-  // build time; postCreateCommand only re-syncs against the live-mounted
-  // workspace (picks up any source drift since the image was built) and
-  // provisions the local env file. `playwright install --with-deps` is
-  // deliberately NOT run here — it is unnecessary, per the Dockerfile.
+  // build time; postCreateCommand only converges the live-mounted workspace
+  // (picking up source drift since the image was built) and provisions the
+  // local env file. `playwright install --with-deps` is deliberately NOT run
+  // here — browser provisioning remains the explicit `setup-browser` action.
   // `just` itself is installed in the image (Debian trixie ships 1.40.0).
-  "postCreateCommand": "just setup-install && just setup-env",
+  "postCreateCommand": "just setup",
 
   "remoteEnv": {
     // Headless Chromium in the container has no interactive display; the

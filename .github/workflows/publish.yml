@@ -78,7 +78,7 @@ jobs:
           tool: just@1.38.0
 
       - name: Initialize the worktree
-        run: just init
+        run: just setup
 
       # The stable rows are the complete support matrix, including runtimes
       # whose classifier promotion is still waiting on binary/artifact proof.
