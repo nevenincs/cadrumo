@@ -22,8 +22,8 @@ from ...application.aggregation import (
     persist_retencion_observations,
     route_invoice_retenciones,
 )
+from ...application.aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from ...application.invoices.catalogue_lifecycle import resolve_catalogue_invoice
-from ...core.external_constants import RETENCIONES_MODELOS
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.modelo import Modelo
@@ -42,7 +42,7 @@ def _route_invoice_retenciones_into_command(
     """Merge invoice-routed retenciones into the command and return the excluded verdicts."""
     if not requests:
         return (command, ())
-    if command.modelo not in RETENCIONES_MODELOS:
+    if not RetencionesAggregationSourceResolver.supports_modelo(command.modelo):
         raise typer.BadParameter(tr("cli.app.modelo.aggregate.invoice_retencion_wrong_modelo", modelo=command.modelo))
     catalogue = load_invoices()
     entries = tuple((resolve_catalogue_invoice(catalogue, request.invoice_id), request.scheme) for request in requests)
@@ -66,7 +66,7 @@ def _persist_cli_owned_observations(command: PerModeloAggregationCommand) -> Non
             period=command.period,
             observations=command.withholding_observations,
         )
-    if command.modelo in RETENCIONES_MODELOS:
+    if RetencionesAggregationSourceResolver.supports_modelo(command.modelo):
         persist_retencion_observations(
             modelo=command.modelo,
             filing_year=command.period.filing_year,

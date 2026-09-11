@@ -19,9 +19,7 @@ from decimal import Decimal
 
 import pytest
 
-from ..errors import IvaValidationError
 from ..recargo_equivalencia import (
-    RecargoRateRecord,
     load_recargo_rate_table,
     recargo_rate_for_applied_rate,
     resolve_recargo_rate_for_applied_rate,
@@ -100,35 +98,6 @@ def test_an_unmodelled_combination_returns_nothing_rather_than_a_near_match(
 ) -> None:
     """No nearest-match fallback: an unmodelled pairing must refuse to guess."""
     assert recargo_rate_for_applied_rate(applied_rate, on_date) is None, why
-
-
-def test_overlapping_windows_for_one_rate_are_refused() -> None:
-    """An ambiguous key must refuse, not answer with whichever record is first.
-
-    Silently answering from an ambiguous key is precisely what made the
-    tier-keyed shape unsafe, so the replacement refuses instead of ordering.
-    """
-    from ..recargo_equivalencia import _reject_overlapping_windows
-
-    overlapping = (
-        RecargoRateRecord(
-            iva_rate=Decimal("0.10"),
-            recargo_rate=Decimal("0.014"),
-            effective_from=date(2023, 1, 1),
-            effective_until=date(2024, 12, 31),
-            legal_refs=("ley-37-1992:art-161",),
-        ),
-        RecargoRateRecord(
-            iva_rate=Decimal("0.10"),
-            recargo_rate=Decimal("0.02"),
-            effective_from=date(2024, 1, 1),
-            effective_until=None,
-            legal_refs=("ley-37-1992:art-161",),
-        ),
-    )
-
-    with pytest.raises(IvaValidationError, match="overlapping windows"):
-        _reject_overlapping_windows(overlapping)
 
 
 def test_the_committed_table_carries_grounding_on_every_record() -> None:

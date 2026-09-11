@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#facts-registry'
 date: '2026-09-09'
-modified: '2026-09-10'
+modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:8fa5b8d1db2e54db12ce6250b76362f779422705a829918a4819fc728589893e'
+body_hash: 'sha256:2732df3f80267a22e2abb328ef2430501869fa5a69666287abe28f367bc1c151'
 related:
   - '[[2026-09-09-facts-registry-W01-P01-S01]]'
   - '[[2026-09-09-facts-registry-W01-P01-S02]]'
@@ -57,12 +57,72 @@ related:
   - '[[2026-09-09-facts-registry-W03-P12-S51]]'
   - '[[2026-09-09-facts-registry-W03-P13-S52]]'
   - '[[2026-09-09-facts-registry-W03-P13-S53]]'
+  - '[[2026-09-09-facts-registry-W03-P13-S66]]'
+  - '[[2026-09-09-facts-registry-W03-P13-S68]]'
+  - '[[2026-09-09-facts-registry-W03-P13-S69]]'
+  - '[[2026-09-09-facts-registry-W03-P13-S70]]'
+  - '[[2026-09-09-facts-registry-W03-P13-S71]]'
+  - '[[2026-09-09-facts-registry-W03-P13-S72]]'
+  - '[[2026-09-09-facts-registry-W03-P13-S73]]'
+  - '[[2026-09-09-facts-registry-W03-P13-S74]]'
+  - '[[2026-09-09-facts-registry-W03-P13-S75]]'
+  - '[[2026-09-09-facts-registry-W03-P13-S76]]'
+  - '[[2026-09-09-facts-registry-W04-P15-S29]]'
+  - '[[2026-09-09-facts-registry-W04-P15-S30]]'
+  - '[[2026-09-09-facts-registry-W04-P15-S77]]'
+  - '[[2026-09-09-facts-registry-W04-P15-S78]]'
+  - '[[2026-09-09-facts-registry-W04-P15-S79]]'
+  - '[[2026-09-09-facts-registry-W04-P15-S80]]'
+  - '[[2026-09-09-facts-registry-W04-P16-S31]]'
+  - '[[2026-09-09-facts-registry-W04-P16-S32]]'
+  - '[[2026-09-09-facts-registry-W04-P16-S33]]'
+  - '[[2026-09-09-facts-registry-W04-P17-S56]]'
+  - '[[2026-09-09-facts-registry-W04-P17-S57]]'
+  - '[[2026-09-09-facts-registry-W04-P18-S35]]'
+  - '[[2026-09-09-facts-registry-W04-P18-S36]]'
+  - '[[2026-09-09-facts-registry-W04-P18-S37]]'
+  - '[[2026-09-09-facts-registry-W04-P19-S60]]'
   - '[[2026-09-09-facts-registry-authority-plumbing-research]]'
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
   - '[[2026-09-09-facts-registry-discovery-blast-radius-research]]'
   - '[[2026-09-09-facts-registry-governed-fact-catalogue-adr]]'
   - '[[2026-09-09-facts-registry-plan]]'
   - '[[2026-09-09-facts-registry-schema-persistence-research]]'
+  - '[[2026-09-10-facts-registry-legal-parameter-consumer-migration-reference]]'
+  - '[[2026-09-10-facts-registry-s64-consumer-migration-review-audit]]'
+  - '[[2026-09-10-facts-registry-s64-legal-parameter-consumers-audit]]'
+  - '[[2026-09-10-facts-registry-s66-legal-coordinate-review-audit]]'
+  - '[[2026-09-10-facts-registry-s68-article95-retention-review-audit]]'
+  - '[[2026-09-10-facts-registry-s69-migrated-legal-parameter-gate-audit]]'
+  - '[[2026-09-10-facts-registry-s70-administrator-retention-review-audit]]'
+  - '[[2026-09-10-facts-registry-s71-payment-fraction-selector-review-audit]]'
+  - '[[2026-09-10-facts-registry-s71-repair-review-audit]]'
+  - '[[2026-09-10-facts-registry-s72-article161-review-audit]]'
+  - '[[2026-09-10-facts-registry-s72-effect-date-repair-review-audit]]'
+  - '[[2026-09-10-facts-registry-s73-objective-exclusion-review-audit]]'
+  - '[[2026-09-10-facts-registry-s73-retirement-repair-review-audit]]'
+  - '[[2026-09-10-facts-registry-s74-activity-selector-review-audit]]'
+  - '[[2026-09-10-facts-registry-s75-legacy-provider-retirement-review-audit]]'
+  - '[[2026-09-10-facts-registry-s76-article-101-provision-path-review-audit]]'
+  - '[[2026-09-11-facts-registry-adapted-family-normalization-reference]]'
+  - '[[2026-09-11-facts-registry-external-constants-retirement-reference]]'
+  - '[[2026-09-11-facts-registry-objective-estimation-publication-boundary-reference]]'
+  - '[[2026-09-11-facts-registry-reference]]'
+  - '[[2026-09-11-facts-registry-s30-iva-recargo-normalization-audit]]'
+  - '[[2026-09-11-facts-registry-s31-external-constants-retirement-audit]]'
+  - '[[2026-09-11-facts-registry-s32-iva-interpretation-retirement-audit]]'
+  - '[[2026-09-11-facts-registry-s33-routing-retirement-audit]]'
+  - '[[2026-09-11-facts-registry-s35-retired-authority-import-gate-review-audit]]'
+  - '[[2026-09-11-facts-registry-s36-governed-runtime-read-gate-review-audit]]'
+  - '[[2026-09-11-facts-registry-s37-provenance-retirement-gate-review-audit]]'
+  - '[[2026-09-11-facts-registry-s56-iva-raw-retirement-audit]]'
+  - '[[2026-09-11-facts-registry-s57-iva-rate-repository-retirement-review-audit]]'
+  - '[[2026-09-11-facts-registry-s59-strict-type-repair-reference]]'
+  - '[[2026-09-11-facts-registry-s60-dead-code-audit]]'
+  - '[[2026-09-11-facts-registry-s77-category-retirement-audit]]'
+  - '[[2026-09-11-facts-registry-s78-holiday-retirement-audit]]'
+  - '[[2026-09-11-facts-registry-s79-convenio-retirement-review-audit]]'
+  - '[[2026-09-11-facts-registry-s80-iva-structured-table-classification-review-audit]]'
 ---
 
 # `facts-registry` feature index
@@ -74,6 +134,38 @@ Auto-generated index of all documents tagged with `#facts-registry`.
 ### adr
 
 - `2026-09-09-facts-registry-governed-fact-catalogue-adr` - `facts-registry` adr: `Unify governed tax facts under a sibling registry catalogue` | (**status:** `accepted`)
+
+### audit
+
+- `2026-09-10-facts-registry-s64-consumer-migration-review-audit` - `facts-registry` audit: `S64 consumer-migration review`
+- `2026-09-10-facts-registry-s64-legal-parameter-consumers-audit` - `facts-registry` audit: `S64 legal-parameter consumer migration`
+- `2026-09-10-facts-registry-s66-legal-coordinate-review-audit` - `facts-registry` audit: `S66 legal-coordinate review`
+- `2026-09-10-facts-registry-s68-article95-retention-review-audit` - `facts-registry` audit: `S68 Article 95 retention review`
+- `2026-09-10-facts-registry-s69-migrated-legal-parameter-gate-audit` - `facts-registry` audit: `s69 migrated legal parameter gate`
+- `2026-09-10-facts-registry-s70-administrator-retention-review-audit` - `facts-registry` audit: `S70 administrator retention review`
+- `2026-09-10-facts-registry-s71-payment-fraction-selector-review-audit` - `facts-registry` audit: `S71 payment-fraction selector review`
+- `2026-09-10-facts-registry-s71-repair-review-audit` - `facts-registry` audit: `S71 applicability repair review`
+- `2026-09-10-facts-registry-s72-article161-review-audit` - `facts-registry` audit: `S72 Article 161 recargo review`
+- `2026-09-10-facts-registry-s72-effect-date-repair-review-audit` - `facts-registry` audit: `S72 Article 161 effect-date repair review`
+- `2026-09-10-facts-registry-s73-objective-exclusion-review-audit` - `facts-registry` audit: `S73 objective-estimation exclusion review`
+- `2026-09-10-facts-registry-s73-retirement-repair-review-audit` - `facts-registry` audit: `S73 adapter-retirement repair review`
+- `2026-09-10-facts-registry-s74-activity-selector-review-audit` - `facts-registry` audit: `S74 activity selector review`
+- `2026-09-10-facts-registry-s75-legacy-provider-retirement-review-audit` - `facts-registry` audit: `S75 legacy provider retirement review`
+- `2026-09-10-facts-registry-s76-article-101-provision-path-review-audit` - `facts-registry` audit: `s76 article 101 provision path review`
+- `2026-09-11-facts-registry-s30-iva-recargo-normalization-audit` - `facts-registry` audit: `S30 IVA and recargo normalization review`
+- `2026-09-11-facts-registry-s31-external-constants-retirement-audit` - `facts-registry` audit: `s31 external constants retirement`
+- `2026-09-11-facts-registry-s32-iva-interpretation-retirement-audit` - `facts-registry` audit: `S32 IVA interpretation retirement`
+- `2026-09-11-facts-registry-s33-routing-retirement-audit` - `facts-registry` audit: `S33 routing retirement`
+- `2026-09-11-facts-registry-s35-retired-authority-import-gate-review-audit` - `facts-registry` audit: `S35 retired authority import gate review`
+- `2026-09-11-facts-registry-s36-governed-runtime-read-gate-review-audit` - `facts-registry` audit: `S36 governed runtime read gate review`
+- `2026-09-11-facts-registry-s37-provenance-retirement-gate-review-audit` - `facts-registry` audit: `S37 provenance retirement gate review`
+- `2026-09-11-facts-registry-s56-iva-raw-retirement-audit` - `facts-registry` audit: `S56 IVA raw provider retirement review`
+- `2026-09-11-facts-registry-s57-iva-rate-repository-retirement-review-audit` - `facts-registry` audit: `S57 IVA rate repository retirement review`
+- `2026-09-11-facts-registry-s60-dead-code-audit` - `facts-registry` audit: `s60 dead code`
+- `2026-09-11-facts-registry-s77-category-retirement-audit` - `facts-registry` audit: `S77 category adapter retirement review`
+- `2026-09-11-facts-registry-s78-holiday-retirement-audit` - `facts-registry` audit: `S78 holiday calendar adapter retirement review`
+- `2026-09-11-facts-registry-s79-convenio-retirement-review-audit` - `facts-registry` audit: `S79 convenio adapter retirement review`
+- `2026-09-11-facts-registry-s80-iva-structured-table-classification-review-audit` - `facts-registry` audit: `S80 IVA structured-table classification review`
 
 ### exec
 
@@ -126,10 +218,44 @@ Auto-generated index of all documents tagged with `#facts-registry`.
 - `2026-09-09-facts-registry-W03-P12-S51` - Rewire extraction recargo aggregation and inventory defaults
 - `2026-09-09-facts-registry-W03-P13-S52` - Rewire treaty and authorization consumers
 - `2026-09-09-facts-registry-W03-P13-S53` - Rewire deadline notification amendment and foreign-asset facts
+- `2026-09-09-facts-registry-W03-P13-S68` - Capture hash-pinned BOE article 95 redactions and author source-cited temporal withholding-rate facts under the governed authority
+- `2026-09-09-facts-registry-W03-P13-S69` - Enforce and prove canonical tax-fact temporal coverage, date-axis selection, provenance, and refusal outside source-grounded windows
+- `2026-09-09-facts-registry-W03-P13-S70` - Capture and author the bounded administrator-retention fact slice from BOE redactions
+- `2026-09-09-facts-registry-W03-P13-S71` - Capture hash-pinned BOE articles 109 and 110 redactions, author source-cited temporal selectors by legal applicability, and rewire Modelo 131 to its form-specific authority
+- `2026-09-09-facts-registry-W03-P13-S72` - Capture hash-pinned BOE article 161 redactions and author source-cited temporal equivalence-surcharge facts under the governed authority
+- `2026-09-09-facts-registry-W03-P13-S73` - Capture hash-pinned BOE article 31 and transitional-provision redactions and author source-cited temporal objective-estimation exclusion facts under the governed authority
+- `2026-09-09-facts-registry-W03-P13-S74` - Capture the official M036 activity-code mapping, author source-cited article-95 activity-selector facts, and remove their legacy adapter definitions
+- `2026-09-09-facts-registry-W03-P13-S76` - Repair Article 101 excerpt filenames and source references so provision-tier evidence is verifiable before the cross-domain authority proof
+- `2026-09-09-facts-registry-W03-P13-S66` - Replace generic fact selectors with provider-owned validated applicability coordinates before consumer-boundary verification
+- `2026-09-09-facts-registry-W03-P13-S75` - Delete retired legal-parameter provider implementations after governed facts replace every live resolver and consumer path
+- `2026-09-09-facts-registry-W04-P15-S29` - Replace the statutory Python fact adapter with normalized scalar and decimal-mapping fragments carrying exact typed payloads, effective applicability, and official source evidence
+- `2026-09-09-facts-registry-W04-P15-S30` - `facts-registry` execution: `W04.P15.S30`
+- `2026-09-09-facts-registry-W04-P15-S77` - `facts-registry` execution: `W04.P15.S77`
+- `2026-09-09-facts-registry-W04-P15-S78` - Normalize and retire the legal-holiday calendar adapter while preserving publication and event provenance
+- `2026-09-09-facts-registry-W04-P15-S79` - Normalize and retire the treaty-override adapter without duplicating the canonical convenio catalogue
+- `2026-09-09-facts-registry-W04-P15-S80` - Classify the remaining IVA structured tables and authorize deletion only with a typed, evidence-bearing provider replacement
+- `2026-09-09-facts-registry-W04-P16-S31` - Delete migrated statutory declarations but retain technical configuration
+- `2026-09-09-facts-registry-W04-P16-S32` - Delete numeric IVA interpretation but retain persisted enum tokens
+- `2026-09-09-facts-registry-W04-P16-S33` - Replace the remaining technical model-routing aliases with their specialized aggregation and calendar-policy owners, then delete the aliases
+- `2026-09-09-facts-registry-W04-P17-S56` - `facts-registry` execution: `W04.P17.S56`
+- `2026-09-09-facts-registry-W04-P17-S57` - Delete the obsolete IVA-rate resource repository after authority-backed rate resolution, while retaining IVA-local grounding only until the raw legal IVA tables have typed fact replacements
+- `2026-09-09-facts-registry-W04-P18-S35` - Block imports of retired declarations and loader symbols
+- `2026-09-09-facts-registry-W04-P18-S36` - Block direct governed-directory reads and unregistered loaders
+- `2026-09-09-facts-registry-W04-P18-S37` - Block provenance-free results and unresolved migration entries
+- `2026-09-09-facts-registry-W04-P19-S60` - Run both dead-code audits and remove exact orphaned code and tests
 
 ### plan
 
 - `2026-09-09-facts-registry-plan` - `facts-registry` plan
+
+### reference
+
+- `2026-09-10-facts-registry-legal-parameter-consumer-migration-reference` - `facts-registry` reference: `Facts registry legal-parameter consumer migration reference`
+- `2026-09-11-facts-registry-adapted-family-normalization-reference` - `facts-registry` reference: adapted family normalization
+- `2026-09-11-facts-registry-external-constants-retirement-reference` - `facts-registry` reference: external constants retirement
+- `2026-09-11-facts-registry-objective-estimation-publication-boundary-reference` - `facts-registry` reference: objective-estimation publication boundary
+- `2026-09-11-facts-registry-reference` - `facts-registry` reference: retired global legal-parameter provider
+- `2026-09-11-facts-registry-s59-strict-type-repair-reference` - `facts-registry` reference: `s59 strict type repair`
 
 ### research
 

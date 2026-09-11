@@ -16,7 +16,7 @@ per-modelo rollup workflows. It is not the resolved-source envelope used by
 calculation; the production calculation route derives source ownership directly
 from each executable resolver contract.
 
-Concrete resolvers re-exported here include
+Concrete resolvers available from their owning modules include
 :class:`LedgerIvaAggregationSourceResolver`,
 :class:`RetencionesAggregationSourceResolver`,
 :class:`OssIossLedgerSourceResolver`,
@@ -124,7 +124,6 @@ from ._modelo_bindings import (
     LedgerRentaIncomeAggregationSourceResolver,
     aggregation_period_for_modelo,
 )
-from ._modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from ._models import CasillaAggregation, CasillaProvenance
 from ._oss_ioss import (
     OssIossInvoiceProjection,
@@ -326,7 +325,6 @@ __all__ = [
     "RetencionPerceptorRollup",
     "RetencionScheme",
     "RetencionesAggregation",
-    "RetencionesAggregationSourceResolver",
     "RetencionesTotalsParity",
     "RowCasillaKey",
     "SourceMeshError",

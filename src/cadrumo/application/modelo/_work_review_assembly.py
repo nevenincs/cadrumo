@@ -201,7 +201,11 @@ def _official_references(
     for layout in derive_export_layouts_from_bindings(snapshot.revision):
         if layout.dictionary_source_ref is None:
             continue
-        for entry in xml_dictionary_entries(layout, source_root=authority.source_root, sources=snapshot.sources):
+        for entry in xml_dictionary_entries(
+            layout,
+            sources=snapshot.sources,
+            source_payloads={item.source_reference_id: item.payload for item in authority.evidence.sources},
+        ):
             if entry.casilla_id is not None:
                 xml_paths.setdefault(entry.casilla_id, entry.path)
     return {
@@ -406,8 +410,8 @@ def _review_row_context(
 ) -> _ReviewRowContext:
     estados_casillas_oficiales = clasificar_casillas_oficiales(
         snapshot.revision,
-        source_root=authority.source_root,
         sources=snapshot.sources,
+        source_payloads={item.source_reference_id: item.payload for item in authority.evidence.sources},
     )
     consumption_index = relation_consumption_index(snapshot.revision)
     return _ReviewRowContext(

@@ -337,8 +337,8 @@ def test_concepto_ingreso_dropped_from_the_payload_surfaces_as_inequality() -> N
 
     assert restored != original
     assert restored.concepto_ingreso is None
-    assert counts_toward_volumen_de_ingresos(restored.concepto_ingreso)
-    assert not counts_toward_volumen_de_ingresos(original.concepto_ingreso)
+    assert counts_toward_volumen_de_ingresos(restored.concepto_ingreso, effective_date=date(2026, 4, 1))
+    assert not counts_toward_volumen_de_ingresos(original.concepto_ingreso, effective_date=date(2026, 4, 1))
 
 
 def test_concepto_ingreso_rejects_a_token_outside_the_closed_set() -> None:

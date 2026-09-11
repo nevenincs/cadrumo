@@ -2,15 +2,60 @@
 
 from __future__ import annotations
 
+import ast
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
 from ...iva.errors import IvaRateNotFoundError
+from .. import enums
 from ..enums import IvaRate, iva_rate_percentage, resolve_iva_rate_slot, resolve_iva_rate_slot_fact
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+_RETIRED_LOCAL_NUMERIC_INTERPRETATION_NAMES = frozenset(
+    {
+        "_NUMERIC_RATE_PREFIX",
+        "_slot_declared_percentage",
+        "iva_rate_slot_percentage",
+        "numeric_iva_rate_slots",
+        "numeric_iva_rate_percentages",
+    }
+)
+
+
+def _module_binding_names(source: str) -> set[str]:
+    """Return module-level bindings so the retirement census catches assignments and APIs."""
+    names: set[str] = set()
+    for node in ast.parse(source).body:
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+            names.add(node.name)
+        elif isinstance(node, ast.Assign | ast.AnnAssign):
+            targets = node.targets if isinstance(node, ast.Assign) else (node.target,)
+            names.update(target.id for target in targets if isinstance(target, ast.Name))
+    return names
+
+
+def test_retired_local_numeric_interpretation_census_detects_a_legacy_binding() -> None:
+    source = "def iva_rate_slot_percentage():\n    pass\n"
+    assert _module_binding_names(source) & _RETIRED_LOCAL_NUMERIC_INTERPRETATION_NAMES == {
+        "iva_rate_slot_percentage"
+    }
+
+
+def test_retired_local_numeric_interpretation_census_detects_a_legacy_assignment() -> None:
+    source = '_NUMERIC_RATE_PREFIX = "RATE_"\n'
+    assert _module_binding_names(source) & _RETIRED_LOCAL_NUMERIC_INTERPRETATION_NAMES == {
+        "_NUMERIC_RATE_PREFIX"
+    }
+
+
+def test_persisted_rate_taxonomy_exposes_no_retired_local_numeric_interpretation() -> None:
+    source = Path(enums.__file__).read_text(encoding="utf-8")
+    assert not _module_binding_names(source) & _RETIRED_LOCAL_NUMERIC_INTERPRETATION_NAMES
 
 
 @pytest.mark.parametrize(

@@ -169,7 +169,7 @@ def resolve_invoice_extraction_authority_values(*, period: Period) -> InvoiceExt
     """
     from ...domain.iva.regime_legend import regime_legend_phrases
     from ...domain.iva.schema import NO_PRINTED_TAX_IVA_CATEGORIES
-    from ...domain.transactions.retencion_parameters import statutory_activity_retencion_rates
+    from ...domain.transactions.retencion_facts import statutory_activity_retencion_rates
 
     return InvoiceExtractionAuthorityValues(
         period=period,

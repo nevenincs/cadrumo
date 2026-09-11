@@ -1,0 +1,19 @@
+[fact]
+fact_id = "madrid-birth-adoption-following-periods"
+family = "scalar"
+
+[[fact.variants]]
+variant_id = "madrid-birth-adoption-following-periods:2023-01-01"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+legal_refs = ["madrid-dl-1-2010:art-4"]
+source_refs = ["aeat-madrid-birth-adoption-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-madrid-birth-adoption-statutory-facts"
+required_text = ["Ámbito temporal de aplicación de la deducción"]
+[fact.variants.payload]
+kind = "scalar"
+value = 2
+unit = "filing_periods"

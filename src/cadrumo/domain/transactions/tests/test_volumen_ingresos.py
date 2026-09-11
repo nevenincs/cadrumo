@@ -1,15 +1,7 @@
-"""The art. 110.1.c) volume base: what counts, and that the two homes agree.
+"""The art. 110.1.c) volume base and its governed legal authority.
 
-The exclusion is declared twice on purpose and that needs guarding rather than
-apologising for. :class:`~core.ConceptoIngreso` is the TYPED home, because a closed
-value set belongs in ``core`` where production code and tests can hold members rather
-than strings. The registry parameter is the GROUNDED home, because the exclusion is a
-regulatory fact and regulatory facts carry their ``legal_refs`` in the registry.
-
-Neither can be dropped, so the risk is that they drift. These tests bind them, in the
-same shape the binding-source taxonomy uses: the enum is the authority, and a parity
-assertion makes a registry edit that disagrees with it a loud failure instead of a
-silently divergent second answer.
+``ConceptoIngreso`` is product vocabulary only.  The governed entity-set fact is the
+sole authority for whether that vocabulary is excluded from the regulatory base.
 """
 
 from __future__ import annotations
@@ -17,18 +9,25 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from dev.registry.compiler.loader import load_shared_catalogues
+from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.compiler.fact_loader import load_governed_facts
 
-from ....core.concepto_ingreso import INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE, ConceptoIngreso
+from ....core.concepto_ingreso import ConceptoIngreso
 from ....core.resources.bundled_data import bundled_path
 from ....core.tipos_actividad import TipoActividad
+from ...calculations.registry.authority import ValidatedRegistryAuthority
 from ..tipo_actividad_partitions import tipo_actividad_code_set
 from ..volumen_ingresos import counts_toward_volumen_de_ingresos
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_EXCLUDED_PARAM = "rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario"
-_ACTIVITY_PARAM = "modelo-131:selector-m036-volumen-ingresos-agrario"
+_EXCLUDED_FACT = "rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario"
+_ACTIVITY_FACT_ID = "modelo-131:selector-m036-volumen-ingresos-agrario"
+
+
+@pytest.fixture(scope="module")
+def authority() -> ValidatedRegistryAuthority:
+    return compiled_bundled_authority()
 
 
 @pytest.mark.parametrize(
@@ -45,6 +44,7 @@ def test_the_predicate_splits_where_the_instrucciones_split(
     concepto: ConceptoIngreso | None,
     *,
     counts: bool,
+    authority: ValidatedRegistryAuthority,
 ) -> None:
     """Every member, including the two that share the 'subvención' prefix.
 
@@ -54,10 +54,10 @@ def test_the_predicate_splits_where_the_instrucciones_split(
     because the interesting pair is precisely the one a sample would be tempted to
     treat as interchangeable.
     """
-    assert counts_toward_volumen_de_ingresos(concepto) is counts
+    assert counts_toward_volumen_de_ingresos(concepto, effective_date=date(2026, 4, 1), authority=authority) is counts
 
 
-def test_the_two_subvencion_members_land_on_opposite_sides() -> None:
+def test_the_two_subvencion_members_land_on_opposite_sides(authority: ValidatedRegistryAuthority) -> None:
     """The assertion the prefix trap would break.
 
     Any implementation keyed on the word "subvención" -- a ``startswith``, a substring
@@ -65,8 +65,12 @@ def test_the_two_subvencion_members_land_on_opposite_sides() -> None:
     inclusion that breaks: an operating subsidy silently dropped from a declared
     volume. Stated as its own test so the failure names the reason.
     """
-    assert counts_toward_volumen_de_ingresos(ConceptoIngreso.SUBVENCION_CORRIENTE)
-    assert not counts_toward_volumen_de_ingresos(ConceptoIngreso.SUBVENCION_CAPITAL)
+    assert counts_toward_volumen_de_ingresos(
+        ConceptoIngreso.SUBVENCION_CORRIENTE, effective_date=date(2026, 4, 1), authority=authority
+    )
+    assert not counts_toward_volumen_de_ingresos(
+        ConceptoIngreso.SUBVENCION_CAPITAL, effective_date=date(2026, 4, 1), authority=authority
+    )
 
 
 def test_an_undeclared_concept_is_included_rather_than_dropped() -> None:
@@ -76,33 +80,37 @@ def test_an_undeclared_concept_is_included_rather_than_dropped() -> None:
     volume -- the silent under-declaration this project treats as its worst failure
     mode. The cost, an unmarked capital subsidy over-declaring, is the tolerable side.
     """
-    assert counts_toward_volumen_de_ingresos(None) is True
+    assert counts_toward_volumen_de_ingresos(None, effective_date=date(2026, 4, 1)) is True
 
 
 def test_the_registry_exclusion_set_agrees_with_the_typed_one() -> None:
     """Parity between the grounded home and the typed home.
 
-    A registry edit that added or removed an excluded concept without moving
-    :data:`INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE` would leave the calculation
-    following the enum while the ``legal_refs`` described something else -- grounding
-    that had quietly stopped describing the code.
+    The governed fact is the sole legal authority for membership.  The enum only
+    supplies the product vocabulary used to interpret its declared tokens.
     """
-    parameter = load_shared_catalogues(bundled_path("registry", "aeat")).parameters[_EXCLUDED_PARAM]
-    declared = frozenset(ConceptoIngreso(token.strip()) for token in parameter.value.split(",") if token.strip())
+    fact = next(
+        fact
+        for fact in load_governed_facts(bundled_path("registry", "aeat", "facts"))
+        if fact.fact_id == _EXCLUDED_FACT
+    )
+    declared = frozenset(ConceptoIngreso(token) for token in fact.variants[0].payload.entities)
 
-    assert declared == INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE
+    assert declared == {ConceptoIngreso.SUBVENCION_CAPITAL, ConceptoIngreso.INDEMNIZACION}
 
 
-def test_the_modelo_131_activity_selector_is_not_the_art_95_one() -> None:
+def test_the_modelo_131_activity_selector_is_not_the_art_95_one(authority: ValidatedRegistryAuthority) -> None:
     """The form-specific agrarian selector is its own, and must stay its own.
 
     Modelo 131 instructions name agricultural, livestock, and forestry activity;
     art. 95's agricultural/livestock set has no forestry code. Reusing it for a
     Modelo 131 casilla would therefore drop a forestry filer's quarterly volume.
     """
-    m131 = tipo_actividad_code_set(_ACTIVITY_PARAM, effective_date=date(2026, 4, 1))
+    m131 = tipo_actividad_code_set(_ACTIVITY_FACT_ID, effective_date=date(2026, 4, 1), authority=authority)
     art_95_agrarian = tipo_actividad_code_set(
-        "rirpf-art-95:selector-m036-actividades-agricolas-ganaderas", effective_date=date(2026, 4, 1)
+        "rirpf-art-95:selector-m036-actividades-agricolas-ganaderas",
+        effective_date=date(2026, 4, 1),
+        authority=authority,
     )
 
     assert TipoActividad.B03_FORESTAL in m131
@@ -111,7 +119,9 @@ def test_the_modelo_131_activity_selector_is_not_the_art_95_one() -> None:
     assert art_95_agrarian < m131
 
 
-def test_pesquera_is_absent_because_the_form_is_narrower_than_article_110() -> None:
+def test_pesquera_is_absent_because_the_form_is_narrower_than_article_110(
+    authority: ValidatedRegistryAuthority,
+) -> None:
     """Modelo 131 is estimación objetiva, and pesca is not in the módulos regime.
 
     The article's wording is wider than this casilla. The AEAT Modelo 131
@@ -124,7 +134,7 @@ def test_pesquera_is_absent_because_the_form_is_narrower_than_article_110() -> N
     modelling an activity this form cannot present -- and would then face the
     ``B04`` mejillón question that the current set deliberately never raises.
     """
-    declared = tipo_actividad_code_set(_ACTIVITY_PARAM, effective_date=date(2026, 4, 1))
+    declared = tipo_actividad_code_set(_ACTIVITY_FACT_ID, effective_date=date(2026, 4, 1), authority=authority)
 
     assert TipoActividad.B05_PESQUERA not in declared
     assert TipoActividad.B04_PRODUCCION_DE_MEJILLON not in declared

@@ -27,7 +27,6 @@ import re
 from collections.abc import Callable, Mapping
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
-from pathlib import Path
 from types import MappingProxyType
 from xml.etree import ElementTree
 
@@ -130,14 +129,18 @@ def render_xml_dictionary_layout(
     Returns:
         UTF-8 XML declaration bytes for the local export artefact.
     """
-    entries = xml_dictionary_entries(layout, source_root=schema_provider.source_root, sources=schema_provider.sources)
+    entries = xml_dictionary_entries(
+        layout,
+        sources=schema_provider.sources,
+        source_payloads=schema_provider.source_payloads,
+    )
     root = ElementTree.Element(
         _XML_DICTIONARY_ROOT_TAG,
         expected_xml_dictionary_root_identity(layout, draft=draft, schema_provider=schema_provider),
     )
     element_order = _xml_dictionary_element_order(
         _xml_dictionary_xsd_source(layout, schema_provider.sources),
-        source_root=schema_provider.source_root,
+        source_payloads=schema_provider.source_payloads,
     )
     _append_declaration_aux(root, layout)
     casilla_values: dict[CasillaId, object] = {value.casilla_id: value.value for value in draft.values}
@@ -195,7 +198,7 @@ def expected_xml_dictionary_root_identity(
         The root attributes, keyed exactly as they appear on the element.
     """
     xsd_source = _xml_dictionary_xsd_source(layout, schema_provider.sources)
-    version = _latest_xml_dictionary_xsd_version(xsd_source, source_root=schema_provider.source_root)
+    version = _latest_xml_dictionary_xsd_version(xsd_source, source_payloads=schema_provider.source_payloads)
     return {
         "modelo": draft.modelo,
         "ejercicio": str(draft.period.filing_year),
@@ -243,21 +246,21 @@ def _xml_dictionary_xsd_source(
     raise FilingExportError(f"XML dictionary export layout {layout.id!r} has no resolved XSD source")
 
 
-def _xml_dictionary_xsd_root(source: SourceReference, *, source_root: Path | None) -> ElementTree.Element[str]:
-    """Return the parsed root of the official XSD ``source`` names."""
-    if source_root is None:
-        raise FilingExportError(f"XML dictionary XSD source {source.id!r} requires source_root")
+def _xml_dictionary_xsd_root(
+    source: SourceReference, *, source_payloads: Mapping[str, bytes]
+) -> ElementTree.Element[str]:
+    """Return the parsed root from the signed XSD projection ``source`` names."""
     try:
-        root = DefusedElementTree.parse(source_root / source.corpus_path).getroot()
-    except (DefusedElementTree.ParseError, OSError) as exc:
+        root = DefusedElementTree.fromstring(source_payloads[str(source.id)])
+    except (DefusedElementTree.ParseError, KeyError) as exc:
         raise FilingExportValidationError(f"XML dictionary XSD source {source.id!r} could not be parsed") from exc
     if root is None:
         raise FilingExportValidationError(f"XML dictionary XSD source {source.id!r} could not be parsed")
     return root
 
 
-def _latest_xml_dictionary_xsd_version(source: SourceReference, *, source_root: Path | None) -> str:
-    root = _xml_dictionary_xsd_root(source, source_root=source_root)
+def _latest_xml_dictionary_xsd_version(source: SourceReference, *, source_payloads: Mapping[str, bytes]) -> str:
+    root = _xml_dictionary_xsd_root(source, source_payloads=source_payloads)
     versions: list[str] = []
     for simple_type in root.iter(f"{_XSD_NS}simpleType"):
         if simple_type.attrib.get("name") != "tipo_VersionXSD":
@@ -349,7 +352,7 @@ def _xsd_declared_children(node: ElementTree.Element[str]) -> list[ElementTree.E
 def _xml_dictionary_element_order(
     source: SourceReference,
     *,
-    source_root: Path | None,
+    source_payloads: Mapping[str, bytes],
 ) -> dict[str, tuple[str, ...]]:
     """Return each element path's declared child order, read from the official XSD.
 
@@ -369,7 +372,7 @@ def _xml_dictionary_element_order(
 
     Args:
         source: The layout's resolved XSD :class:`SourceReference`.
-        source_root: Root the source's ``corpus_path`` resolves against.
+        source_payloads: Signed publication bytes keyed by source reference.
 
     Returns:
         Absolute element path (``""`` for the root's own children) mapped to the
@@ -378,11 +381,10 @@ def _xml_dictionary_element_order(
         first-encounter order for it.
 
     Raises:
-        FilingExportError: ``source_root`` is absent.
-        FilingExportValidationError: The XSD could not be parsed, or declares no
+        FilingExportValidationError: The signed XSD projection could not be parsed, or declares no
             root ``Declaracion`` element to walk from.
     """
-    root = _xml_dictionary_xsd_root(source, source_root=source_root)
+    root = _xml_dictionary_xsd_root(source, source_payloads=source_payloads)
     named_types = {name: node for node in root.iter(f"{_XSD_NS}complexType") if (name := node.get("name")) is not None}
     order: dict[str, tuple[str, ...]] = {}
     declaration = next(

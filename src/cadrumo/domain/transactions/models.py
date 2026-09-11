@@ -69,7 +69,7 @@ from .model_validation import (
     validate_non_negative_decimal,
 )
 from .raw_transaction import RawTransaction
-from .retencion_parameters import retencion_effective_date
+from .retencion_facts import retencion_effective_date
 
 __all__ = ["DecisionProvenance", "derive_split_group_id"]
 

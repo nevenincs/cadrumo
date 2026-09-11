@@ -734,12 +734,12 @@ def _resolve_bucket_source_mesh(
         LedgerRentaIncomeAggregationSourceResolver,
         ModeloSourceResolver,
         OssIossLedgerSourceResolver,
-        RetencionesAggregationSourceResolver,
         WithholdingSourceResolver,
     )
     from ..aggregation.modelo_bindings_renta_expenses import (
         LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
     )
+    from ..aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
     from ..aggregation.source_resolution_operations import merge_source_resolutions
     from ..calculations.iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
     from ..calculations.m303_regimen_simplificado_annual_summary import (

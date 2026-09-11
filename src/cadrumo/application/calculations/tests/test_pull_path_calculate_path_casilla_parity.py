@@ -51,7 +51,7 @@ See Also:
         Shared relation-resolution implementation both transports consume.
     :func:`~domain.calculations.registry.calculate_registry_snapshot`
         Registry formula engine that consumes the resolved relation values.
-    :class:`~application.aggregation.RetencionesAggregationSourceResolver`
+    :class:`~application.aggregation.modelo_bindings_retenciones.RetencionesAggregationSourceResolver`
         RET-1 source resolver seeded explicitly so M180 count parity is not
         faked by summing quarterly relation values.
 """
@@ -99,11 +99,11 @@ from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import (
     CalculationSourceContext,
     LedgerIvaAggregationSourceResolver,
-    RetencionesAggregationSourceResolver,
     RetencionObservation,
     RetencionObservationRepository,
     RetencionScheme,
 )
+from ...aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from ...modelo.binding_resolution import resolve_declaration_period_inputs
 from ...modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from ...modelo.work_lifecycle import create_work_unit

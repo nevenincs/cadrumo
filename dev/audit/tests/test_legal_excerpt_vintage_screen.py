@@ -573,7 +573,7 @@ def test_the_loader_refuses_a_missing_catalogue_rather_than_reading_nothing() ->
 #: yields almost nothing reaches every screen in this package unchallenged.
 _MINIMUM_LEGAL_ENTRIES = 500
 
-#: The six authored TOMLs that declare something other than a ``[legal]`` table.
+#: The authored TOMLs that declare something other than a ``[legal]`` table.
 #: Pinned by EQUALITY, not counted: a floor over the entry population cannot see a
 #: ``[legal]`` table renamed across a SUBSET of the catalogue, because the files that
 #: still carry one hold the total above any floor worth setting. This set growing is
@@ -582,9 +582,11 @@ _FILES_WITHOUT_A_LEGAL_TABLE = frozenset(
     {
         "enrolled-forms-sources-b.toml",
         "enrolled-forms-sources.toml",
-        "irpf-retencion-actividades.toml",
-        "irpf-retencion-administradores.toml",
+        "category-profile-sources.toml",
+        "convenio-sources.toml",
         "ley-58-2003-recargo-bands.toml",
+        "sociedades-annual-manual-coverage.toml",
+        "statutory-constant-sources.toml",
         "supported-filing-years.toml",
     }
 )

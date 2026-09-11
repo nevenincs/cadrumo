@@ -2,9 +2,8 @@
 
 This module is the holiday-adjustment service. It loads BOE-
 published national plus autonomous-community ("CCAA") holiday
-calendars from the project's
-``registry/aeat/calendars/`` directory and exposes pure functions that
-answer two questions:
+calendars from governed event facts in the validated authority and exposes
+pure functions that answer two questions:
 
 * Is a given date a *día hábil* (business day) for AEAT filings in the
   taxpayer's CCAA of tax residence?
@@ -32,8 +31,8 @@ the EU-wide window unilaterally. The exception list is encoded in
 not as a fork in :func:`shift_deadline`.
 
 The substrate is pure domain logic: it never touches the CLI, never
-mutates input, and never reaches outside the project for live calendar
-data (calendars are git-tracked, BOE-cited TOML).
+mutates input, and resolves only governed, BOE-cited event facts from the
+validated registry authority.
 """
 
 from __future__ import annotations
@@ -52,8 +51,6 @@ from ..calculations.registry.facts.resolution import EventFactQuery, ResolvedEve
 from ..calculations.registry.schema_base import DateAxis
 from .errors import DeadlineValidationError
 
-HOLIDAY_CALENDAR_PROVIDER_ID = "legal-holiday-calendars"
-HOLIDAY_CALENDAR_PROVIDER_DIRECTORY = "calendars"
 HOLIDAY_EVENT_FACT_ID = "deadlines.public-holiday"
 HOLIDAY_CALENDAR_PUBLICATION_EVENT_FACT_ID = "deadlines.holiday-calendar-publication"
 _HOLIDAY_SHIFT_LEGAL_REF = "ley-39-2015:art-30.5"
@@ -482,8 +479,6 @@ def shift_deadline(
 
 
 __all__ = (
-    "HOLIDAY_CALENDAR_PROVIDER_DIRECTORY",
-    "HOLIDAY_CALENDAR_PROVIDER_ID",
     "HOLIDAY_CALENDAR_PUBLICATION_EVENT_FACT_ID",
     "HOLIDAY_EVENT_FACT_ID",
     "MODELOS_WITHOUT_SHIFT",

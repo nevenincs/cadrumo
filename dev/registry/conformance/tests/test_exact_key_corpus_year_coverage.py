@@ -37,11 +37,8 @@ from datetime import date
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.loader import load_registry_tree
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.categories.errors import CategoryValidationError
-from cadrumo.domain.categories.registry import category_profile_years, resolve_category_profiles
 from cadrumo.domain.iva.catalogue import iva_catalogue_years, resolve_catalogue
 from cadrumo.domain.iva.errors import IvaCatalogueError
 from cadrumo.domain.iva.place_of_supply import load_place_of_supply_table, place_of_supply_rule, place_of_supply_years
@@ -141,10 +138,6 @@ def _narrow_by_rewriting_citation_windows(source: Path, year: int) -> None:
     source.write_text(narrowed, encoding="utf-8")
 
 
-def _category_profile_years(source: Path) -> frozenset[int]:
-    return category_profile_years(source)
-
-
 def _iva_catalogue_years(source: Path) -> frozenset[int]:
     return iva_catalogue_years(source)
 
@@ -165,14 +158,6 @@ def _resolve_any_place_of_supply_rule(year: int) -> object:
 
 
 ENROLLED_EXACT_KEY_CORPORA: tuple[ExactKeyCorpus, ...] = (
-    ExactKeyCorpus(
-        name="spending-category profiles",
-        relative_source=("registry", "aeat", "categories", "profiles.toml"),
-        years_under=_category_profile_years,
-        narrow=_narrow_by_rewriting_citation_windows,
-        resolve=resolve_category_profiles,
-        raises=CategoryValidationError,
-    ),
     ExactKeyCorpus(
         name="IVA catalogues",
         relative_source=("registry", "aeat", "iva", "catalogues.toml"),

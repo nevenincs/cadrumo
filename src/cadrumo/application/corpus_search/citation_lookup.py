@@ -27,11 +27,8 @@ Notes:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from pathlib import Path
-
-from ...core.corpus_text import CorpusAnchorResolutionError, resolve_anchored_extracted_unit
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from ...domain.calculations.registry.authority_artifact import AuthorityArtifactError
 from ...domain.calculations.registry.schema_references import LegalReference
 from .errors import CorpusSearchInputError
 from .models import CitationResolution
@@ -40,15 +37,15 @@ from .models import CitationResolution
 class CitationLookup:
     """Resolve a registry citation id to metadata plus verbatim text.
 
-    The lookup is built over the reviewed legal catalogue and the corpus
-    source root (the bundled ``_data`` tree the catalogue's ``corpus_ref``
-    values are relative to).
+    The lookup is built over a published authority. Its text projection is
+    signed with the authority, so resolving a citation never opens a bundled
+    corpus file or source root.
     """
 
-    def __init__(self, legal: Mapping[str, LegalReference], *, source_root: Path) -> None:
-        """Initialize the lookup with the legal catalogue and the corpus source root."""
-        self._legal = dict(legal)
-        self._source_root = source_root.resolve()
+    def __init__(self, authority: ValidatedRegistryAuthority) -> None:
+        """Initialize the lookup with one signed runtime authority."""
+        self._authority = authority
+        self._legal = dict(authority.catalogues.legal)
 
     @property
     def citation_ids(self) -> tuple[str, ...]:
@@ -77,9 +74,9 @@ class CitationLookup:
                 reason="citation_id_unknown",
                 context={"citation_id": citation_id},
             )
-        path_part, _, anchor_part = reference.corpus_ref.partition("#")
+        _path_part, _, anchor_part = reference.corpus_ref.partition("#")
         anchor = anchor_part or None
-        verbatim = self._verbatim_text(reference, path_part=path_part, anchor=anchor)
+        verbatim = self._verbatim_text(reference)
         return CitationResolution(
             citation_id=reference.id,
             document_id=reference.document_id,
@@ -107,54 +104,25 @@ class CitationLookup:
         key = ref.strip()
         if key in self._legal:
             return self.resolve(key).verbatim_text
-        path_part, _, anchor_part = key.partition("#")
-        text = self._read_corpus_text(path_part, anchor=anchor_part or None)
-        if text is None:
+        references = tuple(reference for reference in self._legal.values() if reference.corpus_ref == key)
+        if len(references) != 1:
             raise CorpusSearchInputError(reason="corpus_text_unreadable", context={"ref": ref})
-        return text
+        return self._verbatim_text(references[0])
 
-    def _verbatim_text(self, reference: LegalReference, *, path_part: str, anchor: str | None) -> str:
-        text = self._read_corpus_text(path_part, anchor=anchor, required_text=reference.required_text)
-        if text is None:
+    def _verbatim_text(self, reference: LegalReference) -> str:
+        try:
+            return self._authority.legal_evidence_text(reference.id)
+        except AuthorityArtifactError as exc:
             raise CorpusSearchInputError(
                 reason="citation_extracted_text_absent",
                 context={"citation_id": reference.id, "corpus_ref": reference.corpus_ref},
-            )
-        return text
-
-    def _read_corpus_text(
-        self,
-        path_part: str,
-        *,
-        anchor: str | None,
-        required_text: tuple[str, ...] = (),
-    ) -> str | None:
-        source_path = (self._source_root / path_part).resolve()
-        if self._source_root not in source_path.parents:
-            raise CorpusSearchInputError(
-                reason="corpus_ref_escapes_root",
-                context={"path": path_part},
-            )
-        extracted_json = source_path.with_name(source_path.name + ".extracted.json")
-        if not extracted_json.is_file():
-            return None
-        try:
-            return resolve_anchored_extracted_unit(
-                extracted_json,
-                anchor=anchor or "",
-                required_text=required_text,
-            )
-        except CorpusAnchorResolutionError as exc:
-            raise CorpusSearchInputError(
-                reason="corpus_ref_not_one_unit",
-                context={"path": path_part, "anchor": anchor or ""},
             ) from exc
 
 
 def bundled_citation_lookup() -> CitationLookup:
     """Return a :class:`CitationLookup` over the bundled registry catalogue."""
     authority = bundled_authority()
-    return CitationLookup(authority.catalogues.legal, source_root=authority.source_root)
+    return CitationLookup(authority)
 
 
 __all__ = ["CitationLookup", "bundled_citation_lookup"]

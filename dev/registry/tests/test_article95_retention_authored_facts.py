@@ -26,6 +26,7 @@ _RATE_IDS = frozenset(
     {
         "rirpf-art-95:retencion-actividades-profesionales-general",
         "rirpf-art-95:retencion-actividades-profesionales-inicio",
+        "rirpf-art-95:retencion-actividades-profesionales-colectivos-especificos",
         "rirpf-art-95:retencion-actividades-agricolas-ganaderas-general",
         "rirpf-art-95:retencion-actividades-ganaderas-engorde-porcino-avicultura",
         "rirpf-art-95:retencion-actividades-forestales",
@@ -49,6 +50,13 @@ _REDACTION_PUBLICATIONS = (
 _EXPECTED_RATE_VALUES = {
     "rirpf-art-95:retencion-actividades-profesionales-general": ("0.15", "0.18", "0.15", "0.15", "0.15"),
     "rirpf-art-95:retencion-actividades-profesionales-inicio": ("0.07", "0.09", "0.07", "0.07", "0.07"),
+    "rirpf-art-95:retencion-actividades-profesionales-colectivos-especificos": (
+        "0.07",
+        "0.09",
+        "0.07",
+        "0.07",
+        "0.07",
+    ),
     "rirpf-art-95:retencion-actividades-agricolas-ganaderas-general": ("0.02",) * 5,
     "rirpf-art-95:retencion-actividades-ganaderas-engorde-porcino-avicultura": ("0.01",) * 5,
     "rirpf-art-95:retencion-actividades-forestales": ("0.02",) * 5,

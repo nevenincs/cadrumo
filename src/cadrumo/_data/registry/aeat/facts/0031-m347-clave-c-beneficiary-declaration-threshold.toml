@@ -1,0 +1,20 @@
+[fact]
+fact_id = "m347-clave-c-beneficiary-declaration-threshold"
+family = "scalar"
+
+[[fact.variants]]
+variant_id = "m347-clave-c-beneficiary-declaration-threshold:2008-01-01"
+date_axis = "filing_period"
+valid_from = 2008-01-01
+legal_refs = ["rd-1065-2007:art-33"]
+source_refs = ["boe-rd-1065-2007-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-rd-1065-2007-statutory-facts"
+required_text = ["300,51 euros durante el mismo periodo"]
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "300.51"
+unit = "eur"

@@ -3,10 +3,14 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
+from datetime import date
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
+from .....core.aggregation import BindingSourceKind
 from .....core.ed25519_signing import Ed25519KeypairHex, generate_ed25519_keypair_hex, sign_digest_hex
 from .....core.hashing import canonical_json_bytes, sha256_hex
 from ..authority_artifact import (
@@ -14,14 +18,25 @@ from ..authority_artifact import (
     AuthorityArtifactFormatError,
     AuthorityArtifactIntegrityError,
     AuthorityArtifactUnavailableError,
+    AuthorityEvidenceProjection,
+    PublishedSourceEvidence,
     read_authority_artifact,
     write_authority_artifact,
 )
-from ._referential_integrity_support import _minimal_catalogues, _minimal_modelo, _minimal_revision
+from ..errors import RegistryValidationError
+from ..export_parse import xml_dictionary_entries
+from ..schema import DataBindingDefinition, NoPredecessor
+from ._artifact_runtime_support import _minimal_catalogues, _minimal_modelo, _minimal_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _IDENTITY_DIGEST = "e4c712d347701b34615314b6e3f8fdfd75ca5ee3eabe9c1c651668549fb7f66f"
+
+
+@pytest.fixture(scope="session", autouse=True)
+def compose_runtime_ports() -> Iterator[None]:
+    """Keep isolated signed-artifact contracts independent of app port setup."""
+    yield
 
 
 @pytest.fixture
@@ -63,6 +78,61 @@ def test_published_authority_round_trips_as_the_complete_typed_payload(
     assert consumed == published
     assert consumed.modelos[0].title_localization_key == published.modelos[0].title_localization_key
     assert consumed.catalogues.legal == published.catalogues.legal
+    revision = consumed.modelos[0].revisions["test-revision"]
+    assert revision.valid_from == date(2024, 1, 1)
+    assert revision.reviewed_at == date(2026, 7, 1)
+
+
+def test_published_authority_round_trips_strict_profile_selector_json(
+    tmp_path: Path, publisher_keys: Ed25519KeypairHex
+) -> None:
+    """JSON arrays in a signed selector rehydrate to the declared tuple shape."""
+    artifact_path = tmp_path / "authority.json"
+    binding = DataBindingDefinition.model_validate(
+        {
+            "id": "profile-selector",
+            "source": BindingSourceKind.PROFILE,
+            # The explicit empty tuple becomes a JSON array in the artifact.
+            # Its strict rehydration is the regression under test.
+            "selector": {"profile_key": "tax.id", "profile_keys": ()},
+            "legal_refs": ("ley-35-2006:art-1",),
+            "source_refs": ("aeat-dr-130-2019-v12",),
+        }
+    )
+    modelo = _minimal_modelo(_minimal_revision(bindings=(binding,)))
+    published = AuthorityArtifact(
+        modelos=(modelo,),
+        catalogues=_minimal_catalogues(),
+        identity_digest=_IDENTITY_DIGEST,
+    )
+
+    write_authority_artifact(artifact_path, published, signing_private_key_hex=publisher_keys.private_key_hex)
+
+    consumed = _read(artifact_path, publisher_keys)
+    assert consumed == published
+
+
+def test_published_authority_preserves_a_grounded_no_predecessor_declaration(
+    tmp_path: Path, publisher_keys: Ed25519KeypairHex
+) -> None:
+    """The complete artifact honors the predecessor field's declared JSON spelling."""
+    artifact_path = tmp_path / "authority.json"
+    predecessor = NoPredecessor(
+        reason="The fixture has no earlier edition.",
+        legal_refs=("ley-35-2006:art-1",),
+        source_refs=("aeat-dr-130-2019-v12",),
+    )
+    revision = _minimal_revision().model_copy(update={"predecessor": predecessor})
+    published = AuthorityArtifact(
+        modelos=(_minimal_modelo(revision),),
+        catalogues=_minimal_catalogues(),
+        identity_digest=_IDENTITY_DIGEST,
+    )
+
+    write_authority_artifact(artifact_path, published, signing_private_key_hex=publisher_keys.private_key_hex)
+
+    consumed = _read(artifact_path, publisher_keys)
+    assert consumed == published
 
 
 def test_recomputed_replacement_frame_is_refused_without_a_publisher_signature(
@@ -145,3 +215,64 @@ def test_missing_publication_refuses_without_rebuilding_from_authoring_inputs(
     """An absent artifact is a deterministic runtime refusal at the publication boundary."""
     with pytest.raises(AuthorityArtifactUnavailableError):
         _read(tmp_path / "missing-authority.json", publisher_keys)
+
+
+def test_signed_runtime_dictionary_projection_parses_without_a_corpus_tree(
+    tmp_path: Path, publisher_keys: Ed25519KeypairHex
+) -> None:
+    """A staged signed artifact supplies XML dictionary bytes directly to the parser."""
+    dictionary = b"AMOUNT=[/Declaracion/Importe][DEC][001][importe]\n"
+    artifact_path = tmp_path / "authority.json"
+    artifact = AuthorityArtifact(
+        modelos=(_minimal_modelo(_minimal_revision()),),
+        catalogues=_minimal_catalogues(),
+        identity_digest=_IDENTITY_DIGEST,
+        evidence=AuthorityEvidenceProjection(
+            sources=(
+                PublishedSourceEvidence(
+                    source_reference_id="dictionary",
+                    payload=dictionary,
+                    payload_sha256=sha256_hex(dictionary),
+                ),
+            )
+        ),
+    )
+    write_authority_artifact(artifact_path, artifact, signing_private_key_hex=publisher_keys.private_key_hex)
+    published = _read(artifact_path, publisher_keys)
+    layout = SimpleNamespace(
+        id="xml-layout",
+        dictionary_source_ref="dictionary",
+        dictionary_path_overrides=(),
+    )
+    source = SimpleNamespace(id="dictionary", supports_single_uppercase_letter_casilla_ids=False)
+
+    entries = xml_dictionary_entries(
+        layout,
+        sources={"dictionary": source},
+        source_payloads={item.source_reference_id: item.payload for item in published.evidence.sources},
+    )
+
+    assert entries[0].field_id == "AMOUNT"
+    assert entries[0].casilla_id == "001"
+
+
+def test_signed_artifact_missing_runtime_dictionary_payload_refuses_before_parsing(
+    tmp_path: Path, publisher_keys: Ed25519KeypairHex
+) -> None:
+    """A valid signature cannot substitute for a required XML runtime projection."""
+    artifact_path = tmp_path / "authority.json"
+    _publish(artifact_path, publisher_keys)
+    published = _read(artifact_path, publisher_keys)
+    layout = SimpleNamespace(
+        id="xml-layout",
+        dictionary_source_ref="dictionary",
+        dictionary_path_overrides=(),
+    )
+    source = SimpleNamespace(id="dictionary", supports_single_uppercase_letter_casilla_ids=False)
+
+    with pytest.raises(RegistryValidationError, match="no published payload"):
+        xml_dictionary_entries(
+            layout,
+            sources={"dictionary": source},
+            source_payloads={item.source_reference_id: item.payload for item in published.evidence.sources},
+        )

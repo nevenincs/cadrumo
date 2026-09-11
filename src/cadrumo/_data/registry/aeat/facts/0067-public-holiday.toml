@@ -1,0 +1,785 @@
+[fact]
+fact_id = "deadlines.public-holiday"
+family = "event"
+
+[[fact.variants]]
+variant_id = "2024-01-01:national:es"
+selectors = [{ name = "jurisdiction", value = "national" }]
+date_axis = "submission_date"
+valid_from = 2024-01-01
+valid_to = 2024-01-01
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2024"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2024"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2024-01-01
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "A\u00f1o Nuevo" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2024" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2023-21965" },
+]
+
+[[fact.variants]]
+variant_id = "2024-01-06:national:es"
+selectors = [{ name = "jurisdiction", value = "national" }]
+date_axis = "submission_date"
+valid_from = 2024-01-06
+valid_to = 2024-01-06
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2024"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2024"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2024-01-06
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Epifan\u00eda del Se\u00f1or" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2024" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2023-21965" },
+]
+
+[[fact.variants]]
+variant_id = "2024-03-29:national:es"
+selectors = [{ name = "jurisdiction", value = "national" }]
+date_axis = "submission_date"
+valid_from = 2024-03-29
+valid_to = 2024-03-29
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2024"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2024"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2024-03-29
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Viernes Santo" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2024" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2023-21965" },
+]
+
+[[fact.variants]]
+variant_id = "2024-05-01:national:es"
+selectors = [{ name = "jurisdiction", value = "national" }]
+date_axis = "submission_date"
+valid_from = 2024-05-01
+valid_to = 2024-05-01
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2024"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2024"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2024-05-01
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Fiesta del Trabajo" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2024" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2023-21965" },
+]
+
+[[fact.variants]]
+variant_id = "2024-08-15:national:es"
+selectors = [{ name = "jurisdiction", value = "national" }]
+date_axis = "submission_date"
+valid_from = 2024-08-15
+valid_to = 2024-08-15
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2024"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2024"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2024-08-15
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Asunci\u00f3n de la Virgen" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2024" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2023-21965" },
+]
+
+[[fact.variants]]
+variant_id = "2024-10-12:national:es"
+selectors = [{ name = "jurisdiction", value = "national" }]
+date_axis = "submission_date"
+valid_from = 2024-10-12
+valid_to = 2024-10-12
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2024"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2024"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2024-10-12
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Fiesta Nacional de Espa\u00f1a" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2024" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2023-21965" },
+]
+
+[[fact.variants]]
+variant_id = "2024-11-01:national:es"
+selectors = [{ name = "jurisdiction", value = "national" }]
+date_axis = "submission_date"
+valid_from = 2024-11-01
+valid_to = 2024-11-01
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2024"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2024"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2024-11-01
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Todos los Santos" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2024" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2023-21965" },
+]
+
+[[fact.variants]]
+variant_id = "2024-12-06:national:es"
+selectors = [{ name = "jurisdiction", value = "national" }]
+date_axis = "submission_date"
+valid_from = 2024-12-06
+valid_to = 2024-12-06
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2024"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2024"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2024-12-06
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "D\u00eda de la Constituci\u00f3n Espa\u00f1ola" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2024" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2023-21965" },
+]
+
+[[fact.variants]]
+variant_id = "2024-12-25:national:es"
+selectors = [{ name = "jurisdiction", value = "national" }]
+date_axis = "submission_date"
+valid_from = 2024-12-25
+valid_to = 2024-12-25
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2024"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2024"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2024-12-25
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Natividad del Se\u00f1or" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2024" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2023-21965" },
+]
+
+[[fact.variants]]
+variant_id = "2024-05-02:ccaa:es-md"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-MD" }]
+date_axis = "submission_date"
+valid_from = 2024-05-02
+valid_to = 2024-05-02
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2024"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2024"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2024-05-02
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Fiesta de la Comunidad de Madrid" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2024" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2023-21965" },
+]
+
+[[fact.variants]]
+variant_id = "2024-09-11:ccaa:es-ct"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-CT" }]
+date_axis = "submission_date"
+valid_from = 2024-09-11
+valid_to = 2024-09-11
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2024"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2024"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2024-09-11
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Diada Nacional de Catalu\u00f1a" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2024" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2023-21965" },
+]
+
+[[fact.variants]]
+variant_id = "2024-02-28:ccaa:es-an"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-AN" }]
+date_axis = "submission_date"
+valid_from = 2024-02-28
+valid_to = 2024-02-28
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2024"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2024"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2024-02-28
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "D\u00eda de Andaluc\u00eda" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2024" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2023-21965" },
+]
+
+[[fact.variants]]
+variant_id = "2024-10-09:ccaa:es-vc"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-VC" }]
+date_axis = "submission_date"
+valid_from = 2024-10-09
+valid_to = 2024-10-09
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2024"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2024"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2024-10-09
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "D\u00eda de la Comunitat Valenciana" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2024" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2023-21965" },
+]
+
+[[fact.variants]]
+variant_id = "2025-01-01:national:es"
+selectors = [{ name = "jurisdiction", value = "national" }]
+date_axis = "submission_date"
+valid_from = 2025-01-01
+valid_to = 2025-01-01
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2025"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2025"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2025-01-01
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "A\u00f1o Nuevo" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2025" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-22011" },
+]
+
+[[fact.variants]]
+variant_id = "2025-01-06:national:es"
+selectors = [{ name = "jurisdiction", value = "national" }]
+date_axis = "submission_date"
+valid_from = 2025-01-06
+valid_to = 2025-01-06
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2025"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2025"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2025-01-06
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Epifan\u00eda del Se\u00f1or" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2025" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-22011" },
+]
+
+[[fact.variants]]
+variant_id = "2025-04-18:national:es"
+selectors = [{ name = "jurisdiction", value = "national" }]
+date_axis = "submission_date"
+valid_from = 2025-04-18
+valid_to = 2025-04-18
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2025"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2025"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2025-04-18
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Viernes Santo" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2025" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-22011" },
+]
+
+[[fact.variants]]
+variant_id = "2025-05-01:national:es"
+selectors = [{ name = "jurisdiction", value = "national" }]
+date_axis = "submission_date"
+valid_from = 2025-05-01
+valid_to = 2025-05-01
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2025"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2025"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2025-05-01
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Fiesta del Trabajo" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2025" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-22011" },
+]
+
+[[fact.variants]]
+variant_id = "2025-08-15:national:es"
+selectors = [{ name = "jurisdiction", value = "national" }]
+date_axis = "submission_date"
+valid_from = 2025-08-15
+valid_to = 2025-08-15
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2025"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2025"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2025-08-15
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Asunci\u00f3n de la Virgen" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2025" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-22011" },
+]
+
+[[fact.variants]]
+variant_id = "2025-11-01:national:es"
+selectors = [{ name = "jurisdiction", value = "national" }]
+date_axis = "submission_date"
+valid_from = 2025-11-01
+valid_to = 2025-11-01
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2025"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2025"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2025-11-01
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Todos los Santos" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2025" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-22011" },
+]
+
+[[fact.variants]]
+variant_id = "2025-12-06:national:es"
+selectors = [{ name = "jurisdiction", value = "national" }]
+date_axis = "submission_date"
+valid_from = 2025-12-06
+valid_to = 2025-12-06
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2025"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2025"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2025-12-06
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "D\u00eda de la Constituci\u00f3n Espa\u00f1ola" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2025" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-22011" },
+]
+
+[[fact.variants]]
+variant_id = "2025-12-08:national:es"
+selectors = [{ name = "jurisdiction", value = "national" }]
+date_axis = "submission_date"
+valid_from = 2025-12-08
+valid_to = 2025-12-08
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2025"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2025"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2025-12-08
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Inmaculada Concepci\u00f3n" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2025" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-22011" },
+]
+
+[[fact.variants]]
+variant_id = "2025-12-25:national:es"
+selectors = [{ name = "jurisdiction", value = "national" }]
+date_axis = "submission_date"
+valid_from = 2025-12-25
+valid_to = 2025-12-25
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2025"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2025"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2025-12-25
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Natividad del Se\u00f1or" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2025" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-22011" },
+]
+
+[[fact.variants]]
+variant_id = "2025-05-02:ccaa:es-md"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-MD" }]
+date_axis = "submission_date"
+valid_from = 2025-05-02
+valid_to = 2025-05-02
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2025"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2025"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2025-05-02
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Fiesta de la Comunidad de Madrid" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2025" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-22011" },
+]
+
+[[fact.variants]]
+variant_id = "2025-07-25:ccaa:es-md"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-MD" }]
+date_axis = "submission_date"
+valid_from = 2025-07-25
+valid_to = 2025-07-25
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2025"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2025"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2025-07-25
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Santiago Ap\u00f3stol" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2025" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-22011" },
+]
+
+[[fact.variants]]
+variant_id = "2025-11-10:ccaa:es-md"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-MD" }]
+date_axis = "submission_date"
+valid_from = 2025-11-10
+valid_to = 2025-11-10
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2025"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2025"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2025-11-10
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Lunes siguiente a la Almudena (trasladada)" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2025" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-22011" },
+]
+
+[[fact.variants]]
+variant_id = "2025-04-21:ccaa:es-ct"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-CT" }]
+date_axis = "submission_date"
+valid_from = 2025-04-21
+valid_to = 2025-04-21
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2025"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2025"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2025-04-21
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Lunes de Pascua Granada" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2025" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-22011" },
+]
+
+[[fact.variants]]
+variant_id = "2025-06-24:ccaa:es-ct"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-CT" }]
+date_axis = "submission_date"
+valid_from = 2025-06-24
+valid_to = 2025-06-24
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2025"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2025"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2025-06-24
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "San Juan" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2025" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-22011" },
+]
+
+[[fact.variants]]
+variant_id = "2025-09-11:ccaa:es-ct"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-CT" }]
+date_axis = "submission_date"
+valid_from = 2025-09-11
+valid_to = 2025-09-11
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2025"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2025"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2025-09-11
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Diada Nacional de Catalu\u00f1a" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2025" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-22011" },
+]
+
+[[fact.variants]]
+variant_id = "2025-12-26:ccaa:es-ct"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-CT" }]
+date_axis = "submission_date"
+valid_from = 2025-12-26
+valid_to = 2025-12-26
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2025"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2025"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2025-12-26
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "San Esteban" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2025" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-22011" },
+]
+
+[[fact.variants]]
+variant_id = "2025-02-28:ccaa:es-an"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-AN" }]
+date_axis = "submission_date"
+valid_from = 2025-02-28
+valid_to = 2025-02-28
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2025"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2025"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2025-02-28
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "D\u00eda de Andaluc\u00eda" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2025" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-22011" },
+]
+
+[[fact.variants]]
+variant_id = "2025-04-17:ccaa:es-an"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-AN" }]
+date_axis = "submission_date"
+valid_from = 2025-04-17
+valid_to = 2025-04-17
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2025"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2025"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2025-04-17
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Jueves Santo" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2025" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-22011" },
+]
+
+[[fact.variants]]
+variant_id = "2025-04-17:ccaa:es-vc"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-VC" }]
+date_axis = "submission_date"
+valid_from = 2025-04-17
+valid_to = 2025-04-17
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2025"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2025"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2025-04-17
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Jueves Santo" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2025" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-22011" },
+]
+
+[[fact.variants]]
+variant_id = "2025-04-21:ccaa:es-vc"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-VC" }]
+date_axis = "submission_date"
+valid_from = 2025-04-21
+valid_to = 2025-04-21
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2025"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2025"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2025-04-21
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "Lunes de San Vicente Ferrer" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2025" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-22011" },
+]
+
+[[fact.variants]]
+variant_id = "2025-10-09:ccaa:es-vc"
+selectors = [{ name = "jurisdiction", value = "ccaa" }, { name = "ccaa_code", value = "ES-VC" }]
+date_axis = "submission_date"
+valid_from = 2025-10-09
+valid_to = 2025-10-09
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2025"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2025"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2025-10-09
+event_code = "public_holiday"
+outputs = [
+  { name = "name", value = "D\u00eda de la Comunitat Valenciana" },
+  { name = "boe_ref", value = "boe-resolucion-festivos-2025" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-22011" },
+]

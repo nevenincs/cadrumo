@@ -114,6 +114,19 @@ def test_objective_estimation_exclusion_advisory_fires_for_settled_year_excess()
         "objective_estimation_prior_year_agri_livestock_forest_gross_eur",
         "objective_estimation_prior_year_purchases_eur",
     }
+    fact_ids_by_field = {
+        str(finding.message_facts["profile_field_id"]): str(finding.message_facts["fact_id"])
+        for finding in findings
+    }
+    assert fact_ids_by_field == {
+        "objective_estimation_prior_year_gross_income_eur": "lirpf-dt-32:eo-exclusion-rendimientos-conjunto-eur",
+        "objective_estimation_prior_year_invoice_gross_income_eur": "lirpf-dt-32:eo-exclusion-rendimientos-factura-eur",
+        "objective_estimation_prior_year_agri_livestock_forest_gross_eur": (
+            "lirpf-art-31:eo-exclusion-rendimientos-agricolas-ganaderos-forestales-eur"
+        ),
+        "objective_estimation_prior_year_purchases_eur": "lirpf-dt-32:eo-exclusion-compras-eur",
+    }
+    assert all("parameter_id" not in finding.message_facts for finding in findings)
 
 
 def test_objective_estimation_exclusion_advisory_reverts_to_article31_in_2025() -> None:

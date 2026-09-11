@@ -10,10 +10,13 @@ related:
   - '[[2026-09-09-facts-registry-schema-persistence-research]]'
   - '[[2026-09-09-facts-registry-authority-plumbing-research]]'
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
-modified: '2026-09-10'
+  - '[[2026-09-11-facts-registry-s59-strict-type-repair-reference]]'
+modified: '2026-09-11'
 body_schema: body-v2
-body_hash: 'sha256:09c45f920de6ff8650fe48bebbca7fed2db93a1ce36a4c6c497e77085f0623f8'
+body_hash: 'sha256:64a4c9df051af51d9d2ac455ef605ebeb2337eb4425c1431c2c246373472f160'
 ---
+
+<!-- RETIRED: S65 -->
 
 # `facts-registry` plan
 
@@ -158,11 +161,11 @@ Rewire treaty and deadline consumers, retain apoderamientos as non-governed voca
 - [x] `W03.P13.S71` - Capture hash-pinned BOE articles 109 and 110 redactions, author source-cited temporal selectors by legal applicability, and rewire Modelo 131 to its form-specific authority; `dev/corpus and src/cadrumo/_data/corpus/normatives/html and src/cadrumo/_data/registry/aeat/facts and src/cadrumo/_data/registry/aeat/legal and src/cadrumo/application/aggregation`.
 - [x] `W03.P13.S72` - Capture hash-pinned BOE article 161 redactions and author source-cited temporal equivalence-surcharge facts under the governed authority; `dev/corpus and src/cadrumo/_data/corpus/normatives/html and src/cadrumo/_data/registry/aeat/facts and src/cadrumo/_data/registry/aeat/legal and src/cadrumo/domain/iva`.
 - [x] `W03.P13.S73` - Capture hash-pinned BOE article 31 and transitional-provision redactions and author source-cited temporal objective-estimation exclusion facts under the governed authority; `dev/corpus and src/cadrumo/_data/corpus/normatives/html and src/cadrumo/_data/registry/aeat/facts and src/cadrumo/_data/registry/aeat/legal and src/cadrumo/application/modelo`.
-- [ ] `W03.P13.S66` - Replace generic fact selectors with provider-owned validated applicability coordinates before consumer-boundary verification; `src/cadrumo/domain/calculations/registry/facts and src/cadrumo/domain/calculations/registry and src/cadrumo/domain/transactions and src/cadrumo/application/aggregation`.
-- [ ] `W03.P13.S64` - Migrate remaining governed-fact consumers only after their facts carry source-grounded temporal applicability; `src/cadrumo/application/modelo/_objective_estimation_advisory.py and src/cadrumo/domain/transactions and dev/registry/compiler/fact_validation.py`.
-- [ ] `W03.P13.S75` - Delete retired legal-parameter provider implementations after governed facts replace every live resolver and consumer path; `dev/registry/compiler/legal_parameters.py and dev/registry/tests/test_legal_parameter_provider.py and src/cadrumo/domain and src/cadrumo/application`.
-- [ ] `W03.P13.S69` - Enforce and prove canonical tax-fact temporal coverage, date-axis selection, provenance, and refusal outside source-grounded windows; `dev/registry/compiler/fact_validation.py and dev/registry/compiler/validator.py and dev/registry/tests/test_migrated_legal_parameter_fact_gate.py`.
-- [ ] `W03.P13.S76` - Repair Article 101 excerpt filenames and source references so provision-tier evidence is verifiable before the cross-domain authority proof; `src/cadrumo/_data/corpus/normatives/html and src/cadrumo/_data/registry/aeat/legal and src/cadrumo/_data/registry/aeat/facts`.
+- [x] `W03.P13.S66` - Replace generic fact selectors with provider-owned validated applicability coordinates before consumer-boundary verification; `src/cadrumo/domain/calculations/registry/facts and src/cadrumo/domain/calculations/registry and src/cadrumo/domain/transactions and src/cadrumo/application/aggregation`.
+- [ ] `W03.P13.S64` - Verify the migrated objective-estimation fact consumer through the signed published authority artifact before the consumer-boundary handoff; `src/cadrumo/application/modelo/_objective_estimation_advisory.py and src/cadrumo/application/modelo/tests/test_objective_estimation_exclusion_advisory.py and src/cadrumo/_data/registry/authority/authority.json`.
+- [x] `W03.P13.S75` - Delete retired legal-parameter provider implementations after governed facts replace every live resolver and consumer path; `dev/registry/compiler/legal_parameters.py and dev/registry/tests/test_legal_parameter_provider.py and src/cadrumo/domain and src/cadrumo/application`.
+- [x] `W03.P13.S69` - Enforce and prove canonical tax-fact temporal coverage, date-axis selection, provenance, and refusal outside source-grounded windows; `dev/registry/compiler/fact_validation.py and dev/registry/compiler/validator.py and dev/registry/tests/test_retired_fact_provider_gate.py`.
+- [x] `W03.P13.S76` - Repair Article 101 excerpt filenames and source references so provision-tier evidence is verifiable before the cross-domain authority proof; `src/cadrumo/_data/corpus/normatives/html and src/cadrumo/_data/registry/aeat/legal and src/cadrumo/_data/registry/aeat/facts`.
 
 ### Phase `W03.P14` - Verify consumer boundary
 
@@ -185,41 +188,50 @@ Move authored facts into the normalized facts corpus where approved, remove dupl
 
 Move approved adapted data families and Python-held facts into one-fact-per-file normalized TOML while retaining source evidence.
 
-- [ ] `W04.P15.S29` - Author normalized scalar schedule mapping and set fact fragments; `src/cadrumo/_data/registry/aeat/facts`.
-- [ ] `W04.P15.S30` - Normalize adapted families assigned to facts ownership; `src/cadrumo/_data/registry/aeat/facts`.
+- [x] `W04.P15.S29` - Replace the statutory Python fact adapter with normalized scalar and decimal-mapping fragments carrying exact typed payloads, effective applicability, and official source evidence; `src/cadrumo/_data/registry/aeat/facts and dev/registry/compiler/fact_providers.py and dev/registry/compiler/statutory_constants.py and dev/registry/tests and dev/registry/analysis/facts_external_constants_retirement.toml`.
+- [x] `W04.P15.S30` - Normalize IVA-rate and recargo schedules into authored one-fact-per-file fragments with typed rows, temporal applicability, and evidence; `src/cadrumo/_data/registry/aeat/facts and src/cadrumo/_data/registry/aeat/iva and dev/registry/compiler/fact_providers.py`.
+- [x] `W04.P15.S77` - Normalize and retire the category-profile adapter only after every profile has an authored, evidence-bearing fact replacement; `src/cadrumo/_data/registry/aeat/categories and src/cadrumo/_data/registry/aeat/facts and dev/registry/compiler/categories.py and dev/registry/compiler/fact_providers.py and dev/registry/tests`.
+- [x] `W04.P15.S78` - Normalize and retire the legal-holiday calendar adapter while preserving publication and event provenance; `src/cadrumo/_data/registry/aeat/calendars and src/cadrumo/_data/registry/aeat/facts and dev/registry/compiler/holidays.py and dev/registry/compiler/fact_providers.py and dev/registry/tests`.
+- [x] `W04.P15.S79` - Normalize and retire the treaty-override adapter without duplicating the canonical convenio catalogue; `src/cadrumo/_data/registry/aeat/treaties and src/cadrumo/_data/registry/aeat/facts and dev/registry/compiler/convenio.py and dev/registry/compiler/fact_providers.py and dev/registry/compiler/authority.py and dev/registry/tests`.
+- [x] `W04.P15.S80` - Classify the remaining IVA structured tables and authorize deletion only with a typed, evidence-bearing provider replacement; `src/cadrumo/_data/registry/aeat/iva and src/cadrumo/domain/iva and dev/registry/compiler and dev/registry/analysis`.
+- [ ] `W04.P15.S81` - Define a typed catalogue-applicability fact family, normalize IVA catalogue rows with their legal evidence, and only then retire the raw table.; `src/cadrumo/domain/iva and src/cadrumo/_data/registry/aeat/facts and src/cadrumo/_data/registry/aeat/iva and dev/registry`.
+- [ ] `W04.P15.S82` - Define a typed place-of-supply fact family that preserves establishing references plus exempt and silent semantics, normalize rows, then retire the raw table.; `src/cadrumo/domain/iva and src/cadrumo/_data/registry/aeat/facts and src/cadrumo/_data/registry/aeat/iva and dev/registry`.
+- [ ] `W04.P15.S83` - Define a typed territorial-applicability fact family that preserves postal-grouping semantics, normalize territory rows, then retire the raw table.; `src/cadrumo/domain/iva and src/cadrumo/_data/registry/aeat/facts and src/cadrumo/_data/registry/aeat/iva and dev/registry`.
+- [ ] `W04.P15.S84` - Define a typed territorial-carve-out fact family that preserves each three-way disposition, normalize rows, then retire the raw table.; `src/cadrumo/domain/iva and src/cadrumo/_data/registry/aeat/facts and src/cadrumo/_data/registry/aeat/iva and dev/registry`.
 
 ### Phase `W04.P16` - Delete Python legal constants and duplicate mappings
 
 Remove migrated legal declarations and local interpretations while preserving unrelated technical configuration and serialization tokens.
 
-- [ ] `W04.P16.S31` - Delete migrated statutory declarations but retain technical configuration; `src/cadrumo/core/external_constants.py`.
-- [ ] `W04.P16.S32` - Delete numeric IVA interpretation but retain persisted enum tokens; `src/cadrumo/domain/invoices/enums.py`.
-- [ ] `W04.P16.S33` - Delete superseded regulatory mappings and fallback policies; `src/cadrumo`.
-- [ ] `W04.P16.S65` - Delete the statutory Python-fact adapter and duplicate declarations after normalized fact fragments replace both lanes; `src/cadrumo/domain/calculations/registry/facts/statutory_constants.py and src/cadrumo/core/external_constants.py`.
+- [x] `W04.P16.S31` - Delete migrated statutory declarations but retain technical configuration; `src/cadrumo/core/external_constants.py`.
+- [x] `W04.P16.S32` - Delete numeric IVA interpretation but retain persisted enum tokens; `src/cadrumo/domain/invoices/enums.py`.
+- [x] `W04.P16.S33` - Replace the remaining technical model-routing aliases with their specialized aggregation and calendar-policy owners, then delete the aliases; `src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py and src/cadrumo/application/overview/calendar_warnings.py and src/cadrumo/core/external_constants.py and dev/registry/analysis/facts_external_constants_retirement.toml and dev/registry/tests`.
 
 ### Phase `W04.P17` - Delete bespoke loaders caches and data paths
 
 Remove retired parsers, caches, wrappers, direct readers, duplicate TOML paths, and adapter closure entries.
 
 - [ ] `W04.P17.S34` - Delete superseded legal-only adapters and provider-local caches; `src/cadrumo/domain/calculations/registry/loader.py`.
-- [ ] `W04.P17.S56` - Delete retired IVA and recargo parsers caches and raw TOML; `src/cadrumo/domain/iva and src/cadrumo/_data/registry/aeat/iva`.
-- [ ] `W04.P17.S57` - Delete retired IVA-local grounding and obsolete repository wrapper; `src/cadrumo/domain/iva/_grounding.py and src/cadrumo/core/resources/_repos/iva_rate_tables.py`.
+- [x] `W04.P17.S56` - Delete the superseded IVA and recargo raw parsers, caches, provider registration, focused adapter tests, and raw TOML after authored-fact parity is proved; `dev/registry/compiler/iva.py and dev/registry/tests and src/cadrumo/domain/iva and src/cadrumo/_data/registry/aeat/iva`.
+- [x] `W04.P17.S57` - Delete the obsolete IVA-rate resource repository after authority-backed rate resolution, while retaining IVA-local grounding only until the raw legal IVA tables have typed fact replacements.; `src/cadrumo/core/resources/_repos/iva_rate_tables.py and src/cadrumo/core/resources/registry.py and dev/registry/analysis and dev/registry/tests`.
+- [ ] `W04.P17.S85` - Delete IVA-local grounding only after the typed IVA legal-fact migrations remove every raw-table reader and the validated authority owns equivalent evidence refusal.; `src/cadrumo/domain/iva/_grounding.py and src/cadrumo/domain/iva/place_of_supply.py and src/cadrumo/domain/iva/establishment.py and dev/registry/analysis and dev/registry/tests`.
 
 ### Phase `W04.P18` - Enforce negative architecture
 
 Turn retirement-ledger closure, forbidden imports, unowned directories, direct reads, and provenance-free results into blocking gates.
 
-- [ ] `W04.P18.S35` - Block imports of retired declarations and loader symbols; `dev/quality`.
-- [ ] `W04.P18.S36` - Block direct governed-directory reads and unregistered loaders; `dev/quality`.
-- [ ] `W04.P18.S37` - Block provenance-free results and unresolved migration entries; `dev/registry/analysis`.
+- [x] `W04.P18.S35` - Block imports of retired declarations and loader symbols; `dev/quality`.
+- [x] `W04.P18.S36` - Block direct governed-directory reads and unregistered loaders; `dev/quality`.
+- [x] `W04.P18.S37` - Block provenance-free results and unresolved migration entries; `dev/registry/analysis`.
 
 ### Phase `W04.P19` - Verify retirement boundary
 
 Prove the normalized catalogue is the sole operative authority and that all planned deletion targets are absent.
 
 - [ ] `W04.P19.S58` - Verify sole authority and retirement-ledger closure at the Wave 4 handoff; `src/cadrumo and dev/registry`.
+- [ ] `W04.P19.S86` - Repair direct facts-projection and validation type boundaries without reintroducing legacy providers or compatibility adapters; `src/cadrumo/domain/calculations/registry/facts/schema.py and src/cadrumo/domain/categories and src/cadrumo/domain/deadlines/festivos.py and src/cadrumo/domain/iva and dev/registry/analysis/facts_catalogue_quality.py and dev/registry/compiler`.
 - [ ] `W04.P19.S59` - Run canonical strict production type checking after deletion; `justfile check-types and dev/quality/types.py`.
-- [ ] `W04.P19.S60` - Run both dead-code audits and remove exact orphaned code and tests; `dev/audit/dead_code.py and dev/audit/unreachable_code.py`.
+- [x] `W04.P19.S60` - Run both dead-code audits and remove exact orphaned code and tests; `dev/audit/dead_code.py and dev/audit/unreachable_code.py`.
 
 ## Wave `W05` - Integrate and verify campaign closure
 

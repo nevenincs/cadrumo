@@ -21,14 +21,13 @@ from ....core.record_design_epoch import RECORD_DESIGN_EPOCH_RE
 from ....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
 from ....core.url_validation import ANY_HTTP_URL_ADAPTER
 from .errors import RegistryValidationError
-from .ids import LegalRefId, ModeloId, ParameterId, RevisionId, SourceRefId
+from .ids import LegalRefId, ModeloId, RevisionId, SourceRefId
 from .schema_base import (
     CorpusTierField,
     DateAxisField,
     DesignAuthority,
     EvidenceTier,
     EvidenceTierField,
-    LegalRefs,
     PublishingAuthorityField,
     RegistryModel,
     RegistrySourceKind,
@@ -38,7 +37,6 @@ from .schema_base import (
 )
 
 __all__ = [
-    "LegalParameter",
     "LegalReference",
     "PeriodSelector",
     "RegistryExternalLink",
@@ -589,21 +587,6 @@ class SourceReference(RegistryModel):
         if lowered != value or any(char not in "0123456789abcdef" for char in value):
             raise RegistryValidationError("sha256 must be lowercase hexadecimal")
         return value
-
-
-class LegalParameter(RegistryModel):
-    """Versioned legal parameter value cited by registry formulas."""
-
-    id: ParameterId
-    evidence_tier: Annotated[Literal[EvidenceTier.LEGAL_AUTHORITY], BeforeValidator(coerce_enum_member(EvidenceTier))]
-    value: str
-    unit: str
-    applies_to: str
-    legal_refs: LegalRefs
-    review_status: RevisionReviewStatusField
-    reviewed_at: date | None = None
-    reviewed_by: str | None = None
-    notes: str | None = None
 
 
 def governed_period_span(reference: LegalReference) -> tuple[date, date | None]:

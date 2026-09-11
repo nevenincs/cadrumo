@@ -33,7 +33,7 @@ from ...core.period import Period
 from ...domain.iva import rates as _iva_rates_module
 from ...domain.iva.rates import load_iva_rate_table
 from ...domain.iva.schema import NO_PRINTED_TAX_IVA_CATEGORIES, EUMemberState, IvaCategory
-from ...domain.transactions.retencion_parameters import statutory_activity_retencion_rates
+from ...domain.transactions.retencion_facts import statutory_activity_retencion_rates
 from ...tests.attribute_scope import scoped_attribute
 from ..invoice_extraction_prompt import (
     default_extraction_period,

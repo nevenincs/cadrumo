@@ -71,7 +71,7 @@ channel, the failure mode ``aeat-ledger-contract``
 exists to prevent.
 
 The comparison reads the whole grounded art. 95 rate set — 15 %, 7 %, 2 % and 1 %
-— from the registry parameter catalogue, never a literal restated here. The
+— from governed facts, never a literal restated here. The
 sectoral rates (art. 95.4 agrícola/ganadera, with its 1 % engorde de porcino y
 avicultura carve-out from the 2 % general figure; art. 95.5 forestal; art. 95.6.1.º
 estimación objetiva) were grounded precisely because screening against the art. 95.1
@@ -134,7 +134,7 @@ from ...core.aggregation import (
 )
 from ...core.money.rounding import CENT
 from ...domain.calculations.registry.ids import LegalRefId
-from ...domain.transactions.retencion_parameters import (
+from ...domain.transactions.retencion_facts import (
     administrador_retencion_legal_refs,
     load_administrador_retencion_rates,
     professional_activity_retencion_rates,
@@ -537,7 +537,7 @@ def inferred_actividad_retencion_rate_advisory_observations(
     on a fact nothing verified. A weak signal may set how confidently we speak;
     it may not decide whether we speak. Do not "improve" this into a filter.
 
-    The rate set is read from the registry parameter catalogue via
+    The rate set is read from governed facts via
     :func:`~domain.transactions.statutory_activity_retencion_rates`, so the
     comparison tracks the grounded legal figures rather than a literal restated
     here, and a newly-grounded rate widens the conforming band automatically.

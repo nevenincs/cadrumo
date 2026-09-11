@@ -33,7 +33,6 @@ from .....core.i18n import tr
 from .....core.modelo import Modelo
 from .....core.observed_header_fact import ObservedHeaderFact
 from .....core.period import Period
-from .....core.resources.bundled_data import bundled_path
 from .....core.time.clock import now
 from .....domain.calculations.export_field_kind import CasillaFieldKind
 from .....domain.calculations.registry.authority import bundled_authority
@@ -166,6 +165,11 @@ def _registry_authority() -> ValidatedRegistryAuthority:
     return bundled_authority()
 
 
+def _published_source_payloads() -> Mapping[str, bytes]:
+    """Return source bytes from the signed authority projection for submitted-file parsing."""
+    return {item.source_reference_id: item.payload for item in _registry_authority().evidence.sources}
+
+
 def _read_guard_policy_from_snapshot(snapshot: RegistrySnapshot) -> RemoteStateGuardPolicy:
     listing_host = urlsplit(_LISTING_URL).hostname
     if listing_host is None:
@@ -273,8 +277,8 @@ def observed_header_facts_from_submitted_file(
         parsed = parse_export_payload(
             resolved.layout,
             body,
-            source_root=bundled_path(),
             sources=snapshot.sources,
+            source_payloads=_published_source_payloads(),
         )
     except RegistryValidationError:
         return ()
@@ -317,8 +321,8 @@ def observed_casillas_from_submitted_file(
         parsed = parse_export_payload(
             resolved.layout,
             body,
-            source_root=bundled_path(),
             sources=snapshot.sources,
+            source_payloads=_published_source_payloads(),
         )
     except RegistryValidationError as exc:
         raise _submitted_file_layout_refusal(
@@ -423,8 +427,8 @@ def _submitted_file_coverage_for_casillas(
     parsed = parse_export_payload(
         resolved_layout.layout,
         body,
-        source_root=bundled_path(),
         sources=snapshot.sources,
+        source_payloads=_published_source_payloads(),
     )
     return _submitted_file_extraction_coverage(
         parsed_field_ids=frozenset(field.field_id for field in parsed.fields),

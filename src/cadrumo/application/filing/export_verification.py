@@ -26,7 +26,11 @@ from ...domain.calculations.registry.fixed_width_codec import render_fixed_width
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.filing.errors import FilingExportError, FilingExportValidationError
 from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
-from ._export_xml_dictionary import expected_xml_dictionary_root_identity, read_xml_dictionary_root_identity
+from ._export_xml_dictionary import (
+    _format_xml_dictionary_value,
+    expected_xml_dictionary_root_identity,
+    read_xml_dictionary_root_identity,
+)
 from .runtime import RegistryModeloSubview, RegistrySchemaAccessor, build_runtime_schema_provider
 
 _logger = get_logger(__name__)
@@ -320,8 +324,8 @@ def _xml_exported_casilla_ids(
     """Yield draft casillas represented by an XML dictionary layout."""
     entries = xml_dictionary_entries(
         layout,
-        source_root=schema_provider.source_root,
         sources=schema_provider.sources,
+        source_payloads=schema_provider.source_payloads,
     )
     draft_casillas = {value.casilla_id for value in draft.values}
     return (
@@ -373,12 +377,19 @@ def exported_casilla_provenance(
 def _mismatched_casilla_ids(
     layout: ExportLayoutDefinition, *, draft: ModeloDraft, payload: bytes, schema_provider: RegistrySchemaAccessor
 ) -> tuple[tuple[CasillaId, ...], tuple[CasillaId, ...]]:
+    if layout.format is ExportLayoutFormat.XML_DICTIONARY:
+        return _mismatched_xml_dictionary_casilla_ids(
+            layout,
+            draft=draft,
+            payload=payload,
+            schema_provider=schema_provider,
+        )
     values = {value.casilla_id: value.value for value in draft.values}
     fields_by_identity = {(record.id, field.id): field for record in layout.records for field in record.fields}
     mismatched: list[CasillaId] = []
     checked: list[CasillaId] = []
     for parsed in parse_export_payload(
-        layout, payload, source_root=schema_provider.source_root, sources=schema_provider.sources
+        layout, payload, sources=schema_provider.sources, source_payloads=schema_provider.source_payloads
     ).casillas:
         if parsed.casilla_id is None:
             continue
@@ -393,6 +404,59 @@ def _mismatched_casilla_ids(
             ) from exc
         if expected_wire != parsed.raw:
             mismatched.append(parsed.casilla_id)
+    return tuple(dict.fromkeys(mismatched)), tuple(dict.fromkeys(checked))
+
+
+def _mismatched_xml_dictionary_casilla_ids(
+    layout: ExportLayoutDefinition,
+    *,
+    draft: ModeloDraft,
+    payload: bytes,
+    schema_provider: RegistrySchemaAccessor,
+) -> tuple[tuple[CasillaId, ...], tuple[CasillaId, ...]]:
+    """Compare XML values through the signed dictionary's wire vocabulary.
+
+    XML rows have no fixed-width ``ExportFieldDefinition`` record identity;
+    their field id and data type are instead declared by the published
+    dictionary.  Resolve that same signed projection used by both renderer and
+    parser, then compare the filed token with the renderer's canonical token.
+    """
+    entries = {
+        entry.field_id: entry
+        for entry in xml_dictionary_entries(
+            layout,
+            sources=schema_provider.sources,
+            source_payloads=schema_provider.source_payloads,
+        )
+    }
+    values = {value.casilla_id: value.value for value in draft.values}
+    mismatched: list[CasillaId] = []
+    checked: list[CasillaId] = []
+    parsed_payload = parse_export_payload(
+        layout,
+        payload,
+        sources=schema_provider.sources,
+        source_payloads=schema_provider.source_payloads,
+    )
+    for parsed in parsed_payload.casillas:
+        casilla_id = parsed.casilla_id
+        if casilla_id is None:
+            continue
+        checked.append(casilla_id)
+        entry = entries.get(parsed.field_id)
+        expected = values.get(casilla_id)
+        if entry is None:
+            raise FilingExportValidationError(
+                f"XML dictionary field {parsed.field_id!r} could not resolve its signed entry for verification"
+            )
+        try:
+            expected_wire = _format_xml_dictionary_value(entry.data_type, expected)
+        except FilingExportValidationError as exc:
+            raise FilingExportValidationError(
+                f"XML dictionary field {parsed.field_id!r} could not render its expected verification value"
+            ) from exc
+        if expected_wire != parsed.raw:
+            mismatched.append(casilla_id)
     return tuple(dict.fromkeys(mismatched)), tuple(dict.fromkeys(checked))
 
 

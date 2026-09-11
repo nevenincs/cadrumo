@@ -8,7 +8,7 @@
 # - args[4]: profile-bound `country_of_fiscal_residence`
 #
 # The Convenio doble imposicion treaty overrides are no longer a modelo-local
-# parameter: the op consults the cross-cutting `registry/aeat/treaties/` tree
+# parameter: the op consults the cross-cutting `irnr.convenio.override` fact
 # projected onto the snapshot as the `ConvenioAuthority`, and branches on the
 # typed override kind (flat / ceiling / allocation_domestic_tariff / exempt).
 #

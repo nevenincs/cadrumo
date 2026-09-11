@@ -12,6 +12,16 @@ from functools import lru_cache
 from pathlib import Path
 
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.schema import (
+    ModeloDefinition,
+    RegistryCatalogues,
+    SociedadesAnnualManualCoverageCatalogue,
+    SociedadesAnnualManualCoverageStatus,
+    SupportedFilingYearsCatalogue,
+)
+from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+
 from ._compiled_cache import (
     load_compiled_registry_cache,
     store_compiled_registry_cache,
@@ -26,10 +36,8 @@ from ._loader_internals import (
     _RegistryPathFingerprints,
     _toml_fingerprint,
     _validate_legal_directory,
-    _validate_legal_parameter_refs,
     load_modelo_file,
 )
-from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from .identity import (
     RegistryIdentity,
     resolve_registry_identity,
@@ -45,14 +53,6 @@ from .loader_cache import (
 from .loader_fingerprints import (
     refresh_toml_fingerprint_after_load_error as _refresh_toml_fingerprint_after_load_error,
 )
-from cadrumo.domain.calculations.registry.schema import (
-    ModeloDefinition,
-    RegistryCatalogues,
-    SociedadesAnnualManualCoverageCatalogue,
-    SociedadesAnnualManualCoverageStatus,
-    SupportedFilingYearsCatalogue,
-)
-from cadrumo.domain.calculations.registry.schema_references import LegalParameter, LegalReference, SourceReference
 
 
 def load_modelo_directory(directory: Path) -> ModeloDefinition:
@@ -97,7 +97,6 @@ def load_shared_catalogues(root: Path) -> RegistryCatalogues:
     _validate_legal_directory(legal_dir)
     legal: dict[str, LegalReference] = {}
     sources: dict[str, SourceReference] = {}
-    parameters: dict[str, LegalParameter] = {}
     supported_filing_years: SupportedFilingYearsCatalogue | None = None
     sociedades_annual_manual_coverage: SociedadesAnnualManualCoverageCatalogue | None = None
     for path in scan_directory(legal_dir, pattern="*.toml"):
@@ -105,10 +104,9 @@ def load_shared_catalogues(root: Path) -> RegistryCatalogues:
         overlap = (
             set(legal).intersection(catalogue.legal),
             set(sources).intersection(catalogue.sources),
-            set(parameters).intersection(catalogue.parameters),
         )
         if any(overlap):
-            detail = f"legal={sorted(overlap[0])!r} sources={sorted(overlap[1])!r} parameters={sorted(overlap[2])!r}"
+            detail = f"legal={sorted(overlap[0])!r} sources={sorted(overlap[1])!r}"
             raise RegistryLoadError(f"{path}: duplicate catalogue ids {detail}")
         if catalogue.supported_filing_years is not None:
             if supported_filing_years is not None:
@@ -124,15 +122,12 @@ def load_shared_catalogues(root: Path) -> RegistryCatalogues:
             sociedades_annual_manual_coverage = catalogue.sociedades_annual_manual_coverage
         legal.update(catalogue.legal)
         sources.update(catalogue.sources)
-        parameters.update(catalogue.parameters)
-    _validate_legal_parameter_refs(legal_dir, parameters=parameters, legal=legal)
     if supported_filing_years is None or sociedades_annual_manual_coverage is None:
         raise RegistryLoadError(f"{legal_dir}: required shared catalogue declaration is missing")
     _validate_sociedades_annual_manual_coverage(sociedades_annual_manual_coverage, supported_filing_years, sources)
     return RegistryCatalogues(
         legal=legal,
         sources=sources,
-        parameters=parameters,
         supported_filing_years=supported_filing_years,
         sociedades_annual_manual_coverage=sociedades_annual_manual_coverage,
     )

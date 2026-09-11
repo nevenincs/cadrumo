@@ -11,23 +11,15 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
 from cadrumo.core.irnr import ConvenioOverrideKind, TipoRentaIrnr
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.convenio import (
     ConvenioAuthority,
     ConvenioOverrideRow,
     ConvenioTreaty,
-)
-from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
-from dev.registry.compiler.convenio import (
-    collect_convenio_fingerprints,
-    load_convenio_authority,
-    validate_convenio_legal_refs,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -142,64 +134,3 @@ def test_authority_resolve_filters_by_year_window_and_returns_none_off_window() 
     assert authority.resolve("ZW", TipoRentaIrnr.INTEREST, 2025) is None  # no treaty
 
 
-def test_load_convenio_authority_compiles_the_bundled_treaty_tree() -> None:
-    convenio = load_convenio_authority(bundled_path("registry", "aeat", "treaties"))
-
-    assert {"GB", "MA", "AR", "DE"} <= set(convenio.treaties)
-    de = convenio.resolve("DE", TipoRentaIrnr.INTEREST, 2025)
-    assert de is not None
-    assert de.document_id == "BOE-A-2012-10212"
-    assert de.kind is ConvenioOverrideKind.EXEMPT
-
-
-def test_load_convenio_authority_rejects_duplicate_country(tmp_path: Path) -> None:
-    body = (
-        "[treaty]\n"
-        'country_code = "MA"\n'
-        'document_id = "BOE-A-1985-9280"\n'
-        "[[treaty.overrides]]\n"
-        'tipo_renta = "interest"\n'
-        'kind = "ceiling"\n'
-        'rate = "0.10"\n'
-        'legal_ref_anchor = "convenio-es-ma-1978:art-11"\n'
-        'legal_refs = ["convenio-es-ma-1978:art-11"]\n'
-        "valid_from = 2025-01-01\n"
-    )
-    (tmp_path / "es-ma.toml").write_text(body, encoding="utf-8")
-    (tmp_path / "ma-dup.toml").write_text(body, encoding="utf-8")
-
-    with pytest.raises(RegistryLoadError, match="already declared"):
-        load_convenio_authority(tmp_path)
-
-
-def test_absent_treaty_tree_yields_empty_authority(tmp_path: Path) -> None:
-    empty = load_convenio_authority(tmp_path / "does-not-exist")
-    assert empty.treaties == {}
-    assert ConvenioAuthority.empty().treaties == {}
-
-
-def test_validate_convenio_legal_refs_rejects_ungrounded_override() -> None:
-    authority = ConvenioAuthority(
-        treaties={
-            "MA": ConvenioTreaty(
-                country_code="MA",
-                document_id="BOE-A-1985-9280",
-                overrides=(_row(TipoRentaIrnr.INTEREST, ConvenioOverrideKind.CEILING, rate="0.10"),),
-            ),
-        },
-    )
-    # The grounding gate passes when the ref exists in the catalogue and fails when absent.
-    validate_convenio_legal_refs(authority, frozenset({"convenio-es-ma-1978:art-11"}))
-    with pytest.raises(RegistryValidationError, match="missing from the legal catalogue"):
-        validate_convenio_legal_refs(authority, frozenset())
-
-
-def test_collect_convenio_fingerprints_covers_every_treaty_file() -> None:
-    fingerprints = collect_convenio_fingerprints(bundled_path("registry", "aeat"))
-    paths = {Path(entry[0]).name for entry in fingerprints}
-    assert {"es-gb.toml", "es-ma.toml", "es-ar.toml", "es-de.toml"} <= paths
-    # Fingerprints carry (path, size, mtime_ns, content_digest) so a treaty
-    # content edit re-keys the cache even when (size, mtime_ns) collide; the
-    # digest slot is empty here because the bundled tree is read-only package
-    # data exempt from content hashing.
-    assert all(len(entry) == 4 and entry[1] > 0 for entry in fingerprints)

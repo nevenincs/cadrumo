@@ -179,12 +179,7 @@ from .schema_formula import (
     FormulaExpression,
     ParameterDefinition,
 )
-from .schema_references import (
-    LegalParameter,
-    LegalReference,
-    PeriodSelector,
-    SourceReference,
-)
+from .schema_references import LegalReference, PeriodSelector, SourceReference
 from .schema_revision_members import (
     ApplicabilityRuleDefinition as _ApplicabilityRuleDefinition,
 )
@@ -1370,11 +1365,10 @@ class SociedadesAnnualManualCoverageCatalogue(RegistryModel):
 
 
 class RegistryCatalogues(RegistryModel):
-    """Collect the registry-wide legal, source, fact, parameter, and support catalogues."""
+    """Collect the registry-wide legal, source, fact, and support catalogues."""
 
     legal: Mapping[LegalRefId, LegalReference]
     sources: Mapping[SourceRefId, SourceReference]
-    parameters: Mapping[str, LegalParameter] = Field(default_factory=dict)
     facts: GovernedFactCatalogue = Field(default_factory=GovernedFactCatalogue)
     convenio: ConvenioAuthority = Field(default_factory=ConvenioAuthority.empty)
     supplementary_ordenes: Mapping[Modelo, M303AnnualOrdenAuthority] = Field(

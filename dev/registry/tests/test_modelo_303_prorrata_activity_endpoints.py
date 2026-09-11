@@ -21,7 +21,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export import clasificar_casillas_oficiales
 from cadrumo.domain.calculations.registry.formula_initial_values import initial_value_casilla_ids, initial_values
 from cadrumo.domain.calculations.registry.m303_prorrata_activity_projection import project_m303_prorrata_activity_rows
-from cadrumo.domain.calculations.registry.record_design import extract_record_design
+from ..compiler.record_design import extract_record_design
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.prorrata_register.register import ProrrataActivityRow, ProrrataRegister, ProrrataRegisterEntry
 from cadrumo.tests.registry_snapshot import build_snapshot

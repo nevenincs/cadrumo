@@ -12,13 +12,13 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from dev.registry.compiler.source_evidence_fingerprint import collect_source_evidence_fingerprints
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import ModeloId, RevisionId
 from cadrumo.domain.calculations.registry.static_inspection import (
     RegistryRevisionInspection,
     StaticGeneratedArtifactInspection,
 )
+from dev.registry.compiler.authority_state import source_root_for
 from dev.registry.maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
 
 if TYPE_CHECKING:
@@ -96,7 +96,7 @@ def derive_filing_revision_classifications(
                 inspection = RegistryRevisionInspection.from_revision(
                     modelo=modelo,
                     revision=revision,
-                    source_root=authority.source_root,
+                    source_root=source_root_for(authority),
                     sources=authority.catalogues.sources,
                     legal_ref_ids=frozenset(authority.catalogues.legal),
                 )
@@ -228,26 +228,19 @@ def load_registry_diagnostic_classification(
     residue; filing, export, and calculation callers must load a validated
     authority through :func:`dev.registry.compiler.authority.compile_validated_authority`.
     """
-    from cadrumo.domain.calculations.registry.authority import (
-        canonical_authority_root_pair,
-        collect_registry_identity_fingerprints,
-        construct_authority,
-        fingerprint_key,
-    )
+    from dev.registry.compiler.authority import construct_unvalidated_authority
+    from dev.registry.compiler.authority_state import canonical_authoring_root_pair
     from dev.registry.compiler.identity import resolve_registry_identity
+    from dev.registry.compiler.loader import collect_registry_tree_fingerprints
 
-    identity_pair = canonical_authority_root_pair(root, source_root)
-    resolved_root = identity_pair.root
-    resolved_source_root = identity_pair.source_root
+    resolved_root, resolved_source_root = canonical_authoring_root_pair(root, source_root)
     identity = resolve_registry_identity(
         resolved_root,
-        collect_fingerprints=collect_registry_identity_fingerprints,
+        collect_fingerprints=collect_registry_tree_fingerprints,
     )
-    source_evidence_key = fingerprint_key(collect_source_evidence_fingerprints(resolved_source_root))
-    authority = construct_authority(
+    authority = construct_unvalidated_authority(
         resolved_root,
         resolved_source_root,
-        source_evidence_key.fingerprints,
         identity=identity,
     )
     return UnvalidatedRegistryClassification(

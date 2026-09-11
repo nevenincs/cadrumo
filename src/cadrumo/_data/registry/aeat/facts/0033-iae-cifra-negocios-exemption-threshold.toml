@@ -1,0 +1,20 @@
+[fact]
+fact_id = "iae-cifra-negocios-exemption-threshold"
+family = "scalar"
+
+[[fact.variants]]
+variant_id = "iae-cifra-negocios-exemption-threshold:2004-03-10"
+date_axis = "filing_period"
+valid_from = 2004-03-10
+legal_refs = ["rdl-2-2004:art-82"]
+source_refs = ["boe-rdl-2-2004-art-82-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-rdl-2-2004-art-82-statutory-facts"
+required_text = ["inferior a 1.000.000 de euros"]
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "1000000.00"
+unit = "eur"

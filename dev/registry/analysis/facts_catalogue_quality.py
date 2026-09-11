@@ -8,21 +8,33 @@ conformance denominator.
 from __future__ import annotations
 
 import argparse
+import re
 import sys
+import tomllib
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
 from pathlib import Path, PurePosixPath
 
+from pydantic import TypeAdapter
+
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactVariant
+from cadrumo.domain.calculations.registry.facts.resolution import (
+    GovernedFactQuery,
+    ResolvedGovernedFact,
+    resolve_governed_fact,
+)
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue, GovernedFactVariant
+from dev._paths import REPO_ROOT
 from dev.registry.compiler.fact_providers import (
     FACT_PROVIDER_REGISTRATIONS,
     FactProviderRegistration,
+    compile_registered_fact_providers,
     validate_fact_provider_registrations,
 )
+from dev.registry.compiler.loader import load_registry_tree
 
 __all__ = [
     "FactQualityFinding",
@@ -30,7 +42,21 @@ __all__ = [
     "facts_catalogue_findings",
     "live_facts_catalogue_findings",
     "main",
+    "migration_retirement_findings",
+    "resolved_fact_provenance_findings",
 ]
+
+
+_IVA_RETIREMENT_LEDGER = REPO_ROOT / "dev" / "registry" / "analysis" / "facts_iva_retirement.toml"
+_FACTS_REGISTRY_PLAN = REPO_ROOT / ".vault" / "plan" / "2026-09-09-facts-registry-plan.md"
+_S80_TEMPORARY_HOLD_STEPS = {
+    "src/cadrumo/_data/registry/aeat/iva/catalogues.toml": "W04.P15.S81",
+    "src/cadrumo/_data/registry/aeat/iva/place_of_supply.toml": "W04.P15.S82",
+    "src/cadrumo/_data/registry/aeat/iva/territories.toml": "W04.P15.S83",
+    "src/cadrumo/_data/registry/aeat/iva/territory_carve_outs.toml": "W04.P15.S84",
+}
+_S85_TEMPORARY_HOLD_STEPS = {"iva-local-grounding": "W04.P17.S85"}
+_TECHNICAL_IVA_VOCABULARY = "src/cadrumo/_data/registry/aeat/iva/country_names.toml"
 
 
 class FactQualityKind(StrEnum):
@@ -40,6 +66,9 @@ class FactQualityKind(StrEnum):
     DUPLICATE_VARIANT_ID = "duplicate_variant_id"
     INVALID_PRECEDENCE = "invalid_precedence"
     MISSING_PROVENANCE = "missing_provenance"
+    PROVENANCE_FREE_RESULT = "provenance_free_result"
+    UNAPPROVED_MIGRATION_HOLD = "unapproved_migration_hold"
+    STALE_MIGRATION_HOLD = "stale_migration_hold"
     TEMPORAL_AMBIGUITY = "temporal_ambiguity"
     UNOWNED_DIRECTORY = "unowned_directory"
     INVALID_PROVIDER = "invalid_provider"
@@ -207,6 +236,163 @@ def facts_catalogue_findings(
     return tuple(sorted(set(findings)))
 
 
+def resolved_fact_provenance_findings(results: Iterable[ResolvedGovernedFact]) -> tuple[FactQualityFinding, ...]:
+    """Reject an applicable resolved fact result that lost its legal/source evidence."""
+    findings: list[FactQualityFinding] = []
+    for result in results:
+        is_applicable = result.effective_date >= result.valid_from and (
+            result.valid_to is None or result.effective_date <= result.valid_to
+        )
+        if is_applicable and not result.legal_refs and not result.source_refs:
+            findings.append(
+                FactQualityFinding(
+                    FactQualityKind.PROVENANCE_FREE_RESULT,
+                    "resolved-authority",
+                    result.fact_id,
+                    result.variant_id,
+                    "applicable governed result carries neither legal_refs nor source_refs",
+                )
+            )
+    return tuple(sorted(set(findings)))
+
+
+def _resolved_variants(facts: Iterable[GovernedFact]) -> tuple[ResolvedGovernedFact, ...]:
+    """Resolve every declared variant at its first applicable coordinate through the real resolver."""
+    frozen = tuple(facts)
+    catalogue = GovernedFactCatalogue(facts={fact.fact_id: fact for fact in frozen})
+    query_adapter = TypeAdapter(GovernedFactQuery)
+    resolved: list[ResolvedGovernedFact] = []
+    for fact in frozen:
+        for variant in fact.variants:
+            query = query_adapter.validate_python(
+                {
+                    "family": fact.family,
+                    "fact_id": fact.fact_id,
+                    "date_axis": variant.date_axis,
+                    "effective_date": variant.valid_from,
+                    "selectors": variant.selectors,
+                },
+            )
+            resolved.append(resolve_governed_fact(catalogue, query, authority_digest="0" * 64))
+    return tuple(resolved)
+
+
+def _open_plan_steps(plan_text: str) -> frozenset[str]:
+    """Return the exact open step ids from the active facts-registry plan."""
+    return frozenset(re.findall(r"^- \[ \] `([^`]+)`", plan_text, flags=re.MULTILINE))
+
+
+def migration_retirement_findings(
+    iva_ledger: Mapping[str, object],
+    *,
+    open_steps: Iterable[str],
+) -> tuple[FactQualityFinding, ...]:
+    """Admit only complete, named S80/S85 temporary migration holds while their steps remain open."""
+    open_step_ids = frozenset(open_steps)
+    findings: list[FactQualityFinding] = []
+    tables = {
+        str(table.get("data_path", "")): table
+        for table in iva_ledger.get("remaining_structured_tables", ())
+        if isinstance(table, Mapping)
+    }
+    for data_path, step_id in _S80_TEMPORARY_HOLD_STEPS.items():
+        table = tables.pop(data_path, None)
+        if table is None:
+            if step_id in open_step_ids:
+                findings.append(
+                    FactQualityFinding(
+                        FactQualityKind.STALE_MIGRATION_HOLD,
+                        "iva-retirement",
+                        detail=f"approved S80 hold {data_path!r} is absent while {step_id} remains open",
+                    )
+                )
+            continue
+        if step_id not in open_step_ids:
+            findings.append(
+                FactQualityFinding(
+                    FactQualityKind.STALE_MIGRATION_HOLD,
+                    "iva-retirement",
+                    detail=f"S80 hold {data_path!r} remains after {step_id} closed",
+                )
+            )
+            continue
+        complete = (
+            table.get("classification") == "needs_typed_schema_and_fact_migration"
+            and table.get("decision") == "retain_until_lossless_replacement"
+            and bool(table.get("direct_readers"))
+            and bool(table.get("safe_next_scope"))
+        )
+        if not complete:
+            findings.append(
+                FactQualityFinding(
+                    FactQualityKind.UNAPPROVED_MIGRATION_HOLD,
+                    "iva-retirement",
+                    detail=f"S80 hold {data_path!r} lacks its lossless-replacement contract",
+                )
+            )
+    technical = tables.pop(_TECHNICAL_IVA_VOCABULARY, None)
+    if technical is None or technical.get("classification") != "technical_non_legal_canonical_vocabulary":
+        findings.append(
+            FactQualityFinding(
+                FactQualityKind.UNAPPROVED_MIGRATION_HOLD,
+                "iva-retirement",
+                detail="country_names.toml must remain the explicitly technical IVA vocabulary",
+            )
+        )
+    for data_path in sorted(tables):
+        findings.append(
+            FactQualityFinding(
+                FactQualityKind.UNAPPROVED_MIGRATION_HOLD,
+                "iva-retirement",
+                detail=f"unowned remaining IVA table {data_path!r}",
+            )
+        )
+
+    lanes = {
+        str(lane.get("lane_id", "")): lane
+        for lane in iva_ledger.get("lanes", ())
+        if isinstance(lane, Mapping) and "status" in lane
+    }
+    for lane_id, step_id in _S85_TEMPORARY_HOLD_STEPS.items():
+        lane = lanes.pop(lane_id, None)
+        if lane is None:
+            if step_id in open_step_ids:
+                findings.append(
+                    FactQualityFinding(
+                        FactQualityKind.STALE_MIGRATION_HOLD,
+                        "iva-retirement",
+                        detail=f"approved S85 hold {lane_id!r} is absent while {step_id} remains open",
+                    )
+                )
+            continue
+        if step_id not in open_step_ids:
+            findings.append(
+                FactQualityFinding(
+                    FactQualityKind.STALE_MIGRATION_HOLD,
+                    "iva-retirement",
+                    detail=f"S85 hold {lane_id!r} remains after {step_id} closed",
+                )
+            )
+            continue
+        if not str(lane.get("status", "")).startswith("blocked_pending") or not lane.get("blocker"):
+            findings.append(
+                FactQualityFinding(
+                    FactQualityKind.UNAPPROVED_MIGRATION_HOLD,
+                    "iva-retirement",
+                    detail=f"S85 hold {lane_id!r} lacks a named pending blocker",
+                )
+            )
+    for lane_id in sorted(lanes):
+        findings.append(
+            FactQualityFinding(
+                FactQualityKind.UNAPPROVED_MIGRATION_HOLD,
+                "iva-retirement",
+                detail=f"unowned pending retirement lane {lane_id!r}",
+            )
+        )
+    return tuple(sorted(set(findings)))
+
+
 def live_facts_catalogue_findings(
     registry_root: Path,
     registrations: Iterable[FactProviderRegistration] = FACT_PROVIDER_REGISTRATIONS,
@@ -227,11 +413,31 @@ def live_facts_catalogue_findings(
                 )
             )
     governed_directories = tuple(directory for registration in frozen for directory in registration.owned_directories)
+    if any(registration.project_modelos is not None for registration in frozen):
+        try:
+            modelos, _catalogues = load_registry_tree(registry_root)
+            provenance_facts = compile_registered_fact_providers(registry_root, modelos=modelos).facts.values()
+            resolved_findings = resolved_fact_provenance_findings(
+                resolved for resolved in _resolved_variants(provenance_facts)
+            )
+        except Exception as error:
+            resolved_findings = (
+                FactQualityFinding(
+                    FactQualityKind.INVALID_PROVIDER,
+                    "facts-provenance-resolution",
+                    detail=f"compiled projection provenance failed: {type(error).__name__}: {error}",
+                ),
+            )
+    else:
+        resolved_findings = resolved_fact_provenance_findings(
+            resolved for facts in compiled.values() for resolved in _resolved_variants(facts)
+        )
     return tuple(
         sorted(
             {
                 *compile_findings,
                 *facts_catalogue_findings(frozen, compiled, governed_directories),
+                *resolved_findings,
             }
         )
     )
@@ -242,7 +448,12 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
     parser.add_argument("--registry-root", type=Path, default=bundled_path("registry", "aeat"))
     args = parser.parse_args(argv)
-    findings = live_facts_catalogue_findings(args.registry_root)
+    iva_ledger = tomllib.loads(_IVA_RETIREMENT_LEDGER.read_text(encoding="utf-8"))
+    open_steps = _open_plan_steps(_FACTS_REGISTRY_PLAN.read_text(encoding="utf-8"))
+    findings = (
+        *live_facts_catalogue_findings(args.registry_root),
+        *migration_retirement_findings(iva_ledger, open_steps=open_steps),
+    )
     for finding in findings:
         sys.stdout.write(
             f"{finding.kind} provider={finding.provider_id} fact={finding.fact_id} "

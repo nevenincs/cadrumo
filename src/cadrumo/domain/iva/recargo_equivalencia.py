@@ -1,18 +1,9 @@
-"""Registry-backed loader for LIVA art. 161 recargo de equivalencia rates.
+"""Governed-fact resolution for LIVA art. 161 recargo de equivalencia rates.
 
-Closes the recargo de equivalencia rate gap in the IVA substrate:
-the four LIVA art. 161 rate values (general 5.2 %, reduced 1.4 %,
-super-reduced 0.5 %, tobacco 1.75 %) live in
-``registry/aeat/legal/iva-recargo-equivalencia.toml`` under
-``[parameters."liva-art-161:*"]`` entries with explicit BOE
-citations and review metadata, and Python consumers import them
-from this module.
-
-The loader exposes a frozen pydantic record loaded once at module import time, with an explicit
-:func:`recargo_rate_for_applied_rate` lookup that answers from the rate a
-line actually carried and the date it carried it.
-The ``LIVA_ART_161_RECARGO`` accessor is the canonical source for
-recargo de equivalencia rates across the codebase.
+The canonical ``iva-recargo-by-applied-rate`` mapping fact resolves the
+legally grounded recargo pairing at the rate and operation-date coordinate.
+The public lookup answers from the rate a line actually carried and the date
+it carried it, returning provenance with the resolved fact when required.
 
 The recargo de equivalencia regime (LIVA arts. 148-163) applies to
 comerciantes minoristas (retailers) with limited annual revenue who
@@ -135,9 +126,9 @@ def recargo_rate_for_applied_rate(applied_rate: Decimal, on_date: date) -> Decim
         the table models no pairing for that rate on that date -- an unmodelled
         combination, which callers must not read as "no recargo applies".
 
-    The tobacco 1.75 % rate of art. 161 4.o is not reachable here: it attaches
-    to a product rather than to an accompanying IVA rate, and is read from
-    ``LIVA_ART_161_RECARGO.tabaco_rate``.
+    The tobacco rate is not reachable here: it attaches to a product rather
+    than an accompanying IVA rate and remains a separately resolved governed
+    fact.
     """
     if not _recargo_fact_candidate_exists(applied_rate, on_date):
         return None

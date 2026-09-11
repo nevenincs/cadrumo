@@ -2,19 +2,53 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from dev.registry.pipeline.authority_publication import publish_authority_candidate
 
-from ....domain.calculations.registry.authority import bundled_authority
+from ....core.ed25519_signing import Ed25519KeypairHex, generate_ed25519_keypair_hex
+from ....core.resources.bundled_data import bundled_path
+from ....domain.calculations.registry import authority as authority_module
 from ..citation_lookup import CitationLookup, bundled_citation_lookup
 from ..errors import CorpusSearchInputError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def test_resolve_returns_verbatim_text_and_metadata() -> None:
-    lookup = bundled_citation_lookup()
+@pytest.fixture(scope="session", autouse=True)
+def compose_runtime_ports() -> Iterator[None]:
+    """Keep this signed-artifact test independent of application port setup."""
+    yield
+
+
+@pytest.fixture(scope="module")
+def _published_authority(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, Ed25519KeypairHex]:
+    """Publish the real compiler candidate as a signed test authority artifact."""
+    root = tmp_path_factory.mktemp("citation-authority")
+    artifact_path = root / "registry" / "authority" / "authority.json"
+    artifact_path.parent.mkdir(parents=True)
+    keys = generate_ed25519_keypair_hex()
+    publish_authority_candidate(
+        registry_root=bundled_path("registry", "aeat"),
+        source_root=bundled_path(),
+        artifact_path=artifact_path,
+        signing_private_key_hex=keys.private_key_hex,
+    )
+    return root, keys
+
+
+@pytest.fixture
+def lookup(_published_authority: tuple[Path, Ed25519KeypairHex], monkeypatch: pytest.MonkeyPatch) -> CitationLookup:
+    """Read the staged publication through the same runtime authority boundary."""
+    root, keys = _published_authority
+    monkeypatch.setattr(authority_module, "_bundled_path", lambda *parts: root.joinpath(*parts))
+    monkeypatch.setattr(authority_module, "_BUNDLED_AUTHORITY_VERIFICATION_PUBLIC_KEY_HEX", keys.public_key_hex)
+    return bundled_citation_lookup()
+
+
+def test_resolve_returns_verbatim_text_and_metadata(lookup: CitationLookup) -> None:
     resolution = lookup.resolve("ley-58-2003:art-27.2")
     assert resolution.document_id == "BOE-A-2003-23186"
     assert resolution.kind == "ley"
@@ -23,23 +57,7 @@ def test_resolve_returns_verbatim_text_and_metadata() -> None:
     assert "extempor" in resolution.verbatim_text.lower()
 
 
-def test_resolve_refuses_a_sidecar_less_source(tmp_path: Path) -> None:
-    """An anchor cannot widen to raw BOE text when its unit sidecar is absent."""
-    reference = bundled_authority().catalogues.legal["ley-35-2006:art-1"]
-    source_path = bundled_authority().source_root / reference.corpus_ref.partition("#")[0]
-    copied_path = tmp_path / reference.corpus_ref.partition("#")[0]
-    copied_path.parent.mkdir(parents=True)
-    copied_path.write_bytes(source_path.read_bytes())
-
-    lookup = CitationLookup({reference.id: reference}, source_root=tmp_path)
-    with pytest.raises(CorpusSearchInputError) as raised:
-        lookup.resolve("ley-35-2006:art-1")
-
-    assert raised.value.reason == "citation_extracted_text_absent"
-
-
-def test_resolve_slices_consolidated_document_by_anchor() -> None:
-    lookup = bundled_citation_lookup()
+def test_resolve_slices_consolidated_document_by_anchor(lookup: CitationLookup) -> None:
     resolution = lookup.resolve("ley-35-2006:art-11")
     assert resolution.anchor == "a11"
     assert resolution.verbatim_text.strip()
@@ -49,22 +67,18 @@ def test_resolve_slices_consolidated_document_by_anchor() -> None:
     assert len(resolution.verbatim_text) < full_text_length
 
 
-def test_unknown_citation_is_refused() -> None:
-    lookup = bundled_citation_lookup()
+def test_unknown_citation_is_refused(lookup: CitationLookup) -> None:
     with pytest.raises(CorpusSearchInputError):
         lookup.resolve("no-such-law:art-999")
 
 
-def test_citation_authority_is_the_registry_catalogue() -> None:
+def test_citation_authority_is_the_registry_catalogue(lookup: CitationLookup) -> None:
     # The lookup must key on the registry legal catalogue, not a parallel
     # citation parser: its id set equals the catalogue's.
-    lookup = bundled_citation_lookup()
-    catalogue_ids = tuple(sorted(bundled_authority().catalogues.legal))
-    assert lookup.citation_ids == catalogue_ids
+    assert lookup.citation_ids == tuple(sorted(authority_module.bundled_authority().catalogues.legal))
 
 
-def test_every_catalogue_citation_resolves_to_text() -> None:
-    lookup = bundled_citation_lookup()
+def test_every_catalogue_citation_resolves_to_text(lookup: CitationLookup) -> None:
     unresolved: list[str] = []
     for citation_id in lookup.citation_ids:
         resolution = lookup.resolve(citation_id)
@@ -73,19 +87,16 @@ def test_every_catalogue_citation_resolves_to_text() -> None:
     assert not unresolved, f"citations resolved to empty text: {unresolved[:10]}"
 
 
-def test_resolve_corpus_text_accepts_a_citation_id() -> None:
-    lookup = bundled_citation_lookup()
+def test_resolve_corpus_text_accepts_a_citation_id(lookup: CitationLookup) -> None:
     text = lookup.resolve_corpus_text("ley-58-2003:art-27.2")
     assert "extempor" in text.lower()
 
 
-def test_resolve_corpus_text_accepts_a_corpus_ref() -> None:
-    lookup = bundled_citation_lookup()
+def test_resolve_corpus_text_accepts_a_corpus_ref(lookup: CitationLookup) -> None:
     text = lookup.resolve_corpus_text("corpus/normatives/html/ley-58-2003-art-27.html#a27-2")
     assert "extempor" in text.lower()
 
 
-def test_resolve_corpus_text_refuses_unknown_reference() -> None:
-    lookup = bundled_citation_lookup()
+def test_resolve_corpus_text_refuses_unknown_reference(lookup: CitationLookup) -> None:
     with pytest.raises(CorpusSearchInputError):
         lookup.resolve_corpus_text("corpus/normatives/html/does-not-exist.html#a1")
