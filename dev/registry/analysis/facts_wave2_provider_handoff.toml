@@ -8,14 +8,14 @@ iva_ledger = "dev/registry/analysis/facts_iva_retirement.toml"
 provider_id = "authored-facts"
 family = "authored"
 denominator_source = "dev/registry/compiler/fact_providers.py:_compile_authored_facts"
-authored_fact_ids = ["iva-rate-schedule", "iva-recargo-by-applied-rate"]
+authored_fact_ids = ["iva-rate-schedule", "iva-recargo-by-applied-rate", "categories.profile", "categories.statutory-cap", "deadlines.holiday-calendar-publication", "deadlines.public-holiday"]
 query_type = "GovernedFactQuery"
 required_selectors = []
 temporal_axis = "declared_per_fact"
 consumer_step = "W03.P14.S28"
 consumer_files = ["src/cadrumo"]
 legacy_facade = "none; consumers resolve typed facts through registry authority"
-provenance_source = "authored fact TOML legal_refs/source_refs/source_citations, including normalized IVA and recargo schedules"
+provenance_source = "authored fact TOML legal_refs/source_refs/source_citations, including normalized IVA, category, and BOE holiday schedules"
 remaining_conditions = ["delete the retained raw IVA compiler and source paths in W04.P17.S56-S57", "delete no authority-owned source"]
 
 [[contracts]]
@@ -30,19 +30,6 @@ consumer_files = ["src/cadrumo/domain/calculations/registry/_formula_runtime_irn
 legacy_facade = "load_convenio_authority and ConvenioAuthority.resolve remain until migrated"
 provenance_source = "treaties/*.toml plus legal/convenio-sources.toml"
 remaining_conditions = ["rewire IRNR runtime", "retire treaty-local lookup only after last caller"]
-
-[[contracts]]
-provider_id = "legal-holiday-calendars"
-family = "event"
-fact_ids = ["deadlines.public-holiday"]
-query_type = "EventFactQuery"
-required_selectors = ["jurisdiction"]
-temporal_axis = "submission_date"
-consumer_step = "W03.P13.S53"
-consumer_files = ["src/cadrumo/domain/deadlines"]
-legacy_facade = "business-day and holiday-domain facades remain"
-provenance_source = "calendars official BOE holiday rows"
-remaining_conditions = ["rewire deadline consumers", "do not infer years without an official publication"]
 
 [[contracts]]
 provider_id = "modelo-parameter-projections"
@@ -64,11 +51,3 @@ classification = "bootstrap_configuration_not_confirmed_external_legal_taxonomy"
 consumer_step = "none"
 legacy_facade = "catalogue behavior and TOML remain unchanged"
 remaining_conditions = ["no facts migration or retirement without external authority evidence"]
-
-[[non_enrollments]]
-identity = "holiday-calendar-2026"
-source = "src/cadrumo/domain/deadlines/festivos.py"
-classification = "unpublished_official_calendar"
-consumer_step = "W03.P13.S53"
-legacy_facade = "2026 remains absent and resolution fails closed"
-remaining_conditions = ["enroll only after official BOE publication with provenance"]

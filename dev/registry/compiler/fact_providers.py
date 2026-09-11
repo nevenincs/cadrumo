@@ -238,26 +238,6 @@ def _reset_convenio_provider() -> None:
     """Reset the convenio adapter, which deliberately reuses the uncached loader."""
 
 
-def _holiday_calendar_provider_registration() -> FactProviderRegistration:
-    from cadrumo.domain.deadlines.festivos import (
-        HOLIDAY_CALENDAR_PROVIDER_DIRECTORY,
-        HOLIDAY_CALENDAR_PROVIDER_ID,
-    )
-    from dev.registry.compiler.holidays import (
-        collect_holiday_calendar_fact_fingerprints,
-        compile_holiday_calendar_facts,
-        reset_holiday_calendar_fact_provider,
-    )
-
-    return FactProviderRegistration(
-        provider_id=HOLIDAY_CALENDAR_PROVIDER_ID,
-        owned_directories=(HOLIDAY_CALENDAR_PROVIDER_DIRECTORY,),
-        compile=compile_holiday_calendar_facts,
-        collect_fingerprints=collect_holiday_calendar_fact_fingerprints,
-        reset=reset_holiday_calendar_fact_provider,
-    )
-
-
 def _modelo_parameter_projection_registration() -> FactProviderRegistration:
     from dev.registry.compiler.modelo_projections import (
         MODELO_PARAMETER_PROJECTION_PROVIDER_ID,
@@ -291,7 +271,6 @@ FACT_PROVIDER_REGISTRATIONS = validate_fact_provider_registrations(
             collect_fingerprints=_collect_convenio_provider_fingerprints,
             reset=_reset_convenio_provider,
         ),
-        _holiday_calendar_provider_registration(),
         _modelo_parameter_projection_registration(),
     ),
 )

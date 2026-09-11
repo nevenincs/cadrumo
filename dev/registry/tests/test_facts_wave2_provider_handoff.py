@@ -23,6 +23,15 @@ _MANIFEST = _ROOT / "dev/registry/analysis/facts_wave2_provider_handoff.toml"
 _PLAN = _ROOT / ".vault/plan/2026-09-09-facts-registry-plan.md"
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+_AUTHORED_FACT_FAMILIES = {
+    "iva-rate-schedule": "mapping",
+    "iva-recargo-by-applied-rate": "mapping",
+    "categories.profile": "mapping",
+    "categories.statutory-cap": "scalar",
+    "deadlines.holiday-calendar-publication": "event",
+    "deadlines.public-holiday": "event",
+}
+
 
 def _manifest() -> dict[str, Any]:
     return tomllib.loads(_MANIFEST.read_text(encoding="utf-8"))
@@ -61,9 +70,10 @@ def test_handoff_covers_exact_live_provider_and_fact_family_denominator() -> Non
             assert {variant.date_axis.value for variant in fact.variants} == {contract["temporal_axis"]}
             assert all(_selectors_match(contract["required_selectors"], variant.selectors) for variant in fact.variants)
     authored = next(contract for contract in contracts if contract["provider_id"] == "authored-facts")
-    for fact_id in authored["authored_fact_ids"]:
+    assert set(authored["authored_fact_ids"]) == _AUTHORED_FACT_FAMILIES.keys()
+    for fact_id, expected_family in _AUTHORED_FACT_FAMILIES.items():
         fact = direct_catalogue.facts[fact_id]
-        assert fact.family.value == "mapping"
+        assert fact.family.value == expected_family
         assert all(variant.ownership.value == "authored" for variant in fact.variants)
 
 
@@ -110,12 +120,9 @@ def test_explicit_non_enrollments_remain_fail_closed() -> None:
     non_enrollments = {row["identity"]: row for row in manifest["non_enrollments"]}
     provider_ids = {registration.provider_id for registration in FACT_PROVIDER_REGISTRATIONS}
 
-    assert set(non_enrollments) == {"apoderamientos-scopes", "holiday-calendar-2026"}
+    assert set(non_enrollments) == {"apoderamientos-scopes"}
     assert "apoderamientos-scopes" not in provider_ids
-    holiday = compile_registered_fact_providers(bundled_path("registry", "aeat")).facts["deadlines.public-holiday"]
-    assert 2026 not in {variant.valid_from.year for variant in holiday.variants}
     assert "external authority evidence" in non_enrollments["apoderamientos-scopes"]["remaining_conditions"][0]
-    assert "official BOE publication" in non_enrollments["holiday-calendar-2026"]["remaining_conditions"][0]
 
 
 def _selectors_match(required: list[str], selectors: tuple[FactSelector, ...]) -> bool:
