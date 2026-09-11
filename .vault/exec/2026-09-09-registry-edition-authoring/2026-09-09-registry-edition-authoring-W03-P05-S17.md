@@ -65,4 +65,17 @@ Export bytes proof, closed after the first dry run:
 - The gate turns only a ValueError into a finding. A scenario that `build_draft` rejects (ModeloApplicationError) crashes the tool instead. This is an S18 hardening item.
 - `test_m303_generated_envelope_proof.py` fails on the migrated-fact gate for an isolated authority, e.g. `lirpf-art-101:retencion-administrador-general`. That comes from another lane's in-flight fact-provider work, not from this Step.
 
-The Step stays open. What remains: `--apply` on the live tree in a window agreed with the export lane, the 303 `_MIGRATIONS` baseline, republishing the authority, then S42, S50 and S54 against the live pilot.
+Applied on the live tree:
+
+- Once row order became expressible, every successor migrated adjacent. The inherited and stated rows per edition are: 2023, 165 inherited, 33 stated; 2024-hasta-08-y-2t, 192 and 7; 2024-desde-09-y-3t, 192 and 15; 2025, 201 and 6; 2026-y-siguientes, 196 and 12. 2022 stays the full-copy root.
+- `M` `src/cadrumo/_data/registry/aeat/modelos/303` (46 files; no export tree touched)
+- `M` `dev/registry/tests/test_revision_edition_round_trip.py` (the `_MIGRATIONS` baseline for 303 at `784c7cdd3e`, the last full-copy commit)
+- `M` `dev/registry/tests/test_delta_minimality.py` (the live-corpus screen now names 131 but not 303, which restates nothing)
+- `M` `src/cadrumo/_data/registry/authority/authority.json` (republished)
+- `verify:` `python -m dev.registry.edition_delta_migration --modelo 303 --apply` -> `pass` (gate_findings=0; export bytes equal on all five successors; applied=True)
+- `verify:` `python -m dev.registry.conformance integrity` -> `pass`
+- `verify:` corpus round-trip gate for 303, 390 and 131 -> `pass` (3 passed)
+- `verify:` delta-minimality, lineage totality and continuity integrity -> `pass` (25 passed)
+- `verify:` `test_m303_did_account_wire_isolated_authority.py` -> `pass`
+
+The reviewer persona could not be launched, so the orchestrating session reviewed the result against the ADR. Inheritance is keyed on lineage. Restatement is lifted to the edition, as `source_default` per edition. The loader infers no predecessor, because every edge is declared. The proof obligations hold: typed equality, merge order, locale identity and export bytes.

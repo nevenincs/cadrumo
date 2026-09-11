@@ -102,11 +102,11 @@ class AcceptedMigration:
     reason: str
 
 
-#: One entry per modelo whose editions name a predecessor. Empty until the
-#: first modelo migrates; see the module docstring for the entry lifecycle.
-_MIGRATIONS: Final[Mapping[str, PreMigrationBaseline | AcceptedMigration]] = dict[
-    str, PreMigrationBaseline | AcceptedMigration
-]()
+#: One entry per modelo whose editions name a predecessor; see the module
+#: docstring for the entry lifecycle.
+_MIGRATIONS: Final[Mapping[str, PreMigrationBaseline | AcceptedMigration]] = {
+    "303": PreMigrationBaseline(base_commit="784c7cdd3eef1df8abd5524fd71be6c79f65a656"),
+}
 
 _BUNDLED_REGISTRY: Final = bundled_path("registry", "aeat")
 _MODELOS_DIR: Final = "modelos"

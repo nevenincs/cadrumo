@@ -1,0 +1,40 @@
+[[revisions.2026-y-siguientes.casillas]]
+id = "iva.autoconsumo.promotor.base"
+continuidad_id = "iva-autoconsumo-promotor-base"
+continuidad_origin = "seeded"
+number = "iva.autoconsumo.promotor.base"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "iva_autoconsumo_promotor_base"
+required = false
+input_kind = "bound"
+binding = "modelo-303-autoconsumo-promotor-base"
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2026-y-siguientes.casillas]]
+id = "iva.autoconsumo.promotor.cuota"
+continuidad_id = "iva-autoconsumo-promotor-cuota"
+continuidad_origin = "seeded"
+number = "iva.autoconsumo.promotor.cuota"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "iva_autoconsumo_promotor_cuota"
+required = false
+input_kind = "computed"
+formula = "modelo-303-autoconsumo-promotor-cuota"
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "ley-37-1992:art-90", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+export_exemption_reason = "feeds_addressed_casilla"
+
+[[revisions.2026-y-siguientes.casillas]]
+id = "iva.resultado"
+continuidad_id = "iva-resultado-autoliquidacion"
+continuidad_origin = "seeded"
+number = "69"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "iva_resultado_autoliquidacion"
+required = false
+input_kind = "computed"
+formula = "modelo-303-iva-resultado"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30"]
+additional_source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
