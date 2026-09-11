@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-11'
 body_schema: body-v2
-body_hash: 'sha256:206989dee9e84f81bdf1fec50ecfdbc5f2335c8a061d47a5f6f11a271518ec2b'
+body_hash: 'sha256:fb4f14aab20082fe0a4d83d8e785696c43953c7f89034e7bdd35b145f642785d'
 ---
 
 # `facts-registry` plan
@@ -185,7 +185,7 @@ Move authored facts into the normalized facts corpus where approved, remove dupl
 
 Move approved adapted data families and Python-held facts into one-fact-per-file normalized TOML while retaining source evidence.
 
-- [ ] `W04.P15.S29` - Author normalized scalar schedule mapping and set fact fragments; `src/cadrumo/_data/registry/aeat/facts`.
+- [ ] `W04.P15.S29` - Author normalized scalar, decimal-mapping, and set fact fragments with exact typed payloads, applicability coordinates, and source evidence; `src/cadrumo/_data/registry/aeat/facts and src/cadrumo/domain/calculations/registry/facts/schema.py and dev/registry/compiler/fact_loader.py and dev/registry/tests`.
 - [ ] `W04.P15.S30` - Normalize adapted families assigned to facts ownership; `src/cadrumo/_data/registry/aeat/facts`.
 
 ### Phase `W04.P16` - Delete Python legal constants and duplicate mappings
@@ -195,7 +195,7 @@ Remove migrated legal declarations and local interpretations while preserving un
 - [ ] `W04.P16.S31` - Delete migrated statutory declarations but retain technical configuration; `src/cadrumo/core/external_constants.py`.
 - [ ] `W04.P16.S32` - Delete numeric IVA interpretation but retain persisted enum tokens; `src/cadrumo/domain/invoices/enums.py`.
 - [ ] `W04.P16.S33` - Delete superseded regulatory mappings and fallback policies; `src/cadrumo`.
-- [ ] `W04.P16.S65` - Delete the statutory Python-fact adapter and duplicate declarations after normalized fact fragments replace both lanes; `src/cadrumo/domain/calculations/registry/facts/statutory_constants.py and src/cadrumo/core/external_constants.py`.
+- [ ] `W04.P16.S65` - Delete the statutory Python-fact adapter and duplicate declarations after normalized fact fragments replace both lanes; `dev/registry/compiler/statutory_constants.py and dev/registry/compiler/fact_providers.py and dev/registry/tests/test_statutory_constants_provider.py and src/cadrumo/core/external_constants.py`.
 
 ### Phase `W04.P17` - Delete bespoke loaders caches and data paths
 
