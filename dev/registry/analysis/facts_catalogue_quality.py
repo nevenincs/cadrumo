@@ -294,11 +294,7 @@ def migration_retirement_findings(
     findings: list[FactQualityFinding] = []
     remaining_tables = iva_ledger.get("remaining_structured_tables")
     table_entries = remaining_tables if isinstance(remaining_tables, (list, tuple)) else ()
-    tables = {
-        str(table.get("data_path", "")): table
-        for table in table_entries
-        if isinstance(table, Mapping)
-    }
+    tables = {str(table.get("data_path", "")): table for table in table_entries if isinstance(table, Mapping)}
     for data_path, step_id in _S80_TEMPORARY_HOLD_STEPS.items():
         table = tables.pop(data_path, None)
         if table is None:
@@ -355,9 +351,7 @@ def migration_retirement_findings(
     remaining_lanes = iva_ledger.get("lanes")
     lane_entries = remaining_lanes if isinstance(remaining_lanes, (list, tuple)) else ()
     lanes = {
-        str(lane.get("lane_id", "")): lane
-        for lane in lane_entries
-        if isinstance(lane, Mapping) and "status" in lane
+        str(lane.get("lane_id", "")): lane for lane in lane_entries if isinstance(lane, Mapping) and "status" in lane
     }
     for lane_id, step_id in _S85_TEMPORARY_HOLD_STEPS.items():
         lane = lanes.pop(lane_id, None)
