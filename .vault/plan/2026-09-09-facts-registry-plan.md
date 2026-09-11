@@ -10,9 +10,9 @@ related:
   - '[[2026-09-09-facts-registry-schema-persistence-research]]'
   - '[[2026-09-09-facts-registry-authority-plumbing-research]]'
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
-modified: '2026-09-10'
+modified: '2026-09-11'
 body_schema: body-v2
-body_hash: 'sha256:09c45f920de6ff8650fe48bebbca7fed2db93a1ce36a4c6c497e77085f0623f8'
+body_hash: 'sha256:30687aec318beb5891851e776491186a38ad602c2c629e02719b6579abd30003'
 ---
 
 # `facts-registry` plan
@@ -160,7 +160,7 @@ Rewire treaty and deadline consumers, retain apoderamientos as non-governed voca
 - [x] `W03.P13.S73` - Capture hash-pinned BOE article 31 and transitional-provision redactions and author source-cited temporal objective-estimation exclusion facts under the governed authority; `dev/corpus and src/cadrumo/_data/corpus/normatives/html and src/cadrumo/_data/registry/aeat/facts and src/cadrumo/_data/registry/aeat/legal and src/cadrumo/application/modelo`.
 - [ ] `W03.P13.S66` - Replace generic fact selectors with provider-owned validated applicability coordinates before consumer-boundary verification; `src/cadrumo/domain/calculations/registry/facts and src/cadrumo/domain/calculations/registry and src/cadrumo/domain/transactions and src/cadrumo/application/aggregation`.
 - [ ] `W03.P13.S64` - Migrate remaining governed-fact consumers only after their facts carry source-grounded temporal applicability; `src/cadrumo/application/modelo/_objective_estimation_advisory.py and src/cadrumo/domain/transactions and dev/registry/compiler/fact_validation.py`.
-- [ ] `W03.P13.S75` - Delete retired legal-parameter provider implementations after governed facts replace every live resolver and consumer path; `dev/registry/compiler/legal_parameters.py and dev/registry/tests/test_legal_parameter_provider.py and src/cadrumo/domain and src/cadrumo/application`.
+- [x] `W03.P13.S75` - Delete retired legal-parameter provider implementations after governed facts replace every live resolver and consumer path; `dev/registry/compiler/legal_parameters.py and dev/registry/tests/test_legal_parameter_provider.py and src/cadrumo/domain and src/cadrumo/application`.
 - [ ] `W03.P13.S69` - Enforce and prove canonical tax-fact temporal coverage, date-axis selection, provenance, and refusal outside source-grounded windows; `dev/registry/compiler/fact_validation.py and dev/registry/compiler/validator.py and dev/registry/tests/test_migrated_legal_parameter_fact_gate.py`.
 - [ ] `W03.P13.S76` - Repair Article 101 excerpt filenames and source references so provision-tier evidence is verifiable before the cross-domain authority proof; `src/cadrumo/_data/corpus/normatives/html and src/cadrumo/_data/registry/aeat/legal and src/cadrumo/_data/registry/aeat/facts`.
 
