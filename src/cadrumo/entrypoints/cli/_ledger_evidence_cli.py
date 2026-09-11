@@ -8,6 +8,13 @@ from typing import Final, Protocol, TypedDict, cast
 import typer
 from pydantic import ValidationError
 
+from ...adapters.outbound.llm.consent import (
+    EvidenceConsentToken,
+    OffHostEvidenceReadOutcome,
+    classify_off_host_evidence_read,
+    mint_evidence_consent_token,
+)
+from ...adapters.outbound.llm.models import LLMProvider
 from ...application.ledger.attachment_review import get_attachment_review_item, list_attachment_review_queue
 from ...application.ledger.confirmation_gate import FindingResolution
 from ...application.ledger.evidence import (
@@ -27,13 +34,6 @@ from ...domain.invoices.enums import InvoiceClass
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.supply_nature import SupplyNature
-from ...llm.consent import (
-    EvidenceConsentToken,
-    OffHostEvidenceReadOutcome,
-    classify_off_host_evidence_read,
-    mint_evidence_consent_token,
-)
-from ...llm.models import LLMProvider
 from ._common import bad, current_workflow_state, emit_envelope, transaction_catalogue_repo
 from ._date_parsing import _parse_iso_date, _parse_optional_iso_date_str
 from ._decimal_parsing import parse_decimal_amount, parse_optional_decimal_amount

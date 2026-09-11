@@ -36,16 +36,16 @@ import pytest
 from pydantic import SecretStr
 
 from ....adapters.outbound.llm.cache import LLMCache
+from ....adapters.outbound.llm.client import LLMClient
+from ....adapters.outbound.llm.consent import mint_evidence_consent_token
+from ....adapters.outbound.llm.errors import LLMConsentError
+from ....adapters.outbound.llm.evidence_draft_text import TextInvoiceFieldExtractor
+from ....adapters.outbound.llm.models import LLMProvider
 from ....adapters.outbound.llm.usage import UsageRecorder
 from ....application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from ....core.config import override_settings
 from ....core.field_origin import FieldOrigin
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
-from ....llm.client import LLMClient
-from ....llm.consent import mint_evidence_consent_token
-from ....llm.errors import LLMConsentError
-from ....llm.evidence_draft_text import TextInvoiceFieldExtractor
-from ....llm.models import LLMProvider
 from ....tests.fixtures.settings import EnvFileFreeSettings
 from ....tests.loopback_llm import (
     SilentLoopbackHandler,

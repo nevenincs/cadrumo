@@ -28,7 +28,7 @@ def test_app_family_help_is_graph_exact_and_imports_no_behavior_target(family: s
 import json
 import sys
 from typer.testing import CliRunner
-from cadrumo.entrypoints.cli import app
+from cadrumo.entrypoints.cli.main import app
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 
 nodes = COMMAND_GRAPH.nodes()
@@ -100,7 +100,7 @@ def test_real_state_free_leaf_invocation_loads_only_its_own_family_behavior() ->
 import json
 import sys
 from typer.testing import CliRunner
-from cadrumo.entrypoints.cli import app
+from cadrumo.entrypoints.cli.main import app
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 
 nodes = COMMAND_GRAPH.nodes()

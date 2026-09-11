@@ -46,8 +46,8 @@ from typer.main import get_command
 
 from ....application.operator_surface.contract import MOUNTED_COMMAND_FAMILIES
 from ....application.operator_surface.models import OperatorMutability
-from .. import app
 from .._bootstrap_exempt import BOOTSTRAP_EXEMPTIONS, BootstrapExemption, is_bootstrap_exempt
+from ..main import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

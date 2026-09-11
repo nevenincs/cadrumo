@@ -319,7 +319,7 @@ def test_config_repair_is_config_scoped_not_root(isolated_user_cli: Path) -> Non
     assert "Overall\t" in text_result.output
     envelope = json.loads(_json_output(json_result))
     assert envelope["command"] == "config.repair"
-    payload = envelope["result"]
+    assert "result" in envelope
     assert logs_result.exit_code == 0, logs_result.output
     assert "path\t" in logs_result.output
 

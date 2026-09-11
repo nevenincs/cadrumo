@@ -38,7 +38,7 @@ _RESOLVED_PROFILE_TARGET_KEY = "cadrumo.resolved_profile_target"
 
 
 def _refuse(key: str) -> None:
-    error = import_module("cadrumo.entrypoints.cli.errors").CliRefusedBoundaryError
+    error = import_module(".errors", __package__).CliRefusedBoundaryError
     raise error(translated_message=f"cli.config.custody.errors.{key}")
 
 

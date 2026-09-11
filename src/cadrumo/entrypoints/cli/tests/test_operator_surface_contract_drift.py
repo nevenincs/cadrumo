@@ -74,7 +74,7 @@ def _resolve_live_surface() -> dict[str, dict[str, frozenset[str]]]:
     the sub-verb set is the degenerate self-reference ``{child}`` — matching the
     contract's convention of summarising such a verb as ``commands=(child,)``.
     """
-    from .. import app as live_app
+    from ..main import app as live_app
 
     root = _typer_get_command(live_app)
     root.name = live_app.info.name or "cadrumo"

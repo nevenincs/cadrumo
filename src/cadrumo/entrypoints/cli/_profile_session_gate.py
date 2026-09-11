@@ -29,7 +29,7 @@ class RootAuthenticator(Protocol):
     ) -> None: ...
 
 
-CliRefusedBoundaryError = import_module("cadrumo.entrypoints.cli.errors").CliRefusedBoundaryError
+CliRefusedBoundaryError = import_module(".errors", __package__).CliRefusedBoundaryError
 
 _LOGGED_OUT_REFUSALS = frozenset(
     {ProfileSessionRefusalReason.ABSENT, ProfileSessionRefusalReason.KEYCHAIN_ENTRY_MISSING}
@@ -47,7 +47,7 @@ def session_refusal_translation_key(refusal: ProfileSessionRefusalReason) -> str
 
 def _common() -> Any:
     """Resolve the already-initialized facade without a static runtime cycle."""
-    return import_module("cadrumo.entrypoints.cli._common")
+    return import_module("._common", __package__)
 
 
 def bind_profile_target(ctx: typer.Context, *, bucket_id: str) -> None:

@@ -26,7 +26,6 @@ from ....core.operator_action_enums import (
     ActionConditionality,
     ActionEvidenceProvenance,
 )
-from .. import current_operator_surface_reconciliation
 from .._common import (
     _action_text_lines,
     _powershell_action_token,
@@ -35,6 +34,7 @@ from .._common import (
     resolve_notice_action,
 )
 from .._operator_surface_reconciliation import _OPERATOR_SURFACE_RECONCILIATION_META_KEY
+from ..main import current_operator_surface_reconciliation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

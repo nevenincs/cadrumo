@@ -72,7 +72,7 @@ def test_rendering_the_command_tree_does_not_load_the_registry() -> None:
         import sys
         import typer.main
         from click.testing import CliRunner
-        from cadrumo.entrypoints.cli import app
+        from cadrumo.entrypoints.cli.main import app
 
         command = typer.main.get_command(app)
         runner = CliRunner()

@@ -107,7 +107,7 @@ _HARNESS = (
         sys.argv = ["cadrumo", *sys.argv[2:]]
         defer_logging_configuration()
         try:
-            from cadrumo.entrypoints.cli import main
+            from cadrumo.entrypoints.cli.main import main
             try:
                 main()
             except SystemExit as exc:
@@ -205,7 +205,7 @@ _WINDOWS_HANDLE_HARNESS = (
         sys.argv[:] = argv
         defer_logging_configuration()
         try:
-            from cadrumo.entrypoints.cli import main
+            from cadrumo.entrypoints.cli.main import main
             try:
                 main()
             except SystemExit as exc:

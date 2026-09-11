@@ -12,6 +12,7 @@ import pytest
 import typer
 from pydantic import TypeAdapter
 
+from ....adapters.outbound.llm.models import LLMRequest, PromptDefinition
 from ....application.auth.acquisition_lock import acquire_auth_acquisition_lock
 from ....application.modelo.action_errors import ModeloWorkflowGateError
 from ....application.operator_actions.models import (
@@ -33,7 +34,6 @@ from ....core.operator_action_enums import (
     ActionEvidenceProvenance,
 )
 from ....core.optional_extras import MissingOptionalExtraError, OptionalExtra
-from ....llm.models import LLMRequest, PromptDefinition
 from ....tests.cli_runner import invoke_cached_cli, invoke_typer_app, semantic_cli_output
 from ....tests.secure_sql import isolated_profile_storage_root
 from .._common import CliPolicyRefusalProjection, attach_cli_policy_refusal_projection

@@ -21,6 +21,7 @@ import pytest
 from click.testing import Result
 from pydantic import ValidationError
 
+from ....adapters.outbound.llm.models import LLMProvider, LLMResponse
 from ....adapters.outbound.llm.usage import UsageRecorder
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core.config import override_settings
@@ -29,7 +30,6 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.transactions.service import set_classification
-from ....llm.models import LLMProvider, LLMResponse
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
 from ....tests.cli_envelope import unwrap_envelope_notices

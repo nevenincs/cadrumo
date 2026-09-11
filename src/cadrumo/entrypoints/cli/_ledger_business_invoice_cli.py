@@ -602,7 +602,7 @@ def _invoice_column_role_mapper() -> tuple[Callable[[Sequence[str]], Sequence[Fi
         from ...core.errors.hierarchy import CadrumoError
 
         try:
-            from ...llm.column_role_mapping import map_column_roles
+            from ...adapters.outbound.llm.column_role_mapping import map_column_roles
         except ImportError:
             return None
         try:

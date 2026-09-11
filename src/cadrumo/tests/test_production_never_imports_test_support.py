@@ -32,7 +32,7 @@ from pathlib import Path
 
 import pytest
 
-from . import non_test_package_python_files, repo_relative
+from .inventory import non_test_package_python_files, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
