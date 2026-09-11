@@ -25,12 +25,13 @@ from typing import Final
 from dev._paths import REPO_ROOT, UTF_8
 from dev.exit_codes import FAILED, TOOL_BROKEN, TOOL_MISSING
 
-from .import_checker import Authority, CheckResult, check_authority, has_architectural_warning, read_authority
+from .import_checker import Authority, CheckResult, has_architectural_warning, read_authority
 
 _DEFAULT_TIMEOUT_SECONDS: Final[float] = 300.0
 _ROOT_ENV: Final[str] = "CADRUMO_IMPORT_GATE_ROOT"
 _LINTER_ENV: Final[str] = "CADRUMO_IMPORT_GATE_LINT_IMPORTS"
 _FORCE_CHECKER_EXCEPTION_ENV: Final[str] = "CADRUMO_IMPORT_GATE_FORCE_CHECKER_EXCEPTION"
+_CHECKER_PATH: Final[Path] = Path(__file__).with_name("import_checker.py").resolve()
 
 
 @dataclass(frozen=True)
@@ -98,29 +99,94 @@ def run_import_linter(
         return ComponentResult("import-linter", TOOL_BROKEN, f"[TOOL_BROKEN] Import Linter could not run: {exc}")
 
     output = _combined_output(completed.stdout, completed.stderr)
-    returncode = completed.returncode
-    if returncode == 0 and has_architectural_warning(output):
+    if completed.returncode == 0:
+        returncode = FAILED if has_architectural_warning(output) else 0
+    elif completed.returncode == FAILED:
         returncode = FAILED
+    else:
+        returncode = TOOL_BROKEN
     return ComponentResult("import-linter", returncode, output)
 
 
-def run_subordinate(authority: Authority, force_exception: bool = False) -> tuple[ComponentResult, CheckResult]:
+def run_subordinate(
+    authority: Authority,
+    force_exception: bool = False,
+    *,
+    timeout: float = _DEFAULT_TIMEOUT_SECONDS,
+) -> tuple[ComponentResult, CheckResult]:
     """Run the subordinate checker as the final ordered component."""
     try:
         if force_exception:
             raise RuntimeError("forced subordinate checker exception")
-        result = check_authority(authority)
+        if timeout <= 0:
+            return (
+                ComponentResult(
+                    "subordinate-checker",
+                    TOOL_BROKEN,
+                    f"[TOOL_BROKEN] subordinate checker timed out after {timeout:g}s",
+                ),
+                CheckResult((), 0),
+            )
+        environment = os.environ.copy()
+        import_paths = [str(_CHECKER_PATH.parents[2]), *(str(root.source_root) for root in authority.roots)]
+        existing = environment.get("PYTHONPATH")
+        if existing:
+            import_paths.append(existing)
+        environment["PYTHONPATH"] = os.pathsep.join(dict.fromkeys(import_paths))
+        command = (
+            sys.executable,
+            str(_CHECKER_PATH),
+            "--root",
+            str(authority.repository),
+            "--config",
+            str(authority.config_path),
+        )
+        completed = subprocess.run(  # noqa: S603 - fixed interpreter and argv, no shell
+            command,
+            cwd=authority.repository,
+            env=environment,
+            capture_output=True,
+            text=True,
+            encoding=UTF_8,
+            errors="replace",
+            check=False,
+            timeout=timeout,
+        )
     except Exception as exc:  # broad: component boundary must fail closed
-        result = CheckResult((), 0)
+        if isinstance(exc, subprocess.TimeoutExpired):
+            message = f"[TOOL_BROKEN] subordinate checker timed out after {timeout:g}s: {exc}"
+        elif isinstance(exc, FileNotFoundError):
+            message = f"[TOOL_MISSING] subordinate checker interpreter is unavailable: {exc}"
+            return ComponentResult("subordinate-checker", TOOL_MISSING, message), CheckResult((), 0)
+        elif force_exception:
+            message = f"[INTERNAL_CHECKER] subordinate checker aborted: {exc}"
+        else:
+            message = f"[TOOL_BROKEN] subordinate checker could not run: {exc}"
         return ComponentResult(
             "subordinate-checker",
             TOOL_BROKEN,
-            f"[INTERNAL_CHECKER] subordinate checker aborted: {exc}",
-        ), result
-    output = result.render(authority.repository)
-    if result.returncode == 0:
-        output = f"subordinate import checker: scanned {result.files_scanned} governed Python file(s)"
-    return ComponentResult("subordinate-checker", result.returncode, output), result
+            message,
+        ), CheckResult((), 0)
+    output = _combined_output(completed.stdout, completed.stderr)
+    if completed.returncode == 0:
+        return (
+            ComponentResult(
+                "subordinate-checker",
+                0,
+                output or "subordinate import checker completed without diagnostics",
+            ),
+            CheckResult((), 0),
+        )
+    if completed.returncode == FAILED:
+        return ComponentResult("subordinate-checker", FAILED, output), CheckResult((), 0)
+    return (
+        ComponentResult(
+            "subordinate-checker",
+            TOOL_BROKEN,
+            f"[TOOL_BROKEN] subordinate checker exited unexpectedly with {completed.returncode}\n{output}".rstrip(),
+        ),
+        CheckResult((), 0),
+    )
 
 
 def run_import_gate(
@@ -147,6 +213,7 @@ def run_import_gate(
     subordinate, _ = run_subordinate(
         authority,
         force_exception=os.environ.get(_FORCE_CHECKER_EXCEPTION_ENV) == "1",
+        timeout=timeout,
     )
     components.append(subordinate)
 

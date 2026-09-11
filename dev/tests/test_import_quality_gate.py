@@ -12,14 +12,21 @@ import configparser
 import os
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
 
 from dev._paths import REPO_ROOT, UTF_8
 from dev.exit_codes import TOOL_BROKEN, TOOL_MISSING
-from dev.quality.import_checker import Authority, RootPackage, check_authority, has_architectural_warning
-from dev.quality.import_gate import run_import_gate
+from dev.quality.import_checker import (
+    Authority,
+    RootPackage,
+    check_authority,
+    has_architectural_warning,
+    read_authority,
+)
+from dev.quality.import_gate import run_import_gate, run_subordinate
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -433,6 +440,12 @@ def test_missing_import_linter_executable_is_nonzero_through_real_recipe(tmp_pat
     assert run_import_gate(root, lint_executable="cadrumo-import-linter-does-not-exist") == TOOL_MISSING
 
 
+def test_abnormal_import_linter_status_is_tool_broken(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+
+    assert run_import_gate(root, lint_executable=sys.executable) == TOOL_BROKEN
+
+
 def test_forced_checker_exception_is_nonzero_through_real_recipe(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -442,6 +455,18 @@ def test_forced_checker_exception_is_nonzero_through_real_recipe(
     assert "[INTERNAL_CHECKER]" in output
     monkeypatch.setenv(_FORCE_CHECKER_ENV, "1")
     assert run_import_gate(root) == TOOL_BROKEN
+
+
+def test_subordinate_timeout_is_tool_broken(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+
+    authority = read_authority(root).authority
+    assert authority is not None
+
+    component, _ = run_subordinate(authority, timeout=0)
+
+    assert component.returncode == TOOL_BROKEN
+    assert "[TOOL_BROKEN]" in component.output
 
 
 def test_component_failures_run_in_authority_then_subordinate_order(tmp_path: Path) -> None:

@@ -154,6 +154,8 @@ def read_authority(repository: Path, config_path: Path | None = None) -> Authori
 
     if not root_packages:
         findings.append("[UNCLASSIFIED_ROOT] Import Linter declares no root_packages")
+    if _truthy(section.get("exclude_type_checking_imports", "false")):
+        findings.append("[AUTHORITY_CONFIG] Import Linter excludes TYPE_CHECKING imports from its graph")
     if len(root_packages) != len(set(root_packages)):
         findings.append("[AUTHORITY_CONFIG] Import Linter root_packages contains duplicates")
     for package in root_packages:
@@ -1007,7 +1009,7 @@ class _EvaluationContext:
             for part in node.values:
                 if isinstance(part, ast.Constant) and isinstance(part.value, str):
                     pieces = frozenset({part.value})
-                elif isinstance(part, ast.FormattedValue) and part.format_spec is None:
+                elif isinstance(part, ast.FormattedValue) and part.format_spec is None and part.conversion == -1:
                     pieces = self._values(part.value, lineno, resolving, scope)
                 else:
                     return None
@@ -1045,6 +1047,7 @@ class _EvaluationContext:
                 bases is None
                 or any(argument is None for argument in arguments)
                 or any(value is None for value in keywords.values())
+                or any(keyword.arg is None for keyword in node.keywords)
             ):
                 return None
             result: set[str] = set()
