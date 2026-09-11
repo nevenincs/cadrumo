@@ -16,9 +16,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _WAVE2_PROVIDER_IDS = (
     "authored-facts",
-    "category-profiles",
-    "convenio-overrides",
-    "legal-holiday-calendars",
     "modelo-parameter-projections",
 )
 

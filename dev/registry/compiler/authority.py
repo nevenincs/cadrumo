@@ -13,7 +13,7 @@ from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, R
 from .identity import RegistryIdentity, resolve_registry_identity
 from cadrumo.domain.iva.compilation_catalogues import compiling_catalogues
 
-from .convenio import load_convenio_authority, validate_convenio_legal_refs
+from .convenio import convenio_authority_from_facts
 from .fact_providers import compile_registered_fact_providers, validate_fact_provider_directory_ownership
 from .loader import collect_registry_tree_fingerprints, load_registry_tree
 
@@ -49,8 +49,7 @@ def compile_validated_authority(
     validate_fact_provider_directory_ownership(root)
     with compiling_catalogues(catalogues.legal, catalogues.sources, sources_root):
         facts = compile_registered_fact_providers(root, modelos=modelos)
-    convenio = load_convenio_authority(root / "treaties")
-    validate_convenio_legal_refs(convenio, frozenset(catalogues.legal))
+    convenio = convenio_authority_from_facts(facts, catalogues.legal)
     supported_filing_years = catalogues.supported_filing_years
     if supported_filing_years is None:
         raise RegistryValidationError("registry has no supported_filing_years catalogue")

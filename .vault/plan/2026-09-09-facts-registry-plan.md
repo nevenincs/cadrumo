@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-11'
 body_schema: body-v2
-body_hash: 'sha256:623a2d5d317b69bc33352802d57cf9e52fe5f881648eee4771dd2600a37ad5a3'
+body_hash: 'sha256:a5253eba3b7f8b1b95328beba77b03cf3869a3f0fa50b8049a27c54d2cf80b0e'
 ---
 
 <!-- RETIRED: S65 -->
@@ -191,7 +191,7 @@ Move approved adapted data families and Python-held facts into one-fact-per-file
 - [x] `W04.P15.S30` - Normalize IVA-rate and recargo schedules into authored one-fact-per-file fragments with typed rows, temporal applicability, and evidence; `src/cadrumo/_data/registry/aeat/facts and src/cadrumo/_data/registry/aeat/iva and dev/registry/compiler/fact_providers.py`.
 - [x] `W04.P15.S77` - Normalize and retire the category-profile adapter only after every profile has an authored, evidence-bearing fact replacement; `src/cadrumo/_data/registry/aeat/categories and src/cadrumo/_data/registry/aeat/facts and dev/registry/compiler/categories.py and dev/registry/compiler/fact_providers.py and dev/registry/tests`.
 - [x] `W04.P15.S78` - Normalize and retire the legal-holiday calendar adapter while preserving publication and event provenance; `src/cadrumo/_data/registry/aeat/calendars and src/cadrumo/_data/registry/aeat/facts and dev/registry/compiler/holidays.py and dev/registry/compiler/fact_providers.py and dev/registry/tests`.
-- [ ] `W04.P15.S79` - Normalize and retire the treaty-override adapter without duplicating the canonical convenio catalogue; `src/cadrumo/_data/registry/aeat/treaties and src/cadrumo/_data/registry/aeat/facts and dev/registry/compiler/convenio.py and dev/registry/compiler/fact_providers.py and dev/registry/compiler/authority.py and dev/registry/tests`.
+- [x] `W04.P15.S79` - Normalize and retire the treaty-override adapter without duplicating the canonical convenio catalogue; `src/cadrumo/_data/registry/aeat/treaties and src/cadrumo/_data/registry/aeat/facts and dev/registry/compiler/convenio.py and dev/registry/compiler/fact_providers.py and dev/registry/compiler/authority.py and dev/registry/tests`.
 - [ ] `W04.P15.S80` - Classify the remaining IVA structured tables and authorize deletion only with a typed, evidence-bearing provider replacement; `src/cadrumo/_data/registry/aeat/iva and src/cadrumo/domain/iva and dev/registry/compiler and dev/registry/analysis`.
 
 ### Phase `W04.P16` - Delete Python legal constants and duplicate mappings

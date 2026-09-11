@@ -51,7 +51,7 @@ def test_authored_provider_owns_compilation_identity_reset_and_directory(tmp_pat
     assert len(registration.collect_fingerprints(tmp_path)) == 1
     registration.reset()
     assert registered_fact_provider_directories()["facts"] == registration
-    assert registered_fact_provider_directories()["treaties"].provider_id == "convenio-overrides"
+    assert "treaties" not in registered_fact_provider_directories()
 
 
 @pytest.mark.parametrize(
@@ -87,6 +87,6 @@ def test_authored_provider_directly_owns_normalized_iva_facts_without_adapter_re
     direct_facts = {fact.fact_id: fact for fact in load_governed_facts(bundled_path("registry", "aeat", "facts"))}
 
     assert authored.owned_directories == ("facts",)
-    assert {"iva-rate-schedule", "iva-recargo-by-applied-rate"} <= direct_facts.keys()
+    assert {"iva-rate-schedule", "iva-recargo-by-applied-rate", "irnr.convenio.override"} <= direct_facts.keys()
     assert not any(registration.provider_id == "iva-rate-schedule" for registration in FACT_PROVIDER_REGISTRATIONS)
     assert projection.inherited_identity_domains == ("modelos",)

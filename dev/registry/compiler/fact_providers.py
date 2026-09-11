@@ -222,22 +222,6 @@ def _reset_no_direct_provider() -> None:
     """Reset a projection-only provider, which owns no independent cache."""
 
 
-def _compile_convenio_provider(registry_root: Path) -> tuple[GovernedFact, ...]:
-    from dev.registry.compiler.convenio import compile_convenio_facts
-
-    return compile_convenio_facts(registry_root)
-
-
-def _collect_convenio_provider_fingerprints(registry_root: Path) -> RegistryPathFingerprints:
-    from dev.registry.compiler.convenio import collect_convenio_fingerprints
-
-    return collect_convenio_fingerprints(registry_root)
-
-
-def _reset_convenio_provider() -> None:
-    """Reset the convenio adapter, which deliberately reuses the uncached loader."""
-
-
 def _modelo_parameter_projection_registration() -> FactProviderRegistration:
     from dev.registry.compiler.modelo_projections import (
         MODELO_PARAMETER_PROJECTION_PROVIDER_ID,
@@ -263,13 +247,6 @@ FACT_PROVIDER_REGISTRATIONS = validate_fact_provider_registrations(
             compile=_compile_authored_facts,
             collect_fingerprints=_collect_authored_fact_fingerprints,
             reset=_reset_authored_fact_provider,
-        ),
-        FactProviderRegistration(
-            provider_id="convenio-overrides",
-            owned_directories=("treaties",),
-            compile=_compile_convenio_provider,
-            collect_fingerprints=_collect_convenio_provider_fingerprints,
-            reset=_reset_convenio_provider,
         ),
         _modelo_parameter_projection_registration(),
     ),

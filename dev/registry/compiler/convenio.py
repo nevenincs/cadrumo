@@ -1,123 +1,98 @@
-"""Development compilation of mutable Convenio treaty declarations."""
+"""Project canonical Convenio override facts into the runtime catalogue."""
 
 from __future__ import annotations
 
 from collections.abc import Mapping
-from pathlib import Path
 
-from cadrumo.core.directory_scan import scan_directory
-from cadrumo.core.revision_review import RevisionReviewStatus
-from cadrumo.core.toml import freeze_toml, read_toml
-from cadrumo.domain.calculations.registry.convenio import CONVENIO_OVERRIDE_FACT_ID, ConvenioAuthority, ConvenioTreaty
-from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
+from cadrumo.core.irnr import ConvenioOverrideKind, TipoRentaIrnr
+from cadrumo.domain.calculations.registry.convenio import (
+    CONVENIO_OVERRIDE_FACT_ID,
+    ConvenioAuthority,
+    ConvenioOverrideRow,
+    ConvenioTreaty,
+)
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.schema import (
-    FactOwnership,
-    FactSelector,
-    GovernedFact,
+    GovernedFactCatalogue,
     GovernedFactFamily,
-    GovernedFactVariant,
     OverrideFactPayload,
 )
-from .loader_cache import toml_file_fingerprint
-from cadrumo.domain.calculations.registry.schema_base import DateAxis, SourceCitation
+from cadrumo.domain.calculations.registry.schema_base import DateAxis
+from cadrumo.domain.calculations.registry.schema_references import LegalReference
 
-__all__ = [
-    "collect_convenio_fingerprints",
-    "compile_convenio_facts",
-    "load_convenio_authority",
-    "validate_convenio_legal_refs",
-]
+__all__ = ["convenio_authority_from_facts"]
 
 
-def load_convenio_authority(treaties_dir: Path) -> ConvenioAuthority:
-    """Compile the mutable ``treaties/`` TOML tree into runtime treaty types."""
-    resolved = treaties_dir.resolve()
-    if not resolved.is_dir():
-        return ConvenioAuthority.empty()
-    treaties: dict[str, ConvenioTreaty] = {}
-    for path in scan_directory(resolved, pattern="*.toml"):
-        raw = freeze_toml(read_toml(path, error_factory=RegistryLoadError))
-        table = raw.get("treaty")
-        if not isinstance(table, Mapping):
-            raise RegistryLoadError(f"{path}: treaty file must declare a [treaty] table")
+def convenio_authority_from_facts(
+    facts: GovernedFactCatalogue,
+    legal: Mapping[str, LegalReference],
+) -> ConvenioAuthority:
+    """Build the immutable runtime catalogue from the canonical override fact.
+
+    The fact is the sole declaration of treaty applicability and evidence. This
+    projection only retains the established typed lookup shape used by the IRNR
+    runtime; it never reads a second treaty source surface.
+    """
+    fact = facts.facts.get(CONVENIO_OVERRIDE_FACT_ID)
+    if fact is None:
+        raise RegistryValidationError(f"governed fact {CONVENIO_OVERRIDE_FACT_ID!r} is not registered")
+    if fact.family is not GovernedFactFamily.OVERRIDE:
+        raise RegistryValidationError(f"governed fact {CONVENIO_OVERRIDE_FACT_ID!r} must be an override family")
+
+    rows_by_country: dict[str, list[ConvenioOverrideRow]] = {}
+    document_by_country: dict[str, str] = {}
+    for variant in fact.variants:
+        if variant.date_axis is not DateAxis.DEVENGO_DATE:
+            raise RegistryValidationError(
+                f"convenio fact variant {variant.variant_id!r} must use devengo_date applicability",
+            )
+        selector_values = {selector.name: selector.value for selector in variant.selectors}
+        if set(selector_values) != {"country_code", "tipo_renta"}:
+            raise RegistryValidationError(
+                f"convenio fact variant {variant.variant_id!r} must select exactly country_code and tipo_renta",
+            )
+        country_code = selector_values["country_code"].upper()
+        if len(country_code) != 2 or not country_code.isalpha():
+            raise RegistryValidationError(
+                f"convenio fact variant {variant.variant_id!r} has invalid country_code {country_code!r}",
+            )
+        if not isinstance(variant.payload, OverrideFactPayload):
+            raise RegistryValidationError(
+                f"convenio fact variant {variant.variant_id!r} must carry an override payload",
+            )
+        if not variant.legal_refs:
+            raise RegistryValidationError(f"convenio fact variant {variant.variant_id!r} must declare legal_refs")
+        legal_ref_anchor = variant.legal_refs[0]
         try:
-            treaty = ConvenioTreaty.model_validate(table)
-        except RegistryValidationError as exc:
-            raise RegistryLoadError(f"{path}: invalid treaty: {exc}") from exc
-        if treaty.country_code in treaties:
-            raise RegistryLoadError(
-                f"{path}: treaty country {treaty.country_code!r} already declared in another treaties/*.toml file",
+            document_id = legal[legal_ref_anchor].document_id
+        except KeyError as exc:
+            raise RegistryValidationError(
+                f"convenio fact variant {variant.variant_id!r} legal_ref {legal_ref_anchor!r} is not registered",
+            ) from exc
+        previous_document_id = document_by_country.setdefault(country_code, document_id)
+        if previous_document_id != document_id:
+            raise RegistryValidationError(
+                f"convenio country {country_code!r} cannot combine legal documents "
+                f"{previous_document_id!r} and {document_id!r}",
             )
-        treaties[treaty.country_code] = treaty
-    return ConvenioAuthority(treaties=treaties)
-
-
-def collect_convenio_fingerprints(root: Path) -> tuple[tuple[str, int, int, str], ...]:
-    """Fingerprint every mutable treaty declaration used by the compiler."""
-    treaties_dir = root.resolve() / "treaties"
-    return tuple(toml_file_fingerprint(path.resolve()) for path in scan_directory(treaties_dir, pattern="*.toml"))
-
-
-def compile_convenio_facts(registry_root: Path) -> tuple[GovernedFact, ...]:
-    """Project treaty rows into the governed-fact artifact payload."""
-    authority = load_convenio_authority(registry_root.resolve() / "treaties")
-    variants: list[GovernedFactVariant] = []
-    for country_code, treaty in sorted(authority.treaties.items()):
-        for row in treaty.overrides:
-            source_ref = f"boe-{row.legal_ref_anchor.replace(':', '-')}"
-            variants.append(
-                GovernedFactVariant(
-                    variant_id=(
-                        f"{CONVENIO_OVERRIDE_FACT_ID}.{country_code.lower()}."
-                        f"{row.tipo_renta.value}.{row.valid_from.isoformat()}"
-                    ),
-                    selectors=(
-                        FactSelector(name="country_code", value=country_code),
-                        FactSelector(name="tipo_renta", value=row.tipo_renta.value),
-                    ),
-                    date_axis=DateAxis.DEVENGO_DATE,
-                    valid_from=row.valid_from,
-                    valid_to=row.valid_to,
-                    payload=OverrideFactPayload(
-                        override_code=row.kind.value,
-                        value=row.rate_decimal,
-                        unit="ratio" if row.rate_decimal is not None else None,
-                    ),
-                    legal_refs=row.legal_refs,
-                    source_refs=(source_ref,),
-                    source_citations=(
-                        SourceCitation(
-                            source_ref=source_ref,
-                            required_text=("Art", f"{row.legal_ref_anchor.rsplit('-', 1)[-1]}"),
-                        ),
-                    ),
-                    review_status=RevisionReviewStatus.AGENT_REVIEWED,
-                    ownership=FactOwnership.GENERATED,
-                ),
-            )
-    return (
-        (
-            GovernedFact(
-                fact_id=CONVENIO_OVERRIDE_FACT_ID,
-                family=GovernedFactFamily.OVERRIDE,
-                variants=tuple(variants),
+        rows_by_country.setdefault(country_code, []).append(
+            ConvenioOverrideRow(
+                tipo_renta=TipoRentaIrnr(selector_values["tipo_renta"]),
+                kind=ConvenioOverrideKind(variant.payload.override_code),
+                rate=str(variant.payload.value) if variant.payload.value is not None else None,
+                legal_ref_anchor=legal_ref_anchor,
+                legal_refs=variant.legal_refs,
+                valid_from=variant.valid_from,
+                valid_to=variant.valid_to,
             ),
         )
-        if variants
-        else ()
+    return ConvenioAuthority(
+        treaties={
+            country_code: ConvenioTreaty(
+                country_code=country_code,
+                document_id=document_by_country[country_code],
+                overrides=tuple(rows),
+            )
+            for country_code, rows in sorted(rows_by_country.items())
+        },
     )
-
-
-def validate_convenio_legal_refs(authority: ConvenioAuthority, legal_ref_ids: frozenset[str]) -> None:
-    """Refuse a treaty override whose legal provenance is absent from its candidate."""
-    missing: list[str] = []
-    for country_code, treaty in sorted(authority.treaties.items()):
-        for row in treaty.overrides:
-            for ref in row.legal_refs:
-                if ref not in legal_ref_ids:
-                    missing.append(f"treaty {country_code} tipo_renta {row.tipo_renta.value}: legal_ref {ref!r}")
-    if missing:
-        raise RegistryValidationError(
-            "convenio treaty legal_refs missing from the legal catalogue:\n"
-            + "\n".join(f" - {entry}" for entry in missing),
-        )
