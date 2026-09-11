@@ -29,6 +29,7 @@ _MIGRATED_LEGAL_PARAMETER_FACT_IDS = frozenset(
         "lirpf-art-101:retencion-administrador-incn-umbral-eur",
         "rirpf-art-95:retencion-actividades-profesionales-general",
         "rirpf-art-95:retencion-actividades-profesionales-inicio",
+        "rirpf-art-95:retencion-actividades-profesionales-colectivos-especificos",
         "rirpf-art-95:retencion-actividades-agricolas-ganaderas-general",
         "rirpf-art-95:retencion-actividades-ganaderas-engorde-porcino-avicultura",
         "rirpf-art-95:retencion-actividades-forestales",
