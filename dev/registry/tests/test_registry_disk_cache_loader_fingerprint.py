@@ -28,15 +28,15 @@ from pathlib import Path
 from typing import Literal
 
 import pytest
-from dev.registry.compiler.loader import _load_registry_tree_cached, load_registry_tree
 from pydantic import BaseModel
 
-from .....core.auth_provider import AuthProviderKind
-from .....core.config import override_settings
-from .....core.directory_scan import scan_directory
-from .....core.modelo import Modelo
-from .....core.resources.bundled_data import bundled_path
-from .._compiled_cache import (
+from cadrumo.core.auth_provider import AuthProviderKind
+from cadrumo.core.config import override_settings
+from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.modelo import Modelo
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from dev.registry.compiler._compiled_cache import (
     _CADRUMO_PACKAGE_DIR,
     _REGISTRY_PACKAGE_DIR,
     _classify_foreign_type,
@@ -47,9 +47,9 @@ from .._compiled_cache import (
     _registry_disk_cache_key,
     loader_code_fingerprint,
 )
-from .._loader_internals import _collect_registry_tree_fingerprints
-from ..loader_fingerprints import clear_fingerprint_cache
-from ..schema import ModeloDefinition, RegistryCatalogues
+from dev.registry.compiler._loader_internals import _collect_registry_tree_fingerprints
+from dev.registry.compiler.loader import _load_registry_tree_cached, load_registry_tree
+from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -394,8 +394,7 @@ def test_the_fingerprint_is_not_computed_at_import_time() -> None:
         [
             sys.executable,
             "-c",
-            "import cadrumo.domain.calculations.registry._compiled_cache as c;"
-            "print(c.loader_code_fingerprint.cache_info().currsize)",
+            "import dev.registry.compiler._compiled_cache as c;print(c.loader_code_fingerprint.cache_info().currsize)",
         ],
         capture_output=True,
         text=True,

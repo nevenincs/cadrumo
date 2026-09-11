@@ -9,9 +9,9 @@ from typing import Literal
 import pytest
 from pydantic import ValidationError
 
-from .....core.casilla_id import validated_casilla_id
-from .....core.filing_producer_key import FilingProducerKey
-from .....core.filing_projection_ref import (
+from cadrumo.core.casilla_id import validated_casilla_id
+from cadrumo.core.filing_producer_key import FilingProducerKey
+from cadrumo.core.filing_projection_ref import (
     M303Exonerado390OperacionesTercerosProjectionRef,
     M303ProrrataActivityProjectionField,
     M303ProrrataActivityProjectionRef,
@@ -19,27 +19,30 @@ from .....core.filing_projection_ref import (
     M303RegimenSimplificadoModuleProjectionRef,
     M303RegimenSimplificadoModuleValue,
 )
-from .._loader_internals import _compile_export_semantic_field, _compile_projection_endpoint_declaration
-from .._snapshot_internals import _validate_materialized_export_record_families
-from .._validate_evidence import EvidenceValidator
-from .._validate_exports import (
-    _validate_export_record,
-    _validate_generated_projection_layout_bijection,
-    _validate_projection_endpoint_declarations,
-)
-from ..authority import bundled_authority
-from ..errors import RegistryLoadError, RegistryValidationError
-from ..export import derive_export_layouts_from_bindings
-from ..fixed_width_codec import ExportEncoding
-from ..schema import ModeloRevision
-from ..schema_base import CasillaDataType
-from ..schema_exports import (
+from cadrumo.domain.calculations.registry._snapshot_internals import _validate_materialized_export_record_families
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
+from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
+from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
+from cadrumo.domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
     ProjectionEndpointDeclaration,
 )
-from ..schema_references import PeriodSelector
+from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+from dev.registry.compiler._loader_internals import (
+    _compile_export_semantic_field,
+    _compile_projection_endpoint_declaration,
+)
+from dev.registry.compiler._validate_evidence import EvidenceValidator
+from dev.registry.compiler._validate_exports import (
+    _validate_export_record,
+    _validate_generated_projection_layout_bijection,
+    _validate_projection_endpoint_declarations,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from .._loader_internals import load_modelo_file
+from dev.registry.compiler._loader_internals import load_modelo_file
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
