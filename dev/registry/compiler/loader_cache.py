@@ -319,6 +319,22 @@ def _revision_file_sources(path: Path) -> tuple[ModeloRevisionSource, ...]:
     )
 
 
+def fragment_sort_key(path: Path) -> str:
+    """Return the platform-independent ordering key for one revision fragment path.
+
+    A fragmented revision's merge order -- and therefore its materialised row
+    order and compiled identity -- must not depend on the host platform.
+    :class:`~pathlib.Path` ordering folds case on Windows (``ntpath``'s
+    ``casefold``-derived comparison) but not on POSIX, so sorting fragment
+    paths directly makes the merge order silently platform-dependent. The
+    POSIX-style path string compares by Unicode code point on every platform,
+    which is what both this module's ``fragment_paths`` discovery and the
+    canonical fragment-merge order in ``_loader_internals`` key on; neither
+    re-sorts with the platform-default :class:`~pathlib.Path` ordering.
+    """
+    return path.as_posix()
+
+
 def _revision_directory_source(path: Path) -> ModeloRevisionSource:
     _validate_revision_fragment_tree(path)
     revision_manifest = path / "revision.toml"
@@ -327,7 +343,7 @@ def _revision_directory_source(path: Path) -> ModeloRevisionSource:
         *fragment_paths,
         *tuple(
             p
-            for p in sorted(path.glob("*/*.toml"))
+            for p in sorted(path.glob("*/*.toml"), key=fragment_sort_key)
             if p != revision_manifest and not any(part == "locales" for part in p.parts)
         ),
     )
