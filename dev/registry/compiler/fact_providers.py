@@ -238,40 +238,6 @@ def _reset_convenio_provider() -> None:
     """Reset the convenio adapter, which deliberately reuses the uncached loader."""
 
 
-def _iva_rate_provider_registration() -> FactProviderRegistration:
-    from cadrumo.domain.iva.rates import IVA_RATE_PROVIDER_ID
-    from dev.registry.compiler.iva import (
-        collect_iva_rate_fact_fingerprints,
-        collect_iva_recargo_fact_fingerprints,
-        compile_iva_rate_facts,
-        compile_iva_recargo_facts,
-        reset_iva_rate_fact_provider,
-        reset_iva_recargo_fact_provider,
-    )
-
-    def compile_iva_facts(registry_root: Path) -> tuple[GovernedFact, ...]:
-        return (*compile_iva_rate_facts(registry_root), *compile_iva_recargo_facts(registry_root))
-
-    def collect_iva_fingerprints(registry_root: Path) -> RegistryPathFingerprints:
-        return (
-            *collect_iva_rate_fact_fingerprints(registry_root),
-            *collect_iva_recargo_fact_fingerprints(registry_root),
-        )
-
-    def reset_iva_facts() -> None:
-        reset_iva_rate_fact_provider()
-        reset_iva_recargo_fact_provider()
-
-    return FactProviderRegistration(
-        provider_id=IVA_RATE_PROVIDER_ID,
-        owned_directories=("iva",),
-        compile=compile_iva_facts,
-        collect_fingerprints=collect_iva_fingerprints,
-        reset=reset_iva_facts,
-        lifecycle_components=("iva-rates", "iva-recargo-equivalencia"),
-    )
-
-
 def _holiday_calendar_provider_registration() -> FactProviderRegistration:
     from cadrumo.domain.deadlines.festivos import (
         HOLIDAY_CALENDAR_PROVIDER_DIRECTORY,
@@ -346,7 +312,6 @@ FACT_PROVIDER_REGISTRATIONS = validate_fact_provider_registrations(
             collect_fingerprints=_collect_convenio_provider_fingerprints,
             reset=_reset_convenio_provider,
         ),
-        _iva_rate_provider_registration(),
         _holiday_calendar_provider_registration(),
         _modelo_parameter_projection_registration(),
     ),

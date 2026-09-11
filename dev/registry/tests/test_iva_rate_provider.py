@@ -17,6 +17,7 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
 )
 from cadrumo.domain.calculations.registry.facts.schema import (
     FactSelector,
+    GovernedFact,
     GovernedFactCatalogue,
     GovernedFactVariant,
     MappingFactPayload,
@@ -28,8 +29,9 @@ from cadrumo.domain.iva.rates import (
     iva_rate_record_from_fact,
 )
 from cadrumo.domain.iva.schema import EUMemberState, IvaRateKind
+from dev.registry.compiler.fact_loader import load_governed_facts
 from dev.registry.compiler.fact_providers import FACT_PROVIDER_REGISTRATIONS
-from dev.registry.compiler.iva import compile_iva_rate_facts, load_iva_rate_table_for_publication
+from dev.registry.compiler.iva import load_iva_rate_table_for_publication
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -51,16 +53,24 @@ def iva_rate_fact_query(
 
 
 def _catalogue() -> GovernedFactCatalogue:
-    root = bundled_path("registry", "aeat")
-    (fact,) = compile_iva_rate_facts(root)
+    fact = _authored_fact()
     return GovernedFactCatalogue(facts={fact.fact_id: fact})
 
 
-def test_iva_provider_is_enrolled_with_exact_identity_and_legacy_ownership() -> None:
-    registration = next(item for item in FACT_PROVIDER_REGISTRATIONS if item.provider_id == IVA_RATE_PROVIDER_ID)
+def _authored_fact() -> GovernedFact:
+    return next(
+        fact
+        for fact in load_governed_facts(bundled_path("registry", "aeat", "facts"))
+        if fact.fact_id == IVA_RATE_FACT_ID
+    )
 
-    assert registration.owned_directories == ("iva",)
+
+def test_iva_rate_fact_is_directly_authored_without_legacy_provider_registration() -> None:
+    facts = {fact.fact_id: fact for fact in load_governed_facts(bundled_path("registry", "aeat", "facts"))}
+
     assert IVA_RATE_FACT_ID == "iva-rate-schedule"
+    assert facts[IVA_RATE_FACT_ID].family.value == "mapping"
+    assert not any(item.provider_id == IVA_RATE_PROVIDER_ID for item in FACT_PROVIDER_REGISTRATIONS)
 
 
 def test_iva_provider_projects_every_legacy_row_without_semantic_loss() -> None:
@@ -70,7 +80,7 @@ def test_iva_provider_projects_every_legacy_row_without_semantic_loss() -> None:
         for rows in load_iva_rate_table_for_publication(root).values()
         for row in rows
     }
-    (fact,) = compile_iva_rate_facts(root)
+    fact = _authored_fact()
     projected: set[tuple[EUMemberState, IvaRateKind, date, Decimal, bool]] = set()
     for variant in fact.variants:
         assert isinstance(variant.payload, MappingFactPayload)
@@ -133,7 +143,7 @@ def test_iva_query_keeps_coexisting_rate_separate_from_ordinary_tier() -> None:
 
 
 def test_iva_provider_preserves_complete_legal_or_source_evidence_lanes() -> None:
-    (fact,) = compile_iva_rate_facts(bundled_path("registry", "aeat"))
+    fact = _authored_fact()
     spanish = next(
         variant
         for variant in fact.variants
@@ -151,5 +161,18 @@ def test_iva_provider_preserves_complete_legal_or_source_evidence_lanes() -> Non
 
     with pytest.raises(ValidationError, match="must declare legal or source evidence"):
         GovernedFactVariant.model_validate(
-            spanish.model_dump() | {"legal_refs": (), "source_refs": (), "source_citations": ()}
+            {
+                "variant_id": spanish.variant_id,
+                "selectors": spanish.selectors,
+                "date_axis": spanish.date_axis,
+                "valid_from": spanish.valid_from,
+                "valid_to": spanish.valid_to,
+                "payload": spanish.payload,
+                "legal_refs": (),
+                "source_refs": (),
+                "source_citations": (),
+                "review_status": spanish.review_status,
+                "ownership": spanish.ownership,
+                "precedence_over": spanish.precedence_over,
+            }
         )

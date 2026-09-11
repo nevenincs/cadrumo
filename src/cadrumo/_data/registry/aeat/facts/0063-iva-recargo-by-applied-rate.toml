@@ -1,0 +1,126 @@
+[fact]
+fact_id = "iva-recargo-by-applied-rate"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "iva-recargo.0.21.1993-01-01"
+selectors = [
+  { name = "applied_rate", value_type = "decimal", value = "0.21" },
+]
+date_axis = "devengo_date"
+valid_from = 1993-01-01
+legal_refs = ["ley-37-1992:art-161"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "recargo_rate", value_type = "decimal", value = "0.052" },
+  { key = "notes", value = "Art. 161 1.o: tipo general." },
+]
+
+[[fact.variants]]
+variant_id = "iva-recargo.0.10.1993-01-01"
+selectors = [
+  { name = "applied_rate", value_type = "decimal", value = "0.10" },
+]
+date_axis = "devengo_date"
+valid_from = 1993-01-01
+legal_refs = ["ley-37-1992:art-161"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "recargo_rate", value_type = "decimal", value = "0.014" },
+  { key = "notes", value = "Art. 161 2.o: tipo reducido, entregas del art. 91 uno." },
+]
+
+[[fact.variants]]
+variant_id = "iva-recargo.0.04.1993-01-01"
+selectors = [
+  { name = "applied_rate", value_type = "decimal", value = "0.04" },
+]
+date_axis = "devengo_date"
+valid_from = 1993-01-01
+legal_refs = ["ley-37-1992:art-161"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "recargo_rate", value_type = "decimal", value = "0.005" },
+  { key = "notes", value = "Art. 161 3.o: tipo super-reducido, entregas del art. 91 dos." },
+]
+
+[[fact.variants]]
+variant_id = "iva-recargo.0.05.2023-01-01"
+selectors = [
+  { name = "applied_rate", value_type = "decimal", value = "0.05" },
+]
+date_axis = "devengo_date"
+valid_from = 2023-01-01
+valid_to = 2024-09-30
+legal_refs = ["real-decreto-ley-20-2022:art-72", "real-decreto-ley-4-2024:art-1"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "recargo_rate", value_type = "decimal", value = "0.0062" },
+  { key = "notes", value = "Aceites y pastas al 5 %: recargo 0,62 %. Coexiste con el 1,4 % ordinario del mismo tramo reducido, que es la razon por la que esta tabla se indexa por tipo y no por tramo." },
+]
+
+[[fact.variants]]
+variant_id = "iva-recargo.0.00.2023-01-01"
+selectors = [
+  { name = "applied_rate", value_type = "decimal", value = "0.00" },
+]
+date_axis = "devengo_date"
+valid_from = 2023-01-01
+valid_to = 2024-09-30
+legal_refs = ["real-decreto-ley-20-2022:art-72", "real-decreto-ley-4-2024:art-1"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "recargo_rate", value_type = "decimal", value = "0.00" },
+  { key = "notes", value = "Alimentos basicos al 0 %: recargo del 0 %. Es un tipo de cero, no una inaplicacion del regimen: la entrega sigue dentro del recargo de equivalencia con obligacion a tipo cero." },
+]
+
+[[fact.variants]]
+variant_id = "iva-recargo.0.075.2024-10-01"
+selectors = [
+  { name = "applied_rate", value_type = "decimal", value = "0.075" },
+]
+date_axis = "devengo_date"
+valid_from = 2024-10-01
+valid_to = 2024-12-31
+legal_refs = ["real-decreto-ley-4-2024:art-1"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "recargo_rate", value_type = "decimal", value = "0.01" },
+  { key = "notes", value = "Aceites y pastas al 7,5 % desde el 1 de octubre de 2024: recargo 1 %." },
+]
+
+[[fact.variants]]
+variant_id = "iva-recargo.0.02.2024-10-01"
+selectors = [
+  { name = "applied_rate", value_type = "decimal", value = "0.02" },
+]
+date_axis = "devengo_date"
+valid_from = 2024-10-01
+valid_to = 2024-12-31
+legal_refs = ["real-decreto-ley-4-2024:art-1"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "recargo_rate", value_type = "decimal", value = "0.0026" },
+  { key = "notes", value = "Alimentos basicos al 2 % desde el 1 de octubre de 2024: recargo 0,26 %." },
+]

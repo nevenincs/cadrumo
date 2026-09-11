@@ -18,7 +18,6 @@ _WAVE2_PROVIDER_IDS = (
     "authored-facts",
     "category-profiles",
     "convenio-overrides",
-    "iva-rate-schedule",
     "legal-holiday-calendars",
     "modelo-parameter-projections",
 )

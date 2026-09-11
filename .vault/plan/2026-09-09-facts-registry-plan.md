@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-11'
 body_schema: body-v2
-body_hash: 'sha256:3a2f23b463e288aa772a6a2f5e7b776448c550b7c415a5b3af4ec5a9fa121061'
+body_hash: 'sha256:8abac4efc1f6e0c917c0c09e7cff83e9d2c6fd28d5e437a13c51b301d780461d'
 ---
 
 <!-- RETIRED: S65 -->
@@ -188,7 +188,7 @@ Move authored facts into the normalized facts corpus where approved, remove dupl
 Move approved adapted data families and Python-held facts into one-fact-per-file normalized TOML while retaining source evidence.
 
 - [x] `W04.P15.S29` - Replace the statutory Python fact adapter with normalized scalar and decimal-mapping fragments carrying exact typed payloads, effective applicability, and official source evidence; `src/cadrumo/_data/registry/aeat/facts and dev/registry/compiler/fact_providers.py and dev/registry/compiler/statutory_constants.py and dev/registry/tests and dev/registry/analysis/facts_external_constants_retirement.toml`.
-- [ ] `W04.P15.S30` - Normalize IVA-rate and recargo schedules into authored one-fact-per-file fragments with typed rows, temporal applicability, and evidence; `src/cadrumo/_data/registry/aeat/facts and src/cadrumo/_data/registry/aeat/iva and dev/registry/compiler/fact_providers.py`.
+- [x] `W04.P15.S30` - Normalize IVA-rate and recargo schedules into authored one-fact-per-file fragments with typed rows, temporal applicability, and evidence; `src/cadrumo/_data/registry/aeat/facts and src/cadrumo/_data/registry/aeat/iva and dev/registry/compiler/fact_providers.py`.
 - [ ] `W04.P15.S77` - Normalize and retire the category-profile adapter only after every profile has an authored, evidence-bearing fact replacement; `src/cadrumo/_data/registry/aeat/categories and src/cadrumo/_data/registry/aeat/facts and dev/registry/compiler/categories.py and dev/registry/compiler/fact_providers.py and dev/registry/tests`.
 - [ ] `W04.P15.S78` - Normalize and retire the legal-holiday calendar adapter while preserving publication and event provenance; `src/cadrumo/_data/registry/aeat/calendars and src/cadrumo/_data/registry/aeat/facts and dev/registry/compiler/holidays.py and dev/registry/compiler/fact_providers.py and dev/registry/tests`.
 - [ ] `W04.P15.S79` - Normalize and retire the treaty-override adapter without duplicating the canonical convenio catalogue; `src/cadrumo/_data/registry/aeat/treaties and src/cadrumo/_data/registry/aeat/facts and dev/registry/compiler/convenio.py and dev/registry/compiler/fact_providers.py and dev/registry/compiler/authority.py and dev/registry/tests`.

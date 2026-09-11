@@ -14,13 +14,18 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
     ResolvedMappingFact,
     resolve_governed_fact,
 )
-from cadrumo.domain.calculations.registry.facts.schema import FactSelector, GovernedFactCatalogue, MappingFactPayload
+from cadrumo.domain.calculations.registry.facts.schema import (
+    FactSelector,
+    GovernedFact,
+    GovernedFactCatalogue,
+    MappingFactPayload,
+)
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.iva.recargo_equivalencia import (
     IVA_RECARGO_FACT_ID,
     recargo_rate_record_from_fact,
 )
-from dev.registry.compiler.iva import compile_iva_recargo_facts
+from dev.registry.compiler.fact_loader import load_governed_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -35,13 +40,21 @@ def iva_recargo_fact_query(applied_rate: Decimal, operation_date: date) -> Mappi
 
 
 def _catalogue() -> GovernedFactCatalogue:
-    (fact,) = compile_iva_recargo_facts(bundled_path("registry", "aeat"))
+    fact = _authored_fact()
     return GovernedFactCatalogue(facts={fact.fact_id: fact})
 
 
-def test_recargo_compiler_emits_identity_unique_authority_variants() -> None:
-    """Development compilation yields one unambiguous authority variant per pairing."""
-    (fact,) = compile_iva_recargo_facts(bundled_path("registry", "aeat"))
+def _authored_fact() -> GovernedFact:
+    return next(
+        fact
+        for fact in load_governed_facts(bundled_path("registry", "aeat", "facts"))
+        if fact.fact_id == IVA_RECARGO_FACT_ID
+    )
+
+
+def test_authored_recargo_fact_emits_identity_unique_authority_variants() -> None:
+    """The normalized fact holds one unambiguous authority variant per pairing."""
+    fact = _authored_fact()
     projected: set[tuple[Decimal, date, date | None]] = set()
     for variant in fact.variants:
         assert isinstance(variant.payload, MappingFactPayload)

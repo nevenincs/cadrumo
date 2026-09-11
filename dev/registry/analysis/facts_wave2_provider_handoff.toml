@@ -8,14 +8,15 @@ iva_ledger = "dev/registry/analysis/facts_iva_retirement.toml"
 provider_id = "authored-facts"
 family = "authored"
 denominator_source = "dev/registry/compiler/fact_providers.py:_compile_authored_facts"
+authored_fact_ids = ["iva-rate-schedule", "iva-recargo-by-applied-rate"]
 query_type = "GovernedFactQuery"
 required_selectors = []
 temporal_axis = "declared_per_fact"
 consumer_step = "W03.P14.S28"
 consumer_files = ["src/cadrumo"]
 legacy_facade = "none; consumers resolve typed facts through registry authority"
-provenance_source = "authored fact TOML legal_refs/source_refs/source_citations"
-remaining_conditions = ["normalize provider trees in W04.P15.S30", "delete no authority-owned source"]
+provenance_source = "authored fact TOML legal_refs/source_refs/source_citations, including normalized IVA and recargo schedules"
+remaining_conditions = ["delete the retained raw IVA compiler and source paths in W04.P17.S56-S57", "delete no authority-owned source"]
 
 [[contracts]]
 provider_id = "category-profiles"
@@ -55,19 +56,6 @@ consumer_files = ["src/cadrumo/domain/calculations/registry/_formula_runtime_irn
 legacy_facade = "load_convenio_authority and ConvenioAuthority.resolve remain until migrated"
 provenance_source = "treaties/*.toml plus legal/convenio-sources.toml"
 remaining_conditions = ["rewire IRNR runtime", "retire treaty-local lookup only after last caller"]
-
-[[contracts]]
-provider_id = "iva-rate-schedule"
-family = "mapping"
-fact_ids = ["iva-rate-schedule", "iva-recargo-by-applied-rate"]
-query_type = "MappingFactQuery"
-required_selectors = ["member_state|applied_rate", "kind|none", "rate_role|none"]
-temporal_axis = "devengo_date"
-consumer_step = "W03.P12.S26"
-consumer_files = ["src/cadrumo/domain/iva", "src/cadrumo/application/ledger", "src/cadrumo/application/aggregation"]
-legacy_facade = "IVA lookup and recargo typed facades remain"
-provenance_source = "iva/rates.toml and iva/recargo-rates.toml"
-remaining_conditions = ["complete S26/S51 consumers", "normalize in W04.P15.S30", "delete old loaders/data only in W04.P17.S56-S57"]
 
 [[contracts]]
 provider_id = "legal-holiday-calendars"

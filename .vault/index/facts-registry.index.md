@@ -6,7 +6,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:73160fa9b1573bf89e024b9c713df542869160bcaf3863b4c48a36c03a45e578'
+body_hash: 'sha256:7f632baa2828478ec4951a5ca84acbc45d2ca438251bcaa2e0f6b7913752a1bb'
 related:
   - '[[2026-09-09-facts-registry-W01-P01-S01]]'
   - '[[2026-09-09-facts-registry-W01-P01-S02]]'
@@ -68,6 +68,7 @@ related:
   - '[[2026-09-09-facts-registry-W03-P13-S75]]'
   - '[[2026-09-09-facts-registry-W03-P13-S76]]'
   - '[[2026-09-09-facts-registry-W04-P15-S29]]'
+  - '[[2026-09-09-facts-registry-W04-P15-S30]]'
   - '[[2026-09-09-facts-registry-W04-P16-S31]]'
   - '[[2026-09-09-facts-registry-W04-P16-S32]]'
   - '[[2026-09-09-facts-registry-W04-P16-S33]]'
@@ -97,6 +98,7 @@ related:
   - '[[2026-09-11-facts-registry-external-constants-retirement-reference]]'
   - '[[2026-09-11-facts-registry-objective-estimation-publication-boundary-reference]]'
   - '[[2026-09-11-facts-registry-reference]]'
+  - '[[2026-09-11-facts-registry-s30-iva-recargo-normalization-audit]]'
   - '[[2026-09-11-facts-registry-s31-external-constants-retirement-audit]]'
   - '[[2026-09-11-facts-registry-s32-iva-interpretation-retirement-audit]]'
   - '[[2026-09-11-facts-registry-s33-routing-retirement-audit]]'
@@ -129,6 +131,7 @@ Auto-generated index of all documents tagged with `#facts-registry`.
 - `2026-09-10-facts-registry-s74-activity-selector-review-audit` - `facts-registry` audit: `S74 activity selector review`
 - `2026-09-10-facts-registry-s75-legacy-provider-retirement-review-audit` - `facts-registry` audit: `S75 legacy provider retirement review`
 - `2026-09-10-facts-registry-s76-article-101-provision-path-review-audit` - `facts-registry` audit: `s76 article 101 provision path review`
+- `2026-09-11-facts-registry-s30-iva-recargo-normalization-audit` - `facts-registry` audit: `S30 IVA and recargo normalization review`
 - `2026-09-11-facts-registry-s31-external-constants-retirement-audit` - `facts-registry` audit: `s31 external constants retirement`
 - `2026-09-11-facts-registry-s32-iva-interpretation-retirement-audit` - `facts-registry` audit: `S32 IVA interpretation retirement`
 - `2026-09-11-facts-registry-s33-routing-retirement-audit` - `facts-registry` audit: `S33 routing retirement`
@@ -195,6 +198,7 @@ Auto-generated index of all documents tagged with `#facts-registry`.
 - `2026-09-09-facts-registry-W03-P13-S66` - Replace generic fact selectors with provider-owned validated applicability coordinates before consumer-boundary verification
 - `2026-09-09-facts-registry-W03-P13-S75` - Delete retired legal-parameter provider implementations after governed facts replace every live resolver and consumer path
 - `2026-09-09-facts-registry-W04-P15-S29` - Replace the statutory Python fact adapter with normalized scalar and decimal-mapping fragments carrying exact typed payloads, effective applicability, and official source evidence
+- `2026-09-09-facts-registry-W04-P15-S30` - `facts-registry` execution: `W04.P15.S30`
 - `2026-09-09-facts-registry-W04-P16-S31` - Delete migrated statutory declarations but retain technical configuration
 - `2026-09-09-facts-registry-W04-P16-S32` - Delete numeric IVA interpretation but retain persisted enum tokens
 - `2026-09-09-facts-registry-W04-P16-S33` - Replace the remaining technical model-routing aliases with their specialized aggregation and calendar-policy owners, then delete the aliases

@@ -6,8 +6,10 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFact
+from dev.registry.compiler.fact_loader import load_governed_facts
 from dev.registry.compiler.fact_providers import (
     FACT_PROVIDER_REGISTRATIONS,
     FactProviderCompiler,
@@ -77,11 +79,14 @@ def test_registration_refuses_empty_or_overlapping_directory_ownership() -> None
         )
 
 
-def test_combined_iva_lifecycle_and_modelo_inherited_identity_are_explicit() -> None:
-    iva = next(item for item in FACT_PROVIDER_REGISTRATIONS if item.provider_id == "iva-rate-schedule")
+def test_authored_provider_directly_owns_normalized_iva_facts_without_adapter_registration() -> None:
+    authored = next(item for item in FACT_PROVIDER_REGISTRATIONS if item.provider_id == "authored-facts")
     projection = next(
         item for item in FACT_PROVIDER_REGISTRATIONS if item.provider_id == "modelo-parameter-projections"
     )
+    direct_facts = {fact.fact_id: fact for fact in load_governed_facts(bundled_path("registry", "aeat", "facts"))}
 
-    assert iva.lifecycle_components == ("iva-rates", "iva-recargo-equivalencia")
+    assert authored.owned_directories == ("facts",)
+    assert {"iva-rate-schedule", "iva-recargo-by-applied-rate"} <= direct_facts.keys()
+    assert not any(registration.provider_id == "iva-rate-schedule" for registration in FACT_PROVIDER_REGISTRATIONS)
     assert projection.inherited_identity_domains == ("modelos",)

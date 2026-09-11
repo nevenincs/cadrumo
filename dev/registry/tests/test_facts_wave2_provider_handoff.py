@@ -34,8 +34,11 @@ def test_handoff_covers_exact_live_provider_and_fact_family_denominator() -> Non
     registrations = {registration.provider_id: registration for registration in FACT_PROVIDER_REGISTRATIONS}
 
     assert {contract["provider_id"] for contract in contracts} == registrations.keys()
-    assert len(contracts) == 7
-    assert all(contract.get("fact_ids") or contract.get("denominator_source") for contract in contracts)
+    assert len({contract["provider_id"] for contract in contracts}) == len(registrations)
+    assert all(
+        contract.get("fact_ids") or contract.get("authored_fact_ids") or contract.get("denominator_source")
+        for contract in contracts
+    )
     assert all(contract["remaining_conditions"] for contract in contracts)
 
     direct_catalogue = compile_registered_fact_providers(bundled_path("registry", "aeat"))
@@ -57,6 +60,11 @@ def test_handoff_covers_exact_live_provider_and_fact_family_denominator() -> Non
             assert fact.family.value == contract["family"]
             assert {variant.date_axis.value for variant in fact.variants} == {contract["temporal_axis"]}
             assert all(_selectors_match(contract["required_selectors"], variant.selectors) for variant in fact.variants)
+    authored = next(contract for contract in contracts if contract["provider_id"] == "authored-facts")
+    for fact_id in authored["authored_fact_ids"]:
+        fact = direct_catalogue.facts[fact_id]
+        assert fact.family.value == "mapping"
+        assert all(variant.ownership.value == "authored" for variant in fact.variants)
 
 
 def test_handoff_targets_live_wave3_steps_files_and_wave1_ledgers() -> None:
@@ -73,19 +81,28 @@ def test_handoff_targets_live_wave3_steps_files_and_wave1_ledgers() -> None:
     external = tomllib.loads(
         (_ROOT / manifest["external_constants_ledger"]).read_text(encoding="utf-8"),
     )
-    external_fact_ids = {row["destination_id"] for row in external["classifications"] if row["kind"] == "governed_fact"}
-    statutory_fact_ids = {
-        fact.fact_id
-        for fact in load_governed_facts(bundled_path("registry", "aeat", "facts"))
-        if fact.fact_id in external_fact_ids
-    }
-    assert statutory_fact_ids == external_fact_ids - {"iva-general-rate"}
+    assert external["schema_version"] == 2
+    assert external["declaration_count"] == 0
+    assert external["consumer_count"] == 0
+    assert external["deletion_step"] == "W04.P16.S31"
+    assert external["retired_statutory_symbols"]
+    assert "DEFAULT_IVA_GENERAL_RATE_PCT" in external["retired_statutory_symbols"]
+    assert "classifications" not in external
 
     iva = tomllib.loads((_ROOT / manifest["iva_ledger"]).read_text(encoding="utf-8"))
-    assert {lane["destination_id"] for lane in iva["lanes"][:2]} == {
+    iva_fact_ids = {lane["destination_id"] for lane in iva["lanes"][:2]}
+    assert iva_fact_ids == {
         "iva-rate-schedule",
         "iva-recargo-by-applied-rate",
     }
+    authored_facts = {fact.fact_id: fact for fact in load_governed_facts(bundled_path("registry", "aeat", "facts"))}
+    assert iva_fact_ids <= authored_facts.keys()
+    assert all(authored_facts[fact_id].family.value == "mapping" for fact_id in iva_fact_ids)
+    assert all(
+        variant.ownership.value == "authored"
+        for fact_id in iva_fact_ids
+        for variant in authored_facts[fact_id].variants
+    )
 
 
 def test_explicit_non_enrollments_remain_fail_closed() -> None:
