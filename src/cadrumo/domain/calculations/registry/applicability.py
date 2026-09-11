@@ -935,6 +935,18 @@ def iter_modelo_applicability_rules() -> tuple[ModeloApplicabilityRule, ...]:
     return tuple(rule for modelo in known_modelos if (rule := _modelo_applicability_rule(modelo)) is not None)
 
 
+def modelo_requires_iva_regime(modelo: str) -> bool:
+    """Return whether the modelo's applicability rule depends on IVA regime.
+
+    Calendar completeness is a consumer of the same applicability predicate
+    that determines whether a taxpayer can have the modelo obligation.  Keep
+    that classification here, where registry-resolved and seed rules already
+    meet, rather than maintaining a second calendar or core-constants set.
+    """
+    rule = _modelo_applicability_rule(modelo)
+    return rule is not None and bool(rule.applicable_iva_regimes)
+
+
 def taxpayer_model_is_declared(profile: TaxpayerProfile) -> bool:
     """Return whether the profile carries a usable taxpayer model.
 
@@ -1117,5 +1129,6 @@ __all__ = [
     "derive_tax_route",
     "derive_taxpayer_files_economic_activity",
     "iter_modelo_applicability_rules",
+    "modelo_requires_iva_regime",
     "taxpayer_model_is_declared",
 ]

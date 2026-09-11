@@ -18,10 +18,10 @@ from ..aggregation import (
     ModeloSourceResolver,
     OssIossLedgerSourceResolver,
     ProfileSourceResolver,
-    RetencionesAggregationSourceResolver,
     WithholdingSourceResolver,
 )
 from ..aggregation.modelo_bindings_renta_expenses import LedgerRentaGastosEstimacionDirectaAggregationSourceResolver
+from ..aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from ..calculations.bienes_inversion_regularizacion import BienesInversionRegularizacionSourceResolver
 from ..calculations.iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
 from ..calculations.iva_wallet_reconciliation import IvaWalletDecisionSourceResolver

@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-11'
 body_schema: body-v2
-body_hash: 'sha256:f11821d9361907298c252ad863fedd335a995ff4e194dee3d3255ebf560a42fa'
+body_hash: 'sha256:6e5ffd32abf656c0f2e12b3ca2d644e94ac117595c46452f3d2dd932d7d53be9'
 ---
 
 <!-- RETIRED: S65 -->
@@ -196,7 +196,7 @@ Remove migrated legal declarations and local interpretations while preserving un
 
 - [x] `W04.P16.S31` - Delete migrated statutory declarations but retain technical configuration; `src/cadrumo/core/external_constants.py`.
 - [ ] `W04.P16.S32` - Delete numeric IVA interpretation but retain persisted enum tokens; `src/cadrumo/domain/invoices/enums.py`.
-- [ ] `W04.P16.S33` - Replace the remaining technical model-routing aliases with their specialized aggregation and calendar-policy owners, then delete the aliases; `src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py and src/cadrumo/application/overview/calendar_warnings.py and src/cadrumo/core/external_constants.py and dev/registry/analysis/facts_external_constants_retirement.toml and dev/registry/tests`.
+- [x] `W04.P16.S33` - Replace the remaining technical model-routing aliases with their specialized aggregation and calendar-policy owners, then delete the aliases; `src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py and src/cadrumo/application/overview/calendar_warnings.py and src/cadrumo/core/external_constants.py and dev/registry/analysis/facts_external_constants_retirement.toml and dev/registry/tests`.
 
 ### Phase `W04.P17` - Delete bespoke loaders caches and data paths
 

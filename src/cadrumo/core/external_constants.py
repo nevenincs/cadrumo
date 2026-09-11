@@ -34,7 +34,6 @@ from typing import Any, Final, Literal
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from .errors.hierarchy import CoreValidationError
-from .modelo import Modelo
 from .models import STRICT_FROZEN_CONFIG
 from .type_guards import is_object_list
 
@@ -513,23 +512,6 @@ DEFAULT_OUTPUT_LANGUAGE: Final[OutputLanguage] = OutputLanguage.ES
 #: this constant is the str-typed projection used at the click.Choice
 #: boundary.
 SUPPORTED_OUTPUT_LANGUAGES: Final[tuple[str, ...]] = tuple(lang.value for lang in OutputLanguage)
-
-#: Modelos belonging to the *retenciones* aggregation family (withholding/retention filings).
-#: Covers: M111 (labour income), M115 (leases), M123 (capital yields), M180 (lease annual),
-#: M190 (labour annual summary), M193 (capital yields annual summary).
-RETENCIONES_MODELOS: Final[tuple[Modelo, ...]] = (
-    Modelo.M111,
-    Modelo.M115,
-    Modelo.M123,
-    Modelo.M180,
-    Modelo.M190,
-    Modelo.M193,
-)
-
-#: Modelos belonging to the *IVA regime* gating group (value-added tax periodic filings).
-#: Covers: M303 (quarterly/monthly IVA self-assessment), M390 (IVA annual summary).
-IVA_REGIME_MODELOS: Final[tuple[Modelo, ...]] = (Modelo.M303, Modelo.M390)
-
 
 @lru_cache(maxsize=1)
 def load_external_constants(path: Path | None = None) -> ExternalConstants:

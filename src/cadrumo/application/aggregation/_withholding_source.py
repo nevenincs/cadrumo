@@ -72,7 +72,7 @@ class WithholdingSourceResolver:
     Materialises the Modelo 190 "número total de percepciones" box with the
     DISTINCT (perceptor_tax_id, clave, subclave) count (the ``percepcion_count``
     fact) over the persisted withholding detail — the percepciones counterpart of
-    :class:`~._modelo_bindings.RetencionesAggregationSourceResolver` (which counts
+    :class:`~.modelo_bindings_retenciones.RetencionesAggregationSourceResolver` (which counts
     distinct perceptores for M180/M193). The pull and calculate surfaces read this
     one store (one-aggregation-path).
     """

@@ -43,42 +43,26 @@ def test_negative_census_includes_unannotated_module_bindings() -> None:
 
 def test_external_constants_retirement_census_matches_live_source() -> None:
     ledger = tomllib.loads(_LEDGER.read_text(encoding="utf-8"))
-    declarations = ledger["declarations"]
     constants = _top_level_constants(_ROOT / ledger["source_path"])
 
-    assert len(declarations) == len(ledger["classifications"]) == ledger["declaration_count"] == 2
-    assert sum(len(item["consumers"]) for item in declarations) == ledger["consumer_count"] == 2
-    assert not set(ledger["retired_statutory_symbols"]) & set(constants)
-    symbols = [item["symbol"] for item in declarations]
-    assert {item["symbol"] for item in ledger["classifications"]} == set(symbols)
-    assert constants[constants.index(ledger["remaining_start_symbol"]) :] == symbols
+    assert ledger["declaration_count"] == ledger["consumer_count"] == 0
+    assert "classifications" not in ledger
+    assert "declarations" not in ledger
+    retired = set(ledger["retired_statutory_symbols"]) | set(ledger["retired_routing_symbols"])
+    assert not retired & set(constants)
 
 
-def test_retirement_classifications_and_consumers_are_machine_resolvable() -> None:
+def test_retired_symbols_have_no_production_import_path() -> None:
     ledger = tomllib.loads(_LEDGER.read_text(encoding="utf-8"))
-    declarations = {item["symbol"]: item for item in ledger["declarations"]}
-    for classification in ledger["classifications"]:
-        assert classification["kind"] in {"extraction_rule", "implementation_coverage"}
-        assert not classification["destination_id"] and not classification["destination_family"]
-        assert all(classification[key] for key in ("authority", "dependencies", "disposition", "closure"))
-        for consumer in declarations[classification["symbol"]]["consumers"]:
-            assert consumer["symbol"].split(".")[-1] in (_ROOT / consumer["path"]).read_text(encoding="utf-8")
-
-
-def test_every_direct_production_import_is_in_the_retirement_census() -> None:
-    ledger = tomllib.loads(_LEDGER.read_text(encoding="utf-8"))
-    actual = {item["symbol"]: set() for item in ledger["declarations"]}
+    retired = set(ledger["retired_statutory_symbols"]) | set(ledger["retired_routing_symbols"])
+    actual: dict[str, set[str]] = {}
     for path in _production_python_files():
-        text = path.read_text(encoding="utf-8")
-        if "external_constants import" not in text:
-            continue
-        for node in ast.walk(ast.parse(text)):
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
             if isinstance(node, ast.ImportFrom) and node.module and node.module.endswith("external_constants"):
                 for imported in node.names:
-                    if imported.name in actual:
-                        actual[imported.name].add(path.relative_to(_ROOT).as_posix())
-    expected = {item["symbol"]: {consumer["path"] for consumer in item["consumers"]} for item in ledger["declarations"]}
-    assert actual == expected
+                    if imported.name in retired:
+                        actual.setdefault(imported.name, set()).add(path.relative_to(_ROOT).as_posix())
+    assert actual == {}
 
 
 def test_technical_configuration_boundary_matches_source() -> None:
@@ -88,7 +72,7 @@ def test_technical_configuration_boundary_matches_source() -> None:
     tree = ast.parse(source.read_text(encoding="utf-8"))
     constants = _top_level_constants(source)
     types = [node.name for node in tree.body if isinstance(node, ast.ClassDef)]
-    assert constants[: constants.index(ledger["remaining_start_symbol"])] == boundary["technical_constants"]
+    assert constants == boundary["technical_constants"]
     assert types == boundary["technical_types"]
     assert boundary["technical_functions"] == ["load_external_constants"]
     assert (_ROOT / boundary["technical_configuration_data"]).is_file()

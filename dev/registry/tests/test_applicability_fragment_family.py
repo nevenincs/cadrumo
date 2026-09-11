@@ -14,7 +14,11 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.modelo import Modelo
-from cadrumo.domain.calculations.registry.applicability import ModeloApplicabilityRule, hydrate_applicability_rule
+from cadrumo.domain.calculations.registry.applicability import (
+    ModeloApplicabilityRule,
+    hydrate_applicability_rule,
+    modelo_requires_iva_regime,
+)
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import schema_family_fields
@@ -52,6 +56,13 @@ not_applicable_reason = "does not apply"
 cuota_bearing = true
 legal_refs = ["{REFERENCE_LEGAL_ID}"]
 """.lstrip()
+
+
+def test_iva_regime_coverage_is_derived_from_the_applicability_owner() -> None:
+    """No core constant repeats the IVA-regime applicability classification."""
+    assert modelo_requires_iva_regime("303") is True
+    assert modelo_requires_iva_regime("390") is True
+    assert modelo_requires_iva_regime("unknown") is False
 
 
 def _write_directory_modelo(root: Path, *, inline_in_manifest: bool = False) -> Path:

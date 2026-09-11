@@ -1,8 +1,7 @@
 schema_version = 2
 source_path = "src/cadrumo/core/external_constants.py"
-declaration_count = 2
-consumer_count = 2
-remaining_start_symbol = "RETENCIONES_MODELOS"
+declaration_count = 0
+consumer_count = 0
 deletion_step = "W04.P16.S31"
 
 # Negative census for the legal values retired after authoritative fact enrollment.
@@ -22,6 +21,10 @@ retired_statutory_symbols = [
   "SAL_RESERVA_CAPITAL_MULTIPLE", "DEHU_RECHAZO_TACITO_DIAS_NATURALES", "COUNTERPART_MODELOS", "FOREIGN_ASSET_MODELOS",
 ]
 
+# Model-routing classifications retired in S33. They were technical coverage
+# metadata, not legal facts: each consumer now asks its owning service.
+retired_routing_symbols = ["RETENCIONES_MODELOS", "IVA_REGIME_MODELOS"]
+
 [preservation_boundary]
 technical_configuration_source = "src/cadrumo/core/external_constants.py"
 technical_configuration_data = "src/cadrumo/core/external_constants.toml"
@@ -29,33 +32,3 @@ technical_configuration_disposition = "exclude_from_facts_and_retain"
 technical_constants = ["DEFAULT_CURRENCY", "BINARY_MIME_TYPE", "JSON_MIME_TYPE", "CSV_MIME_TYPE", "JSONL_MIME_TYPE", "XLSX_MIME_TYPE", "CLASSIFIED_BY_MANUAL", "CLASSIFIED_BY_AUTO", "PDF_MIME_TYPE", "PDF_EXTENSION", "XML_MIME_TYPE", "XLS_EXTENSION", "XLSX_EXTENSION", "XLSM_EXTENSION", "LATIN_1_ENCODING", "UTF_8_ENCODING", "CSV_ENCODING_FALLBACK_CHAIN", "PROVENANCE_SOURCE_MANUAL_CLI", "PROVENANCE_SOURCE_CENSO_ARTEFACT", "SANDBOX_LABEL_PREFIX", "OUTPUT_LANGUAGE_ENV_VAR", "DEFAULT_OUTPUT_LANGUAGE", "SUPPORTED_OUTPUT_LANGUAGES"]
 technical_types = ["_Frozen", "AeatDomainSection", "AeatSedePathSection", "AeatClaveMovilSurface", "AeatClavePermanenteSurface", "AeatPre303Surface", "AeatHelpPageSection", "AeatNotificationsQuery", "AeatOracleSection", "AeatLiveSafety", "AeatPortalPathSection", "AeatSection", "GoogleOAuthScopeSection", "GoogleServiceSection", "OnlineServicesSection", "ExternalConstants", "OutputLanguage"]
 technical_functions = ["load_external_constants"]
-
-[[classifications]]
-symbol = "RETENCIONES_MODELOS"
-kind = "extraction_rule"
-destination_id = ""
-destination_family = ""
-authority = "src/cadrumo/core/external_constants.py:RETENCIONES_MODELOS"
-dependencies = ["W03.P10.S49", "W04.P16.S31"]
-disposition = "move_to_public_aggregation_routing"
-closure = "a public aggregation routing owner replaces the CLI import; declaration import count is zero"
-
-[[classifications]]
-symbol = "IVA_REGIME_MODELOS"
-kind = "implementation_coverage"
-destination_id = ""
-destination_family = ""
-authority = "src/cadrumo/core/external_constants.py:IVA_REGIME_MODELOS"
-dependencies = ["W03.P13.S53", "W04.P16.S31"]
-disposition = "move_to_calendar_coverage_policy"
-closure = "the registry applicability or calendar-policy owner replaces the coverage import; declaration import count is zero"
-
-[[declarations]]
-symbol = "RETENCIONES_MODELOS"
-family = "entity_set"
-consumers = [{ path = "src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py", symbol = "_persist_cli_owned_observations" }]
-
-[[declarations]]
-symbol = "IVA_REGIME_MODELOS"
-family = "entity_set"
-consumers = [{ path = "src/cadrumo/application/overview/calendar_warnings.py", symbol = "_IVA_REGIME_MODELOS" }]

@@ -65,6 +65,7 @@ class RetencionesAggregationSourceResolver:
     owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (BindingSourceKind.RETENCIONES_AGGREGATION,)
 
     def __init__(self, *, retencion_repository: RetencionObservationRepository | None = None) -> None:
+        """Optionally use the supplied encrypted retención-observation repository."""
         self._retencion_repository = retencion_repository
 
     @staticmethod
@@ -93,6 +94,7 @@ class RetencionesAggregationSourceResolver:
         return modelo in _RETENCIONES_AGGREGATORS
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        """Resolve the retenciones binding values for the declared modelo context."""
         if not revision_has_binding_source(context.revision, "retenciones_aggregation"):
             return empty_source_resolution(self.resolver_id, self.owned_sources)
         if str(context.modelo) not in _RETENCIONES_AGGREGATORS:
