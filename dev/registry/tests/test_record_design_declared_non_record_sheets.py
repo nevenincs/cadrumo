@@ -11,7 +11,6 @@ missing record, and an undeclared skip still is.
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.loader import load_catalogue_file
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
@@ -19,7 +18,9 @@ from cadrumo.domain.calculations.registry.record_design_schema import (
     RecordDesignExtraction,
     RecordDesignSkippedSheet,
 )
-from dev.registry.compiler.record_design import extract_record_design
+
+from ..compiler.loader import load_catalogue_file
+from ..compiler.record_design import extract_record_design
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

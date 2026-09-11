@@ -33,8 +33,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from cadrumo.core.toml import read_toml
-
-from ...quality.unread_inputs import report_unread
+from dev.quality.unread_inputs import report_unread
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 SCANNED_ROOTS = ("src/cadrumo", "dev")

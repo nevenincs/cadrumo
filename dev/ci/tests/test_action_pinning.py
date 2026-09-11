@@ -28,8 +28,8 @@ import pytest
 import yaml
 
 from cadrumo.core.directory_scan import scan_directory
+from dev._paths import REPO_ROOT
 
-from ..._paths import REPO_ROOT
 from ..workflow_run_text import executed_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

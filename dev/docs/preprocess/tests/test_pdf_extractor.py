@@ -18,7 +18,8 @@ from pathlib import Path
 
 import pytest
 
-from ...._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from .._parts import TEXT_BUDGET_BYTES, split_units_by_budget, stamp_part_anchors
 from .._pdf import (
     PDF_EXTRACTOR_ID,

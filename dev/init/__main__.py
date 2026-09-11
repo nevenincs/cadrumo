@@ -46,8 +46,9 @@ import sys
 from pathlib import Path
 
 from dev.exit_codes import INIT_HOST_TOOL_MISSING, INIT_STALE, OK
-from dev.init import plan
-from dev.init.contract import (
+
+from . import plan
+from .contract import (
     DONE,
     FAILED,
     FORCE_ENV,
@@ -63,18 +64,18 @@ from dev.init.contract import (
     StepResult,
     build_report,
 )
-from dev.init.probe import check_all
-from dev.init.process import run as run_step
-from dev.init.stamp import (
+from .probe import check_all
+from .process import run as run_step
+from .stamp import (
     is_current,
     phase_digest,
     report_path,
     staleness,
 )
-from dev.init.stamp import (
+from .stamp import (
     read as read_stamp,
 )
-from dev.init.stamp import (
+from .stamp import (
     write as write_stamp,
 )
 

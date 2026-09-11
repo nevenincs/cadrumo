@@ -29,3 +29,11 @@ consumer = "cadrumo.application.filing.export_draft"
 requires_snapshot = true
 legal_refs = ["orden-hfp-227-2017:art-2"]
 source_refs = ["aeat-dr-222-2025"]
+
+[[revisions."2025-y-siguientes".application_links]]
+id = "modelo-222-calculation"
+surface = "calculation"
+consumer = "cadrumo.domain.calculations.registry.calculate_registry_snapshot"
+requires_snapshot = true
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]

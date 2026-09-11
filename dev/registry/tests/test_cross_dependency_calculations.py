@@ -49,11 +49,12 @@ import pytest
 from cadrumo.core.aggregation import RetencionClave
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from cadrumo.core.period import Period
-from cadrumo.tests import FIXTURES_DIR
-from cadrumo.domain.period import calculation_filing_date
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation, resolve_available_bound_inputs_by_casilla_id
+from cadrumo.domain.calculations.registry.bindings import (
+    RegistryModeloObservation,
+    resolve_available_bound_inputs_by_casilla_id,
+)
 from cadrumo.domain.calculations.registry.bindings_previous_filing import resolve_previous_filing_binding_values
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.relations import (
@@ -63,8 +64,14 @@ from cadrumo.domain.calculations.registry.relations import (
     resolve_relation_values_from_observations,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
-from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation, resolve_withholding_binding_values
-from dev.registry.tests._cross_dependency_calculation_support import (
+from cadrumo.domain.calculations.registry.withholding_bindings import (
+    WithholdingObservation,
+    resolve_withholding_binding_values,
+)
+from cadrumo.domain.period import calculation_filing_date
+from cadrumo.tests import FIXTURES_DIR
+
+from ._cross_dependency_calculation_support import (
     _casilla_inputs,
     _grounded_observations,
     _observations_from_requirements,

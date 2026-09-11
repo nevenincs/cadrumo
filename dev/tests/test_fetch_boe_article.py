@@ -22,7 +22,7 @@ from typing import Final
 
 import pytest
 
-from ..corpus.fetch_boe_normative import (
+from dev.corpus.fetch_boe_normative import (
     ArticleRedaction,
     NormativeAcquisitionError,
     article_redaction_document,

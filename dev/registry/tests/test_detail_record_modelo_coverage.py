@@ -17,7 +17,8 @@ import pytest
 
 from cadrumo.application.storage.calc_sheets.engine import collect_row_sets
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
-from dev.registry.tests._registry_schema_support import _committed_registry_tree
+
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

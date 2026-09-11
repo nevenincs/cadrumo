@@ -10,12 +10,6 @@ import pytest
 from cadrumo.core.aggregation import RetencionClave
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.deadlines.errors import DeadlineValidationError
-from cadrumo.domain.deadlines.festivos import shift_deadline
-from cadrumo.tests.aeat_literal_fixtures import aeat_host
-from cadrumo.tests.registry_observations import registry_grounded_modelo_observation
-from cadrumo.tests.registry_snapshot import build_snapshot
-from dev.registry.compiler.validator import RegistryValidator
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
@@ -27,7 +21,14 @@ from cadrumo.domain.calculations.registry.withholding_bindings import (
     WithholdingObservation,
     resolve_withholding_binding_values,
 )
-from dev.registry.tests._registry_schema_support import _committed_modelo, _committed_snapshot
+from cadrumo.domain.deadlines.errors import DeadlineValidationError
+from cadrumo.domain.deadlines.festivos import shift_deadline
+from cadrumo.tests.aeat_literal_fixtures import aeat_host
+from cadrumo.tests.registry_observations import registry_grounded_modelo_observation
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ..compiler.validator import RegistryValidator
+from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -9,8 +9,8 @@ from typing import Any, Final
 import pytest
 import yaml
 
-from ..._paths import REPO_ROOT
-from ...ci.workflow_run_text import executed_lines, executed_text
+from dev._paths import REPO_ROOT
+from dev.ci.workflow_run_text import executed_lines, executed_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

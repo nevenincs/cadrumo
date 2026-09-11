@@ -23,8 +23,8 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from dev.registry.compiler.loader import load_modelo_directory
 
+from ..compiler.loader import load_modelo_directory
 from ..pipeline._tree_validation import GeneratedExportTreeValidationContext, _validated_target_snapshot
 from ..pipeline.candidate_staging import stage_continuity_metadata, stage_generated_export_candidate
 from ..pipeline.cli import _supporting_modelos

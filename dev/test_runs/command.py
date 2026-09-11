@@ -11,7 +11,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
-from .._paths import REPO_ROOT, UTF_8
+from dev._paths import REPO_ROOT, UTF_8
+
 from .paths import allocate_run_directory
 
 _UTF_8: Final[str] = UTF_8

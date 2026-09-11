@@ -27,7 +27,7 @@ from __future__ import annotations
 from collections import defaultdict
 from dataclasses import dataclass
 
-from dev.registry.compiler.authority import compiled_bundled_authority
+from ..compiler.authority import compiled_bundled_authority
 
 
 @dataclass(frozen=True, slots=True, order=True)

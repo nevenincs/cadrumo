@@ -25,7 +25,8 @@ from cadrumo.domain.calculations.registry.detail_record_bindings import (
     resolve_atribucion_binding_row_values,
     resolve_foreign_asset_binding_row_values,
 )
-from dev.registry.tests._registry_schema_support import _committed_registry_tree
+
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

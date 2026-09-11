@@ -10,8 +10,9 @@ from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from dev.registry.compiler.edition_materialisation import materialise_edition
-from dev.registry.conformance.tests._loader_directory_mode_support import _write_standard_manifest
+
+from ..compiler.edition_materialisation import materialise_edition
+from ..conformance.tests._loader_directory_mode_support import _write_standard_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

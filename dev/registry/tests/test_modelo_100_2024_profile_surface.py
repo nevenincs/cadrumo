@@ -14,10 +14,11 @@ from cadrumo.domain.calculations.registry.bindings import ProfileSelector, selec
 from cadrumo.domain.calculations.registry.schema import RegistryCatalogues, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.tests.registry_snapshot import build_snapshot
-from dev.registry.compiler.fact_providers import compile_registered_fact_providers
-from dev.registry.compiler.loader import load_shared_catalogues
-from dev.registry.compiler.validator import RegistryValidator
-from dev.registry.maintenance_support import load_modelo_path
+
+from ..compiler.fact_providers import compile_registered_fact_providers
+from ..compiler.loader import load_shared_catalogues
+from ..compiler.validator import RegistryValidator
+from ..maintenance_support import load_modelo_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

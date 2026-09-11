@@ -5,16 +5,11 @@ tags:
 date: '2026-09-11'
 modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:cee58f4c5cdfd8726522910828b12e0a743db640445da71a4b2b668ad338f8ca'
+body_hash: 'sha256:59adf613a1e6dff951939c8748b621003c934e5796f2672dbc6eea2f4daaf73c'
 step_id: 'S63'
 related:
   - "[[2026-09-09-registry-edition-authoring-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # [M | opus-medium] Unblock the successor edges that fail for missing lineage rather than order: of 67 successor edges, 33 are blocked because a predecessor row carries no continuidad_id, 2 by a lineage withdrawn without a retirement record, and 1 by a lower authority grade (that one correctly stays full-copy). For each lineage-blocked edge, seed or ground the missing predecessor-row lineage through the existing seeder and rulings (seeded marked apart from grounded, no identity from a byte span or box number alone), and declare each real withdrawal as a retirement evolution grounded in the official design. Rows that cannot be grounded stay unresolved in the lineage ledger, never guessed. Proof: the migration script reports each unblocked edge as migratable, the lineage totality gate stays at zero uncovered and zero stale, and every edge still blocked is listed with its reason.
 

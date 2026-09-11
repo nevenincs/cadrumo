@@ -26,7 +26,7 @@ corpus. Each test states whether it is DISCRIMINATING or SUPPORTING.
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.loader import load_catalogue_file
+from test_support.registry_authoring import load_catalogue_file
 
 from ....core.citation_grounding import CitationGrounding
 from ....core.resources.bundled_data import bundled_path

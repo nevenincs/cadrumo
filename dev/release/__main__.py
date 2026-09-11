@@ -13,8 +13,8 @@ from __future__ import annotations
 
 import argparse
 
-from dev.release.preview import preview
-from dev.release.rollback import print_procedure
+from .preview import preview
+from .rollback import print_procedure
 
 
 def main(argv: list[str] | None = None) -> int:

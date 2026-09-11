@@ -10,8 +10,6 @@ from __future__ import annotations
 
 import pytest
 
-from dev.registry.compiler.authority import compiled_bundled_authority
-
 from ..analysis.corpus import bundled_modelo_ids
 from ..analysis.manifest_uncited_references import (
     KINDS,
@@ -21,6 +19,7 @@ from ..analysis.manifest_uncited_references import (
     screen_authority as uncited_screen,
 )
 from ..analysis.provenance_consistency import screen_authority as citing_screen
+from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

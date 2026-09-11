@@ -10,7 +10,6 @@ from typing import get_args
 
 import pytest
 import rtoml
-from dev.registry.compiler.loader import load_catalogue_file
 from pydantic import ValidationError
 
 from cadrumo.core.directory_scan import scan_directory
@@ -19,9 +18,9 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
-from dev.registry.compiler.loader import load_catalogue_file
-from dev.registry.maintenance_support import resolve_record_design_binary
 
+from ..compiler.loader import load_catalogue_file
+from ..maintenance_support import resolve_record_design_binary
 from ..pipeline import _export_tree, render_profile, render_profile_eligibility
 from ..pipeline.joined_record_design import (
     JoinedRecordDesign,

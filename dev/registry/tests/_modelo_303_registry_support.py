@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.tests.aeat_literal_fixtures import aeat_host
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.tests.aeat_literal_fixtures import aeat_host
 
 _WWW1_HOST = aeat_host("www1")
 _WWW6_HOST = aeat_host("www6")

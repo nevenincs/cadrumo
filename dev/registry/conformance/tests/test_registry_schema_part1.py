@@ -11,12 +11,6 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.identity import SPANISH_TAX_ID_WIDTH, IdentityError, validate_spanish_tax_id
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from dev.registry.compiler._loader_internals import load_modelo_file
-from dev.registry.compiler._validate_export_field_widths import (
-    DRAFT_ATTRIBUTE_CANONICAL_WIDTHS,
-    validate_draft_field_slot_width,
-)
-from dev.registry.compiler.validator import RegistryValidator
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
@@ -37,8 +31,14 @@ from cadrumo.domain.calculations.registry.schema_surfaces import (
     CasillaDefinition,
 )
 from cadrumo.tests.registry_snapshot import build_snapshot
-from dev.registry.conformance.coverage import build_model_law_coverage_ledger
 
+from ...compiler._loader_internals import load_modelo_file
+from ...compiler._validate_export_field_widths import (
+    DRAFT_ATTRIBUTE_CANONICAL_WIDTHS,
+    validate_draft_field_slot_width,
+)
+from ...compiler.validator import RegistryValidator
+from ..coverage import build_model_law_coverage_ledger
 from ._registry_schema_support import (
     _EXPECTED_LIVE_CROSS_REFERENCES,
     _NUMERIC_CASILLA_01,

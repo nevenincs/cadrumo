@@ -92,7 +92,8 @@ from typing import Final
 
 from packaging.version import InvalidVersion, Version
 
-from .._paths import REPO_ROOT, UTF_8
+from dev._paths import REPO_ROOT, UTF_8
+
 from .burned_versions import BurnedVersionLedgerError, burn_reason, canonical_version, is_burned
 
 _UTF_8: Final[str] = UTF_8

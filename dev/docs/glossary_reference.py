@@ -50,8 +50,8 @@ from typing import cast
 from cadrumo.core.concept_lifecycle import ConceptLifecycle
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
+from dev._paths import UTF_8
 
-from .._paths import UTF_8
 from ._locale_chrome import docs_chrome
 from .build import docs_build_language
 from .legal_reference import LEGAL_CATALOGUE_RELPATH, legal_citation

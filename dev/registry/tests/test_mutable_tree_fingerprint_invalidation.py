@@ -28,28 +28,28 @@ import time
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.loader import _load_registry_tree_cached, load_registry_tree
 
 from cadrumo.core.config import override_settings
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
-from dev.registry.compiler._loader_internals import (
+
+from ..compiler._loader_internals import (
     _collect_registry_directory_fingerprints,
     _collect_registry_tree_fingerprints,
     _collect_registry_tree_fingerprints_uncached,
 )
-from dev.registry.compiler.identity import (
+from ..compiler.identity import (
     RegistryIdentity,
     RegistryIdentityOrigin,
     compute_walked_tree_digest,
 )
-from dev.registry.compiler.loader import _load_registry_tree_cached, load_registry_tree
-from dev.registry.compiler.loader_cache import is_bundled_registry_root
-from dev.registry.compiler.loader_fingerprints import (
+from ..compiler.loader import _load_registry_tree_cached, load_registry_tree
+from ..compiler.loader_cache import is_bundled_registry_root
+from ..compiler.loader_fingerprints import (
     _registry_fingerprint_cache,
     clear_fingerprint_cache,
 )
-from dev.registry.compiler.verdict_cache import (
+from ..compiler.verdict_cache import (
     certify_registry_validation,
     compute_verdict_key,
     registry_validation_is_certified,

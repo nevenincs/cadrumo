@@ -1,31 +1,31 @@
 """Record-design corpus discovery and revision-span test support."""
 
 from __future__ import annotations
-# Development-only record-design corpus support.
 
+# Development-only record-design corpus support.
 import re
 from functools import cache, lru_cache
 from pathlib import Path
-
-from dev.registry.compiler.authority import compile_validated_authority
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.external_constants import PDF_EXTENSION as _PDF_EXTENSION
 from cadrumo.core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from dev.registry.compiler.record_design import (
+from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignSheet
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from cadrumo.tests.registry_tree import bundled_registry_tree
+
+from ..compiler.authority import compile_validated_authority
+from ..compiler.record_design import (
     extract_record_design_pdf,
     extract_record_design_workbook,
     extract_record_design_xls_workbook,
 )
-from dev.registry.compiler.record_design_pdf_rows import clean_pdf_line
-from dev.registry.compiler.record_design_pdf_visual import extract_pdf_text_lines
-from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignSheet
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from ..compiler.record_design_pdf_rows import clean_pdf_line
+from ..compiler.record_design_pdf_visual import extract_pdf_text_lines
 
 _CASILLA_TAG_RE = re.compile(r"\[(\d{1,5})\]")
 

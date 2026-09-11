@@ -9,8 +9,6 @@ body_hash: 'sha256:3c0ed1ad813b0ea0a114d41bf3176c4484047155a711d967de50e8277ad99
 related: []
 ---
 
-
-
 # `registry-authority-artifact-boundary` audit: `provider relocation`
 
 ## Scope

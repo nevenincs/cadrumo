@@ -46,9 +46,8 @@ from typing import TextIO
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.link_safety import is_link_like
 from cadrumo.tests import pytest_numbered_dir_root, reap_abandoned_numbered_dirs
-
-from .._paths import REPO_ROOT
-from ..test_runs.reaper import assess_run_directories, reclaim_run_directories
+from dev._paths import REPO_ROOT
+from dev.test_runs.reaper import assess_run_directories, reclaim_run_directories
 
 CLAUDE_TEMP_STEM = "claude"
 """Claude Code's root under the OS temp directory.

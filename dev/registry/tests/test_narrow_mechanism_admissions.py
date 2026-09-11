@@ -30,8 +30,8 @@ See Also:
 """
 
 from __future__ import annotations
-# Development-only record-design corpus gate.
 
+# Development-only record-design corpus gate.
 import json
 
 import pytest
@@ -42,11 +42,12 @@ from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
-from dev.registry.compiler.record_design import extract_record_design
 from cadrumo.domain.calculations.registry.record_design_schema import (
     _AUXILIARY_ENVELOPE_HEADER_PERIOD_RE,
     _auxiliary_header_constant,
 )
+
+from ..compiler.record_design import extract_record_design
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

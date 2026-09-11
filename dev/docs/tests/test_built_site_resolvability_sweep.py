@@ -55,7 +55,8 @@ from pathlib import Path
 import pytest
 from bs4 import BeautifulSoup
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..pagefind_inject import _materialise_records
 
 pytestmark = [

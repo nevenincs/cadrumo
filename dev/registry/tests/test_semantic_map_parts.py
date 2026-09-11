@@ -11,8 +11,8 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from dev.registry.compiler.authority import compiled_bundled_authority
 
+from ..compiler.authority import compiled_bundled_authority
 from ..pipeline._semantic_map_validation import validate_declared_parts
 from ..pipeline.joined_record_design import JoinedRecordDesignField, design_view
 from ..pipeline.render_check import revision_render_inputs

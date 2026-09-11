@@ -20,7 +20,8 @@ from typing import Annotated
 
 import typer
 
-from .._paths import UTF_8
+from dev._paths import UTF_8
+
 from . import _coverage, _diff, _harness, _inventory, _raster, _viewports
 from ._artifacts import (
     DEFAULT_RUN_NAME,

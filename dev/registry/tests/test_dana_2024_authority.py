@@ -52,8 +52,9 @@ from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, Gove
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 from cadrumo.tests.registry_tree import bundled_registry_tree
-from dev.registry.compiler.fact_providers import compile_registered_fact_providers
-from dev.registry.compiler.legal_grounding import (
+
+from ..compiler.fact_providers import compile_registered_fact_providers
+from ..compiler.legal_grounding import (
     legal_reference_quotes_corpus,
     verify_legal_catalogue_grounding,
 )

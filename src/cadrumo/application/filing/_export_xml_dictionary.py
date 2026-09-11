@@ -372,7 +372,7 @@ def _xml_dictionary_element_order(
 
     Args:
         source: The layout's resolved XSD :class:`SourceReference`.
-        source_payloads: Signed publication bytes keyed by source reference.
+        source_payloads: Published authority bytes keyed by source reference.
 
     Returns:
         Absolute element path (``""`` for the root's own children) mapped to the
@@ -381,7 +381,7 @@ def _xml_dictionary_element_order(
         first-encounter order for it.
 
     Raises:
-        FilingExportValidationError: The signed XSD projection could not be parsed, or declares no
+        FilingExportValidationError: The published XSD projection could not be parsed, or declares no
             root ``Declaracion`` element to walk from.
     """
     root = _xml_dictionary_xsd_root(source, source_payloads=source_payloads)

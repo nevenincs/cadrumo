@@ -61,8 +61,9 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-from .._paths import REPO_ROOT, UTF_8
-from ..test_runs.paths import allocate_run_directory
+from dev._paths import REPO_ROOT, UTF_8
+from dev.test_runs.paths import allocate_run_directory
+
 from .complexity import scan_complexity
 from .duplication import DuplicationOutcome, run_duplication_scan
 

@@ -12,7 +12,7 @@ from typing import cast
 
 import pytest
 
-from ...source_tree import repository_files, snapshot
+from dev.source_tree import repository_files, snapshot
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

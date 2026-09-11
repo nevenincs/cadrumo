@@ -47,8 +47,8 @@ from dataclasses import dataclass
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from dev.registry.compiler.authority import compiled_bundled_authority
 
+from ..compiler.authority import compiled_bundled_authority
 from ..pipeline.render_check import revision_render_inputs
 from .footnote_pointer_notes import design_transcription_path, sheet_note_definitions
 

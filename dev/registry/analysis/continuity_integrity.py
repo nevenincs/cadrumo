@@ -38,8 +38,8 @@ from dataclasses import dataclass
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
-from dev.registry.compiler.authority import compiled_bundled_authority
 
+from ..compiler.authority import compiled_bundled_authority
 from .casilla_id_grammar import classify_casilla_id
 from .corpus import bundled_modelo_ids
 

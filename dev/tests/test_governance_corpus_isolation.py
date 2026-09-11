@@ -56,9 +56,8 @@ from typing import Final
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
-
-from .._paths import REPO_ROOT
-from ..quality.governance_corpus_scan import (
+from dev._paths import REPO_ROOT
+from dev.quality.governance_corpus_scan import (
     GOVERNANCE_TREE_ROOTS,
     GovernanceRefForm,
     find_governance_path_violations,

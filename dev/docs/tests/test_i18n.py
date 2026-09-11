@@ -6,7 +6,8 @@ from pathlib import Path, PurePosixPath, PureWindowsPath
 
 import pytest
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..i18n import _EXCLUDED_FILES, prune_orphan_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]

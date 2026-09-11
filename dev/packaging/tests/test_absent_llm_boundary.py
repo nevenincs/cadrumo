@@ -23,7 +23,8 @@ from importlib.metadata import packages_distributions
 
 import pytest
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from .._distribution_names import normalise_distribution_name
 from ..lane_verification_core import optional_extra_registry
 from ..smoke_absent_llm import _EXPECTED_EXTRA, _INFERENCE_SURFACES

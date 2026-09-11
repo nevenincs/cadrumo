@@ -31,21 +31,21 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.export_parse import xml_dictionary_entries
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.tests.registry_tree import bundled_registry_tree
-from dev.registry.conformance.errors import RegistryApplicationInputError
-from dev.registry.conformance.external_grounding import (
+
+from ...maintenance_support import load_bundled_external_oracle_inventory
+from ..errors import RegistryApplicationInputError
+from ..external_grounding import (
     RegistryExternalGroundingAudit,
     build_external_grounding_audit,
 )
-from dev.registry.conformance.profile import (
+from ..profile import (
     AnnualCasillaPopulationComparison,
     RegistryConformanceProfile,
     build_registry_conformance_profile,
     compare_annual_casilla_population,
     compare_annual_casilla_population_for_revision,
 )
-from dev.registry.conformance.registry_classification_coherence import build_classification_coherence_audit
-from dev.registry.maintenance_support import load_bundled_external_oracle_inventory
-
+from ..registry_classification_coherence import build_classification_coherence_audit
 from ._conformance_profile_fixtures import degraded_profile, validated_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -20,7 +20,8 @@ from cadrumo.domain.transactions.tipo_actividad_partitions import (
     resolve_tipo_actividad_selector,
     tipo_actividad_code_set,
 )
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -9,11 +9,16 @@ import pytest
 
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from dev.registry.compiler.validator import RegistryValidator
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.binding_selector_utils import BindingFixedExportSelector
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, FormulaDefinition, ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import (
+    DataBindingDefinition,
+    FormulaDefinition,
+    ModeloDefinition,
+    ModeloRevision,
+    RegistryCatalogues,
+)
 from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
 from cadrumo.domain.calculations.registry.schema_extraction import (
     ExtractionProfileDefinition,
@@ -28,7 +33,9 @@ from cadrumo.domain.calculations.registry.schema_verification import (
     VerificationExpectationDefinition,
     VerificationPredicateDefinition,
 )
-from dev.registry.tests._referential_integrity_support import (
+
+from ..compiler.validator import RegistryValidator
+from ._referential_integrity_support import (
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,
     Decimal,

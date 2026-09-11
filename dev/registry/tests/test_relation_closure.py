@@ -10,9 +10,6 @@ from pydantic import ValidationError
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.registry_observations import registry_grounded_modelo_observation
-from dev.registry.compiler.validator import RegistryValidator
-from dev.registry.compiler._validate_relation_sources import validate_relation_closure, validate_slot_source_hygiene
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
@@ -22,8 +19,16 @@ from cadrumo.domain.calculations.registry.relations import (
     resolve_relation_values_from_observations,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
-from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition, RelationPeriodAlignment, RelationRevisionSelector
-from dev.registry.tests._registry_schema_support import _committed_registry_tree
+from cadrumo.domain.calculations.registry.schema_surfaces import (
+    RelationDefinition,
+    RelationPeriodAlignment,
+    RelationRevisionSelector,
+)
+from cadrumo.tests.registry_observations import registry_grounded_modelo_observation
+
+from ..compiler._validate_relation_sources import validate_relation_closure, validate_slot_source_hygiene
+from ..compiler.validator import RegistryValidator
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -676,7 +681,7 @@ class TestSourceUpperBound:
     """Pure unit coverage for the future-year structural exclusion helpers."""
 
     def test_an_open_ended_candidate_has_no_ceiling(self) -> None:
-        from .._validate_relation_periods import _is_beyond_latest_modelled_source_year, _source_upper_bound
+        from ..compiler._validate_relation_periods import _is_beyond_latest_modelled_source_year, _source_upper_bound
 
         modelos, _catalogues = _committed_tree()
         m115_revision = _modelo(modelos, "115").revisions["2019-y-siguientes"]
@@ -685,7 +690,7 @@ class TestSourceUpperBound:
         assert _is_beyond_latest_modelled_source_year(2099, (m115_revision,)) is False
 
     def test_closed_per_year_candidates_bound_at_the_latest_year(self) -> None:
-        from .._validate_relation_periods import _is_beyond_latest_modelled_source_year, _source_upper_bound
+        from ..compiler._validate_relation_periods import _is_beyond_latest_modelled_source_year, _source_upper_bound
 
         modelos, _catalogues = _committed_tree()
         m100_revisions = tuple(_modelo(modelos, "100").revisions.values())

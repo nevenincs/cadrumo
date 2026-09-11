@@ -17,9 +17,9 @@ from cadrumo.domain.calculations.registry.remote_state_guard import (
 )
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
 from cadrumo.tests.aeat_literal_fixtures import aeat_host
-from dev.registry.maintenance_support import LiveParityCatalogue, OracleEnvironment
-from dev.registry.parity.live_parity import LiveParityOracle
 
+from ..maintenance_support import LiveParityCatalogue, OracleEnvironment
+from ..parity.live_parity import LiveParityOracle
 from ._remote_guard_support import AEAT_WRITE_FORBIDDEN_ACTIONS
 from .aeat_nif_iva_oracle import (
     ORACLE_ID,
@@ -207,7 +207,7 @@ def test_replay_payload_roundtrip_via_nif_iva_driver() -> None:
     """ReplayPayload.model_validate accepts the canonical JSON shape and the
     NIF-IVA replay driver round-trips the same envelope faithfully."""
 
-    from dev.registry.parity.live_parity import ReplayPayload
+    from ..parity.live_parity import ReplayPayload
 
     raw = json.dumps(
         {
@@ -234,7 +234,7 @@ def test_replay_payload_roundtrip_via_nif_iva_driver() -> None:
 def test_replay_payload_strict_rejects_extra_fields_nif_iva() -> None:
     """extra=forbid on ReplayPayload raises ValidationError for unknown keys."""
 
-    from dev.registry.parity.live_parity import ReplayPayload
+    from ..parity.live_parity import ReplayPayload
 
     with pytest.raises(ValidationError, match="Extra"):
         ReplayPayload.model_validate({"observed": {}, "unexpected_key": True})
@@ -243,7 +243,7 @@ def test_replay_payload_strict_rejects_extra_fields_nif_iva() -> None:
 def test_replay_payload_strict_rejects_non_string_value_in_observed_nif_iva() -> None:
     """Mapping[str, str] under strict mode rejects non-string values."""
 
-    from dev.registry.parity.live_parity import ReplayPayload
+    from ..parity.live_parity import ReplayPayload
 
     with pytest.raises(ValidationError):
         ReplayPayload.model_validate({"observed": {"DE111222333": 42}})

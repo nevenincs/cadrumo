@@ -25,7 +25,8 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.provenance import NormativeCorpusProvenance
 from cadrumo.domain.calculations.registry.schema_base import CorpusTier
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
-from dev.registry.compiler.corpus_provenance import classify_normative_corpus_provenance
+
+from .corpus_provenance import classify_normative_corpus_provenance
 
 __all__ = [
     "PROVISION_SUFFIXED_FILENAME",

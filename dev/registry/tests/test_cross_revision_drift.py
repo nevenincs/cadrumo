@@ -27,15 +27,16 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaConstraints, CasillaDefinition
-from dev.registry.compiler._validate_cross_revision import (
+
+from ..compiler._validate_cross_revision import (
     cross_revision_casilla_consistency_failures,
     declared_cross_revision_continuity_semantic_linkage_failures,
 )
-from dev.registry.compiler.loader import load_modelo_directory
-from dev.registry.compiler.registry_scope import validate_registry_scope
-from dev.registry.compiler.validator import RegistryValidator
-from dev.registry.conformance.tests._registry_schema_support import _committed_registry_tree
-from dev.registry.tests._synthetic_locale_fixtures import (
+from ..compiler.loader import load_modelo_directory
+from ..compiler.registry_scope import validate_registry_scope
+from ..compiler.validator import RegistryValidator
+from ..conformance.tests._registry_schema_support import _committed_registry_tree
+from ._synthetic_locale_fixtures import (
     _synthetic_locale_scope,
     _write_test_label,
     synthetic_locale_state,

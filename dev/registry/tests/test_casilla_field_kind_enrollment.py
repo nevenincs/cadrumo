@@ -18,7 +18,8 @@ from cadrumo.domain.calculations.registry.schema_exports import (
     ExportRecordDefinition,
 )
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
-from dev.registry.tests._registry_schema_support import _committed_registry_tree
+
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -52,7 +53,7 @@ def test_bundledexport_field_kinds_are_hydrated_enum_members() -> None:
 
 def test_binding_derived_export_fields_preserve_enum_kind() -> None:
     """The binding-derived export path emits CasillaFieldKind members."""
-    from ..withholding_bindings import _WithholdingSelector
+    from cadrumo.domain.calculations.registry.withholding_bindings import _WithholdingSelector
 
     selector = _WithholdingSelector.model_validate(
         {
@@ -133,7 +134,7 @@ def test_m720_binding_fields_remain_visible_when_a_resolved_revision_is_derived_
 
 def test_binding_derived_export_skips_source_mirror_when_row_field_is_hand_authored() -> None:
     """One official fixed-width field can represent multiple source-specific row bindings."""
-    from ..withholding_bindings import _WithholdingSelector
+    from cadrumo.domain.calculations.registry.withholding_bindings import _WithholdingSelector
 
     public_binding = DataBindingDefinition(
         id="binding.rows.public",
@@ -211,7 +212,7 @@ def test_binding_derived_export_skips_source_mirror_when_row_field_is_hand_autho
 
 def test_binding_derived_export_emits_one_field_for_source_mirror_template() -> None:
     """A casilla template row field becomes one binding export field, not one per source."""
-    from ..withholding_bindings import _WithholdingSelector
+    from cadrumo.domain.calculations.registry.withholding_bindings import _WithholdingSelector
 
     public_binding = DataBindingDefinition(
         id="binding.rows.public",
@@ -295,7 +296,7 @@ def _minimal_revision(
 ):
     from datetime import date
 
-    from ..schema import ModeloRevision
+    from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
     return ModeloRevision(
         id="test-revision",

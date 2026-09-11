@@ -28,9 +28,9 @@ import subprocess
 import sys
 from typing import Final
 
-from .._paths import REPO_ROOT
-from ..exit_codes import DRIFT, FIX_STRICT_ENV, OK
-from ..source_tree import content_digest, repository_files
+from dev._paths import REPO_ROOT
+from dev.exit_codes import DRIFT, FIX_STRICT_ENV, OK
+from dev.source_tree import content_digest, repository_files
 
 #: Each fixer's command, in the order a repair pass wants them: lint fixes can
 #: rewrite lines the formatter then re-wraps, so formatting comes last.

@@ -33,18 +33,19 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.loader import load_registry_tree
 
 from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
-from cadrumo.domain.iva.flow import IvaFlowDirection
-from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     iva_ledger_selector,
     resolve_ledger_iva_aggregation_binding_values,
 )
-from dev.registry.tests._gate_support import fragment_declaring
-from dev.registry.tests._ledger_iva_aggregation_support import _deduction_provenance
+from cadrumo.domain.iva.flow import IvaFlowDirection
+from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
+
+from ..compiler.loader import load_registry_tree
+from ._gate_support import fragment_declaring
+from ._ledger_iva_aggregation_support import _deduction_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

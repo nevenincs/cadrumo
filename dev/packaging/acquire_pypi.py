@@ -19,7 +19,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
-from .._paths import UTF_8
+from dev._paths import UTF_8
+
 from ._acquire_common import (
     PYTHON_COHORT_WHEEL_NAMES,
     AcquisitionError,

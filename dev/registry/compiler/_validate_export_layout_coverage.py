@@ -128,8 +128,6 @@ from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
-from .record_design import extract_record_design
-from .record_design_pdf_rows import naturaleza_or_none
 from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignField, RecordDesignSheet
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind
@@ -141,6 +139,9 @@ from cadrumo.domain.calculations.registry.schema_exports import (
     FilingEnvelopeDefinition,
 )
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
+
+from .record_design import extract_record_design
+from .record_design_pdf_rows import naturaleza_or_none
 
 #: AEAT's own filler words for a byte run, matched at the start of a field's
 #: naturaleza or description. Anchored and word-bounded so 'RECTIFICACIONES'

@@ -10,8 +10,8 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.core.modelo import Modelo
-from dev.registry.compiler.authority import compiled_bundled_authority
 
+from ...compiler.authority import compiled_bundled_authority
 from ..closure import load_registry_closure_report
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

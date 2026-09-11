@@ -29,8 +29,8 @@ from cadrumo.core.hashing import canonical_json_bytes, hash_file
 from cadrumo.core.link_safety import is_link_like
 from cadrumo.core.locks import exclusive_file_lock
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from dev.registry.compiler.loader import load_modelo_directory
 
+from ..compiler.loader import load_modelo_directory
 from ..conformance.manager import reset_conformance_cache
 from ._export_tree import RenderedExportTree
 from ._tree_paths import contains

@@ -38,33 +38,40 @@ from cadrumo.domain.calculations.registry.static_inspection import (
     ProjectionEndpointDeclaration,
     RevisionId,
 )
-from dev.registry.compiler.authority_lifecycle import (
+
+from .compiler.authority_lifecycle import (
     SILENT_REGISTRY_AUTHORITY_LIFECYCLE_OBSERVER,
     RegistryAuthorityLifecycleObserver,
 )
-from dev.registry.compiler.authority_state import compiler_reset
-from dev.registry.compiler.fact_providers import reset_registered_fact_providers
-from dev.registry.compiler.identity import (
+from .compiler.authority_state import compiler_reset
+from .compiler.corpus_catalogue import (
+    GeneratedArtifactSource,
+    RegistrySourceKind,
+    RegistryValidationError,
+    verify_source_file,
+)
+from .compiler.fact_providers import reset_registered_fact_providers
+from .compiler.identity import (
     _LOGGER,
     REGISTRY_IDENTITY_SCHEMA_VERSION,
     FingerprintTuples,
     RegistryIdentityStamp,
     registry_identity_stamp_location,
 )
-from dev.registry.compiler.loader import (
+from .compiler.loader import (
     collect_registry_tree_fingerprints as collect_registry_identity_fingerprints,
 )
-from dev.registry.compiler.loader import (
+from .compiler.loader import (
     load_modelo_directory,
     load_modelo_file,
 )
-from dev.registry.compiler.m303_orden_census_artefact import (
+from .compiler.m303_orden_census_artefact import (
     EXTRACTOR_VERSION,
     M303_ORDEN_CENSUS_SCHEMA_VERSION,
     M303AnnualOrdenCensusArtefact,
     M303AnnualOrdenSourceCensus,
 )
-from dev.registry.compiler.m303_orden_manifest import (
+from .compiler.m303_orden_manifest import (
     UTF_8_ENCODING,
     M303AnnualOrdenGeneratedManifest,
     SourceReference,
@@ -73,14 +80,14 @@ from dev.registry.compiler.m303_orden_manifest import (
     _generate_manifest_with_censuses,
     _render_generated_manifest,
 )
-from dev.registry.compiler.verdict_cache import (
+from .compiler.verdict_cache import (
     VERDICT_OUTCOME_GREEN,
     RegistryValidationVerdict,
     compute_shipped_verdict_key,
     shipped_verdict_location,
     write_verdict,
 )
-from dev.registry.parity.external_grounding import (
+from .parity.external_grounding import (
     ExternalGroundingModel,
     ExternalOracleCorpus,
     FilingYear,
@@ -88,15 +95,8 @@ from dev.registry.parity.external_grounding import (
     OraclePayload,
     RentaWebOpenReplayPayload,
 )
-from dev.registry.parity.live_parity import LiveParityOracle, _ParityModel
-from dev.registry.parity.renta_web_open_replay_corpus import replay_corpus_directory
-
-from .compiler.corpus_catalogue import (
-    GeneratedArtifactSource,
-    RegistrySourceKind,
-    RegistryValidationError,
-    verify_source_file,
-)
+from .parity.live_parity import LiveParityOracle, _ParityModel
+from .parity.renta_web_open_replay_corpus import replay_corpus_directory
 
 
 class OracleEnvironment(StrEnum):
@@ -125,8 +125,8 @@ def reset_registry_caches(
     that swap the registry root or rewrite bundled TOML need all three, so the
     package exposes the whole reset rather than its parts.
     """
-    from dev.registry.compiler.loader import _load_registry_tree_cached
-    from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
+    from .compiler.loader import _load_registry_tree_cached
+    from .compiler.loader_fingerprints import clear_fingerprint_cache
 
     lifecycle_observer.registry_cache_reset_requested()
     with compiler_reset():

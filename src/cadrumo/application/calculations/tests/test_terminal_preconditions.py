@@ -11,7 +11,7 @@ from types import ModuleType
 from typing import TYPE_CHECKING
 
 import pytest
-from dev.registry.compiler.loader import load_registry_tree
+from test_support.registry_authoring import load_registry_tree
 
 from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import TerminalPreconditionErrorMixin

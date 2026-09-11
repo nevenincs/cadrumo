@@ -11,8 +11,6 @@ from __future__ import annotations
 
 import pytest
 
-from dev.registry.compiler.authority import compiled_bundled_authority
-
 from ..analysis.condition_overlap import (
     RELATIONS,
     UNITS,
@@ -22,6 +20,7 @@ from ..analysis.condition_overlap import (
     overlapping_conditions,
 )
 from ..analysis.corpus import bundled_modelo_ids
+from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

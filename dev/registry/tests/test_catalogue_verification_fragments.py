@@ -8,6 +8,7 @@ import pytest
 
 from cadrumo.core.corpus_text import normalise_corpus_text, resolve_anchored_extracted_unit
 from cadrumo.core.resources.bundled_data import bundled_path
+
 from ..compiler.legal_grounding import verify_legal_catalogue
 from ._catalogue_verification_support import _catalogues
 

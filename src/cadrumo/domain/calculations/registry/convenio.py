@@ -19,10 +19,12 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
+from typing import Annotated
 
 from pydantic import Field, field_validator, model_validator
 
 from ....core.decimal.constants import ONE, ZERO
+from ....core.frozen_mapping import FROZEN_MAPPING
 from ....core.irnr import ConvenioOverrideKind, TipoRentaIrnr
 from .errors import RegistryValidationError
 from .ids import LegalRefId
@@ -155,7 +157,9 @@ class ConvenioAuthority(RegistryModel):
     single tipo-de-gravamen resolution path, never a parallel rate mechanism.
     """
 
-    treaties: Mapping[str, ConvenioTreaty] = Field(default_factory=dict)
+    treaties: Annotated[Mapping[str, ConvenioTreaty], FROZEN_MAPPING] = Field(
+        default_factory=dict, validate_default=True
+    )
 
     @classmethod
     def empty(cls) -> ConvenioAuthority:

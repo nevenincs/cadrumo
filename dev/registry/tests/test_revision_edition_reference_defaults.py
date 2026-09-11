@@ -25,13 +25,14 @@ from pathlib import Path
 from typing import Final
 
 import pytest
-from dev.registry.compiler.authority import compile_validated_authority
-from dev.registry.compiler.loader import load_modelo_directory
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from dev.registry.conformance.tests._loader_directory_mode_support import _write_standard_manifest
+
+from ..compiler.authority import compile_validated_authority
+from ..compiler.loader import load_modelo_directory
+from ..conformance.tests._loader_directory_mode_support import _write_standard_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -579,7 +580,5 @@ def test_the_source_default_resolves_against_the_catalogue_even_when_no_row_take
         with pytest.raises(RegistryValidationError, match=re.escape(failure)):
             compile_validated_authority(root, bundled_path())
         return
-    revision = (
-        compile_validated_authority(root, bundled_path()).modelo("111").revisions["2019-y-siguientes"]
-    )
+    revision = compile_validated_authority(root, bundled_path()).modelo("111").revisions["2019-y-siguientes"]
     assert revision.casilla_source_refs == (declared,)

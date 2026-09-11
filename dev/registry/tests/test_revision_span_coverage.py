@@ -10,18 +10,19 @@ import pytest
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.tests.registry_tree import bundled_registry_tree
-from dev.registry.tests._revision_span_coverage_support import (
+
+from ._revision_span_coverage_support import (
     _covers_year,
     _current_filing_year,
     _earliest_declared_year,
     _offset_annual_modelo,
     _period_overlap,
 )
-from dev.registry.tests._revision_span_declaration_support import (
+from ._revision_span_declaration_support import (
     _NON_EJERCICIO_COVERAGE_AXIS,
     _OPEN_BOUNDED_ERA_DESIGNS,
 )
-from dev.registry.tests._revision_span_design_support import (
+from ._revision_span_design_support import (
     _DESIGN_ROOT_PARTS,
     _design_coverage_years,
     _design_sources,

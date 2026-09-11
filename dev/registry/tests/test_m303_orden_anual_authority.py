@@ -13,9 +13,7 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from dev.registry.compiler._m303_orden_source import extract_m303_annual_orden_source
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
-from dev.registry.compiler.m303_orden_manifest import load_m303_annual_orden_authority
 from cadrumo.domain.calculations.registry.m303_orden_projection_models import M303AnnualOrdenProjection
 from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
@@ -23,8 +21,11 @@ from cadrumo.domain.iva.regimen_simplificado_rows import (
     M303RegimenSimplificadoScope,
     M303RegimenSimplificadoScopeDecision,
 )
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.maintenance_support import check_m303_annual_orden_manifest
+
+from ..compiler._m303_orden_source import extract_m303_annual_orden_source
+from ..compiler.authority import compiled_bundled_authority
+from ..compiler.m303_orden_manifest import load_m303_annual_orden_authority
+from ..maintenance_support import check_m303_annual_orden_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

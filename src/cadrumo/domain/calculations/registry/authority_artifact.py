@@ -1,9 +1,8 @@
 """Versioned, digest-checked publication format for a validated registry authority.
 
 Development writes the validated authority as canonical JSON; runtime reads it
-back and reconstructs fresh typed models. The artifact is generated output, not
-a signed document: it carries no signature, key, or certificate. Its digest
-detects a truncated, corrupted, or hand-edited file, and its recorded
+back and reconstructs fresh typed models. The artifact is generated output. Its
+digest detects a truncated, corrupted, or hand-edited file, and its recorded
 ``identity_digest`` names the registry and source-evidence inputs it was
 compiled from, so development can tell when it is out of date. This module
 neither knows a registry root nor compiles, repairs, or validates authoring
@@ -28,15 +27,16 @@ refused by name.
 from __future__ import annotations
 
 import json
+import os
 import re
 from base64 import b64decode, b64encode
-from binascii import Error as Base64Error
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
 from pathlib import Path, PurePath
+from threading import Lock
 from typing import Final, cast, get_args
 
 from pydantic import BaseModel, ValidationError
@@ -58,6 +58,7 @@ __all__ = [
     "PublishedLegalEvidence",
     "PublishedSourceEvidence",
     "read_authority_artifact",
+    "read_shared_authority_artifact",
     "write_authority_artifact",
 ]
 
@@ -239,6 +240,47 @@ def read_authority_artifact(path: Path) -> AuthorityArtifact:
     except OSError as exc:
         raise AuthorityArtifactUnavailableError(f"published authority artifact is unavailable at {path}") from exc
     return _decode_artifact(raw)
+
+
+@dataclass(frozen=True, slots=True)
+class _ArtifactFileIdentity:
+    device: int
+    inode: int
+    size: int
+    modified_ns: int
+    changed_ns: int
+
+
+_shared_artifact_lock = Lock()
+_shared_artifacts: dict[str, tuple[_ArtifactFileIdentity, AuthorityArtifact]] = {}
+
+
+def read_shared_authority_artifact(path: Path) -> AuthorityArtifact:
+    """Reuse a verified immutable artifact graph until its file identity changes."""
+    key = os.path.abspath(path)
+    identity = _artifact_file_identity(path)
+    with _shared_artifact_lock:
+        cached = _shared_artifacts.get(key)
+        if cached is not None and cached[0] == identity:
+            return cached[1]
+        _shared_artifacts.pop(key, None)
+        artifact = read_authority_artifact(path)
+        _shared_artifacts[key] = (identity, artifact)
+        return artifact
+
+
+def _artifact_file_identity(path: Path) -> _ArtifactFileIdentity:
+    try:
+        status = path.stat()
+    except OSError as exc:
+        raise AuthorityArtifactUnavailableError(f"published authority artifact is unavailable at {path}") from exc
+    return _ArtifactFileIdentity(
+        device=status.st_dev,
+        inode=status.st_ino,
+        size=status.st_size,
+        modified_ns=status.st_mtime_ns,
+        changed_ns=status.st_ctime_ns,
+    )
 
 
 def _encode_artifact(artifact: AuthorityArtifact) -> bytes:
@@ -491,7 +533,7 @@ def _required_sequence(document: Mapping[str, object], field_name: str) -> Seque
 def _decode_base64(value: str) -> bytes:
     try:
         return b64decode(value.encode("ascii"), validate=True)
-    except (Base64Error, ValueError) as exc:
+    except ValueError as exc:
         raise AuthorityArtifactFormatError(
             "published authority artifact contains invalid base64 source evidence"
         ) from exc

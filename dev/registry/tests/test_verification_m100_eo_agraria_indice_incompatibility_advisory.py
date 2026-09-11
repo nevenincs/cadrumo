@@ -48,7 +48,8 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from dev.registry.maintenance_support import load_modelo_path
+
+from ..maintenance_support import load_modelo_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

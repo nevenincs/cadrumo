@@ -1,8 +1,8 @@
 """Tests for the committed Modelo 369 OSS/IOSS registry foundation."""
 
 from __future__ import annotations
-# Development-only record-design corpus gate.
 
+# Development-only record-design corpus gate.
 import warnings
 from calendar import monthrange
 from datetime import date
@@ -13,8 +13,6 @@ import pytest
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.aeat_literal_fixtures import aeat_host
-from dev.registry.compiler._validate import RegistryValidator
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.ids import LegalRefId
@@ -22,10 +20,13 @@ from cadrumo.domain.calculations.registry.ledger_oss_bindings import (
     OssIossLedgerObservation,
     resolve_ledger_oss_aggregation_binding_values,
 )
-from dev.registry.compiler.record_design import extract_record_design
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_verification import LiveVerificationSurface
-from dev.registry.tests._registry_schema_support import _committed_modelo, _committed_snapshot
+from cadrumo.tests.aeat_literal_fixtures import aeat_host
+
+from ..compiler._validate import RegistryValidator
+from ..compiler.record_design import extract_record_design
+from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW1_HOST = aeat_host("www1")
@@ -503,9 +504,9 @@ def test_modelo_369_esquema_union_demonstrator_bindings_resolve_end_to_end() -> 
     Esquema Unión observations."""
     from decimal import Decimal
 
-    from ....iva.classification import InvoiceKind, TransactionKind
-    from ....iva.oss import OssIossRegime
-    from ....iva.schema import EUMemberState, IvaRateKind
+    from cadrumo.domain.iva.classification import InvoiceKind, TransactionKind
+    from cadrumo.domain.iva.oss import OssIossRegime
+    from cadrumo.domain.iva.schema import EUMemberState, IvaRateKind
 
     modelo, _ = _load_modelo_369()
     revision = modelo.revisions["esquema-union"]
@@ -564,9 +565,9 @@ def test_modelo_369_esquema_importacion_ioss_binding_resolves_low_value_sale() -
     """
     from decimal import Decimal
 
-    from ....iva.classification import InvoiceKind, TransactionKind
-    from ....iva.oss import OssIossRegime
-    from ....iva.schema import EUMemberState, IvaRateKind
+    from cadrumo.domain.iva.classification import InvoiceKind, TransactionKind
+    from cadrumo.domain.iva.oss import OssIossRegime
+    from cadrumo.domain.iva.schema import EUMemberState, IvaRateKind
 
     modelo, _ = _load_modelo_369()
     revision = modelo.revisions["esquema-importacion"]
@@ -641,10 +642,10 @@ def test_modelo_369_esquema_union_cuota_total_resolves_end_to_end() -> None:
     bound casillas → cuota-total formula sum."""
     from decimal import Decimal
 
-    from ....iva.classification import InvoiceKind, TransactionKind
-    from ....iva.oss import OssIossRegime
-    from ....iva.schema import EUMemberState, IvaRateKind
-    from ..formula_runtime import calculate_registry_snapshot
+    from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+    from cadrumo.domain.iva.classification import InvoiceKind, TransactionKind
+    from cadrumo.domain.iva.oss import OssIossRegime
+    from cadrumo.domain.iva.schema import EUMemberState, IvaRateKind
 
     modelo, _ = _load_modelo_369()
     revision = modelo.revisions["esquema-union"]
@@ -716,10 +717,10 @@ def test_modelo_369_esquema_union_cuota_total_resolves_end_to_end() -> None:
 def test_modelo_369_esquema_importacion_cuota_total_resolves_end_to_end() -> None:
     from decimal import Decimal
 
-    from ....iva.classification import InvoiceKind, TransactionKind
-    from ....iva.oss import OssIossRegime
-    from ....iva.schema import EUMemberState, IvaRateKind
-    from ..formula_runtime import calculate_registry_snapshot
+    from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+    from cadrumo.domain.iva.classification import InvoiceKind, TransactionKind
+    from cadrumo.domain.iva.oss import OssIossRegime
+    from cadrumo.domain.iva.schema import EUMemberState, IvaRateKind
 
     modelo, _ = _load_modelo_369()
     revision = modelo.revisions["esquema-importacion"]

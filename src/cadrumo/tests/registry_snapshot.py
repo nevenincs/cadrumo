@@ -10,7 +10,7 @@ from __future__ import annotations
 from datetime import date
 from pathlib import Path
 
-from dev.registry.compiler.validator import RegistryValidator
+from test_support.registry_authoring import RegistryValidator
 
 from ..core.authority_grade import RegistryAuthorityGrade
 from ..domain.calculations.registry._snapshot_internals import _build_validated_snapshot
@@ -126,4 +126,31 @@ def build_validated_snapshot(
         on=on,
         revision_id=revision_id,
         grade=RegistryAuthorityGrade.FILING,
+    )
+
+
+def build_snapshot_for_validated_modelo(
+    modelo: ModeloDefinition,
+    catalogues: RegistryCatalogues,
+    *,
+    filing_year: int,
+    period: str,
+    on: date | None = None,
+    revision_id: RevisionId | None = None,
+    grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
+) -> RegistrySnapshot:
+    """Build a graded snapshot when the caller already validated its modelo.
+
+    Test fixtures that deliberately exercise a later validation layer use this
+    boundary to avoid re-running model-local validation. Production callers
+    should use :func:`build_snapshot` or ``ValidatedRegistryAuthority``.
+    """
+    return _build_validated_snapshot(
+        modelo,
+        catalogues,
+        filing_year=filing_year,
+        period=period,
+        on=on,
+        revision_id=revision_id,
+        grade=grade,
     )

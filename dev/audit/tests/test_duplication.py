@@ -17,8 +17,9 @@ from pathlib import Path
 
 import pytest
 
-from ..._paths import REPO_ROOT
-from ...source_tree import repository_files
+from dev._paths import REPO_ROOT
+from dev.source_tree import repository_files
+
 from ..duplication import (
     CloneGroup,
     DuplicationOutcome,

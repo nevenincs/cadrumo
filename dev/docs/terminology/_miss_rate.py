@@ -22,7 +22,8 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ..._paths import UTF_8
+from dev._paths import UTF_8
+
 from ._sweep import SweepResult
 
 __all__ = [

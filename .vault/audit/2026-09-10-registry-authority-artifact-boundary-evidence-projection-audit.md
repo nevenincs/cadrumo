@@ -9,8 +9,6 @@ body_hash: 'sha256:a451d5e6935e4f546700d5d72d7d9e833110ce82872ace1217a3007cb267a
 related: []
 ---
 
-
-
 # `registry-authority-artifact-boundary` audit: `evidence projection`
 
 ## Scope

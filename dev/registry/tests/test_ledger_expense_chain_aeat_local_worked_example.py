@@ -57,17 +57,18 @@ from cadrumo.application.aggregation import aggregate_renta_ledger_expenses
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.registry_snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
+    resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values,
+)
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.invoices.models import InvoiceCatalogue
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
-    resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values,
-)
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from dev.registry.tests._registry_schema_support import _committed_modelo
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

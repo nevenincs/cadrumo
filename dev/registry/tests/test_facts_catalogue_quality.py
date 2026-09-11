@@ -11,7 +11,6 @@ import pytest
 
 from cadrumo.domain.calculations.registry.facts.resolution import ScalarFactQuery, resolve_governed_fact
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
-from dev.registry.compiler.fact_providers import FactProviderRegistration
 
 from ..analysis.facts_catalogue_quality import (
     FactQualityKind,
@@ -21,6 +20,7 @@ from ..analysis.facts_catalogue_quality import (
     migration_retirement_findings,
     resolved_fact_provenance_findings,
 )
+from ..compiler.fact_providers import FactProviderRegistration
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

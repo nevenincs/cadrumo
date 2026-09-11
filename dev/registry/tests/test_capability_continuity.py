@@ -18,7 +18,6 @@ import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..analysis.capability_continuity import (
     GRADE_LADDER,
@@ -27,6 +26,7 @@ from ..analysis.capability_continuity import (
     modelo_findings,
     screen_authority,
 )
+from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

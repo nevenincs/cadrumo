@@ -10,7 +10,8 @@ from pathlib import Path
 
 import pytest
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..import_hygiene_scan import module_name_for, resolve_relative_import
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

@@ -26,16 +26,15 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests import python_files_under
+from dev._paths import REPO_ROOT as _REPOSITORY_ROOT
+from dev.quality.unread_inputs import report_unread
 from dev.registry.compiler.identity import (
     REGISTRY_IDENTITY_STAMP_FILENAME,
     compute_walked_tree_digest,
     registry_identity_stamp_location,
 )
-from cadrumo.tests import python_files_under
 from dev.registry.maintenance_support import compute_installed_tree_digest
-
-from .._paths import REPO_ROOT as _REPOSITORY_ROOT
-from ..quality.unread_inputs import report_unread
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

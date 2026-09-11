@@ -6,8 +6,6 @@ from datetime import date
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compile_validated_authority
-from dev.registry.compiler.loader import load_registry_tree, load_shared_catalogues
 from pydantic import ValidationError
 
 from cadrumo.core.modelo import Modelo
@@ -18,6 +16,9 @@ from cadrumo.domain.calculations.registry.schema import (
     SociedadesAnnualManualCoverageStatus,
     SupportedFilingYearsCatalogue,
 )
+
+from ..compiler.authority import compile_validated_authority
+from ..compiler.loader import load_registry_tree, load_shared_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

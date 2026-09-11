@@ -50,9 +50,9 @@ from typing import Final
 import pytest
 
 from cadrumo.core.directory_scan import iter_directory, scan_directory
+from dev._paths import REPO_ROOT as _REPO_ROOT
+from dev.ci.workflow_run_text import executed_text
 
-from ..._paths import REPO_ROOT as _REPO_ROOT
-from ...ci.workflow_run_text import executed_text
 from ..campaign import _LANES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

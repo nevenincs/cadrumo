@@ -7,11 +7,12 @@ from datetime import date, timedelta
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.registry_snapshot import build_snapshot
-from dev.registry.compiler.validator import RegistryValidator
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
 from cadrumo.domain.calculations.registry.temporal import select_revision
-from dev.registry.tests._modelo_303_registry_support import (
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ..compiler.validator import RegistryValidator
+from ._modelo_303_registry_support import (
     _M303_ANNUAL_ORDEN_SOURCE_BY_REVISION,
     _M303_EXPLICIT_RECORD_DESIGN_REVISIONS,
     _M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION,

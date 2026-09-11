@@ -27,8 +27,9 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
-from dev.registry.compiler.loader import load_modelo_source
-from dev.registry.compiler.loader_cache import discover_modelo_sources
+
+from ..compiler.loader import load_modelo_source
+from ..compiler.loader_cache import discover_modelo_sources
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -17,6 +17,15 @@ from cadrumo.core.filing_projection_ref import (
     M303RegimenSimplificadoModuleValue,
 )
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from cadrumo.domain.calculations.registry.m303_regimen_simplificado_projection import (
+    _m303_iae_epigraph_wire_value,
+    project_m303_regimen_simplificado_rows,
+    validate_m303_regimen_simplificado_endpoint_epoch,
+)
+from cadrumo.domain.filing_evidence import FilingEvidenceReference
 from cadrumo.domain.iva.errors import IvaValidationError
 from cadrumo.domain.iva.regimen_simplificado_rows import (
     ActividadAgricolaSimplificado,
@@ -26,15 +35,6 @@ from cadrumo.domain.iva.regimen_simplificado_rows import (
     M303RegimenSimplificadoScope,
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
-)
-from cadrumo.domain.filing_evidence import FilingEvidenceReference
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
-from cadrumo.domain.calculations.registry.m303_regimen_simplificado_projection import (
-    _m303_iae_epigraph_wire_value,
-    project_m303_regimen_simplificado_rows,
-    validate_m303_regimen_simplificado_endpoint_epoch,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

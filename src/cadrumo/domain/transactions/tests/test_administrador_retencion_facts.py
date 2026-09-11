@@ -29,7 +29,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.fact_providers import compile_registered_fact_providers
+from test_support.registry_authoring import compile_registered_fact_providers
 
 from ....core.directory_scan import scan_directory
 from ....core.resources.bundled_data import bundled_path

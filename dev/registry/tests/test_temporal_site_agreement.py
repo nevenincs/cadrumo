@@ -12,9 +12,9 @@ import datetime
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..analysis.temporal_site_agreement import site_agreement_findings
+from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

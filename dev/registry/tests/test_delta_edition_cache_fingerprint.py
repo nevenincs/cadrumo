@@ -30,14 +30,15 @@ import pytest
 
 from cadrumo.core.hashing import blake2b_hex
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
-from dev.registry.compiler._loader_internals import (
+
+from ..compiler._loader_internals import (
     _collect_modelo_directory_fingerprints,
     _collect_registry_tree_fingerprints_uncached,
     _load_modelo_directory_cached,
 )
-from dev.registry.compiler.loader import _load_registry_tree_cached, load_modelo_directory, load_registry_tree
-from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
-from dev.registry.conformance.tests._loader_directory_mode_support import (
+from ..compiler.loader import _load_registry_tree_cached, load_modelo_directory, load_registry_tree
+from ..compiler.loader_fingerprints import clear_fingerprint_cache
+from ..conformance.tests._loader_directory_mode_support import (
     write_fragmented_revision,
     write_minimal_shared_catalogues,
 )

@@ -7,20 +7,21 @@ registry selection: the calculation-grade revisions deliberately begin in
 """
 
 from __future__ import annotations
-# Development-only record-design corpus gate.
 
+# Development-only record-design corpus gate.
 from datetime import date
 from hashlib import sha256
 from typing import NamedTuple
 
 import pytest
-from dev.registry.compiler.loader import load_catalogue_file, load_modelo_directory
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from dev.registry.compiler._validate_export_layout_coverage import _position, validate_export_layout_record_coverage
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
-from dev.registry.compiler.record_design import extract_record_design
 from cadrumo.domain.calculations.registry.temporal import select_revision
+
+from ..compiler._validate_export_layout_coverage import _position, validate_export_layout_record_coverage
+from ..compiler.loader import load_catalogue_file, load_modelo_directory
+from ..compiler.record_design import extract_record_design
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

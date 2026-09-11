@@ -29,8 +29,8 @@ from mcp.types import CallToolResult, TextResourceContents
 from pydantic import AnyUrl
 
 from cadrumo.core.directory_scan import scan_directory
+from dev._paths import UTF_8
 
-from .._paths import UTF_8
 from ._installed_wheel_binding import installed_distribution_payload_sha256
 from ._recovery_enrollment import enrolled_profile_creation
 from .command_execution import run_command

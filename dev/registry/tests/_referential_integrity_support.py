@@ -10,17 +10,16 @@ from typing import Literal
 import pytest
 from pydantic import ValidationError as ValidationError
 
-from .....core.authority_grade import RegistryAuthorityGrade
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.classification.policies import SensitivityClass
-from .....core.config import Settings
-from .....core.tax_domain import TaxDomain
-from .....core.toml import freeze_toml
-from .._snapshot_internals import _build_validated_snapshot as build_snapshot_at_grade
-from ..authority import ValidatedRegistryAuthority
-from ..errors import RegistryValidationError
-from ..reference_checks import check_all_id_references
-from ..schema import (
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.classification.policies import SensitivityClass
+from cadrumo.core.config import Settings
+from cadrumo.core.tax_domain import TaxDomain
+from cadrumo.core.toml import freeze_toml
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.reference_checks import check_all_id_references
+from cadrumo.domain.calculations.registry.schema import (
     DataBindingDefinition,
     FormulaDefinition,
     ModeloDefinition,
@@ -53,7 +52,12 @@ from cadrumo.domain.calculations.registry.schema_surfaces import (
     CasillaDefinition,
     RelationDefinition,
 )
-from ..schema_verification import LiveCrossReferenceDecision, VerificationExpectationDefinition, WorkbookParityReference
+from cadrumo.domain.calculations.registry.schema_verification import (
+    LiveCrossReferenceDecision,
+    VerificationExpectationDefinition,
+    WorkbookParityReference,
+)
+from cadrumo.tests.registry_snapshot import build_snapshot_for_validated_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -104,7 +108,7 @@ def _snapshot_for_revision(
     # binding definition -- and carry no export layout, so a filing-grade
     # snapshot refuses on the missing filing capability before any reference is
     # ever checked. The integrity checks themselves are grade-independent.
-    return build_snapshot_at_grade(
+    return build_snapshot_for_validated_modelo(
         modelo,
         catalogues,
         filing_year=filing_year,

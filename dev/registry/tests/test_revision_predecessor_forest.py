@@ -18,13 +18,14 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.loader import load_modelo_directory
 
-from cadrumo.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.revision_predecessor_forest import validate_predecessor_forest
 from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor, ModeloDefinition, NoPredecessor
-from dev.registry.conformance.tests._loader_directory_mode_support import _write_standard_manifest
+from cadrumo.tests.registry_tree import bundled_registry_tree
+
+from ..compiler.loader import load_modelo_directory
+from ..conformance.tests._loader_directory_mode_support import _write_standard_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

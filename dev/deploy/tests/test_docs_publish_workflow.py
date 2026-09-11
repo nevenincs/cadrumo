@@ -20,7 +20,8 @@ from typing import Any
 import pytest
 import yaml
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ...deploy import docs_static_site
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

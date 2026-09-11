@@ -14,7 +14,8 @@ from __future__ import annotations
 import sys
 from collections import Counter
 
-from .._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ._tree_scan import (
     EXCLUDED_PATH_FRAGMENTS,
     SCANNED_SUFFIXES,

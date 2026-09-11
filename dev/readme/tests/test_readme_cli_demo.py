@@ -7,7 +7,8 @@ import sys
 
 import pytest
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from .. import prepare_cli_demo, render_cli_demo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

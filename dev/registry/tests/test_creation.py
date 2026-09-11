@@ -36,7 +36,8 @@ from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.modelos.row_models import Modelo349ClaveOperacion, Modelo349OperadorRow
 from cadrumo.tests.secure_sql import isolated_runtime_profile
-from dev.registry.maintenance_support import load_modelo_path
+
+from ..maintenance_support import load_modelo_path
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -861,7 +862,7 @@ def test_canonical_creation_emits_the_lifecycle_event_for_its_direction(
     the wrong event, which is the same silent mis-attribution the campaign has
     already found on other axes.
     """
-    from ....domain.buckets.event import BucketEventType
+    from cadrumo.domain.buckets.event import BucketEventType
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         result = create_catalogue_invoice(
@@ -878,7 +879,7 @@ def test_canonical_creation_emits_the_lifecycle_event_for_its_direction(
                 currency="EUR",
             ),
         )
-        from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+        from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 
         history = BucketEventHistoryRepository(objects=profile.repository).load().events.values()
 

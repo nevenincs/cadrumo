@@ -52,9 +52,8 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
-
-from ..._paths import REPO_ROOT
-from ...deploy.docs_static_site import (
+from dev._paths import REPO_ROOT
+from dev.deploy.docs_static_site import (
     CANONICAL_DOCS_BASE_URL,
     DEFAULT_SOURCE_LANGUAGE,
     DeploymentTarget,
@@ -64,6 +63,7 @@ from ...deploy.docs_static_site import (
     _public_delivery_checks,
     _site_build_environment,
 )
+
 from ..build import docs_build_language, resolve_record_injector
 from ..pagefind_index import DECIDED_INJECTED_RECORD_KINDS, build_search_index
 from ..pagefind_inject import InjectionStats

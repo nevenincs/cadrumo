@@ -33,12 +33,13 @@ from dev.exit_codes import (
     INIT_STEP_FAILED,
     OK,
 )
-from dev.init.contract import DONE, FAILED, StepResult
+
+from .contract import DONE, FAILED, StepResult
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from dev.init.contract import Step
+    from .contract import Step
 
 #: How many trailing lines of a failed step's output the report carries. Enough
 #: to hold a Python traceback's final frames or a resolver's conflict summary,

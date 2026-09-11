@@ -13,11 +13,8 @@ import shutil
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.loader import load_modelo_directory
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.compiler.loader import load_modelo_directory
 
 from ..analysis.hand_authored_type_column import hand_authored_revisions
 from ..analysis.type_column_coverage import (
@@ -25,6 +22,8 @@ from ..analysis.type_column_coverage import (
     TypeColumnCoverage,
     type_column_coverage,
 )
+from ..compiler.authority import compiled_bundled_authority
+from ..compiler.loader import load_modelo_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

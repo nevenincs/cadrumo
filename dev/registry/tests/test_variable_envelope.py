@@ -5,15 +5,14 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.loader import load_registry_tree
 
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_exports import FilingEnvelopeCloserDerivation
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.compiler.loader import load_registry_tree
 
+from ..compiler.authority import compiled_bundled_authority
+from ..compiler.loader import load_registry_tree
 from ..pipeline._variable_envelope import (
     FilingEnvelopeProvenance,
     compile_filing_envelope_definition,

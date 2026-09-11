@@ -11,15 +11,8 @@ from pydantic import ValidationError
 from typer.testing import CliRunner
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.conformance.closure_models import (
-    RegistryClosureEvidence,
-    RegistryClosureFilingChannelRefusal,
-    RegistryClosureLimb,
-    RegistryClosureOwnerDisposition,
-    RegistryClosureRefusalReason,
-)
 
+from ...compiler.authority import compiled_bundled_authority
 from ...export_proof import FilingExportProofAssessment
 from ...filing_export_proof_contracts import FilingExportProofCoordinate
 from ...temporal_coverage import TemporalCoverageReport, TemporalRevisionCoverage
@@ -34,6 +27,13 @@ from ..closure import (
     check_registry_closure_release,
     load_registry_closure_report,
     render_registry_closure_report,
+)
+from ..closure_models import (
+    RegistryClosureEvidence,
+    RegistryClosureFilingChannelRefusal,
+    RegistryClosureLimb,
+    RegistryClosureOwnerDisposition,
+    RegistryClosureRefusalReason,
 )
 from ..filing_export_coverage import FilingExportCoverageReport
 

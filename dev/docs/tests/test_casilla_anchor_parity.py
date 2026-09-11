@@ -30,7 +30,8 @@ import re
 
 import pytest
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..casilla_reference import CasillaReferenceError, CasillaReferenceResult, render_casilla_reference
 from ..terminology.casilla_anchor import casilla_page_anchor
 from ..terminology.casilla_projection import project_casilla_search_records

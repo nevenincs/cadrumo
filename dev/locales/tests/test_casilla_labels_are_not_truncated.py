@@ -23,7 +23,7 @@ from __future__ import annotations
 import pytest
 import yaml
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

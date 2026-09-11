@@ -6,8 +6,9 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.tests.aeat_literal_fixtures import PROCEDIMIENTOINI_PATH_PREFIX_FIXTURE
-from dev.registry.compiler.validator import RegistryValidator
-from dev.registry.tests._registry_schema_support import _committed_modelo, _committed_registry_tree
+
+from ..compiler.validator import RegistryValidator
+from ._registry_schema_support import _committed_modelo, _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

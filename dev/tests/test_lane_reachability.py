@@ -73,8 +73,8 @@ from pathlib import Path
 
 import pytest
 
-from .._paths import REPO_ROOT
-from ..ci.lane_reachability import (
+from dev._paths import REPO_ROOT
+from dev.ci.lane_reachability import (
     Lane,
     analyse_directory_coverage,
     analyse_reachability,

@@ -114,7 +114,6 @@ from cadrumo.domain.calculations.registry.export import (
     derive_export_layouts_from_bindings as _derive_export_layouts_from_bindings,
 )
 from cadrumo.domain.calculations.registry.export_parse import xml_dictionary_entries as _xml_dictionary_entries
-from dev.registry.compiler.identity import resolve_registry_identity as _resolve_registry_identity
 from cadrumo.domain.calculations.registry.ids import BindingId as _BindingId
 from cadrumo.domain.calculations.registry.ids import FormulaId as _FormulaId
 from cadrumo.domain.calculations.registry.ids import LegalRefId as _LegalRefId
@@ -134,22 +133,22 @@ from cadrumo.domain.calculations.registry.schema_references import SourceReferen
 from cadrumo.domain.calculations.registry.support_matrix import ModeloEntry as _ModeloEntry
 from cadrumo.domain.calculations.registry.support_matrix import build_support_matrix as _build_support_matrix
 from cadrumo.domain.calculations.registry.support_matrix import revision_capability_probe as _revision_capability_probe
-from dev.registry.compiler.authority import compile_validated_authority as _compile_validated_authority
-from dev.registry.compiler.identity import resolve_registry_identity as _resolve_registry_identity
-from dev.registry.compiler.loader import (
+
+from ..compiler.authority import compile_validated_authority as _compile_validated_authority
+from ..compiler.identity import resolve_registry_identity as _resolve_registry_identity
+from ..compiler.loader import (
     collect_registry_tree_fingerprints as _collect_registry_tree_fingerprints,
 )
-from dev.registry.compiler.loader import (
+from ..compiler.loader import (
     load_registry_tree as _load_registry_tree,
 )
-from dev.registry.compiler.registry_scope import (
+from ..compiler.registry_scope import (
     validate_registry_scope as _validate_registry_scope,
 )
-from dev.registry.maintenance_support import UnattributedOraclePayload as _UnattributedOraclePayload
-from dev.registry.maintenance_support import (
+from ..maintenance_support import UnattributedOraclePayload as _UnattributedOraclePayload
+from ..maintenance_support import (
     load_bundled_external_oracle_inventory as _load_bundled_external_oracle_inventory,
 )
-
 from .coverage import REQUIRED_COVERAGE_TIERS as _REQUIRED_COVERAGE_TIERS
 from .coverage import ConstructEvidenceLedger as _ConstructEvidenceLedger
 from .coverage import ConstructEvidenceRow as _ConstructEvidenceRow

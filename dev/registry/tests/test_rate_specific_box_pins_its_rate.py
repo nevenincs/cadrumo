@@ -66,12 +66,13 @@ import re
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compile_validated_authority
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from dev.registry.tests._revision_span_design_support import _CASILLA_TAG_RE
+
+from ..compiler.authority import compile_validated_authority
+from ._revision_span_design_support import _CASILLA_TAG_RE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

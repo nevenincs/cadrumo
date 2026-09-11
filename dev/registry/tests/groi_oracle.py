@@ -13,9 +13,9 @@ from pydantic import AnyUrl
 
 from cadrumo.core.config import Settings
 from cadrumo.domain.calculations.registry.ids import OracleId
-from dev.registry.maintenance_support import LiveParityCatalogue, OracleEnvironment
-from dev.registry.parity.live_parity import OracleSurfaceKind
 
+from ..maintenance_support import LiveParityCatalogue, OracleEnvironment
+from ..parity.live_parity import OracleSurfaceKind
 from .checker_oracle import CheckerDriver, CheckerOperationPlan, CheckerOracle
 
 GROI_ORACLE_ID: OracleId = "aeat-groi-spanish-roi-checker"

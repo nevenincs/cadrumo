@@ -188,7 +188,7 @@ def _resolve_objective_estimation_threshold(
             translated_message="errors.error.error_modelos_validation",
             context={"fact_id": fact_id, "filing_year": filing_year, "fact_legal_refs": False},
         )
-    return cast("ResolvedScalarFact", resolved)
+    return resolved
 
 
 def _as_decimal(value: object, surface: str) -> Decimal:

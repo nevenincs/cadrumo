@@ -18,7 +18,8 @@ from typing import Any, Final
 import pytest
 import yaml
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..workflow_python_selection import declared_python_selection, uv_python_env
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -140,7 +141,7 @@ def test_compatibility_matrix_override_classifier(
 
 def test_release_cohort_enforces_the_repository_python_pin() -> None:
     """The reproducible cohort builder consumes the same pin as CI."""
-    from ...packaging.release_cohort import _REQUIRED_PYTHON_VERSION
+    from dev.packaging.release_cohort import _REQUIRED_PYTHON_VERSION
 
     assert _python_pin() == _REQUIRED_PYTHON_VERSION
 

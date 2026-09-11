@@ -8,7 +8,8 @@ from typing import Annotated, Final
 
 import typer
 
-from ..._paths import UTF_8
+from dev._paths import UTF_8
+
 from ..terminology_handbook.errors import TerminologyLoadError
 from ._synonym_mining import (
     RatificationStatus,

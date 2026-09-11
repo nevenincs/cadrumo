@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.loader import load_modelo_directory
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
-from ...compiler.corpus_catalogue import verify_source_file
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
@@ -15,10 +13,11 @@ from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.tests import REPO_ROOT
 from cadrumo.tests.registry_snapshot import build_snapshot
-from dev.registry.compiler.loader import load_modelo_directory
-from dev.registry.compiler.loader_cache import discover_modelo_sources
-from dev.registry.conformance.coverage import build_model_law_coverage_ledger
 
+from ...compiler.corpus_catalogue import verify_source_file
+from ...compiler.loader import load_modelo_directory
+from ...compiler.loader_cache import discover_modelo_sources
+from ..coverage import build_model_law_coverage_ledger
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

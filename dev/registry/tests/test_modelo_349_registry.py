@@ -11,22 +11,23 @@ import pytest
 from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.export_layout_format import ExportLayoutFormat
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests import REPO_ROOT
-from cadrumo.tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED
-from cadrumo.tests.registry_snapshot import build_snapshot
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from dev.registry.compiler._validate import RegistryValidator
 from cadrumo.domain.calculations.registry.authority import bundled_authority
-from dev.registry.compiler.corpus_catalogue import verify_source_file
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings, resolve_export_layout
 from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
-from dev.registry.compiler.legal_grounding import verify_legal_catalogue
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.temporal import select_revision
-from dev.registry.tests._modelo_349_registry_support import (
+from cadrumo.tests import REPO_ROOT
+from cadrumo.tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ..compiler._validate import RegistryValidator
+from ..compiler.corpus_catalogue import verify_source_file
+from ..compiler.legal_grounding import verify_legal_catalogue
+from ._modelo_349_registry_support import (
     _DECL_IMPORTE_OPERACIONES_CASILLA,
     _DECL_IMPORTE_RECTIFICACIONES_CASILLA,
     _DECL_NUMERO_OPERADORES_CASILLA,

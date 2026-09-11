@@ -42,12 +42,12 @@ from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
 from cadrumo.domain.calculations.registry.schema_revision_members import ApplicationLinkSurface
-from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.quality.unread_inputs import report_unread
 
-from ...quality.unread_inputs import report_unread
 from ..analysis.casilla_id_grammar import screen_authority as grammar_screen
 from ..analysis.continuity_integrity import screen_authority as continuity_screen
 from ..analysis.export_ref_symmetry import screen_authority as export_ref_screen
+from ..compiler.authority import compiled_bundled_authority
 
 _BINDING_DERIVATION = "derive_export_layouts_from_bindings"
 
@@ -271,13 +271,12 @@ def test_every_screen_searches_a_population_that_is_not_empty(
     lose: it is a filesystem walk, and a corpus moved or renamed would return an
     empty tuple, which reads exactly like a corpus with nothing to report.
     """
-    from dev.registry.maintenance_support import resolved_export_endpoints
-
     from ..analysis.casilla_id_grammar import screen_authority as grammar
     from ..analysis.continuity_integrity import continuity_census
     from ..analysis.footnote_pointer_notes import sheet_note_definitions
     from ..analysis.note_label_scope import transcription_paths
     from ..analysis.wire_type_compatibility import screen_authority as wire_types
+    from ..maintenance_support import resolved_export_endpoints
 
     transcriptions = transcription_paths()
 

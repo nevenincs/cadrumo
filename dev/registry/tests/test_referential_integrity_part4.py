@@ -7,7 +7,6 @@ import pytest
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from dev.registry.compiler.validator import RegistryValidator
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import (
     FormulaDefinition,
@@ -30,7 +29,9 @@ from cadrumo.domain.calculations.registry.schema_revision_members import (
     DependencyClassificationDefinition,
 )
 from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
-from dev.registry.tests._referential_integrity_support import (
+
+from ..compiler.validator import RegistryValidator
+from ._referential_integrity_support import (
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,
     build_minimal_snapshot,

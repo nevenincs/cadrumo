@@ -26,7 +26,8 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
-from .._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from .lane_verification_core import (
     create_pip_venv,
     isolated_product_env,

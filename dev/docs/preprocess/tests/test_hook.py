@@ -27,8 +27,8 @@ import pytest
 from pathspec import PathSpec
 
 from cadrumo.core.directory_scan import iter_directory, scan_directory
+from dev._paths import REPO_ROOT
 
-from ...._paths import REPO_ROOT
 from ..hook import (
     UPSTREAM_SCHEMA_VERSION,
     adapt_outputs,

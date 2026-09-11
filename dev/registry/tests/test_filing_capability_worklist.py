@@ -67,11 +67,12 @@ import pytest
 
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
-from dev.registry.tests.test_cited_design_field_bounds_are_self_consistent import (
+from cadrumo.tests.registry_tree import bundled_registry_tree
+
+from .test_cited_design_field_bounds_are_self_consistent import (
     _KNOWN_SELF_CONTRADICTING_DESIGN,
 )
 
@@ -569,7 +570,7 @@ def _producer_vocabulary_gap(modelo: ModeloDefinition) -> _FilingCapabilityBlock
     therefore not on this list. A modelo genuinely lacking a vocabulary cannot be
     hidden by the alias, because it has no keys under any name.
     """
-    from .....core.filing_producer_key import FilingProducerKey
+    from cadrumo.core.filing_producer_key import FilingProducerKey
 
     prefix = f"m{modelo.id}."
     if any(member.value.startswith(prefix) for member in FilingProducerKey):

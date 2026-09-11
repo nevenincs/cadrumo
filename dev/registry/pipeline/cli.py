@@ -30,9 +30,9 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
     casilla_occurrence_locale_key,
 )
 from dev.locales.manager import LocaleManager, discover_locale_codes
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.compiler.edition_materialisation import MaterialisedEdition, materialise_edition
 
+from ..compiler.authority import compiled_bundled_authority
+from ..compiler.edition_materialisation import MaterialisedEdition, materialise_edition
 from ._export_tree import RenderedExportTree, _render_toml_bytes, render_complete_export_tree
 from ._tree_check import CheckedGeneratedExportTree, GeneratedExportTreeCheckContext, check_generated_export_tree
 from ._tree_publication import (

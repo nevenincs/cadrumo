@@ -11,8 +11,6 @@ import pytest
 from cadrumo.core.aggregation import RelationAggregationOp
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry._relation_aggregation import relation_aggregation_op
-from dev.registry.compiler.validator import RegistryValidator
-from dev.registry.compiler._validate_relation_periods import select_relation_source_revisions
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.bindings import binding_source_casilla_ids
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
@@ -29,7 +27,10 @@ from cadrumo.domain.calculations.registry.schema import (
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_revision_members import DependencyClassificationDefinition
 from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
-from dev.registry.tests._registry_schema_support import _committed_registry_tree
+
+from ..compiler._validate_relation_periods import select_relation_source_revisions
+from ..compiler.validator import RegistryValidator
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -14,10 +14,11 @@ cannot silently relax them.
 from __future__ import annotations
 
 from decimal import Decimal
+
 import pytest
 
 from ..proportionality import ProportionalityKind
-from ..registry import load_category_profiles, resolve_category_profiles
+from ..registry import resolve_category_profiles
 from ..spending_category import SpendingCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

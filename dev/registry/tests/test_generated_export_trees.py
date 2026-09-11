@@ -28,10 +28,6 @@ from pathlib import Path
 from typing import Final, override
 
 import pytest
-from dev.registry.compiler.loader import (
-    load_modelo_directory,
-    load_registry_tree,
-)
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import (
@@ -40,13 +36,13 @@ from cadrumo.domain.calculations.registry.errors import (
 )
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.compiler.loader import (
+
+from ..compiler.authority import compiled_bundled_authority
+from ..compiler.loader import (
     load_modelo_directory,
     load_registry_tree,
 )
-from dev.registry.maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
-
+from ..maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
 from ..pipeline._export_tree import ExportTreeTransportProfile, render_complete_export_tree
 from ..pipeline._tree_check import GeneratedExportTreeCheckContext, check_generated_export_tree
 from ..pipeline._tree_validation import GeneratedExportTreeValidationContext, validate_generated_export_tree

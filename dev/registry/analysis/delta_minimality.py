@@ -106,8 +106,8 @@ from cadrumo.domain.calculations.registry.schema import (
     NoPredecessor,
 )
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-from dev.registry.compiler.authority import compiled_bundled_authority
 
+from ..compiler.authority import compiled_bundled_authority
 from .corpus import bundled_modelo_ids
 
 __all__ = [

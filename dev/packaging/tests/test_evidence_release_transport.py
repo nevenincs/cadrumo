@@ -22,9 +22,8 @@ import pytest
 import yaml
 
 from cadrumo.core.directory_scan import scan_directory
-
-from ..._paths import REPO_ROOT
-from ...ci.workflow_permissions import jobs_granting, jobs_with_unsettled_grant
+from dev._paths import REPO_ROOT
+from dev.ci.workflow_permissions import jobs_granting, jobs_with_unsettled_grant
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

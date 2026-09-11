@@ -47,9 +47,9 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n import lookup_translation_entry
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
+from dev._paths import UTF_8
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..._paths import UTF_8
 from ._miss_rate import load_committed_relevance
 from ._sweep import SweepResult
 from .casilla_projection import project_casilla_search_records

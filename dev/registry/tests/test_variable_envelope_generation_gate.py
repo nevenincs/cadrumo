@@ -6,14 +6,13 @@ import inspect
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.loader import load_catalogue_file
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.compiler.loader import load_catalogue_file
 
+from ..compiler.authority import compiled_bundled_authority
+from ..compiler.loader import load_catalogue_file
 from ..pipeline._export_tree import ExportTreeTransportProfile, RenderedExportTree, render_complete_export_tree
 from ..pipeline.joined_record_design import join_record_design_semantics
 from ..pipeline.record_design_intermediate import load_record_design_intermediate

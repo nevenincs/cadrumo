@@ -29,7 +29,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
-from ..scripted_registration_channels import scripted_registration_descriptors
+from dev.scripted_registration_channels import scripted_registration_descriptors
 
 #: The product's own inherited-HANDLE bootstrap. It converts ownership of the
 #: allowlisted HANDLEs to CRT descriptors, injects the canonical descriptor

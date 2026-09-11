@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import pytest
 
-from dev.registry.compiler.record_design_pdf_repairs import _row_identities_by_record, rejoin_reversed_column_rows
+from ..compiler.record_design_pdf_repairs import _row_identities_by_record, rejoin_reversed_column_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

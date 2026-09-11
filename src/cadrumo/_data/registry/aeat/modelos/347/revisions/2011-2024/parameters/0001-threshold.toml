@@ -19,5 +19,5 @@ required_text = ["operaciones con terceras personas"]
 [[revisions."2011-2024".parameters.values]]
 value = "3005.06"
 date_axis = "filing_period"
-valid_from = 2008-01-01
-
+valid_from = 2011-01-01
+valid_to = 2024-12-31

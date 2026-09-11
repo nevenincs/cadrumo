@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
-from .._paths import REPO_ROOT, UTF_8
+from dev._paths import REPO_ROOT, UTF_8
 
 SRC_ROOT = REPO_ROOT / "src"
 _UTF_8: Final[str] = UTF_8

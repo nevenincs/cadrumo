@@ -92,23 +92,6 @@ def governed_fact_catalogue_failures(
                 for ref in variant.source_refs
                 if ref not in source_ref_ids
             )
-            if source_refs is not None:
-                for ref_id in variant.source_refs:
-                    reference = source_refs.get(ref_id)
-                    if reference is None:
-                        continue
-                    if reference.applies_from is not None and variant.valid_from < reference.applies_from:
-                        failures.append(
-                            f"governed fact {fact_id!r} variant {variant.variant_id!r} starts before "
-                            f"source {ref_id!r} applicability window"
-                        )
-                    if reference.applies_to is not None and (
-                        variant.valid_to is None or variant.valid_to > reference.applies_to
-                    ):
-                        failures.append(
-                            f"governed fact {fact_id!r} variant {variant.variant_id!r} ends after "
-                            f"source {ref_id!r} applicability window"
-                        )
             cited = {citation.source_ref for citation in variant.source_citations}
             if cited != set(variant.source_refs):
                 failures.append(

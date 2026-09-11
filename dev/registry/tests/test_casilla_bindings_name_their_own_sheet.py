@@ -21,8 +21,8 @@ from collections.abc import Iterable
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from dev.registry.compiler.authority import compiled_bundled_authority
 
+from ..compiler.authority import compiled_bundled_authority
 from ..pipeline.render_check import revision_render_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

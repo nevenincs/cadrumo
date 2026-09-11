@@ -7,7 +7,8 @@ import sys
 import tarfile
 from pathlib import Path
 
-from .._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from .lane_verification_core import (
     _configured_corpus_binary_suffixes,
     _is_corpus_source_binary,

@@ -12,9 +12,9 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..analysis.type_convention_notes import KINDS, revision_findings, screen_authority, types_named_in
+from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

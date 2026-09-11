@@ -7,7 +7,7 @@ from functools import lru_cache
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.m303_orden_manifest import load_m303_annual_orden_authority
+from test_support.registry_authoring import load_m303_annual_orden_authority
 from pydantic import ValidationError
 
 from ....adapters.persistence.profile.justificante import JustificanteRepository

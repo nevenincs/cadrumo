@@ -16,8 +16,8 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path as _bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from dev.registry.compiler.authority import compile_validated_authority
 
+from ..compiler.authority import compile_validated_authority
 from ..filing_export_proof import (
     build_pinned_conformance_evidence,
     canonical_filing_export_conformance_vectors,

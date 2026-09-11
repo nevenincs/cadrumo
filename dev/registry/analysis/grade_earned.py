@@ -37,8 +37,8 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.support_matrix import revision_capability_probe
-from dev.registry.compiler.authority import compiled_bundled_authority
 
+from ..compiler.authority import compiled_bundled_authority
 from .corpus import bundled_modelo_ids
 
 __all__ = ["GradeFinding", "grade_findings", "screen_authority"]

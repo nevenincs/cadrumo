@@ -22,8 +22,8 @@ from pathlib import Path
 
 import pytest
 
-from dev.registry.compiler._loader_internals import _revision_section_fragment_paths
-from dev.registry.compiler.loader_cache import _revision_directory_source, fragment_sort_key
+from ..compiler._loader_internals import _revision_section_fragment_paths
+from ..compiler.loader_cache import _revision_directory_source, fragment_sort_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

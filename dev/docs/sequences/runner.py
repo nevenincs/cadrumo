@@ -87,8 +87,8 @@ from cadrumo.tests.profile_capsule import (
 )
 from cadrumo.tests.profile_persistence import composed_profile_persistence_ports
 from cadrumo.tests.secure_sql import isolated_profile_storage_root
+from dev._paths import REPO_ROOT
 
-from ..._paths import REPO_ROOT
 from .errors import SequenceExecutionError
 from .schema import (
     FrameKind,

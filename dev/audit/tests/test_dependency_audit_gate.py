@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from dev.audit import dependency_audit as da
+from .. import dependency_audit as da
 
 if TYPE_CHECKING:
     from pathlib import Path

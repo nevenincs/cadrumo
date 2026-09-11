@@ -15,8 +15,9 @@ from typing import Final
 
 import pytest
 
-from ..._paths import REPO_ROOT
-from ...packaging.cohort_manifest import ArtifactKind
+from dev._paths import REPO_ROOT
+from dev.packaging.cohort_manifest import ArtifactKind
+
 from ..download_matrix import (
     _ZONE_BEGIN,
     _ZONE_END,
@@ -139,7 +140,7 @@ def _write_cohort_manifest(directory: Path) -> Path:
     """Write a minimal-but-valid cohort manifest and its artifact files."""
     from datetime import UTC, datetime
 
-    from ...packaging.cohort_manifest import (
+    from dev.packaging.cohort_manifest import (
         REQUIRED_ARTIFACT_KINDS,
         BuildIdentity,
         SourceIdentity,

@@ -6,7 +6,8 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.tests.registry_snapshot import build_snapshot
-from dev.registry.tests._modelo_303_registry_support import (
+
+from ._modelo_303_registry_support import (
     load_modelo_303,
 )
 
@@ -37,7 +38,8 @@ def test_modelo_303_monthly_snapshot_resolves_for_each_period() -> None:
 
 def test_modelo_303_monthly_filing_schedule_matches_monthly_liquidation_profiles() -> None:
     """The monthly schedule fires for monthly IVA-liquidation triggers only."""
-    from ....deadlines.models import (
+    from cadrumo.domain.calculations.registry.schedules import applicable_filing_schedules
+    from cadrumo.domain.deadlines.models import (
         IVARegime,
         M303RegimeComposition,
         M303TaxTerritory,
@@ -45,7 +47,6 @@ def test_modelo_303_monthly_filing_schedule_matches_monthly_liquidation_profiles
         ModeloIVAProfile,
         TaxpayerProfile,
     )
-    from ..schedules import applicable_filing_schedules
 
     modelo, _catalogues = load_modelo_303()
     revision = modelo.revisions["2025"]

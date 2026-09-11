@@ -8,8 +8,9 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.conformance.coverage import build_construct_evidence_ledger
+
+from ...compiler.authority import compiled_bundled_authority
+from ..coverage import build_construct_evidence_ledger
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

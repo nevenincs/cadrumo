@@ -43,7 +43,8 @@ import re
 from pathlib import Path
 from typing import Final, cast
 
-from ..._paths import UTF_8
+from dev._paths import UTF_8
+
 from ._parts import split_units_by_budget, write_part_sidecars
 from .schema import (
     ExtractionStatus,

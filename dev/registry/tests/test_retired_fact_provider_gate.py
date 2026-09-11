@@ -21,14 +21,15 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
-from dev.registry.compiler import fact_providers
-from dev.registry.compiler.authority import compile_validated_authority
-from dev.registry.compiler.fact_providers import compile_registered_fact_providers
-from dev.registry.compiler.fact_validation import retired_fact_provider_closure_failures
-from dev.registry.compiler.loader import load_shared_catalogues
-from dev.registry.compiler.validator import RegistryValidator
-from dev.registry.pipeline.candidate_staging import stage_generated_export_candidate
-from dev.registry.pipeline.cli import _supporting_modelos
+
+from ..compiler import fact_providers
+from ..compiler.authority import compile_validated_authority
+from ..compiler.fact_providers import compile_registered_fact_providers
+from ..compiler.fact_validation import retired_fact_provider_closure_failures
+from ..compiler.loader import load_shared_catalogues
+from ..compiler.validator import RegistryValidator
+from ..pipeline.candidate_staging import stage_generated_export_candidate
+from ..pipeline.cli import _supporting_modelos
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

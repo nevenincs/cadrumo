@@ -15,9 +15,8 @@ from cadrumo.core.filing_projection_ref import (
     compile_filing_projection_ref,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from dev.registry.compiler.authority import compiled_bundled_authority
+from dev._paths import REPO_ROOT
 
-from ..._paths import REPO_ROOT
 from ..analysis import _dp30302_field_matrix
 from ..analysis._dp30302_field_matrix import (
     DP30302_EPOCH_COORDINATES,
@@ -34,6 +33,7 @@ from ..analysis._dp30302_field_matrix import (
     measure_dp30302_field_matrix,
     resolve_dp30302_module_sub_indices,
 )
+from ..compiler.authority import compiled_bundled_authority
 from ..pipeline.record_design_intermediate import RecordDesignIntermediateField
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.quality.secure_store_write_path import (
+from ..secure_store_write_path import (
     SecureStoreWritePathError,
     collect_store_usage,
     evaluate,

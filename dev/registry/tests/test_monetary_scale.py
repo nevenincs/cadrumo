@@ -10,10 +10,10 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.maintenance_support import resolved_export_endpoints
 
 from ..analysis.monetary_scale import _SELF_SCALING_WIRE_TYPES, CENTS_SCALE, scale_findings, screen_authority
+from ..compiler.authority import compiled_bundled_authority
+from ..maintenance_support import resolved_export_endpoints
 
 #: The amount width modelo 353 declares for every importe of its declaration
 #: record, and the width both cents spellings appear at side by side.

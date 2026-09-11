@@ -166,7 +166,7 @@ def _registry_authority() -> ValidatedRegistryAuthority:
 
 
 def _published_source_payloads() -> Mapping[str, bytes]:
-    """Return source bytes from the signed authority projection for submitted-file parsing."""
+    """Return source bytes from the published authority projection for submitted-file parsing."""
     return {item.source_reference_id: item.payload for item in _registry_authority().evidence.sources}
 
 

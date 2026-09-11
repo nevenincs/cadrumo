@@ -8,7 +8,6 @@ import pytest
 
 from cadrumo.core.aggregation import BindingAggregation, BindingAggregationOp
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.tests.registry_observations import registry_grounded_modelo_observation
 from cadrumo.domain.calculations.registry.bindings_previous_filing import (
     previous_filing_observation_requirements,
     previous_filing_source_reference,
@@ -21,7 +20,9 @@ from cadrumo.domain.calculations.registry.relations import (
     resolve_relation_values_from_observations,
 )
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from dev.registry.tests._formula_runtime_support import (
+from cadrumo.tests.registry_observations import registry_grounded_modelo_observation
+
+from ._formula_runtime_support import (
     _M100_PAGOS_FRACCIONADOS_CASILLA,
     _M100_RENDIMIENTO_NETO_ACTIVIDADES_CASILLA,
     _M100_RESULTADO_AUTOLIQUIDACION_CASILLA,

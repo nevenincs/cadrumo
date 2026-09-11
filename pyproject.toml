@@ -267,7 +267,7 @@ exclude = [
   "src/cadrumo/**/tests/**",
   # Registry TOML, source manifests, and cached compiler receipts are
   # development authoring inputs.  A released product consumes exactly one
-  # signed authority artifact, so no authored registry tree may reach an
+  # published authority artifact, so no authored registry tree may reach an
   # sdist from which a downstream wheel could accidentally restore a compiler
   # fallback.
   "src/cadrumo/_data/registry/aeat",
@@ -301,7 +301,7 @@ exclude = [
   "src/cadrumo_harness/tests/**",
   "src/cadrumo_harness/**/tests",
   "src/cadrumo_harness/**/tests/**",
-  # The immutable signed publication is the only registry payload a product
+  # The immutable published authority is the only registry payload a product
   # process may consume.  Its evidence projection is authenticated inside the
   # same frame, so it needs no parallel corpus-quality or registry-source
   # payload in the wheel.
@@ -340,7 +340,7 @@ exclude = [
 # inline types; `external_constants.toml` carries the curated leaf constants.
 include = [
   # Release tooling creates this only after the full development compiler has
-  # validated the authored registry and signed the resulting authority.
+  # validated the authored registry and published the resulting authority.
   "src/cadrumo/_data/registry/authority/authority.json",
   "src/cadrumo/py.typed",
   "src/cadrumo/adapters/persistence/storage/_bip39_wordlist.txt",

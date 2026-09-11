@@ -23,10 +23,11 @@ from cadrumo.domain.calculations.registry.errors import RegistryLoadError, Regis
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import schema_family_fields
 from cadrumo.domain.calculations.registry.schema_revision_members import ApplicabilityRuleDefinition
-from dev.registry.compiler._validate_applicability_section import validate_applicability_section
-from dev.registry.compiler.loader import load_modelo_directory
-from dev.registry.conformance.tests._schema_family_support import schema_family_enrollment_failures
-from dev.registry.tests._referential_integrity_support import REFERENCE_LEGAL_ID, minimal_legal_ref, minimal_revision
+
+from ..compiler._validate_applicability_section import validate_applicability_section
+from ..compiler.loader import load_modelo_directory
+from ..conformance.tests._schema_family_support import schema_family_enrollment_failures
+from ._referential_integrity_support import REFERENCE_LEGAL_ID, minimal_legal_ref, minimal_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -138,14 +139,14 @@ def test_hydrate_applicability_rule_round_trips_every_axis() -> None:
 
     hydrated = hydrate_applicability_rule(Modelo.M100, fragment)
 
-    from .....domain.contribuyente.entity_type import EntityType
-    from .....domain.deadlines.models import (
+    from cadrumo.domain.calculations.registry.applicability_payer_facts import PayerFact
+    from cadrumo.domain.contribuyente.entity_type import EntityType
+    from cadrumo.domain.deadlines.models import (
         FiscalResidency,
         IrpfEstimationRegime,
         IrpfIncomeCategory,
         IVARegime,
     )
-    from ..applicability_payer_facts import PayerFact
 
     assert hydrated == ModeloApplicabilityRule(
         modelo=Modelo.M100,

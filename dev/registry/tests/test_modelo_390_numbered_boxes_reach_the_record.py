@@ -28,8 +28,8 @@ are read from the bundled design; nothing is transcribed here.
 """
 
 from __future__ import annotations
-# Development-only record-design corpus gate.
 
+# Development-only record-design corpus gate.
 import re
 
 import pytest
@@ -37,8 +37,9 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
-from dev.registry.compiler.record_design import extract_record_design
-from dev.registry.tests._registry_schema_support import _committed_registry_tree
+
+from ..compiler.record_design import extract_record_design
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

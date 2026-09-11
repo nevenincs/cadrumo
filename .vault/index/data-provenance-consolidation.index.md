@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#data-provenance-consolidation'
 date: '2026-09-10'
-modified: '2026-09-10'
+modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:e9430754ee90d5b8366e53ed92b9b77ba9281d5fa80910e41fae37f7e72d277a'
+body_hash: 'sha256:db950b22f1e1ee047cb5749a2f69547a0fb6b642c3d1260b9434c97947a6cfa8'
 related:
   - '[[2026-09-10-data-provenance-consolidation-W01-P01-S01]]'
   - '[[2026-09-10-data-provenance-consolidation-W01-P01-S02]]'
@@ -30,6 +30,10 @@ related:
   - '[[2026-09-10-data-provenance-consolidation-W03-P07-S20]]'
   - '[[2026-09-10-data-provenance-consolidation-W03-P07-S21]]'
   - '[[2026-09-10-data-provenance-consolidation-W03-P07-S22]]'
+  - '[[2026-09-10-data-provenance-consolidation-W04-P08-S23]]'
+  - '[[2026-09-10-data-provenance-consolidation-W04-P08-S24]]'
+  - '[[2026-09-10-data-provenance-consolidation-W04-P08-S25]]'
+  - '[[2026-09-10-data-provenance-consolidation-W04-P08-S26]]'
   - '[[2026-09-10-data-provenance-consolidation-adr]]'
   - '[[2026-09-10-data-provenance-consolidation-lane-inventory-research]]'
   - '[[2026-09-10-data-provenance-consolidation-live-lane-map-reference]]'
@@ -56,6 +60,10 @@ related:
   - '[[2026-09-10-data-provenance-consolidation-w03-p07-s20-provenance-docs-review-audit]]'
   - '[[2026-09-10-data-provenance-consolidation-w03-p07-s21-coverage-noop-review-audit]]'
   - '[[2026-09-10-data-provenance-consolidation-w03-p07-s22-sidecar-dedup-review-audit]]'
+  - '[[2026-09-10-data-provenance-consolidation-w04-p08-s23-consumer-boundary-review-audit]]'
+  - '[[2026-09-10-data-provenance-consolidation-w04-p08-s25-sync-verification-review-audit]]'
+  - '[[2026-09-11-data-provenance-consolidation-authority-publication-import-boundary-audit]]'
+  - '[[2026-09-11-data-provenance-consolidation-consumer-boundary-reconciliation-audit]]'
 ---
 
 # `data-provenance-consolidation` feature index
@@ -92,6 +100,10 @@ Auto-generated index of all documents tagged with `#data-provenance-consolidatio
 - `2026-09-10-data-provenance-consolidation-w03-p07-s20-provenance-docs-review-audit` - `data-provenance-consolidation` audit: `w03 p07 s20 provenance docs review`
 - `2026-09-10-data-provenance-consolidation-w03-p07-s21-coverage-noop-review-audit` - `data-provenance-consolidation` audit: `w03 p07 s21 coverage noop review`
 - `2026-09-10-data-provenance-consolidation-w03-p07-s22-sidecar-dedup-review-audit` - `data-provenance-consolidation` audit: `w03 p07 s22 sidecar dedup review`
+- `2026-09-10-data-provenance-consolidation-w04-p08-s23-consumer-boundary-review-audit` - `data-provenance-consolidation` audit: `w04 p08 s23 consumer boundary review`
+- `2026-09-10-data-provenance-consolidation-w04-p08-s25-sync-verification-review-audit` - `data-provenance-consolidation` audit: `w04 p08 s25 sync verification review`
+- `2026-09-11-data-provenance-consolidation-authority-publication-import-boundary-audit` - `data-provenance-consolidation` audit: `authority-publication and import-boundary review`
+- `2026-09-11-data-provenance-consolidation-consumer-boundary-reconciliation-audit` - `data-provenance-consolidation` audit: `consumer boundary reconciliation`
 
 ### exec
 
@@ -117,6 +129,10 @@ Auto-generated index of all documents tagged with `#data-provenance-consolidatio
 - `2026-09-10-data-provenance-consolidation-W03-P07-S20` - Restrict PROVENANCE documentation checks to readable audit attribution rather than identity admission
 - `2026-09-10-data-provenance-consolidation-W03-P07-S21` - Remove duplicated payload, metadata, and derivative classification from the retired coverage sweep
 - `2026-09-10-data-provenance-consolidation-W03-P07-S22` - Remove duplicate generic full-tree sidecar validation after shared validator parity
+- `2026-09-10-data-provenance-consolidation-W04-P08-S23` - Verify each production consumer-owned evidence boundary has exhaustive exactly-once catalog classification
+- `2026-09-10-data-provenance-consolidation-W04-P08-S25` - Verify record-design sync reproducibility and catalog-backed coverage without network writes
+- `2026-09-10-data-provenance-consolidation-W04-P08-S24` - Verify the authority publish workflow rejects a divergent record-design source binding while preserving the prior artifact
+- `2026-09-10-data-provenance-consolidation-W04-P08-S26` - Verify sidecar, export, normative-text, and calculation-oracle contracts remain distinct
 
 ### plan
 

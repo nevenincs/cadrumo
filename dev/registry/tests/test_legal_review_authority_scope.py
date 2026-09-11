@@ -5,16 +5,17 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from dev.registry.compiler.authority import compile_validated_authority
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.revision_review import RevisionReviewStatus
-from cadrumo.tests.registry_snapshot import build_validated_snapshot
-from cadrumo.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.calculations.registry._snapshot_internals import _check_snapshot_filing_capability
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
+from cadrumo.tests.registry_snapshot import build_validated_snapshot
+from cadrumo.tests.registry_tree import bundled_registry_tree
+
+from ..compiler.authority import compile_validated_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

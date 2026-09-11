@@ -7,8 +7,9 @@ import tomllib
 
 import pytest
 
-from ..._paths import REPO_ROOT, UTF_8
-from ...ci.python_runtime_matrix import load_runtime_inventory
+from dev._paths import REPO_ROOT, UTF_8
+from dev.ci.python_runtime_matrix import load_runtime_inventory
+
 from .._base_image import linux_base_image
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

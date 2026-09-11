@@ -13,8 +13,9 @@ from cadrumo.domain.calculations.registry.facts.schema import FactSelector, Scal
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.calculations.registry.schema_formula import ParameterDefinition
-from dev.registry.compiler.fact_providers import FACT_PROVIDER_REGISTRATIONS
-from dev.registry.compiler.modelo_projections import (
+
+from ..compiler.fact_providers import FACT_PROVIDER_REGISTRATIONS
+from ..compiler.modelo_projections import (
     MODELO_PARAMETER_PROJECTION_PROVIDER_ID,
     ModeloParameterFact,
     compile_modelo_parameter_projection_facts,

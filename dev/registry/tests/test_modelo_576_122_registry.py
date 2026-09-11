@@ -27,16 +27,17 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from dev.registry.compiler.validator import RegistryValidator
-from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 
-from .....core.authority_grade import RegistryAuthorityGrade
-from .....core.resources.bundled_data import bundled_path
-from .....core.revision_review import RevisionReviewStatus
-from .....core.tax_domain import TaxDomain
-from .....tests.registry_snapshot import build_snapshot, build_validated_snapshot
-from ..errors import RegistryValidationError
-from ..support_matrix import revision_capability_probe
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.revision_review import RevisionReviewStatus
+from cadrumo.core.tax_domain import TaxDomain
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.support_matrix import revision_capability_probe
+from cadrumo.tests.registry_snapshot import build_snapshot, build_validated_snapshot
+
+from ..compiler.validator import RegistryValidator
+from ..conformance.tests._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

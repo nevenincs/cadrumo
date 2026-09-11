@@ -25,7 +25,8 @@ from typing import Final
 import pytest
 import yaml
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..runner_capabilities import _BREW_PATHS, Finding, _machine, version_probe
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

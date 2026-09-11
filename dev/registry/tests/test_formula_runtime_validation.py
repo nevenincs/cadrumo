@@ -11,7 +11,8 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.formula_text_inputs import validated_text_input_casilla_ids
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
-from dev.registry.tests._formula_runtime_support import (
+
+from ._formula_runtime_support import (
     _M130_AGRARIAN_VOLUME_CASILLA,
     _M130_AGRARIAN_WITHHELD_CASILLA,
     _M130_GASTOS_CASILLA,

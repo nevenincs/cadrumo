@@ -36,7 +36,6 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import IvaLedgerOb
 from cadrumo.domain.calculations.registry.m303_differentiated_deduction_projection import (
     project_m303_differentiated_deduction_rows,
 )
-from ..compiler.record_design import extract_record_design
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva.flow import IvaFlowDirection
@@ -44,10 +43,12 @@ from cadrumo.domain.iva.prorrata import InputClassification
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from cadrumo.domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
 from cadrumo.tests.registry_snapshot import build_snapshot
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.compiler.loader import load_catalogue_file
-from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
-from dev.registry.maintenance_support import resolve_record_design_binary
+
+from ..compiler.authority import compiled_bundled_authority
+from ..compiler.loader import load_catalogue_file
+from ..compiler.record_design import extract_record_design
+from ..conformance.tests._registry_schema_support import _committed_modelo
+from ..maintenance_support import resolve_record_design_binary
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

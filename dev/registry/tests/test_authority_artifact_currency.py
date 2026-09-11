@@ -16,17 +16,17 @@ import pytest
 from typer.testing import CliRunner
 
 from cadrumo.domain.calculations.registry.authority_artifact import AuthorityArtifact, write_authority_artifact
-from cadrumo.domain.calculations.registry.tests._referential_integrity_support import (
-    minimal_catalogues,
-    minimal_modelo,
-    minimal_revision,
-)
-from dev.registry.conformance.cli import app as conformance_app
 
+from ..conformance.cli import app as conformance_app
 from ..pipeline.authority_publication import (
     AuthorityArtifactCurrencyStatus,
     authority_artifact_currency,
     authority_candidate_identity,
+)
+from ._referential_integrity_support import (
+    minimal_catalogues,
+    minimal_modelo,
+    minimal_revision,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

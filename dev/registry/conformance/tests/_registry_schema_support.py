@@ -9,7 +9,6 @@ from functools import cache
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.loader import load_registry_tree
 from pydantic import ValidationError
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
@@ -31,10 +30,11 @@ from cadrumo.domain.calculations.registry.schema_surfaces import (
     CasillaDefinition,
 )
 from cadrumo.tests.registry_snapshot import build_snapshot
-from dev.registry.compiler._loader_internals import load_modelo_file
-from dev.registry.compiler.authority import compile_registry_tree, compiled_bundled_authority
-from dev.registry.compiler.validator import RegistryValidator
-from dev.registry.conformance.coverage import build_model_law_coverage_ledger
+
+from ...compiler._loader_internals import load_modelo_file
+from ...compiler.authority import compile_registry_tree, compiled_bundled_authority
+from ...compiler.validator import RegistryValidator
+from ..coverage import build_model_law_coverage_ledger
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

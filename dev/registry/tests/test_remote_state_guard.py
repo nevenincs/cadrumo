@@ -33,11 +33,12 @@ from cadrumo.tests.aeat_literal_fixtures import (
     configured_path,
 )
 from cadrumo.tests.registry_snapshot import build_snapshot
-from dev.registry.conformance.tests._registry_schema_support import _committed_registry_tree
-from dev.registry.maintenance_support import LiveParityCatalogue, OracleEnvironment
-from dev.registry.parity.renta_web_open_oracle import RentaWebOpenOracle
-from dev.registry.tests.aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
-from dev.registry.tests.groi_oracle import GROI_ORACLE_ID, GroiOracle
+
+from ..conformance.tests._registry_schema_support import _committed_registry_tree
+from ..maintenance_support import LiveParityCatalogue, OracleEnvironment
+from ..parity.renta_web_open_oracle import RentaWebOpenOracle
+from .aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
+from .groi_oracle import GROI_ORACLE_ID, GroiOracle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

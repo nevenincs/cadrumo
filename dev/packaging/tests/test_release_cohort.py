@@ -11,8 +11,9 @@ from typing import Final
 
 import pytest
 
-from ..._paths import REPO_ROOT
-from ...source_tree import content_digest, repository_files
+from dev._paths import REPO_ROOT
+from dev.source_tree import content_digest, repository_files
+
 from .. import release_cohort as release_cohort_module
 from ..release_cohort import (
     _REQUIRED_PYTHON_VERSION,

@@ -11,13 +11,6 @@ from pydantic import AnyUrl, ValidationError
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId
-from cadrumo.tests.registry_snapshot import build_snapshot
-from cadrumo.domain.contribuyente.family_profile import RentaFamilyProfile
-from cadrumo.domain.contribuyente.family_types import RentaAscendantProfile, RentaDescendantProfile
-from cadrumo.domain.contribuyente.keys import profile_keys as registered_profile_keys
-from cadrumo.domain.contribuyente.tax_residence import TaxResidenceProfile
-from dev.registry.compiler.validator import RegistryValidator
-from dev.registry.compiler._validate_constructs import _CONSTRUCT_MEMBER_ATTRS
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export import resolve_export_layout
@@ -31,7 +24,15 @@ from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, R
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_revision_members import ApplicationLinkSurface
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-from dev.registry.tests._modelo_100_registry_support import (
+from cadrumo.domain.contribuyente.family_profile import RentaFamilyProfile
+from cadrumo.domain.contribuyente.family_types import RentaAscendantProfile, RentaDescendantProfile
+from cadrumo.domain.contribuyente.keys import profile_keys as registered_profile_keys
+from cadrumo.domain.contribuyente.tax_residence import TaxResidenceProfile
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ..compiler._validate_constructs import _CONSTRUCT_MEMBER_ATTRS
+from ..compiler.validator import RegistryValidator
+from ._modelo_100_registry_support import (
     _DECLARATIONS_LISTING_URL,
     _MEMBER_GROUNDED_2025_CONSTRUCT_IDS,
     _PERSONAL_FAMILY_BINDINGS,

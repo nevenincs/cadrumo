@@ -20,8 +20,9 @@ from typing import TYPE_CHECKING
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from dev.registry.compiler.validator import RegistryValidator
 from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
+
+from ..compiler.validator import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

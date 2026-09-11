@@ -335,7 +335,8 @@ class LocaleManager:
         through a separate parity assertion that verifies at least one
         concrete locale key exists under each declared prefix.
         """
-        from ..quality.unread_inputs import report_unread
+        from dev.quality.unread_inputs import report_unread
+
         from ._ast_scanner import scan_source_tree
         from ._command_spec_scanner import scan_command_spec_keys
         from ._fstring_registry import get_registered_keys

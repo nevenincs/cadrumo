@@ -13,17 +13,12 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
     write_authority_artifact,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryValidationError
-from dev.registry.tests._referential_integrity_support import (
-    minimal_catalogues,
-    minimal_modelo,
-    minimal_revision,
-)
-from dev.registry.compiler import fact_providers
-from dev.registry.conformance.tests._loader_directory_mode_support import (
+
+from ..compiler import fact_providers
+from ..conformance.tests._loader_directory_mode_support import (
     write_extracted_corpus_sidecar,
     write_fragmented_revision,
 )
-
 from ..pipeline.authority_publication import (
     AuthorityArtifactCurrencyStatus,
     authority_artifact_currency,
@@ -31,6 +26,11 @@ from ..pipeline.authority_publication import (
     validate_authority_candidate,
 )
 from ..pipeline.cli import publish_authority_candidate_workflow
+from ._referential_integrity_support import (
+    minimal_catalogues,
+    minimal_modelo,
+    minimal_revision,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -242,6 +242,24 @@ def test_defective_candidate_refuses_before_replacing_the_previous_artifact(tmp_
         publish_authority_candidate_workflow(
             registry_root=tmp_path / "defective-registry",
             source_root=tmp_path / "defective-sources",
+            artifact_path=artifact_path,
+        )
+
+    assert artifact_path.read_bytes() == previous_bytes
+
+
+def test_provider_enrollment_requires_the_convenio_fact_before_publication(tmp_path: Path) -> None:
+    """An enrolled provider set cannot silently publish without the treaty fact."""
+    candidate_root = tmp_path / "candidate"
+    _stage_valid_candidate(candidate_root)
+    artifact_path = tmp_path / "authority.json"
+    write_authority_artifact(artifact_path, _previous_publication())
+    previous_bytes = artifact_path.read_bytes()
+
+    with pytest.raises(RegistryValidationError, match=r"governed fact 'irnr\.convenio\.override' is not registered"):
+        publish_authority_candidate_workflow(
+            registry_root=candidate_root / "registry" / "aeat",
+            source_root=candidate_root,
             artifact_path=artifact_path,
         )
 

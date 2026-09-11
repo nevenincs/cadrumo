@@ -9,9 +9,9 @@ from pydantic import ValidationError
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryValidationError
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
 
+from ..compiler.authority import compiled_bundled_authority
+from ..maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
 from ..temporal_coverage import (
     TemporalCoverageReport,
     TemporalRevisionCoverage,

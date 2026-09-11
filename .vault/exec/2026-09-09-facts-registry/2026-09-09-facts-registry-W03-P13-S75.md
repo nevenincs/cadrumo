@@ -5,16 +5,11 @@ tags:
 date: '2026-09-11'
 modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:937a916c2b82b748a2384ee2d3f7e2752400e364c97973c745cd30b1620f1df3'
+body_hash: 'sha256:a9d5a7fb1b9a4b0385e8433f229374ad1109496cf92d82a402c7f7f73a2d4a38'
 step_id: 'S75'
 related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete retired legal-parameter provider implementations after governed facts replace every live resolver and consumer path
 
@@ -23,23 +18,6 @@ related:
 - `dev/registry/compiler/legal_parameters.py and dev/registry/tests/test_legal_parameter_provider.py and src/cadrumo/domain and src/cadrumo/application`
 
 ## Changes
-
-<!-- MECHANICAL LOG. One line per path touched, nothing else:
-       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
-     Paths are repo-relative, in backticks. No prose, no sentences, no
-     narration of intent, outcome, or difficulty - the diff and the plan Step
-     already carry those. Example:
-
-       - `M` `src/vaultspec_core/cli/exec_cmd.py`
-       - `A` `src/vaultspec_core/cli/tests/test_exec_cmd.py`
-       - `D` `src/legacy/shim.py`
-
-     Optional final line, only when a check was run:
-       - `verify:` `<command>` -> `pass` | `fail`
-
-     Optional `## Notes` section, ONLY on exception: data loss, skipped work,
-     a scaffold left in code, or a persistent failure. Omit it otherwise -
-     an absent section is correct; an empty one is a check finding. -->
 
 - `A` `.vault/reference/2026-09-11-facts-registry-reference.md`
 - `M` `dev/audit/tests/test_legal_excerpt_vintage_screen.py`

@@ -19,9 +19,10 @@ from pathlib import Path
 
 import pytest
 
-from ..._paths import REPO_ROOT
-from ...docs.preprocess.normatives_html import build_outputs
-from ...docs.preprocess.schema import PreprocessOutput
+from dev._paths import REPO_ROOT
+from dev.docs.preprocess.normatives_html import build_outputs
+from dev.docs.preprocess.schema import PreprocessOutput
+
 from ..extract_boe_article import (
     _DIV_OPEN_OR_CLOSE,
     ArticleExtractionError,

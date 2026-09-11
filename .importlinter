@@ -25,11 +25,10 @@ exclude_type_checking_imports = True
 # for every real user at import time. This replaces a bespoke AST re-reading of
 # the same import statements; the rule is now evaluated against the live graph.
 #
-# Test modules under src/ are excused as a CLASS, not as a list: the wheel build
-# excludes every tests/ directory (asserted in
-# dev/packaging/tests/test_shipped_code_carries_no_dev_dependency.py), so a test
-# importing a dev harness never reaches an operator. The two wildcard lines
-# carry no file or module names and cannot go stale on a rename.
+# Tests under ``src/`` use the repository-level ``test_support`` boundary when
+# they need development authoring tooling.  They are included here deliberately:
+# a source-tree test import is still a source-tree dependency and must not make
+# the distributable package aware of ``dev``.
 
 [importlinter:contract:no-dev-in-shipped]
 name = Shipped cadrumo modules must not import the dev tree
@@ -39,9 +38,6 @@ source_modules =
     cadrumo
 forbidden_modules =
     dev
-ignore_imports =
-    cadrumo.tests.** -> dev.**
-    cadrumo.**.tests.** -> dev.**
 
 [importlinter:contract:no-renta-in-registry]
 name = Calculations registry must not import directly from domain.renta
@@ -66,12 +62,6 @@ forbidden_modules =
 # contract enforcing genuine production calculations -> renta imports while
 # excusing the test path. The same edge is already sanctioned in the
 # domain-not-application contract.
-ignore_imports =
-    # ── W09: re-sanctioned test-file roundtrip/fixture/oracle edges (prior ignores went stale on test rename) ──
-    cadrumo.domain.calculations.registry.tests.test_ledger_renta_gastos_estimacion_directa_binding -> cadrumo.domain.renta.ledger_expenses
-    # W09.S90: parity-scenario test consumers trigger the renta first-slice
-    # registration directly (relocated out of the production _scenarios harness)
-
 [importlinter:contract:domain-not-application]
 name = Domain must not import application
 # ── S21: Domain must not import application ───────────────────────────────────
@@ -220,7 +210,6 @@ ignore_imports =
     cadrumo.core.resources._repos.manuals -> cadrumo.domain.manuals.schema
     cadrumo.core.resources._repos.iva_catalogues -> cadrumo.domain.iva.catalogue
     cadrumo.core.resources._repos.iva_catalogues -> cadrumo.domain.iva.errors
-    cadrumo.core.resources._repos.iva_rate_tables -> cadrumo.domain.iva.rates
     cadrumo.core.resources._repos.recargo_bands -> cadrumo.domain.deadlines.recargo
 [importlinter:contract:llm-not-persistence]
 name = Local-inference subpackage must not reach persistence
@@ -657,7 +646,6 @@ ignore_imports =
     cadrumo.core.resources._repos.manuals -> cadrumo.domain.manuals.schema
     cadrumo.core.resources._repos.iva_catalogues -> cadrumo.domain.iva.catalogue
     cadrumo.core.resources._repos.iva_catalogues -> cadrumo.domain.iva.errors
-    cadrumo.core.resources._repos.iva_rate_tables -> cadrumo.domain.iva.rates
     cadrumo.core.resources._repos.recargo_bands -> cadrumo.domain.deadlines.recargo
 
 [importlinter:contract:application-not-inbound-adapters]

@@ -88,7 +88,8 @@ def plan_fragments(root: Path | None = None) -> tuple[GeneratedFragment, ...]:
 
     from cadrumo.core.authority_grade import RegistryAuthorityGrade
     from cadrumo.core.resources.bundled_data import bundled_path
-    from dev.registry.compiler.loader import load_registry_tree
+
+    from .compiler.loader import load_registry_tree
 
     modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelos_root = root if root is not None else REGISTRY_MODELOS_ROOT

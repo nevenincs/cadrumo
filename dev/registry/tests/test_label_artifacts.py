@@ -5,15 +5,16 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from cadrumo.domain.calculations.registry.validate_registry_scope import validate_registry_scope
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from dev.registry.compiler._validate_label_artifacts import collect_label_artifact_findings, validate_no_label_artifacts
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-from cadrumo.domain.calculations.registry.validate_registry_scope import validate_registry_scope
-from dev.registry.tests._registry_schema_support import _committed_registry_tree
-from dev.registry.tests._synthetic_locale_fixtures import _synthetic_locale_scope, _write_test_label
+
+from ..compiler._validate_label_artifacts import collect_label_artifact_findings, validate_no_label_artifacts
+from ._registry_schema_support import _committed_registry_tree
+from ._synthetic_locale_fixtures import _synthetic_locale_scope, _write_test_label
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

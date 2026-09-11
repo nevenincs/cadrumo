@@ -15,7 +15,8 @@ import pytest
 
 from cadrumo.core.config import override_settings
 from cadrumo.tests import assert_path_matches_grammar
-from dev.registry.compiler.verdict_cache import (
+
+from ..compiler.verdict_cache import (
     VERDICT_OUTCOME_GREEN,
     RegistryValidationVerdict,
     verdict_cache_path,

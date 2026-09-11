@@ -11,8 +11,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Final
 
-from .._paths import REPO_ROOT, UTF_8
-from ..source_tree import normalised_contents, repository_files
+from dev._paths import REPO_ROOT, UTF_8
+from dev.source_tree import normalised_contents, repository_files
 
 SOURCE_ROOT: Final[str] = "src/cadrumo"
 _SOURCE_SUFFIXES: Final[frozenset[str]] = frozenset({".py", ".toml", ".json", ".md"})

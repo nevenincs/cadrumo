@@ -15,12 +15,12 @@ import dataclasses
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.quality.unread_inputs import report_unread
 
-from ...quality.unread_inputs import report_unread
 from ..analysis.corpus import bundled_modelo_ids
 from ..analysis.rule_grounding_coverage import KINDS, GroundingFinding, revision_findings, screen_authority
 from ..analysis.type_convention_notes import revision_findings as type_conventions
+from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -15,7 +15,8 @@ from typing import cast
 
 import pytest
 
-from ...source_tree import repository_files, snapshot
+from dev.source_tree import repository_files, snapshot
+
 from ..python_cohort import _FORBIDDEN_COMMAND_ARTIFACT_NAMES
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]

@@ -40,11 +40,10 @@ import pydantic
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
-
-from ..._paths import REPO_ROOT
-from ...packaging.evidence import DistributionEvidence, EvidenceStatus
-from ...quality.unread_inputs import report_unread
-from ...release.readiness import ALL_DISTRIBUTION_ROWS
+from dev._paths import REPO_ROOT
+from dev.packaging.evidence import DistributionEvidence, EvidenceStatus
+from dev.quality.unread_inputs import report_unread
+from dev.release.readiness import ALL_DISTRIBUTION_ROWS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 

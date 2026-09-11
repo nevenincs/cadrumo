@@ -48,7 +48,7 @@ from typing import Final
 
 from packaging.version import InvalidVersion, Version
 
-from .._paths import UTF_8
+from dev._paths import UTF_8
 
 _UTF_8: Final[str] = UTF_8
 

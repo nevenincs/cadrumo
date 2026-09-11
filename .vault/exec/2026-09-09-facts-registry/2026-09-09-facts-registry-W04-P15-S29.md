@@ -5,15 +5,11 @@ tags:
 date: '2026-09-11'
 modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:29ef260d82d26f7dd8cecbf4ba7c11a537989041fb76d6dddade137d859dc818'
+body_hash: 'sha256:b4504e090708a8da9cdb8837db83f50d8d88ef757dd7abc79e67783c13b8058c'
 step_id: 'S29'
 related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Replace the statutory Python fact adapter with normalized scalar and decimal-mapping fragments carrying exact typed payloads, effective applicability, and official source evidence
 

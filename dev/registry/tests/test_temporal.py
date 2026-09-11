@@ -18,7 +18,6 @@ import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.errors.error_codes import resolve_error_message
-from dev.registry.compiler._validate_revision_rules import validate_revision_windows
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import (
     AmbiguousRevisionSelectionError,
@@ -29,7 +28,9 @@ from cadrumo.domain.calculations.registry.relations import relation_source_requi
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition
 from cadrumo.domain.calculations.registry.temporal import select_revision, select_revision_for_year
-from dev.registry.tests._registry_schema_support import _committed_modelo, _committed_registry_tree, _committed_snapshot
+
+from ..compiler._validate_revision_rules import validate_revision_windows
+from ._registry_schema_support import _committed_modelo, _committed_registry_tree, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

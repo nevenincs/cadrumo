@@ -25,14 +25,15 @@ from decimal import Decimal
 from functools import cache
 
 import pytest
-from dev.registry.compiler.loader import load_registry_tree
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.registry_snapshot import build_snapshot
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from dev.registry.tests._modelo_100_registry_support import _m100_2024_deduccion_maternidad_bindings
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ..compiler.loader import load_registry_tree
+from ._modelo_100_registry_support import _m100_2024_deduccion_maternidad_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

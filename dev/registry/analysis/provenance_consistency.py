@@ -35,9 +35,9 @@ from typing import Literal, Protocol
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema import SCHEMA_FAMILY, ModeloRevision
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.maintenance_support import resolved_export_endpoints
 
+from ..compiler.authority import compiled_bundled_authority
+from ..maintenance_support import resolved_export_endpoints
 from .corpus import bundled_modelo_ids
 
 __all__ = [

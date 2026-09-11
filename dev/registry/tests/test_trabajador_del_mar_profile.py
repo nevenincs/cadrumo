@@ -17,8 +17,9 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.user_profile.loader import load_user_profile_schema
 from cadrumo.domain.user_profile.schema import ProfileFieldType
-from dev.registry.compiler.legal_grounding import verify_legal_catalogue
-from dev.registry.tests._registry_schema_support import _committed_registry_tree
+
+from ..compiler.legal_grounding import verify_legal_catalogue
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

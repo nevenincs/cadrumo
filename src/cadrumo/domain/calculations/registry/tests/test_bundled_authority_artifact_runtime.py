@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -91,7 +90,8 @@ def test_runtime_uses_a_published_artifact_and_isolates_later_consumers(
         period="0A",
         grade=RegistryAuthorityGrade.APPLICABILITY,
     )
-    first.catalogues.legal["consumer-injected"] = next(iter(first.catalogues.legal.values()))
+    with pytest.raises(TypeError):
+        first.catalogues.legal["consumer-injected"] = next(iter(first.catalogues.legal.values()))
 
     later = bundled_authority()
 
@@ -131,11 +131,31 @@ def test_runtime_answers_a_citation_from_published_evidence_without_a_corpus_roo
     assert authority.legal_quotation_is_grounded("test:art-1", "published provision")
 
 
-def test_runtime_reads_signed_provenance_without_a_corpus_tree(
+def test_runtime_reads_published_provenance_without_a_corpus_tree(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """The artifact authority retains its package data root for real citation inspection."""
-    _stage_runtime_publication(tmp_path)
+    """The runtime reads the artifact projection without a package corpus root."""
+    artifact_path = _stage_runtime_publication(tmp_path)
+    legal_id = "test:art-1"
+    citation_text = "validated published provision"
+    write_authority_artifact(
+        artifact_path,
+        AuthorityArtifact(
+            modelos=(_minimal_modelo(_minimal_revision()),),
+            catalogues=_minimal_catalogues(),
+            identity_digest=_IDENTITY_DIGEST,
+            evidence=AuthorityEvidenceProjection(
+                legal=(
+                    PublishedLegalEvidence(
+                        legal_reference_id=legal_id,
+                        anchored_text=citation_text,
+                        text_sha256=sha256_hex(citation_text.encode("utf-8")),
+                        provenance=NormativeCorpusProvenance.BOE_ATTESTED,
+                    ),
+                )
+            ),
+        ),
+    )
     _use_staged_package(monkeypatch, tmp_path)
     authority = bundled_authority()
 

@@ -32,8 +32,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
+from dev.quality.unread_inputs import report_unread
 
-from ...quality.unread_inputs import report_unread
 from ..sequences.checks import default_docs_root, discover_sequences
 from ..sequences.golden_store import read_golden
 from ..sequences.schema import FrameKind

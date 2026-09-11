@@ -22,17 +22,18 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.artifact_catalogue import ArtifactRole, registry_source_identity
-from dev.registry.compiler.corpus_catalogue import (
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.provenance import NormativeCorpusProvenance
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
+
+from ..compiler.corpus_catalogue import (
     compile_record_design_manifest_catalogue,
     verify_catalogue_identity_bindings,
     verify_source_catalogue,
     verify_source_file,
 )
-from cadrumo.domain.calculations.registry.provenance import NormativeCorpusProvenance
-from dev.registry.compiler.corpus_provenance import classify_normative_corpus_provenance
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema_references import SourceReference
-from dev.registry.tests._registry_schema_support import _committed_registry_tree
+from ..compiler.corpus_provenance import classify_normative_corpus_provenance
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

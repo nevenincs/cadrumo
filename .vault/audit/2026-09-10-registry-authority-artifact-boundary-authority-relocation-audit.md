@@ -3,31 +3,12 @@ tags:
   - '#audit'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-10'
-modified: '2026-09-10'
+modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:6f7945879bfedaff1f38212e01a64c86b59d738f5d82aaff8209d9136934a84b'
+body_hash: 'sha256:a5dc5a4de339605faf08bcce3a8716594b6c3e3163ffc78e33fe1a238edfdfe6'
 related:
   - "[[2026-09-10-registry-authority-artifact-boundary-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace registry-authority-artifact-boundary with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `registry-authority-artifact-boundary` audit: `authority relocation`
 
@@ -36,15 +17,6 @@ related:
 Reviewed the W03.P04.S06 runtime/development boundary against the accepted immutable-publication decision. The review traced runtime authority construction, corpus/provenance access, development compiler ownership, and registry-local test fixtures. It deliberately treated outcomes from artifact and workflow behavior as gate evidence, and did not use AST, text-shape, or source-inventory assertions as acceptance tests.
 
 ## Findings
-
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
-
-       ### authority relocation | {level} | {summary}
-
-     followed by a paragraph carrying the detail. authority relocation is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
 
 ### authority-relocation | high | Runtime package retains a mutable normative-corpus resolver
 
@@ -59,10 +31,6 @@ The registry test `conftest.py` still calls `bundled_registry_tree()` and builds
 `test_export_projection_refs.py` remains below the runtime registry tests but imports the relocated `_loader_internals` module. Its focused collection fails with `ModuleNotFoundError`; this is a concrete incomplete relocation rather than a theoretical import-shape concern. The test contains compiler hydration behavior and belongs with the development compiler tests. The artifact contract suite itself passes 18 focused behavioral tests, so the failure is localized to the incomplete test move rather than artifact decoding.
 
 ## Recommendations
-
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
 
 - Address the mutable-corpus-resolver finding by relocating source-root resolution and corpus-byte classification entrypoints to development tooling; keep runtime provenance queries limited to the signed evidence projection.
 

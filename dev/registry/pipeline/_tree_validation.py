@@ -20,11 +20,11 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from cadrumo.tests.registry_snapshot import build_snapshot
-from dev.registry.compiler.authority import compile_registry_tree, compile_validated_authority
-from dev.registry.compiler.identity import resolve_registry_identity
-from dev.registry.compiler.loader import collect_registry_tree_fingerprints, load_modelo_directory
-from dev.registry.compiler.registry_scope import validate_registry_scope
 
+from ..compiler.authority import compile_registry_tree, compile_validated_authority
+from ..compiler.identity import resolve_registry_identity
+from ..compiler.loader import collect_registry_tree_fingerprints, load_modelo_directory
+from ..compiler.registry_scope import validate_registry_scope
 from ._export_tree import RenderedExportTree
 from ._tree_paths import require_existing_non_link
 from .export_fragment_provenance import (

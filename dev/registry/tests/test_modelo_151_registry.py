@@ -5,10 +5,11 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from dev.registry.compiler._validate import RegistryValidator
-from dev.registry.compiler.legal_grounding import verify_legal_catalogue
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
-from dev.registry.tests._registry_schema_support import _committed_modelo
+
+from ..compiler._validate import RegistryValidator
+from ..compiler.legal_grounding import verify_legal_catalogue
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

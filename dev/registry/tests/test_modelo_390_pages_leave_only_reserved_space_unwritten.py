@@ -24,18 +24,19 @@ anything else joins them, without claiming a permission that has not been ground
 """
 
 from __future__ import annotations
-# Development-only record-design corpus gate.
 
+# Development-only record-design corpus gate.
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compile_validated_authority
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from dev.registry.compiler.record_design import extract_record_design
 from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignSheet
 from cadrumo.domain.calculations.registry.schema import ModeloRevision, RegistryCatalogues
-from dev.registry.tests._registry_schema_support import _committed_modelo
+
+from ..compiler.authority import compile_validated_authority
+from ..compiler.record_design import extract_record_design
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

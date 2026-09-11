@@ -1,0 +1,14 @@
+[[revisions.2025-y-siguientes.formulas]]
+id = "modelo-222-modalidad-40-3-resultado"
+target_casilla_id = "32"
+# [18] (B.1, single rate) and [26] (B.2, several rates) are mutually exclusive computations of the same
+# resultado previo: a group completes one lane's inputs and leaves the other lane's empty, so the unused
+# box resolves to zero and adding both reproduces "clave [18] o clave [26]".
+expression = { op = "subtract", args = [{ op = "subtract", args = [{ op = "percent", args = [{ op = "subtract", args = [{ op = "subtract", args = [{ op = "add", args = [{ casilla_id = "18" }, { casilla_id = "26" }] }, { casilla_id = "27" }] }, { casilla_id = "28" }] }, { casilla_id = "29" }] }, { casilla_id = "30" }] }, { casilla_id = "31" }] }
+rounding = "money-2"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "orden-hfp-227-2017:art-2"]
+source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
+
+[[revisions.2025-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-222-instructions"
+required_text = ["clave [32]", "] = [[(clave [18] o clave [26]) – clave [27] – clave [28]] x clave [29]/100] - clave [30] - clave [31]"]

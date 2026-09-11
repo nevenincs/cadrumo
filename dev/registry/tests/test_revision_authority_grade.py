@@ -20,20 +20,21 @@ import shutil
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.loader import load_modelo_directory
 
 from cadrumo.core.authority_grade import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.schema import (
     REVISION_GOVERNANCE_FIELDS,
     REVISION_MANIFEST_ONLY_FIELDS,
     ModeloRevision,
 )
-from dev.registry.conformance.tests._loader_directory_mode_support import _load_revision as _shared_load_revision
-from dev.registry.conformance.tests._loader_directory_mode_support import _write_modelo as _shared_write_modelo
+from cadrumo.tests.registry_tree import bundled_registry_tree
+
+from ..compiler.loader import load_modelo_directory
+from ..conformance.tests._loader_directory_mode_support import _load_revision as _shared_load_revision
+from ..conformance.tests._loader_directory_mode_support import _write_modelo as _shared_write_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

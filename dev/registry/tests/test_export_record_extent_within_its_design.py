@@ -47,19 +47,20 @@ tomorrow.
 """
 
 from __future__ import annotations
-# Development-only record-design corpus gate.
 
+# Development-only record-design corpus gate.
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compile_validated_authority
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from dev.registry.compiler.record_design import extract_record_design
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_exports import ExportRecordDefinition
+from cadrumo.tests.registry_tree import bundled_registry_tree
+
+from ..compiler.authority import compile_validated_authority
+from ..compiler.record_design import extract_record_design
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

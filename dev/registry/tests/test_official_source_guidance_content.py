@@ -27,9 +27,11 @@ from typing import override
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.tests.registry_tree import bundled_registry_tree
-from dev.registry.compiler._validate_evidence import EvidenceValidator
-from dev.registry.compiler._validate_official_source_guidance_content import (
+
+from ..compiler._validate_evidence import EvidenceValidator
+from ..compiler._validate_official_source_guidance_content import (
     _DEADLINE_VOCABULARY,
     _SUPPRESSION_VOCABULARY,
     _carries_deadline_content,
@@ -37,8 +39,7 @@ from dev.registry.compiler._validate_official_source_guidance_content import (
     deadline_window_content_failures,
     validate_suppression_notice_content,
 )
-from dev.registry.compiler.corpus_catalogue import verify_source_file
-from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from ..compiler.corpus_catalogue import verify_source_file
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -59,10 +59,11 @@ from cadrumo.domain.calculations.registry.record_design_schema import (
     RecordDesignRangeStartCorrection,
     RecordDesignSinglePositionCorrection,
 )
-from dev.registry.compiler.record_design import extract_record_design
-from dev.registry.compiler.record_design_pdf_repairs import collapse_stuttered_row_prefix, join_wrapped_row_descriptions
-from dev.registry.compiler.record_design_pdf_rows import parse_pdf_row
-from dev.registry.compiler.record_design_pdf_visual import extract_pdf_text_lines
+
+from ..compiler.record_design import extract_record_design
+from ..compiler.record_design_pdf_repairs import collapse_stuttered_row_prefix, join_wrapped_row_descriptions
+from ..compiler.record_design_pdf_rows import parse_pdf_row
+from ..compiler.record_design_pdf_visual import extract_pdf_text_lines
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -314,7 +315,7 @@ def _provenance_only_design_names() -> frozenset[str]:
     it. This is the same discipline the fixture-provenance gates follow: read the
     declaration, never hardcode a per-file exception.
     """
-    from ..authority import bundled_authority
+    from cadrumo.domain.calculations.registry.authority import bundled_authority
 
     sources = bundled_authority().catalogues.sources
     sources = getattr(sources, "entries", None) or sources

@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import argparse
 
-from dev.test_runs.lanes import run_lanes
+from .lanes import run_lanes
 
 
 def main(argv: list[str] | None = None) -> int:

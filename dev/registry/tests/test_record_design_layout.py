@@ -7,16 +7,16 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
-from dev.registry.compiler import record_design_workbook_headers as record_design_headers_module
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from ..compiler.record_design import (
-    extract_record_design,
-    extract_record_design_pdf,
-)
 from cadrumo.domain.calculations.registry.record_design_schema import (
     RecordDesignRelativeSuffixMarker,
 )
 
+from ..compiler import record_design_workbook_headers as record_design_headers_module
+from ..compiler.record_design import (
+    extract_record_design,
+    extract_record_design_pdf,
+)
 from ._record_design_support import (
     _RECORD_DESIGN_ROOT,
     _write_pdf_lines,
@@ -372,7 +372,8 @@ def test_a_two_byte_closing_part_that_is_not_a_terminator_is_not_peeled() -> Non
     reclassify a real identifier component as physical padding.
     """
     from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignRelativeSuffixMarker
-    from dev.registry.compiler.record_design_layout_markers import split_record_terminator
+
+    from ..compiler.record_design_layout_markers import split_record_terminator
 
     def suffix(length: int, description: str, ordinal: int) -> RecordDesignRelativeSuffixMarker:
         return RecordDesignRelativeSuffixMarker(
@@ -405,7 +406,8 @@ def test_a_terminator_that_does_not_come_last_is_refused() -> None:
     would hide both.
     """
     from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignRelativeSuffixMarker
-    from dev.registry.compiler.record_design_workbook import _require_terminator_closes_the_record
+
+    from ..compiler.record_design_workbook import _require_terminator_closes_the_record
 
     def suffix(ordinal: int, length: int, description: str) -> RecordDesignRelativeSuffixMarker:
         return RecordDesignRelativeSuffixMarker(
@@ -469,8 +471,8 @@ def test_the_workbook_and_pdf_parsers_share_one_notion_of_a_crlf_row() -> None:
     Asserted by composition, not by equality of behaviour: this fails if either side
     grows its own copy.
     """
-    from dev.registry.compiler.record_design_layout_markers import _RECORD_TERMINATOR, RECORD_TERMINATOR_PHRASE
-    from dev.registry.compiler.record_design_pdf_rows import _COMPACT_PDF_CRLF_ROW_RE
+    from ..compiler.record_design_layout_markers import _RECORD_TERMINATOR, RECORD_TERMINATOR_PHRASE
+    from ..compiler.record_design_pdf_rows import _COMPACT_PDF_CRLF_ROW_RE
 
     assert RECORD_TERMINATOR_PHRASE in _COMPACT_PDF_CRLF_ROW_RE.pattern
     assert _RECORD_TERMINATOR.pattern == RECORD_TERMINATOR_PHRASE
@@ -504,7 +506,8 @@ def test_envelope_composition_order_is_checked_by_source_position_not_by_ordinal
         RecordDesignVariableBodyMarker,
         RecordDesignVariableTotalMarker,
     )
-    from dev.registry.compiler.record_design_workbook import _require_ordered_variable_envelope
+
+    from ..compiler.record_design_workbook import _require_ordered_variable_envelope
 
     def field(row: int) -> RecordDesignField:
         return RecordDesignField(sheet="S", row=row, ordinal="1", offset=1, length=1, type_code="An", description="d")

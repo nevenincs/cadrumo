@@ -18,7 +18,7 @@ inspection passes through it: measured across the filing suite, every
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.loader import load_registry_tree
+from test_support.registry_authoring import load_registry_tree
 
 from ....core.period import Period
 from ....core.resources.bundled_data import bundled_path

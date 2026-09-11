@@ -20,10 +20,11 @@ from typing import TYPE_CHECKING
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.tests.registry_snapshot import build_snapshot
-from dev.registry.tests._registry_schema_support import _committed_modelo
+
+from ._registry_schema_support import _committed_modelo
 
 if TYPE_CHECKING:
-    from ..schema import ModeloRevision
+    from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 #: The filing year both oracles pin. Shared because the revision resolved below
 #: is law-determined by it: a year that drifted between the two modules would

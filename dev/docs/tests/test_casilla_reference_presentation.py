@@ -41,8 +41,8 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.modelo import Modelo
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaConstraints
+from dev._paths import REPO_ROOT
 
-from ..._paths import REPO_ROOT
 from .._locale_chrome import DocsChromeError, docs_chrome
 from ..casilla_reference import (
     EMPTY_SCHEMA,
@@ -273,7 +273,7 @@ def test_display_keys_are_registered_so_the_scaffold_keeps_them() -> None:
     surface consumes would be pruned as stale on the next scaffold run unless it
     is registered. Registration is what makes the catalogue the durable home.
     """
-    from ...locales._fstring_registry import get_registered_keys
+    from dev.locales._fstring_registry import get_registered_keys
 
     assert set(display_locale_keys()) <= get_registered_keys()
 

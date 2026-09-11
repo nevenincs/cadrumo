@@ -29,8 +29,9 @@ from typing import IO, Any, cast
 
 import pytest
 
-from ..._paths import REPO_ROOT
-from ...source_tree import repository_files, snapshot
+from dev._paths import REPO_ROOT
+from dev.source_tree import repository_files, snapshot
+
 from .._distribution_names import normalise_distribution_name
 from ..hashing import sha256_path
 from ..installed_mcp_oracle import run_installed_mcp_oracle

@@ -7,8 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from ..._paths import REPO_ROOT
-from ...source_tree import repository_files, snapshot
+from dev._paths import REPO_ROOT
+from dev.source_tree import repository_files, snapshot
+
 from ..build_scratch_reclaim import (
     RELEASE_COHORT_INTEGRATION_FAMILY,
     matching_family,

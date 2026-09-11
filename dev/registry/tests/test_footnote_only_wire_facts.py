@@ -32,7 +32,6 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..analysis.footnote_only_wire_facts import (
     ADJUDICATED_KINDS,
@@ -49,6 +48,7 @@ from ..analysis.footnote_only_wire_facts import (
     would_become_eligible,
 )
 from ..analysis.footnote_pointer_notes import note_definitions
+from ..compiler.authority import compiled_bundled_authority
 from ..pipeline.render_check import revision_render_inputs
 from ..pipeline.render_profile_eligibility import project_render_profile_eligibility, resolve_render_profile_eligibility
 from ..pipeline.source_defects import NoteGovernedAmountDeclaration, NoteStatedApplicabilityDeclaration

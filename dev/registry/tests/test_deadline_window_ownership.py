@@ -7,17 +7,18 @@ from datetime import date
 import pytest
 
 from cadrumo.core.period import Period
-from dev.registry.compiler._validate_revision_rules import (
-    validate_deadline_window_cadence,
-    validate_deadline_window_ownership,
-    validate_periodic_deadline_completeness,
-)
-from dev.registry.compiler.validator import RegistryValidator
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import SupportedFilingYearsCatalogue
 from cadrumo.domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition, ModeloScheduleDefinition
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
-from dev.registry.tests._referential_integrity_support import minimal_catalogues, minimal_modelo, minimal_revision
+
+from ..compiler._validate_revision_rules import (
+    validate_deadline_window_cadence,
+    validate_deadline_window_ownership,
+    validate_periodic_deadline_completeness,
+)
+from ..compiler.validator import RegistryValidator
+from ._referential_integrity_support import minimal_catalogues, minimal_modelo, minimal_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

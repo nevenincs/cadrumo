@@ -7,11 +7,11 @@ from dataclasses import replace
 import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.calculations.registry._snapshot_internals import _build_validated_snapshot
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.tests.registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

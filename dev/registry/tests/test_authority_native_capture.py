@@ -34,8 +34,9 @@ from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from cadrumo.tests import REPO_ROOT
-from dev.registry.compiler.authority import compile_validated_authority, compiled_bundled_authority
-from dev.registry.maintenance_support import reset_registry_caches
+
+from ..compiler.authority import compile_validated_authority, compiled_bundled_authority
+from ..maintenance_support import reset_registry_caches
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -333,7 +334,7 @@ def test_native_capture_refuses_a_real_child_process_coordinate(
     environment = os.environ.copy()
     source_path = str(REPO_ROOT / "src")
     environment["PYTHONPATH"] = source_path + os.pathsep + environment.get("PYTHONPATH", "")
-    child = subprocess.run(  # noqa: S603 - fixed interpreter and in-repository test program
+    child = subprocess.run(
         (sys.executable, "-c", child_program, str(publication.root)),
         cwd=REPO_ROOT,
         env=environment,

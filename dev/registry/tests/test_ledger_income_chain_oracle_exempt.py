@@ -63,7 +63,8 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.transactions.retencion_facts import load_retencion_actividades_rates
-from dev.registry.tests._ledger_income_chain_oracle_support import modelo_130_revision
+
+from ._ledger_income_chain_oracle_support import modelo_130_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

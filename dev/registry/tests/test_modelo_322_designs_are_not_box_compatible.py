@@ -25,15 +25,16 @@ reverse question -- does every DESIGN box have a home? -- surfaces ``[73]``.
 """
 
 from __future__ import annotations
-# Development-only record-design corpus gate.
 
+# Development-only record-design corpus gate.
 import re
 
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from dev.registry.compiler.record_design import extract_record_design
-from dev.registry.tests._registry_schema_support import _committed_registry_tree
+
+from ..compiler.record_design import extract_record_design
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -9,8 +9,8 @@ from typing import Final
 import pytest
 
 from cadrumo.core.directory_scan import iter_directory
+from dev._paths import UTF_8
 
-from ..._paths import UTF_8
 from ..proof_cache import (
     PROOF_SCOPE_PATHS,
     environment_fingerprint,

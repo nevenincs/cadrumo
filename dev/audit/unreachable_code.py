@@ -86,15 +86,15 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final, cast
 
-from .._paths import REPO_ROOT, UTF_8
-from ..quality.import_hygiene_scan import (
+from dev._paths import REPO_ROOT, UTF_8
+from dev.quality.import_hygiene_scan import (
     is_shipped_module,
     module_name_for,
     resolve_relative_import,
     type_checking_guarded_nodes,
     wheel_exclude_globs,
 )
-from ..quality.unread_inputs import report_unread
+from dev.quality.unread_inputs import report_unread
 
 _UTF_8: Final[str] = UTF_8
 _FINDING_CAP: Final[int] = 40

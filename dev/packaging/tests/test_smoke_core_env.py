@@ -11,7 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..lane_verification_core import installed_product_env, venv_bin_dir
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

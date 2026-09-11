@@ -14,8 +14,9 @@ from cadrumo.tests.aeat_literal_fixtures import (
     aeat_host,
     aeat_url,
 )
-from dev.registry.maintenance_support import LiveParityCatalogue, OracleEnvironment
-from dev.registry.parity.live_parity import (
+
+from ..maintenance_support import LiveParityCatalogue, OracleEnvironment
+from ..parity.live_parity import (
     OracleSurfaceKind,
     ParityFieldComparison,
     ParityResult,
@@ -23,9 +24,9 @@ from dev.registry.parity.live_parity import (
     ReplayPayload,
     decode_replay_json_payload,
 )
-from dev.registry.parity.renta_web_open_oracle import RentaWebOpenOracle
-from dev.registry.tests.aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
-from dev.registry.tests.groi_oracle import GROI_ORACLE_ID, GroiOracle
+from ..parity.renta_web_open_oracle import RentaWebOpenOracle
+from .aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
+from .groi_oracle import GROI_ORACLE_ID, GroiOracle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -63,7 +63,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import Final, override
 
-from ..quality.repository_sources import production_sources
+from dev.quality.repository_sources import production_sources
 
 NORMALISING_METHODS: Final = ("strip", "upper", "casefold", "lower")
 TAX_ID_HINTS: Final = (

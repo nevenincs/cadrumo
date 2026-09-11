@@ -37,7 +37,8 @@ from typing import TYPE_CHECKING, Any, Final
 
 from pydantic import JsonValue
 
-from .._paths import UTF_8
+from dev._paths import UTF_8
+
 from ._installed_wheel_binding import (
     assert_installed_console_entry_point,
     installed_distribution_payload_sha256,

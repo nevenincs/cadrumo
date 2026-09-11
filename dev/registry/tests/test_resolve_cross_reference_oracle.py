@@ -17,12 +17,12 @@ from cadrumo.domain.calculations.registry.schema_verification import (
     LiveCrossReferenceDecision,
     ProfilePredicateDefinition,
 )
-from dev.registry.conformance.tests._registry_schema_support import _committed_registry_tree
-from dev.registry.maintenance_support import LiveParityCatalogue, OracleEnvironment, collect_orphan_oracle_ids
-from dev.registry.tests.aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
-from dev.registry.tests.groi_oracle import GROI_ORACLE_ID, GroiOracle
 
+from ..conformance.tests._registry_schema_support import _committed_registry_tree
+from ..maintenance_support import LiveParityCatalogue, OracleEnvironment, collect_orphan_oracle_ids
 from ._remote_guard_support import AEAT_WRITE_FORBIDDEN_ACTIONS
+from .aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
+from .groi_oracle import GROI_ORACLE_ID, GroiOracle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

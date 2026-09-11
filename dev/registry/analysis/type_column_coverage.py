@@ -35,7 +35,8 @@ from typing import Final
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor, ModeloDefinition, ModeloRevision
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from ..compiler.authority import compiled_bundled_authority
 
 __all__ = [
     "GENERATION_MANIFEST_NAME",

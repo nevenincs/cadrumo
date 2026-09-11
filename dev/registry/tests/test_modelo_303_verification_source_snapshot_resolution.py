@@ -36,13 +36,14 @@ These tests pin the closed state at the application-facing resolution boundary
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
 
 from cadrumo.core.directory_scan import iter_directory
 from cadrumo.core.resources.bundled_data import bundled_path
-from dev.registry.compiler._validate import RegistryValidator
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+
+from ..compiler._validate import RegistryValidator
+from ..compiler.loader_fingerprints import clear_fingerprint_cache
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

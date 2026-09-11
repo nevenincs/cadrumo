@@ -8,9 +8,10 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.registry_snapshot import build_snapshot
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
-from dev.registry.tests._modelo_303_registry_support import (
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ._modelo_303_registry_support import (
     _M303_AUTOCONSUMO_PROMOTOR_BASE_CASILLA,
     _M303_AUTOCONSUMO_PROMOTOR_CUOTA_CASILLA,
     _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
@@ -31,7 +32,7 @@ def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuot
     tipo general = 21%), NOT from the registry implementation under test; this
     test would fail if the formula were mis-wired or the tipo were wrong.
     """
-    from ..formula_runtime import calculate_registry_snapshot
+    from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 
     modelo, catalogues = load_modelo_303()
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="1T")
@@ -104,7 +105,7 @@ def test_modelo_303_autoconsumo_promotor_cuota_proportional_to_base() -> None:
     tipo 21%), not from a second call to the same formula.  If the formula
     constant were changed to, say, 0.10, this test would catch it immediately.
     """
-    from ..formula_runtime import calculate_registry_snapshot
+    from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 
     modelo, catalogues = load_modelo_303()
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="1T")

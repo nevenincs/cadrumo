@@ -50,10 +50,11 @@ import re
 from typing import Final
 
 import pytest
-from dev.registry.compiler.authority import compile_validated_authority
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+
+from ..compiler.authority import compile_validated_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

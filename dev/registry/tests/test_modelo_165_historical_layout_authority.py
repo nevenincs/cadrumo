@@ -7,21 +7,22 @@ the design whose own heading is ``Ejercicio 2026`` starts only in 2026.
 """
 
 from __future__ import annotations
-# Development-only record-design corpus gate.
 
+# Development-only record-design corpus gate.
 from datetime import date
 
 import pytest
-from dev.registry.compiler.loader import load_catalogue_file, load_modelo_directory, load_registry_tree
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
-from dev.registry.compiler._validate import RegistryValidator
-from dev.registry.compiler._validate_export_exemption import validate_export_exemption_declarations
-from dev.registry.compiler._validate_export_layout_coverage import validate_export_layout_record_coverage
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from dev.registry.compiler.record_design import extract_record_design
 from cadrumo.domain.calculations.registry.temporal import select_revision
+
+from ..compiler._validate import RegistryValidator
+from ..compiler._validate_export_exemption import validate_export_exemption_declarations
+from ..compiler._validate_export_layout_coverage import validate_export_layout_record_coverage
+from ..compiler.loader import load_catalogue_file, load_modelo_directory, load_registry_tree
+from ..compiler.record_design import extract_record_design
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

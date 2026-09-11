@@ -61,9 +61,9 @@ from pathlib import Path
 from typing import Final, TextIO
 
 from cadrumo.core.link_safety import is_link_like
+from dev._paths import REPO_ROOT, UTF_8
+from dev.packaging.build_scratch_reclaim import report_var_scratch
 
-from .._paths import REPO_ROOT, UTF_8
-from ..packaging.build_scratch_reclaim import report_var_scratch
 from .temp_reaper import report_temporary_storage
 
 WORKTREE_FAMILY: Final = "worktree"

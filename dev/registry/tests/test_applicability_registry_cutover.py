@@ -26,13 +26,21 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compile_validated_authority
 
 from cadrumo.core.modelo import Modelo
+from cadrumo.domain.calculations.registry.applicability import (
+    ApplicabilityVerdict,
+    ModeloApplicabilityRule,
+    resolve_applicability_rule_from_authority,
+)
 from cadrumo.domain.contribuyente.entity_type import EntityType
 from cadrumo.domain.deadlines.models import FiscalResidency, IVARegime, TaxpayerProfile
-from cadrumo.domain.calculations.registry.applicability import ApplicabilityVerdict, ModeloApplicabilityRule, resolve_applicability_rule_from_authority
-from dev.registry.conformance.tests._loader_directory_mode_support import write_extracted_corpus_sidecar, write_fragmented_revision
+
+from ..compiler.authority import compile_validated_authority
+from ..conformance.tests._loader_directory_mode_support import (
+    write_extracted_corpus_sidecar,
+    write_fragmented_revision,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

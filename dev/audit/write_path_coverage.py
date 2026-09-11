@@ -102,8 +102,9 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-from .._paths import REPO_ROOT
-from ..quality.import_hygiene_scan import resolve_relative_import
+from dev._paths import REPO_ROOT
+from dev.quality.import_hygiene_scan import resolve_relative_import
+
 from .unreachable_code import (
     ShippedModule,
     ShippedTreeSpec,

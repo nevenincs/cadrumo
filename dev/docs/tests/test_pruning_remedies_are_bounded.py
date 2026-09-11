@@ -40,7 +40,8 @@ from pathlib import Path
 
 import pytest
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..apidocs.manager import (
     MAX_STUB_REMOVALS_PER_RUN,
     ApiStubManager,

@@ -40,9 +40,9 @@ from typing import Final
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from cadrumo.core.directory_scan import iter_directory
+from dev._paths import UTF_8
+from dev.source_tree import content_digest, repository_files
 
-from .._paths import UTF_8
-from ..source_tree import content_digest, repository_files
 from .hashing import sha256_text
 
 _UTF_8: Final[str] = UTF_8

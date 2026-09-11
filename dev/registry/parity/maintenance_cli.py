@@ -10,8 +10,8 @@ import typer
 from pydantic import BaseModel
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from dev.registry.maintenance_support import OracleEnvironment
 
+from ..maintenance_support import OracleEnvironment
 from .maintenance import (
     audit_registry_oracles,
     replay_registry_parity,

@@ -608,7 +608,7 @@ def _generated_docs_registrations() -> tuple[FStringKeyRegistration, ...]:
     ``docs`` is not among them. Until that root is admitted, this registration
     is what keeps scaffold from pruning the families as stale.
     """
-    from ..docs.casilla_reference import display_locale_keys
+    from dev.docs.casilla_reference import display_locale_keys
 
     return (
         FStringKeyRegistration(

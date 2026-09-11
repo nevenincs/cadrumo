@@ -162,7 +162,7 @@ def _resolved_scalar_fact(
         )
     if not resolved.legal_refs:
         raise TransactionValidationError(f"retención fact {fact_id!r} has no legal references")
-    return cast("ResolvedScalarFact", resolved)
+    return resolved
 
 
 def _legal_refs_of(

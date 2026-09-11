@@ -29,8 +29,8 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.link_safety import is_link_like
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
+from dev._paths import UTF_8
 
-from .._paths import UTF_8
 from ._locale_chrome import docs_chrome
 from .build import docs_build_language
 

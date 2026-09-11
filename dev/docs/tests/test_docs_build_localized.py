@@ -19,7 +19,8 @@ from pathlib import Path
 
 import pytest
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..i18n import TARGET_LANGUAGES
 from ._sphinx_build_harness import (
     copy_docs_source,

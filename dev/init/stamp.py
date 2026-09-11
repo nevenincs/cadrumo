@@ -29,12 +29,12 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
-from dev.init.contract import CONTRACT_VERSION
+from .contract import CONTRACT_VERSION
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from dev.init.contract import Phase
+    from .contract import Phase
 
 #: Where the stamp lives. Inside the virtual environment on purpose: `.venv` is
 #: already ignored in every repository, it is per-worktree, and destroying the

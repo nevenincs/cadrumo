@@ -12,8 +12,8 @@ from typer.testing import CliRunner
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from dev.registry.compiler.authority import compiled_bundled_authority
 
+from ..compiler.authority import compiled_bundled_authority
 from ..pipeline._export_tree import render_complete_export_tree
 from ..pipeline._tree_publication import (
     GeneratedExportTreePublicationContext,

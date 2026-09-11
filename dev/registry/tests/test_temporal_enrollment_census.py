@@ -7,7 +7,6 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..analysis.temporal_enrollment_census import (
     LiteralEnrollmentAudit,
@@ -17,6 +16,7 @@ from ..analysis.temporal_enrollment_census import (
     audit_temporal_enrollment_source,
     law_selectable_revision_subjects,
 )
+from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -7,17 +7,17 @@ from pathlib import Path
 
 import pytest
 
-from dev.registry.compiler import record_design_workbook as record_design_workbook_module
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from ..compiler.record_design import (
-    extract_record_design,
-)
 from cadrumo.domain.calculations.registry.record_design_schema import (
     RecordDesignCompositeRelativeClosing,
     RecordDesignRelativeSuffixMarker,
 )
-from dev.registry.maintenance_support import resolve_record_design_binary
 
+from ..compiler import record_design_workbook as record_design_workbook_module
+from ..compiler.record_design import (
+    extract_record_design,
+)
+from ..maintenance_support import resolve_record_design_binary
 from ._record_design_support import (
     _committed_registry_tree,
     bundled_path,

@@ -40,9 +40,9 @@ from typing import Final
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
+from dev._paths import REPO_ROOT
+from dev.source_tree import repository_files
 
-from ...._paths import REPO_ROOT
-from ....source_tree import repository_files
 from ..checks import _SKIPPED_DOC_DIRS, _page_files, default_docs_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]

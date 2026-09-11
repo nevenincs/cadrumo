@@ -5,7 +5,7 @@ from __future__ import annotations
 import subprocess
 import sys
 
-from dev.env._venv import VENV, guard
+from ._venv import VENV, guard
 
 #: The extras and groups an everyday development environment carries.
 EXTRA = "workbook-windows"

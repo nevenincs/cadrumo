@@ -28,15 +28,16 @@ import re
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.tests.registry_tree import bundled_registry_tree
-from dev.registry.compiler._validate_layout_authority_content import (
+
+from ..compiler._validate_layout_authority_content import (
     _ANNEX_BLOCK,
     _ANNEX_HEADING,
     _LAYOUT_VOCABULARY,
     _carries_layout_content,
     validate_layout_authority_content,
 )
-from cadrumo.domain.calculations.registry.schema_references import SourceReference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

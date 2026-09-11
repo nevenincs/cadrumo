@@ -14,15 +14,15 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
-from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
-from dev.registry.maintenance_support import (
+
+from ..conformance.tests._registry_schema_support import _committed_modelo
+from ..maintenance_support import (
     _COMPATIBLE_SURFACE_PAIRS,
     LiveParityCatalogue,
     OracleEnvironment,
     audit_oracle_bindings,
 )
-from dev.registry.parity.renta_web_open_oracle import RentaWebOpenOracle
-
+from ..parity.renta_web_open_oracle import RentaWebOpenOracle
 from .aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from .groi_oracle import GROI_ORACLE_ID, GroiOracle
 

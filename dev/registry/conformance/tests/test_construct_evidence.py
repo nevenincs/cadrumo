@@ -10,14 +10,14 @@ from pydantic import ValidationError
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.tests.registry_snapshot import build_snapshot
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.conformance.coverage import (
+
+from ...compiler.authority import compiled_bundled_authority
+from ..coverage import (
     ConstructEvidenceLedger,
     ConstructEvidenceRow,
     audit_registry_construct_evidence,
     build_construct_evidence_ledger,
 )
-
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

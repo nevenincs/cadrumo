@@ -43,8 +43,9 @@ from pathlib import Path
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+
+from ..compiler.authority import compiled_bundled_authority
 from ..compiler.record_design import extract_record_design
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 __all__ = [
     "Alignment",

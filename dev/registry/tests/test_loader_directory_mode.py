@@ -24,17 +24,18 @@ from cadrumo.domain.calculations.registry.errors import (
     RegistryLoadError,
     RegistryValidationError,
 )
-from dev.registry.compiler._loader_internals import load_modelo_file
-from dev.registry.compiler.loader import (
+
+from ..compiler._loader_internals import load_modelo_file
+from ..compiler.loader import (
     load_catalogue_file,
     load_modelo_directory,
     load_modelo_source,
     load_registry_tree,
     load_shared_catalogues,
 )
-from dev.registry.compiler.loader_cache import ModeloSource, discover_modelo_sources
-from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
-from dev.registry.conformance.tests._loader_directory_mode_support import (
+from ..compiler.loader_cache import ModeloSource, discover_modelo_sources
+from ..compiler.loader_fingerprints import clear_fingerprint_cache
+from ..conformance.tests._loader_directory_mode_support import (
     _MAX_SINGLE_FILE_MODELO_LINES,
     _MAX_TOML_FRAGMENT_LINES,
     _MAX_TOML_ROW_CHARS,

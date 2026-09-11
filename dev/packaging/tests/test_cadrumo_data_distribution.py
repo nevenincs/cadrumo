@@ -51,9 +51,9 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
+from dev._paths import REPO_ROOT
+from dev.source_tree import repository_files
 
-from ..._paths import REPO_ROOT
-from ...source_tree import repository_files
 from .._distribution_limits import PYPI_FILE_CAP_BYTES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

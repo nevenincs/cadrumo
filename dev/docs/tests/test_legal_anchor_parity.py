@@ -15,7 +15,8 @@ from __future__ import annotations
 
 import pytest
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..legal_reference import LegalPage, LegalReferenceResult, render_legal_reference
 from ..terminology.legal_projection import project_legal_search_records
 from ..terminology.search_record import LegalSearchRecord, SearchRecordKind

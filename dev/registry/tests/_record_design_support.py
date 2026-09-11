@@ -17,14 +17,15 @@ from cadrumo.domain.calculations.registry.binding_selector_utils import (
     binding_export_selector,
 )
 from cadrumo.domain.calculations.registry.export import resolve_export_layout
+from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignSheet
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from cadrumo.tests.registry_snapshot import build_snapshot
+
 from ..compiler.record_design import (
     extract_record_design,
     extract_record_design_pdf,
 )
-from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignSheet
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
-from cadrumo.tests.registry_snapshot import build_snapshot
-from dev.registry.conformance.tests._registry_schema_support import _committed_registry_tree
+from ..conformance.tests._registry_schema_support import _committed_registry_tree
 
 __all__ = [
     "_MODELO_131_CURRENT",

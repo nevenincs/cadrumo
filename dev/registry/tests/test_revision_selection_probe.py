@@ -11,9 +11,9 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..analysis.revision_selection_probe import declared_period_codes, probe_modelo
+from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ..registry.analysis.modelo_regulatory_literal_scan import derive_regulatory_literal_findings
+from dev.registry.analysis.modelo_regulatory_literal_scan import derive_regulatory_literal_findings
 
 
 def main() -> None:

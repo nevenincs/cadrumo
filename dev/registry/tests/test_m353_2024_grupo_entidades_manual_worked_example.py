@@ -70,8 +70,6 @@ import pytest
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
-from cadrumo.domain.iva.flow import IvaFlowDirection
-from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
@@ -79,7 +77,10 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
 )
-from dev.registry.tests._ledger_iva_aggregation_support import _deduction_provenance
+from cadrumo.domain.iva.flow import IvaFlowDirection
+from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
+
+from ._ledger_iva_aggregation_support import _deduction_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

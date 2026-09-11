@@ -8,9 +8,10 @@ import pytest
 
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
-from dev.registry.compiler._loader_internals import load_modelo_file
-from dev.registry.compiler.loader import load_modelo_directory
-from dev.registry.conformance.tests._loader_directory_mode_support import (
+
+from ..compiler._loader_internals import load_modelo_file
+from ..compiler.loader import load_modelo_directory
+from ..conformance.tests._loader_directory_mode_support import (
     _standard_manifest_text,
     _standard_revision_preamble_text,
 )

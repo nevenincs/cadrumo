@@ -16,9 +16,10 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
 )
 from cadrumo.domain.calculations.registry.facts.schema import FactSelector, GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
-from dev.registry.compiler.convenio import convenio_authority_from_facts
-from dev.registry.compiler.fact_loader import load_governed_facts
-from dev.registry.compiler.loader import load_registry_tree
+
+from ..compiler.convenio import convenio_authority_from_facts
+from ..compiler.fact_loader import load_governed_facts
+from ..compiler.loader import load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

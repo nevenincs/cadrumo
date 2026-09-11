@@ -36,7 +36,8 @@ from pathlib import Path
 
 import pytest
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..pagefind_index import build_search_index
 from ._http_serve_support import serve_directory
 

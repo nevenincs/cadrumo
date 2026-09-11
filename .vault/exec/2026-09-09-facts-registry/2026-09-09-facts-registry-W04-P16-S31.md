@@ -5,15 +5,11 @@ tags:
 date: '2026-09-11'
 modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:de074d5429c68d28c2d385515cf5c1ee162e3cac50ebbe907677566f31500636'
+body_hash: 'sha256:92f514fd03cd75c70d268669154cac7bd5b7dd358471400ba8175e02024314c3'
 step_id: 'S31'
 related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete migrated statutory declarations but retain technical configuration
 

@@ -8,8 +8,9 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_authority
-from dev.registry.compiler.corpus_catalogue import verify_source_catalogue
-from dev.registry.compiler.legal_grounding import verify_legal_catalogue
+
+from ..compiler.corpus_catalogue import verify_source_catalogue
+from ..compiler.legal_grounding import verify_legal_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

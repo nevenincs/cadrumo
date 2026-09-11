@@ -1,4 +1,4 @@
-"""Runtime IVA citation checks against signed authority evidence.
+"""Runtime IVA citation checks against published authority evidence.
 
 The tables under ``registry/aeat/iva/`` carry regulatory values -- rates, recargo
 tiers, place-of-supply placements, territorial exclusions -- and each row names
@@ -7,7 +7,7 @@ between a value and a wrong filing, and until a table's loader resolves it the
 citation is validated by nothing: an identifier naming a provision nobody defined
 parses exactly like one naming a provision the BOE actually carries.
 
-The signed artifact projects the anchor-scoped legal text that publication
+The published artifact projects the anchor-scoped legal text that publication
 validated.  Runtime consumes that projection only: authoring corpus readers and
 their repair or fallback paths stay in development tooling.
 

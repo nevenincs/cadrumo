@@ -15,7 +15,6 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor, ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..analysis.corpus import bundled_modelo_ids
 from ..analysis.delta_minimality import (
@@ -33,6 +32,7 @@ from ..analysis.delta_minimality import (
     screen_authority,
     stated_casillas,
 )
+from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

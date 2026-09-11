@@ -25,12 +25,6 @@ from cadrumo.core.result_disposition import (
     derive_result_disposition,
     result_disposition_casilla_ids,
 )
-from cadrumo.tests.registry_snapshot import build_snapshot
-from cadrumo.tests.registry_tree import bundled_registry_tree
-from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance, required_deduction_evidence_authority
-from cadrumo.domain.iva.flow import IvaFlowDirection
-from cadrumo.domain.iva.schema import IvaCategory, IvaExemptionArticle, IvaLedgerObservationRole, IvaRateKind
-from cadrumo.domain.iva_compensation.filed_derivation import M303CompensationBasis
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.bindings import (
@@ -43,8 +37,20 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
 )
-from cadrumo.domain.calculations.registry.relations import materialize_relation_binding_values, resolve_relation_values_from_observations
+from cadrumo.domain.calculations.registry.relations import (
+    materialize_relation_binding_values,
+    resolve_relation_values_from_observations,
+)
 from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from cadrumo.domain.iva.deduction_facts import (
+    IvaDeductionClassificationProvenance,
+    required_deduction_evidence_authority,
+)
+from cadrumo.domain.iva.flow import IvaFlowDirection
+from cadrumo.domain.iva.schema import IvaCategory, IvaExemptionArticle, IvaLedgerObservationRole, IvaRateKind
+from cadrumo.domain.iva_compensation.filed_derivation import M303CompensationBasis
+from cadrumo.tests.registry_snapshot import build_snapshot
+from cadrumo.tests.registry_tree import bundled_registry_tree
 
 _M303_APP_FILING_CAPTURED_AT = datetime(2027, 1, 20, 9, 0, 0, tzinfo=UTC)
 

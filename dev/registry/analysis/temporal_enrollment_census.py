@@ -23,8 +23,8 @@ from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.ids import ModeloId, RevisionId, SourceRefId
+from dev._paths import REPO_ROOT
 
-from ..._paths import REPO_ROOT
 from ..temporal_coverage import compose_temporal_coverage
 
 __all__ = [

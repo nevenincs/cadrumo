@@ -12,11 +12,12 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.registry_snapshot import build_snapshot
-from dev.registry.compiler._validate_exports import _validate_embedded_envelope_source_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
-from dev.registry.tests._registry_schema_support import _committed_registry_tree
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ..compiler._validate_exports import _validate_embedded_envelope_source_authority
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

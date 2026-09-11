@@ -37,7 +37,7 @@ from __future__ import annotations
 from collections.abc import Callable, Collection
 
 import pytest
-from dev.registry.compiler.loader import load_catalogue_file
+from test_support.registry_authoring import load_catalogue_file
 
 from ....core.directory_scan import scan_directory
 from ....core.resources.bundled_data import bundled_path

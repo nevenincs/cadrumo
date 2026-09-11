@@ -77,7 +77,8 @@ from typing import Final
 
 import pytest
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..campaign import campaign_pytest_argv
 from ._justfile_recipes import Recipe, packaging_pytest_recipes
 

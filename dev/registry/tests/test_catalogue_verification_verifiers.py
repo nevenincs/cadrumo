@@ -22,11 +22,12 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier, SourceCitation
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
-from dev.registry.compiler._validate_evidence import EvidenceValidator
-from dev.registry.compiler.corpus_catalogue import verify_source_catalogue, verify_source_file
-from dev.registry.compiler.legal_grounding import verify_legal_catalogue
-from dev.registry.compiler.validator import RegistryValidator
-from dev.registry.conformance.tests._registry_schema_support import _committed_registry_tree
+
+from ..compiler._validate_evidence import EvidenceValidator
+from ..compiler.corpus_catalogue import verify_source_catalogue, verify_source_file
+from ..compiler.legal_grounding import verify_legal_catalogue
+from ..compiler.validator import RegistryValidator
+from ..conformance.tests._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

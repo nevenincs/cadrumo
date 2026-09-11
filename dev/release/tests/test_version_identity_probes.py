@@ -36,7 +36,8 @@ from typing import NamedTuple, override
 
 import pytest
 
-from ..._paths import REPO_ROOT, UTF_8
+from dev._paths import REPO_ROOT, UTF_8
+
 from ..version_identity import PYPI_PROJECTS, VersionIdentityError, pypi_projects_owning
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

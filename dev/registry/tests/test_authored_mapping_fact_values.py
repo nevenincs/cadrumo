@@ -8,8 +8,9 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.facts.schema import MappingFactEntry
-from dev.registry.compiler.fact_loader import load_governed_fact_file
+from cadrumo.domain.calculations.registry.facts.schema import FactSelector, MappingFactEntry, ScalarFactPayload
+
+from ..compiler.fact_loader import load_governed_fact_file
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -50,6 +51,22 @@ def test_mapping_decimal_annotation_refuses_non_string_values() -> None:
     """The author must make decimal intent explicit rather than relying on TOML float parsing."""
     with pytest.raises(ValidationError, match="decimal mapping value_type requires a decimal string"):
         MappingFactEntry.model_validate({"key": 2025, "value_type": "decimal", "value": 15876})
+    with pytest.raises(ValidationError, match="decimal fact selector value_type requires a decimal string"):
+        FactSelector.model_validate({"name": "applied_rate", "value_type": "decimal", "value": 15876})
+
+
+def test_decimal_annotations_refuse_nonfinite_typed_decimals() -> None:
+    """Only the artifact reader may carry a finite Decimal through an annotation."""
+    with pytest.raises(ValidationError, match="Input should be a finite number"):
+        FactSelector(name="applied_rate", value_type="decimal", value=Decimal("NaN"))
+    with pytest.raises(ValidationError, match="Input should be a finite number"):
+        MappingFactEntry(key=2025, value_type="decimal", value=Decimal("Infinity"))
+
+
+def test_declared_scalar_decimal_refuses_malformed_authored_text() -> None:
+    """Every declared-decimal carrier converts malformed text into a schema refusal."""
+    with pytest.raises(ValidationError, match="decimal fact value_type requires a valid decimal string"):
+        ScalarFactPayload(value_type="decimal", value="not-a-decimal", unit="EUR")
 
 
 def test_generated_mapping_decimal_entries_remain_typed_without_an_authoring_annotation() -> None:

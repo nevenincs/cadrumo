@@ -12,7 +12,8 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingKind
-from dev.registry.maintenance_support import load_modelo_path
+
+from ..maintenance_support import load_modelo_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -7,12 +7,12 @@ from functools import cache
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.registry_snapshot import build_snapshot
-from cadrumo.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
 from cadrumo.domain.calculations.registry.relations import RegistryFoldRequirement
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.tests.registry_snapshot import build_snapshot
+from cadrumo.tests.registry_tree import bundled_registry_tree
 
 _M202_CUOTA_BASE_CASILLA: CasillaId = validated_casilla_id("01", surface="_M202_CUOTA_BASE_CASILLA")
 _M200_CUOTA_DIFERENCIAL_CASILLA: CasillaId = validated_casilla_id(

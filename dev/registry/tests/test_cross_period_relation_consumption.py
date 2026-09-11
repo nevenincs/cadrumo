@@ -29,7 +29,8 @@ from cadrumo.core.modelo import Modelo
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.handoffs import relation_consumption_channels, relation_consumption_index
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-from dev.registry.tests._registry_schema_support import _committed_registry_tree
+
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

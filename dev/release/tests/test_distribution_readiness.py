@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from ...packaging.evidence import (
+from dev.packaging.evidence import (
     AcquisitionIdentity,
     CommandTranscript,
     DestinationIdentity,
@@ -23,9 +23,10 @@ from ...packaging.evidence import (
     current_runtime_identity,
     write_distribution_evidence,
 )
-from ...packaging.hashing import sha256_path
-from ...packaging.tests._release_cohort_support import release_cohort
-from ...source_tree import content_digest, repository_files
+from dev.packaging.hashing import sha256_path
+from dev.packaging.tests._release_cohort_support import release_cohort
+from dev.source_tree import content_digest, repository_files
+
 from ..readiness import check_distribution_evidence_set
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
