@@ -15,13 +15,13 @@ from __future__ import annotations
 
 import pytest
 
-from .. import iter_skill_documents, iter_skill_metadata
 from .._skill_metadata import (
     SkillAppliesWhen,
     SkillMetadataError,
     parse_skill_metadata,
     profile_fact_names,
 )
+from ..resources import iter_skill_documents, iter_skill_metadata
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 

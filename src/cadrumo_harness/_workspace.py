@@ -39,7 +39,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 
-from . import harness_root, iter_operator_rules, iter_personas
+from .resources import harness_root, iter_operator_rules, iter_personas
 
 _UTF_8 = "utf-8"
 

@@ -112,7 +112,7 @@ def _command_doc(descriptor: McpToolDescriptor) -> CommandDoc:
     """
     key_tokens = descriptor.command_key.replace(".", " ").replace("_", " ")
     key_and_name = f"{descriptor.command_key} {key_tokens} {descriptor.name}"
-    from cadrumo.entrypoints.cli import command_search_terms
+    from cadrumo.entrypoints.cli.main import command_search_terms
 
     return CommandDoc(
         command_key=descriptor.command_key,

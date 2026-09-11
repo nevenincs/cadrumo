@@ -22,8 +22,8 @@ from pathlib import Path
 import pytest
 import yaml
 
-from .. import harness_root, iter_personas
 from .._workspace import _PluginPythonCohort, materialise_plugin
+from ..resources import harness_root, iter_personas
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 

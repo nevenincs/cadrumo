@@ -16,8 +16,8 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 
-from .. import harness_root, iter_operator_rules, iter_personas
 from .._workspace import materialise_workspace
+from ..resources import harness_root, iter_operator_rules, iter_personas
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 

@@ -152,7 +152,7 @@ def build_tool_descriptors() -> tuple[McpToolDescriptor, ...]:
         # operator intent, while every executable identity is carried only by
         # the resolver-backed capability projection on ``verb_schema``.
         description = intent or f"Cadrumo tool for {key}."
-        from cadrumo.entrypoints.cli import command_execution_policy_for_cli_path
+        from cadrumo.entrypoints.cli.main import command_execution_policy_for_cli_path
 
         execution_policy = project_command_policy(
             key,

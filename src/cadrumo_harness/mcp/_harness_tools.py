@@ -36,7 +36,7 @@ from cadrumo.core.external_constants import UTF_8_ENCODING as _UTF_8
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.json_contract import ResolvedPreconditionAction
 
-from .. import iter_personas, operator_rules_text
+from ..resources import iter_personas, operator_rules_text
 from ._persona_scope import AgentPersona
 
 if TYPE_CHECKING:
@@ -289,7 +289,7 @@ def build_whoami_identity() -> WhoamiIdentity:
     ensure_profile_keys_registered()
     health = assess_active_profile_health()
     tax_id_present = health.profile_record_present and _TAX_ID_FACT_PATH not in health.missing_required
-    from cadrumo.entrypoints.cli import resolve_cli_precondition_action
+    from cadrumo.entrypoints.cli.main import resolve_cli_precondition_action
 
     return WhoamiIdentity(
         active_profile=health.active_profile_label,

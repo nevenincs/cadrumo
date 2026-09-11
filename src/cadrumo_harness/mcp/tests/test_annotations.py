@@ -11,7 +11,7 @@ import importlib.util
 
 import pytest
 
-from cadrumo.entrypoints.cli import command_execution_policy_for_cli_path
+from cadrumo.entrypoints.cli.main import command_execution_policy_for_cli_path
 
 from .._annotations import (
     McpAnnotations,
