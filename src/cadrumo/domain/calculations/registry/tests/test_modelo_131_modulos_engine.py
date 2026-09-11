@@ -39,12 +39,11 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from test_support.registry_authoring import _committed_snapshot
 
-from .....core.authority_grade import RegistryAuthorityGrade
-from .....core.money.rounding import round_to_cents
-from ..formula_runtime import calculate_registry_snapshot
-from ._modelo_131_modulos_engine_support import (
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.core.money.rounding import round_to_cents
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.tests._modelo_131_modulos_engine_support import (
     _ALIMENTACION_647_1,
     _AUTOTAXI_721_2,
     _CAFETERIAS_672_1,
@@ -59,6 +58,8 @@ from ._modelo_131_modulos_engine_support import (
     _expected_modulos_generales,
     _run_modulos_engine,
 )
+
+from ._registry_schema_support import _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

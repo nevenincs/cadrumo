@@ -6,17 +6,23 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from test_support.registry_authoring import load_convenio_authority, load_registry_tree
 
-from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_snapshot import build_snapshot
-from .registry_tree import bundled_registry_tree
-from .._formula_runtime_irnr import _irnr_resolve_tipo_gravamen_args
-from ..errors import RegistryValidationError
-from ..formula_runtime import calculate_registry_snapshot
-from ..formula_runtime_ops import RegistryUnresolvedOutcomeReason, resolve_keyed_bracket
-from ..schema import RegistrySnapshot
-from ..schema_formula import FormulaExpression
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry._formula_runtime_irnr import _irnr_resolve_tipo_gravamen_args
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.formula_runtime_ops import (
+    RegistryUnresolvedOutcomeReason,
+    resolve_keyed_bracket,
+)
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
+from cadrumo.tests.registry_snapshot import build_snapshot
+from cadrumo.tests.registry_tree import bundled_registry_tree
+
+from ..compiler.convenio import convenio_authority_from_facts
+from ..compiler.fact_providers import compile_registered_fact_providers
+from ..compiler.loader import load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -40,7 +46,10 @@ def _current_m210_rate_expression() -> FormulaExpression:
 def _current_m210_snapshot() -> RegistrySnapshot:
     root = bundled_path("registry", "aeat")
     modelos, catalogues = load_registry_tree(root)
-    catalogues = catalogues.model_copy(update={"convenio": load_convenio_authority(root / "treaties")})
+    facts = compile_registered_fact_providers(root, modelos=modelos)
+    catalogues = catalogues.model_copy(
+        update={"facts": facts, "convenio": convenio_authority_from_facts(facts, catalogues.legal)},
+    )
     modelo = next(modelo for modelo in modelos if modelo.id == "210")
     return build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="EVENT-1")
 
