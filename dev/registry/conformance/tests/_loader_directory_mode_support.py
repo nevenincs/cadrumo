@@ -10,10 +10,10 @@ from pathlib import Path
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from dev.registry.compiler._loader_internals import _REVISION_SECTION_FIELDS
 from dev.registry.compiler.loader import load_modelo_directory, load_modelo_source, load_registry_tree
 from dev.registry.compiler.loader_cache import ModeloSource, discover_modelo_sources
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 
 _REVISION_HEADER_RE = re.compile(r'^\[\[?revisions\.(?:"([^"]+)"|([A-Za-z0-9_-]+))(?=[.\]])')
 _REVISION_FIELD_RE = re.compile(r'^\[\[?revisions\.(?:"[^"]+"|[A-Za-z0-9_-]+)\.([A-Za-z0-9_]+)')
