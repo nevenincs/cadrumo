@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-11'
 body_schema: body-v2
-body_hash: 'sha256:2cc36838ef11f3b8edd557dd958aaf824fce9d8978a40fd780bde21eae81eb6e'
+body_hash: 'sha256:7031005de16546f577d5fb657ad1cf9e0d270c504dd88a5d49e478b277972456'
 ---
 
 <!-- RETIRED: S65 -->
@@ -221,7 +221,7 @@ Turn retirement-ledger closure, forbidden imports, unowned directories, direct r
 
 - [x] `W04.P18.S35` - Block imports of retired declarations and loader symbols; `dev/quality`.
 - [x] `W04.P18.S36` - Block direct governed-directory reads and unregistered loaders; `dev/quality`.
-- [ ] `W04.P18.S37` - Block provenance-free results and unresolved migration entries; `dev/registry/analysis`.
+- [x] `W04.P18.S37` - Block provenance-free results and unresolved migration entries; `dev/registry/analysis`.
 
 ### Phase `W04.P19` - Verify retirement boundary
 

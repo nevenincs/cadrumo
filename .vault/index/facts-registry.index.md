@@ -6,7 +6,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:4b0da90ad81cd869b89daa4dd0477cf560a05256a2196a3153d77e3c2fe7d40a'
+body_hash: 'sha256:a572f52953d7175019dc10754f521f9246a5438322bcd9adb3bc68124cf389de'
 related:
   - '[[2026-09-09-facts-registry-W01-P01-S01]]'
   - '[[2026-09-09-facts-registry-W01-P01-S02]]'
@@ -80,6 +80,7 @@ related:
   - '[[2026-09-09-facts-registry-W04-P17-S57]]'
   - '[[2026-09-09-facts-registry-W04-P18-S35]]'
   - '[[2026-09-09-facts-registry-W04-P18-S36]]'
+  - '[[2026-09-09-facts-registry-W04-P18-S37]]'
   - '[[2026-09-09-facts-registry-authority-plumbing-research]]'
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
   - '[[2026-09-09-facts-registry-discovery-blast-radius-research]]'
@@ -112,6 +113,7 @@ related:
   - '[[2026-09-11-facts-registry-s33-routing-retirement-audit]]'
   - '[[2026-09-11-facts-registry-s35-retired-authority-import-gate-review-audit]]'
   - '[[2026-09-11-facts-registry-s36-governed-runtime-read-gate-review-audit]]'
+  - '[[2026-09-11-facts-registry-s37-provenance-retirement-gate-review-audit]]'
   - '[[2026-09-11-facts-registry-s56-iva-raw-retirement-audit]]'
   - '[[2026-09-11-facts-registry-s57-iva-rate-repository-retirement-review-audit]]'
   - '[[2026-09-11-facts-registry-s77-category-retirement-audit]]'
@@ -153,6 +155,7 @@ Auto-generated index of all documents tagged with `#facts-registry`.
 - `2026-09-11-facts-registry-s33-routing-retirement-audit` - `facts-registry` audit: `S33 routing retirement`
 - `2026-09-11-facts-registry-s35-retired-authority-import-gate-review-audit` - `facts-registry` audit: `S35 retired authority import gate review`
 - `2026-09-11-facts-registry-s36-governed-runtime-read-gate-review-audit` - `facts-registry` audit: `S36 governed runtime read gate review`
+- `2026-09-11-facts-registry-s37-provenance-retirement-gate-review-audit` - `facts-registry` audit: `S37 provenance retirement gate review`
 - `2026-09-11-facts-registry-s56-iva-raw-retirement-audit` - `facts-registry` audit: `S56 IVA raw provider retirement review`
 - `2026-09-11-facts-registry-s57-iva-rate-repository-retirement-review-audit` - `facts-registry` audit: `S57 IVA rate repository retirement review`
 - `2026-09-11-facts-registry-s77-category-retirement-audit` - `facts-registry` audit: `S77 category adapter retirement review`
@@ -234,6 +237,7 @@ Auto-generated index of all documents tagged with `#facts-registry`.
 - `2026-09-09-facts-registry-W04-P17-S57` - Delete the obsolete IVA-rate resource repository after authority-backed rate resolution, while retaining IVA-local grounding only until the raw legal IVA tables have typed fact replacements
 - `2026-09-09-facts-registry-W04-P18-S35` - Block imports of retired declarations and loader symbols
 - `2026-09-09-facts-registry-W04-P18-S36` - Block direct governed-directory reads and unregistered loaders
+- `2026-09-09-facts-registry-W04-P18-S37` - Block provenance-free results and unresolved migration entries
 
 ### plan
 

@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import ast
+import tomllib
 from datetime import date
 from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.facts.schema import GovernedFact
+from cadrumo.domain.calculations.registry.facts.resolution import ScalarFactQuery, resolve_governed_fact
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
 from dev.registry.compiler.fact_providers import FactProviderRegistration
 
 from ..analysis.facts_catalogue_quality import (
@@ -16,6 +18,8 @@ from ..analysis.facts_catalogue_quality import (
     facts_catalogue_findings,
     live_facts_catalogue_findings,
     main,
+    migration_retirement_findings,
+    resolved_fact_provenance_findings,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -189,6 +193,108 @@ def test_every_declared_source_requires_a_citation() -> None:
     findings = facts_catalogue_findings((provider,), {"authored": (fact,)}, ("facts",))
 
     assert {finding.kind for finding in findings} == {FactQualityKind.MISSING_PROVENANCE}
+
+
+def test_applicable_resolved_fact_without_provenance_is_rejected() -> None:
+    fact = _fact("iva-rate", _variant("ordinary", date(2025, 1, 1)))
+    resolved = resolve_governed_fact(
+        GovernedFactCatalogue(facts={fact.fact_id: fact}),
+        ScalarFactQuery(fact_id=fact.fact_id, date_axis="transaction_date", effective_date=date(2025, 1, 1)),
+        authority_digest="a" * 64,
+    ).model_copy(update={"legal_refs": (), "source_refs": (), "source_citations": ()})
+
+    findings = resolved_fact_provenance_findings((resolved,))
+
+    assert {finding.kind for finding in findings} == {FactQualityKind.PROVENANCE_FREE_RESULT}
+
+
+def _live_iva_retirement_ledger() -> dict[str, object]:
+    return tomllib.loads(
+        (Path(__file__).parents[1] / "analysis" / "facts_iva_retirement.toml").read_text(encoding="utf-8"),
+    )
+
+
+def test_only_named_open_s80_s85_holds_are_admitted() -> None:
+    ledger = _live_iva_retirement_ledger()
+    open_steps = {"W04.P15.S81", "W04.P15.S82", "W04.P15.S83", "W04.P15.S84", "W04.P17.S85"}
+
+    assert migration_retirement_findings(ledger, open_steps=open_steps) == ()
+
+
+def test_unowned_or_stale_retirement_hold_bites() -> None:
+    ledger = _live_iva_retirement_ledger()
+    tables = ledger["remaining_structured_tables"]
+    assert isinstance(tables, list)
+    tables.append(
+        {
+            "data_path": "src/cadrumo/_data/registry/aeat/iva/unowned.toml",
+            "classification": "needs_typed_schema_and_fact_migration",
+            "decision": "retain_until_lossless_replacement",
+            "direct_readers": ["src/cadrumo/domain/iva/unowned.py:load"],
+            "safe_next_scope": "invent a migration",
+        },
+    )
+
+    findings = migration_retirement_findings(
+        ledger,
+        open_steps={"W04.P15.S82", "W04.P15.S83", "W04.P15.S84", "W04.P17.S85"},
+    )
+
+    assert {finding.kind for finding in findings} == {
+        FactQualityKind.UNAPPROVED_MIGRATION_HOLD,
+        FactQualityKind.STALE_MIGRATION_HOLD,
+    }
+
+
+def test_closed_s80_s85_holds_must_be_removed_but_need_not_remain_in_the_ledger() -> None:
+    ledger = _live_iva_retirement_ledger()
+    tables = ledger["remaining_structured_tables"]
+    lanes = ledger["lanes"]
+    assert isinstance(tables, list)
+    assert isinstance(lanes, list)
+    ledger["remaining_structured_tables"] = [
+        table
+        for table in tables
+        if table["data_path"] != "src/cadrumo/_data/registry/aeat/iva/catalogues.toml"
+    ]
+    ledger["lanes"] = [lane for lane in lanes if lane["lane_id"] != "iva-local-grounding"]
+
+    assert migration_retirement_findings(
+        ledger,
+        open_steps={"W04.P15.S82", "W04.P15.S83", "W04.P15.S84"},
+    ) == ()
+
+
+def test_live_gate_resolves_registered_modelo_projections_with_actual_modelos(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    projected = _fact("modelo-projection", _variant("projected", date(2025, 1, 1)))
+    provider = FactProviderRegistration(
+        provider_id="projection-provider",
+        owned_directories=(),
+        compile=lambda _root: (),
+        collect_fingerprints=lambda _root: (),
+        reset=lambda: None,
+        project_modelos=lambda _modelos: (),
+        inherited_identity_domains=("modelos",),
+    )
+    marker = object()
+    calls: list[tuple[Path, tuple[object, ...]]] = []
+    monkeypatch.setattr(
+        "dev.registry.analysis.facts_catalogue_quality.load_registry_tree",
+        lambda root: ((marker,), object()),
+    )
+    monkeypatch.setattr(
+        "dev.registry.analysis.facts_catalogue_quality.compile_registered_fact_providers",
+        lambda root, *, modelos: (
+            calls.append((root, tuple(modelos)))
+            or GovernedFactCatalogue(facts={projected.fact_id: projected})
+        ),
+    )
+
+    assert live_facts_catalogue_findings(tmp_path, (provider,)) == ()
+    assert calls == [(tmp_path, (marker,))]
 
 
 def test_gate_imports_no_modelo_denominator() -> None:
