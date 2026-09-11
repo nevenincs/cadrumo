@@ -7,28 +7,30 @@ import json
 import typer
 from pydantic import BaseModel, ValidationError
 
-from ...application.aggregation import (
-    CounterpartObservation,
-    ForeignAssetIngestObservation,
+from ...application.aggregation.counterpart import CounterpartObservation
+from ...application.aggregation.foreign_assets import ForeignAssetIngestObservation
+from ...application.aggregation.invoice_retencion import (
     InvoiceRetencionProjection,
     InvoiceRetencionRouteRequest,
-    PerModeloAggregationCommand,
-    PerModeloAggregationResult,
-    RetencionObservation,
-    WithholdingObservation,
-    aggregate_per_modelo,
     merge_manual_and_routed_retencion_observations,
-    persist_percepcion_observations,
-    persist_retencion_observations,
     route_invoice_retenciones,
 )
 from ...application.aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
+from ...application.aggregation.percepciones_observations_repository import persist_percepcion_observations
+from ...application.aggregation.retencion_observations_repository import persist_retencion_observations
+from ...application.aggregation.retenciones import RetencionObservation
+from ...application.aggregation.service import (
+    PerModeloAggregationCommand,
+    PerModeloAggregationResult,
+    aggregate_per_modelo,
+)
 from ...application.invoices.catalogue_lifecycle import resolve_catalogue_invoice
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.modelo import Modelo
 from ...domain.calculations.registry.withholding_bindings import (
     WithholdingClaveBreakdown,
+    WithholdingObservation,
     aggregate_withholding_by_clave,
 )
 from ._common import emit_envelope, load_invoices

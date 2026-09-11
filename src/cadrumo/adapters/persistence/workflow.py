@@ -58,7 +58,7 @@ def _secure_objects(store: WorkflowSecureObjectStorePort) -> SecureObjectReposit
 
 def _clear_output_language_cache() -> None:
     try:
-        from ...core.i18n import clear_output_language_cache
+        from ...core.i18n.render import clear_output_language_cache
     except Exception:  # pragma: no cover - cache invalidation must never block persistence
         _logger.debug("workflow persistence could not import i18n cache invalidator", exc_info=True)
         return

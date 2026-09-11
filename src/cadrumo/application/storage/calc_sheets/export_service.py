@@ -25,7 +25,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol
 
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.sync_surface import SyncSurface
@@ -34,7 +34,6 @@ from ..sync_runs.persist import record_sync_run
 from ..sync_runs.records import SyncRunRecordRepositoryProtocol, bounded_scope_description, coverage_of
 
 if TYPE_CHECKING:
-    from ....adapters.outbound.google.calc_sheets_apply import CalcSheetsApplyResult
     from .records import SheetExportPlan
 
 __all__ = ["export_modelo_to_sheets"]
@@ -67,6 +66,18 @@ class _SingleExportCoverage:
         return ()
 
 
+class _CalcSheetsApplyResult(Protocol):
+    """Result fields forwarded by the application export seam."""
+
+    folder_id: str
+    spreadsheet_id: str
+    spreadsheet_url: str
+    value_cells_written: int
+    formula_cells_written: int
+    protected_ranges_written: int
+    tab_count: int
+
+
 def _export_scope_description(plan: SheetExportPlan) -> str:
     metadata = plan.metadata
     return bounded_scope_description(
@@ -80,8 +91,8 @@ def export_modelo_to_sheets(
     credentials: object,
     root_folder_id: str,
     sync_run_repository: SyncRunRecordRepositoryProtocol,
-    apply_export_plan: Callable[..., CalcSheetsApplyResult],
-) -> CalcSheetsApplyResult:
+    apply_export_plan: Callable[..., _CalcSheetsApplyResult],
+) -> _CalcSheetsApplyResult:
     """Apply an already-built export plan to Sheets and record the run's provenance.
 
     Takes the plan already built by :func:`build_export_plan` rather than

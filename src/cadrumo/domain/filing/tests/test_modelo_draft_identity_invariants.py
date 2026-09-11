@@ -3,7 +3,7 @@
 ``profile_tax_id`` and ``subject_tax_id`` are two axes of the same taxpayer:
 :func:`application.filing.build_draft` copies one validated profile identity into
 both, and no consumer reads them as different parties. Typing each as
-:data:`~core.identity.SubjectTaxId` validates each value's AEAT checksum in
+:data:`~core.identity.tax_id.SubjectTaxId` validates each value's AEAT checksum in
 isolation, so two individually-valid but *different* NIFs were accepted — a draft
 naming one taxpayer as the profile and another as the filing subject, which the
 encrypted repository round-tripped unchanged. Only ``profile_tax_id`` feeds

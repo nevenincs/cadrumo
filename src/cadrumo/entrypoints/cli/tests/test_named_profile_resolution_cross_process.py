@@ -40,7 +40,7 @@ from typing import TYPE_CHECKING
 import pytest
 from pydantic import TypeAdapter
 
-from ....tests._os_keychain_hook import require_os_credential_store
+from ....tests.os_keychain_hook import require_os_credential_store
 from .test_cold_start_wizard_registration import _register_profile_for_cold_run, _run_cli_cold
 
 if TYPE_CHECKING:

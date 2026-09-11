@@ -17,9 +17,9 @@ from typing import Any
 import pytest
 from click.testing import Result
 
-from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_storage  # noqa: F401 - autouse fixture
 from ....tests.user_profile import register_cli_profile
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

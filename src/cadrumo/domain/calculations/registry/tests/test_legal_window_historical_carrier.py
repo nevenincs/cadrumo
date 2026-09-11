@@ -18,8 +18,8 @@ from datetime import date
 
 import pytest
 
-from .._snapshot_internals import _historical_carrier_admits
 from ..schema_references import LegalReference
+from ..snapshot import _historical_carrier_admits
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

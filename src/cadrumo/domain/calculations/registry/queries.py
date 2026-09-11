@@ -19,7 +19,7 @@ from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
 
 from ....core.aggregation import BindingSourceKind
 from ....core.authority_grade import RegistryAuthorityGrade
-from ....core.i18n import output_language
+from ....core.i18n.render import output_language
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import Period, RegistrySelectorPeriodCode

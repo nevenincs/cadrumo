@@ -29,7 +29,7 @@ def _argument(name: str, annotation: str, help_key: str) -> ArgumentSpec:
     """Build an independent complete argument contract for one expected field."""
     return ArgumentSpec(
         name=name,
-        value=ValueContract(DeferredTarget(*annotation.split(":", maxsplit=1))),
+        value=ValueContract(DeferredTarget(*annotation.split(":", maxsplit=1), package=__package__)),
         default=ParameterDefault.required(),
         help_key=TranslationKey(help_key),
     )
@@ -51,7 +51,7 @@ def _option(
     return OptionSpec(
         name=name,
         declarations=declarations or (f"--{name.replace('_', '-')}",),
-        value=ValueContract(DeferredTarget(*annotation.split(":", maxsplit=1))),
+        value=ValueContract(DeferredTarget(*annotation.split(":", maxsplit=1), package=__package__)),
         default=ParameterDefault.required() if required else ParameterDefault.value(default),
         help_key=TranslationKey(help_key) if help_key is not None else None,
         is_flag=is_flag,

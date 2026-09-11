@@ -33,12 +33,10 @@ MODELO_NONWORK_WORK_AMEND_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _o("output_language_opt", "--output-language", _LANGUAGE, help_name="output_language"),
         ),
         policy=_INTERACTIVE_MODEL_WRITE,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_amend_wizard_cli", "work_amend_wizard")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._modelo_amend_wizard_cli", "work_amend_wizard", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_amend_wizard_payloads", "WorkAmendWizardResult"),
+            DeferredTarget("._modelo_amend_wizard_payloads", "WorkAmendWizardResult", __package__),
             identity="modelo.work.amend_wizard",
         ),
     ),

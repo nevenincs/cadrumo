@@ -2,35 +2,32 @@
 
 from __future__ import annotations
 
+import hashlib
+import logging
+import sqlite3
+from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any, cast
 
 import pytest
+from pydantic import ValidationError
+from sqlalchemy import event
 
+from ......core.classification.policies import SensitivityClass
 from ......tests.master_key import EphemeralMasterKeyProvider
-from ._secure_objects_support import (
-    UTC,
-    Path,
+from ...errors import SecureObjectRevisionConflictError, StorageValidationError
+from ...secure_object_namespaces import (
     SecureObjectNamespaceDefinition,
-    SecureObjectNamespaceIntegrity,
-    SecureObjectRecord,
-    SecureObjectRepository,
-    SecureObjectRevisionConflictError,
-    SecureObjectUnreadable,
-    SecureObjectWrite,
-    SensitivityClass,
     StorageCustodyDisposition,
     StorageHierarchyRegistry,
     StorageNamespaceScope,
-    StorageValidationError,
-    ValidationError,
+)
+from .._secure_object_records import SecureObjectRecord, SecureObjectUnreadable
+from ..secure_objects import SecureObjectNamespaceIntegrity, SecureObjectRepository, SecureObjectWrite
+from ._secure_objects_support import (
     _ephemeral_secure_repo,
     _ephemeral_secure_repo_at,
     _seed_under_key,
-    datetime,
-    event,
-    hashlib,
-    logging,
-    sqlite3,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -96,7 +93,7 @@ def test_iter_records_with_failures_returns_empty_on_empty_namespace(
 
 def test_iter_records_with_failures_yields_older_schema_drift(tmp_path: Path) -> None:
     """Rows below the current version are unreadable without migration."""
-    from ......core.i18n import tr
+    from ......core.i18n.render import tr
 
     with _ephemeral_secure_repo(tmp_path, "older-schema-drift.db") as (_, _, repo):
         namespace = "cadrumo-test.older.schema"

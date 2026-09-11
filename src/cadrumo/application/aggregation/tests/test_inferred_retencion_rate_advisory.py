@@ -54,12 +54,12 @@ from ....domain.transactions.retencion_facts import (
     load_retencion_actividades_rates,
     statutory_activity_retencion_rates,
 )
-from .._renta_income_ledger import RentaIncomeObservation, aggregate_renta_income_ledger
 from .._retencion_rate_advisory import (
     INFERRED_ACTIVIDAD_RETENCION_RATE_SOURCE_KIND,
     INFERRED_SECTORAL_RETENCION_RATE_SOURCE_KIND,
     inferred_actividad_retencion_rate_advisory_observations,
 )
+from ..renta_income_ledger import RentaIncomeObservation, aggregate_renta_income_ledger
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

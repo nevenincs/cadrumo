@@ -35,7 +35,8 @@ import pytest
 from ...tests.env_scope import isolated_aeat_env, settings_without_env_file
 from ...tests.inventory import REPO_ROOT
 from ..config import Settings
-from ..storage_taxonomy import STORAGE_TAXONOMY, StorageScope
+from ..storage_taxonomy import StorageScope
+from ..storage_taxonomy_locations import STORAGE_TAXONOMY
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

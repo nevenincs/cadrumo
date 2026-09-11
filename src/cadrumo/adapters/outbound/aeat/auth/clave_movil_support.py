@@ -20,7 +20,7 @@ from pydantic import SecretStr
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import AuthError
 from .....core.hashing import sha256_hex
-from .....core.identity import IdentityDocument, IdentityError, validate_identity
+from .....core.identity.documents import IdentityDocument, IdentityError, validate_identity
 from .....core.logging import get_logger
 from .....core.operator_progress import OperatorProgress
 from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
@@ -145,7 +145,7 @@ def classify_identity(raw: str) -> str:
     """Return the configured Cl@ve identity kind as ``DNI`` or ``NIE``.
 
     Classification is the domain's, through
-    :func:`~core.identity.validate_identity`, which settles the shape and the
+    :func:`~core.identity.documents.validate_identity`, which settles the shape and the
     checksum together. This function only maps the resulting document to the
     name Cl@ve uses and refuses what the flow does not serve: a CIF-style
     organization identifier is intentionally rejected, because Cl@ve Movil

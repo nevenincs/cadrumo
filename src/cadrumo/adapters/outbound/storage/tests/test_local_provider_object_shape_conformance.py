@@ -18,8 +18,8 @@ from pathlib import Path
 
 import pytest
 
-from .....tests import assert_path_matches_grammar
 from ....persistence.storage.bucket.directory_layout import bucket_paths
+from ....persistence.storage.tests.storage_path_grammar import assert_path_matches_grammar
 from ..local import LocalFileSystemProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

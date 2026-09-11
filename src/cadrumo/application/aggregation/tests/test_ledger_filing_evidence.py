@@ -22,6 +22,7 @@ from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepo
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.iva.schema import IvaCategory
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -34,8 +35,7 @@ from ....domain.modelos.work_unit import derive_work_unit_id
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....tests import general_m303_filing_evidence
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from ....tests.filing_evidence import general_m303_filing_evidence
 from ..ledger_filing_snapshot import (
     assert_evidence_covers_snapshot,
     compute_ledger_filing_evidence,

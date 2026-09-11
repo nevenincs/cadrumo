@@ -9,7 +9,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.aggregation import BindingSourceKind
-from ....core.i18n import Translatable as tr
+from ....core.i18n.translatable import Translatable as tr
 from ....tests.aeat_literal_fixtures import RENTA_DEDUCIBILIDAD_CITATION_URL_FIXTURE
 from ...categories.profile import CategoryProfile
 from ...categories.proportionality import (

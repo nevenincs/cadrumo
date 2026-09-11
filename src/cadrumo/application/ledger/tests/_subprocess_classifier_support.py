@@ -28,9 +28,9 @@ import shutil
 import subprocess
 from dataclasses import dataclass, field
 
+from ....domain.transactions.errors import LLMClassifierError
 from ....domain.transactions.llm import (
     LLMClassificationResponse,
-    LLMClassifierError,
     LLMSplitResponse,
     PromptSpec,
     build_split_prompt,

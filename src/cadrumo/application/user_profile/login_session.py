@@ -63,7 +63,7 @@ from ...core.hashing import (
     reject_duplicate_json_members,
     reject_json_constant,
 )
-from ...core.identity import BucketId
+from ...core.identity.bucket import BucketId
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.paths import effective_storage_root

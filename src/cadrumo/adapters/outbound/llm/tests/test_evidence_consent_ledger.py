@@ -38,6 +38,7 @@ from typing import override
 import pytest
 
 from .....core.config import Settings
+from .....core.config_support import LLMProvider
 from .....core.external_constants import UTF_8_ENCODING
 from .....domain.evidence_consent.record import EvidenceConsentLedgerEntry
 from ....persistence.storage.master_key.active_session import close_active_bucket_session
@@ -47,7 +48,7 @@ from ..client import LLMClient
 from ..consent import EvidenceConsentToken
 from ..consent_ledger import EvidenceConsentLedger
 from ..errors import LLMConsentError
-from ..models import LLMProvider, LLMRequest
+from ..models import LLMRequest
 from ..providers.base import ProviderAdapter, ProviderCompletion, ProviderRequest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

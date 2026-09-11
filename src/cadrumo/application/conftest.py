@@ -24,15 +24,13 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from pathlib import Path
-from typing import TYPE_CHECKING, Protocol, cast, runtime_checkable
+from typing import Protocol, cast, runtime_checkable
 
 import pytest
 
 from ..tests.env import temporary_env
 from ..tests.secure_sql import isolated_runtime_profile
-
-if TYPE_CHECKING:
-    from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from .user_profile.custody_ports import ProfileCustodySecureObjectRepositoryPort
 
 
 @runtime_checkable
@@ -62,7 +60,7 @@ def isolated_aeat_root(request: pytest.FixtureRequest, tmp_path: Path) -> Iterat
 def secure_objects(
     tmp_path: Path,
     request: pytest.FixtureRequest,
-) -> Iterator[SecureObjectRepository]:
+) -> Iterator[ProfileCustodySecureObjectRepositoryPort]:
     """Yield the real encrypted-SQLite object repository for a module bucket."""
     request_with_module = cast(_RequestWithModule, request)
     bucket_id = getattr(request_with_module.module, "_BUCKET_ID", None)

@@ -50,7 +50,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core.aggregation import BindingSourceKind
+from ....core.aggregation import BindingSourceKind, RetencionScheme
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
@@ -60,9 +60,8 @@ from ....domain.calculations.registry.ids import RelationId
 from ....domain.calculations.registry.relations import materialize_relation_binding_values
 from ....domain.calculations.registry.retenciones_bindings import resolve_retenciones_aggregation_binding_values
 from ....tests.secure_sql import isolated_runtime_profile
-from .._retenciones import (
+from ..retenciones import (
     RetencionObservation,
-    RetencionScheme,
     aggregate_retenciones_193,
     compute_retenciones_totals_parity,
 )

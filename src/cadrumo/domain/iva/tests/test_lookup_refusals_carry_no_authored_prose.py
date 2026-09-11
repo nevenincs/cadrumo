@@ -138,7 +138,7 @@ def test_every_lookup_refusal_key_resolves_to_real_text(key: str) -> None:
     differ from the key is what separates the two.
     """
     from ....core.config import override_settings
-    from ....core.i18n import tr
+    from ....core.i18n.render import tr
 
     for language in ("en", "es", "ca", "hu"):
         with override_settings(cadrumo_output_language=language):

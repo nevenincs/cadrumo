@@ -98,7 +98,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.llm.errors.LLMError",
+        "cadrumo.adapters.outbound.llm.errors.LLMError",
         ErrorCode(
             code="ERROR_LLM",
             category=ErrorCategory.ERROR,
@@ -108,7 +108,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.llm.errors.LLMProviderError",
+        "cadrumo.adapters.outbound.llm.errors.LLMProviderError",
         ErrorCode(
             code="FAIL_LLM_PROVIDER",
             category=ErrorCategory.FAIL,
@@ -118,7 +118,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.llm.errors.LLMTransientTransportError",
+        "cadrumo.adapters.outbound.llm.errors.LLMTransientTransportError",
         ErrorCode(
             code="FAIL_LLM_TRANSIENT_TRANSPORT",
             category=ErrorCategory.FAIL,
@@ -128,7 +128,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.llm.errors.LLMPdfRasterisationError",
+        "cadrumo.adapters.outbound.llm.errors.LLMPdfRasterisationError",
         ErrorCode(
             code="FAIL_LLM_PDF_RASTERISATION",
             category=ErrorCategory.FAIL,
@@ -138,7 +138,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.llm.errors.LLMCacheError",
+        "cadrumo.adapters.outbound.llm.errors.LLMCacheError",
         ErrorCode(
             code="FAIL_LLM_CACHE",
             category=ErrorCategory.FAIL,
@@ -148,7 +148,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.llm.errors.LLMRateLimitError",
+        "cadrumo.adapters.outbound.llm.errors.LLMRateLimitError",
         ErrorCode(
             code="FAIL_LLM_RATE_LIMIT",
             category=ErrorCategory.FAIL,
@@ -158,7 +158,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.llm.errors.LLMConfigError",
+        "cadrumo.adapters.outbound.llm.errors.LLMConfigError",
         ErrorCode(
             code="REFUSED_LLM_CONFIG",
             category=ErrorCategory.REFUSED,
@@ -168,7 +168,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.llm.errors.LLMContentionError",
+        "cadrumo.adapters.outbound.llm.errors.LLMContentionError",
         ErrorCode(
             code="REFUSED_LLM_CONTENTION",
             category=ErrorCategory.REFUSED,
@@ -178,7 +178,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.llm.errors.LLMBusyError",
+        "cadrumo.adapters.outbound.llm.errors.LLMBusyError",
         ErrorCode(
             code="REFUSED_LLM_BUSY",
             category=ErrorCategory.REFUSED,
@@ -188,7 +188,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.llm.errors.LLMConsentError",
+        "cadrumo.adapters.outbound.llm.errors.LLMConsentError",
         ErrorCode(
             code="REFUSED_LLM_CONSENT",
             category=ErrorCategory.REFUSED,
@@ -198,7 +198,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.llm.errors.LLMValidationError",
+        "cadrumo.adapters.outbound.llm.errors.LLMValidationError",
         ErrorCode(
             code="REFUSED_LLM_VALIDATION",
             category=ErrorCategory.REFUSED,

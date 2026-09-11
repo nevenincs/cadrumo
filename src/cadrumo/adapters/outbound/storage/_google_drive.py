@@ -44,7 +44,8 @@ from collections.abc import Iterator
 from typing import Any
 
 from ....application.operator_actions.preconditions import no_action_precondition_verdict
-from ....core.config import FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME, load_settings
+from ....core.config import load_settings
+from ....core.config_integration_fields import FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME
 from ....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
 from ....core.hashing import sha256_hex
 from ....core.logging import get_logger

@@ -46,7 +46,7 @@ from .....core.directory_scan import scan_directory
 from .....core.external_constants import BINARY_MIME_TYPE
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import sha256_hex as _sha256_hex
-from .....core.identity import ContentDigest
+from .....core.identity.digest import ContentDigest
 from .....core.logging import get_logger
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.time.clock import now

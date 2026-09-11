@@ -4,7 +4,7 @@
 application auth providers and live Sede readers. It creates one
 Playwright ``BrowserContext`` at a time from a :class:`Profile`, optional
 decrypted in-memory storage state, and an optional
-:class:`adapters.outbound.aeat.auth.BrowserContextProvisioner`.
+:class:`application.auth.protocols.BrowserContextProvisioner`.
 Certificate auth passes a
 :class:`adapters.outbound.aeat.auth.CertificateContextProvisioner` so
 the AEAT origin receives the configured PKCS#12 certificate at context
@@ -36,6 +36,7 @@ if TYPE_CHECKING:
         Response,
     )
 
+from .....application.auth.protocols import BrowserContextProvisioner
 from .....core.async_cleanup import await_cancellation_complete
 from .....core.config import Settings
 from .....core.errors.hierarchy import SiteHealthError, SiteHealthState
@@ -43,7 +44,6 @@ from .....core.logging import get_logger
 from .....core.operator_action_enums import NoRecoveryOutcome
 from .....core.time.clock import now
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
-from ..auth.providers import BrowserContextProvisioner
 from ._site_health_probe import probe_response
 from .errors import (
     BrowserError,

@@ -6,8 +6,14 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....tests import bucket_id
 from ....tests.secure_sql import isolated_runtime_profile
+
+
+@pytest.fixture
+def bucket_id() -> str:
+    """Require each consumer to provide its own isolated-storage bucket id."""
+    raise NotImplementedError("bucket_id must be overridden by the importing test module")
+
 
 #: The bucket the ``secure_objects`` fixture makes ACTIVE. A test that builds a
 #: repository for any other bucket id gets a route that is not attached to the

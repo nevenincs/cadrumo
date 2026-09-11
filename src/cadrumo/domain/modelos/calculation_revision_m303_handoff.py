@@ -12,7 +12,9 @@ from pydantic import BaseModel, field_serializer, field_validator, model_validat
 from ...core.casilla_id import CasillaId
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
-from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, WorkUnitId
+from ...core.identity.bucket import BucketId
+from ...core.identity.digest import ContentDigest
+from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ..calculations.registry.ids import RevisionId

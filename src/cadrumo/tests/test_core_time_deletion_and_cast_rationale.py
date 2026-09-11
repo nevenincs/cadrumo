@@ -16,12 +16,12 @@ See Also:
 from __future__ import annotations
 
 import ast
-import importlib
 from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
 
+from ..core import time as core_time
 from .inventory import production_ast_items, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -41,8 +41,9 @@ def test_retired_core_time_shim_stays_deleted() -> None:
     package is proven inert by :func:`test_the_core_time_namespace_is_inert`
     instead, which is the contract that actually needs defending now.
     """
-    with pytest.raises(ModuleNotFoundError):
-        importlib.import_module("cadrumo.core._time")
+    core = Path(__file__).parents[1] / "core"
+    assert not (core / "_time.py").exists()
+    assert not (core / "_time").exists()
 
 
 def test_the_core_time_namespace_is_inert() -> None:
@@ -51,7 +52,7 @@ def test_the_core_time_namespace_is_inert() -> None:
     Its contracts are reached at their defining modules (``.clock``, ``.utc``,
     ``.date_range``); the package itself must stay a namespace, never a facade.
     """
-    package = importlib.import_module("cadrumo.core.time")
+    package = core_time
 
     assert package.__all__ == (), f"the core.time namespace re-exports {package.__all__}"
 

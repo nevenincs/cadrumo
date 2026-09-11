@@ -70,7 +70,8 @@ from ...domain.iva.prorrata_especial_parameters import (
     resolve_prorrata_especial_mandatory_parameters,
 )
 from ...domain.prorrata_register.register import ProrrataRegisterError
-from ..aggregation import CalculationSourceDiagnostic, compute_annual_deducible_totals_by_regime
+from ..aggregation.iva_ledger import compute_annual_deducible_totals_by_regime
+from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..calculations.observations_repository import (
     CalculationObservationRepository,
     require_observation_envelope_coordinates_current,

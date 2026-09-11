@@ -39,10 +39,10 @@ import pytest
 
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_location
-from .....tests import literal_directory_runs
 from ..namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ..namespace_taxonomy import StoragePathAnchor, StoragePathKind
 from ..storage_path_definitions import StoragePathDefinition
+from .storage_path_grammar import literal_directory_runs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

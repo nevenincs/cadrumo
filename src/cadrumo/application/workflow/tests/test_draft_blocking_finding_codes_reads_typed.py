@@ -26,7 +26,7 @@ from typing import Any, cast
 import pytest
 
 from ....core.errors.severity import BaseSeverity
-from ....core.i18n import Translatable as tr
+from ....core.i18n.translatable import Translatable as tr
 from ....domain.filing.schema import ModeloValidationFinding
 from ..engine import _draft_blocking_finding_codes
 

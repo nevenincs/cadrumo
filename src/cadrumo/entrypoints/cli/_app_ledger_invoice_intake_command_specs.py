@@ -65,14 +65,10 @@ LEDGER_INVOICE_INTAKE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS[1],
         ),
         policy=_POLICY_2,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._ledger_business_invoice_cli", "invoice_add")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._ledger_business_invoice_cli", "invoice_add", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget(
-                "cadrumo.entrypoints.cli._ledger_catalogue_invoice_payloads", "CatalogueInvoiceCreatePayload"
-            ),
+            target=DeferredTarget("._ledger_catalogue_invoice_payloads", "CatalogueInvoiceCreatePayload", __package__),
             identity="ledger.invoice.add",
         ),
     ),
@@ -123,14 +119,10 @@ LEDGER_INVOICE_INTAKE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_2,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._ledger_business_invoice_cli", "invoice_import")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._ledger_business_invoice_cli", "invoice_import", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget(
-                "cadrumo.entrypoints.cli._ledger_catalogue_invoice_payloads", "CatalogueInvoiceImportResult"
-            ),
+            target=DeferredTarget("._ledger_catalogue_invoice_payloads", "CatalogueInvoiceImportResult", __package__),
             identity="ledger.invoice.import",
         ),
     ),

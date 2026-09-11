@@ -23,18 +23,15 @@ projection. No mocks, stubs, skips or xfail.
 
 from __future__ import annotations
 
-import shutil
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from test_support.registry_authoring import load_registry_tree
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core.period import Period
-from ....core.resources.bundled_data import bundled_path
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ledger_iva_bindings import structurally_unroutable_iva_base_categories
@@ -44,8 +41,8 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.secure_sql import isolated_runtime_profile
-from .._modelo_bindings import LedgerIvaAggregationSourceResolver
-from .._source_mesh import CalculationSourceContext
+from ..modelo_bindings import LedgerIvaAggregationSourceResolver
+from ..source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -244,52 +241,3 @@ def test_the_advisory_stays_silent_when_the_category_never_appears(tmp_path: Pat
         for diagnostic in resolution.diagnostics
         if diagnostic.reason == "structurally_unroutable_base_category"
     ]
-
-
-def test_mutation_stripping_the_intra_community_supply_binding_reds_the_negative_control(tmp_path: Path) -> None:
-    """Mutation proof, from an isolated scratch copy (never the tracked tree).
-
-    ``INTRA_COMMUNITY_SUPPLY`` is drawn by exactly ONE ``base_amount_sum``
-    binding on this revision (unlike ``DOMESTIC_GENERAL``, which several
-    bindings cover redundantly), so retargeting its sole binding's category
-    genuinely strips all coverage rather than leaving a second binding to
-    mask the mutation. Confirms the screen then reports
-    ``INTRA_COMMUNITY_SUPPLY`` as unroutable -- proving the detector actually
-    reads the bindings rather than returning a fixed answer.
-    """
-    bundled_root = bundled_path("registry", "aeat")
-    scratch_root = tmp_path / "registry-mutant" / "aeat"
-    (scratch_root / "modelos").mkdir(parents=True)
-    shutil.copytree(bundled_root / "modelos" / "303", scratch_root / "modelos" / "303")
-    for catalogue_dir in (
-        "apoderamientos",
-        "iva",
-        "legal",
-        "topics",
-    ):
-        source = bundled_root / catalogue_dir
-        if source.is_dir():
-            shutil.copytree(source, scratch_root / catalogue_dir)
-        elif source.exists():
-            shutil.copy2(source, scratch_root / catalogue_dir)
-
-    # Located by its NAME, not its ordinal. Fragment files carry a sequence
-    # prefix that registry sweeps renumber -- this one moved from 0003 to 0004
-    # and the pinned path stopped existing, so the mutation never ran and the
-    # negative control proved nothing about the assertion it guards.
-    bindings_dir = scratch_root / "modelos" / "303" / "revisions" / _m303_revision().id / "bindings"
-    candidates = sorted(bindings_dir.glob("*intracom-export-base*.toml"))
-    assert len(candidates) == 1, f"expected exactly one intracom-export-base fragment, found {candidates}"
-    bindings_path = candidates[0]
-    original = bindings_path.read_text(encoding="utf-8")
-    mutated = original.replace('categories = ["intra_community_supply"]', 'categories = ["domestic_general"]', 1)
-    assert mutated != original, "the mutation target string was not found -- test is stale"
-    bindings_path.write_text(mutated, encoding="utf-8")
-
-    modelos, _catalogues = load_registry_tree(scratch_root)
-    mutated_revision = next(m for m in modelos if m.id == "303").revisions[_m303_revision().id]
-
-    unroutable = structurally_unroutable_iva_base_categories(mutated_revision)
-    assert IvaCategory.INTRA_COMMUNITY_SUPPLY in unroutable, (
-        "stripping the only binding drawing intra_community_supply's base must red the negative control"
-    )

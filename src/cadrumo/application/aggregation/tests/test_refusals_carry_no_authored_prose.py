@@ -38,8 +38,9 @@ import pytest
 
 from ....core.config import override_settings
 from ....core.directory_scan import scan_directory
-from ....core.i18n import tr
-from ..errors import AggregationConfigError, AggregationValidationError, t
+from ....core.i18n.render import tr
+from ....core.i18n.translatable import Translatable as t
+from ..errors import AggregationConfigError, AggregationValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -105,11 +106,11 @@ _MIGRATED_KEYS: tuple[str, ...] = (
 #: static sweep pass vacuously over a package that no longer contains them.
 _COVERED_MODULES: tuple[str, ...] = (
     "errors.py",
-    "_invoice_retencion.py",
+    "invoice_retencion.py",
     "_iva_ledger.py",
-    "_m303_arrivals.py",
+    "m303_arrivals.py",
     "_oss_ioss.py",
-    "_service.py",
+    "service.py",
 )
 
 

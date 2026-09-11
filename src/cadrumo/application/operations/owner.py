@@ -14,7 +14,7 @@ from typing import Protocol, runtime_checkable
 from pydantic import BaseModel
 
 from ...core.async_cleanup import AsyncCloseable
-from ...core.identity import ContentDigest
+from ...core.identity.digest import ContentDigest
 from ...core.operations import OperationEffect
 from .capabilities import OperationOwnedResource
 from .events import OperationEventCode, OperationLogSeverity

@@ -70,10 +70,10 @@ LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _optional_text_option("actor", ("--actor",), "cli.ledger.detach.actor_help"),
         ),
         policy=_POLICY_4,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli.ledger_lifecycle_cli", "ledger_detach")),
+        handler=LazyBinding.available(DeferredTarget(".ledger_lifecycle_cli", "ledger_detach", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_payloads", "LedgerDetachResult"),
+            target=DeferredTarget("._ledger_payloads", "LedgerDetachResult", __package__),
             identity="ledger.detach",
         ),
     ),
@@ -90,7 +90,7 @@ LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="source",
                 declarations=("--source",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.attachments.enums", "DocumentLinkSource")),
+                value=ValueContract(DeferredTarget("...domain.attachments.enums", "DocumentLinkSource", __package__)),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.ledger.evidence.pull_source_help"),
                 metavar=None,
@@ -126,12 +126,10 @@ LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _EVIDENCE_ACTOR_OPTION,
         ),
         policy=_POLICY_8,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli.ledger_lifecycle_cli", "ledger_evidence_pull")
-        ),
+        handler=LazyBinding.available(DeferredTarget(".ledger_lifecycle_cli", "ledger_evidence_pull", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_payloads", "LedgerAttachResult"),
+            target=DeferredTarget("._ledger_payloads", "LedgerAttachResult", __package__),
             identity="ledger.evidence.pull",
         ),
     ),
@@ -163,10 +161,10 @@ LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _EVIDENCE_ACTOR_OPTION,
         ),
         policy=_POLICY_4,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli.ledger_lifecycle_cli", "ledger_exclude")),
+        handler=LazyBinding.available(DeferredTarget(".ledger_lifecycle_cli", "ledger_exclude", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_payloads", "LedgerExcludeResult"),
+            target=DeferredTarget("._ledger_payloads", "LedgerExcludeResult", __package__),
             identity="ledger.exclude",
         ),
     ),
@@ -201,7 +199,9 @@ LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="export_kind",
                 declarations=("--export-format",),
-                value=ValueContract(DeferredTarget("cadrumo.application.export.tabular", "ExportSerializationFormat")),
+                value=ValueContract(
+                    DeferredTarget("...application.export.tabular", "ExportSerializationFormat", __package__)
+                ),
                 default=ParameterDefault.value("csv"),
                 help_key=TranslationKey("cli.ledger.export.format_help"),
                 metavar=None,
@@ -222,10 +222,10 @@ LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _LEDGER_ACTOR_OPTION,
         ),
         policy=_POLICY_10,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._ledger_read_cli", "ledger_export")),
+        handler=LazyBinding.available(DeferredTarget("._ledger_read_cli", "ledger_export", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_payloads", "LedgerExportPayload"),
+            target=DeferredTarget("._ledger_payloads", "LedgerExportPayload", __package__),
             identity="ledger.export",
         ),
     ),
@@ -246,10 +246,10 @@ LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_5,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._ledger_read_cli", "ledger_history")),
+        handler=LazyBinding.available(DeferredTarget("._ledger_read_cli", "ledger_history", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_payloads", "LedgerHistoryResult"),
+            target=DeferredTarget("._ledger_payloads", "LedgerHistoryResult", __package__),
             identity="ledger.history",
         ),
     ),
@@ -284,7 +284,9 @@ LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="provider",
                 declarations=("--provider",),
-                value=ValueContract(DeferredTarget("cadrumo.application.ledger.actions_import", "LedgerProviderID")),
+                value=ValueContract(
+                    DeferredTarget("...application.ledger.actions_import", "LedgerProviderID", __package__)
+                ),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.ledger.import.provider_help"),
                 metavar=None,
@@ -323,10 +325,10 @@ LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _OPTIONAL_YEAR_OPTION,
         ),
         policy=_POLICY_2,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._ledger_import_cli", "ledger_import")),
+        handler=LazyBinding.available(DeferredTarget("._ledger_import_cli", "ledger_import", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_payloads", "LedgerImportPayload"),
+            target=DeferredTarget("._ledger_payloads", "LedgerImportPayload", __package__),
             identity="ledger.import",
         ),
     ),

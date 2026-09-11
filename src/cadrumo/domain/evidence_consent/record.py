@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
-from ...core.identity import BucketId
+from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import UtcInstant
 

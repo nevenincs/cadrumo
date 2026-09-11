@@ -17,7 +17,7 @@ from ..command_spec import (
 )
 from ._spec_policies import CALCULATION_READ, PROFILE_READ
 
-_OUTPUT_LANGUAGE = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
+_OUTPUT_LANGUAGE = ValueContract(DeferredTarget("....core.external_constants", "OutputLanguage", __package__))
 _OUTPUT_LANGUAGE_OPTION = OptionSpec(
     name="output_language",
     declarations=("--output-language", "--language"),
@@ -38,12 +38,10 @@ PROFILE_INVENTORY_COMMAND_SPECS = (
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(_OUTPUT_LANGUAGE_OPTION,),
         policy=PROFILE_READ,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli.config._profile_list_cli", "config_list")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._profile_list_cli", "config_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli.config._profile_list_payloads", "ConfigListResult"),
+            target=DeferredTarget("._profile_list_payloads", "ConfigListResult", __package__),
             identity="config.profile.list",
         ),
     ),
@@ -57,12 +55,10 @@ PROFILE_INVENTORY_COMMAND_SPECS = (
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(_OUTPUT_LANGUAGE_OPTION,),
         policy=CALCULATION_READ,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli.config._profile_status_cli", "config_status")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._profile_status_cli", "config_status", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli.config_payloads", "ConfigStatusResult"),
+            target=DeferredTarget("..config_payloads", "ConfigStatusResult", __package__),
             identity="config.profile.status",
         ),
         allow_unregistered_profile_diagnostic=True,

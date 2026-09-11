@@ -19,7 +19,7 @@ from ....core.capabilities import ServiceCapability
 
 if TYPE_CHECKING:
     from ....application.provisioning import ContentionSnapshot, DependencyStatus, HardwareProfile
-from ....core.i18n import tr
+from ....core.i18n.render import tr
 from .._common import emit_envelope, resolve_cli_precondition_action
 from ._check_payloads import CheckDependencyPayload, CheckPreflightPayload, ConfigCheckResult
 from .status_rendering import precondition_action_lines

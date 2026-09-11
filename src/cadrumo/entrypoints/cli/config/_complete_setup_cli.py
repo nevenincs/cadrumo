@@ -26,7 +26,7 @@ from typing import cast
 import typer
 
 from ....core.bucket_pointer import resolve_active_bucket_id
-from ....core.i18n import tr
+from ....core.i18n.render import tr
 from .._common import bad, emit_envelope
 
 # on the CLI build path, keeping the leaf in the JSON-contract registry.

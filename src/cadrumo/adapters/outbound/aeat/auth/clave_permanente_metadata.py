@@ -31,7 +31,7 @@ from typing import Final
 from pydantic import BaseModel, Field
 
 from .....core.auth_provider import AuthProviderKind
-from .....core.identity import ContentDigest
+from .....core.identity.digest import ContentDigest
 from .....core.models import STRICT_FROZEN_CONFIG
 
 AEAT_CLAVE_PERMANENTE_METADATA_SCHEMA_VERSION: Final[int] = 1

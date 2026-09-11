@@ -54,12 +54,13 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from test_support.registry_authoring import _committed_modelo
 
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources.bundled_data import bundled_path
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.resources.bundled_data import bundled_path
+
 from .....tests.registry_snapshot import build_snapshot
 from ..formula_runtime import calculate_registry_snapshot
+from ._published_authority import artifact_components
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -105,7 +106,7 @@ _CASILLA_REDUCCION_IRREGULARIDAD_BASE = validated_casilla_id("eo-agraria-reducci
 
 
 def _modelo_100_2025_snapshot():
-    modelo, catalogues = _committed_modelo("100")
+    modelo, catalogues = artifact_components("100")
     return build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="0A")
 
 

@@ -25,7 +25,7 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
-from .....core.identity import TransactionId
+from .....core.identity.transaction_ids import TransactionId
 from .....domain.iva.schema import IvaCategory
 from ..suggestions import OperatorIvaDerivationResult
 

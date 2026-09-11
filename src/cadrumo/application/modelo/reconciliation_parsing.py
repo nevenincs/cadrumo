@@ -13,7 +13,8 @@ from pathlib import Path
 from typing import Protocol
 
 from ...core.period import Period
-from ...domain.justificante import Justificante
+from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.justificante.schema import Justificante
 
 
 class ReconciliationCasillaObservation(Protocol):
@@ -27,6 +28,16 @@ class ReconciliationCasillaObservation(Protocol):
     @property
     def printed_value(self) -> object:
         """Return the parsed printed value, if any."""
+        ...
+
+    @property
+    def source_page(self) -> int:
+        """Return the one-based page carrying the observation."""
+        ...
+
+    @property
+    def extraction_confidence(self) -> float:
+        """Return the parser's bounded extraction confidence."""
         ...
 
 
@@ -89,6 +100,18 @@ class ReconciliationEvidenceParserPort(Protocol):
         period: str,
     ) -> ReconciliationDeclaracionObservation:
         """Parse one local declaración PDF against its addressed work unit."""
+        ...
+
+    def parse_declaracion_bytes(
+        self,
+        source: bytes,
+        *,
+        modelo: str,
+        filing_year: int,
+        period: str,
+        registry_snapshot: RegistrySnapshot,
+    ) -> ReconciliationDeclaracionObservation:
+        """Parse decrypted declaration bytes against a validated snapshot."""
         ...
 
 

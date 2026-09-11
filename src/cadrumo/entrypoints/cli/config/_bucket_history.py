@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 import typer
 
 from ....core.external_constants import OutputLanguage
-from ....core.i18n import tr
+from ....core.i18n.render import tr
 from ....core.time.utc import coerce_utc_aware
 from ....domain.buckets.event import BucketEvent, BucketEventType
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language

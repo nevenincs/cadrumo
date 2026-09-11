@@ -15,7 +15,7 @@ from ....adapters.persistence.storage.sql.secure_objects import SecureObjectReco
 from ....core.classification.policies import SensitivityClass
 from ....core.errors.hierarchy import CadrumoError
 from ....core.hashing import content_hash_hex
-from ....core.identity import BucketId
+from ....core.identity.bucket import BucketId
 from ..borrador_100 import Borrador100SnapshotRepository, BorradorSnapshotNotFoundError
 from ..errors import LiveApplicationInputError
 from ..snapshot_base import (

@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core.i18n import Translatable as tr
+from ...core.i18n.translatable import Translatable as tr
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.requirement import Requirement
 from .errors import ProfileKeysRegistrationError, ProfileValidationError

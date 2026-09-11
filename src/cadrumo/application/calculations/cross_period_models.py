@@ -11,7 +11,8 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.casilla_id import CasillaId
 from ...core.filing_year import FilingYear
-from ...core.identity import BucketId, CalculationRevisionId, FilingRecordId
+from ...core.identity.bucket import BucketId
+from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import OperatorActionAxis
 from ...core.period import Period

@@ -21,10 +21,10 @@ import pytest
 
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
-from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
 from ....tests.user_profile import register_minimal_profile
 from ._modelo_empty_profile_fixture import _isolated_backend
+from .cli_runner import invoke_cached_cli
 
 __all__ = ["_isolated_backend"]
 

@@ -23,7 +23,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, SecretStr, StringConstrai
 from ...core.filing_year import FilingYear
 from ...core.hex import Hex64Str
 from ...core.identifier_grammar import NamespacedId
-from ...core.identity import CalculationRevisionId, FilingRecordId
+from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.text_fold import fold_printed_phrase

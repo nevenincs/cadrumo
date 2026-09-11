@@ -79,7 +79,7 @@ async def test_every_focusable_control_on_a_populated_home_is_reachable_by_tab(s
     went undetected there. These fixtures populate the tables, so the chain has
     something to fail on.
     """
-    from test_support.tui_home_fixtures import HomeFixtureScenario, build_home_projection_fixture
+    from dev.tui.harness.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 
     screen = HomeScreen(build_home_projection_fixture(HomeFixtureScenario(scenario)))
     await _assert_tab_reaches_everything(screen, f"home--{scenario}")
@@ -95,7 +95,7 @@ async def test_home_restores_focus_by_domain_identity_rather_than_row_position()
     than a fresh profile that legitimately has none — and it REORDERS them, which
     is the case an ordinal restore passes by accident and this one does not.
     """
-    from test_support.tui_home_fixtures import HomeFixtureScenario, build_home_projection_fixture
+    from dev.tui.harness.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 
     projection = build_home_projection_fixture(HomeFixtureScenario.READY)
     screen = HomeScreen(projection)

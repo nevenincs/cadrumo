@@ -13,9 +13,9 @@ See Also:
         wrapper preserves.
     :class:`~domain.transactions.LedgerDatePartition`
         Period partition result cached by exact ``(start, end)`` window.
-    :mod:`~application.aggregation._renta_income_ledger`
+    :mod:`~application.aggregation.renta_income_ledger`
         Cumulative M130/M100 income consumers that share period partitions.
-    :mod:`~application.aggregation._renta_gasto_ledger`
+    :mod:`~application.aggregation.renta_gasto_ledger`
         Companion M130 gasto consumer that requests the same cumulative window.
 """
 

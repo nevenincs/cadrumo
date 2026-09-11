@@ -39,14 +39,14 @@ from ....domain.iva.classification import InvoiceKind, TransactionKind
 from ....domain.iva.errors import IvaRateNotFoundError
 from ....domain.iva.oss import OssIossRegime
 from ....domain.iva.schema import EUMemberState, IvaRateKind
-from ....tests import REPO_ROOT
-from .. import (
+from ....tests.inventory import REPO_ROOT
+from ..errors import AggregationValidationError
+from ..oss_ioss import (
     OssIossLedgerCandidate,
     aggregate_oss_ioss_bindings,
     validate_oss_ioss_observation,
     validate_oss_ioss_observations,
 )
-from ..errors import AggregationValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -406,7 +406,7 @@ def test_no_parallel_oss_ioss_aggregator_exists() -> None:
             offenders.append(py_file)
     assert offenders == [], (
         "Parallel OSS/IOSS aggregation surfaces detected outside the canonical "
-        "`cadrumo.application.aggregation._oss_ioss` module: "
+        "`cadrumo.application.aggregation.oss_ioss` module: "
         + ", ".join(str(p.relative_to(source_root)) for p in offenders)
     )
 

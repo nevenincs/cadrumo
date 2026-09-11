@@ -238,7 +238,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.identity._documents.IdentityError",
+        "cadrumo.core.identity.documents.IdentityError",
         ErrorCode(
             code="INTEGRITY_IDENTITY_DOCUMENT",
             category=ErrorCategory.INTEGRITY,

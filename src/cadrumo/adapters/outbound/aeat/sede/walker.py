@@ -24,7 +24,7 @@ from urllib.parse import urlsplit
 from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
 from .....core.hashing import sha256_hex
-from .....core.i18n import tr
+from .....core.i18n.render import tr
 from .....core.logging import get_logger
 from .....core.time.clock import now
 from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy

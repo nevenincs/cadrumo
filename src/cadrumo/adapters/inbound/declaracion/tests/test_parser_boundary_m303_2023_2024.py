@@ -18,8 +18,12 @@ See Also:
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 
+from .....tests.inventory import FIXTURES_DIR
+from ..parser import parse_declaracion
 from ._parser_boundary_casillas import (
     _M303_CASILLA_27,
     _M303_CASILLA_29,
@@ -45,10 +49,7 @@ from ._parser_boundary_m303_support import (
     _M303_CURRENT_PROFILE_CASILLAS,
 )
 from ._parser_boundary_support import (
-    FIXTURES_DIR,
-    Decimal,
     _expected_period,
-    parse_declaracion,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

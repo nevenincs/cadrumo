@@ -21,18 +21,18 @@ fixture.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+from pathlib import Path
+
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from ......core.identity import ContentDigest
+from ......core.classification.policies import SensitivityClass
+from ......core.identity.digest import ContentDigest
 from ......tests.master_key import EphemeralMasterKeyProvider
 from .._secure_object_records import SecureObjectRawRow, SecureObjectRecord
 from ._secure_objects_support import (
-    UTC,
-    Path,
-    SensitivityClass,
     _repo_at,
-    datetime,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

@@ -3,7 +3,7 @@
 ``_split_vies_nif`` once restated the normalisation locally and stripped spaces
 and hyphens but NOT dots. That is not a different normal form, it is the
 canonical one weaker by one separator -- and the separator it dropped is the one
-:func:`~core.identity.normalise_nif_iva` names in its own docstring as the
+:func:`~core.identity.nif_iva.normalise_nif_iva` names in its own docstring as the
 routine case, because operators paste ``BE 0123.456.789``.
 
 **The dotted case is the load-bearing fixture.** Every other variant passed

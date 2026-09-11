@@ -49,7 +49,7 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation import (
+from ...aggregation.iva_ledger import (
     IvaLedgerAggregationIssueReason,
     aggregate_iva_ledger_observations,
 )

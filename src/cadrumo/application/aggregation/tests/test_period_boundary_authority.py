@@ -14,13 +14,13 @@ pure in-memory selection predicate that adds no plaintext persistence surface;
 the rows it selects ride the encrypted :class:`~adapters.persistence.storage.SecureObjectRepository`.
 
 See Also:
-    :func:`~entrypoints.cli._common._canonical_period`
+    :func:`~application.ledger.period_filter.canonical_ledger_period`
         ``--period`` / ``--year`` transport that constructs the core period
         directly from separated operator inputs.
-    :func:`~entrypoints.cli._common._filter_canonical_period`
+    :func:`~application.ledger.period_filter.optional_canonical_ledger_period`
         ``--filter period=`` / ``--filter year=`` transport that reuses the
         same canonical resolver.
-    :func:`~application.aggregation.aggregation_period_for_modelo`
+    :func:`~application.aggregation.modelo_bindings.aggregation_period_for_modelo`
         Calculation-snapshot transport that must converge on the same
         :class:`~core.Period` boundary.
     :class:`~core.StandardPeriodCode`
@@ -35,8 +35,8 @@ from datetime import date, timedelta
 import pytest
 
 from ....core.period import Period, StandardPeriodCode
-from ....entrypoints.cli.period_parsing import _canonical_period
-from .. import aggregation_period_for_modelo
+from ...ledger.period_filter import canonical_ledger_period
+from ..modelo_bindings import aggregation_period_for_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -59,7 +59,7 @@ _LEDGER_SPAN_TOKENS = tuple(
 
 def _cli_period_via_command_transport(token: str, *, year: int) -> Period:
     """Resolve a ``--period TOKEN --year YEAR`` pair to a Period the CLI way."""
-    return _canonical_period(token, year=year)
+    return canonical_ledger_period(token, year=year)
 
 
 def _calc_engine_period(token: str, *, year: int) -> Period:
@@ -100,7 +100,7 @@ def test_both_transports_route_through_one_period_boundary() -> None:
     """
     for year in _YEARS:
         for token in _LEDGER_SPAN_TOKENS:
-            cli_period = _canonical_period(token, year=year)
+            cli_period = canonical_ledger_period(token, year=year)
             engine_period = aggregation_period_for_modelo(filing_year=year, code=token)
             assert cli_period == engine_period, (year, token)
 

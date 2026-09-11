@@ -21,7 +21,7 @@ from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from ...core.hashing import content_hash_hex
 from ...core.hex import Hex64Str
-from ...core.identity import BucketId
+from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import UtcInstant, validate_utc_aware
 from .errors import BucketEventValidationError

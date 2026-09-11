@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import importlib
 import re
 import sys
 from pathlib import Path
@@ -303,8 +302,8 @@ def test_registry_projection_refuses_carrying_both_or_neither_admission_shape() 
 
 
 def test_workspace_producers_have_one_public_module_and_no_private_or_package_binding_remnant() -> None:
-    public_module = importlib.import_module("cadrumo.application.modelo.workspace_producers")
-    package = importlib.import_module("cadrumo.application.modelo")
+    public_module = sys.modules[ModeloWorkspaceEpochV1.__module__]
+    package = sys.modules["cadrumo.application.modelo"]
     private_module = ".".join((*public_module.__name__.split(".")[:-1], "_workspace" + "_producers"))
     sys.modules.pop(private_module, None)
 
@@ -312,8 +311,8 @@ def test_workspace_producers_have_one_public_module_and_no_private_or_package_bi
     assert ModeloWorkspaceEpochV1.__module__ == public_module.__name__
     assert package.__all__ == ()
     assert not hasattr(package, "ModeloWorkspaceEpochV1")
-    with pytest.raises(ModuleNotFoundError):
-        importlib.import_module(private_module)
+    assert not (Path(public_module.__file__).parent / "_workspace_producers.py").exists()
+    assert not (Path(public_module.__file__).parent / "_workspace_producers").exists()
 
 
 def test_workspace_producer_docs_and_active_tree_reach_the_public_module_fixed_point() -> None:

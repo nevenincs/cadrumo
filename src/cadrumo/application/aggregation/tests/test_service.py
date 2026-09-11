@@ -12,18 +12,17 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core.aggregation import BindingSourceKind
+from ....core.aggregation import COUNTERPART_SOURCE_KIND_ORDER, BindingSourceKind, ForeignAssetClass, RetencionScheme
 from ....core.errors.error_codes import build_error_envelope, get_registered_error_code
 from ....core.period import Period
-from .._service import (
-    ACCEPTED_SOURCE_KINDS,
+from ..errors import AggregationConfigError
+from ..service import (
     PerModeloAggregationContract,
     PerModeloAggregationContributor,
     PerModeloAggregationContributorContract,
     PerModeloAggregationLogFields,
     PerModeloAggregationResult,
 )
-from ..errors import AggregationConfigError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -60,7 +59,7 @@ def _retenciones_contract() -> PerModeloAggregationContributorContract:
         provider=PerModeloAggregationContributor.RETENCIONES,
         modelos=("111", "115", "123", "180", "190", "193"),
         service_owner="cadrumo.application.aggregation",
-        accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
+        accepted_source_kinds=COUNTERPART_SOURCE_KIND_ORDER,
     )
 
 
@@ -69,7 +68,7 @@ def _counterpart_contract() -> PerModeloAggregationContributorContract:
         provider=PerModeloAggregationContributor.COUNTERPART,
         modelos=("347", "349"),
         service_owner="cadrumo.application.aggregation",
-        accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
+        accepted_source_kinds=COUNTERPART_SOURCE_KIND_ORDER,
     )
 
 
@@ -78,7 +77,7 @@ def _foreign_assets_contract() -> PerModeloAggregationContributorContract:
         provider=PerModeloAggregationContributor.FOREIGN_ASSETS,
         modelos=("720",),
         service_owner="cadrumo.application.aggregation",
-        accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
+        accepted_source_kinds=COUNTERPART_SOURCE_KIND_ORDER,
     )
 
 
@@ -89,7 +88,7 @@ def test_site1_provider_contract_rejects_duplicate_modelos() -> None:
             provider=PerModeloAggregationContributor.RETENCIONES,
             modelos=("111", "111"),  # duplicate
             service_owner="cadrumo.application.aggregation",
-            accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
+            accepted_source_kinds=COUNTERPART_SOURCE_KIND_ORDER,
         )
     causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
     assert any(isinstance(c, AggregationConfigError) for c in causes), (
@@ -103,13 +102,13 @@ def test_site2_contract_rejects_duplicate_providers() -> None:
         provider=PerModeloAggregationContributor.RETENCIONES,
         modelos=("193",),
         service_owner="cadrumo.application.aggregation",
-        accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
+        accepted_source_kinds=COUNTERPART_SOURCE_KIND_ORDER,
     )
     retenciones_base = _retenciones_contract()
     with pytest.raises(ValidationError) as exc_info:
         PerModeloAggregationContract(
             providers=(retenciones_base, retenciones_dup),
-            accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
+            accepted_source_kinds=COUNTERPART_SOURCE_KIND_ORDER,
             error_codes=("ERROR_FINANCIAL_AGGREGATION",),
         )
     causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
@@ -123,12 +122,12 @@ def test_site3_contract_rejects_modelo_owned_by_multiple_providers() -> None:
         provider=PerModeloAggregationContributor.COUNTERPART,
         modelos=("347", "349", "111"),  # 111 also claimed by retenciones
         service_owner="cadrumo.application.aggregation",
-        accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
+        accepted_source_kinds=COUNTERPART_SOURCE_KIND_ORDER,
     )
     with pytest.raises(ValidationError) as exc_info:
         PerModeloAggregationContract(
             providers=(_retenciones_contract(), counterpart_with_extra, _foreign_assets_contract()),
-            accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
+            accepted_source_kinds=COUNTERPART_SOURCE_KIND_ORDER,
             error_codes=("ERROR_FINANCIAL_AGGREGATION",),
         )
     causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
@@ -150,8 +149,8 @@ def test_site4_contract_rejects_wrong_source_kind_taxonomy() -> None:
 
 def test_site5_command_rejects_cross_family_observations() -> None:
     """PerModeloAggregationCommand._only_matching_observation_family_is_populated raises AggregationConfigError."""
-    from .._foreign_assets import ForeignAssetClass, ForeignAssetIngestObservation
-    from .._service import PerModeloAggregationCommand
+    from ..foreign_assets import ForeignAssetIngestObservation
+    from ..service import PerModeloAggregationCommand
 
     obs = ForeignAssetIngestObservation(
         source_kind=BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
@@ -174,8 +173,8 @@ def test_site5_command_rejects_cross_family_observations() -> None:
 
 def test_site6_result_rejects_duplicate_source_kinds() -> None:
     """PerModeloAggregationResult._source_kinds_are_unique raises AggregationConfigError."""
-    from .._retenciones import RetencionObservation, RetencionScheme
-    from .._service import PerModeloAggregationCommand, aggregate_per_modelo
+    from ..retenciones import RetencionObservation
+    from ..service import PerModeloAggregationCommand, aggregate_per_modelo
 
     obs = RetencionObservation(
         source_kind=BindingSourceKind.LEDGER_TRANSACTION,
@@ -215,8 +214,8 @@ def test_site6_result_rejects_duplicate_source_kinds() -> None:
 
 def test_site7_result_rejects_modelo_mismatch() -> None:
     """PerModeloAggregationResult._envelope_matches_payload raises AggregationConfigError for modelo mismatch."""
-    from .._counterpart import CounterpartObservation
-    from .._service import PerModeloAggregationCommand, aggregate_per_modelo
+    from ..counterpart import CounterpartObservation
+    from ..service import PerModeloAggregationCommand, aggregate_per_modelo
 
     obs = CounterpartObservation(
         source_kind=BindingSourceKind.LEDGER_TRANSACTION,
@@ -257,8 +256,8 @@ def test_site7_result_rejects_modelo_mismatch() -> None:
 
 def test_site8_result_rejects_period_mismatch() -> None:
     """PerModeloAggregationResult._envelope_matches_payload raises AggregationConfigError for period mismatch."""
-    from .._counterpart import CounterpartObservation
-    from .._service import PerModeloAggregationCommand, aggregate_per_modelo
+    from ..counterpart import CounterpartObservation
+    from ..service import PerModeloAggregationCommand, aggregate_per_modelo
 
     obs = CounterpartObservation(
         source_kind=BindingSourceKind.LEDGER_TRANSACTION,
@@ -302,8 +301,8 @@ def test_site9_result_rejects_provider_payload_type_mismatch() -> None:
 
     Triggered by a provider / payload type mismatch.
     """
-    from .._retenciones import RetencionObservation, RetencionScheme
-    from .._service import PerModeloAggregationCommand, aggregate_per_modelo
+    from ..retenciones import RetencionObservation
+    from ..service import PerModeloAggregationCommand, aggregate_per_modelo
 
     obs = RetencionObservation(
         source_kind=BindingSourceKind.LEDGER_TRANSACTION,
@@ -344,16 +343,16 @@ def test_site9_result_rejects_provider_payload_type_mismatch() -> None:
 
 
 def test_accepted_source_kinds_are_enum_members() -> None:
-    """ACCEPTED_SOURCE_KINDS must be a tuple of BindingSourceKind, not raw strings."""
-    assert len(ACCEPTED_SOURCE_KINDS) == 4
-    for kind in ACCEPTED_SOURCE_KINDS:
+    """COUNTERPART_SOURCE_KIND_ORDER must be a tuple of BindingSourceKind, not raw strings."""
+    assert len(COUNTERPART_SOURCE_KIND_ORDER) == 4
+    for kind in COUNTERPART_SOURCE_KIND_ORDER:
         assert isinstance(kind, BindingSourceKind), (
-            f"ACCEPTED_SOURCE_KINDS entry {kind!r} is {type(kind).__name__}, expected BindingSourceKind"
+            f"COUNTERPART_SOURCE_KIND_ORDER entry {kind!r} is {type(kind).__name__}, expected BindingSourceKind"
         )
 
 
 def test_accepted_source_kinds_covers_all_four_members() -> None:
-    """ACCEPTED_SOURCE_KINDS must contain exactly the four canonical aggregation kinds.
+    """COUNTERPART_SOURCE_KIND_ORDER must contain exactly the four canonical aggregation kinds.
 
     The retired bare ``INVOICE`` alias must not participate at this boundary.
     """
@@ -365,8 +364,8 @@ def test_accepted_source_kinds_covers_all_four_members() -> None:
             BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
         },
     )
-    actual = frozenset(ACCEPTED_SOURCE_KINDS)
-    assert actual == expected, f"ACCEPTED_SOURCE_KINDS {actual} != canonical four {expected}"
+    actual = frozenset(COUNTERPART_SOURCE_KIND_ORDER)
+    assert actual == expected, f"COUNTERPART_SOURCE_KIND_ORDER {actual} != canonical four {expected}"
 
 
 def test_counterpart_canonical_source_kinds_are_enum_members() -> None:
@@ -389,7 +388,7 @@ def test_retenciones_canonical_source_kinds_are_enum_members() -> None:
 
 def test_foreign_assets_canonical_source_kinds_are_enum_members() -> None:
     """_foreign_assets._CANONICAL_SOURCE_KINDS must contain BindingSourceKind members."""
-    from .._foreign_assets import _CANONICAL_SOURCE_KINDS
+    from ..foreign_assets import _CANONICAL_SOURCE_KINDS
 
     assert len(_CANONICAL_SOURCE_KINDS) == 4
     for kind in _CANONICAL_SOURCE_KINDS:
@@ -398,9 +397,9 @@ def test_foreign_assets_canonical_source_kinds_are_enum_members() -> None:
         )
 
 
-def test_operator_accepted_kind_map_uses_enum_keys_for_aggregation_source_kinds() -> None:
-    """_operator._ACCEPTED_KIND_TO_INTERNAL must use BindingSourceKind for the four aggregation kinds."""
-    from ...review.operator import _ACCEPTED_KIND_TO_INTERNAL
+def test_operator_public_accepted_kinds_advertise_aggregation_source_values() -> None:
+    """The public operator vocabulary advertises every canonical aggregation source kind."""
+    from ...review.operator import ACCEPTED_KINDS
 
     aggregation_keys = {
         BindingSourceKind.LEDGER_TRANSACTION,
@@ -408,12 +407,7 @@ def test_operator_accepted_kind_map_uses_enum_keys_for_aggregation_source_kinds(
         BindingSourceKind.PAYABLE_INVOICE,
         BindingSourceKind.COLLECTIBLE_INVOICE,
     }
-    for key in aggregation_keys:
-        assert key in _ACCEPTED_KIND_TO_INTERNAL, (
-            f"BindingSourceKind.{key.name} ({key!r}) not found as key in _ACCEPTED_KIND_TO_INTERNAL"
-        )
-        # StrEnum members compare equal to their string values, but isinstance confirms the type
-        assert isinstance(key, BindingSourceKind)
+    assert {str(key) for key in aggregation_keys} <= set(ACCEPTED_KINDS)
 
 
 def test_aggregation_source_kind_values_are_stable() -> None:

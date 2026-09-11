@@ -28,6 +28,7 @@ from __future__ import annotations
 import asyncio
 
 from ....core.config import Settings, load_settings
+from ....core.config_support import LLMProvider
 from ....core.optional_extras import LLM_EXTRA, require_optional_extra
 from ....core.provenance_stamp import build_provenance_stamp
 from ....domain.transactions.llm import (
@@ -40,7 +41,7 @@ from ....domain.transactions.llm import (
 )
 from ....domain.transactions.models import Transaction
 from .client import LLMClient
-from .models import LLMProvider, LLMRequest
+from .models import LLMRequest
 
 __all__ = ["LocalTextLLMClassifier"]
 

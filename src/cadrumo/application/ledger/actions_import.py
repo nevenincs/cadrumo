@@ -23,7 +23,7 @@ from ...core.directory_scan import DirectoryEntryKind, scan_directory
 from ...core.errors.error_codes import resolve_error_message
 from ...core.external_constants import DEFAULT_CURRENCY, XLS_EXTENSION, XLSX_EXTENSION
 from ...core.hashing import canonical_json_bytes, sha256_file, sha256_hex
-from ...core.i18n import tr
+from ...core.i18n.render import tr
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import emit_bucket_events
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol

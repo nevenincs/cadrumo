@@ -29,7 +29,7 @@ import pytest
 
 from .....core.corpus_text import CorpusAnchorResolutionError, resolve_anchored_extracted_unit
 from .....core.resources.bundled_data import bundled_path
-from .registry_tree import bundled_registry_tree
+from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

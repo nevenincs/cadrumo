@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 
+from .....tests.inventory import FIXTURES_DIR
+from ..parser import parse_declaracion
 from ._parser_boundary_m111_support import (
     _M111_CASILLA_30,
     _M111_CORPUS_IDS,
@@ -13,11 +17,8 @@ from ._parser_boundary_m111_support import (
 )
 from ._parser_boundary_support import (
     _MODELO_111_EXPECTED_TARGETS,
-    FIXTURES_DIR,
-    Decimal,
     _expected_period,
     _modelo_snapshot,
-    parse_declaracion,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

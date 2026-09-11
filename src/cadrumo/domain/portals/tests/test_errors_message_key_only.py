@@ -31,7 +31,7 @@ import pytest
 
 from ....core.errors.error_codes import get_registered_error_code
 from ....core.errors.hierarchy import CadrumoError
-from ....core.i18n import tr
+from ....core.i18n.render import tr
 from ..errors import (
     PortalIntegrityError,
     PortalRegistryError,

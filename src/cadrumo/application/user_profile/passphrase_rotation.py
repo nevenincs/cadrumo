@@ -35,7 +35,7 @@ from pydantic import BaseModel, Field
 
 from ...core.credentials import assess_profile_password
 from ...core.errors.hierarchy import CadrumoError
-from ...core.identity import ProfileId
+from ...core.identity.profile import ProfileId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.paths import effective_storage_root
 from ...core.time.clock import now as _now

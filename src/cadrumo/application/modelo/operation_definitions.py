@@ -32,13 +32,9 @@ from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, StringConstra
 from ...core.country_code import CountryCodeAlpha2
 from ...core.errors.hierarchy import CadrumoError
 from ...core.filing_year import FilingYear
-from ...core.identity import (
-    BucketId,
-    CalculationRevisionId,
-    ContentDigest,
-    ModeloEditBaselineId,
-    WorkUnitId,
-)
+from ...core.identity.bucket import BucketId
+from ...core.identity.digest import ContentDigest
+from ...core.identity.hex_ids import CalculationRevisionId, ModeloEditBaselineId, WorkUnitId
 from ...core.irnr import M210PayerMode
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import (

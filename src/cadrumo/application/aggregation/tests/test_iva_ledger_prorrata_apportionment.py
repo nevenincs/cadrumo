@@ -10,7 +10,7 @@ See Also:
     :mod:`~domain.prorrata_register`
         Register model used to record ``NINGUNA`` and active ``GENERAL``
         scenarios in these regressions.
-    :class:`~application.aggregation._modelo_bindings.LedgerIvaAggregationSourceResolver`
+    :class:`~application.aggregation.modelo_bindings.LedgerIvaAggregationSourceResolver`
         Production source-mesh route that threads the same aggregation and
         binding resolver.
 """
@@ -46,9 +46,9 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import AggregationValidationError
-from .. import aggregate_iva_ledger_observations_from_repositories as _aggregate_from_repositories
+from ..errors import AggregationValidationError
 from ..iva_ledger import _active_prorrata_apportionment, resolve_iva_ledger_binding_values
+from ..iva_ledger import aggregate_iva_ledger_observations_from_repositories as _aggregate_from_repositories
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -20,12 +20,12 @@ import weakref
 import pytest
 
 from ......core.time.clock import now
-from .._live_sessions import close_all_live_bucket_sessions
 from ..active_session import (
     activate_session,
     close_active_bucket_session,
 )
 from ..bucket_session import BucketSession
+from ..live_sessions import close_all_live_bucket_sessions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

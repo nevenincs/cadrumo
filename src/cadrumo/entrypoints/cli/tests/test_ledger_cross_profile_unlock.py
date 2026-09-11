@@ -18,11 +18,11 @@ from pathlib import Path
 
 import pytest
 
-from ....tests import FIXTURES_DIR
-from ....tests.cli_runner import invoke_cached_cli
+from ....tests.inventory import FIXTURES_DIR
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.profile_storage_root_fixture import isolated_profile_storage_fixture
 from ....tests.user_profile import register_minimal_profile
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

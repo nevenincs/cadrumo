@@ -27,12 +27,9 @@ from datetime import date
 from decimal import Decimal
 from functools import cache
 
-from test_support.registry_authoring import load_registry_tree
-
-from ....core.resources.bundled_data import bundled_path
+from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.formula_runtime_ops import resolve_parameter
 from ...calculations.registry.static_inspection import RegistryRevisionInspection
-from ...calculations.registry.temporal import select_revision
 from ..family_types import MinimoDescendientesThresholds
 
 __all__ = [
@@ -53,27 +50,11 @@ _BIRTH_ORDER_SUFFIXES = (
 def _inspection(filing_year: int) -> RegistryRevisionInspection:
     """Non-filing static inspection of M100's *filing_year* revision.
 
-    Built directly from the compile-only registry tree rather than
-    ``ValidatedRegistryAuthority.inspect_revision`` (or ``.snapshot``):
-    the authority validates every modelo in the bundled tree before it
-    returns anything, so one unrelated modelo missing filing capability
-    would break this M100-only, non-filing parameter lookup for a reason
-    that has nothing to do with it. A regulatory ceiling is a declaration
-    of the selected revision, and reading it is not a filing operation:
-    an authority-backed snapshot would additionally demand operator review
-    of a revision these tests never file.
+    Read the selected revision from the committed authority artifact. This is
+    a non-filing inspection, so use the authority's inspection projection rather
+    than reopening mutable registry sources or invoking the compiler.
     """
-    root = bundled_path("registry", "aeat")
-    modelos, catalogues = load_registry_tree(root)
-    modelo = next(item for item in modelos if item.id == "100")
-    revision = select_revision(modelo, filing_year=filing_year, period="0A")
-    return RegistryRevisionInspection.from_revision(
-        modelo=modelo,
-        revision=revision,
-        source_root=bundled_path(),
-        sources=catalogues.sources,
-        legal_ref_ids=frozenset(catalogues.legal),
-    )
+    return bundled_authority().inspect_revision("100", filing_year=filing_year, period="0A")
 
 
 def _parameter(filing_year: int, suffix: str) -> Decimal:

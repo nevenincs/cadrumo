@@ -39,11 +39,11 @@ from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from .._modelo_bindings import (
+from ..modelo_bindings import (
     LedgerIvaAggregationSourceResolver,
     LedgerRentaIncomeAggregationSourceResolver,
 )
-from .._source_mesh import CalculationSourceContext, CalculationSourceResolution
+from ..source_mesh import CalculationSourceContext, CalculationSourceResolution
 from .renta_income_aggregation_support import _actividad_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

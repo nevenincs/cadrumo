@@ -38,8 +38,8 @@ from ....application.modelo.m145_communication_records import (
 )
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....tests.cli_envelope import unwrap_schema_envelope
-from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import dev_test_database_password, isolated_runtime_profile
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

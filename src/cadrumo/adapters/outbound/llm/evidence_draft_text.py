@@ -72,6 +72,7 @@ from ....application.ledger.invoice_extraction_authority import (
     resolve_invoice_extraction_authority_values,
 )
 from ....core.config import Settings, load_settings
+from ....core.config_support import LLMProvider
 from ....core.operator_action_enums import ActionEvidenceProvenance
 from ....core.optional_extras import LLM_EXTRA, require_optional_extra
 from ....core.provenance_stamp import build_provenance_stamp
@@ -84,7 +85,7 @@ from .invoice_extraction_prompt import (
     render_invoice_extraction_prompt,
 )
 from .invoice_field_grounding import ground_extracted_fields, parse_invoice_extraction_response
-from .models import LLMProvider, LLMRequest
+from .models import LLMRequest
 from .preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 
 __all__ = [

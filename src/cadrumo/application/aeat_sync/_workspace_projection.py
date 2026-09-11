@@ -13,7 +13,7 @@ from typing import Any, Final, Protocol
 from pydantic import BaseModel, TypeAdapter
 
 from ...core.filing_year import FilingYear
-from ...core.identity import BucketId
+from ...core.identity.bucket import BucketId
 from ...core.period import Period
 from ...domain.modelos.codes import ModeloCode
 from ..operations.models import OperationDefinitionId

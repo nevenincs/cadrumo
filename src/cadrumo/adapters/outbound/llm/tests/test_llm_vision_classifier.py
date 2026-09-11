@@ -25,11 +25,11 @@ from .....domain.iva.schema import IvaCategory
 from .....domain.transactions.enums import BusinessClassification
 from .....domain.transactions.llm import LLMClassificationResponse, prompt_spec_with_saturation_fields
 from .....tests.llm_vision_evidence_support import (
-    _json_array,
-    _json_object,
-    _png_image,
-    _run_against_loopback_ollama,
-    _transaction,
+    json_array,
+    json_object,
+    png_image,
+    run_against_loopback_ollama,
+    vision_transaction,
 )
 from ..client import LLMClient
 from ..models import MultimodalImageInput
@@ -67,20 +67,20 @@ def test_vision_classifier_classifies_from_images() -> None:
             "business_pct": None,
         },
     )
-    images = (MultimodalImageInput.from_base64(base64.b64encode(_png_image()).decode("ascii"), ImageMediaType.PNG),)
+    images = (MultimodalImageInput.from_base64(base64.b64encode(png_image()).decode("ascii"), ImageMediaType.PNG),)
 
     def _call() -> LLMClassificationResponse:
         classifier = LocalVisionLLMClassifier(spec=prompt_spec_with_saturation_fields(year=2025), model="llava-test")
-        return classifier.classify(_transaction("ev-1"), evidence_images=images)
+        return classifier.classify(vision_transaction("ev-1"), evidence_images=images)
 
-    observed, response = _run_against_loopback_ollama(classification_json, _call)
+    observed, response = run_against_loopback_ollama(classification_json, _call)
     assert response.classification is BusinessClassification.BUSINESS
     assert response.category is SpendingCategory.HARDWARE_AMORTIZABLE
     assert response.iva_category is IvaCategory.DOMESTIC_GENERAL
 
-    body = _json_object(observed["body"])
-    messages = _json_array(body["messages"])
-    user_message = _json_object(messages[-1])
+    body = json_object(observed["body"])
+    messages = json_array(body["messages"])
+    user_message = json_object(messages[-1])
     assert user_message["images"] == [image.base64_data for image in images]
 
 
@@ -99,12 +99,12 @@ def test_image_evidence_classifies_with_no_provider() -> None:
     evidence = ResolvedEvidence(
         reference="ev-1",
         text=None,
-        images=(MultimodalImageInput.from_base64(base64.b64encode(_png_image()).decode("ascii"), ImageMediaType.PNG),),
+        images=(MultimodalImageInput.from_base64(base64.b64encode(png_image()).decode("ascii"), ImageMediaType.PNG),),
     )
 
     def _call() -> tuple[LLMClassificationResponse, str]:
         return classify_with_evidence(
-            _transaction("ev-1"),
+            vision_transaction("ev-1"),
             evidence,
             text_classifier=None,
             spec=prompt_spec_with_saturation_fields(year=2025),
@@ -113,7 +113,7 @@ def test_image_evidence_classifies_with_no_provider() -> None:
             settings=load_settings(),
         )
 
-    _observed, (response, provenance) = _run_against_loopback_ollama(classification_json, _call)
+    _observed, (response, provenance) = run_against_loopback_ollama(classification_json, _call)
     assert response.classification is BusinessClassification.BUSINESS
     assert provenance.startswith("llm:local-vision:")
 
@@ -134,7 +134,7 @@ def test_text_path_without_a_cloud_provider_now_routes_on_host() -> None:
     """
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
         classify_with_evidence(
-            _transaction("ev-1"),
+            vision_transaction("ev-1"),
             None,
             text_classifier=None,
             spec=prompt_spec_with_saturation_fields(year=2025),
@@ -154,7 +154,7 @@ def test_vision_connection_error_carries_the_runtime_precondition_verdict() -> N
     evidence = ResolvedEvidence(
         reference="ev-1",
         text=None,
-        images=(MultimodalImageInput.from_base64(base64.b64encode(_png_image()).decode("ascii"), ImageMediaType.PNG),),
+        images=(MultimodalImageInput.from_base64(base64.b64encode(png_image()).decode("ascii"), ImageMediaType.PNG),),
     )
     unreachable_settings = load_settings().model_copy(
         update={
@@ -168,7 +168,7 @@ def test_vision_connection_error_carries_the_runtime_precondition_verdict() -> N
     )
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
         classify_with_evidence(
-            _transaction("ev-1"),
+            vision_transaction("ev-1"),
             evidence,
             text_classifier=None,
             spec=prompt_spec_with_saturation_fields(year=2025),
@@ -197,7 +197,7 @@ def test_vision_model_override_selects_the_named_model() -> None:
     evidence = ResolvedEvidence(
         reference="ev-1",
         text=None,
-        images=(MultimodalImageInput.from_base64(base64.b64encode(_png_image()).decode("ascii"), ImageMediaType.PNG),),
+        images=(MultimodalImageInput.from_base64(base64.b64encode(png_image()).decode("ascii"), ImageMediaType.PNG),),
     )
 
     def _call() -> tuple[LLMClassificationResponse, str]:
@@ -212,7 +212,7 @@ def test_vision_model_override_selects_the_named_model() -> None:
             settings=settings,
         )
         return classify_with_evidence(
-            _transaction("ev-1"),
+            vision_transaction("ev-1"),
             evidence,
             text_classifier=None,
             spec=prompt_spec_with_saturation_fields(year=2025),
@@ -221,8 +221,8 @@ def test_vision_model_override_selects_the_named_model() -> None:
             settings=settings,
         )
 
-    observed, (_response, provenance) = _run_against_loopback_ollama(classification_json, _call)
+    observed, (_response, provenance) = run_against_loopback_ollama(classification_json, _call)
     assert provenance == "llm:local-vision:qwen2.5vl:7b"
-    body = _json_object(observed["body"])
+    body = json_object(observed["body"])
     assert body["model"] == "qwen2.5vl:7b"
     assert observed["runtime_requests"] == [{"method": "GET", "path": "/api/ps"}]

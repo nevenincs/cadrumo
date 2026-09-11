@@ -26,7 +26,8 @@ from ...core.hashing import (
     validate_prefixed_digest,
 )
 from ...core.hex import Hex64Str
-from ...core.identity import PrefixedContentDigest, ProfileLabel
+from ...core.identity.digest import PrefixedContentDigest
+from ...core.identity.profile_label import ProfileLabel
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import validate_utc_aware
 from .custody_hold_models import (

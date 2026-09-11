@@ -31,8 +31,8 @@ from ....core.casilla_id import validated_casilla_id
 from ....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ....core.period import Period
 from ....core.register_scoping_signal import RegisterScopingSignal
-from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
+from ....domain.deadlines.models import TaxpayerProfile
 from .. import filed_data_capture as subject
 from ..filed_data_capture import (
     ExpectedFiledDeclarationGrid,

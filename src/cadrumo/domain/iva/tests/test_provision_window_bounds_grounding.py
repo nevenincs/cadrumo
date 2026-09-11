@@ -24,10 +24,9 @@ from collections.abc import Iterable
 from datetime import date
 
 import pytest
-from test_support.registry_authoring import load_registry_tree
 
-from ....core.resources.bundled_data import bundled_path
 from ....core.validity_window import ValidityWindow
+from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.schema_references import LegalReference
 from ..catalogue import bundled_iva_catalogue
 from ..place_of_supply import load_place_of_supply_table
@@ -36,8 +35,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _legal_catalogue() -> dict[str, LegalReference]:
-    _modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    return dict(catalogues.legal)
+    return dict(bundled_authority().catalogues.legal)
 
 
 def _permitted_span(

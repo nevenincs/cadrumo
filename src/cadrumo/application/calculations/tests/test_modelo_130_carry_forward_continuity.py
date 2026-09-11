@@ -47,6 +47,11 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.tests.registry_observations import (
+    registry_grounded_modelo_observation,
+    revision_id_for_coordinates,
+    revision_id_for_observation,
+)
 from ....domain.deadlines.models import (
     IVARegime,
     M303RegimeComposition,
@@ -60,11 +65,6 @@ from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
 from ....tests.profile_capsule import seed_test_profile_record
-from ....domain.calculations.registry.tests.registry_observations import (
-    registry_grounded_modelo_observation,
-    revision_id_for_coordinates,
-    revision_id_for_observation,
-)
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo.calculation_actions import calculate_modelo_revision
 from ...modelo.external_import_actions import import_external_filing_evidence

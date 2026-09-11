@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.casilla_id import validated_casilla_id
-from ._parser_boundary_support import _MODELO_347_SYNTHETIC_FIXTURE, CasillaId, _expected_period, parse_declaracion
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from ..parser import parse_declaracion
+from ._parser_boundary_support import _MODELO_347_SYNTHETIC_FIXTURE, _expected_period
 
 pytestmark = [
     pytest.mark.unit,

@@ -26,8 +26,8 @@ import pytest
 from click.testing import Result
 
 from ....core.config import load_settings
-from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage
+from .cli_runner import invoke_cached_cli
 
 __all__ = ["isolated_profile_storage"]
 from ....tests.bucket_layout import provision_bucket_directory

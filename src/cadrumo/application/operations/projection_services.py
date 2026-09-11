@@ -11,7 +11,7 @@ from typing import Protocol, runtime_checkable
 from pydantic import BaseModel
 
 from ...core.hashing import content_hash_hex
-from ...core.identity import ContentDigest
+from ...core.identity.digest import ContentDigest
 from ._projection_authority import (
     BoundOperationSecureResponseAuthorityMixin,
     OperationResponseAuthorityBrokerMixin,
@@ -92,37 +92,39 @@ from ._projection_read import (
     review_request_or_refusal as _review_request_or_refusal,
 )
 from .frontend_contracts import (
+    OperationCancellationResultV1,
+    OperationDetachResultV1,
+    OperationResponseControlResultV1,
+    OperationResponseMutationRequestV1,
+    OperationResponseMutationResultV1,
+    OperationResultProjectionResultV1,
+    OperationReviewProjectionResultV1,
+    OperationWorkspaceRefreshTargetResultV1,
+)
+from .frontend_requests import (
     OperationCancellationRefusalV1,
     OperationCancellationRequestV1,
-    OperationCancellationResultV1,
     OperationCancellationVersionHeader,
     OperationDetachRefusalCode,
     OperationDetachRefusalV1,
     OperationDetachRequestV1,
-    OperationDetachResultV1,
     OperationDetachSuccessV1,
     OperationDetachVersionHeader,
     OperationResponseApplyRequestV1,
     OperationResponseControlRefusalCode,
     OperationResponseControlRefusalV1,
     OperationResponseControlRequestV1,
-    OperationResponseControlResultV1,
     OperationResponseControlVersionHeader,
-    OperationResponseMutationRequestV1,
-    OperationResponseMutationResultV1,
     OperationResponseMutationSuccessV1,
     OperationResponseRejectRequestV1,
     OperationResultProjectionRefusalV1,
     OperationResultProjectionRequestV1,
-    OperationResultProjectionResultV1,
     OperationResultProjectionVersionHeader,
     OperationReviewProjectionRefusalV1,
     OperationReviewProjectionRequestV1,
-    OperationReviewProjectionResultV1,
     OperationReviewProjectionVersionHeader,
     OperationWorkspaceRefreshTargetRefusalV1,
     OperationWorkspaceRefreshTargetRequestV1,
-    OperationWorkspaceRefreshTargetResultV1,
     OperationWorkspaceRefreshTargetVersionHeader,
 )
 from .interactions import (

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from decimal import Decimal
-from typing import Annotated, Final
+from typing import Annotated
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
@@ -23,14 +23,11 @@ from .carry_forward import (
     IvaCompensationExpiryReviewState,
 )
 
-_FOUR_YEAR_WINDOW: Final[int] = 4
-
-
 CompensationExpiryYear = Annotated[int, Field(ge=2000, le=2200)]
 """The year an unused compensation lot lapses.
 
 Deliberately wider than :obj:`~cadrumo.core.filing_year.FilingYear`. This is a
-DERIVED year -- ``source_filing_year + 4`` for the earliest still-active lot --
+DERIVED year based on the configured carry window for the earliest still-active lot --
 so it may legitimately fall beyond the last year a return can be filed for, and
 narrowing it to the filing-year range would refuse a balance the engine can
 correctly produce.
@@ -61,13 +58,13 @@ def build_iva_wallet_balance_report(
     """Summarise a carry-forward report into a balance snapshot.
 
     ``total_balance`` is the gross remaining balance across all positive lots.
-    ``active_balance`` is the portion still inside the four-year compensation
+    ``active_balance`` is the portion still inside the statutory compensation
     window, including lots due for expiry review. ``expired_balance`` is the
     portion past that window and therefore not usable without separate review.
 
-    ``next_expiry_year`` is ``source_filing_year + 4`` for the earliest
-    non-expired lot that still carries a non-zero remaining balance (the lot
-    closest to its four-year expiry boundary). ``None`` when no non-expired lots
+    ``next_expiry_year`` is the source filing year plus the configured carry
+    window for the earliest non-expired lot that still carries a non-zero
+    remaining balance. ``None`` when no non-expired lots
     with remaining balance exist.
 
     Returns an :class:`IvaWalletBalanceReport`.
@@ -97,9 +94,9 @@ def _partition_balance_lots(
         for lot in lots_with_balance
         if lot.expiry_review_state is IvaCompensationExpiryReviewState.EXPIRED_REVIEW_REQUIRED
     ]
-    # Include ACTIVE and EXPIRY_REVIEW_DUE lots (age <= 4). EXPIRED_REVIEW_REQUIRED
-    # lots (age > 4) have passed the four-year boundary and are not usable without
-    # a separate policy review.
+    # Include ACTIVE and EXPIRY_REVIEW_DUE lots. EXPIRED_REVIEW_REQUIRED lots
+    # have passed the statutory boundary and are not usable without a separate
+    # policy review.
     active_lots = [
         lot
         for lot in lots_with_balance
@@ -113,8 +110,8 @@ def _sum_lot_balances(lots: Iterable[IvaCompensationCarryForwardLot]) -> Decimal
 
 
 def _next_expiry_year(lots: Iterable[IvaCompensationCarryForwardLot]) -> int | None:
-    expiry_years = [lot.source_filing_year + _FOUR_YEAR_WINDOW for lot in lots]
-    return min(expiry_years) if expiry_years else None
+    # TODO(fact-relocation): resolve the IVA compensation carry window from registry authority
+    raise NotImplementedError("IVA compensation carry window is unresolved")
 
 
 __all__ = [

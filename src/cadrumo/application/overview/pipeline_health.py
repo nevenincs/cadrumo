@@ -49,8 +49,9 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from ...core.i18n import tr
-from ...core.identity import BucketId, WorkUnitId
+from ...core.i18n.render import tr
+from ...core.identity.bucket import BucketId
+from ...core.identity.hex_ids import WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...domain.modelos.calculation_revision import CalculationRevisionState

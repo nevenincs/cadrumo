@@ -29,7 +29,7 @@ _POLICY = ExecutionPolicySpec(
     CommandWriteRoute.PROFILE_BOUND,
     handoff=True,
 )
-_LANG = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
+_LANG = ValueContract(DeferredTarget("...core.external_constants", "OutputLanguage", __package__))
 
 
 def _option(
@@ -95,14 +95,14 @@ QUICKFILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option(
                 "refund_election",
                 ("--refund-election",),
-                ValueContract(DeferredTarget("cadrumo.core.refund_election", "RefundElection")),
+                ValueContract(DeferredTarget("...core.refund_election", "RefundElection", __package__)),
                 "cli.app.modelo.work.refund_election_help",
                 default="compensar",
             ),
             _option(
                 "payment_election",
                 ("--payment-election",),
-                ValueContract(DeferredTarget("cadrumo.core.payment_election", "PaymentElection")),
+                ValueContract(DeferredTarget("...core.payment_election", "PaymentElection", __package__)),
                 "cli.app.modelo.work.payment_election_help",
                 default="ingreso",
             ),
@@ -110,7 +110,7 @@ QUICKFILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 "prior_domiciliation_election",
                 ("--prior-domiciliation-election",),
                 ValueContract(
-                    DeferredTarget("cadrumo.core.prior_domiciliation_election", "PriorDomiciliationElection")
+                    DeferredTarget("...core.prior_domiciliation_election", "PriorDomiciliationElection", __package__)
                 ),
                 "cli.app.modelo.work.prior_domiciliation_election_help",
                 default="keep",
@@ -132,10 +132,10 @@ QUICKFILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         _POLICY,
-        LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._app_quickfile", "quickfile")),
+        LazyBinding.available(DeferredTarget("._app_quickfile", "quickfile", __package__)),
         ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("cadrumo.entrypoints.cli._app_quickfile_payloads", "QuickfileResultPayload"),
+            DeferredTarget("._app_quickfile_payloads", "QuickfileResultPayload", __package__),
             identity="app.quickfile",
         ),
         search_terms=(

@@ -34,7 +34,7 @@ from typing import Never, Self, SupportsIndex, override
 from pydantic import BaseModel, Field, model_serializer, model_validator
 
 from ...core.field_origin import FieldOrigin
-from ...core.identity import ContentDigest
+from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 
 __all__ = [

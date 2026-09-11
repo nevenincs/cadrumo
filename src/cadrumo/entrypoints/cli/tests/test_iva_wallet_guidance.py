@@ -8,12 +8,12 @@ import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.cli_envelope import require_schema_envelope
-from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_runtime_profile
 from ._iva_wallet_inspector_support import (
     _GUIDANCE_PROFILE,
     _seed_full_autonomo_profile_for_guidance,
 )
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Callable, Generator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -13,56 +13,31 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
-from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from .....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
-from .....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from .....adapters.persistence.profile.justificante import JustificanteRepository
-from .....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from .....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from .....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from .....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from .....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from .....application.auth.apoderado_service import ApoderadoService
-from .....application.auth.diagnostics import list_auth_diagnostics
-from .....application.calculations.iva_compensation_history import IvaCompensationHistoryRepository
-from .....application.calculations.observations_repository import (
-    CalculationObservationRepository,
-    IvaWalletDecisionRepository,
-)
-from .....application.diagnostics import (
-    preview_quarantine_unreadable_secure_objects,
-    secure_object_unreadable_total,
-)
 from .....application.filing.history_models import ModeloHistory, ModeloHistoryEntry
-from .....application.filing.history_repository import ModeloHistoryRepository
 from .....application.live.borrador_100 import (
     Borrador100Snapshot,
-    Borrador100SnapshotRepository,
     derive_borrador_100_snapshot_id,
 )
 from .....application.live.snapshot_base import SnapshotLifecycleState
-from .....application.modelo.review_package_recipient_registry import RecipientFingerprintRegistryRepository
-from .....application.workflow.persistence import WorkflowRunRepository, WorkflowStateRepository
 from .....application.workflow.run_models import WorkflowResult, WorkflowStage, WorkflowStep
-from .....application.workflow.state_models import DeclaracionPointer, WorkflowState
+from .....application.workflow.state_models import WorkflowState
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.classification.policies import SensitivityClass
 from .....core.config import override_settings
+from .....core.config_support import LLMProvider
 from .....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from .....core.period import Period as _Period
-from .....domain.attachments.errors import AttachmentNotFoundError
 from .....domain.buckets.event import (
     BucketEvent,
-    BucketEventHistoryCatalogue,
     BucketEventObjectType,
     BucketEventType,
     derive_bucket_event_id,
 )
 from .....domain.calculations.registry.authority import bundled_authority
-from .....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from .....domain.calculations.registry.bindings import CasillaObservation
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.categories.spending_category import SpendingCategory
-from .....domain.contribuyente.inventory.records import InventoryLedger, InventoryLedgerDocument, ValuationMethod
+from .....domain.contribuyente.inventory.records import InventoryLedger, ValuationMethod
 from .....domain.filing.schema import (
     ModeloDraft,
     ModeloValue,
@@ -72,11 +47,11 @@ from .....domain.filing.schema import (
 )
 from .....domain.identifiers import ModeloIdentifier
 from .....domain.invoices.enums import IvaRate, PaymentStatus
-from .....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
+from .....domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
 from .....domain.iva.classification import InvoiceKind
 from .....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from .....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
-from .....domain.justificante import Justificante
+from .....domain.justificante.schema import Justificante
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -97,7 +72,7 @@ from .....domain.modelos.verification_report import (
     VerificationReportCatalogue,
     derive_verification_report_id,
 )
-from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
+from .....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from .....domain.submission.models import (
     ModeloDraftStatus,
     ModeloPresentado,
@@ -105,7 +80,7 @@ from .....domain.submission.models import (
     SubmissionStatus,
 )
 from .....domain.transactions.enums import TransactionDirection
-from .....domain.transactions.models import Transaction, TransactionCatalogue
+from .....domain.transactions.models import Transaction
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .....domain.usage_ratios.model import UsageRatioProfile
 from .....tests.aeat_literal_fixtures import (
@@ -117,24 +92,9 @@ from .....tests.aeat_literal_fixtures import (
     aeat_url,
 )
 from .....tests.master_key import EphemeralMasterKeyProvider
-from ....outbound.aeat.auth import session_store as _session_store
-from ....outbound.aeat.sede.errors import ExpedienteNotFoundError
-from ....outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
 from ....outbound.aeat.sede.schema import FiledDeclaracionArtefact
-from ....outbound.google import session_store as google_session_store
 from ....outbound.google.records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
-from ....outbound.llm.cache import LLMCache
-from ....outbound.llm.consent_ledger import EvidenceConsentLedger
-from ....outbound.llm.models import LLMProvider, LLMRequest, LLMResponse, UsageRecord
-from ....outbound.llm.run_telemetry import LLMRunTelemetryRecorder
-from ....outbound.llm.usage import UsageRecorder
-from ...profile.inventory import InventoryLedgerRepository
-from ...profile.recipient_replay_guard import RecipientReplayGuardRepository
-from ...profile.submission import SubmissionRepository
-from ...profile.usage_ratios import load_usage_ratios, save_usage_ratios
-from ..attachment import AttachmentStore
-from ..errors import StorageValidationError
-from ..master_key.active_session import activate_session
+from ....outbound.llm.models import LLMRequest, LLMResponse, UsageRecord
 from ..master_key.bucket_session import BucketSession
 from ..runtime_repository import secure_object_repository_for_active_bucket
 from ..secure_object_namespaces import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE, LLM_USAGE_NAMESPACE
@@ -142,64 +102,6 @@ from ..sql.engine import dispose_engine
 from .registered_bucket import ensure_registered_bucket
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-__all__ = [
-    "LLM_USAGE_NAMESPACE",
-    "_BUCKET_A_ATTACHMENT_PAYLOAD",
-    "_BUCKET_A_ID",
-    "_BUCKET_B_ATTACHMENT_PAYLOAD",
-    "_BUCKET_B_ID",
-    "_WALLET_SUBJECT_ID",
-    "ApoderadoService",
-    "AttachmentNotFoundError",
-    "AttachmentStore",
-    "Borrador100SnapshotRepository",
-    "BucketEventHistoryCatalogue",
-    "BucketEventHistoryRepository",
-    "CalculationObservationRepository",
-    "CalculationRevisionCatalogueRepository",
-    "Callable",
-    "EvidenceConsentLedger",
-    "ExpedienteNotFoundError",
-    "FiledDeclaracionObservationStore",
-    "InventoryLedgerDocument",
-    "InventoryLedgerRepository",
-    "InvoiceCatalogue",
-    "InvoiceCatalogueRepository",
-    "IvaCompensationHistoryRepository",
-    "IvaWalletDecisionRepository",
-    "JustificanteRepository",
-    "LLMCache",
-    "LLMProvider",
-    "LLMRunTelemetryRecorder",
-    "ModeloDraftRepository",
-    "ModeloHistoryRepository",
-    "ModeloRecordCatalogueRepository",
-    "Path",
-    "RecipientFingerprintRegistryRepository",
-    "RecipientReplayGuardRepository",
-    "RegistryModeloObservation",
-    "SpendingCategory",
-    "StorageValidationError",
-    "SubmissionRepository",
-    "TransactionCatalogue",
-    "TransactionCatalogueRepository",
-    "UsageRatioProfile",
-    "UsageRecorder",
-    "VerificationReportCatalogueRepository",
-    "WorkUnitCatalogue",
-    "WorkUnitCatalogueRepository",
-    "WorkflowRunRepository",
-    "WorkflowStateRepository",
-    "_session_store",
-    "activate_session",
-    "google_session_store",
-    "list_auth_diagnostics",
-    "load_usage_ratios",
-    "preview_quarantine_unreadable_secure_objects",
-    "save_usage_ratios",
-    "secure_object_unreadable_total",
-]
 
 _KEK = b"k" * 32
 
@@ -247,19 +149,7 @@ def _session(bucket_id: str) -> BucketSession:
 
 def _workflow_state(label: str) -> WorkflowState:
     now = datetime.now(UTC).replace(microsecond=0)
-    period = _Period.from_year_and_code(2026, "1T")
-    return WorkflowState(
-        declarations={
-            f"303:{period.filing_year}:{period.registry_token}": DeclaracionPointer(
-                modelo="303",
-                period=period,
-                draft_id=(label.replace("-", "")[-1:] or "d") * 64,
-                status="BORRADOR",
-                updated_at=now,
-            ),
-        },
-        updated_at=now,
-    )
+    return WorkflowState(updated_at=now)
 
 
 def _transaction(label: str) -> Transaction:

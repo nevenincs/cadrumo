@@ -18,10 +18,9 @@ inspection passes through it: measured across the filing suite, every
 from __future__ import annotations
 
 import pytest
-from test_support.registry_authoring import load_registry_tree
 
 from ....core.period import Period
-from ....core.resources.bundled_data import bundled_path
+from ....domain.calculations.registry.authority import bundled_authority
 from ..draft_construction import _refuse_unsupported_filing_year
 from ..errors import ModeloApplicationError
 
@@ -29,8 +28,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _declared_years() -> tuple[int, ...]:
-    _modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    declaration = catalogues.supported_filing_years
+    declaration = bundled_authority().catalogues.supported_filing_years
     assert declaration is not None, "the bundled registry declares no supported filing years"
     return tuple(declaration.years)
 
@@ -83,8 +81,7 @@ def test_registry_inspection_of_an_undeclared_year_is_untouched() -> None:
     2021 revisions that structural tests read. Loading and inspecting them must
     stay possible, because the guard governs FILING, not reading.
     """
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo_100 = next(modelo for modelo in modelos if modelo.id == "100")
+    modelo_100 = bundled_authority().modelo("100")
     declared = set(_declared_years())
 
     historical = [revision for revision in modelo_100.revisions.values() if revision.valid_from.year not in declared]

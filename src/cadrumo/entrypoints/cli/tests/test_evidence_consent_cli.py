@@ -31,8 +31,8 @@ from ....application.ledger.extraction_draft_store import write_extraction_draft
 from ....application.ledger.invoice_draft_records import InvoiceDraft
 from ....core.field_origin import FieldOrigin
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
-from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import TestRuntimeProfile
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

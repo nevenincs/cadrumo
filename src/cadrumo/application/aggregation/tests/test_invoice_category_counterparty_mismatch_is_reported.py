@@ -52,7 +52,7 @@ from .._modelo_bindings_invoice_iva import (
     category_counterparty_mismatch_diagnostics,
     screened_invoice_iva_observations,
 )
-from .._source_mesh import CalculationSourceContext
+from ..source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

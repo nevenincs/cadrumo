@@ -305,7 +305,7 @@ def test_justificante_csv_within_the_receipt_domain_bounds_is_accepted() -> None
     """
     from pydantic import TypeAdapter
 
-    from ....core.identity import AeatCsv
+    from ....core.identity.aeat_csv import AeatCsv
 
     receipt_bound = TypeAdapter(AeatCsv)
 

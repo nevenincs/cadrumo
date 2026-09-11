@@ -48,7 +48,7 @@ from ..capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..errors import OperationDeclarationError
-from ..frontend_contracts import (
+from ..frontend_requests import (
     OperationObservationRequestV1,
     OperationObservationSuccessV1,
 )

@@ -44,9 +44,9 @@ from ....core.telemetry.schema import TelemetryEventPayload
 from ....core.telemetry.tier import TelemetryTier
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
-from ....tests.cli_runner import invoke_cached_cli
 from ....tests.loopback_recording_server import run_loopback_server, stop_loopback_server
 from .._diagnostics_payloads import TelemetryFlushResult
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

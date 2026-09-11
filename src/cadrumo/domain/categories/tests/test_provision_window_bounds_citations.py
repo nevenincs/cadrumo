@@ -22,10 +22,9 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from test_support.registry_authoring import load_registry_tree
 
-from ....core.resources.bundled_data import bundled_path
 from ....core.validity_window import ValidityWindow
+from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.schema_references import LegalReference
 from ..proportionality import (
     ANNUAL_EDITION_CITATION_SOURCES,
@@ -39,8 +38,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _legal_catalogue() -> dict[str, LegalReference]:
-    _modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    return dict(catalogues.legal)
+    return dict(bundled_authority().catalogues.legal)
 
 
 def _statutory_citations() -> list[tuple[str, CategoryCitation]]:
@@ -127,7 +125,7 @@ def test_a_statutory_citation_must_name_its_provision() -> None:
     """DISCRIMINATING: without legal_ref there is no axis to judge the window on."""
     from pydantic import ValidationError
 
-    from ....core.i18n import Translatable as tr
+    from ....core.i18n.translatable import Translatable as tr
     from ..proportionality import parse_http_url
 
     with pytest.raises(ValidationError, match="must name it with legal_ref"):

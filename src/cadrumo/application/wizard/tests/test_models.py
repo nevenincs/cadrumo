@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....core.i18n import Translatable as tr
+from ....core.i18n.translatable import Translatable as tr
 from ..models import (
     WizardChoice,
     WizardCondition,

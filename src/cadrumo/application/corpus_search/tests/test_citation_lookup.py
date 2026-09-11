@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
+import shutil
 from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from test_support.registry_authoring import publish_authority_candidate
 
-from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry import authority as authority_module
 from ..citation_lookup import CitationLookup, bundled_citation_lookup
 from ..errors import CorpusSearchInputError
@@ -24,15 +23,11 @@ def compose_runtime_ports() -> Iterator[None]:
 
 @pytest.fixture(scope="module")
 def _published_authority(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """Publish the real compiler candidate as a test authority artifact."""
+    """Stage the committed authority artifact behind the runtime loader."""
     root = tmp_path_factory.mktemp("citation-authority")
     artifact_path = root / "registry" / "authority" / "authority.json"
     artifact_path.parent.mkdir(parents=True)
-    publish_authority_candidate(
-        registry_root=bundled_path("registry", "aeat"),
-        source_root=bundled_path(),
-        artifact_path=artifact_path,
-    )
+    shutil.copy2(authority_module.bundled_authority_artifact_path(), artifact_path)
     return root
 
 

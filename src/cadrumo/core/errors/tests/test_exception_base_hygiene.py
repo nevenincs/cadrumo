@@ -30,15 +30,20 @@ why two gates deliberately overlap here.
 from __future__ import annotations
 
 import ast
-import importlib
-import inspect
-import pkgutil
-from types import ModuleType
+from dataclasses import dataclass
+from functools import cache
 
 import pytest
 
-from .... import __path__ as _cadrumo_package_path
-from ....tests.inventory import production_python_files, repo_relative
+from ....tests.inventory import (
+    import_binding_map,
+    module_name,
+    production_ast_items,
+    production_python_files,
+    qualified_name,
+    repo_relative,
+    resolve_dotted_origin,
+)
 from .optional_extras import describe_optional_extras
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -53,7 +58,7 @@ _MIN_EXCEPTION_CLASSES_SCANNED = 400
 _BARE_BASE_RATIONALE_ATTR = "__bare_base_rationale__"
 
 
-def _declared_bare_base_rationale(error_type: type[BaseException]) -> str | None:
+def _declared_bare_base_rationale(error_type: type[BaseException] | _SourceExceptionClass) -> str | None:
     """Return the class's OWN bare-base rationale, or ``None`` when it declares none.
 
     Read from ``__dict__`` rather than by attribute access, deliberately: an
@@ -62,40 +67,152 @@ def _declared_bare_base_rationale(error_type: type[BaseException]) -> str | None
     per-class because the fact it records — "this class deliberately roots at a
     bare builtin" — is per-class.
     """
+    if isinstance(error_type, _SourceExceptionClass):
+        return error_type.rationale
     declared = error_type.__dict__.get(_BARE_BASE_RATIONALE_ATTR)
     return declared if isinstance(declared, str) and declared.strip() else None
 
 
-def _has_only_bare_bases(error_type: type[BaseException]) -> bool:
+def _has_only_bare_bases(error_type: type[BaseException] | _SourceExceptionClass) -> bool:
     """Whether every base of ``error_type`` is an unregistered builtin root."""
-    bare = tuple(base for base in error_type.__bases__ if base in _BARE_EXCEPTION_BASES)
+    if isinstance(error_type, _SourceExceptionClass):
+        bare = tuple(base for base in error_type.__bases__ if base.__name__ in _BARE_BASE_NAMES)
+    else:
+        bare = tuple(base for base in error_type.__bases__ if base in _BARE_EXCEPTION_BASES)
     return bool(bare) and len(bare) == len(error_type.__bases__)
 
 
-def _iter_imported_cadrumo_modules() -> list[ModuleType]:
-    modules: list[ModuleType] = []
-    for info in pkgutil.walk_packages(_cadrumo_package_path, prefix="cadrumo."):
-        name = info.name
-        if ".tests." in name or ".test_" in name or "._test_" in name:
+@dataclass(frozen=True)
+class _SourceBase:
+    """One class base as written in a production source file."""
+
+    name: str
+
+    @property
+    def __name__(self) -> str:
+        return self.name.rsplit(".", 1)[-1]
+
+
+@dataclass(frozen=True)
+class _SourceExceptionClass:
+    """Static metadata for an exception class declaration.
+
+    The former implementation imported every discovered module and reflected on
+    the resulting class objects.  This descriptor carries exactly the facts the
+    gate reads from those objects while keeping the subject set tied to the
+    production source tree, including declarations in optional branches.
+    """
+
+    module: str
+    qualname: str
+    bases: tuple[_SourceBase, ...]
+    rationale: str | None
+
+    @property
+    def __module__(self) -> str:
+        return self.module
+
+    @property
+    def __qualname__(self) -> str:
+        return self.qualname
+
+    @property
+    def __bases__(self) -> tuple[_SourceBase, ...]:
+        return self.bases
+
+
+def _source_class_qualnames(tree: ast.AST) -> dict[int, str]:
+    qualnames: dict[int, str] = {}
+
+    def visit(body: list[ast.stmt], prefix: str = "") -> None:
+        for statement in body:
+            if not isinstance(statement, ast.ClassDef):
+                continue
+            qualname = f"{prefix}.{statement.name}" if prefix else statement.name
+            qualnames[id(statement)] = qualname
+            visit(statement.body, qualname)
+
+    visit(getattr(tree, "body", []))
+    return qualnames
+
+
+@cache
+def _production_exception_classes() -> tuple[_SourceExceptionClass, ...]:
+    """Every exception class declared in the production source tree.
+
+    Class ancestry is resolved conservatively from source names and import
+    bindings.  A declaration whose base cannot be resolved is not guessed to be
+    an exception; this mirrors the old gate's ``issubclass`` subject boundary
+    without executing optional modules merely to discover what they define.
+    """
+    declarations: list[tuple[str, str, ast.ClassDef, dict[str, str]]] = []
+    for path, tree in production_ast_items():
+        bindings = import_binding_map(tree)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef):
+                declarations.append((module_name(path), _source_class_qualnames(tree)[id(node)], node, bindings))
+
+    by_qualified_name: dict[str, tuple[str, str, ast.ClassDef, dict[str, str]]] = {
+        f"{module}.{qualname}": (module, qualname, node, bindings) for module, qualname, node, bindings in declarations
+    }
+    by_bare_name: dict[str, list[str]] = {}
+    for key in by_qualified_name:
+        by_bare_name.setdefault(key.rsplit(".", 1)[-1], []).append(key)
+
+    def base_origin(module: str, base: ast.expr, bindings: dict[str, str]) -> str:
+        rendered = qualified_name(base) or ast.unparse(base)
+        return resolve_dotted_origin(rendered, bindings)
+
+    def resolve_reference(module: str, origin: str) -> str | None:
+        if origin in by_qualified_name:
+            return origin
+        leaf = origin.rsplit(".", 1)[-1]
+        local = f"{module}.{leaf}"
+        if local in by_qualified_name:
+            return local
+        candidates = by_bare_name.get(leaf, [])
+        return candidates[0] if len(candidates) == 1 else None
+
+    exception_keys = {key for key in by_qualified_name if key.rsplit(".", 1)[-1] in {"BaseException", "Exception"}}
+    exception_keys.update(
+        key for key in by_qualified_name if key.rsplit(".", 1)[-1] in {base.__name__ for base in _BARE_EXCEPTION_BASES}
+    )
+    builtin_exception_names = {base.__name__ for base in _BARE_EXCEPTION_BASES} | {"BaseException"}
+    changed = True
+    while changed:
+        changed = False
+        for module, qualname, node, bindings in declarations:
+            key = f"{module}.{qualname}"
+            if key in exception_keys:
+                continue
+            origins = [base_origin(module, base, bindings) for base in node.bases]
+            if any(
+                origin.rsplit(".", 1)[-1] in builtin_exception_names
+                or (resolved := resolve_reference(module, origin)) in exception_keys
+                for origin in origins
+            ):
+                exception_keys.add(key)
+                changed = True
+
+    result: list[_SourceExceptionClass] = []
+    for module, qualname, node, bindings in declarations:
+        if f"{module}.{qualname}" not in exception_keys:
             continue
-        modules.append(importlib.import_module(name))
-    return modules
-
-
-def _module_exception_classes(module: ModuleType) -> list[type[BaseException]]:
-    module_name = module.__name__
-    return [
-        error_type
-        for _, error_type in inspect.getmembers(module, inspect.isclass)
-        if error_type.__module__ == module_name and issubclass(error_type, BaseException)
-    ]
-
-
-def _production_exception_classes() -> list[type[BaseException]]:
-    """Every exception class defined by an importable production module."""
-    return [
-        error_type for module in _iter_imported_cadrumo_modules() for error_type in _module_exception_classes(module)
-    ]
+        bases = tuple(_SourceBase(base_origin(module, base, bindings)) for base in node.bases)
+        rationale: str | None = None
+        for statement in node.body:
+            targets: list[ast.expr] = []
+            if isinstance(statement, ast.Assign):
+                targets = list(statement.targets)
+            elif isinstance(statement, ast.AnnAssign):
+                targets = [statement.target]
+            if not any(isinstance(target, ast.Name) and target.id == _BARE_BASE_RATIONALE_ATTR for target in targets):
+                continue
+            value = statement.value
+            if isinstance(value, ast.Constant) and isinstance(value.value, str) and value.value.strip():
+                rationale = value.value
+        result.append(_SourceExceptionClass(module, qualname, bases, rationale))
+    return tuple(result)
 
 
 def test_scan_reaches_a_plausible_exception_population() -> None:

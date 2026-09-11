@@ -2,31 +2,30 @@
 
 from __future__ import annotations
 
-from datetime import timedelta, timezone
+import logging
+import sqlite3
+from datetime import UTC, datetime, timedelta, timezone
+from pathlib import Path
 
 import pytest
 
+from ......core.classification.policies import SensitivityClass
 from ......core.errors.hierarchy import CoreValidationError
 from ......core.secure_object_write import SecureObjectWrite
 from ......tests.master_key import EphemeralMasterKeyProvider
-from ...errors import DecryptionError
-from ...tests.engine_bootstrap import bootstrap_sqlite_engine
-from ._secure_objects_support import (
-    UTC,
+from ...errors import (
     ClassificationError,
+    DecryptionError,
     EnvelopeVersionError,
-    Path,
-    SecureObjectRecord,
-    SecureObjectRepository,
-    SecureObjectUnreadable,
     SecureObjectUnreadableError,
-    SensitivityClass,
     StorageValidationError,
+)
+from ...tests.engine_bootstrap import bootstrap_sqlite_engine
+from .._secure_object_records import SecureObjectRecord, SecureObjectUnreadable
+from ..secure_objects import SecureObjectRepository
+from ._secure_objects_support import (
     _ephemeral_secure_repo,
     _seed_under_key,
-    datetime,
-    logging,
-    sqlite3,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -857,7 +856,7 @@ def test_iter_records_with_failures_yields_metadata_contract_failures(tmp_path: 
         assert len(outcomes) == 2
         assert all(isinstance(item, SecureObjectUnreadable) for item in outcomes)
         reasons = {item.reason for item in outcomes if isinstance(item, SecureObjectUnreadable)}
-        from ......core.i18n import tr
+        from ......core.i18n.render import tr
 
         assert any("classification" in reason for reason in reasons)
         assert (

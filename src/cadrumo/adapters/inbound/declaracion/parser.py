@@ -32,7 +32,8 @@ from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId
 from ....core.decimal.grammar import european_thousands_reading_is_ambiguous
 from ....core.hashing import sha256_hex
-from ....core.identity import IdentityError, validate_spanish_tax_id
+from ....core.identity.documents import IdentityError
+from ....core.identity.tax_id import validate_spanish_tax_id
 from ....core.logging import get_logger
 from ....core.period import Period, PeriodError, is_administrative_period_token
 from ....core.text_fold import fold_diacritics

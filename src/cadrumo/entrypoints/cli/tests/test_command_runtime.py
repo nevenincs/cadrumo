@@ -108,9 +108,7 @@ def _graph() -> CommandSpecGraph:
             ),
         ),
         policy=_POLICY,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli.tests.test_command_runtime", "public_behavior")
-        ),
+        handler=LazyBinding.available(DeferredTarget(".test_command_runtime", "public_behavior", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget("builtins", "dict"),
@@ -189,8 +187,9 @@ def test_runtime_preserves_repeated_options_as_a_list_of_items() -> None:
                 parameters=(replace(option, multiple=True),),
                 handler=LazyBinding.available(
                     DeferredTarget(
-                        "cadrumo.entrypoints.cli.tests.test_command_runtime",
+                        ".test_command_runtime",
                         "public_multiple_behavior",
+                        __package__,
                     )
                 ),
             )
@@ -217,8 +216,9 @@ def test_runtime_preserves_repeated_options_as_a_list_of_items() -> None:
             ValueContract(
                 DeferredTarget("builtins", "str"),
                 parser=DeferredTarget(
-                    "cadrumo.entrypoints.cli.tests.test_command_runtime",
+                    ".test_command_runtime",
                     "public_parser",
+                    __package__,
                 ),
             ),
             public_parser,
@@ -307,8 +307,9 @@ def test_runtime_materializes_shared_value_and_constraint_kwargs_for_arguments_a
 def test_runtime_materializes_factory_defaults_for_arguments_and_options() -> None:
     default = ParameterDefault.from_factory(
         DeferredTarget(
-            "cadrumo.entrypoints.cli.tests.test_command_runtime",
+            ".test_command_runtime",
             "public_default_factory",
+            __package__,
         )
     )
     value = ValueContract(DeferredTarget("builtins", "str"))
@@ -343,12 +344,14 @@ def test_runtime_materializes_and_exercises_option_only_hooks() -> None:
         value=ValueContract(
             DeferredTarget("builtins", "str"),
             callback=DeferredTarget(
-                "cadrumo.entrypoints.cli.tests.test_command_runtime",
+                ".test_command_runtime",
                 "public_option_callback",
+                __package__,
             ),
             completion=DeferredTarget(
-                "cadrumo.entrypoints.cli.tests.test_command_runtime",
+                ".test_command_runtime",
                 "public_option_completion",
+                __package__,
             ),
         ),
         default=ParameterDefault.required(),
@@ -387,8 +390,9 @@ def test_runtime_materializes_and_exercises_option_only_hooks() -> None:
                 parameters=(name_option, enabled_option),
                 handler=LazyBinding.available(
                     DeferredTarget(
-                        "cadrumo.entrypoints.cli.tests.test_command_runtime",
+                        ".test_command_runtime",
                         "public_option_behavior",
+                        __package__,
                     )
                 ),
             )

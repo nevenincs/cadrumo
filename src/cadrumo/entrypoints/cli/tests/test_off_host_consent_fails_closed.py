@@ -28,7 +28,7 @@ import typer
 import yaml
 
 from ....adapters.outbound.llm.consent import OffHostEvidenceReadOutcome, classify_off_host_evidence_read
-from ....core.config import LLMProvider
+from ....core.config_support import LLMProvider
 from ....core.i18n.render import tr
 from .._ledger_evidence_cli import _OFF_HOST_REFUSAL_LOCALE_KEYS, _mint_extract_consent
 

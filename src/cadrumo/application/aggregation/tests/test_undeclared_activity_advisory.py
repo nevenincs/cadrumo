@@ -34,14 +34,14 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
-from .._renta_income_ledger import (
+from .._undeclared_activity_advisory import undeclared_activity_income_advisory_observations
+from ..renta_income_ledger import (
     RentaIncomeLedgerAggregation,
     _m131_agrarian_activity_codes,
     aggregate_renta_income_ledger,
     aggregate_renta_m131_agrario_income_ledger,
 )
-from .._source_mesh import CalculationSourceDiagnostic
-from .._undeclared_activity_advisory import undeclared_activity_income_advisory_observations
+from ..source_mesh import CalculationSourceDiagnostic
 from .renta_income_aggregation_support import _raw_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

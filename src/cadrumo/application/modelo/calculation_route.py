@@ -6,22 +6,24 @@ from dataclasses import dataclass
 from typing import Literal, cast
 
 from ...core.aggregation import BindingSourceKind
-from ..aggregation import (
-    AtribucionMemberSourceResolver,
-    ForeignAssetsAggregationSourceResolver,
-    InventorySourceResolver,
+from ..aggregation.atribucion_member import AtribucionMemberSourceResolver
+from ..aggregation.foreign_assets import ForeignAssetsAggregationSourceResolver
+from ..aggregation.inventory import InventorySourceResolver
+from ..aggregation.modelo_bindings import (
     LedgerImpatriadoIncomeAggregationSourceResolver,
     LedgerIrnrIncomeAggregationSourceResolver,
     LedgerIvaAggregationSourceResolver,
     LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
     LedgerRentaIncomeAggregationSourceResolver,
-    ModeloSourceResolver,
-    OssIossLedgerSourceResolver,
-    ProfileSourceResolver,
-    WithholdingSourceResolver,
 )
 from ..aggregation.modelo_bindings_renta_expenses import LedgerRentaGastosEstimacionDirectaAggregationSourceResolver
 from ..aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
+from ..aggregation.oss_ioss import OssIossLedgerSourceResolver
+from ..aggregation.source_mesh import (
+    ModeloSourceResolver,
+)
+from ..aggregation.source_profile import ProfileSourceResolver
+from ..aggregation.withholding_source import WithholdingSourceResolver
 from ..calculations.bienes_inversion_regularizacion import BienesInversionRegularizacionSourceResolver
 from ..calculations.iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
 from ..calculations.iva_wallet_reconciliation import IvaWalletDecisionSourceResolver

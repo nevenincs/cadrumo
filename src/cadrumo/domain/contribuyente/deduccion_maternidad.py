@@ -12,19 +12,61 @@ from collections.abc import Container
 
 
 def _resolve_maternidad_figure(filing_year: int, slug: str) -> int:
-    """Read one Art. 81.1 maternidad figure from its dated Modelo 100 parameter.
+    """Read one Art. 81.1 figure from the published authority.
 
-    The registry is the causal authority: a missing revision or parameter is a
-    grounding defect and raises :class:`RegistryValidationError`; the
-    arithmetic has no undated fallback authority.
+    The three 2025 Modelo 100 parameters are also projected into the typed
+    governed-fact catalogue. Consume that projection when its exact
+    year/parameter coordinate is published; earlier years retain the existing
+    exact-year Modelo 100 parameter lookup because no generated projection is
+    declared for them. Neither path has an undated or numeric fallback.
 
     Returns:
         The integer euro figure the registry declares for ``filing_year``.
     """
     from datetime import date
+    from typing import cast
 
     from ...core.modelo import Modelo
+    from ..calculations.registry.authority import bundled_authority
+    from ..calculations.registry.facts.modelo_parameter_fact import ModeloParameterFact
+    from ..calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
+    from ..calculations.registry.facts.schema import FactSelector
     from ..calculations.registry.formula_runtime_ops import read_parameter
+    from ..calculations.registry.schema_base import DateAxis
+
+    projection_fact_ids = {
+        "mensual": ModeloParameterFact.MATERNITY_MONTHLY_DEDUCTION,
+        "cap-anual": ModeloParameterFact.MATERNITY_ANNUAL_CAP,
+        "alta-posterior-incremento": ModeloParameterFact.MATERNITY_POST_ENROLLMENT_INCREMENT,
+    }
+    authority = bundled_authority()
+    fact_id = projection_fact_ids.get(slug)
+    parameter_id = f"renta-{filing_year}-maternidad-{slug}"
+    effective_date = date(filing_year, 12, 31)
+    fact = authority.catalogues.facts.facts.get(fact_id) if fact_id is not None else None
+    expected_selectors = frozenset({("modelo", "100"), ("parameter_id", parameter_id)})
+    if (
+        fact_id is not None
+        and fact is not None
+        and any(
+            variant.valid_from <= effective_date
+            and (variant.valid_to is None or effective_date <= variant.valid_to)
+            and frozenset((selector.name, selector.value) for selector in variant.selectors) == expected_selectors
+            for variant in fact.variants
+        )
+    ):
+        resolved = authority.resolve_governed_fact(
+            ScalarFactQuery(
+                fact_id=fact_id,
+                date_axis=DateAxis.FILING_PERIOD,
+                effective_date=effective_date,
+                selectors=(
+                    FactSelector(name="modelo", value="100"),
+                    FactSelector(name="parameter_id", value=parameter_id),
+                ),
+            ),
+        )
+        return int(cast(ResolvedScalarFact, resolved).payload.value)
 
     return int(
         read_parameter(

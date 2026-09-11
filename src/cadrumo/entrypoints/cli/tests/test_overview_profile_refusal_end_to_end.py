@@ -22,8 +22,8 @@ from click.testing import Result
 
 from ....application.user_profile.preflight import build_profile_preflight_requirement
 from ....domain.user_profile.loader import load_user_profile_schema
-from ....tests.cli_runner import invoke_cached_cli
 from ._overview_calendar_support import calendar_backend_omitting_gating_facts
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

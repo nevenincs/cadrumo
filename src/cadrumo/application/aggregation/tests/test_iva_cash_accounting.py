@@ -27,9 +27,11 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import (
+from ..iva_ledger import (
     IvaLedgerAggregation,
     aggregate_iva_ledger_observations_from_repositories,
+)
+from ..m303_arrivals import (
     resolve_m303_supplier_regime_arrival,
 )
 from .iva_authority_support import aggregate_iva_ledger_observations

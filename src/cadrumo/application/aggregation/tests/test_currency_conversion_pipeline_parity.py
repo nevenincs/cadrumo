@@ -33,7 +33,7 @@ production classification function for every pipeline that gates on
   ``invoice.base_total``/``invoice.iva_total`` (native) instead of the
   ``invoice.base_total_eur``/``invoice.iva_total_eur`` properties that already
   exist on ``Invoice`` for exactly this purpose (and are used correctly in
-  ``_invoice_retencion.py``). Both are fixed here.
+  ``invoice_retencion.py``). Both are fixed here.
 - ``_iva_transaction._substrate_admission_issue`` (IVA ledger) -- already
   correct, refuses a converted row outright because its tax substrate
   (``taxable_base``/``iva_amount``) stays native-currency; this is a
@@ -49,7 +49,7 @@ A wider sweep of ``application/`` for the same SHAPE -- any native-currency
 read for a EUR-denominated purpose, not just these five sites -- found two
 more, on the Invoice/InvoiceLine side rather than Transaction:
 
-- ``_modelo_bindings.py`` (M303 general IVA screen,
+- ``modelo_bindings.py`` (M303 general IVA screen,
   ``_screened_invoice_line_observations`` and its dispatch tree) built every
   ``IvaLedgerObservation`` straight from ``line.subtotal``/``line.iva_amount``
   -- native to ``invoice.currency`` -- with NO currency check anywhere in the
@@ -106,17 +106,17 @@ from ....domain.resources.registry import resources
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from .._impatriado_income_ledger import (
+from .._iva_transaction import _substrate_admission_issue
+from .._modelo_bindings_invoice_iva import _screened_invoice_line_observations
+from ..impatriado_income_ledger import (
     ImpatriadoIncomeLedgerAggregationIssue,
     _classify_impatriado_income_transaction,
 )
-from .._iva_transaction import _substrate_admission_issue
-from .._modelo_bindings_invoice_iva import _screened_invoice_line_observations
-from .._oss_ioss import _candidate_for_invoice_line
-from .._renta_gasto_ledger import RentaGastoLedgerAggregationIssue, _classify_gasto_transaction
-from .._renta_income_ledger import RentaIncomeLedgerAggregationIssue, _classify_income_transaction
-from .._renta_ledger import RentaLedgerAggregationIssue, _classify_renta_transaction
 from ..iva_ledger import IvaLedgerAggregationIssueReason
+from ..oss_ioss import _candidate_for_invoice_line
+from ..renta_gasto_ledger import RentaGastoLedgerAggregationIssue, _classify_gasto_transaction
+from ..renta_income_ledger import RentaIncomeLedgerAggregationIssue, _classify_income_transaction
+from ..renta_ledger import RentaLedgerAggregationIssue, _classify_renta_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -437,7 +437,7 @@ def _converted_usd_invoice(
 def test_modelo_bindings_iva_screen_converts_invoice_line_amounts() -> None:
     """FIXED: the M303 general IVA screen reads EUR, not native invoice-line amounts.
 
-    ``_modelo_bindings.py`` built every ``IvaLedgerObservation`` straight from
+    ``modelo_bindings.py`` built every ``IvaLedgerObservation`` straight from
     ``line.subtotal``/``line.iva_amount`` with no currency check anywhere in
     the file, feeding M303's IVA aggregation at the invoice's native
     magnitude.

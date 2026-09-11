@@ -23,8 +23,8 @@ from click.testing import Result
 
 from ....domain.transactions.models import derive_transaction_id
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
-from ....tests.cli_runner import invoke_cached_cli
 from ._ledger_seeded_profile_fixture import _isolated_backend
+from .cli_runner import invoke_cached_cli
 
 __all__ = ["_isolated_backend"]
 

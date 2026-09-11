@@ -62,7 +62,7 @@ if TYPE_CHECKING:
     # Annotation-only: `from __future__ import annotations` keeps this lazy so the
     # state-free CLI surface pays no runtime aggregation-import cost, matching the
     # calculate module's own deferral of the same type.
-    from ...application.aggregation import CalculationSourceDiagnostic
+    from ...application.aggregation.source_mesh import CalculationSourceDiagnostic
 
 _EXTEMPORANEOUS_RECARGO_LEGAL_REF = "ley-58-2003:art-27.2"
 _M184_SOCIO_HANDOFF_CODE = "modelo.work.m184_socio_handoff"

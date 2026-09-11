@@ -9,7 +9,7 @@ from typing import NamedTuple
 
 import pytest
 
-from .....tests import (
+from .....tests.inventory import (
     ast_for_path,
     leaf_name,
     non_test_package_python_files,

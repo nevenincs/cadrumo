@@ -49,12 +49,10 @@ MODELO_NONWORK_FILING_RECORD_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_MODEL_READ,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_records_cli", "filing_record_list")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._modelo_records_cli", "filing_record_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_payloads", "ModeloRecordListResult"),
+            DeferredTarget("._modelo_payloads", "ModeloRecordListResult", __package__),
             identity="modelo.filing_record.list",
         ),
     ),
@@ -68,12 +66,10 @@ MODELO_NONWORK_FILING_RECORD_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(_required_text_argument("filing_record_id", "cli.app.modelo.filing_record.filing_record_id_help"),),
         policy=_MODEL_READ,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_records_cli", "filing_record_show")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._modelo_records_cli", "filing_record_show", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_payloads", "ModeloRecordShowResult"),
+            DeferredTarget("._modelo_payloads", "ModeloRecordShowResult", __package__),
             identity="modelo.filing_record.view",
         ),
     ),
@@ -90,7 +86,9 @@ MODELO_NONWORK_FILING_RECORD_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="evidence_kind",
                 declarations=("--evidence-kind",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.modelos.filing_record", "ExternalEvidenceKind")),
+                value=ValueContract(
+                    DeferredTarget("...domain.modelos.filing_record", "ExternalEvidenceKind", __package__)
+                ),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.modelo.filing_record.evidence_kind_help"),
                 multiple=False,
@@ -129,12 +127,10 @@ MODELO_NONWORK_FILING_RECORD_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_MODEL_WRITE,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_records_cli", "filing_record_import")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._modelo_records_cli", "filing_record_import", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_payloads", "FilingRecordImportResult"),
+            DeferredTarget("._modelo_payloads", "FilingRecordImportResult", __package__),
             identity="modelo.filing_record.import",
         ),
     ),
@@ -174,11 +170,11 @@ MODELO_NONWORK_FILING_RECORD_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_MODEL_WRITE,
         handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_records_cli", "filing_record_observe_local")
+            DeferredTarget("._modelo_records_cli", "filing_record_observe_local", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_payloads", "FilingRecordLocalObservationResult"),
+            DeferredTarget("._modelo_payloads", "FilingRecordLocalObservationResult", __package__),
             identity="modelo.filing_record.observe_local",
         ),
     ),

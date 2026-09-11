@@ -37,6 +37,7 @@ from ._ledger_binding_resolution import (
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import invariant_diagnostics, selector_against_model
 from .binding_selector_utils import selector_as_dict as _selector_as_dict
+from .binding_targets import casillas_by_binding
 from .errors import RegistryValidationError
 from .ids import BindingId
 from .ledger_binding_selector_support import LedgerIvaFact, LedgerIvaFactValue
@@ -286,6 +287,232 @@ def iva_ledger_selector(binding: DataBindingDefinition) -> _IvaLedgerSelector:
         return _IvaLedgerSelector.model_validate(_selector_as_dict(binding))
     except (ValueError, TypeError) as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed ledger_iva_aggregation selector") from exc
+
+
+class IvaLedgerScreenBinding(NamedTuple):
+    """One selected-revision binding used by the invoice-versus-ledger screen.
+
+    The screen is deliberately selected from the typed IVA selector rather than
+    from binding IDs authored in application code.  Keeping the parsed selector
+    alongside its ID lets callers retain the category/rate/flow provenance when
+    producing diagnostics without introducing a second selector representation.
+    """
+
+    binding_id: BindingId
+    selector: _IvaLedgerSelector
+
+
+class _InvoiceLedgerScreenShape(NamedTuple):
+    """The selector axes that identify one invoice-screen slot."""
+
+    categories: tuple[IvaCategory, ...]
+    rate_kinds: tuple[IvaRateKind, ...]
+    flow_direction: IvaFlowDirection
+    fact: LedgerIvaFact
+
+
+_INVOICE_LEDGER_SCREEN_CASH_ACCOUNTING_TREATMENTS: tuple[IvaCashAccountingTreatment, ...] = (
+    IvaCashAccountingTreatment.NONE,
+    IvaCashAccountingTreatment.TAXPAYER_REGIME,
+    IvaCashAccountingTreatment.SUPPLIER_REGIME,
+)
+_INVOICE_LEDGER_SCREEN_OBSERVATION_ROLES: tuple[IvaLedgerObservationRole, ...] = (IvaLedgerObservationRole.SETTLEMENT,)
+_INVOICE_LEDGER_SCREEN_RATE_SLOTS: tuple[_InvoiceLedgerScreenShape, ...] = (
+    _InvoiceLedgerScreenShape(
+        (IvaCategory.DOMESTIC_GENERAL,),
+        (IvaRateKind.GENERAL,),
+        IvaFlowDirection.REPERCUTIDO,
+        LedgerIvaFact.IVA_AMOUNT_SUM,
+    ),
+    _InvoiceLedgerScreenShape(
+        (IvaCategory.DOMESTIC_REDUCED,),
+        (IvaRateKind.REDUCED,),
+        IvaFlowDirection.REPERCUTIDO,
+        LedgerIvaFact.IVA_AMOUNT_SUM,
+    ),
+    _InvoiceLedgerScreenShape(
+        (IvaCategory.DOMESTIC_SUPER_REDUCED,),
+        (IvaRateKind.SUPER_REDUCED,),
+        IvaFlowDirection.REPERCUTIDO,
+        LedgerIvaFact.IVA_AMOUNT_SUM,
+    ),
+    _InvoiceLedgerScreenShape(
+        (
+            IvaCategory.DOMESTIC_GENERAL,
+            IvaCategory.DOMESTIC_REDUCED,
+            IvaCategory.DOMESTIC_SUPER_REDUCED,
+        ),
+        (
+            IvaRateKind.GENERAL,
+            IvaRateKind.REDUCED,
+            IvaRateKind.SUPER_REDUCED,
+        ),
+        IvaFlowDirection.SOPORTADO,
+        LedgerIvaFact.IVA_AMOUNT_SUM,
+    ),
+    _InvoiceLedgerScreenShape(
+        (IvaCategory.DOMESTIC_GENERAL,),
+        (IvaRateKind.GENERAL,),
+        IvaFlowDirection.REPERCUTIDO,
+        LedgerIvaFact.RECARGO_AMOUNT_SUM,
+    ),
+    _InvoiceLedgerScreenShape(
+        (IvaCategory.DOMESTIC_REDUCED,),
+        (IvaRateKind.REDUCED,),
+        IvaFlowDirection.REPERCUTIDO,
+        LedgerIvaFact.RECARGO_AMOUNT_SUM,
+    ),
+    _InvoiceLedgerScreenShape(
+        (IvaCategory.DOMESTIC_SUPER_REDUCED,),
+        (IvaRateKind.SUPER_REDUCED,),
+        IvaFlowDirection.REPERCUTIDO,
+        LedgerIvaFact.RECARGO_AMOUNT_SUM,
+    ),
+)
+_INVOICE_LEDGER_SCREEN_SHAPE_SET = frozenset(_INVOICE_LEDGER_SCREEN_RATE_SLOTS)
+_INVOICE_LEDGER_SCREEN_DOMESTIC_CATEGORIES = frozenset(
+    {
+        IvaCategory.DOMESTIC_GENERAL,
+        IvaCategory.DOMESTIC_REDUCED,
+        IvaCategory.DOMESTIC_SUPER_REDUCED,
+    },
+)
+_INVOICE_LEDGER_SCREEN_RATE_KINDS = frozenset(
+    {
+        IvaRateKind.GENERAL,
+        IvaRateKind.REDUCED,
+        IvaRateKind.SUPER_REDUCED,
+    },
+)
+_INVOICE_LEDGER_SCREEN_FACTS = frozenset(
+    {
+        LedgerIvaFact.IVA_AMOUNT_SUM,
+        LedgerIvaFact.RECARGO_AMOUNT_SUM,
+    },
+)
+_INVOICE_LEDGER_SCREEN_MODELOS = frozenset({"303", "390"})
+
+
+def _is_invoice_ledger_screen_candidate(
+    revision: ModeloRevision,
+    binding: DataBindingDefinition,
+    selector: _IvaLedgerSelector,
+    *,
+    modelo: str,
+) -> bool:
+    """Return whether a binding has the screen's typed candidate envelope.
+
+    ``applied_rates`` is an orthogonal rate-layer axis.  M390's rate-specific
+    annual boxes are not screen candidates because its conceptual total rows
+    are rate-blind.  M303's ordinary reduced/super-reduced rows are qualified
+    by a rate, while the same revision also declares supplemental transitional
+    rungs.  The selected casilla continuity target distinguishes those layers:
+    a target carrying the revision's transitional qualifier is a separate rung,
+    not the conceptual screen slot.  This keeps the distinction in authored
+    registry target identity rather than copying a rate fact into Python.
+    """
+    if selector.applied_rates is not None:
+        if modelo != "303":
+            return False
+        target_ids = casillas_by_binding(revision).get(binding.id, ())
+        if not target_ids:
+            return False
+        if any("transitorio" in str(target_id).casefold() for target_id in target_ids):
+            return False
+    return (
+        selector.exemption_articles is None
+        and selector.observation_roles == _INVOICE_LEDGER_SCREEN_OBSERVATION_ROLES
+        and selector.cash_accounting_treatments == _INVOICE_LEDGER_SCREEN_CASH_ACCOUNTING_TREATMENTS
+        and selector.flow_direction in {IvaFlowDirection.REPERCUTIDO, IvaFlowDirection.SOPORTADO}
+        and selector.fact in _INVOICE_LEDGER_SCREEN_FACTS
+        and set(selector.categories).issubset(_INVOICE_LEDGER_SCREEN_DOMESTIC_CATEGORIES)
+        and set(selector.rate_kinds).issubset(_INVOICE_LEDGER_SCREEN_RATE_KINDS)
+    )
+
+
+def _invoice_ledger_screen_shape(selector: _IvaLedgerSelector) -> _InvoiceLedgerScreenShape:
+    return _InvoiceLedgerScreenShape(
+        categories=selector.categories,
+        rate_kinds=selector.rate_kinds,
+        flow_direction=selector.flow_direction,
+        fact=selector.fact,
+    )
+
+
+def invoice_ledger_screen_bindings(
+    revision: ModeloRevision,
+    *,
+    modelo: str,
+) -> tuple[IvaLedgerScreenBinding, ...]:
+    """Resolve the invoice screen's seven typed bindings from a revision.
+
+    The invoice-versus-ledger refusal applies only to the M303 and M390
+    revisions.  For every other modelo the empty result preserves the previous
+    non-applicability contract.  For an applicable modelo, all seven shapes
+    must be present exactly once; an incomplete, duplicate, cross-model, or
+    unknown screen-shaped binding raises a registry validation error rather than
+    silently weakening the screen.
+
+    Binding IDs are returned in a stable conceptual order (three IVA output
+    tiers, domestic input IVA, then three recargo tiers).  The IDs are merely
+    selected outputs; the selector is the authority used to identify them.
+    """
+    if modelo not in _INVOICE_LEDGER_SCREEN_MODELOS:
+        return ()
+
+    expected_by_shape: dict[_InvoiceLedgerScreenShape, list[IvaLedgerScreenBinding]] = {
+        shape: [] for shape in _INVOICE_LEDGER_SCREEN_RATE_SLOTS
+    }
+    expected_prefix = f"modelo-{modelo}-"
+    for binding in revision.bindings:
+        if binding.source != BindingSourceKind.LEDGER_IVA_AGGREGATION:
+            continue
+        selector = iva_ledger_selector(binding)
+        if not _is_invoice_ledger_screen_candidate(
+            revision,
+            binding,
+            selector,
+            modelo=modelo,
+        ):
+            continue
+        shape = _invoice_ledger_screen_shape(selector)
+        if shape not in _INVOICE_LEDGER_SCREEN_SHAPE_SET:
+            raise RegistryValidationError(
+                f"revision {revision.id!r} modelo {modelo!r} has an unknown "
+                f"invoice IVA screen selector shape {shape!r} on binding {binding.id!r}",
+            )
+        if not str(binding.id).startswith(expected_prefix):
+            raise RegistryValidationError(
+                f"revision {revision.id!r} modelo {modelo!r} has cross-model invoice IVA screen binding {binding.id!r}",
+            )
+        expected_by_shape[shape].append(IvaLedgerScreenBinding(binding.id, selector))
+
+    selected: list[IvaLedgerScreenBinding] = []
+    for shape in _INVOICE_LEDGER_SCREEN_RATE_SLOTS:
+        matches = expected_by_shape[shape]
+        if len(matches) != 1:
+            state = "missing" if not matches else "duplicate"
+            raise RegistryValidationError(
+                f"revision {revision.id!r} modelo {modelo!r} invoice IVA screen "
+                f"shape is {state}: expected exactly one, got {len(matches)} for {shape!r}",
+            )
+        selected.append(matches[0])
+
+    selected_ids = tuple(item.binding_id for item in selected)
+    if len(set(selected_ids)) != len(selected_ids):
+        raise RegistryValidationError(
+            f"revision {revision.id!r} modelo {modelo!r} invoice IVA screen resolved duplicate binding IDs",
+        )
+    return tuple(selected)
+
+
+def invoice_ledger_screen_binding_ids(
+    revision: ModeloRevision,
+    *,
+    modelo: str,
+) -> tuple[BindingId, ...]:
+    """Return the selected revision's stable invoice-screen binding IDs."""
+    return tuple(item.binding_id for item in invoice_ledger_screen_bindings(revision, modelo=modelo))
 
 
 def validate_ledger_iva_aggregation_binding_definition(

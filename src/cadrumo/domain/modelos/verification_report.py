@@ -33,7 +33,7 @@ from pydantic import BaseModel, Field, StringConstraints, field_serializer, fiel
 from ...core.casilla_id import CasillaId
 from ...core.hashing import content_hash_hex
 from ...core.identifier_grammar import FIELD_KEY_PATTERN, NAMESPACED_ID_PATTERN
-from ...core.identity import CalculationRevisionId, VerificationReportId
+from ...core.identity.hex_ids import CalculationRevisionId, VerificationReportId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import OperatorActionAxis
 from ...core.time.utc import UtcInstant, validate_utc_aware

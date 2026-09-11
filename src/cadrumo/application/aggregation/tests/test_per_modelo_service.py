@@ -8,7 +8,7 @@ source-mesh parity, and the retenciones collapse onto
 :meth:`~application.aggregation.RetencionesAggregationSourceResolver.aggregate`.
 
 See Also:
-    :mod:`~application.aggregation._service`
+    :mod:`~application.aggregation.service`
         Service contracts and dispatch implementation under test.
     :func:`~application.aggregation.get_per_modelo_aggregation_contract`
         Backend-owned provider/source-kind contract asserted by this module.
@@ -16,7 +16,7 @@ See Also:
         Strict command envelope that selects the provider family.
     :class:`~application.aggregation.PerModeloAggregationResult`
         Typed result envelope checked for provider/payload coherence.
-    :class:`~application.aggregation.ForeignAssetsAggregationSourceResolver`
+    :class:`~application.aggregation.foreign_assets.ForeignAssetsAggregationSourceResolver`
         Foreign-assets resolver compared with Modelo 720 row projections.
 """
 
@@ -29,52 +29,58 @@ from types import SimpleNamespace
 import pytest
 from pydantic import ValidationError
 
-from ....core.aggregation import BindingSourceKind
+from ....core.aggregation import (
+    COUNTERPART_SOURCE_KIND_ORDER,
+    BindingSourceKind,
+    CounterpartSourceKind,
+    ForeignAssetClass,
+    OperationKind347,
+    RetencionScheme,
+)
 from ....core.errors.error_codes import get_registered_error_code
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
 from ....domain.calculations.registry.detail_record_bindings import resolve_foreign_asset_binding_row_values
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
-from .. import (
-    ACCEPTED_SOURCE_KINDS,
-    AggregationErrorCodes,
-    AggregationUnsupportedModeloError,
+from .._preconditions import AggregationPreconditionCondition
+from ..counterpart import (
     CounterpartAggregation,
     CounterpartObservation,
-    ForeignAssetClass,
+    declarable_counterparty_nifs_347,
+)
+from ..errors import (
+    AggregationUnsupportedModeloError,
+)
+from ..foreign_assets import (
     ForeignAssetIngestObservation,
     ForeignAssetsAggregation,
-    PerModeloAggregationCommand,
-    PerModeloAggregationContributor,
-    PerModeloAggregationLogFields,
-    PerModeloAggregationResult,
+    ForeignAssetsAggregationSourceResolver,
+    _registry_observations_from_foreign_assets_aggregation,
+    aggregate_foreign_assets_720,
+    declarable_asset_classes_720,
+)
+from ..modelo_bindings_retenciones import RetencionesAggregationSourceResolver
+from ..retenciones import (
     RetencionesAggregation,
     RetencionObservation,
-    RetencionScheme,
-    aggregate_per_modelo,
     aggregate_retenciones_111,
     aggregate_retenciones_115,
     aggregate_retenciones_123,
     aggregate_retenciones_180,
     aggregate_retenciones_190,
     aggregate_retenciones_193,
-    declarable_asset_classes_720,
-    declarable_counterparty_nifs_347,
+)
+from ..service import (
+    AggregationErrorCodes,
+    PerModeloAggregationCommand,
+    PerModeloAggregationContributor,
+    PerModeloAggregationLogFields,
+    PerModeloAggregationResult,
+    aggregate_per_modelo,
     get_per_modelo_aggregation_contract,
 )
-from .._counterpart import (
-    CounterpartSourceKind,
-    OperationKind347,
-)
-from .._foreign_assets import (
-    ForeignAssetsAggregationSourceResolver,
-    _registry_observations_from_foreign_assets_aggregation,
-    aggregate_foreign_assets_720,
-)
-from .._preconditions import AggregationPreconditionCondition
-from .._source_mesh import CalculationSourceContext
-from ..modelo_bindings_retenciones import RetencionesAggregationSourceResolver
+from ..source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -162,7 +168,7 @@ def test_contract_maps_supported_modelos_to_application_aggregation_owner() -> N
     contract = get_per_modelo_aggregation_contract()
 
     assert contract.service_owner == "cadrumo.application.aggregation"
-    assert contract.accepted_source_kinds == ACCEPTED_SOURCE_KINDS
+    assert contract.accepted_source_kinds == COUNTERPART_SOURCE_KIND_ORDER
     assert contract.error_codes == AggregationErrorCodes
     by_provider = {provider.provider: provider for provider in contract.providers}
     assert by_provider[PerModeloAggregationContributor.RETENCIONES].modelos == (
@@ -713,7 +719,7 @@ def test_service_surface_has_no_cli_dependency() -> None:
 
         for module_name in (
             "cadrumo.application.aggregation",
-            "cadrumo.application.aggregation._service",
+            "cadrumo.application.aggregation.service",
         ):
             importlib.import_module(module_name)
 

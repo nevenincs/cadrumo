@@ -22,50 +22,31 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
-from functools import cache
 
 import pytest
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.calculations.registry.tests._modelo_100_registry_support import (
-    _m100_2024_deduccion_maternidad_bindings,
-)
-from cadrumo.tests.registry_snapshot import build_snapshot
+from cadrumo.domain.contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
 
-from ..compiler.loader import load_registry_tree
+from ..formula_runtime import calculate_registry_snapshot
+from ..schema import RegistrySnapshot
+from ._published_authority import artifact_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
-_SOURCE_ROOT = bundled_path()
 _MINIMO_CONTRIBUYENTE_ESTATAL_CASILLA: CasillaId = validated_casilla_id(
     "0511",
     surface="_MINIMO_CONTRIBUYENTE_ESTATAL_CASILLA",
 )
 
 
-@cache
-def _registry():
-    """Load the registry tree once for the session."""
-    # Import for side-effect: cross-domain snapshot checks.
-
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    return {m.id: m for m in modelos}, catalogues
-
-
 def _snapshot(filing_year: int) -> RegistrySnapshot:
-    """Build an M100 snapshot for the given filing_year, bypassing corpus validation."""
-    modelos_by_id, catalogues = _registry()
-    return build_snapshot(
-        modelos_by_id["100"],
-        catalogues,
-        source_root=_SOURCE_ROOT,
-        filing_year=filing_year,
-        period="0A",
-    )
+    """Load the committed M100 artifact for the requested filing year."""
+    return artifact_snapshot("100", filing_year, "0A")
+
+
+def _m100_2024_deduccion_maternidad_bindings() -> dict[str, Decimal]:
+    return {"renta-2024-profile-deduccion-maternidad": Decimal(compute_deduccion_maternidad_0611([], filing_year=2024))}
 
 
 # Relation values required by the 2024 snapshot (zero - not exercised).

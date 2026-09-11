@@ -28,7 +28,7 @@ from ...domain.transactions.enums import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from ..aggregation import invoice_kind_for_direction
+from ..aggregation.invoice_kind import invoice_kind_for_direction
 from .preconditions import build_modelo_precondition_failure
 
 
@@ -78,7 +78,7 @@ def _enum_or_unparseable[EnumT: StrEnum](enum_type: type[EnumT], value: str) -> 
 
 # ALT-EVIDENCE-GRADE-RATIONALE-LEDGER-GATE: deliberately looser, on the
 # attachment_ids axis, than the calculate-path deductible-side test
-# application.aggregation._evidence_advisory._row_has_deduction_grade_evidence
+# application.aggregation.evidence_advisory._row_has_deduction_grade_evidence
 # (LIVA art. 97 enumerative there); tightening it here would create an
 # unrecoverable finalized-revision dead end -- see the divergence paragraph
 # in this docstring below for why it is recorded rather than closed.
@@ -86,7 +86,7 @@ def _row_has_linked_evidence(row: LedgerEvidenceRow) -> bool:
     """Return whether the bundled row carries any linked evidence at all.
 
     ``invoice_id`` is credited here for the same reason it is credited at
-    verify time (:func:`~application.aggregation._evidence_advisory._row_has_deduction_grade_evidence`):
+    verify time (:func:`~application.aggregation.evidence_advisory._row_has_deduction_grade_evidence`):
     without it, a row verify granted specifically BECAUSE it carried a linked,
     validated ``Invoice`` -- and only that -- would bundle with
     ``purchase_invoice_evidence_id`` and ``attachment_ids`` both empty, and

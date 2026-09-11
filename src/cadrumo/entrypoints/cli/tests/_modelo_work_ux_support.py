@@ -11,11 +11,11 @@ from ....application.wizard import catalogue as _wizard_catalogue
 from ....application.wizard import persistence as _wizard_persistence
 from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.temporal import select_revision
-from ....tests.cli_runner import invoke_cached_cli
-from ....tests.modelo_cli import create_modelo_work_unit_via_cli
-from ....tests.registry_tree import bundled_registry_tree
+from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from ....tests.user_profile import register_cli_profile
+from .cli_runner import invoke_cached_cli
+from .modelo_cli import create_modelo_work_unit_via_cli
 
 _WIZARD_REGISTRATION_MODULES = (_wizard_catalogue, _wizard_persistence)
 _PROFILE_LABEL = "operator"

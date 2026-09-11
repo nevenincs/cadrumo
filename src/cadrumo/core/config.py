@@ -9,7 +9,8 @@ while AEAT and Sede route and selector defaults come from
 
 The storage boundary exposed here is also deliberate. Database URL derivation,
 active-profile bucket routing, and route classification are surfaced through
-:class:`StorageRouteClassification`, :func:`classify_storage_route`, and
+:class:`~core.config_support.StorageRouteClassification`,
+:func:`classify_storage_route`, and
 :func:`settings_for_active_profile_bucket` so write guards do not re-parse SQL
 URLs or active-profile pointers independently.
 """
@@ -33,43 +34,15 @@ from pydantic_settings import (
 
 from . import _config_runtime, _config_validation
 from . import config_live_tests as _live_test_config
+from . import config_support as _config_support
 from .auth_provider import AuthProviderKind as _AuthProviderKind
-from .config_integration_fields import (
-    # public re-export for storage adapters
-    FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME as FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME,
-)
 from .config_llm_fields import CadrumoLlmSettings
-from .config_state_root import (
-    FORMER_PRODUCT_DATABASE_FILENAME as FORMER_PRODUCT_DATABASE_FILENAME,  # public re-export for storage adapters
-)
 from .config_state_root import (
     default_storage_root,
 )
 from .config_storage_route import classify_storage_route_for_settings, settings_for_bucket_route
 from .config_support import (
-    AEAT_CERTIFICATE_PROTECTED_ORIGIN as AEAT_CERTIFICATE_PROTECTED_ORIGIN,  # public certificate route authority
-)
-from .config_support import (
-    AEAT_CERTIFICATE_PROTECTED_PATH as AEAT_CERTIFICATE_PROTECTED_PATH,  # public certificate route authority
-)
-from .config_support import (
-    AEAT_CERTIFICATE_PROTECTED_URL as AEAT_CERTIFICATE_PROTECTED_URL,  # public certificate route authority
-)
-from .config_support import (
     JustificanteParserBackendSetting,
-    SecretStoreBackend,
-    StorageRouteClassification,
-    TuiAppearance,
-    coerce_output_language_setting,
-)
-from .config_support import (
-    LLMProvider as LLMProvider,  # public re-export from cadrumo.core.config
-)
-from .config_support import (
-    StorageRouteKind as StorageRouteKind,  # public re-export from cadrumo.core.config
-)
-from .config_support import (
-    assert_canonical_protected_resource as assert_canonical_protected_resource,  # public certificate route authority
 )
 from .config_support import default_aeat_sede_origin as _default_aeat_sede_origin
 from .config_support import default_aeat_sede_origin_with_slash as _default_aeat_sede_origin_with_slash
@@ -80,9 +53,6 @@ from .config_support import default_clave_sede_access_url_template as _default_c
 from .config_support import default_sede_expedientes_path as _default_sede_expedientes_path
 from .config_support import default_status_detail_url_template as _default_status_detail_url_template
 from .config_support import default_status_notificaciones_path as _default_status_notificaciones_path
-from .config_support import (
-    unwrap_optional_secret as unwrap_optional_secret,  # public re-export from cadrumo.core.config
-)
 from .external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from .paths import normalize_project_relative_path
 from .resources.bundled_data import bundled_path
@@ -98,8 +68,6 @@ if TYPE_CHECKING:
 DEV_TEST_DATABASE_PASSWORD = "aeat-dev-test-database-password"
 """Shared development/test password for database-backed secure-storage tests."""
 """Environment variable backing :attr:`Settings.cadrumo_dev_test_database_password`."""
-LIVE_READ_TEST_OPT_IN_SETTINGS_FIELD = _live_test_config.LIVE_READ_TEST_OPT_IN_SETTINGS_FIELD
-LIVE_READ_TEST_OPT_IN_ENV_VAR = _live_test_config.LIVE_READ_TEST_OPT_IN_ENV_VAR
 LIVE_READ_TEST_OPT_IN_VALUE = _live_test_config.LIVE_READ_TEST_OPT_IN_VALUE
 LIVE_READ_TEST_GOOGLE_OPT_IN_SETTINGS_FIELD = _live_test_config.LIVE_READ_TEST_GOOGLE_OPT_IN_SETTINGS_FIELD
 LIVE_READ_TEST_GOOGLE_OPT_IN_ENV_VAR = _live_test_config.LIVE_READ_TEST_GOOGLE_OPT_IN_ENV_VAR
@@ -226,8 +194,8 @@ class Settings(CadrumoLlmSettings):
         default="",
         description="Optional default CLI log level override: quiet, default, verbose, or debug",
     )
-    cadrumo_tui_appearance: TuiAppearance = Field(
-        default=TuiAppearance.AUTO,
+    cadrumo_tui_appearance: _config_support.TuiAppearance = Field(
+        default=_config_support.TuiAppearance.AUTO,
         description=(
             "Appearance for the full-screen terminal surfaces. "
             "auto = follow the host terminal. light = the warm-paper appearance. "
@@ -237,7 +205,7 @@ class Settings(CadrumoLlmSettings):
     # ── Multilingual i18n ───────────────────────────────────────────────────
     cadrumo_output_language: Annotated[
         OutputLanguage | None,
-        BeforeValidator(coerce_output_language_setting),
+        BeforeValidator(_config_support.coerce_output_language_setting),
     ] = Field(
         default=DEFAULT_OUTPUT_LANGUAGE,
         description=(
@@ -273,8 +241,8 @@ class Settings(CadrumoLlmSettings):
             "reads the computed value."
         ),
     )
-    cadrumo_secret_store_backend: SecretStoreBackend = Field(
-        default=SecretStoreBackend.AUTO,
+    cadrumo_secret_store_backend: _config_support.SecretStoreBackend = Field(
+        default=_config_support.SecretStoreBackend.AUTO,
         description=(
             "Whether at-rest material is protected by real custody. "
             "auto = the profile's own password custody, which is the only "
@@ -1066,10 +1034,10 @@ _settings_pointer_observation: contextvars.ContextVar[tuple[Path, BucketPointer]
 )
 
 
-def classify_storage_route(settings: Settings | None = None) -> StorageRouteClassification:
+def classify_storage_route(settings: Settings | None = None) -> _config_support.StorageRouteClassification:
     """Classify the effective primary SQL route.
 
-    The returned :class:`StorageRouteClassification` distinguishes explicit
+    The returned :class:`~core.config_support.StorageRouteClassification` distinguishes explicit
     database URLs, active-profile bucket databases, and cold root-fallback
     SQLite routes. Application write guards consume this facade instead of
     re-parsing ``cadrumo_database_url`` or duplicating active-profile pointer
@@ -1189,7 +1157,7 @@ def override_settings(**overrides: object) -> Generator[Settings]:
     The field set is taken from the taxonomy, so a member added there is
     covered here the moment it lands.
     """
-    from .storage_taxonomy import ROOT_DERIVED_STORAGE_FIELDS
+    from .storage_taxonomy_locations import ROOT_DERIVED_STORAGE_FIELDS
 
     current = load_settings()
     # ``model_copy(update=)`` skips validators in Pydantic v2; route the

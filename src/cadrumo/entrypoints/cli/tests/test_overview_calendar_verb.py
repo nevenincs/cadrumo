@@ -32,7 +32,6 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ....domain.modelos.filing_repository import upsert_filing_record
 from ....domain.user_profile.values import ProfileSetupState
-from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
 from .._overview import (
@@ -49,6 +48,7 @@ from ._overview_calendar_support import (
     _modelo_record_with_external_justificante,
     _stamp_calendar_enrolment_from_censo,
 )
+from .cli_runner import invoke_cached_cli
 
 __all__ = ["_isolated_backend"]
 

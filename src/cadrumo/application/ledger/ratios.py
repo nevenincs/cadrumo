@@ -19,7 +19,7 @@ from typing import Annotated, Self
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
-from ...core.identity import BucketId
+from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.prose_elision import ElidedProse
 from ...core.unit_proportion import UnitProportion, is_unit_proportion

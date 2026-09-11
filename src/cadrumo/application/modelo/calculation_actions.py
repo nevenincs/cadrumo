@@ -57,7 +57,7 @@ from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRe
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.aggregation import BindingAggregationOp, BindingSourceKind
 from ...core.casilla_id import CasillaId
-from ...core.identity import CalculationRevisionId
+from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.irnr import M210_TIPO_RENTA_CODE_PROJECTION, M210GrossIncomeSourceMode
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
@@ -166,14 +166,14 @@ from .revision_persistence import persist_calculation_revision
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from ...adapters.persistence.storage.sql.secure_objects import SecureObjectWrite
+    from ...core.secure_object_write import SecureObjectWrite
     from ...domain.calculations.registry.detail_record_bindings import Modelo720RowObservation
     from ...domain.calculations.registry.schema import RegistrySnapshot
-    from ..aggregation import (
+    from ..aggregation.foreign_assets import ForeignAssetIngestObservation
+    from ..aggregation.source_mesh import (
         CalculationSourceDiagnostic,
         CalculationSourceDiagnosticReason,
         CalculationSourceResolution,
-        ForeignAssetIngestObservation,
     )
     from ..calculations.observations_repository import IvaWalletDecisionRepository
     from ..live.borrador_100 import Borrador100SnapshotRepository
@@ -722,25 +722,27 @@ def _resolve_bucket_source_mesh(
             asset_profile_id=work_unit.bucket_id,
         )
         iva_investment_asset_profile_id = work_unit.bucket_id
-    from ..aggregation import (
-        AtribucionMemberSourceResolver,
-        CalculationSourceContext,
-        ForeignAssetsAggregationSourceResolver,
-        InventorySourceResolver,
+    from ..aggregation.atribucion_member import AtribucionMemberSourceResolver
+    from ..aggregation.foreign_assets import ForeignAssetsAggregationSourceResolver
+    from ..aggregation.inventory import InventorySourceResolver
+    from ..aggregation.modelo_bindings import (
         LedgerImpatriadoIncomeAggregationSourceResolver,
         LedgerIrnrIncomeAggregationSourceResolver,
         LedgerIvaAggregationSourceResolver,
         LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
         LedgerRentaIncomeAggregationSourceResolver,
-        ModeloSourceResolver,
-        OssIossLedgerSourceResolver,
-        WithholdingSourceResolver,
     )
     from ..aggregation.modelo_bindings_renta_expenses import (
         LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
     )
     from ..aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
+    from ..aggregation.oss_ioss import OssIossLedgerSourceResolver
+    from ..aggregation.source_mesh import (
+        CalculationSourceContext,
+        ModeloSourceResolver,
+    )
     from ..aggregation.source_resolution_operations import merge_source_resolutions
+    from ..aggregation.withholding_source import WithholdingSourceResolver
     from ..calculations.iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
     from ..calculations.m303_regimen_simplificado_annual_summary import (
         M303RegimenSimplificadoAnnualSummarySourceResolver,

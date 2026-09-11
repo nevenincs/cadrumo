@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from ....tests.cli_envelope import unwrap_cli_result
-from ....tests.cli_runner import invoke_cached_cli
+from .cli_runner import invoke_cached_cli
 
 
 def _import_one_transaction(

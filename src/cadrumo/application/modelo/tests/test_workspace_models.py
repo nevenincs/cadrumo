@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import importlib
 import subprocess
 import sys
 from pathlib import Path
@@ -644,8 +643,8 @@ def test_workspace_cursor_page_state_and_unavailable_cursor_mutations_are_refuse
 
 
 def test_workspace_models_have_one_public_module_and_no_private_or_package_binding_remnant() -> None:
-    public_module = importlib.import_module("cadrumo.application.modelo.workspace_models")
-    package = importlib.import_module("cadrumo.application.modelo")
+    public_module = sys.modules[ModeloWorkspaceBaselineV1.__module__]
+    package = sys.modules["cadrumo.application.modelo"]
     private_module = ".".join((*public_module.__name__.split(".")[:-1], "_workspace" + "_models"))
     sys.modules.pop(private_module, None)
 
@@ -653,8 +652,8 @@ def test_workspace_models_have_one_public_module_and_no_private_or_package_bindi
     assert ModeloWorkspaceBaselineV1.__module__ == public_module.__name__
     assert package.__all__ == ()
     assert not hasattr(package, "ModeloWorkspaceBaselineV1")
-    with pytest.raises(ModuleNotFoundError):
-        importlib.import_module(private_module)
+    assert not (Path(public_module.__file__).parent / "_workspace_models.py").exists()
+    assert not (Path(public_module.__file__).parent / "_workspace_models").exists()
 
 
 def test_workspace_model_docs_and_active_tree_reach_the_public_module_fixed_point() -> None:

@@ -9,12 +9,18 @@ from decimal import Decimal
 import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
+from .....domain.contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
 from ..errors import RegistryValidationError
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..schema import RegistrySnapshot
-from ._modelo_100_registry_support import _m100_2024_deduccion_maternidad_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_M100_2024_MATERNIDAD_BINDINGS = {
+    "renta-2024-profile-deduccion-maternidad": Decimal(
+        compute_deduccion_maternidad_0611([], filing_year=2024),
+    ),
+}
 
 _FILING_DATE = date(2024, 12, 31)
 _TIER_BINDING = "renta-2024-rental-reduccion-art-23-2-tier"
@@ -55,7 +61,7 @@ def _calculate(
             "renta-2024-profile-incremento-guarderia": Decimal("0"),
             "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
             "renta-2024-profile-descendientes-guarderia": Decimal("0"),
-            **_m100_2024_deduccion_maternidad_bindings(),
+            **_M100_2024_MATERNIDAD_BINDINGS,
             "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
             "renta-2024-profile-declaration-type": Decimal("1"),

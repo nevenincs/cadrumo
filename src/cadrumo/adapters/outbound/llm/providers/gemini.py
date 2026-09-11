@@ -14,9 +14,9 @@ from typing import override
 from pydantic import BaseModel, ConfigDict, Field
 
 from .....core.config import load_settings
+from .....core.config_support import LLMProvider
 from .....core.logging import get_logger
 from .....core.models import STRICT_FROZEN_CONFIG
-from ..models import LLMProvider
 from .base import (
     ProviderAdapter,
     ProviderCompletion,

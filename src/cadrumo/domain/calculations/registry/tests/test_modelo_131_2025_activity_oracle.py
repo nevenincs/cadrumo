@@ -15,10 +15,11 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from test_support.registry_authoring import _committed_snapshot
 
-from .....core.authority_grade import RegistryAuthorityGrade
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
+
 from ..formula_runtime import calculate_registry_snapshot
+from ._published_authority import artifact_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -56,7 +57,7 @@ _ACTIVITY_CASES = {
 
 
 def _calculate_activity_value(period: str, epigrafe: str, module_inputs: dict[str, Decimal]) -> Decimal:
-    snapshot = _committed_snapshot("131", 2025, period, grade=RegistryAuthorityGrade.CALCULATION)
+    snapshot = artifact_snapshot("131", 2025, period, grade=RegistryAuthorityGrade.CALCULATION)
     assert snapshot.filing_period is not None
     result = calculate_registry_snapshot(
         snapshot,

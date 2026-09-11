@@ -10,7 +10,7 @@ import pytest
 
 from ......core.config import Settings
 from ......core.errors.hierarchy import SiteHealthError, SiteHealthState
-from ......tests import FIXTURES_DIR
+from ......tests.inventory import FIXTURES_DIR
 from .._site_health_probe import probe_response
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

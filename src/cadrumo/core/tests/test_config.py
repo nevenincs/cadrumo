@@ -33,12 +33,12 @@ from ..auth_provider import AuthProviderKind
 from ..bucket_pointer import BucketPointer
 from ..config import (
     Settings,
-    StorageRouteKind,
     classify_storage_route,
     load_settings,
     reset_settings_cache,
 )
 from ..config_state_root import StateRootInputs, platform_user_data_root
+from ..config_support import StorageRouteKind
 from ..external_constants import load_external_constants
 from ..storage_taxonomy import StorageCategory
 from ..storage_taxonomy_locations import storage_location

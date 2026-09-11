@@ -28,11 +28,11 @@ from pydantic import SecretStr, ValidationError
 
 from ..config import (
     Settings,
-    coerce_output_language_setting,
     load_settings,
     override_settings,
     reset_settings_cache,
 )
+from ..config_support import coerce_output_language_setting
 from ..external_constants import OutputLanguage
 from ..paths import resolve_project_path
 

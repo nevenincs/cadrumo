@@ -22,8 +22,8 @@ from __future__ import annotations
 
 import pytest
 
-from ...i18n import tr
-from ...identity import IdentityError
+from ...i18n.render import tr
+from ...identity.documents import IdentityError
 from ..error_codes import resolve_error_message
 from ..hierarchy import CadrumoError, CoreValidationError
 

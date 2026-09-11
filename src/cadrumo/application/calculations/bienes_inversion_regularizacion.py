@@ -50,7 +50,7 @@ from ...domain.bienes_inversion.regularizacion_parameters import (
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.iva.m303_settlement import m303_annual_settlement_period_tokens
-from ..aggregation import (
+from ..aggregation.source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
@@ -555,7 +555,7 @@ class BienesInversionRegularizacionSourceResolver:
             An empty resolution when the revision declares no binding, an
             unresolved resolution when the modelo is not Modelo 303 or 390,
             a degraded resolution on register-load failure, or the resolved
-            :class:`~._source_mesh.CalculationSourceResolution`.
+            :class:`~.source_mesh.CalculationSourceResolution`.
         """
         declared_binding_ids = _declared_binding_ids(context.revision)
         if not declared_binding_ids:

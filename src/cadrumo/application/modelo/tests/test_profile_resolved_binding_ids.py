@@ -18,7 +18,7 @@ from decimal import Decimal
 
 import pytest
 
-from ...aggregation import CalculationSourceResolution
+from ...aggregation.source_mesh import CalculationSourceResolution
 from ..profile_binding import profile_resolved_binding_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -26,7 +26,7 @@ from collections.abc import Iterator
 from typing import ClassVar, override
 
 from ....core.classification.policies import SensitivityClass
-from ....domain.justificante import Justificante
+from ....domain.justificante.schema import Justificante
 from ..storage.envelope.secure_bound_repository import SecureBoundRepository
 from ..storage.secure_object_namespaces import JUSTIFICANTE_METADATA_NAMESPACE
 

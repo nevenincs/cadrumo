@@ -73,7 +73,9 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="direction",
                 declarations=("--direction",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.transactions.enums", "TransactionDirection")),
+                value=ValueContract(
+                    DeferredTarget("...domain.transactions.enums", "TransactionDirection", __package__)
+                ),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.ledger.add.direction_help"),
                 metavar=None,
@@ -108,7 +110,9 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="business_classification",
                 declarations=("--classification",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.transactions.enums", "BusinessClassification")),
+                value=ValueContract(
+                    DeferredTarget("...domain.transactions.enums", "BusinessClassification", __package__)
+                ),
                 default=ParameterDefault.value("NOT_YET_PROCESSED"),
                 help_key=TranslationKey("cli.ledger.add.classification_help"),
                 metavar=None,
@@ -146,7 +150,7 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="art_104_tres_exclusion",
                 declarations=("--art-104-tres-exclusion",),
-                value=ValueContract(DeferredTarget("cadrumo.core.prorrata_exclusions", "Art104TresExclusion")),
+                value=ValueContract(DeferredTarget("...core.prorrata_exclusions", "Art104TresExclusion", __package__)),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.ledger.add.art_104_tres_exclusion_help"),
                 metavar=None,
@@ -162,7 +166,7 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="input_classification",
                 declarations=("--input-classification",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.iva.prorrata", "InputClassification")),
+                value=ValueContract(DeferredTarget("...domain.iva.prorrata", "InputClassification", __package__)),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.ledger.add.input_classification_help"),
                 metavar=None,
@@ -190,10 +194,10 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_2,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._ledger", "ledger_add")),
+        handler=LazyBinding.available(DeferredTarget("._ledger", "ledger_add", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_payloads", "LedgerAddResult"),
+            target=DeferredTarget("._ledger_payloads", "LedgerAddResult", __package__),
             identity="ledger.add",
         ),
     ),
@@ -216,10 +220,10 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _LEDGER_ACTOR_OPTION,
         ),
         policy=_POLICY_3,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._ledger", "ledger_allocate")),
+        handler=LazyBinding.available(DeferredTarget("._ledger", "ledger_allocate", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_payloads", "LedgerAllocateResult"),
+            target=DeferredTarget("._ledger_payloads", "LedgerAllocateResult", __package__),
             identity="ledger.allocate",
         ),
     ),
@@ -238,10 +242,10 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _LEDGER_ACTOR_OPTION,
         ),
         policy=_POLICY_4,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli.ledger_lifecycle_cli", "ledger_archive")),
+        handler=LazyBinding.available(DeferredTarget(".ledger_lifecycle_cli", "ledger_archive", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_payloads", "LedgerArchiveResult"),
+            target=DeferredTarget("._ledger_payloads", "LedgerArchiveResult", __package__),
             identity="ledger.archive",
         ),
     ),
@@ -264,10 +268,10 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _LEDGER_ACTOR_OPTION,
         ),
         policy=_POLICY_4,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli.ledger_lifecycle_cli", "ledger_attach")),
+        handler=LazyBinding.available(DeferredTarget(".ledger_lifecycle_cli", "ledger_attach", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_payloads", "LedgerAttachResult"),
+            target=DeferredTarget("._ledger_payloads", "LedgerAttachResult", __package__),
             identity="ledger.attach",
         ),
     ),
@@ -294,10 +298,10 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(),
         policy=_POLICY_6,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._ledger_read_cli", "ledger_categories")),
+        handler=LazyBinding.available(DeferredTarget("._ledger_read_cli", "ledger_categories", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_payloads", "LedgerCategoriesResult"),
+            target=DeferredTarget("._ledger_payloads", "LedgerCategoriesResult", __package__),
             identity="ledger.categories",
         ),
     ),
@@ -315,10 +319,10 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _OPTIONAL_YEAR_OPTION,
         ),
         policy=_POLICY_6,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._ledger_read_cli", "ledger_check")),
+        handler=LazyBinding.available(DeferredTarget("._ledger_read_cli", "ledger_check", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_payloads", "LedgerCheckResult"),
+            target=DeferredTarget("._ledger_payloads", "LedgerCheckResult", __package__),
             identity="ledger.check",
         ),
     ),

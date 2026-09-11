@@ -6,9 +6,10 @@ from enum import StrEnum
 
 from pydantic import BaseModel, model_validator
 
-from ...core.identity import FilingRecordId
+from ...core.identity.hex_ids import FilingRecordId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ..calculations.registry.ids import RevisionId
+from ..calculations.registry.schema import RegistrySnapshot
 from ..calculations.registry.schema_references import SourceReference
 from .errors import ModeloValidationError
 
@@ -98,9 +99,26 @@ def m303_rectificativa_motive_is_applicable(
     ) in _M303_RECTIFICATIVA_RECORD_DESIGNS
 
 
+def m303_rectificativa_record_design_from_snapshot(snapshot: RegistrySnapshot) -> SourceReference | None:
+    """Resolve the sole admitted record-design source owned by a snapshot."""
+    candidates = tuple(
+        source
+        for source in snapshot.sources.values()
+        if source.id in snapshot.revision.source_refs
+        and m303_rectificativa_motive_is_applicable(
+            registry_revision_id=snapshot.revision.id,
+            record_design=source,
+        )
+    )
+    if len(candidates) > 1:
+        raise ModeloValidationError("M303 revision owns more than one admitted rectificativa record design")
+    return candidates[0] if candidates else None
+
+
 __all__ = [
     "CalculationRevisionAmendmentIdentity",
     "CalculationRevisionAmendmentKind",
     "M303RectificativaMotive",
     "m303_rectificativa_motive_is_applicable",
+    "m303_rectificativa_record_design_from_snapshot",
 ]

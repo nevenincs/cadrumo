@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from .. import ProfileLabel
+from ..profile_label import ProfileLabel
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

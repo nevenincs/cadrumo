@@ -20,6 +20,7 @@ from pydantic import ValidationError
 
 from ....core.classification.policies import SensitivityClass
 from ....core.config import load_settings
+from ....core.config_support import LLMProvider
 from ....core.hashing import canonical_json_bytes, content_hash_hex, sha256_hex
 from ....core.logging import get_logger
 from ....core.redaction.rules import default_rules_for_class, redact_structured
@@ -28,7 +29,7 @@ from ....core.type_guards import is_object_dict
 from ...persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...persistence.storage.secure_object_namespaces import LLM_CACHE_NAMESPACE
 from .errors import LLMCacheError
-from .models import CachedEntry, CacheKey, CacheStats, LLMProvider, LLMRequest, LLMResponse
+from .models import CachedEntry, CacheKey, CacheStats, LLMRequest, LLMResponse
 from .retention import select_retention_removal_keys
 
 if TYPE_CHECKING:

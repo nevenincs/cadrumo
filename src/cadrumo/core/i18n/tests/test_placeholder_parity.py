@@ -46,7 +46,7 @@ import pytest
 import yaml
 
 from ...directory_scan import scan_directory
-from .. import extract_placeholders
+from ..render import extract_placeholders
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -9,10 +9,11 @@ from ...application.modelo.reconciliation_parsing import (
     ReconciliationDeclaracionObservation,
     ReconciliationEvidenceParserPort,
 )
+from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.filing.reconciliation.errors import ReconciliationDeclaracionParseError
-from ...domain.justificante import Justificante
+from ...domain.justificante.schema import Justificante
 from .declaracion.errors import DeclaracionParseError
-from .declaracion.parser import parse_declaracion
+from .declaracion.parser import parse_declaracion, parse_declaracion_bytes
 from .justificante.parser import parse_justificante, parse_justificante_bytes
 
 
@@ -42,6 +43,30 @@ class InboundReconciliationEvidenceParser(ReconciliationEvidenceParserPort):
                 modelo_override=modelo,
                 año_override=filing_year,
                 period_override=period,
+            )
+        except DeclaracionParseError as error:
+            raise ReconciliationDeclaracionParseError(
+                "filed declaración evidence could not be parsed",
+            ) from error
+
+    @override
+    def parse_declaracion_bytes(
+        self,
+        source: bytes,
+        *,
+        modelo: str,
+        filing_year: int,
+        period: str,
+        registry_snapshot: RegistrySnapshot,
+    ) -> ReconciliationDeclaracionObservation:
+        try:
+            return parse_declaracion_bytes(
+                source,
+                source_label="secure declaration PDF",
+                modelo_override=modelo,
+                año_override=filing_year,
+                period_override=period,
+                registry_snapshot=registry_snapshot,
             )
         except DeclaracionParseError as error:
             raise ReconciliationDeclaracionParseError(

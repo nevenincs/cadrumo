@@ -36,11 +36,11 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ....domain.transactions.retencion_facts import statutory_activity_retencion_rates
 from ....domain.transactions.service import link_invoice
 from .._renta_income_evidence import SalesInvoiceEvidenceRefusal
-from .._renta_income_ledger import aggregate_renta_income_ledger, aggregate_renta_m100_income_ledger
 from .._retencion_rate_advisory import (
     _conforms_to_fixed_rate,
     inferred_actividad_retencion_rate_advisory_observations,
 )
+from ..renta_income_ledger import aggregate_renta_income_ledger, aggregate_renta_m100_income_ledger
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -16,7 +16,6 @@ from .....core.classification.policies import SensitivityClass
 from .....core.config import Settings
 from .....core.tax_domain import TaxDomain
 from .....core.toml import freeze_toml
-from .._snapshot_internals import _build_validated_snapshot as build_snapshot_at_grade
 from ..authority import ValidatedRegistryAuthority
 from ..errors import RegistryValidationError
 from ..reference_checks import check_all_id_references
@@ -54,6 +53,7 @@ from ..schema_surfaces import (
     RelationDefinition,
 )
 from ..schema_verification import LiveCrossReferenceDecision, VerificationExpectationDefinition, WorkbookParityReference
+from ..snapshot import build_validated_snapshot as build_snapshot_at_grade
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -24,7 +24,7 @@ import pytest
 from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.binding_selector_utils import selector_as_dict
-from ...aggregation import InventorySourceResolver
+from ...aggregation.inventory import InventorySourceResolver
 from ...modelo.calculation_route import CALCULATION_ROUTE_RESOLVER_OWNERSHIP
 from ..row_set_assembly import _GROUPING_DISPATCH
 

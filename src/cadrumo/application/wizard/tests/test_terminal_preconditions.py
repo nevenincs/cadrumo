@@ -270,23 +270,27 @@ def test_wizard_terminal_carrier_totality_is_exact_and_mutation_sensitive() -> N
 
 
 def test_wizard_preconditions_delegate_to_one_public_constructor_without_local_command_prose() -> None:
-    errors_module = __import__("cadrumo.application.wizard.errors", fromlist=["*"])
-    for module in (*_WIZARD_PRODUCER_MODULES, errors_module):
-        tree = ast.parse(inspect.getsource(module))
+    errors_source = Path(inspect.getfile(WizardError)).read_text(encoding="utf-8")
+    source_modules = [
+        *((inspect.getsource(module), module.__name__) for module in _WIZARD_PRODUCER_MODULES),
+        (errors_source, WizardError.__module__),
+    ]
+    for source, module_name in source_modules:
+        tree = ast.parse(source)
         constructed = {
             _call_name(node.func)
             for node in ast.walk(tree)
             if isinstance(node, ast.Call) and _call_name(node.func) in {"PreconditionVerdict", "ConditionEvidence"}
         }
-        assert not constructed, module.__name__
+        assert not constructed, module_name
 
     delegates = [
-        module.__name__
-        for module in (*_WIZARD_PRODUCER_MODULES, errors_module)
-        for node in ast.walk(ast.parse(inspect.getsource(module)))
+        module_name
+        for source, module_name in source_modules
+        for node in ast.walk(ast.parse(source))
         if isinstance(node, ast.Call) and _call_name(node.func) == "no_action_precondition_verdict"
     ]
-    assert delegates == [errors_module.__name__]
+    assert delegates == [WizardError.__module__]
 
     tree = ast.parse(inspect.getsource(status_module))
     next_action = next(

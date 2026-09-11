@@ -17,9 +17,12 @@ application functions and pydantic records.
 
 from __future__ import annotations
 
+import json
 import os
 from collections.abc import Generator
 from contextlib import contextmanager, nullcontext
+from dataclasses import fields, is_dataclass
+from enum import Enum
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING
@@ -146,6 +149,9 @@ def main() -> None:
     import sys
 
     arguments = sys.argv[1:]
+    if arguments == ["--cadrumo-command-surface"]:
+        _emit_command_surface_manifest()
+        return
     metadata_invocation = _is_metadata_invocation(arguments)
     if _apply_language_argv_to_environment(arguments) is not None:
         # load_settings() holds a process-wide Settings singleton cached by
@@ -260,6 +266,87 @@ def _emit_operator_progress(progress: object) -> None:
     if not isinstance(progress, OperatorProgress):
         raise TypeError(f"progress must be OperatorProgress, got {type(progress).__name__}")
     typer.echo(progress.render(), err=True)
+
+
+def _jsonable_command_surface_value(value: object) -> object:
+    """Project command-surface records onto a process-safe JSON value.
+
+    The MCP distribution is a separately shipped outer composition root.  It
+    receives this projection by launching the CLI process; it must not import
+    this entrypoint package merely to inspect the command graph.  The helper is
+    intentionally local to the CLI transport: the application port owns the
+    wire records, while this root owns the graph-specific dataclass projection.
+    """
+    if isinstance(value, Enum):
+        return value.value
+    if is_dataclass(value) and not isinstance(value, type):
+        return {field.name: _jsonable_command_surface_value(getattr(value, field.name)) for field in fields(value)}
+    if isinstance(value, dict):
+        return {str(key): _jsonable_command_surface_value(item) for key, item in value.items()}
+    if isinstance(value, (tuple, list, set, frozenset)):
+        items = (_jsonable_command_surface_value(item) for item in value)
+        return sorted(items) if isinstance(value, (set, frozenset)) else list(items)
+    if hasattr(value, "model_dump"):
+        return _jsonable_command_surface_value(value.model_dump(mode="json"))
+    return value
+
+
+def _emit_command_surface_manifest() -> None:
+    """Emit the graph-owned command surface for an independent outer root.
+
+    This is a process boundary, not an import bridge: the retained harness
+    invokes the installed ``aeat`` executable and consumes this closed JSON
+    projection.  The graph, result schemas, policies, and input projections
+    therefore remain authoritative in the CLI composition root without making
+    the harness import a sibling entrypoint.
+    """
+    from ._command_schema import command_registration_projection, command_schema_refs, command_schema_type
+    from ._verb_input_schema import build_verb_input_schemas, is_exposable_command
+
+    references = command_schema_refs()
+    command_keys = tuple(reference.command for reference in references)
+    input_schemas = build_verb_input_schemas(command_keys)
+    policies: dict[str, dict[str, object]] = {}
+    result_schemas: dict[str, object] = {}
+    search_terms: dict[str, tuple[str, ...]] = {}
+    for reference in references:
+        key = reference.command
+        schema = input_schemas[key]
+        policy = _declared_execution_policy_for_cli_path(schema.cli_path)
+        policies[key] = {
+            "cli_path": schema.cli_path,
+            "capabilities": tuple(sorted(policy.classification.capabilities)),
+            "side_effects": tuple(sorted(policy.classification.side_effects)),
+            "performance": policy.classification.performance,
+            "write_route": policy.write_route,
+            "destructive": policy.destructive,
+            "handoff": policy.handoff,
+            "live_write": policy.live_write,
+        }
+        result_schemas[key] = command_schema_type(key).model_json_schema()
+        spec = _COMMAND_GRAPH.by_schema_identity().get(key)
+        if spec is None:
+            raise LookupError(f"unknown command schema identity: {key}")
+        search_terms[key] = spec.search_terms
+
+    payload = {
+        "command_schemas": tuple(reference.model_dump(mode="json") for reference in references),
+        "global_flags": tuple(
+            option
+            for parameter in _COMMAND_GRAPH.by_key()["root"].parameters
+            for option in getattr(parameter, "declarations", ())
+            if isinstance(option, str) and option.startswith("-")
+        ),
+        "exposable_commands": tuple(
+            reference.command for reference in references if is_exposable_command(reference.command)
+        ),
+        "input_schemas": {key: schema.model_dump(mode="json") for key, schema in input_schemas.items()},
+        "result_schemas": result_schemas,
+        "policies": policies,
+        "search_terms": search_terms,
+        "registration_projection": _jsonable_command_surface_value(command_registration_projection()),
+    }
+    typer.echo(json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")))
 
 
 __all__ = [

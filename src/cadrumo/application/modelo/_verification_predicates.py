@@ -27,7 +27,7 @@ from types import MappingProxyType
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.money.rounding import CENT
-from ...core.parsing import parse_date
+from ...core.parsing.dates import parse_date
 from ...domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from ...domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from ...domain.calculations.registry.schema import RegistrySnapshot

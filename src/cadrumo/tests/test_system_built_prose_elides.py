@@ -43,16 +43,13 @@ See Also:
 from __future__ import annotations
 
 import ast
-import importlib
-import inspect
-import pkgutil
-import warnings
 from typing import TYPE_CHECKING, Annotated
 
 import pytest
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
 from ..core.prose_elision import elided_prose
+from .inventory import production_ast_items
 from .test_advisory_message_constructibility import _PROSE_FIELDS, _prose_caps
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -91,34 +88,54 @@ def _declared_cap(field: FieldInfo) -> int | None:
     return None
 
 
-def _capped_prose_fields() -> Mapping[tuple[str, str], FieldInfo]:
+class _StaticField:
+    """Pydantic field metadata recovered from its production declaration."""
+
+    def __init__(self, *, cap: int, elides: bool) -> None:
+        self.cap = cap
+        self.elides = elides
+
+
+def _contains_elider(node: ast.AST, aliases: set[str]) -> bool:
+    if isinstance(node, ast.Name) and node.id in aliases:
+        return True
+    if isinstance(node, ast.Call):
+        target = node.func.attr if isinstance(node.func, ast.Attribute) else getattr(node.func, "id", None)
+        if target in {"elided_prose", "ElidedProse"}:
+            return True
+    return any(_contains_elider(child, aliases) for child in ast.iter_child_nodes(node))
+
+
+def _capped_prose_fields() -> Mapping[tuple[str, str], object]:
     """Return ``(model name, field name) -> field`` for every capped prose field.
 
     Walks the live package rather than a list, so a model added tomorrow is
     covered without anyone remembering to enrol it.
     """
-    warnings.filterwarnings("ignore")
-    from .. import __path__ as cadrumo_path
-
-    found: dict[tuple[str, str], FieldInfo] = {}
-    for module_info in pkgutil.walk_packages(cadrumo_path, "cadrumo."):
-        if ".tests" in module_info.name:
-            continue
-        try:
-            module = importlib.import_module(module_info.name)
-        except Exception:  # noqa: S112 - see below
-            # A module that will not import declares no discoverable field, and
-            # an optional-dependency import error is not this gate's business.
-            # Swallowed rather than logged because the population and coverage
-            # controls below fail loudly if enough modules drop out for the walk
-            # to stop being tree-wide, which is the only consequence that matters.
-            continue
-        for obj in vars(module).values():
-            if not (inspect.isclass(obj) and issubclass(obj, BaseModel) and obj is not BaseModel):
+    caps = _prose_caps()
+    eliding: set[tuple[str, str]] = set()
+    for _path, tree in production_ast_items():
+        aliases: set[str] = set()
+        for statement in tree.body:
+            if isinstance(statement, (ast.Assign, ast.AnnAssign)) and statement.value is not None:
+                if _contains_elider(statement.value, set()):
+                    targets = statement.targets if isinstance(statement, ast.Assign) else [statement.target]
+                    aliases.update(target.id for target in targets if isinstance(target, ast.Name))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.ClassDef):
                 continue
-            for field_name, field in obj.model_fields.items():
-                if field_name in _PROSE_FIELDS and _declared_cap(field) is not None:
-                    found[(obj.__name__, field_name)] = field
+            for field in node.body:
+                if not isinstance(field, ast.AnnAssign) or not isinstance(field.target, ast.Name):
+                    continue
+                key = (node.name, field.target.id)
+                if key in caps and (
+                    _contains_elider(field.annotation, aliases)
+                    or (field.value is not None and _contains_elider(field.value, aliases))
+                ):
+                    eliding.add(key)
+    found: dict[tuple[str, str], _StaticField] = {
+        key: _StaticField(cap=cap, elides=key in eliding) for key, cap in caps.items()
+    }
     return found
 
 
@@ -162,7 +179,7 @@ def _system_built(source_tree_ast: Mapping[Path, ast.AST]) -> frozenset[tuple[st
     return frozenset(system_built)
 
 
-def _elides(field: FieldInfo) -> bool:
+def _elides(field: FieldInfo | _StaticField) -> bool:
     """Whether *field* shortens an over-cap value instead of refusing it.
 
     Rebuilds the field's own annotation into a standalone validator so the
@@ -170,6 +187,8 @@ def _elides(field: FieldInfo) -> bool:
     model -- most of these carriers have several other required fields, and a
     gate that had to satisfy them would be testing its own fixtures.
     """
+    if isinstance(field, _StaticField):
+        return field.elides
     # Built at runtime from a field's own annotation and metadata, so the
     # subscript is not a static type expression and no checker can follow it.
     # The construction is the point: it reproduces the field exactly.

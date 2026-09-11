@@ -18,11 +18,12 @@ from pathlib import Path
 import pytest
 
 from .....core.classification.policies import SensitivityClass
+from .....core.config_support import LLMProvider
 from .....core.hashing import canonical_json_bytes
 from .....core.redaction.rules import default_rules_for_class, redact_structured
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ..errors import LLMCacheError
-from ..models import LLMProvider, UsageRecord
+from ..models import UsageRecord
 from ..usage import _USAGE_NAMESPACE, _USAGE_VERSION, UsageRecorder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

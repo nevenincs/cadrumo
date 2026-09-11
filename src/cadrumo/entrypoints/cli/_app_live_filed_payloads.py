@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from ...application.live.capture_mode import LiveCaptureMode, LiveCaptureModeValue
-from ...core.identity import AeatExpedienteId
+from ...core.identity.aeat_expediente import AeatExpedienteId
 from ...core.json_contract import OutputSchema
 from ...core.period import Period
 

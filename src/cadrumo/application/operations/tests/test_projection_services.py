@@ -34,7 +34,8 @@ from ..capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from ..frontend_contracts import (
+from ..frontend_projection import OperationReviewProjectionReferenceV1
+from ..frontend_requests import (
     OperationCancellationRefusalCode,
     OperationCancellationRefusalV1,
     OperationCancellationRequestV1,
@@ -51,7 +52,6 @@ from ..frontend_contracts import (
     OperationResultProjectionRefusalV1,
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
-    OperationReviewProjectionReferenceV1,
     OperationReviewProjectionRefusalCode,
     OperationReviewProjectionRefusalV1,
     OperationReviewProjectionRequestV1,

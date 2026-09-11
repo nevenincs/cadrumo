@@ -25,8 +25,8 @@ from pathlib import Path
 import pytest
 
 from ......core.directory_scan import scan_directory
-from ......tests import FIXTURES_DIR
 from ......tests.aeat_literal_fixtures import configured_path
+from ......tests.inventory import FIXTURES_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

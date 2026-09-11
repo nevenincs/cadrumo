@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import ClassVar
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...core.i18n.translatable import Translatable as t
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.calculations.registry.retenciones_bindings import resolve_retenciones_aggregation_binding_values
@@ -14,11 +15,12 @@ from ._modelo_bindings_support import (
     revision_has_binding_source,
 )
 from ._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
-from ._retencion_observations_repository import RetencionObservationRepository
 from ._retencion_rate_advisory import (
     administrador_retencion_rate_advisory_observations,
 )
-from ._retenciones import (
+from .errors import AggregationValidationError
+from .retencion_observations_repository import RetencionObservationRepository
+from .retenciones import (
     RetencionesAggregation,
     RetencionObservation,
     aggregate_retenciones_111,
@@ -28,12 +30,11 @@ from ._retenciones import (
     aggregate_retenciones_190,
     aggregate_retenciones_193,
 )
-from ._source_mesh import (
+from .source_mesh import (
     CalculationSourceContext,
     CalculationSourceProvenance,
     CalculationSourceResolution,
 )
-from .errors import AggregationValidationError, t
 from .source_resolution_operations import (
     source_provenance_for as _provenance_for,
 )
@@ -53,12 +54,12 @@ class RetencionesAggregationSourceResolver:
     """Source mesh resolver for the dedicated per-perceptor retención store.
 
     Reads the bucket-scoped per-perceptor retención observations
-    (:class:`~._retencion_observations_repository.RetencionObservationRepository`)
+    (:class:`~.retencion_observations_repository.RetencionObservationRepository`)
     for the modelo's period and materialises the declared retenciones aggregation
     bindings through the matching validated aggregator. Modelo 115 consumes the
     quarterly URBAN_RENTAL count/base; annual summary modelos consume the same
     family store for their distinct-NIF count. Modelo 190's percepciones count is
-    handled by :class:`~._withholding_source.WithholdingSourceResolver`.
+    handled by :class:`~.withholding_source.WithholdingSourceResolver`.
     """
 
     resolver_id: ClassVar[str] = "retenciones_aggregation"
@@ -79,7 +80,7 @@ class RetencionesAggregationSourceResolver:
 
         The ONE canonical retenciones aggregation entry point. Both this
         resolver's live calculate path (:meth:`resolve`) and the per-modelo
-        aggregation service (:func:`~._service.aggregate_per_modelo`, the CLI
+        aggregation service (:func:`~.service.aggregate_per_modelo`, the CLI
         ``aggregate`` / pull surface) route through this single method over the
         shared :data:`_RETENCIONES_AGGREGATORS` dispatch, so the calculate and
         pull surfaces produce byte-identical aggregation and cannot drift

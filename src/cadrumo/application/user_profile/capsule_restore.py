@@ -30,7 +30,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel
 
 from ...core.errors.hierarchy import CadrumoError
-from ...core.identity import ProfileId
+from ...core.identity.profile import ProfileId
 from ...core.models import STRICT_FROZEN_CONFIG
 from .aggregate import ProfileRestoreAuthority
 from .custody_ports import read_profile_custody_capsule_source

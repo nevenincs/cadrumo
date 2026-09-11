@@ -24,7 +24,7 @@ import textwrap
 
 import pytest
 
-from .._snapshot_internals import _CROSS_DOMAIN_CHECK_MODULES
+from ..snapshot import _CROSS_DOMAIN_CHECK_MODULES
 from ..validate_cross_domain_snapshot import (
     _CROSS_DOMAIN_CHECK_IDENTITIES,
     _CROSS_DOMAIN_SNAPSHOT_CHECKS,
@@ -42,7 +42,7 @@ def _build_m100_with_declared_modules(declared: str) -> subprocess.CompletedProc
     """Build the committed M100 snapshot with ``declared`` peer modules installed."""
 
     script = f"""
-        import cadrumo.domain.calculations.registry._snapshot_internals as internals
+        import cadrumo.domain.calculations.registry.snapshot as internals
 
         internals._CROSS_DOMAIN_CHECK_MODULES = {declared}
 

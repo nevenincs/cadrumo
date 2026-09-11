@@ -25,7 +25,7 @@ import pytest
 import typer
 from typer.testing import CliRunner
 
-from ....core.i18n import Translatable as tr
+from ....core.i18n.translatable import Translatable as tr
 from ..commands import (
     _CCAA_CHOICE_VALUES,
     _SETUP_OPTION_INFOS,

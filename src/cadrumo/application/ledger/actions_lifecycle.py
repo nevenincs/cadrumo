@@ -16,12 +16,6 @@ The public services return
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
@@ -60,6 +54,11 @@ from .models import (
     LedgerRemovalBlocker,
     LedgerTransactionRemovalReport,
     ManualLedgerTransactionResult,
+)
+from .protocols import (
+    BucketEventHistoryCoCommitWriterProtocol,
+    InvoiceCatalogueCoCommitWriterProtocol,
+    TransactionCatalogueCoCommitWriterProtocol,
 )
 
 
@@ -438,13 +437,13 @@ def _reset_invoice_context(
     removed_ids: tuple[str, ...],
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
 ) -> tuple[
-    InvoiceCatalogueRepository | None,
+    InvoiceCatalogueCoCommitWriterProtocol | None,
     InvoiceCatalogue,
     tuple[str, ...],
     InvoiceCatalogue | None,
 ]:
     """Resolve and inspect invoice evidence needed by a catalogue reset."""
-    invoices: InvoiceCatalogueRepository | None = None
+    invoices: InvoiceCatalogueCoCommitWriterProtocol | None = None
     invoice_catalogue = InvoiceCatalogue()
     purchase_evidence_ids: tuple[str, ...] = ()
     updated_invoice_catalogue: InvoiceCatalogue | None = None
@@ -528,9 +527,9 @@ def _build_catalogue_reset_event(
 
 def _persist_catalogue_reset(
     *,
-    repository: TransactionCatalogueRepository,
-    event_repository: BucketEventHistoryRepository,
-    invoices: InvoiceCatalogueRepository | None,
+    repository: TransactionCatalogueCoCommitWriterProtocol,
+    event_repository: BucketEventHistoryCoCommitWriterProtocol,
+    invoices: InvoiceCatalogueCoCommitWriterProtocol | None,
     updated_invoice_catalogue: InvoiceCatalogue | None,
     events: tuple[BucketEvent, ...],
 ) -> None:

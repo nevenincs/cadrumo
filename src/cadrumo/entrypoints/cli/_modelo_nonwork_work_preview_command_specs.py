@@ -66,7 +66,7 @@ MODELO_NONWORK_WORK_PREVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="output_language",
                 declarations=("--output-language",),
-                value=ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage")),
+                value=ValueContract(DeferredTarget("...core.external_constants", "OutputLanguage", __package__)),
                 default=ParameterDefault.value(None),
                 help_key=None,
                 multiple=False,
@@ -77,11 +77,11 @@ MODELO_NONWORK_WORK_PREVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_CALCULATION_READ,
         handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_maritime_cli", "work_preview_maritime_exemption")
+            DeferredTarget("._modelo_maritime_cli", "work_preview_maritime_exemption", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_payloads", "WorkPreviewMaritimeExemptionResult"),
+            DeferredTarget("._modelo_payloads", "WorkPreviewMaritimeExemptionResult", __package__),
             identity="modelo.work.preview_maritime_exemption",
         ),
     ),

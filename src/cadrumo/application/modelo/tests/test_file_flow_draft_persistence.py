@@ -19,13 +19,13 @@ import pytest
 
 from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ....domain.submission.models import ModeloDraftStatus
+from ..calculation_actions import calculate_modelo_revision
 from ._file_flow_support import (
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
     T1,
     T2,
     Repos,
-    calculate_modelo_revision,
     seed_work_unit,
     verify_revision,
 )

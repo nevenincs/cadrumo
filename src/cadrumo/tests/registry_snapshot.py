@@ -1,8 +1,8 @@
 """The registry snapshot construction contract.
 
 Building an immutable snapshot for one filing context is what callers outside
-this package legitimately need; the machinery behind it is private in
-:mod:`_snapshot_internals`.
+this package legitimately need; its validated construction boundary lives in
+:mod:`cadrumo.domain.calculations.registry.snapshot`.
 """
 
 from __future__ import annotations
@@ -10,24 +10,13 @@ from __future__ import annotations
 from datetime import date
 from pathlib import Path
 
-from test_support.registry_authoring import RegistryValidator
-
 from ..core.authority_grade import RegistryAuthorityGrade
-from ..domain.calculations.registry._snapshot_internals import _build_validated_snapshot
+from ..domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ..domain.calculations.registry.ids import RevisionId
 from ..domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
+from ..domain.calculations.registry.snapshot import build_validated_snapshot as _build_validated_snapshot
 
 _SNAPSHOT_CACHE: dict[tuple[object, ...], tuple[ModeloDefinition, RegistryCatalogues, RegistrySnapshot]] = {}
-_VALIDATION_CACHE: dict[tuple[object, ...], tuple[ModeloDefinition, RegistryCatalogues]] = {}
-
-
-def _validate_modelo_once(modelo: ModeloDefinition, catalogues: RegistryCatalogues, source_root_key: str) -> None:
-    key = (id(modelo), id(catalogues), source_root_key)
-    cached = _VALIDATION_CACHE.get(key)
-    if cached is not None and cached[0] is modelo and cached[1] is catalogues:
-        return
-    RegistryValidator(catalogues, source_root=Path(source_root_key)).validate_modelo(modelo)
-    _VALIDATION_CACHE[key] = (modelo, catalogues)
 
 
 def build_snapshot(
@@ -41,7 +30,7 @@ def build_snapshot(
     revision_id: RevisionId | None = None,
     grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
 ) -> RegistrySnapshot:
-    """Validate ``modelo`` and return the selected immutable snapshot.
+    """Return a snapshot for an already validated modelo and catalogue slice.
 
     This helper performs model-local validation and snapshot-local reference
     checks. It cannot validate cross-model relation closure because it does not
@@ -77,10 +66,12 @@ def build_snapshot(
     if cached is not None and cached[0] is modelo and cached[1] is catalogues:
         return cached[2]
 
-    _validate_modelo_once(modelo, catalogues, source_root_key)
-    snapshot = _build_validated_snapshot(
-        modelo,
-        catalogues,
+    snapshot = ValidatedRegistryAuthority.from_validated_components(
+        modelos=(modelo,),
+        catalogues=catalogues,
+        identity_digest=source_root_key,
+    ).snapshot(
+        modelo.id,
         filing_year=filing_year,
         period=period,
         on=on,
@@ -118,9 +109,12 @@ def build_validated_snapshot(
     Returns:
         The selected :class:`RegistrySnapshot`.
     """
-    return _build_validated_snapshot(
-        modelo,
-        catalogues,
+    return ValidatedRegistryAuthority.from_validated_components(
+        modelos=(modelo,),
+        catalogues=catalogues,
+        identity_digest="validated-modelo-test",
+    ).snapshot(
+        modelo.id,
         filing_year=filing_year,
         period=period,
         on=on,

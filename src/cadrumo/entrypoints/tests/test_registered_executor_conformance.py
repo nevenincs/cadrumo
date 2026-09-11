@@ -39,19 +39,21 @@ from ...application.operations.composition import (
     OperationSubmission,
     compose_operation_services,
 )
-from ...application.operations.frontend_contracts import (
+from ...application.operations.frontend_projection import (
+    OperationNoPendingInteractionV1,
+    OperationReviewAvailableInteractionV1,
+    OperationReviewProjectionReferenceV1,
+)
+from ...application.operations.frontend_requests import (
     OperationCancellationRefusalV1,
     OperationCancellationRequestV1,
     OperationCancellationSuccessV1,
-    OperationNoPendingInteractionV1,
     OperationObservationRequestV1,
     OperationObservationSuccessV1,
     OperationPublicPhaseEventV1,
     OperationResponseApplyRequestV1,
     OperationResponseControlRequestV1,
     OperationResponseMutationSuccessV1,
-    OperationReviewAvailableInteractionV1,
-    OperationReviewProjectionReferenceV1,
     OperationReviewProjectionRefusalCode,
     OperationReviewProjectionRefusalV1,
     OperationReviewProjectionRequestV1,

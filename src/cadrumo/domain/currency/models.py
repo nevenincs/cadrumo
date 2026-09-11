@@ -14,7 +14,7 @@ from enum import StrEnum
 from pydantic import BaseModel, Field, field_validator
 
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.parsing import IsoCurrencyCode, normalise_iso_4217_currency
+from ...core.parsing.codes import IsoCurrencyCode, normalise_iso_4217_currency
 
 
 class CurrencyNormalizationStatus(StrEnum):

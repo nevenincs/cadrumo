@@ -38,12 +38,18 @@ from decimal import Decimal
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....domain.contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
 from ..formula_runtime import calculate_registry_snapshot
 from ..ids import BindingId, RelationId
 from ..schema import RegistrySnapshot
-from ._modelo_100_registry_support import _m100_2024_deduccion_maternidad_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_M100_2024_MATERNIDAD_BINDINGS = {
+    "renta-2024-profile-deduccion-maternidad": Decimal(
+        compute_deduccion_maternidad_0611([], filing_year=2024),
+    ),
+}
 
 
 # -----------------------------------------------------------------------
@@ -330,7 +336,7 @@ def _base_binding_values() -> dict[BindingId, Decimal]:
         # (Option A engine): zero baseline for a
         # childless profile; scenarios that exercise real descendientes
         # override this key directly.
-        **_m100_2024_deduccion_maternidad_bindings(),
+        **_M100_2024_MATERNIDAD_BINDINGS,
         "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
         # Parte autonómica (casilla 0514): every scenario in this file
         # runs a Cataluña-resident profile, which is absent from the wired
@@ -392,7 +398,7 @@ def test_m100_2024_cuota_estatal_pere_age_70_with_age_supplement(
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
         binding_values={
             **_base_binding_values(),
-            **_m100_2024_deduccion_maternidad_bindings(),
+            **_M100_2024_MATERNIDAD_BINDINGS,
             "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
         },
@@ -443,7 +449,7 @@ def test_m100_2024_cuota_estatal_two_descendants_one_under_three(
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
         binding_values={
             **_base_binding_values(),
-            **_m100_2024_deduccion_maternidad_bindings(),
+            **_M100_2024_MATERNIDAD_BINDINGS,
             "renta-2024-profile-minimo-descendientes-estatal": Decimal("7900"),
             "renta-2024-profile-minimo-descendientes-autonomico": Decimal("7900"),
         },

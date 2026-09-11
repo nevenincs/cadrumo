@@ -22,8 +22,9 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
-from ....domain.justificante import Justificante
+from ....domain.justificante.schema import Justificante
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -44,15 +45,14 @@ from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.profile_capsule import seed_test_profile_record
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations.cross_period_clean_state import (
+from ...calculations.cross_period_clean_state import cross_period_dependency_requirements
+from ...calculations.cross_period_models import (
     CrossPeriodCleanStateBlocker,
     CrossPeriodCleanStateVerdict,
     CrossPeriodDependencyEvidence,
     CrossPeriodDependencyOrigin,
     CrossPeriodDependencyRequirement,
-    cross_period_dependency_requirements,
 )
 from ...calculations.observations_repository import CalculationObservationRepository
 from .._verification_cross_period import _cross_period_clean_state_findings

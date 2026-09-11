@@ -22,7 +22,7 @@ from pydantic import BaseModel, Field, model_serializer, model_validator
 
 from ...core.document_shape import DocumentShape
 from ...core.hashing import sha256_hex
-from ...core.identity import ContentDigest
+from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.attachments.protocols import AttachmentStoreProtocol
 from .evidence import PurchaseInvoiceEvidence

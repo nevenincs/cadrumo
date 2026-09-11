@@ -38,7 +38,7 @@ from ...core.aggregation import (
 )
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import sha256_hex
-from ...core.identity import BucketId
+from ...core.identity.bucket import BucketId
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.calculations.registry.errors import RegistryValidationError
@@ -56,7 +56,7 @@ from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.schema import IvaCategory
 from ...domain.modelos.row_models import Modelo349OperadorRow, validate_m349_country_prefix_context
-from ..aggregation import (
+from ..aggregation.source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,

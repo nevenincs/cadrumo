@@ -24,7 +24,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.outbound.fx.ecb_provider import ECB_RATE_SOURCE_ID
-from ....core.aggregation import BindingSourceKind
+from ....core.aggregation import BindingSourceKind, RetencionScheme
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
@@ -36,19 +36,19 @@ from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.components import IvaRetencionRole, category_components
 from ....domain.iva.schema import IvaCategory
 from ....tests.secure_sql import isolated_runtime_profile
-from .._invoice_retencion import (
+from ..errors import AggregationValidationError
+from ..invoice_retencion import (
     INVOICE_RETENCION_DEFECT_GUIDANCE,
     InvoiceRetencionProjectionDefect,
     merge_manual_and_routed_retencion_observations,
     project_received_invoice_retencion,
     route_invoice_retenciones,
 )
-from .._retencion_observations_repository import (
+from ..retencion_observations_repository import (
     RetencionObservationRepository,
     persist_retencion_observations,
 )
-from .._retenciones import RetencionObservation, RetencionScheme, aggregate_retenciones_111
-from ..errors import AggregationValidationError
+from ..retenciones import RetencionObservation, aggregate_retenciones_111
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -54,7 +54,7 @@ _OPERATION_ID = OptionSpec(
 
 
 def _handler(name: str) -> LazyBinding:
-    return LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli.config._reset_cli", name))
+    return LazyBinding.available(DeferredTarget("._reset_cli", name, __package__))
 
 
 CONFIG_RESET_COMMAND_SPECS = (

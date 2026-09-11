@@ -2,62 +2,73 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from pathlib import Path
 from typing import cast
 
 import pytest
 
+from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from .....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
+from .....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from .....adapters.persistence.profile.justificante import JustificanteRepository
+from .....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from .....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from .....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+from .....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from .....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from .....application.auth.apoderado_service import ApoderadoService
+from .....application.auth.diagnostics import list_auth_diagnostics
+from .....application.calculations.iva_compensation_history import IvaCompensationHistoryRepository
+from .....application.calculations.observations_repository import (
+    CalculationObservationRepository,
+    IvaWalletDecisionRepository,
+)
+from .....application.diagnostics import (
+    preview_quarantine_unreadable_secure_objects,
+    secure_object_unreadable_total,
+)
+from .....application.filing.history_repository import ModeloHistoryRepository
+from .....application.live.borrador_100 import Borrador100SnapshotRepository
+from .....application.modelo.review_package_recipient_registry import RecipientFingerprintRegistryRepository
+from .....application.workflow.persistence import WorkflowRunRepository, WorkflowStateRepository
+from .....core.config import override_settings
+from .....core.config_support import LLMProvider
 from .....core.period import Period
+from .....domain.attachments.errors import AttachmentNotFoundError
+from .....domain.buckets.event import BucketEventHistoryCatalogue
 from .....domain.calculations.registry.authority import bundled_authority
+from .....domain.calculations.registry.bindings import RegistryModeloObservation
+from .....domain.categories.spending_category import SpendingCategory
+from .....domain.contribuyente.inventory.records import InventoryLedgerDocument
+from .....domain.invoices.models import InvoiceCatalogue
+from .....domain.modelos.work_unit import WorkUnitCatalogue
+from .....domain.transactions.models import TransactionCatalogue
+from .....domain.usage_ratios.model import UsageRatioProfile
+from ....outbound.aeat.auth import session_store as _session_store
+from ....outbound.aeat.sede.errors import ExpedienteNotFoundError
+from ....outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
+from ....outbound.google import session_store as google_session_store
+from ....outbound.llm.cache import LLMCache
+from ....outbound.llm.consent_ledger import EvidenceConsentLedger
+from ....outbound.llm.run_telemetry import LLMRunTelemetryRecorder
+from ....outbound.llm.usage import UsageRecorder
+from ...profile.inventory import InventoryLedgerRepository
+from ...profile.recipient_replay_guard import RecipientReplayGuardRepository
+from ...profile.submission import SubmissionRepository
+from ...profile.usage_ratios import load_usage_ratios, save_usage_ratios
+from ..attachment import AttachmentStore
+from ..errors import StorageValidationError
+from ..master_key.active_session import activate_session
 from ..runtime_readiness import StorageRuntimeReadinessCode
 from ..runtime_repository import secure_object_repository_for_active_bucket_or_default_route
+from ..secure_object_namespaces import LLM_USAGE_NAMESPACE
 from ._runtime_attached_repositories_support import (
     _BUCKET_A_ATTACHMENT_PAYLOAD,
     _BUCKET_A_ID,
     _BUCKET_B_ATTACHMENT_PAYLOAD,
     _BUCKET_B_ID,
     _WALLET_SUBJECT_ID,
-    LLM_USAGE_NAMESPACE,
-    ApoderadoService,
-    AttachmentNotFoundError,
-    AttachmentStore,
-    Borrador100SnapshotRepository,
-    BucketEventHistoryCatalogue,
-    BucketEventHistoryRepository,
-    CalculationObservationRepository,
-    CalculationRevisionCatalogueRepository,
-    Callable,
-    EvidenceConsentLedger,
-    ExpedienteNotFoundError,
-    FiledDeclaracionObservationStore,
-    InventoryLedgerDocument,
-    InventoryLedgerRepository,
-    InvoiceCatalogue,
-    InvoiceCatalogueRepository,
-    IvaCompensationHistoryRepository,
-    IvaWalletDecisionRepository,
-    JustificanteRepository,
-    LLMCache,
-    LLMProvider,
-    LLMRunTelemetryRecorder,
-    ModeloDraftRepository,
-    ModeloHistoryRepository,
-    ModeloRecordCatalogueRepository,
-    Path,
-    RecipientFingerprintRegistryRepository,
-    RecipientReplayGuardRepository,
-    RegistryModeloObservation,
-    SpendingCategory,
-    StorageValidationError,
-    SubmissionRepository,
-    TransactionCatalogue,
-    TransactionCatalogueRepository,
-    UsageRatioProfile,
-    UsageRecorder,
-    VerificationReportCatalogueRepository,
-    WorkflowRunRepository,
-    WorkflowStateRepository,
-    WorkUnitCatalogue,
-    WorkUnitCatalogueRepository,
     _active_runtime,
     _borrador_snapshot,
     _bucket_event,
@@ -78,7 +89,6 @@ from ._runtime_attached_repositories_support import (
     _save_diagnostic_probe_row,
     _sede_artefact,
     _session,
-    _session_store,
     _storage_state,
     _submission,
     _transaction,
@@ -88,14 +98,6 @@ from ._runtime_attached_repositories_support import (
     _work_unit,
     _workflow_run,
     _workflow_state,
-    activate_session,
-    google_session_store,
-    list_auth_diagnostics,
-    load_usage_ratios,
-    override_settings,
-    preview_quarantine_unreadable_secure_objects,
-    save_usage_ratios,
-    secure_object_unreadable_total,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

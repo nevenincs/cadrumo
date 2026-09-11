@@ -19,7 +19,7 @@ so a catalogue that translated nothing could not pass either.
 from __future__ import annotations
 
 import pytest
-from test_support.tui_registration import registration_attempt
+from dev.tui.harness.fixture import registration_attempt
 from textual.widgets import Button, Input, Label, Select, Static
 from textual.widgets._select import SelectOverlay
 

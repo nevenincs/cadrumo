@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.config import LLMProvider
+from ....core.config_support import LLMProvider
 from ....core.provenance_stamp import build_provenance_stamp, provenance_stamp_transport
 from ..llm_classification import _transport_from_provenance
 

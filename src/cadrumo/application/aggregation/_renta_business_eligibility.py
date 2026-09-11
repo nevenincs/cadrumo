@@ -29,7 +29,7 @@ from decimal import Decimal
 from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.irpf_categories import has_activity_irpf_category
 from ...domain.transactions.models import Transaction
-from ._business_proportion import business_proportion
+from .business_proportion import business_proportion
 
 __all__ = ["relies_on_activity_marker", "renta_expense_business_proportion"]
 

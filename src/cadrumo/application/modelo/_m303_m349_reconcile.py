@@ -49,7 +49,7 @@ from ...domain.modelos.verification_report import (
 )
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from .work_addressing import (
+from ._work_selection import (
     ModeloWorkSelectionMode,
     ModeloWorkSelectorRequest,
     ModeloWorkSelectorState,

@@ -121,17 +121,25 @@ def _probe_worker(
             result["rows"] = len(rows)
             result["directions"] = [row.direction.value for row in rows]
         else:
+            from ......application.ledger.column_roles import bind_column_role_mapping_resolver
+            from ......core.optional_extras import LLM_EXTRA, require_optional_extra
             from .._mapped_tabular import MappedTabularProvider
 
-            try:
-                list(MappedTabularProvider().ingest(_UNKNOWN_VOCABULARY))
-                result["raised"] = None
-            except BaseException as exc:
-                result["raised"] = type(exc).__name__
-                result["message"] = str(exc)
-                context = getattr(exc, "context", None) or {}
-                refused = context.get("extra")
-                result["refused_extra"] = str(refused) if refused is not None else None
+            def _probe_mapping(_table: object) -> None:
+                """Model the optional outbound capability through the inward port."""
+                require_optional_extra(LLM_EXTRA)
+                return None
+
+            with bind_column_role_mapping_resolver(_probe_mapping):
+                try:
+                    list(MappedTabularProvider().ingest(_UNKNOWN_VOCABULARY))
+                    result["raised"] = None
+                except BaseException as exc:
+                    result["raised"] = type(exc).__name__
+                    result["message"] = str(exc)
+                    context = getattr(exc, "context", None) or {}
+                    refused = context.get("extra")
+                    result["refused_extra"] = str(refused) if refused is not None else None
         results.put({"payload": result, "error": None})
     except BaseException as exc:
         results.put({"payload": None, "error": f"{type(exc).__name__}: {exc}"})

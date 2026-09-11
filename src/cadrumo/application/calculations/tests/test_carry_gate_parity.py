@@ -33,10 +33,12 @@ from ....domain.calculations.registry.tests.registry_observations import registr
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..binding_prefill import resolve_bindings_from_local_store
 from ..cross_period_clean_state import (
-    CrossPeriodCleanStateBlocker,
-    CrossPeriodCleanStateVerdict,
     cross_period_dependency_requirements,
     evaluate_cross_period_clean_state,
+)
+from ..cross_period_models import (
+    CrossPeriodCleanStateBlocker,
+    CrossPeriodCleanStateVerdict,
 )
 from ..observations_repository import CalculationObservationRepository, observation_key
 from ..revision_carry_gate import revision_carry_outcome

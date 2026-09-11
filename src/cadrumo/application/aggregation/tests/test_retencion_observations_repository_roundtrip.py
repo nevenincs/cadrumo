@@ -24,17 +24,17 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.storage.crypto.encrypted_columns import secure_object_key_digest
 from ....adapters.persistence.storage.errors import PathContainmentError, SecureObjectRowIdentityError
-from ....core.aggregation import AggregationCaptureKind, BindingSourceKind
+from ....core.aggregation import AggregationCaptureKind, BindingSourceKind, RetencionScheme
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.period import Period
 from ....tests.secure_sql import isolated_runtime_profile
-from .._retencion_observations_repository import (
+from ..retencion_observations_repository import (
     RetencionObservationRepository,
     _RetencionObservationEnvelopePayload,
     persist_retencion_observations,
     retencion_observation_key,
 )
-from .._retenciones import RetencionObservation, RetencionScheme, aggregate_retenciones_111
+from ..retenciones import RetencionObservation, aggregate_retenciones_111
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -142,7 +142,7 @@ def test_anti_tautology_strict_payload_rejects_dropped_field() -> None:
     If this proof ever passes with a partial payload, every roundtrip above would
     be tautological (a save-drops-field regression could not surface).
     """
-    from .._retencion_observations_repository import _RetencionObservationEnvelopePayload
+    from ..retencion_observations_repository import _RetencionObservationEnvelopePayload
 
     full = {
         "modelo": "180",
@@ -447,7 +447,7 @@ def test_envelope_refuses_a_capture_instant_without_utc(captured_at: datetime) -
     against UTC-aware instants silently answered a different question. All three
     now use the one canonical UtcInstant.
     """
-    from .._retencion_observations_repository import _RetencionObservationEnvelopePayload
+    from ..retencion_observations_repository import _RetencionObservationEnvelopePayload
 
     with pytest.raises(ValidationError):
         _RetencionObservationEnvelopePayload(
@@ -466,7 +466,7 @@ def test_envelope_refuses_a_capture_instant_without_utc(captured_at: datetime) -
 
 def test_envelope_accepts_a_utc_capture_instant() -> None:
     """The positive control for the refusal above."""
-    from .._retencion_observations_repository import _RetencionObservationEnvelopePayload
+    from ..retencion_observations_repository import _RetencionObservationEnvelopePayload
 
     payload = _RetencionObservationEnvelopePayload(
         modelo="180",

@@ -49,7 +49,7 @@ def test_not_in_force_refusal_carries_no_authored_sentence() -> None:
 def test_every_rate_slot_refusal_key_resolves_to_real_text(key: str) -> None:
     """A key that never landed in a catalogue must fail, not render bare."""
     from ....core.config import override_settings
-    from ....core.i18n import tr
+    from ....core.i18n.render import tr
 
     for language in ("en", "es", "ca", "hu"):
         with override_settings(cadrumo_output_language=language):

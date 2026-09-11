@@ -5,7 +5,7 @@ filing subject, and those values reach carry-forward projection, wallet balance
 and live history consumers as if they identified that subject. A bounded plain
 string cannot enforce the AEAT checksum, so ``taxpayer_nif='bad'`` was
 persistable and returned intact; both fields are now
-:data:`~cadrumo.core.identity.SubjectTaxId`, the same authority every other
+:data:`~cadrumo.core.identity.tax_id.SubjectTaxId`, the same authority every other
 subject-identifying field uses.
 
 Anti-tautology: the checksum-invalid case (``12345678A``) is one letter away

@@ -46,8 +46,8 @@ from textual.screen import Screen
 from textual.widgets import Button, Footer, Input, Label, Select, Static
 
 from ....core.credentials import PROFILE_PASSWORD_MIN_SCALARS
-from ....core.external_constants import UTF_8_ENCODING
-from ....core.i18n.render import SUPPORTED_OUTPUT_LANGUAGES, output_language, tr
+from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, UTF_8_ENCODING
+from ....core.i18n.render import output_language, tr
 from ....entrypoints.tui.components.status import PinnedStatusBar
 from ....entrypoints.tui.components.theme import BASE_CSS, install_cadrumo_themes, tokenised
 from .credentials import (

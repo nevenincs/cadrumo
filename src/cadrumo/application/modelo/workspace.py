@@ -47,12 +47,14 @@ from ...domain.calculations.registry.schema_surfaces import RelationDefinition
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from .work_addressing import (
-    ModeloExactWorkUnitTarget,
-    ModeloVisibleFilingTarget,
+from ._work_selection import (
     ModeloWorkResolution,
     ModeloWorkSelectionMode,
     ModeloWorkSelectorRequest,
+)
+from .work_addressing import (
+    ModeloExactWorkUnitTarget,
+    ModeloVisibleFilingTarget,
     diverging_work_target_revision_axes,
 )
 from .workspace_models import (

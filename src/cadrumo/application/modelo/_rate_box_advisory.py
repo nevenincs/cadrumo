@@ -36,7 +36,7 @@ from ...domain.calculations.registry.rate_box_partition import (
     rate_box_coverage_shortfalls,
 )
 from ...domain.calculations.registry.schema import ModeloRevision
-from ..aggregation import CalculationSourceDiagnostic
+from ..aggregation.source_mesh import CalculationSourceDiagnostic
 
 __all__ = ["collect_rate_box_coverage_diagnostics"]
 

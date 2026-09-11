@@ -13,10 +13,9 @@ from datetime import date
 from decimal import Decimal
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ...core.modelo import Modelo
+from ...core.i18n.translatable import Translatable as t
 from ...core.money.rounding import round_to_cents
 from ...core.period import Period
-from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ...domain.invoices.enums import IvaRate, iva_rate_kind, iva_rate_percentage
 from ...domain.invoices.models import Invoice, InvoiceLine
@@ -27,48 +26,19 @@ from ...domain.iva.invoice_classification import invoice_line_to_iva_observation
 from ...domain.iva.recargo_equivalencia import recargo_rate_for_applied_rate
 from ...domain.iva.schema import EUMemberState, IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from ...domain.transactions.models import OutOfWindowTransactionSummary
-from ._invoice_devengo import (
+from ._modelo_bindings_support import STORAGE_DEGRADATION_ERRORS
+from .errors import AggregationValidationError
+from .invoice_devengo import (
     invoice_devengo_in_period,
     resolve_invoice_devengo,
 )
-from ._modelo_bindings_support import STORAGE_DEGRADATION_ERRORS
-from ._source_mesh import (
+from .source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
     out_of_window_summary_source_diagnostic,
 )
-from .errors import AggregationValidationError, t
 from .source_resolution_operations import source_diagnostics_for as _diagnostics_for
 
-INVOICE_LEDGER_SCREEN_BINDINGS: dict[str, tuple[BindingId, ...]] = {
-    # ONE screen, a binding set per modelo -- deliberately not a second
-    # screen per modelo. M390 declares the same seven concepts M303 does,
-    # differing only in the id prefix, so a parallel function would be two
-    # implementations of one comparison free to drift: a widening applied to
-    # one and not the other is invisible until a filing is wrong.
-    Modelo.M303.value: (
-        "modelo-303-iva-repercutido-general-cuota",
-        "modelo-303-iva-repercutido-reducido-cuota",
-        "modelo-303-iva-repercutido-super-reducido-cuota",
-        "modelo-303-iva-soportado-interiores-cuota",
-        # The recargo de equivalencia tiers (LIVA art. 161). A supplier to a
-        # recargo-regime retailer charges it ON TOP of the cuota, so an invoice
-        # carrying one and a ledger missing it under-declare by exactly the
-        # surcharge.
-        "modelo-303-recargo-equivalencia-general-cuota",
-        "modelo-303-recargo-equivalencia-reducido-cuota",
-        "modelo-303-recargo-equivalencia-super-reducido-cuota",
-    ),
-    Modelo.M390.value: (
-        "modelo-390-iva-repercutido-general-cuota",
-        "modelo-390-iva-repercutido-reducido-cuota",
-        "modelo-390-iva-repercutido-super-reducido-cuota",
-        "modelo-390-iva-soportado-interiores-cuota",
-        "modelo-390-iva-recargo-equivalencia-general-cuota",
-        "modelo-390-iva-recargo-equivalencia-reducido-cuota",
-        "modelo-390-iva-recargo-equivalencia-super-reducido-cuota",
-    ),
-}
 M303_INVOICE_EVIDENCE_SAMPLE_LIMIT = 5
 
 

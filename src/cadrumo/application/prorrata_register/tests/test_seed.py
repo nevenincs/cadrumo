@@ -6,9 +6,9 @@ See Also:
     :class:`~application.calculations.CalculationObservationRepository`
         Real encrypted observation repository that stores the prior Modelo 303
         settlement observation.
-    :class:`~application.calculations.CrossPeriodCleanStateBlocker`
+    :class:`~application.calculations.cross_period_models.CrossPeriodCleanStateBlocker`
         Blocking vocabulary asserted for registry-revision divergence findings.
-    :func:`~tests.registry_observations.registry_grounded_modelo_observation`
+    :func:`~domain.calculations.registry.tests.registry_observations.registry_grounded_modelo_observation`
         Test helper that builds registry-grounded Modelo 303 observation
         payloads instead of mirroring calculation logic.
 """
@@ -27,7 +27,7 @@ from ....core.prorrata_register import ProrrataProvisionalProvenance
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations.cross_period_clean_state import CrossPeriodCleanStateBlocker
+from ...calculations.cross_period_models import CrossPeriodCleanStateBlocker
 from ...calculations.observations_repository import CalculationObservationRepository
 from ..seed import evaluate_carried_prior_definitiva_seed
 

@@ -61,11 +61,14 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.tests.registry_observations import (
+    registry_grounded_modelo_observation,
+    revision_id_for_observation,
+)
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ..._foreign_asset_thresholds import foreign_asset_declaration_thresholds
-from ...aggregation import CalculationSourceContext
+from ...aggregation.source_mesh import CalculationSourceContext
 from ..binding_prefill import resolve_bindings_from_local_store
 from ..foreign_asset_redeclaration import modelo_720_redeclaration_advisory_findings
 from ..multi_year import PreviousFilingSourceResolver

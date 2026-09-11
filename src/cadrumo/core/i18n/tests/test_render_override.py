@@ -13,8 +13,7 @@ import logging
 import pytest
 
 from ...config import override_settings
-from ...external_constants import SUPPORTED_OUTPUT_LANGUAGES
-from .. import DEFAULT_OUTPUT_LANGUAGE
+from ...external_constants import DEFAULT_OUTPUT_LANGUAGE, SUPPORTED_OUTPUT_LANGUAGES
 from .. import render as _render
 from ..render import output_language
 
@@ -49,22 +48,14 @@ def test_output_language_ignores_invalid_override_then_falls_back() -> None:
 
 
 def test_default_output_language_equals_es() -> None:
-    """The public i18n facade exports the canonical Spanish fallback constant.
+    """The canonical Spanish fallback constant is used by the renderer.
 
     After contract every ``"es"`` fallback string in _cached_output_language is
     replaced by this constant. Locking its value here ensures accidental
-    changes fail loudly and that the public facade resolves the renderer's
-    authority rather than defining a second value.
+    changes fail loudly.
     """
     assert DEFAULT_OUTPUT_LANGUAGE == "es"
     assert DEFAULT_OUTPUT_LANGUAGE == _render.DEFAULT_OUTPUT_LANGUAGE
-
-
-def test_default_output_language_exported_in_all() -> None:
-    """DEFAULT_OUTPUT_LANGUAGE is part of the i18n facade's public surface."""
-    from .. import __all__ as public_exports
-
-    assert "DEFAULT_OUTPUT_LANGUAGE" in public_exports
 
 
 def test_fallback_language_is_default_output_language() -> None:

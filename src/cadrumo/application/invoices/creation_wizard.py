@@ -5,7 +5,7 @@ when automated extraction (``ledger evidence extract`` / vision OCR) is
 unavailable or insufficient: the operator (an autonomous LLM agent that cannot
 answer an interactive prompt) supplies every invoice field as CLI options in
 one call. This module validates each field independently -- reusing the same
-grounded heuristics :func:`~core.identity.validate_spanish_tax_id` and the
+grounded heuristics :func:`~core.identity.tax_id.validate_spanish_tax_id` and the
 ISO-8601 / canonical-decimal parsers already enforce on the extract/confirm
 path -- and accumulates every failing field into one refusal
 (``no-silent-under-declaration``: a malformed field is named, never silently
@@ -49,9 +49,10 @@ from ...core.aggregation import IntracomOperationType
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.error_codes import resolve_error_message
 from ...core.errors.hierarchy import CoreValidationError
-from ...core.identity import IdentityError, validate_spanish_tax_id
+from ...core.identity.documents import IdentityError
+from ...core.identity.tax_id import validate_spanish_tax_id
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.parsing import normalise_iso_4217_currency
+from ...core.parsing.codes import normalise_iso_4217_currency
 from ...core.parsing.dates import parse_iso8601_date
 from ...domain.invoices.enums import resolve_iva_rate_slot
 from ...domain.invoices.errors import InvoiceValidationError

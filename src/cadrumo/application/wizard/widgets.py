@@ -10,7 +10,7 @@ the failure back to a localised prompt.
 
 Tax-ID-shaped questions (any question whose id matches ``tax-id`` or
 ends with ``-tax-id``) route through
-:func:`cadrumo.core.identity.validate_identity` so the Spanish NIF / NIE
+:func:`cadrumo.core.identity.documents.validate_identity` so the Spanish NIF / NIE
 / CIF checksum is enforced at every write surface: interactive,
 ``--quiet`` flag, and profile wizard mutations.
 """
@@ -20,9 +20,9 @@ from __future__ import annotations
 from pathlib import Path
 
 from ...core.errors.error_codes import resolve_error_message
-from ...core.i18n import tr
-from ...core.identity import IdentityError, validate_identity
-from ...core.parsing import parse_bool
+from ...core.i18n.render import tr
+from ...core.identity.documents import IdentityError, validate_identity
+from ...core.parsing.utils import parse_bool
 from ...core.redaction.rules import redact_validation_context as _redact_validation_context
 from ...core.spanish_postcode import is_spanish_postcode
 from .errors import WizardValidationError

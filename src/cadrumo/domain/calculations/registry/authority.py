@@ -17,9 +17,8 @@ from threading import RLock
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.hashing import content_hash_hex
-from ....core.identity import ContentDigest
+from ....core.identity.digest import ContentDigest
 from ....core.resources.bundled_data import bundled_path as _bundled_path
-from ._snapshot_internals import _build_validated_snapshot
 from .authority_artifact import (
     AuthorityArtifact,
     AuthorityEvidenceProjection,
@@ -38,6 +37,7 @@ from .schema import (
 from .schema_deadlines import DeadlineWindowDefinition
 from .schema_references import SourceReference
 from .schema_verification import LiveCrossReferenceDecision, WorkbookParityReference
+from .snapshot import build_validated_snapshot
 from .static_inspection import RegistryRevisionInspection
 from .temporal import select_revision
 
@@ -417,7 +417,7 @@ class ValidatedRegistryAuthority:
         if cached is not None:
             return cached
         modelo = self.validate_modelo(modelo_id)
-        snapshot = _build_validated_snapshot(
+        snapshot = build_validated_snapshot(
             modelo,
             self.catalogues,
             filing_year=filing_year,

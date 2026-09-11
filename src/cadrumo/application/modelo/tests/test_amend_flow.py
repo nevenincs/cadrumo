@@ -33,6 +33,7 @@ from ....core.period import Period
 from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -54,7 +55,6 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.cross_period_seeding import seed_clean_cross_period_sources
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ....tests.write_unit_recorder import WriteUnitRecorder
 from ..action_errors import (

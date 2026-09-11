@@ -88,7 +88,7 @@ from ...domain.prorrata_register.register import (
     ProrrataRegisterEntry,
     ProrrataRegisterError,
 )
-from ..aggregation import (
+from ..aggregation.source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,

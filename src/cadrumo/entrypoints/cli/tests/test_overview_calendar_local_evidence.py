@@ -19,7 +19,7 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.filing_repository import upsert_filing_record
-from ....tests import FIXTURES_DIR
+from ....tests.inventory import FIXTURES_DIR
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
 from .._overview import local_calendar_filing_evidence

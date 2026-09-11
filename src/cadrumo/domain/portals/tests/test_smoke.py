@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import sys
+
 import pytest
 
 from ....core import logging
@@ -21,9 +23,7 @@ def test_smoke_portals_public_surface() -> None:
     assert logging.get_logger(__name__).name == __name__
 
     # Every name advertised in __all__ is resolvable.
-    import importlib
-
-    package = importlib.import_module(_package_name)
+    package = sys.modules[_package_name]
     for name in portals_all:
         assert hasattr(package, name), name
 

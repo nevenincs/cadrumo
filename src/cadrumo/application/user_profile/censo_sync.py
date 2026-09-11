@@ -33,7 +33,8 @@ from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel
 
-from ...core.identity import IdentityError, validate_spanish_tax_id
+from ...core.identity.documents import IdentityError
+from ...core.identity.tax_id import validate_spanish_tax_id
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.user_profile.values import UserProfileFact
@@ -116,7 +117,7 @@ def _assert_read_belongs_to_this_profile(
     is required to complete the profile in any case.
 
     Both sides are compared in the CANONICAL form
-    :func:`~core.identity.validate_spanish_tax_id` returns, rather than by an
+    :func:`~core.identity.tax_id.validate_spanish_tax_id` returns, rather than by an
     ad-hoc strip-and-upper. That single change closes the guard's two ways of
     being wrong at once, and they fail in opposite directions:
 

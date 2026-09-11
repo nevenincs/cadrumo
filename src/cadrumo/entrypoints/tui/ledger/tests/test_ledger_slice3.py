@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import override
 
 import pytest
-from test_support.tui_frame import geometry_band
+from dev.tui.harness.frame import geometry_band
 from textual.containers import VerticalScroll
 from textual.widgets import Button, DataTable, Static
 

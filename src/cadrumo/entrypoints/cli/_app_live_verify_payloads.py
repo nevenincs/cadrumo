@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ...core.identity import BucketId
+from ...core.identity.bucket import BucketId
 from ...core.json_contract import OutputSchema
 
 

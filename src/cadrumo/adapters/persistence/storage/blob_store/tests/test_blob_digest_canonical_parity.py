@@ -25,7 +25,7 @@ from pydantic import TypeAdapter, ValidationError
 
 from ......core.classification.policies import SensitivityClass
 from ......core.hashing import sha256_hex
-from ......core.identity import ContentDigest
+from ......core.identity.digest import ContentDigest
 from ..blob_store import BlobManifest, BlobReference, EncryptedBlobStore
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

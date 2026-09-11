@@ -25,7 +25,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ...core.identity import CalculationRevisionId
+from ...core.identity.hex_ids import CalculationRevisionId
 from ...domain.modelos.codes import ModeloCode
 from ._modelo_review_package_payloads import (
     ModeloReviewPackageBuildResult,

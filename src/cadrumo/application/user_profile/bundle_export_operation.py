@@ -37,7 +37,8 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import HEX_ALPHABET
 from ...core.hex import Hex64Str
-from ...core.identity import ContentDigest, ProfileId
+from ...core.identity.digest import ContentDigest
+from ...core.identity.profile import ProfileId
 from ...core.locks import exclusive_file_lock
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.paths import effective_storage_root

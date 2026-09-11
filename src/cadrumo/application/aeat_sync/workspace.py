@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, StringConstraints, TypeAd
 from ...core.filing_year import FilingYear
 from ...core.hex import HEX_PATTERN_64
 from ...core.identifier_grammar import NamespacedId
-from ...core.identity import BucketId
+from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.time.utc import UtcInstant

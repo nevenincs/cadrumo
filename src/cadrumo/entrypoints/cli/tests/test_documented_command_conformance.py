@@ -91,8 +91,8 @@ import pytest
 from pydantic import TypeAdapter
 
 from ....core.directory_scan import scan_directory
-from ....tests import REPO_ROOT
-from ....tests.cli_runner import cadrumo_click_command
+from ....tests.inventory import REPO_ROOT
+from .cli_runner import cadrumo_click_command
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

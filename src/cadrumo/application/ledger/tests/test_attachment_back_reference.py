@@ -16,6 +16,9 @@ history -- no mocks or stubs.
 
 from __future__ import annotations
 
+from datetime import UTC, date, datetime
+from decimal import Decimal
+
 import pytest
 
 from ....adapters.persistence.storage.attachment import AttachmentStore
@@ -27,20 +30,12 @@ from ....domain.attachments.service import (
     add_attachment,
     link_attachment_transaction,
 )
-from ._action_test_support import (
+from ....domain.transactions.enums import TransactionDirection
+from ..actions_manual import attach_manual_transaction_evidence, create_manual_transaction
+from ..models import ManualLedgerTransactionCommand
+from .action_fixtures import (
     _BUCKET_ID,
-    UTC,
-    Decimal,
-    ManualLedgerTransactionCommand,
-    TransactionDirection,
     _repositories,
-    attach_manual_transaction_evidence,
-    create_manual_transaction,
-    date,
-    datetime,
-)
-from ._action_test_support import (
-    secure_objects as secure_objects,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

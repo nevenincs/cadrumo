@@ -48,7 +48,7 @@ from pathlib import Path
 import pytest
 
 from ....core.directory_scan import scan_directory
-from ....tests import REPO_ROOT
+from ....tests.inventory import REPO_ROOT
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

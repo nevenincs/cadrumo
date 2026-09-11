@@ -78,26 +78,27 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from test_support.registry_authoring import _committed_modelo
 
-from .....application.aggregation import aggregate_renta_m100_income_ledger
-from .....core.aggregation import LedgerIncomeGrounding
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.period import Period
-from .....core.resources.bundled_data import bundled_path
+from cadrumo.application.aggregation.renta_income_ledger import aggregate_renta_m100_income_ledger
+from cadrumo.core.aggregation import LedgerIncomeGrounding
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.period import Period
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.iva.classification import InvoiceKind
+from cadrumo.domain.iva.components import category_cuota_is_zero_by_law
+from cadrumo.domain.iva.schema import IvaCategory
+from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
+from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+
 from .....tests.registry_snapshot import build_snapshot
-from ....iva.classification import InvoiceKind
-from ....iva.components import category_cuota_is_zero_by_law
-from ....iva.schema import IvaCategory
-from ....transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from ....transactions.models import Transaction, TransactionCatalogue
-from ....transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
 )
 from ..schema import ModeloRevision
 from ..schema_input_kind import InputKind
+from ._published_authority import artifact_components
 from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -228,7 +229,7 @@ def _modelo_100_revision() -> ModeloRevision:
     matches is the one a production calculate would load. A hand-assembled
     revision could agree with this module and disagree with the filing.
     """
-    modelo, catalogues = _committed_modelo("100")
+    modelo, catalogues = artifact_components("100")
     return build_snapshot(
         modelo,
         catalogues,

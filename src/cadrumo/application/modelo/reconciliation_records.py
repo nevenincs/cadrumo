@@ -28,7 +28,8 @@ from typing import Protocol
 
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
-from ...core.identity import BucketId, WorkUnitId
+from ...core.identity.bucket import BucketId
+from ...core.identity.hex_ids import WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.utc import validate_utc_aware
 from ...domain.buckets.event import BucketEvent, BucketEventId

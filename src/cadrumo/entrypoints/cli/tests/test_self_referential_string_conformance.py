@@ -57,7 +57,7 @@ import pytest
 from ....application.modelo.selectors import ModeloCalculationRevisionSelector
 from ....core.i18n.render import locale_map
 from ....domain.attachments.enums import AttachmentSource
-from ....tests.cli_runner import cadrumo_click_command
+from .cli_runner import cadrumo_click_command
 from .test_documented_command_conformance import (
     _AEAT_TOKEN_RE,
     _CitedCommand,

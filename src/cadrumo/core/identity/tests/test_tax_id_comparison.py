@@ -28,7 +28,7 @@ from __future__ import annotations
 
 import pytest
 
-from .._tax_id import same_tax_identifier, tax_id_identity_token
+from ..tax_id import same_tax_identifier, tax_id_identity_token
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

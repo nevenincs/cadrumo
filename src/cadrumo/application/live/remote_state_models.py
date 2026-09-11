@@ -18,7 +18,8 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field
 
-from ...core.identity import AeatExpedienteId, BucketId
+from ...core.identity.aeat_expediente import AeatExpedienteId
+from ...core.identity.bucket import BucketId
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.json_contract import Notice
 from ...core.models import STRICT_FROZEN_CONFIG

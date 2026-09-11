@@ -23,14 +23,14 @@ import pytest
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....domain.modelos.calculation_revision import CalculationRevisionState
-from ._action_test_support import (
-    _BUCKET_ID,
-    SecureObjectRepository,
-    _repositories,
-    remove_manual_transaction,
-)
+from ..actions_lifecycle import remove_manual_transaction
 from ._remove_draft_revision_support import _create_row, _seed_revision_citing_transaction
+from .action_fixtures import (
+    _BUCKET_ID,
+    _repositories,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

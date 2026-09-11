@@ -46,7 +46,7 @@ def _option(
     return OptionSpec(
         name=name,
         declarations=(declaration,),
-        value=ValueContract(DeferredTarget(module, qualname)),
+        value=ValueContract(DeferredTarget(module, qualname, __package__)),
         default=ParameterDefault.value(default),
         help_key=TranslationKey(help_key),
         metavar=None,

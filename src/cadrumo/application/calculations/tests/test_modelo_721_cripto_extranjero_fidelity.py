@@ -71,8 +71,11 @@ from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.foreign_asset_obligation import ForeignAssetObligationGroup
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry.tests.registry_observations import (
+    registry_grounded_observation_rows,
+    revision_id_for_observation,
+)
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observation_rows, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ..._foreign_asset_thresholds import foreign_asset_declaration_thresholds
 from ..foreign_asset_redeclaration import modelo_721_redeclaration_advisory_findings

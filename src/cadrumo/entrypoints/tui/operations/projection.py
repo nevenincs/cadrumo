@@ -16,7 +16,7 @@ from typing import Literal, assert_never
 from pydantic import BaseModel, model_validator
 
 from ....application.operations.events import OperationEventCode
-from ....application.operations.frontend_contracts import (
+from ....application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,
     OperationReviewAvailableInteractionV1,

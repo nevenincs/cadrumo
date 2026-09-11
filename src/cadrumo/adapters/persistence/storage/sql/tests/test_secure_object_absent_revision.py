@@ -20,20 +20,19 @@ real AEAD, real stored-metadata erasure. Nothing is mocked.
 
 from __future__ import annotations
 
+import sqlite3
+from datetime import UTC, datetime
+from pathlib import Path
+
 import pytest
 
+from ......core.classification.policies import SensitivityClass
 from ......tests.master_key import EphemeralMasterKeyProvider
+from ...errors import SecureObjectUnreadableError
+from .._secure_object_records import SecureObjectRecord, SecureObjectUnreadable
+from ..secure_objects import SecureObjectRepository
 from ._secure_objects_support import (
-    UTC,
-    Path,
-    SecureObjectRecord,
-    SecureObjectRepository,
-    SecureObjectUnreadable,
-    SecureObjectUnreadableError,
-    SensitivityClass,
     _repo_at,
-    datetime,
-    sqlite3,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

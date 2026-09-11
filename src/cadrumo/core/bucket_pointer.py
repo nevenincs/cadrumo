@@ -95,7 +95,8 @@ class BucketPointer(BaseModel):
 
 def pointer_path(root: Path) -> Path:
     """Return the active-profile record path beneath ``root``."""
-    from .storage_taxonomy import StorageCategory, storage_location
+    from .storage_taxonomy import StorageCategory
+    from .storage_taxonomy_locations import storage_location
 
     return root / storage_location(StorageCategory.ACTIVE_PROFILE_POINTER).relative_path()
 

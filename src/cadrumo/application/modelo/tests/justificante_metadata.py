@@ -10,7 +10,7 @@ from pydantic import AnyHttpUrl, TypeAdapter
 from ....adapters.inbound.pdf.source_provenance import source_pdf_reference_path
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....core.period import Period
-from ....domain.justificante import Justificante
+from ....domain.justificante.schema import Justificante
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 
 

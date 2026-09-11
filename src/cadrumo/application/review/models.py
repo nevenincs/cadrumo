@@ -30,7 +30,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-from ...core.i18n import Translatable as tr
+from ...core.i18n.translatable import Translatable as tr
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.utc import validate_utc_aware
 from ...domain.filing.schema import ModeloValidationFinding

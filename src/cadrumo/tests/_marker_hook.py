@@ -1,8 +1,8 @@
 """Shared pytest collection policy enforcing taxonomy and live-import safety.
 
 This module is test-infrastructure, not a production module. The repo-root
-``conftest.py`` imports it so items collected anywhere under ``src/cadrumo/``
-pass through the same enforcement surface.
+``conftest.py`` imports it so every item collected through that root passes
+through the same enforcement surface.
 
 The marker contract enforced by :func:`apply` on every collected item:
 
@@ -28,15 +28,13 @@ any other invocation (a bare ``pytest -m integration``, a path-scoped run) ran
 isolation-sensitive tests against a run-varying set of co-resident files and
 produced failures that belonged to the schedule, not the code.
 
-The hold is a deselect plus a warning rather than a refusal, and both halves are
-load-bearing. Raising from this hook is not available: under xdist this hook runs
-INSIDE each worker, and an exception here kills the worker, which xdist reports as
-``INTERNALERROR ... assert not crashitem`` -- the same class of aborted run the
-hold exists to prevent. A silent deselect is not available either: xdist performs
-deselection inside its workers and the controller's stats never receive it (see
-:mod:`._deselection_hook`), so the dropped coverage would go unreported. The
-warning rides the warnings channel, which IS aggregated to the controller, so the
-hold is always stated.
+The hold deselects inside each worker, emits a warning there, and carries the
+held node ids back through ``workeroutput``. The controller then reports the
+population and exits with ``USAGE_ERROR``. Raising directly from the collection
+hook is not available: under xdist this hook runs INSIDE each worker, and an
+exception there kills the worker and surfaces as an internal error. The
+worker-to-controller handoff preserves a clean worker lifecycle while ensuring
+the incomplete invocation cannot finish green.
 
 The two policy functions compose in this order: :func:`apply` validates marker
 taxonomy before :func:`apply_banned_live_import_policy` inspects live-marked
@@ -236,9 +234,8 @@ def _hold_serial_items_from_xdist(config: pytest.Config, items: list[pytest.Item
     node_ids = sorted(item.nodeid for item in held)
     # ``workeroutput`` is the sanctioned worker-to-controller channel; xdist
     # ships it on node-down, where ``pytest_testnodedown`` can read it. Written
-    # here so a controller-side hook can turn the hold into a non-zero exit
-    # rather than leaving a green run that silently dropped tests. Inert until
-    # such a hook exists: nothing reads the key yet.
+    # here so the controller-side node-down hook can turn the hold into a
+    # non-zero exit rather than leaving a green run that dropped tests.
     config.workeroutput[SERIAL_HELD_WORKEROUTPUT_KEY] = node_ids
     named = ", ".join(node_ids[:_MAX_NAMED_HELD_ITEMS])
     elided = len(node_ids) - _MAX_NAMED_HELD_ITEMS
@@ -260,6 +257,11 @@ _held_from_workers: list[str] = []
 Module-level because the controller sees each worker exactly once, on node
 down, and must survive until the session finishes to decide the exit status.
 """
+
+
+def reset_held_serials() -> None:
+    """Clear controller-side held-serial state for a new pytest session."""
+    _held_from_workers.clear()
 
 
 def record_held_from_node(node: object) -> None:

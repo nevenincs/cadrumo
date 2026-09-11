@@ -59,12 +59,10 @@ LIVE_EXPEDIENTES_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _OPTIONAL_YEAR_TO_OPTION,
         ),
         policy=_PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._app_live_expedientes_cli", "expedientes_pull")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._app_live_expedientes_cli", "expedientes_pull", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_expedientes_payloads", "ExpedientesCaptureResult"),
+            target=DeferredTarget("._app_live_expedientes_payloads", "ExpedientesCaptureResult", __package__),
             identity="app.live.expedientes.pull",
         ),
     ),
@@ -78,12 +76,10 @@ LIVE_EXPEDIENTES_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=_LEAF_INVOCATION,
         parameters=(),
         policy=_ENCRYPTED_LOCAL_READ_POLICY,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._app_live_expedientes_cli", "expedientes_list")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._app_live_expedientes_cli", "expedientes_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_expedientes_payloads", "ExpedientesListResult"),
+            target=DeferredTarget("._app_live_expedientes_payloads", "ExpedientesListResult", __package__),
             identity="app.live.expedientes.list",
         ),
     ),
@@ -105,12 +101,10 @@ LIVE_EXPEDIENTES_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_ENCRYPTED_LOCAL_READ_POLICY,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._app_live_expedientes_cli", "expedientes_show")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._app_live_expedientes_cli", "expedientes_show", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_expedientes_payloads", "ExpedientesViewResult"),
+            target=DeferredTarget("._app_live_expedientes_payloads", "ExpedientesViewResult", __package__),
             identity="app.live.expedientes.view",
         ),
     ),
@@ -124,12 +118,10 @@ LIVE_EXPEDIENTES_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=_LEAF_INVOCATION,
         parameters=(),
         policy=_ENCRYPTED_LOCAL_READ_POLICY,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._app_live_expedientes_cli", "expedientes_latest")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._app_live_expedientes_cli", "expedientes_latest", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._app_live_expedientes_payloads", "ExpedientesLatestResult"),
+            target=DeferredTarget("._app_live_expedientes_payloads", "ExpedientesLatestResult", __package__),
             identity="app.live.expedientes.latest",
         ),
     ),

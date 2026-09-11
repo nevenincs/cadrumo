@@ -26,7 +26,7 @@ from typing import Annotated, Any
 
 from pydantic import AfterValidator
 
-from ...core.parsing import require_iso8601_date
+from ...core.parsing.dates import require_iso8601_date
 
 
 def enum_value_text(enum_cls: type[StrEnum]) -> Any:

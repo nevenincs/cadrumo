@@ -21,11 +21,11 @@ import pytest
 
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.schema_extraction import ExtractionProfileDefinition
-from .....tests import FIXTURES_DIR
 from .....tests.fixtures.external_layout_candidates.models import (
     external_layout_source_class_is_non_authoritative,
     load_external_layout_candidate,
 )
+from .....tests.inventory import FIXTURES_DIR
 from ..parser import (
     _classify_target,
     _extract_pages_words,

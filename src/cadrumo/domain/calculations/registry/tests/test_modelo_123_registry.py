@@ -6,15 +6,19 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from test_support.registry_authoring import RegistryValidator, _committed_modelo, _committed_snapshot
 
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources.bundled_data import bundled_path
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.resources.bundled_data import bundled_path
+
 from .....tests.registry_snapshot import build_snapshot
 from ..authority import bundled_authority
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema import RegistrySnapshot
 from ..temporal import select_revision
+from ._published_authority import (
+    artifact_components,
+    artifact_snapshot,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -73,7 +77,7 @@ _M123_2019_2023_INGRESO_CASILLA: CasillaId = validated_casilla_id("07")
 
 
 def test_modelo_123_guidance_and_layout_sources_are_separated() -> None:
-    modelo, catalogues = _committed_modelo("123")
+    modelo, catalogues = artifact_components("123")
 
     procedure = catalogues.sources["aeat-modelo-123-procedure"]
     assert "aeat-modelo-123-procedure" in modelo.source_refs
@@ -147,9 +151,8 @@ def test_modelo_123_validated_snapshot_owns_workflow_surfaces(
     filing_year: int,
     required_surfaces: set[str],
 ) -> None:
-    modelo, catalogues = _committed_modelo("123")
+    modelo, catalogues = artifact_components("123")
 
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
     snapshot = build_snapshot(
         modelo,
         catalogues,
@@ -167,7 +170,7 @@ def test_modelo_123_validated_snapshot_owns_workflow_surfaces(
 
 
 def test_modelo_123_supported_year_deadline_census_dates_sources_and_ownership() -> None:
-    modelo, _ = _committed_modelo("123")
+    modelo, _ = artifact_components("123")
     windows = {
         (window.filing_year, window.period.registry_token): (revision, window)
         for revision in modelo.revisions.values()
@@ -215,7 +218,7 @@ def test_modelo_123_supported_year_deadline_census_dates_sources_and_ownership()
 
 
 def _snapshot_2024(filing_year: int = 2024) -> RegistrySnapshot:
-    return _committed_snapshot("123", filing_year, "1T")
+    return artifact_snapshot("123", filing_year, "1T")
 
 
 def _calculate_2024(
@@ -337,7 +340,7 @@ def test_m123_2019_2023_casilla_06_invariant_to_nperceptores_and_base() -> None:
     manual pass-through casillas with no formula; they must not affect
     casilla 06 (Suma de retenciones y regularizacion = [03] + [05]).
     """
-    modelo, catalogues = _committed_modelo("123")
+    modelo, catalogues = artifact_components("123")
     snapshot = build_snapshot(
         modelo,
         catalogues,

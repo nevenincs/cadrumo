@@ -32,7 +32,7 @@ import pytest
 from pydantic import TypeAdapter
 
 from ......domain.transactions.enums import TransactionDirection
-from ......tests import FIXTURES_DIR
+from ......tests.inventory import FIXTURES_DIR
 from ..detection import detect_provider
 from ..pdf_n26 import PdfN26Provider
 

@@ -23,7 +23,8 @@ from pathlib import Path
 import pytest
 
 from ....core.casilla_id import validated_casilla_id
-from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
+from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+from ....core.i18n.render import tr
 from ....core.resources.bundled_data import bundled_path
 from ....tests.fixtures.borrador.generate import render_borrador_pdf
 from ._cli_surface_support import (

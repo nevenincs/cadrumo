@@ -8,7 +8,8 @@ from ...application.filing.producer_snapshot import AmendmentEvidence
 from ...core.modelo import Modelo
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.deadlines.models import TaxpayerProfile
-from ...domain.justificante import Justificante, JustificanteRepositoryProtocol
+from ...domain.justificante.protocols import JustificanteRepositoryProtocol
+from ...domain.justificante.schema import Justificante
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionAmendmentIdentity,

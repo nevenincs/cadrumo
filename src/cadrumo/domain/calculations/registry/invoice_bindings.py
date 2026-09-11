@@ -13,7 +13,7 @@ from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_v
 from ....core.aggregation import INVOICE_BINDING_SOURCE_KINDS, BindingAggregationOp, BindingSourceKind
 from ....core.country_code import CountryCodeAlpha2
 from ....core.filing_year import FilingYear
-from ....core.identity import TaxIdIdentityToken
+from ....core.identity.tax_id import TaxIdIdentityToken
 from ....core.models import STRICT_FROZEN_CONFIG
 from ._invoice_row_materialization import (
     InvoiceGrouping,
@@ -21,7 +21,6 @@ from ._invoice_row_materialization import (
     m349_public_row_union,
     normalise_m349_nif_export_rows,
 )
-from ._m347_threshold import m347_clave_c_declarable_party_ids, m347_declarable_party_ids
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
     M347_OPERATION_CLAVES,
@@ -37,6 +36,7 @@ from .binding_selector_utils import (
 from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
 from .ids import BindingId
+from .m347_threshold import m347_clave_c_declarable_party_ids, m347_declarable_party_ids
 from .schema import DataBindingDefinition, ModeloRevision
 from .schema_base import coerce_enum_member
 

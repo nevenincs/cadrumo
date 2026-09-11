@@ -11,7 +11,7 @@ from pydantic import ValidationError
 
 from ....application.modelo.action_errors import WorkUnitAlreadyDiscardedError, WorkUnitMutationRefusedError
 from ...access_gate.errors import LiveSubmitForbiddenError
-from ...i18n import UnmatchedPlaceholderError, tr
+from ...i18n.render import UnmatchedPlaceholderError, tr
 from ...observability.errors import RunContextMissingError, RunTracePersistenceError
 from ..error_codes import (
     _DEFERRED_BIND,

@@ -16,8 +16,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....application.aggregation import (
-    CounterpartObservation,
+from ....application.aggregation.counterpart import CounterpartObservation
+from ....application.aggregation.service import (
     PerModeloAggregationCommand,
     PerModeloAggregationContributor,
     PerModeloAggregationResult,

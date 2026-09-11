@@ -12,7 +12,12 @@ from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
 from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
-from ...core.identity import BucketId, ContentDigest, ContinuidadId, ProfileId, TransactionId, WorkUnitId
+from ...core.identity.bucket import BucketId
+from ...core.identity.continuidad import ContinuidadId
+from ...core.identity.digest import ContentDigest
+from ...core.identity.hex_ids import WorkUnitId
+from ...core.identity.profile import ProfileId
+from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.revision_review import RevisionReviewStatus

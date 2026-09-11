@@ -12,7 +12,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field, NonNegativeInt
 
 from .....core.classification.policies import SensitivityClass
-from .....core.identity import ContentDigest
+from .....core.identity.digest import ContentDigest
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 # Every digest-shaped column below is written by ``core.hashing.sha256_hex``

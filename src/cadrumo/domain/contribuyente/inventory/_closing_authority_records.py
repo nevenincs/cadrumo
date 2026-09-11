@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_va
 from ....core.decimal.constants import MONEY_ZERO
 from ....core.filing_year import FilingYear
 from ....core.hashing import content_hash_hex as _content_hash_hex
-from ....core.identity import ContentDigest
+from ....core.identity.digest import ContentDigest
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ....core.time.utc import UtcInstant
 from ...identifiers import canonical_decimal_string as _canonical_decimal_string

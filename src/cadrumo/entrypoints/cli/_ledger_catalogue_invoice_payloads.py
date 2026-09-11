@@ -25,9 +25,12 @@ from pydantic import Field, NonNegativeInt, model_validator
 
 from ...core.aggregation import IntracomOperationType
 from ...core.country_code import CountryCodeAlpha2
-from ...core.identity import BucketId, InvoiceId, TaxIdIdentityToken, TransactionId
+from ...core.identity.bucket import BucketId
+from ...core.identity.hex_ids import InvoiceId
+from ...core.identity.tax_id import TaxIdIdentityToken
+from ...core.identity.transaction_ids import TransactionId
 from ...core.json_contract import OutputSchema
-from ...core.parsing import IsoCurrencyCode
+from ...core.parsing.codes import IsoCurrencyCode
 from ...core.text_bounds import NonEmptyStr, NonNegativeDecimal, PositiveCount, PositiveDecimal
 from ...domain.invoices.enums import PaymentStatus
 from ...domain.invoices.validators import validate_counterparty_tax_id, validate_country_code

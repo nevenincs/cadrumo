@@ -28,9 +28,9 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ....core.config import LLMProvider
+from ....core.config_support import LLMProvider
 from ....core.hashing import sha256_hex
-from ....core.identity import ContentDigest
+from ....core.identity.digest import ContentDigest
 from ....core.image_media_type import ImageMediaType
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operator_action_enums import ActionEvidenceProvenance

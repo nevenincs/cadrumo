@@ -6,7 +6,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
-from ...core.identity import ContentDigest
+from ...core.identity.digest import ContentDigest
 from ...core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ...core.models import STRICT_FROZEN_CONFIG
 from .errors import IvaValidationError

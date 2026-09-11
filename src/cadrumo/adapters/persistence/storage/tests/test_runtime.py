@@ -10,7 +10,8 @@ from pathlib import Path
 import pytest
 
 from .....core.bucket_pointer import BucketPointer, write_pointer
-from .....core.config import Settings, StorageRouteKind, override_settings
+from .....core.config import Settings, override_settings
+from .....core.config_support import StorageRouteKind
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CadrumoError
 from .....core.external_constants import OutputLanguage

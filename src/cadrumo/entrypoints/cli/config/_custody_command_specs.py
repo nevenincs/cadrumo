@@ -27,7 +27,7 @@ from ._spec_policies import BOOTSTRAP_DESTRUCTIVE, BOOTSTRAP_WRITE, ENCRYPTED_DE
 _OUTPUT_LANGUAGE = OptionSpec(
     name="output_language",
     declarations=("--output-language", "--language"),
-    value=ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage")),
+    value=ValueContract(DeferredTarget("....core.external_constants", "OutputLanguage", __package__)),
     default=ParameterDefault.value(None),
     help_key=TranslationKey("cli.config.auth.output_language_help"),
 )
@@ -81,9 +81,7 @@ CONFIG_CUSTODY_COMMAND_SPECS = (
             _OUTPUT_LANGUAGE,
         ),
         policy=ENCRYPTED_DESTRUCTIVE,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli.config._passphrase", "passphrase_change")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._passphrase", "passphrase_change", __package__)),
         result_schema=_schema("ConfigPassphraseChangeResult", "config.passphrase.change"),
         machine_secret=MachineSecretSpec(
             (
@@ -95,8 +93,9 @@ CONFIG_CUSTODY_COMMAND_SPECS = (
                         MachineSecretFieldSpec("new_passphrase_confirmation"),
                     ),
                     DeferredTarget(
-                        "cadrumo.entrypoints.cli.config._passphrase",
+                        "._passphrase",
                         "PassphraseChangeSecrets",
+                        __package__,
                     ),
                 ),
             )
@@ -122,14 +121,14 @@ CONFIG_CUSTODY_COMMAND_SPECS = (
             _OUTPUT_LANGUAGE,
         ),
         policy=BOOTSTRAP_WRITE,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli.config.custody", "config_login")),
+        handler=LazyBinding.available(DeferredTarget(".custody", "config_login", __package__)),
         result_schema=_schema("ConfigLoginResult", "config.login"),
         machine_secret=MachineSecretSpec(
             (
                 MachineSecretVariantSpec(
                     "passphrase",
                     (MachineSecretFieldSpec("passphrase"),),
-                    DeferredTarget("cadrumo.entrypoints.cli.config.custody", "LoginSecrets"),
+                    DeferredTarget(".custody", "LoginSecrets", __package__),
                 ),
             )
         ),
@@ -144,7 +143,7 @@ CONFIG_CUSTODY_COMMAND_SPECS = (
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(_OUTPUT_LANGUAGE,),
         policy=BOOTSTRAP_DESTRUCTIVE,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli.config.custody", "config_logout")),
+        handler=LazyBinding.available(DeferredTarget(".custody", "config_logout", __package__)),
         result_schema=_schema("ConfigLogoutResult", "config.logout"),
     ),
 )

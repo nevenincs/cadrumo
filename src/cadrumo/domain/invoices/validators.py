@@ -18,7 +18,8 @@ from __future__ import annotations
 import re
 
 from ...core.country_code import COUNTRY_CODE_ALPHA2_PATTERN
-from ...core.identity import nif_iva_format_for_country, normalise_nif_iva, validate_spanish_tax_id
+from ...core.identity.nif_iva import nif_iva_format_for_country, normalise_nif_iva
+from ...core.identity.tax_id import validate_spanish_tax_id
 from ..iva.schema import EUMemberState
 from .errors import InvoiceValidationError
 
@@ -97,7 +98,7 @@ def validate_iva_number(value: str, country: str) -> str:
 
     For an EU Member State (and Northern Ireland ``XI``) the number is matched
     against the country's published NIF-IVA structural pattern, sourced from the
-    central :data:`cadrumo.core.identity.NIF_IVA_FORMATS` authority: a malformed
+    central :data:`cadrumo.core.identity.nif_iva.NIF_IVA_FORMATS` authority: a malformed
     intra-community IVA number is bounced by AEAT's Modelo 349 validator, so the
     refusal names the country and the expected format. Live VIES existence is not
     checked — only the structure. For a non-EU counterparty (no published

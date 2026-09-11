@@ -23,7 +23,7 @@ from pydantic import StringConstraints
 
 from ..hex import HEX_PATTERN_64, Hex64Str
 
-ContentDigest = Hex64Str
+type ContentDigest = Hex64Str
 """Lowercase hex-64 SHA-256 digest of a payload's exact bytes."""
 
 #: The digest shape widened to admit the empty string, derived from the same

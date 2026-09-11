@@ -17,12 +17,11 @@ from pydantic import BaseModel, Field
 
 from ....core.config import (
     Settings,
-    StorageRouteClassification,
-    StorageRouteKind,
     classify_storage_route,
     load_settings,
     settings_for_active_profile_bucket,
 )
+from ....core.config_support import StorageRouteClassification, StorageRouteKind
 from ....core.time.clock import now as _utc_now
 from .errors import (
     storage_validation_error as _storage_validation_error,
@@ -43,7 +42,7 @@ if TYPE_CHECKING:
     from .master_key.bucket_session import BucketSession
     from .sql.secure_objects import SecureObjectRepository
 
-from ....core.identity import BucketId
+from ....core.identity.bucket import BucketId
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _SYNTHETIC_SESSION_BUCKET_IDS = frozenset({"ephemeral"})

@@ -27,7 +27,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from ...core.identity import BucketId
+from ...core.identity.bucket import BucketId
 from ...core.json_contract import OutputSchema
 from ...core.text_bounds import PositiveCount
 from ...core.time.utc import UtcInstant

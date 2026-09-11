@@ -22,7 +22,7 @@ from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL
 from ...core.time.clock import now
 
 if TYPE_CHECKING:
-    from ...adapters.persistence.storage.sql.secure_objects import SecureObjectWrite
+    from ...core.secure_object_write import SecureObjectWrite
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -57,6 +57,11 @@ from .models import (
     ManualLedgerTransactionCommand,
     ManualLedgerTransactionPatch,
     ManualLedgerTransactionResult,
+)
+from .protocols import (
+    BucketEventHistoryCoCommitWriterProtocol,
+    InvoiceCatalogueCoCommitWriterProtocol,
+    TransactionCatalogueCoCommitWriterProtocol,
 )
 
 _BUCKET_EVENT_PAYLOAD_VERSION = 1
@@ -903,7 +908,7 @@ def _commit_with_guarded_events(
     *,
     # rationale: calls to_secure_object_write(), an adapter-only escape
     # hatch absent from BucketEventHistoryRepositoryProtocol.
-    event_repository: BucketEventHistoryRepository,
+    event_repository: BucketEventHistoryCoCommitWriterProtocol,
     events: tuple[BucketEvent, ...],
     commit: Callable[[SecureObjectWrite], None],
     attempts: int = 4,
@@ -958,10 +963,10 @@ def _commit_with_guarded_events(
 
 def save_transaction_catalogue_and_events(
     *,
-    transaction_repository: TransactionCatalogueRepository,
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol,
     # rationale: calls to_secure_object_write(), an adapter-only escape
     # hatch absent from BucketEventHistoryRepositoryProtocol.
-    event_repository: BucketEventHistoryRepository,
+    event_repository: BucketEventHistoryCoCommitWriterProtocol,
     catalogue: TransactionCatalogue,
     events: tuple[BucketEvent, ...],
 ) -> None:
@@ -977,11 +982,11 @@ def save_transaction_catalogue_and_events(
 
 def save_transaction_catalogue_invoices_and_events(
     *,
-    transaction_repository: TransactionCatalogueRepository,
-    invoice_repository: InvoiceCatalogueRepository,
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol,
+    invoice_repository: InvoiceCatalogueCoCommitWriterProtocol,
     # rationale: calls to_secure_object_write(), an adapter-only escape
     # hatch absent from BucketEventHistoryRepositoryProtocol.
-    event_repository: BucketEventHistoryRepository,
+    event_repository: BucketEventHistoryCoCommitWriterProtocol,
     transaction_catalogue: TransactionCatalogue,
     invoice_catalogue: InvoiceCatalogue,
     events: tuple[BucketEvent, ...],

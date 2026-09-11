@@ -34,7 +34,7 @@ from ....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRate
 from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ....domain.iva_compensation.errors import IvaCompensationCasillaReferenceError
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation import CalculationSourceContext
+from ...aggregation.source_mesh import CalculationSourceContext
 from ..bienes_inversion_regularizacion import BienesInversionRegularizacionSourceResolver
 from ..binding_prefill import (
     _iva_compensation_history_observation,

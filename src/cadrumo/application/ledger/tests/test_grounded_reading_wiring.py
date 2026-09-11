@@ -19,11 +19,11 @@ import hashlib
 import inspect
 import json
 from decimal import Decimal
-from importlib import import_module
 from pathlib import Path
 
 import pytest
 
+from ....adapters.outbound.llm import evidence_draft_text
 from ....adapters.outbound.llm.errors import LLMProviderError
 from ....adapters.outbound.llm.invoice_field_grounding import ground_extracted_fields, parse_invoice_extraction_response
 from ....core.config import load_settings
@@ -36,6 +36,7 @@ from ....tests.attribute_scope import scoped_attribute
 
 # The MODULE object, not names from it: the tests below scope an attribute
 # on it. `from .. import <module>` is the relative form that yields one.
+from .. import invoice_draft_extraction as invoice_draft_extraction_module
 from ..document_transcription import DocumentTranscription, TranscriberIdentity
 from ..evidence_errors import PurchaseInvoiceEvidenceInputError
 from ..evidence_input import EvidenceInput
@@ -61,10 +62,6 @@ _DOCUMENT_TEXT = (
     "TOTAL 121,00 EUR\n"
 )
 
-#: The defining module itself, for the attribute scoping below. Named through
-#: `import_module` rather than `from .. import`: the ledger package facade is
-#: inert and its tests may not import through it.
-invoice_draft_extraction_module = import_module("cadrumo.application.ledger.invoice_draft_extraction")
 """A transcription printing BOTH party headings, so a heading claim can be true or false.
 
 A fixture printing no heading at all would make every dropped-evidence
@@ -404,7 +401,7 @@ def test_a_missing_reader_does_not_fall_through_to_the_vision_engine() -> None:
     # The reader is imported inside the consumer from its defining module, so the
     # substitution has to land there. Patching the `llm` package namespace reached
     # nothing once that facade went inert.
-    reader_module = import_module("cadrumo.llm.evidence_draft_text")
+    reader_module = evidence_draft_text
     from ..invoice_draft_extraction import _read_transcription_semantically
 
     def unavailable(*args: object, **kwargs: object) -> object:

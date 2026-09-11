@@ -54,7 +54,7 @@ from ...domain.iva_compensation.reconciliation import (
     reconcile_iva_compensation_wallet,
     validate_wallet_matches_snapshot,
 )
-from ..aggregation import (
+from ..aggregation.source_mesh import (
     CalculationSourceContext,
     CalculationSourceProvenance,
     CalculationSourceResolution,
@@ -78,6 +78,16 @@ class IvaCompensationReconciliationReport(BaseModel):
 
     decision: IvaCompensationReconciliationDecision
     prefill_report: BindingPrefillReport
+
+
+# The report's annotation is deliberately resolved in its defining module so
+# importing this public service does not depend on a package initializer.
+from .binding_prefill import BindingPrefillReport as _BindingPrefillReport
+
+IvaCompensationReconciliationReport.model_rebuild(
+    _types_namespace={"BindingPrefillReport": _BindingPrefillReport},
+)
+del _BindingPrefillReport
 
 
 class IvaWalletDecisionSourceResolver:

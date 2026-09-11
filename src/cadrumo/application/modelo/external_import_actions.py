@@ -46,7 +46,7 @@ from decimal import Decimal, InvalidOperation
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal.coercion import normalize_decimal_separators
-from ...core.identity import CalculationRevisionId
+from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...core.time.clock import now as _utc_now
@@ -60,7 +60,8 @@ from ...domain.calculations.registry.ids import (
 )
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ...domain.justificante import Justificante, JustificanteRepositoryProtocol
+from ...domain.justificante.protocols import JustificanteRepositoryProtocol
+from ...domain.justificante.schema import Justificante
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -96,6 +97,12 @@ from ..user_profile.custody_ports import default_profile_bucket_event_history_re
 from ..workflow.active_profile import require_active_profile_bucket_id
 from ._calculation_helpers import external_filing_observations as _external_filing_observations
 from ._registry_helpers import reject_unknown_import_casillas as _reject_unknown_import_casillas
+from ._work_selection import (
+    ModeloWorkResolution,
+    ModeloWorkSelectionMode,
+    ModeloWorkSelectorRequest,
+    select_modelo_work_resolution,
+)
 from .action_errors import ExternalModeloImportError
 from .calculation_repository import calculation_revision_catalogue_repository
 from .filing_repository import modelo_record_catalogue_repository
@@ -103,13 +110,9 @@ from .justificante_repository import justificante_repository as resolve_justific
 from .revision_persistence import build_modelo_bucket_event as _build_bucket_event
 from .revision_persistence import supersede_prior_current_filing as _supersede_prior_current_filing
 from .work_addressing import (
-    ModeloWorkResolution,
     ModeloWorkRevisionConflictError,
-    ModeloWorkSelectionMode,
-    ModeloWorkSelectorRequest,
     ModeloWorkVisibleTargetAmbiguousError,
     law_selected_revision_for_work_target,
-    select_modelo_work_resolution,
 )
 from .work_lifecycle import ActiveWorkUnitUse, create_work_unit, require_active_work_unit
 from .work_unit_repository import work_unit_catalogue_repository

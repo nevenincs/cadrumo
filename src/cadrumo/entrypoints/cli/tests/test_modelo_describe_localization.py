@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.i18n.render import SUPPORTED_OUTPUT_LANGUAGES, tr
-from ....tests.cli_runner import invoke_cached_cli
+from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+from ....core.i18n.render import tr
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

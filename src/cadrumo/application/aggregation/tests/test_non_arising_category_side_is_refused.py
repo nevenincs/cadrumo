@@ -54,7 +54,7 @@ from ....domain.iva.schema import EUMemberState, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from .._invoice_kind import invoice_kind_for_direction
+from ..invoice_kind import invoice_kind_for_direction
 from ..iva_ledger import IvaLedgerAggregationIssueReason
 from .iva_authority_support import aggregate_iva_ledger_observations
 

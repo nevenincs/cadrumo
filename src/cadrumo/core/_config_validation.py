@@ -98,7 +98,8 @@ def resolve_database_url_for_active_profile(
             raise ActiveProfilePointerError(path=pointer_file) from exc
         if pointer.bucket_id is not None:
             bucket_id = pointer.bucket_id.strip()
-    from .storage_taxonomy import StorageCategory, bucket_scoped_storage_path, storage_path
+    from .storage_taxonomy import StorageCategory
+    from .storage_taxonomy_locations import bucket_scoped_storage_path, storage_path
 
     if not bucket_id:
         refuse_former_product_database(settings.cadrumo_local_storage_root)
@@ -153,7 +154,7 @@ def resolve_output_dirs_under_storage_root(settings: Settings) -> Settings:
     ``mode="after"`` guarantees ``cadrumo_local_storage_root`` is already
     populated when this runs.
     """
-    from .storage_taxonomy import ROOT_DERIVED_STORAGE_LOCATIONS
+    from .storage_taxonomy_locations import ROOT_DERIVED_STORAGE_LOCATIONS
 
     for location in ROOT_DERIVED_STORAGE_LOCATIONS:
         field_name = location.settings_field

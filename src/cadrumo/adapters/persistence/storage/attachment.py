@@ -33,7 +33,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import HEX_ALPHABET, sha256_hex
-from ....core.identity import BucketId
+from ....core.identity.bucket import BucketId
 from ....core.logging import get_logger
 from ....core.secure_object_write import SecureObjectWrite
 from ....core.time.clock import now

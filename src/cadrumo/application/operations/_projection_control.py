@@ -7,10 +7,14 @@ from typing import TYPE_CHECKING, TypeGuard
 
 from ...core.operations import OperationCancellation, OperationClosePolicy, OperationInteractionKind, OperationLifecycle
 from .frontend_contracts import (
+    OperationCancellationResultV1,
+    OperationResponseControlResultV1,
+    OperationResponseMutationRequestV1,
+)
+from .frontend_requests import (
     OperationCancellationRefusalCode,
     OperationCancellationRefusalV1,
     OperationCancellationRequestV1,
-    OperationCancellationResultV1,
     OperationCancellationSuccessV1,
     OperationCancellationVersionHeader,
     OperationDetachRefusalCode,
@@ -21,10 +25,8 @@ from .frontend_contracts import (
     OperationResponseControlRefusalCode,
     OperationResponseControlRefusalV1,
     OperationResponseControlRequestV1,
-    OperationResponseControlResultV1,
     OperationResponseControlSuccessV1,
     OperationResponseControlVersionHeader,
-    OperationResponseMutationRequestV1,
 )
 from .interactions import (
     OperationApplyResponse,

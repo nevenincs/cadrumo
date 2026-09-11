@@ -30,7 +30,7 @@ from typing import Protocol
 from pydantic import BaseModel, Field
 
 from ...core.config import Settings
-from ...core.identity import BucketId
+from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from ...core.time.utc import UtcInstant

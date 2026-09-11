@@ -13,8 +13,6 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.tests._os_keychain_hook import require_os_credential_store
-
 from ....adapters.persistence.storage.custody.acceleration_receipt import mint_profile_session, profile_session_path
 from ....adapters.persistence.storage.custody.capsule import (
     inventory_staged_profile_custody_capsule,
@@ -46,6 +44,7 @@ from ....core.period import Period
 from ....core.profile_publication import ProfilePublicationKind
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import ModeloRecord, derive_filing_record_id
+from ....tests.os_keychain_hook import require_os_credential_store
 from ... import user_profile as user_profiles
 from ...evidence.profile_legal_hold import LegalHoldCaseAuthority
 from ...filing.retention import FilingRetentionAuthority

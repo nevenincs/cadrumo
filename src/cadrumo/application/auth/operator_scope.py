@@ -21,8 +21,9 @@ from ...adapters.persistence.storage.master_key.active_session import (
     current_active_bucket_session,
     session_serves_bucket,
 )
-from ...core.config import LIVE_READ_TEST_OPT_IN_SETTINGS_FIELD, Settings, load_settings
-from ...core.identity import BucketId
+from ...core.config import Settings, load_settings
+from ...core.config_live_tests import LIVE_READ_TEST_OPT_IN_SETTINGS_FIELD
+from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from .catalogue import get_auth_provider, known_auth_provider_ids
 from .operator_results import (

@@ -514,7 +514,7 @@ def _read_transcription_semantically(
     # Both imports are function-local by necessity, not preference, and both are
     # cycle-breaks rather than lazy-loading:
     #
-    # `cadrumo.llm` imports `InvoiceDraft` from this package, and
+    # The outbound LLM adapter imports `InvoiceDraft` from this package, and
     # `_grounded_reading` reaches this module through `_closure_findings`. A
     # module-level import of either closes a loop through this file.
     #

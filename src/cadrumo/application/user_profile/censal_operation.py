@@ -13,7 +13,8 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from ...core.async_cleanup import AsyncCloseable
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.hashing import content_hash_hex
-from ...core.identity import ContentDigest, ContentDigestOrAbsent, ProfileId
+from ...core.identity.digest import ContentDigest, ContentDigestOrAbsent
+from ...core.identity.profile import ProfileId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import (
     EFFECTS_WITHOUT_PARTIAL_COMMIT,

@@ -54,7 +54,7 @@ from typing import TYPE_CHECKING, Self
 
 from pydantic import BaseModel, model_validator
 
-from ...core.identity import InvoiceId
+from ...core.identity.hex_ids import InvoiceId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..iva.components import (
     IvaComponentPresence,

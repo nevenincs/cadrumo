@@ -13,7 +13,8 @@ import pytest
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.modelo.work_lifecycle import get_work_unit
 from ....core.bucket_pointer import resolve_active_bucket_id
-from ....core.config import SecretStoreBackend, load_settings, override_settings
+from ....core.config import load_settings, override_settings
+from ....core.config_support import SecretStoreBackend
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_cli_profile
 from .._verb_input_schema import build_verb_input_schemas, cli_argv_for

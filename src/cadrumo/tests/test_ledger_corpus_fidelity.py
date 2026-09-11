@@ -40,9 +40,11 @@ import pytest
 
 from ..adapters.inbound.financial.providers.csv import CsvProvider
 from ..adapters.outbound.fx.ecb_provider import EcbReferenceRateProvider
-from ..application.aggregation import (
+from ..application.aggregation.iva_ledger import (
     IvaLedgerAggregationIssueReason,
     aggregate_iva_ledger_observations,
+)
+from ..application.aggregation.renta_income_ledger import (
     aggregate_renta_income_ledger,
 )
 from ..core.period import Period

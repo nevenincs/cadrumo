@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING
 
 from ...core.auth_provider import AuthProviderKind
 from ...core.config import load_settings
-from ...core.i18n import tr
-from ...core.identity import tax_id_identity_token
+from ...core.i18n.render import tr
+from ...core.identity.tax_id import tax_id_identity_token
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ..operator_actions.models import PreconditionVerdict
 from ..operator_actions.preconditions import no_action_precondition_verdict

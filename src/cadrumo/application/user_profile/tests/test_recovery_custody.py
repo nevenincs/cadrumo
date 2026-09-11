@@ -29,7 +29,7 @@ from ....adapters.persistence.storage.custody.sentinel import create_profile_cus
 from ....adapters.persistence.storage.recovery_key import RecoveryKey, generate_recovery_key
 from ....core.config import override_settings
 from ....core.errors.error_codes import build_error_envelope, render_error_text
-from ....core.i18n import tr
+from ....core.i18n.render import tr
 from ....domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from ..authentication import ProfileAuthenticationRefusedError
 from ..capsule_record import ProfileRecordSession, ProfileRecordStore

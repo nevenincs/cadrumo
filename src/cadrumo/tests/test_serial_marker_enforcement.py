@@ -51,6 +51,7 @@ import _marker_hook
 
 
 def pytest_configure(config):
+    _marker_hook.reset_held_serials()
     config.addinivalue_line("markers", "serial: isolation-sensitive")
     for name in ("unit", "hex_core"):
         config.addinivalue_line("markers", name + ": taxonomy marker")
@@ -58,6 +59,18 @@ def pytest_configure(config):
 
 def pytest_collection_modifyitems(config, items):
     _marker_hook.apply(config, items)
+
+
+def pytest_testnodedown(node, error):
+    _marker_hook.record_held_from_node(node)
+
+
+def pytest_sessionfinish(session, exitstatus):
+    _marker_hook.fail_session_on_held_serials(session)
+
+
+def pytest_terminal_summary(terminalreporter):
+    _marker_hook.report_held_serials(terminalreporter)
 """
 
 _TEST_MODULE = """\
@@ -137,10 +150,11 @@ def test_serial_item_is_held_and_announced_under_real_xdist_workers(serial_marke
     completed = _nested_pytest(serial_marker_package, "-n2", "--dist=loadfile")
     output = completed.stdout + completed.stderr
 
-    assert completed.returncode == 0, output
+    assert completed.returncode == int(pytest.ExitCode.USAGE_ERROR), output
     assert "1 passed" in completed.stdout, output
     assert "test_needs_isolation" not in completed.stdout.split("warnings summary")[0], (
         f"the serial test must not execute while xdist workers are active:\n{completed.stdout}"
     )
     assert "SerialTestsHeldWarning" in output, f"the hold must be announced, not silent:\n{output}"
+    assert "SERIAL TESTS HELD BACK" in output, f"the controller must report the held population:\n{output}"
     assert "test_generated.py::test_needs_isolation" in output, f"the announcement must name the held test:\n{output}"

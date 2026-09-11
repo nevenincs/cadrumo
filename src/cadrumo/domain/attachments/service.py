@@ -15,7 +15,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from ...core.identity import BucketId
+from ...core.identity.bucket import BucketId
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import UtcInstant

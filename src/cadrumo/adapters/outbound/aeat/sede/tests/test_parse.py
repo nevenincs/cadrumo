@@ -23,8 +23,8 @@ from __future__ import annotations
 import pytest
 
 from ......core.config import Settings
-from ......tests import FIXTURES_DIR
 from ......tests.aeat_literal_fixtures import KATA_COTEJO_ID_PATH_FIXTURE
+from ......tests.inventory import FIXTURES_DIR
 from ..errors import SedeParseError
 from ..parse import parse_expediente_detail, parse_resumen_tree
 

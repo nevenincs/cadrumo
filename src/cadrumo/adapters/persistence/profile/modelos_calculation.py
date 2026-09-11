@@ -42,7 +42,7 @@ from pydantic import ValidationError
 
 from ....core.bucket_pointer import resolve_repository_bucket_id
 from ....core.external_constants import UTF_8_ENCODING
-from ....core.identity import SubjectTaxId
+from ....core.identity.tax_id import SubjectTaxId
 from ....core.logging import get_logger
 from ....core.modelo import Modelo
 from ....domain.calculations.registry.authority import bundled_authority

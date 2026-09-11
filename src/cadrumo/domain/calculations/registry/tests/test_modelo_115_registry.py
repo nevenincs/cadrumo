@@ -6,15 +6,16 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from test_support.registry_authoring import RegistryValidator, _committed_modelo
 
-from .....core.resources.bundled_data import bundled_path
+from cadrumo.core.resources.bundled_data import bundled_path
+
 from .....tests.registry_snapshot import build_snapshot
 from ..authority import bundled_authority
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema_input_kind import InputKind
 from ..temporal import select_revision
+from ._published_authority import artifact_components
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -53,9 +54,8 @@ _SUPPORTED_DEADLINES = {
 
 
 def test_modelo_115_validated_snapshot_owns_workflow_surfaces() -> None:
-    modelo, catalogues = _committed_modelo("115")
+    modelo, catalogues = artifact_components("115")
 
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
     snapshot = build_snapshot(
         modelo,
         catalogues,
@@ -87,7 +87,7 @@ def test_modelo_115_validated_snapshot_owns_workflow_surfaces() -> None:
 def test_modelo_115_binds_retenciones_aggregation_and_calculates_rent_withholding() -> None:
     """M115 count/base come from retenciones aggregation; retención remains the registry formula."""
 
-    modelo, catalogues = _committed_modelo("115")
+    modelo, catalogues = artifact_components("115")
     snapshot = build_snapshot(
         modelo,
         catalogues,
@@ -127,7 +127,7 @@ def test_modelo_115_binds_retenciones_aggregation_and_calculates_rent_withholdin
 
 
 def test_modelo_115_supported_year_deadline_census_dates_sources_and_ownership() -> None:
-    modelo, _ = _committed_modelo("115")
+    modelo, _ = artifact_components("115")
     revision = modelo.revisions["2019-y-siguientes"]
     windows = {(window.filing_year, window.period.registry_token): window for window in revision.deadline_windows}
 

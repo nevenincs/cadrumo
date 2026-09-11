@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from .....core.classification.policies import SensitivityClass
 from .....core.hashing import sha256_hex
-from .....core.i18n import tr
+from .....core.i18n.render import tr
 from .....core.secure_object_write import (
     ABSENT_SECURE_OBJECT_REVISION_ID,
     DEFAULT_WRITE_PROVENANCE,

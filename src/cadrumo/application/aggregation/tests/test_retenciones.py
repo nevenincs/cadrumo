@@ -6,12 +6,11 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.aggregation import BindingSourceKind
+from ....core.aggregation import BindingSourceKind, RetencionScheme
 from ....core.period import Period
-from .._retenciones import (
+from ..retenciones import (
     RetencionesAggregation,
     RetencionObservation,
-    RetencionScheme,
     aggregate_retenciones_111,
     aggregate_retenciones_115,
     aggregate_retenciones_123,

@@ -29,8 +29,9 @@ See Also:
 
 from __future__ import annotations
 
+import ast
 import re
-from importlib import import_module
+from importlib.util import find_spec
 from pathlib import Path
 
 import pytest
@@ -85,9 +86,15 @@ def test_extraction_parser_paths_resolve() -> None:
                 f"parser {dotted_path!r} must resolve under one of {sorted(_ALLOWED_PARSER_AUTHORITY_PREFIXES)!r}",
             )
             continue
-        module = import_module(module_name)
-        resolved = getattr(module, attribute, None)
-        if not callable(resolved):
+        spec = find_spec(module_name)
+        if spec is None or spec.origin is None:
+            failures.append(f"parser {dotted_path!r} has no module source")
+            continue
+        tree = ast.parse(Path(spec.origin).read_text(encoding="utf-8"))
+        callable_names = {
+            node.name for node in tree.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+        }
+        if attribute not in callable_names:
             failures.append(f"parser {dotted_path!r} does not resolve to a callable")
 
     assert not failures, "\n".join(failures)

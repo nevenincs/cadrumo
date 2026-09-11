@@ -20,10 +20,10 @@ from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo.calculation_actions import calculate_modelo_revision
 from ...modelo.verification_actions import verify_modelo_revision
 from ...modelo.work_lifecycle import create_work_unit
-from ..cross_period_clean_state import (
+from ..cross_period_clean_state import evaluate_cross_period_clean_state
+from ..cross_period_models import (
     CrossPeriodCleanStateBlocker,
     CrossPeriodExpectedMemberSet,
-    evaluate_cross_period_clean_state,
 )
 from ..observations_repository import CalculationObservationRepository
 from ._cross_period_clean_state_support import (

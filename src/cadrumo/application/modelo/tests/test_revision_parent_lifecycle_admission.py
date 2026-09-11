@@ -7,6 +7,7 @@ import pytest
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ..action_errors import CalculationRevisionNotFoundError
+from ..calculation_actions import calculate_modelo_revision
 from ..filing_actions import file_modelo_revision
 from ..verification_actions import verify_modelo_revision_with_preconditions
 from ..work_lifecycle import discard_work_unit
@@ -18,7 +19,6 @@ from ._file_flow_support import (
     T3,
     T4,
     Repos,
-    calculate_modelo_revision,
     seed_work_unit,
     verify_revision,
     workflow_profile,

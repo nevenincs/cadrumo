@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict
 
-from ....core.identity import TaxIdIdentityToken
+from ....core.identity.tax_id import TaxIdIdentityToken
 from ....core.period import Period
 from .errors import RegistryValidationError
 from .ids import BindingId
@@ -286,7 +286,7 @@ def _build_contraparte_clave_rows(
     Applies the RD 1065/2007 art. 31 declaration floor to *this* family
     before grouping, routed through :func:`_m347_row_family_threshold_filter`,
     which itself delegates to the same canonical comparison
-    (:func:`~._m347_threshold.m347_declarable_party_ids` /
+    (:func:`~.m347_threshold.m347_declarable_party_ids` /
     ``m347_clave_c_declarable_party_ids``) rather than a new one written out
     here. A party's TOTAL across every NON-clave-C clave decides general
     declarability (the floor is strictly exceeded, ``>``, never merely

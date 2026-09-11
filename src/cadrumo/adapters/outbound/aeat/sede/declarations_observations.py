@@ -23,13 +23,14 @@ from urllib.parse import urlsplit
 
 from pydantic import AnyHttpUrl
 
+from .....application.modelo.reconciliation_parsing import reconciliation_evidence_parser
 from .....core.casilla_id import CasillaId
 from .....core.casilla_value_kind import CasillaValueKind
 from .....core.config import Settings
 from .....core.export_layout_format import ExportLayoutFormat
 from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
 from .....core.hashing import canonical_json_bytes, sha256_hex
-from .....core.i18n import tr
+from .....core.i18n.render import tr
 from .....core.modelo import Modelo
 from .....core.observed_header_fact import ObservedHeaderFact
 from .....core.period import Period
@@ -55,6 +56,7 @@ from .....domain.calculations.registry.runtime_graph import expression_casilla_r
 from .....domain.calculations.registry.schema import RegistrySnapshot
 from .....domain.calculations.registry.schema_exports import ExportFieldDefinition
 from .....domain.calculations.registry.schema_surfaces import CasillaDefinition
+from .....domain.filing.reconciliation.errors import ReconciliationDeclaracionParseError
 from .....domain.iva_compensation.filed_derivation import (
     M303_COMPENSATION_AVAILABLE_CASILLA,
     M303_COMPENSATION_GENERADA_CASILLA,
@@ -63,8 +65,6 @@ from .....domain.iva_compensation.filed_derivation import (
     M303CompensationAvailableDerivation,
     derive_m303_compensation_available_from_casillas,
 )
-from ....inbound.declaracion.errors import DeclaracionParseError
-from ....inbound.declaracion.parser import parse_declaracion_bytes
 from .declarations_schema import Declaracion
 from .errors import SedeParseError, SedeValidationError
 from .schema import (
@@ -469,15 +469,14 @@ def _observed_casillas_from_declaration_pdf(
         # The decrypted declaration bytes are parsed entirely in memory, including
         # bbox-anchored word-position extraction; they are never written to a
         # plaintext scratch file (sensitive-financial-data-secure-storage-only).
-        filing = parse_declaracion_bytes(
+        filing = reconciliation_evidence_parser().parse_declaracion_bytes(
             body,
-            source_label="secure declaration PDF",
-            modelo_override=declaration.modelo,
-            año_override=declaration.ejercicio,
-            period_override=declaration_period,
+            modelo=declaration.modelo,
+            filing_year=declaration.ejercicio,
+            period=declaration_period,
             registry_snapshot=snapshot,
         )
-    except DeclaracionParseError:
+    except ReconciliationDeclaracionParseError:
         # `from None`: the refusal carries the coordinates the operator needs and
         # the parse cause would only add PDF internals to the traceback.
         raise SedeParseError(

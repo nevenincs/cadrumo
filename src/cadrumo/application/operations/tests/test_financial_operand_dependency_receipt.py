@@ -44,10 +44,10 @@ _ROOT = Path(__file__).resolve().parents[5]
 _STATE = OperationFinancialOperandCustodyState
 _T0 = datetime(2026, 3, 4, 9, 0, 0, tzinfo=UTC)
 
-_OPERAND_MODULES = (
-    "cadrumo.application.operations.financial_operand",
-    "cadrumo.application.operations.financial_operand_custody",
-    "cadrumo.application.operations.persistence.financial_operand_custody",
+_OPERAND_MODULE_ANCHORS = (
+    OperationTransientFinancialOperandAccess,
+    OperationFinancialOperandCustodyCheckpoint,
+    OperationFinancialOperandCustodyRepository,
 )
 
 _RECORD_TYPES = (
@@ -61,10 +61,10 @@ _RECORD_TYPES = (
 )
 
 
-def _module_source(dotted: str) -> str:
-    import importlib
-
-    return Path(importlib.import_module(dotted).__file__ or "").read_text(encoding="utf-8")
+def _module_source(anchor: object) -> str:
+    source = inspect.getsourcefile(anchor)
+    assert source is not None
+    return Path(source).read_text(encoding="utf-8")
 
 
 def test_protocol_schema_is_structural_and_closed() -> None:
@@ -165,8 +165,8 @@ def test_non_retention_holds_across_every_record_and_signature() -> None:
 def test_current_only_evidence_carries_no_legacy_branch() -> None:
     """The contract reads one shape; nothing here upgrades an older one."""
     legacy_markers = ("schema_version", "legacy", "migrate", "upgrade", "deprecated", "compat")
-    for dotted in _OPERAND_MODULES:
-        source = _module_source(dotted)
+    for anchor in _OPERAND_MODULE_ANCHORS:
+        source = _module_source(anchor)
         for marker in legacy_markers:
             assert marker not in source.lower(), f"{dotted} carries {marker!r}"
 

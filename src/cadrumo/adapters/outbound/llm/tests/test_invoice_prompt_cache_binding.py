@@ -29,13 +29,14 @@ from __future__ import annotations
 import pytest
 
 from .....application.ledger.invoice_extraction_authority import resolve_invoice_extraction_authority_values
+from .....core.config_support import LLMProvider
 from .....core.period import Period
 from .....core.time.clock import now
 from .....domain.transactions.models import DecisionProvenance
 from ..cache import LLMCache
 from ..evidence_draft_text import TextInvoiceFieldExtractor
 from ..evidence_draft_vision import LocalVisionDocumentTranscriber
-from ..models import LLMProvider, LLMRequest
+from ..models import LLMRequest
 from .prompt_support import build_invoice_extraction_prompt
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

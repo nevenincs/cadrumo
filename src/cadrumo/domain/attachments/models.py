@@ -21,7 +21,8 @@ from pydantic import (
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.hashing import HEX_ALPHABET
 from ...core.hex import Hex64Str
-from ...core.identity import BucketId, ContentDigest
+from ...core.identity.bucket import BucketId
+from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.utc import UtcInstant, parse_iso_datetime, validate_utc_aware
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER

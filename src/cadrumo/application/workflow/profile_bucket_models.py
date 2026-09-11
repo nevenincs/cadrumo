@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
-from ...core.identity import BucketId, ProfileLabel
+from ...core.identity.bucket import BucketId
+from ...core.identity.profile_label import ProfileLabel
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 

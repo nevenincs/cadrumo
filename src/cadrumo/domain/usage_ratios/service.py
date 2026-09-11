@@ -15,7 +15,7 @@ from contextlib import contextmanager
 from decimal import Decimal
 from pathlib import Path
 
-from ...core.identity import canonical_bucket_id
+from ...core.identity.bucket import canonical_bucket_id
 from ..categories.proportionality import effective_usage_ratio
 from ..categories.registry import resolve_category_profiles
 from ..categories.spending_category import HOME_OFFICE_FAMILIES, SpendingCategory, categories_for_family

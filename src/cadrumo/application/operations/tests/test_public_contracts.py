@@ -19,7 +19,7 @@ from ....core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
-from .. import frontend_contracts
+from .. import frontend_projection, frontend_requests
 from .._model_contract import require_strict_frozen_operation_model_graph
 from ..capabilities import (
     OperationBaselinePolicy,
@@ -30,38 +30,42 @@ from ..capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..frontend_contracts import (
+    OperationObservationResultV1,
+    OperationReviewProjectionResultV1,
+    OperationWorkspaceRefreshTargetResultV1,
+)
+from ..frontend_projection import (
+    OperationNoPendingInteractionV1,
+    OperationPublicProgressV1,
+    OperationPublicProjectionV1,
+    OperationReviewProjectionReferenceV1,
+    OperationUnsupportedInteractionV1,
+)
+from ..frontend_requests import (
     OperationCancellationRefusalCode,
     OperationCancellationRefusalV1,
     OperationCancellationVersionHeader,
     OperationDetachRefusalCode,
     OperationDetachRefusalV1,
     OperationDetachVersionHeader,
-    OperationNoPendingInteractionV1,
     OperationObservationRefusalCode,
     OperationObservationRefusalV1,
     OperationObservationRequestV1,
-    OperationObservationResultV1,
     OperationObservationSuccessV1,
     OperationObservationVersionHeader,
     OperationPublicEventPageV1,
     OperationPublicPhaseEventV1,
-    OperationPublicProgressV1,
-    OperationPublicProjectionV1,
     OperationResponseControlRefusalCode,
     OperationResponseControlRefusalV1,
     OperationResponseControlVersionHeader,
     OperationResultProjectionSuccessV1,
-    OperationReviewProjectionReferenceV1,
     OperationReviewProjectionRefusalCode,
     OperationReviewProjectionRefusalV1,
-    OperationReviewProjectionResultV1,
     OperationReviewProjectionSuccessV1,
     OperationReviewProjectionVersionHeader,
-    OperationUnsupportedInteractionV1,
     OperationWorkspaceRefreshTargetRefusalCode,
     OperationWorkspaceRefreshTargetRefusalV1,
     OperationWorkspaceRefreshTargetRequestV1,
-    OperationWorkspaceRefreshTargetResultV1,
     OperationWorkspaceRefreshTargetSuccessV1,
     OperationWorkspaceRefreshTargetVersionHeader,
 )
@@ -579,23 +583,22 @@ def test_refresh_result_is_exactly_specialized_in_its_defining_module() -> None:
 
 def _frontend_contract_model_types() -> tuple[type[BaseModel], ...]:
     models: list[type[BaseModel]] = []
-    for name in frontend_contracts.__all__:
-        candidate = getattr(frontend_contracts, name)
-        if not isinstance(candidate, type) or not issubclass(candidate, BaseModel):
-            continue
-        if candidate.__module__ != "cadrumo.application.operations.frontend_contracts":
-            continue
-        # Each of these carries a caller-supplied projection behind a type
-        # parameter. Walked unparameterised, that parameter resolves to its
-        # BaseModel bound and every one of them reads as an open object, which
-        # says nothing about whether the envelope around it is closed.
-        if candidate is OperationReviewProjectionSuccessV1:
-            candidate = OperationReviewProjectionSuccessV1[SafeProjection]
-        elif candidate is OperationWorkspaceRefreshTargetSuccessV1:
-            candidate = OperationWorkspaceRefreshTargetSuccessV1[SafeProjection]
-        elif candidate is OperationResultProjectionSuccessV1:
-            candidate = OperationResultProjectionSuccessV1[SafeProjection]
-        models.append(candidate)
+    for module in (frontend_projection, frontend_requests):
+        for name in module.__all__:
+            candidate = getattr(module, name)
+            if not isinstance(candidate, type) or not issubclass(candidate, BaseModel):
+                continue
+            # Each of these carries a caller-supplied projection behind a type
+            # parameter. Walked unparameterised, that parameter resolves to its
+            # BaseModel bound and every one of them reads as an open object,
+            # which says nothing about whether the envelope around it is closed.
+            if candidate is OperationReviewProjectionSuccessV1:
+                candidate = OperationReviewProjectionSuccessV1[SafeProjection]
+            elif candidate is OperationWorkspaceRefreshTargetSuccessV1:
+                candidate = OperationWorkspaceRefreshTargetSuccessV1[SafeProjection]
+            elif candidate is OperationResultProjectionSuccessV1:
+                candidate = OperationResultProjectionSuccessV1[SafeProjection]
+            models.append(candidate)
     return tuple(models)
 
 

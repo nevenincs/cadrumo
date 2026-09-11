@@ -26,7 +26,8 @@ from typing import override
 
 import pytest
 
-from .....core.config import LLMProvider, override_settings
+from .....core.config import override_settings
+from .....core.config_support import LLMProvider
 from .....core.operator_action_enums import NoRecoveryOutcome
 from .....tests.fixtures.settings import EnvFileFreeSettings
 from .....tests.loopback_llm import (

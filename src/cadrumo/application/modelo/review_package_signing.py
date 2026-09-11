@@ -67,7 +67,8 @@ from ...core.ed25519_signing import (
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hex import HEX_PATTERN_64 as _HEX_PATTERN_64
 from ...core.hex import HEX_PATTERN_128 as _HEX_PATTERN_128
-from ...core.identity import BucketId, CalculationRevisionId, canonical_bucket_id
+from ...core.identity.bucket import BucketId, canonical_bucket_id
+from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.clock import now as _utc_now
 from ...core.time.utc import UtcInstant

@@ -22,7 +22,7 @@ from collections.abc import Mapping
 import pytest
 
 from ....core.flows import FlowMode
-from ....core.i18n import tr
+from ....core.i18n.render import tr
 from ...flows.definition import FlowDefinition
 from ...flows.engine import FlowState, answer, first_unanswered_key, jump_to, next_page, start_flow
 from ...flows.errors import FlowSubmitError

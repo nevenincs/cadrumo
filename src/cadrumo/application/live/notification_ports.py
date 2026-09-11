@@ -11,7 +11,7 @@ from collections.abc import Awaitable, Callable
 from datetime import date
 from typing import Protocol
 
-from ...core.identity import AeatCertificadoId
+from ...core.identity.aeat_certificado import AeatCertificadoId
 from ...domain.notifications.sancion import SancionLiquidacion
 
 

@@ -27,8 +27,8 @@ _WRITE = ExecutionPolicySpec(
     frozenset({"local-storage"}), frozenset({"local-state"}), "local-io", CommandWriteRoute.NONE
 )
 _METADATA = ExecutionPolicySpec(frozenset({"state-free"}), frozenset({"none"}), "metadata", CommandWriteRoute.NONE)
-_TIER = ValueContract(DeferredTarget("cadrumo.core.telemetry.tier", "TelemetryTier"))
-_PAYLOADS = "cadrumo.entrypoints.cli._diagnostics_payloads"
+_TIER = ValueContract(DeferredTarget("...core.telemetry.tier", "TelemetryTier", __package__))
+_PAYLOADS = "._diagnostics_payloads"
 
 
 def _option(
@@ -71,10 +71,10 @@ def _leaf(
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=parameters,
         policy=policy,
-        handler=LazyBinding.available(DeferredTarget(module, handler)),
+        handler=LazyBinding.available(DeferredTarget(module, handler, __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget(_PAYLOADS, schema),
+            DeferredTarget(_PAYLOADS, schema, __package__),
             identity=key.replace("_", "."),
         ),
     )
@@ -113,7 +113,7 @@ DIAGNOSTICS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         (),
         _READ,
-        LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._app_diagnostics", "diagnostics_root")),
+        LazyBinding.available(DeferredTarget("._app_diagnostics", "diagnostics_root", __package__)),
         ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
     ),
     _leaf(
@@ -121,7 +121,7 @@ DIAGNOSTICS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "app_diagnostics",
         "run-health",
         "cli.diagnostics.run_health.help",
-        "cadrumo.entrypoints.cli._app_diagnostics",
+        "._app_diagnostics",
         "diagnostics_run_health",
         "RunHealthResult",
         _READ,
@@ -132,7 +132,7 @@ DIAGNOSTICS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "app_diagnostics",
         "runs",
         "cli.diagnostics.runs.help",
-        "cadrumo.entrypoints.cli._app_diagnostics",
+        "._app_diagnostics",
         "diagnostics_runs",
         "RunsListResult",
         _READ,
@@ -143,7 +143,7 @@ DIAGNOSTICS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "app_diagnostics",
         "latency",
         "cli.diagnostics.latency.help",
-        "cadrumo.entrypoints.cli._app_diagnostics",
+        "._app_diagnostics",
         "diagnostics_latency",
         "LatencyResult",
         _READ,
@@ -154,7 +154,7 @@ DIAGNOSTICS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "app_diagnostics",
         "errors",
         "cli.diagnostics.errors.help",
-        "cadrumo.entrypoints.cli._app_diagnostics",
+        "._app_diagnostics",
         "diagnostics_errors",
         "ErrorsBreakdownResult",
         _READ,
@@ -165,7 +165,7 @@ DIAGNOSTICS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "app_diagnostics",
         "llm-usage",
         "cli.diagnostics.llm_usage.help",
-        "cadrumo.entrypoints.cli._app_diagnostics",
+        "._app_diagnostics",
         "diagnostics_llm_usage",
         "LlmUsageResult",
         _READ,
@@ -189,7 +189,7 @@ DIAGNOSTICS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "app_diagnostics_telemetry",
         "status",
         "cli.diagnostics.telemetry.status.help",
-        "cadrumo.entrypoints.cli._app_diagnostics_telemetry",
+        "._app_diagnostics_telemetry",
         "diagnostics_telemetry_status",
         "TelemetryStatusResult",
         _READ,
@@ -200,7 +200,7 @@ DIAGNOSTICS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "app_diagnostics_telemetry",
         "flush",
         "cli.diagnostics.telemetry.flush.help",
-        "cadrumo.entrypoints.cli._app_diagnostics_telemetry",
+        "._app_diagnostics_telemetry",
         "diagnostics_telemetry_flush",
         "TelemetryFlushResult",
         _WRITE,

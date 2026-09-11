@@ -42,7 +42,7 @@ from prompt_toolkit.output.plain_text import PlainTextOutput
 from pydantic import BaseModel
 
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
-from ....core.i18n import tr
+from ....core.i18n.render import tr
 from ....core.json_contract import NoticeSeverity
 from ...flows.checkpoint import checkpoint_available
 from ...flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection

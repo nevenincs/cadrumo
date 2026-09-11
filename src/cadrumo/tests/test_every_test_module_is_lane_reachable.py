@@ -34,7 +34,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 #: Markers a declared lane selects on.
 #:
 #: ``unit`` and ``integration`` are the two default lanes; ``aeat_live`` is
-#: enrolled by ``just test-live`` and is the reason the live-AEAT modules are
+#: enrolled by ``just test-registry-live`` and is the reason the live-AEAT modules are
 #: reachable despite carrying neither of the other two.
 _EXECUTION_MARKERS = frozenset({"unit", "integration", "aeat_live"})
 
@@ -61,7 +61,7 @@ _LANE_SELECTORS: tuple[tuple[str, Callable[[frozenset[str]], bool]], ...] = (
         lambda m: "integration" in m and "serial" in m and "perf" not in m and "os_keychain" not in m,
     ),
     ("just test-os-keychain", lambda m: "os_keychain" in m),
-    ("just test-live", lambda m: "aeat_live" in m),
+    ("just test-registry-live", lambda m: "aeat_live" in m),
 )
 
 #: A module that would never run: architectural markers only.

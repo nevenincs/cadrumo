@@ -19,7 +19,7 @@ from ..application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from ..application.user_profile.validation import COMPLETENESS_ISSUE_CODES, ProfileValidationService
 from ..core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ..core.hashing import sha256_hex
-from ..core.identity import nif_check_letter
+from ..core.identity.documents import nif_check_letter
 from ..domain.deadlines.models import IVARegime
 from ..domain.user_profile.schema import NUMERIC_PROFILE_FIELD_TYPES, ProfileFieldType
 from ..domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -144,7 +144,7 @@ def register_minimal_profile(
 
     from ..application.evidence.profile_legal_hold import LegalHoldCaseAuthority
     from ..application.filing.retention import try_record_filing_retention_snapshot
-    from ..core.identity import canonical_profile_bucket_id
+    from ..core.identity.profile import canonical_profile_bucket_id
 
     # Normalise at the door: the record below constrains its identifier to the
     # canonical UUIDv4 string, so a readable identifier must fail here with one

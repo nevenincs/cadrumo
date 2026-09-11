@@ -19,7 +19,7 @@ See Also:
     :func:`~application.calculations.revision_carry_outcome`
         Shared law-determined gate used to re-confirm the stored
         ``stamped_revision_id`` before trusting the carry.
-    :class:`~application.calculations.CrossPeriodCleanStateBlocker`
+    :class:`~application.calculations.cross_period_models.CrossPeriodCleanStateBlocker`
         Blocker vocabulary reused for revision-divergent seed findings.
 """
 
@@ -38,7 +38,7 @@ from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.iva.m303_settlement import m303_annual_settlement_order_key
 from ...domain.prorrata_register.register import ProrrataRegisterEntry
-from ..calculations.cross_period_clean_state import CrossPeriodCleanStateBlocker
+from ..calculations.cross_period_models import CrossPeriodCleanStateBlocker
 from ..calculations.observations_repository import CalculationObservationRepository
 from ..calculations.revision_carry_gate import revision_carry_outcome
 

@@ -27,7 +27,7 @@ import textwrap
 
 import pytest
 
-from .....core.i18n import tr
+from .....core.i18n.render import tr
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

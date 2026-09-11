@@ -20,9 +20,9 @@ from ....application.calculations.observations_repository import CalculationObse
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
-from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

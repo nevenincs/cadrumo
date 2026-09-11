@@ -63,7 +63,7 @@ from ...core.config import load_settings
 from ...core.errors.hierarchy import CadrumoError
 from ...core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ...core.filing_year import FilingYear
-from ...core.i18n import tr
+from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period

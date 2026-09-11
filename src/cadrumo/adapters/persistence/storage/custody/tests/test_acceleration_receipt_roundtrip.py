@@ -22,7 +22,7 @@ import pytest
 
 from ......core.errors.hierarchy import CoreValidationError
 from ......core.profile_session import ProfileSessionRefusalReason
-from ......tests._os_keychain_hook import require_os_credential_store
+from ......tests.os_keychain_hook import require_os_credential_store
 from ...custody.filesystem import (
     compare_and_replace_profile_custody_local_record,
     ensure_profile_custody_local_directory,

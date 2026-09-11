@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from pydantic import ValidationError
 
 from ...core.citation_grounding import CitationGrounding
-from ...core.i18n import Translatable as tr
+from ...core.i18n.translatable import Translatable as tr
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import (
     MappingFactQuery,

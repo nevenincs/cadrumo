@@ -39,7 +39,8 @@ from typing import Never, Self, override
 
 from pydantic import BaseModel, Field, model_serializer, model_validator
 
-from ....core.config import LLMProvider, Settings
+from ....core.config import Settings
+from ....core.config_support import LLMProvider
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operator_action_enums import ActionEvidenceProvenance
 from .errors import LLMConsentError

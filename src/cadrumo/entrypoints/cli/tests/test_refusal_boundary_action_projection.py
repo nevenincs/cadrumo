@@ -27,18 +27,18 @@ from ....core.auth_provider import AuthProviderKind
 from ....core.config import Settings, override_settings
 from ....core.errors.error_codes import ErrorCategory, get_error_exit_code
 from ....core.errors.hierarchy import CoreValidationError
-from ....core.i18n.render import SUPPORTED_OUTPUT_LANGUAGES
+from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.operator_action_enums import (
     ActionArgumentStatus,
     ActionConditionality,
     ActionEvidenceProvenance,
 )
 from ....core.optional_extras import MissingOptionalExtraError, OptionalExtra
-from ....tests.cli_runner import invoke_cached_cli, invoke_typer_app, semantic_cli_output
 from ....tests.secure_sql import isolated_profile_storage_root
 from .._common import CliPolicyRefusalProjection, attach_cli_policy_refusal_projection
 from ..errors import CliRefusedBoundaryError, command_error_boundary
 from ._english_locale_fixture import english_locale_fixture
+from .cli_runner import invoke_cached_cli, invoke_typer_app, semantic_cli_output
 
 __all__ = ["english_locale_fixture"]
 

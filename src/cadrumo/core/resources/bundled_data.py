@@ -38,12 +38,12 @@ rather than by which distribution happens to carry the file next to it.
 from __future__ import annotations
 
 import atexit
-import importlib
 from collections.abc import Generator
 from contextlib import ExitStack, contextmanager
 from functools import cache
 from importlib.resources import as_file, files  # nosemgrep
 from importlib.resources.abc import Traversable  # nosemgrep
+from importlib.util import find_spec
 from pathlib import Path
 
 from ..product_identity import PRODUCT_IDENTITY
@@ -203,10 +203,9 @@ def _companion_data_roots() -> tuple[Path, ...]:
         reports.
     """
     try:
-        module = importlib.import_module(_COMPANION_PACKAGE)
+        spec = find_spec(_COMPANION_PACKAGE)
     except (ImportError, TypeError):
         return ()
-    spec = module.__spec__
     if spec is None or spec.submodule_search_locations is None:
         return ()
     # The search locations of a namespace package recompute from ``sys.path``,

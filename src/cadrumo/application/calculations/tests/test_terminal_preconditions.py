@@ -11,7 +11,6 @@ from types import ModuleType
 from typing import TYPE_CHECKING
 
 import pytest
-from test_support.registry_authoring import load_registry_tree
 
 from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
@@ -19,10 +18,11 @@ from ....core.modelo import Modelo
 from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.period import Period
-from ....core.resources.bundled_data import bundled_path
 from ....core.result_disposition import ResultDisposition
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.calculations.registry.temporal import select_revision
+from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from ....domain.iva_compensation.filed_derivation import (
     M303_COMPENSATION_AVAILABLE_CASILLA,
     M303_COMPENSATION_GENERADA_CASILLA,
@@ -31,7 +31,6 @@ from ....domain.iva_compensation.filed_derivation import (
     M303CompensationAvailableDerivation,
     M303CompensationBasis,
 )
-from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import errors as errors_module
 from .. import m303_carry_ingress as m303_module
@@ -442,8 +441,7 @@ def test_m303_derived_carry_contradiction_has_an_exact_safety_verdict(tmp_path: 
 
 
 def test_m303_registry_formula_contradiction_has_an_exact_safety_verdict() -> None:
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(candidate for candidate in modelos if candidate.id == Modelo.M303.value)
+    modelo = bundled_authority().modelo(Modelo.M303.value)
     revision = select_revision(
         modelo,
         filing_year=_PERIOD.filing_year,

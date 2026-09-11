@@ -15,7 +15,7 @@ from ....core.external_constants import (
     XLSX_EXTENSION,
 )
 from ....core.filing_year import FilingYear
-from ....core.identity import ContentDigest
+from ....core.identity.digest import ContentDigest
 from ....core.period import RegistryPeriodCode, RegistrySelectorPeriodCode
 from ....core.record_design_epoch import RECORD_DESIGN_EPOCH_RE
 from ....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus

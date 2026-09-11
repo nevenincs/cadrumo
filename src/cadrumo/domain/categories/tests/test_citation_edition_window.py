@@ -23,7 +23,7 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from ....core.i18n import Translatable as tr
+from ....core.i18n.translatable import Translatable as tr
 from ..proportionality import (
     ANNUAL_EDITION_CITATION_SOURCES,
     STATUTORY_CITATION_SOURCES,

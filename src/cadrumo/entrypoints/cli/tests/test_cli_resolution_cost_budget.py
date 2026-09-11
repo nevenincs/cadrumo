@@ -68,7 +68,7 @@ _PROBE = textwrap.dedent(
     import json
     import sys
 
-    from cadrumo.tests.cli_performance import _resolve_cli_path
+    from cadrumo.entrypoints.cli.tests.cli_performance import _resolve_cli_path
 
     _resolve_cli_path(tuple(json.loads(sys.argv[1])))
     print(len([name for name in sys.modules if name.startswith("cadrumo")]))

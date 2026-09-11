@@ -35,7 +35,7 @@ from pydantic import AnyUrl, Field
 from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
 from .....core.errors.hierarchy import SiteHealthError
-from .....core.identity import normalise_nif_iva
+from .....core.identity.nif_iva import normalise_nif_iva
 from .....core.identity_check_verdict import IdentityCheckVerdictValue
 from .....core.logging import get_logger
 from .....domain.calculations.registry.checker_oracle_flow import CheckerDriverMode, CheckerObservation
@@ -613,7 +613,7 @@ async def _click_expected(locator: Locator, *, stage: str, description: str, tim
 def _split_vies_nif(nif: str) -> tuple[str, str]:
     """Split a NIF-IVA into its country prefix and number, on the canonical normal form.
 
-    Normalisation is :func:`~core.identity.normalise_nif_iva`, which is named
+    Normalisation is :func:`~core.identity.nif_iva.normalise_nif_iva`, which is named
     for exactly this concept. A local restatement here once stripped spaces and
     hyphens but NOT dots -- and a dotted IVA number is the canonical function's
     own motivating example, because operators routinely paste one. That gap sent

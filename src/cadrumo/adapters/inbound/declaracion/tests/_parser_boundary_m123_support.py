@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
+from pathlib import Path
+
+from .....core.casilla_id import CasillaId
 from ._parser_boundary_support import (
     _MODELO_123_2023_SYNTHETIC_FIXTURE,
     _MODELO_123_2024_SYNTHETIC_FIXTURE,
     _MODELO_123_CURRENT_EXPECTED_TARGETS,
     _MODELO_123_HISTORICAL_EXPECTED_TARGETS,
-    CasillaId,
-    Decimal,
-    Path,
     _expected_casilla_values,
 )
 

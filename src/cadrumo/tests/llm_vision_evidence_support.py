@@ -27,23 +27,23 @@ from .loopback_llm import (
 )
 
 
-def _json_object(value: object) -> dict[str, object]:
+def json_object(value: object) -> dict[str, object]:
     """Narrow one decoded JSON value to a string-keyed object for typed subscripting."""
     return STR_KEYED_MAPPING_ADAPTER.validate_python(value)
 
 
-def _json_array(value: object) -> list[object]:
+def json_array(value: object) -> list[object]:
     assert isinstance(value, list)
     return list(value)
 
 
-def _png_image() -> bytes:
+def png_image() -> bytes:
     buffer = BytesIO()
     Image.new("RGB", (120, 80), "white").save(buffer, format="PNG")
     return buffer.getvalue()
 
 
-def _transaction(evidence_id: str) -> Transaction:
+def vision_transaction(evidence_id: str) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id="row-vision",
         booked_date=date(2025, 5, 1),
@@ -96,7 +96,7 @@ class _ObservedOllamaRequest(SilentLoopbackHandler):
         )
 
 
-def _run_against_loopback_ollama[T](content: str, call: Callable[[], T]) -> tuple[dict[str, object], T]:
+def run_against_loopback_ollama[T](content: str, call: Callable[[], T]) -> tuple[dict[str, object], T]:
     """Stand up a loopback Ollama returning ``content`` and run ``call()`` against it."""
     events: Queue[dict[str, object]] = Queue()
     resident_events: Queue[dict[str, object]] = Queue()

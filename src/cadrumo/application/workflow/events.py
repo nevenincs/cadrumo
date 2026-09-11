@@ -27,7 +27,7 @@ from typing import Annotated, Final
 
 from pydantic import BaseModel, Field, StringConstraints
 
-from ...core.identity import BucketId
+from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now as utc_now
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType

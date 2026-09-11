@@ -16,9 +16,9 @@ from typing import Any
 
 import pytest
 
-from ....tests import FIXTURES_DIR
-from ....tests.cli_runner import invoke_cached_cli
+from ....tests.inventory import FIXTURES_DIR
 from ._isolated_profile_storage_fixtures import live_fx_isolated_backend_per_module
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["live_fx_isolated_backend_per_module"]

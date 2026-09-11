@@ -18,10 +18,11 @@ from typing import TYPE_CHECKING, NoReturn
 import httpx
 from pydantic import BaseModel, Field, ValidationError
 
+from .....core.config_support import LLMProvider
 from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.operator_action_enums import ActionEvidenceProvenance
 from ..errors import LLMConfigError, LLMProviderError, LLMRateLimitError, LLMTransientTransportError
-from ..models import LLMProvider, MultimodalImageInput
+from ..models import MultimodalImageInput
 from ..preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 
 if TYPE_CHECKING:

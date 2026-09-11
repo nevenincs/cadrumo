@@ -33,13 +33,14 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from test_support.registry_authoring import _committed_modelo
 
-from .....core.resources.bundled_data import bundled_path
+from cadrumo.core.resources.bundled_data import bundled_path
+
 from .....tests.registry_snapshot import build_snapshot
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema_input_kind import InputKind
+from ._published_authority import artifact_components
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -47,7 +48,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def test_modelo_193_copies_monetary_relations_and_binds_perceptor_count() -> None:
     """M193 relation formulas cover money only; perceptor count is a bound distinct-NIF fact."""
 
-    modelo, catalogues = _committed_modelo("193")
+    modelo, catalogues = artifact_components("193")
     revision = next(iter(modelo.revisions.values()))
 
     # Graph-wiring assertions — each monetary output casilla must declare an

@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ....core.decimal.constants import MONEY_ZERO
 from ....core.hashing import content_hash_hex as _content_hash_hex
-from ....core.identity import ContentDigest
+from ....core.identity.digest import ContentDigest
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ....core.money.rounding import round_to_cents as _quantize
 from ._closing_authority_records import (

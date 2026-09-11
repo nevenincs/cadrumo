@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 
+from .....core.casilla_id import CasillaId
+from .....tests.inventory import FIXTURES_DIR
+from ..parser import parse_declaracion
 from ._parser_boundary_support import (
-    FIXTURES_DIR,
-    CasillaId,
-    Decimal,
     _expected_casilla_values,
     _expected_period,
-    parse_declaracion,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

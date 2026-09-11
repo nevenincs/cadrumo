@@ -22,19 +22,18 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from test_support.registry_authoring import load_registry_tree
 
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
-from ....core.resources.bundled_data import bundled_path
-from ....domain.calculations.registry._m347_threshold import (
+from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.export import derive_export_layouts_from_bindings
+from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.invoice_bindings import InvoiceObservation, resolve_invoice_binding_row_values
+from ....domain.calculations.registry.m347_threshold import (
     m347_threshold_decimal,
     resolve_m347_clave_c_declaration_threshold,
     resolve_m347_counterparty_annual_threshold,
 )
-from ....domain.calculations.registry.export import derive_export_layouts_from_bindings
-from ....domain.calculations.registry.ids import BindingId
-from ....domain.calculations.registry.invoice_bindings import InvoiceObservation, resolve_invoice_binding_row_values
 from ....domain.calculations.registry.schema_exports import ExportRecordDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -50,8 +49,7 @@ _M347_CLAVE_C_THRESHOLD = m347_threshold_decimal(
 
 
 def _revision(revision_id: str):
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    return next(modelo for modelo in modelos if modelo.id == "347").revisions[revision_id]
+    return bundled_authority().modelo("347").revisions[revision_id]
 
 
 def _declarado_record(revision) -> ExportRecordDefinition:

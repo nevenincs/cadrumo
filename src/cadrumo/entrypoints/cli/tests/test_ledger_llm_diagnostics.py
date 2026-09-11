@@ -33,12 +33,12 @@ from ....domain.transactions.service import set_classification
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
 from ....tests.cli_envelope import unwrap_envelope_notices
-from ....tests.cli_runner import invoke_cached_cli
 from .._ledger_rule_payloads import (
     LedgerLlmDiagnosticsResult,
     LlmConfidenceProviderPayload,
     LlmUsageCostProviderPayload,
 )
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

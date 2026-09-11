@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.hashing import content_hash_hex
-from ...core.identity import ContentDigest
+from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.revision_review import RevisionReviewStatus
 from ...domain.calculations.registry.ids import RevisionId
@@ -19,7 +19,7 @@ from ...domain.calculations.registry.static_inspection import RegistryRevisionIn
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..state_projection import ProjectionModeloReadiness
-from .work_addressing import ModeloWorkResolution, ModeloWorkSelectionMode, ModeloWorkSelectorRequest
+from ._work_selection import ModeloWorkResolution, ModeloWorkSelectionMode, ModeloWorkSelectorRequest
 from .work_review import ModeloWorkReview
 from .workspace_manifest import ModeloWorkspaceFieldManifestV1
 from .workspace_models import ModeloWorkspaceContributorIdentityV1

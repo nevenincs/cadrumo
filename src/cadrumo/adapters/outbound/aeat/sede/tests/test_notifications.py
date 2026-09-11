@@ -17,11 +17,11 @@ from ......application.auth.session_types import AeatSession
 from ......core.config import Settings
 from ......domain.calculations.registry.errors import RegistryValidationError
 from ......domain.calculations.registry.remote_state_guard import RemoteOperation, assert_remote_operation_allowed
-from ......tests import FIXTURES_DIR
 from ......tests.aeat_literal_fixtures import (
     NOTIFICATION_ACKNOWLEDGE_PATH_CANARY,
     NOTIFICATION_COMPARECER_PATH_CANARY,
 )
+from ......tests.inventory import FIXTURES_DIR
 from ...browser.tests.real_http_boundary import opened_http_boundary, real_browser_factory
 from ..errors import SedeNavigationError
 from ..notifications import (

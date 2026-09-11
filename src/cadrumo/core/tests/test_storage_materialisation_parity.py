@@ -11,7 +11,7 @@ The sibling module proves the materialiser *works*: it builds a tree, it is
 idempotent, it refuses an occupied path, it restricts the root. This one proves
 the tree it builds is the declared one. The oracle is the filesystem, walked
 after the fact, compared against an expectation derived from
-:data:`~core.storage_taxonomy.STORAGE_TAXONOMY`. Building the expectation by
+:data:`~core.storage_taxonomy_locations.STORAGE_TAXONOMY`. Building the expectation by
 calling the same iteration the materialiser calls would assert nothing at all.
 
 Parity is asserted in both directions, because each catches a different defect:
@@ -41,12 +41,12 @@ from ..config import Settings, load_settings, override_settings
 from ..directory_scan import DirectoryEntryKind, scan_directory
 from ..storage_materialization import ensure_storage_tree
 from ..storage_taxonomy import (
-    STORAGE_TAXONOMY,
     StorageCategory,
     StorageLocation,
     StorageNodeKind,
     StorageScope,
 )
+from ..storage_taxonomy_locations import STORAGE_TAXONOMY
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

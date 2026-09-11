@@ -15,17 +15,20 @@ without moving an amount V1 already watched.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
+from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.prorrata import InputClassification
 from ....domain.modelos.errors import ModeloValidationError
 from ....domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
-from ....domain.transactions.enums import TransactionDirection
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
-from ...modelo.tests.test_modelo_303_deductible_evidence_gate import _iva_transaction
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..ledger_filing_snapshot import (
     _FINGERPRINT_FIELDS_V1,
     _FINGERPRINT_FIELDS_V2,
@@ -41,6 +44,50 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _CAPTURED_AT = datetime(2026, 1, 1, tzinfo=UTC)
 _LEGAL_REFS = ("ley-37-1992-art-97",)
 _SOURCE_REFS = ("aeat-modelo-303",)
+
+
+def _iva_transaction(transaction_id: str, *, direction: TransactionDirection, taxable_base: Decimal) -> Transaction:
+    """Build the minimal transaction needed by the fingerprint contract tests."""
+    booked_date = date(2026, 2, 10)
+    iva_amount = (taxable_base * Decimal("0.21")).quantize(Decimal("0.01"))
+    fields: dict[str, object] = {
+        "raw": RawTransaction(
+            provider_transaction_id=transaction_id,
+            booked_date=booked_date,
+            value_date=booked_date,
+            amount=taxable_base + iva_amount,
+            currency="EUR",
+            counterparty="Cliente o proveedor",
+            description=f"fingerprint row {transaction_id}",
+            provenance=RawProvenance(
+                source_path=Path(__file__),
+                source_sha256="e" * 64,
+                source_row_index=1,
+                source_format=SourceFormat.MANUAL,
+                ingested_at=_CAPTURED_AT,
+                provider_name="manual-ledger",
+            ),
+            raw_fields={"source_kind": "ledger_transaction"},
+        ),
+        "direction": direction,
+        "group_label": None,
+        "source_jurisdiction": "ES",
+        "business_classification": BusinessClassification.BUSINESS,
+        "category_id": "test_iva_operation",
+        "taxable_base": taxable_base,
+        "iva_rate": Decimal("0.21"),
+        "iva_amount": iva_amount,
+        "classified_at": _CAPTURED_AT,
+        "classified_by": "manual",
+    }
+    if direction is TransactionDirection.OUTGOING:
+        fields["deduction_fact_kind"] = IvaDeductionFactKind.DOMESTIC_CURRENT
+        fields["deduction_provenance"] = IvaDeductionClassificationProvenance(
+            authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+            source_locator=f"invoice:{transaction_id}",
+            evidence_digest="a" * 64,
+        )
+    return Transaction.model_validate(fields)
 
 
 def _purchase() -> Transaction:

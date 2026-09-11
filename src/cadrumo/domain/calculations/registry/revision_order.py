@@ -20,7 +20,7 @@ def revisions_overlap(left: ModeloRevision, right: ModeloRevision) -> bool:
 
     ``ModeloRevision.period_selector`` is a REQUIRED field (never ``None``),
     and every real caller (all three: :func:`_pair_field_divergences`,
-    ``_validate_cross_revision.py``'s ``_period_overlap_requires_evolution``,
+    ``validate_cross_revision.py``'s ``_period_overlap_requires_evolution``,
     ``_validate_cross_revision_contiguity.py``'s ``_skipped_revisions``)
     always passes real, fully-constructed :class:`ModeloRevision` instances --
     confirmed by reading each call site, and no production code ever builds a

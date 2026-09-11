@@ -41,7 +41,7 @@ from ...domain.calculations.registry.schema import (
 )
 from ...domain.identifiers import canonical_decimal_string as _canonical_decimal_str
 from ...domain.modelos.work_unit import WorkUnit
-from ..aggregation import CalculationSourceResolution
+from ..aggregation.source_mesh import CalculationSourceResolution
 from ..aggregation.source_resolution_operations import merge_source_resolutions_by_precedence
 from .binding_resolution import (
     lift_previous_filing_casilla_overrides_to_bindings,

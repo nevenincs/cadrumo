@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.hashing import content_hash_hex
 from ...core.hex import Hex64Str
-from ...core.identity import ContentDigest
+from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import OperationInteractionKind
 from ...core.time.utc import validate_utc_aware

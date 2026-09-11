@@ -26,7 +26,7 @@ from pathlib import Path
 
 import pytest
 
-from ..config import Settings, StorageRouteKind
+from ..config import Settings
 from ..config_state_root import (
     BUCKET_DB_DIRNAME,
     BUCKETS_DIRNAME,
@@ -37,7 +37,9 @@ from ..config_state_root import (
     resolve_state_root,
 )
 from ..config_storage_route import classify_storage_route_for_settings
-from ..storage_taxonomy import StorageCategory, storage_location
+from ..config_support import StorageRouteKind
+from ..storage_taxonomy import StorageCategory
+from ..storage_taxonomy_locations import storage_location
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

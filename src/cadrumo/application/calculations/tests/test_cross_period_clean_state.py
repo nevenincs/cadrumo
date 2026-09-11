@@ -16,14 +16,16 @@ from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.modelos.filing_record import ModeloRecordCatalogue, ModeloRecordStatus
 from ....tests.secure_sql import isolated_runtime_profile
 from ..cross_period_clean_state import (
+    cross_period_dependency_inventory,
+    cross_period_dependency_requirements,
+    partition_cross_period_requirements_by_activity_start,
+)
+from ..cross_period_models import (
     CrossPeriodCleanStateBlocker,
     CrossPeriodCleanStateVerdict,
     CrossPeriodDependencyOrigin,
     CrossPeriodExpectedMemberSet,
     NoPriorObligationProvenanceKind,
-    cross_period_dependency_inventory,
-    cross_period_dependency_requirements,
-    partition_cross_period_requirements_by_activity_start,
 )
 from ..observations_repository import CalculationObservationRepository
 from ._cross_period_clean_state_support import (

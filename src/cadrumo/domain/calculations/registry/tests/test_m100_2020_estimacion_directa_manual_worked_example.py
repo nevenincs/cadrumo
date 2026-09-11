@@ -168,18 +168,18 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.tests.manual_oracle_support import oracle_declared_figures
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 
+from ..authority import ValidatedRegistryAuthority
 from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
     assert_registry_scenario_matches,
     run_registry_calculation_scenario,
 )
-from .manual_oracle_support import oracle_declared_figures
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -45,7 +45,7 @@ from decimal import Decimal
 from typing import Final, NamedTuple, Never, override
 
 from ...core.casilla_id import CasillaId
-from ...core.identity import same_tax_identifier
+from ...core.identity.tax_id import same_tax_identifier
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.period import Period as _Period
@@ -497,7 +497,7 @@ def _apply_wallet_resolution(
     decision: IvaCompensationReconciliationDecision,
     backend_binding_values: dict[BindingId, Decimal],
 ) -> None:
-    from ..aggregation import CalculationSourceContext
+    from ..aggregation.source_mesh import CalculationSourceContext
     from ..calculations.iva_wallet_reconciliation import IvaWalletDecisionSourceResolver
     from .calculation_route import require_calculation_route_resolver
 

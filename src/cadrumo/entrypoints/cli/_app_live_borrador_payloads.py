@@ -13,10 +13,8 @@ from pydantic import (
 from ...application.live.borrador_100 import BorradorSourceUrl
 from ...application.live.snapshot_base import SnapshotLifecycleStateValue
 from ...core.filing_year import FilingYear
-from ...core.identity import (
-    BucketId,
-    SnapshotId,
-)
+from ...core.identity.bucket import BucketId
+from ...core.identity.hex_ids import SnapshotId
 from ...core.json_contract import OutputSchema
 from ...domain.calculations.registry.ids import BindingId
 from ._app_live_payloads_support import canonical_borrador_period, canonical_borrador_utc_timestamp

@@ -642,7 +642,8 @@ def _apply_one(rule: _RedactionRule, value: str) -> str:
         # Imported here, not at module scope: ``core.identity`` reaches
         # ``core.errors``, which reaches this module — the same cycle the
         # lazy ``..errors`` imports below step around.
-        from ..identity import IdentityError, normalise_nif_iva, validate_identity
+        from ..identity.documents import IdentityError, validate_identity
+        from ..identity.nif_iva import normalise_nif_iva
 
         def _hash_if_identity(span: str) -> str | None:
             # Normalise through the SAME function the codebase's canonical
@@ -663,7 +664,8 @@ def _apply_one(rule: _RedactionRule, value: str) -> str:
         return _gated_sub(pattern, value, protected, _hash_if_identity)
     if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_NIF_IVA:
         # Imported at call time for the reason the identity arm above states.
-        from ..identity import IdentityError, nif_iva_format_for_country, normalise_nif_iva, validate_identity
+        from ..identity.documents import IdentityError, validate_identity
+        from ..identity.nif_iva import nif_iva_format_for_country, normalise_nif_iva
 
         def _hash_if_nif_iva(span: str) -> str | None:
             normalised = normalise_nif_iva(span)

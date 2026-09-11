@@ -14,7 +14,7 @@ from .....core.hashing import (
     canonical_json_digest,
     validate_prefixed_digest,
 )
-from .....core.identity import canonical_profile_bucket_id
+from .....core.identity.profile import canonical_profile_bucket_id
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .digest_model import CustodyDigestModel
 from .errors import ProfileCustodyRecordError

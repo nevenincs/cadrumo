@@ -860,6 +860,15 @@ _R99_FALLTHROUGH_ID = "R99_fallthrough"
 # -- Public resolver ------------------------------------------------------
 
 
+def classifiable_categories(*, consuming: PartyFact | None = None) -> frozenset[IvaCategory]:
+    """Return categories declared by the decision table, optionally narrowed by fact."""
+    return frozenset(
+        rule.category
+        for rule in _CLASSIFICATION_RULES
+        if rule.category is not None and (consuming is None or consuming in rule.consumes)
+    )
+
+
 def classify_iva(criteria: IvaInvoiceClassificationCriteria) -> IvaClassificationResult:
     """Apply the closed decision table; first match wins.
 

@@ -16,7 +16,7 @@ import pytest
 from openpyxl import load_workbook
 
 from ......domain.transactions.enums import TransactionDirection
-from ......tests import FIXTURES_DIR
+from ......tests.inventory import FIXTURES_DIR
 from ..base import InvalidFinancialSourceError
 from ..xlsx import XlsxProvider
 

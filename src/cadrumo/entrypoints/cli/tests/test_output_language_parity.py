@@ -23,9 +23,9 @@ from collections.abc import Sequence
 
 import pytest
 
-from ....core.i18n.render import SUPPORTED_OUTPUT_LANGUAGES
-from ....tests.cli_runner import invoke_cached_cli, semantic_cli_output
+from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ._isolated_profile_storage_fixtures import _isolated_state
+from .cli_runner import invoke_cached_cli, semantic_cli_output
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["_isolated_state"]

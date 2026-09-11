@@ -13,7 +13,7 @@ from prompt_toolkit.output.plain_text import PlainTextOutput
 from ....adapters.persistence.storage.bucket.directory_layout import bucket_paths
 from ....core.config import Settings, override_settings
 from ....core.flows import FlowMode
-from ....core.identity import canonical_bucket_id
+from ....core.identity.bucket import canonical_bucket_id
 from ....core.time.clock import now
 from ....domain.auth.apoderamientos.catalogue import UnknownScopeError
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, isolated_two_bucket_runtime

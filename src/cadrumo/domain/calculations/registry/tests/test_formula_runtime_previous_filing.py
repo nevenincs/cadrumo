@@ -8,7 +8,7 @@ import pytest
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.authority_grade import RegistryAuthorityGrade
-from .registry_observations import registry_grounded_modelo_observation
+from .....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ..bindings_previous_filing import (
     previous_filing_observation_requirements,
     previous_filing_source_reference,

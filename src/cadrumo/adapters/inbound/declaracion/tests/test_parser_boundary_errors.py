@@ -2,16 +2,17 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
+from pathlib import Path
+
 import pytest
 
+from .....tests.inventory import FIXTURES_DIR
+from ..errors import DeclaracionParseError
+from ..parser import parse_declaracion
 from ._parser_boundary_support import (
-    FIXTURES_DIR,
-    Decimal,
-    DeclaracionParseError,
-    Path,
     _modelo_130_snapshot,
     _write_declaration_pdf,
-    parse_declaracion,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

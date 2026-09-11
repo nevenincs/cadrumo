@@ -32,7 +32,8 @@ from ...application.modelo.review_package import ReviewPackageActor
 from ...application.modelo.review_package_text import ReviewFeedbackNote, ReviewPackageNote
 from ...core.filing_year import FilingYear
 from ...core.hex import Hex64Str
-from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
+from ...core.identity.bucket import BucketId
+from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.json_contract import OutputSchema
 from ...core.period import Period
 from ...core.text_bounds import NonEmptyStr, PositiveCount

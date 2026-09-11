@@ -38,7 +38,7 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 from .....core.classification.policies import SensitivityClass, default_policy_for
 from .....core.errors.hierarchy import CoreValidationError
 from .....core.external_constants import UTF_8_ENCODING
-from .....core.identity import ContentDigest
+from .....core.identity.digest import ContentDigest
 from .....core.locks import exclusive_file_lock
 from .....core.logging import get_logger
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN

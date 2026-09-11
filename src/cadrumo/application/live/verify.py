@@ -44,7 +44,8 @@ from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRecor
 from ...core.config import Settings, load_settings
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import sha256_hex
-from ...core.identity import BucketId, ContentDigest
+from ...core.identity.bucket import BucketId
+from ...core.identity.digest import ContentDigest
 from ...core.identity_check_verdict import IdentityCheckVerdictValue
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now

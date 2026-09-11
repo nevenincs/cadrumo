@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.config import LLMProvider
+from .....core.config_support import LLMProvider
 from ..consent import (
     OffHostEvidenceReadOutcome,
     classify_off_host_evidence_read,

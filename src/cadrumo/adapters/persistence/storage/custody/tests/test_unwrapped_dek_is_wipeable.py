@@ -26,7 +26,7 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from ......tests._os_keychain_hook import require_os_credential_store
+from ......tests.os_keychain_hook import require_os_credential_store
 from ..acceleration_receipt import (
     delete_profile_session,
     mint_profile_session,

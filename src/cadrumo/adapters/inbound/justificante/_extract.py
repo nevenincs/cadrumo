@@ -37,11 +37,11 @@ from ....core.period import Period, PeriodError
 from ....core.text_fold import fold_diacritics
 from ....core.time.clock import now
 from ....core.url_validation import ANY_HTTP_URL_ADAPTER
-from ....domain.justificante import (
-    Justificante,
+from ....domain.justificante.errors import (
     JustificanteCsvNotFoundError,
     JustificanteParseError,
 )
+from ....domain.justificante.schema import Justificante
 from ..pdf.label_regex import EJERCICIO_LABEL, MODELO_LABEL, PRESENTADOR_NIF_LABEL, parse_spanish_decimal
 from ..pdf.source_provenance import sha256_file, source_pdf_reference_path
 

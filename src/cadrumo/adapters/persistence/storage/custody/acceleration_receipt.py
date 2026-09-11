@@ -74,7 +74,7 @@ from .....core.hashing import (
     reject_duplicate_json_members,
     reject_json_constant,
 )
-from .....core.identity import canonical_profile_bucket_id
+from .....core.identity.profile import canonical_profile_bucket_id
 from .....core.logging import get_logger
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.profile_session import ProfileSessionRefusalReason

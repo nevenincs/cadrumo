@@ -35,7 +35,7 @@ import typer
 from pydantic import SecretStr
 
 from ....core.external_constants import UTF_8_ENCODING
-from ....core.i18n import tr
+from ....core.i18n.render import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from .._common import emit_envelope
 from ..errors import CliRefusedBoundaryError

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from ....domain.justificante import PdfModeloImportError
+from ....domain.justificante.errors import PdfModeloImportError
 
 
 class BorradorParseError(PdfModeloImportError):

@@ -41,13 +41,19 @@ import pytest
 
 from .....core.aggregation import RelationAggregationOp
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .._relation_aggregation import relation_aggregation_op
+from .....domain.contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
 from ..formula_runtime import calculate_registry_snapshot
+from ..relation_aggregation import relation_aggregation_op
 from ..relations import resolve_relation_values
 from ..schema import RegistrySnapshot
-from ._modelo_100_registry_support import _m100_2024_deduccion_maternidad_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_M100_2024_MATERNIDAD_BINDINGS = {
+    "renta-2024-profile-deduccion-maternidad": Decimal(
+        compute_deduccion_maternidad_0611([], filing_year=2024),
+    ),
+}
 
 # ── shared date contexts ──────────────────────────────────────────────────────
 _DATE_2024 = {"filing_period": date(2024, 12, 31)}
@@ -68,7 +74,7 @@ _BINDINGS_2024: dict[str, Decimal] = {
     "renta-2024-profile-incremento-guarderia": Decimal("0"),
     "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
     "renta-2024-profile-descendientes-guarderia": Decimal("0"),
-    **_m100_2024_deduccion_maternidad_bindings(),
+    **_M100_2024_MATERNIDAD_BINDINGS,
     "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
     "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
     # matrimonio-sobrevenido bindings (81feae7b0): zero = marriage pre-dates filing year.

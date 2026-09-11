@@ -35,7 +35,7 @@ from ..custody.zeroise import zeroise as _zeroise
 from ..errors import (
     storage_validation_error as _storage_validation_error,
 )
-from ._live_sessions import register_live_session
+from .live_sessions import register_live_session
 
 if TYPE_CHECKING:
     from sqlalchemy import Engine

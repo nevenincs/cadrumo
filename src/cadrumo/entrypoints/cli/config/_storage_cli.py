@@ -26,7 +26,7 @@ import typer
 
 from ....application.operator_actions.models import ActionReference
 from ....application.storage_management.models import StorageCheckIssueKind, StorageTreeIssueKind
-from ....core.i18n import tr
+from ....core.i18n.render import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from ....core.storage_taxonomy import StorageArea
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language

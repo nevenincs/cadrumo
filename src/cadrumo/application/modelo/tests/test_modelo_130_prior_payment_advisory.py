@@ -50,14 +50,17 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.errors import RegistrySnapshotError
 from ....domain.calculations.registry.schema import ModeloRevision
+from ....domain.calculations.registry.tests.registry_observations import (
+    registry_grounded_observations,
+    revision_id_for_observation,
+)
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation import CalculationSourceDiagnostic
+from ...aggregation.source_mesh import CalculationSourceDiagnostic
 from ...calculations.observations_repository import CalculationObservationRepository
 from .._prior_payment_advisory import (
     collect_prior_payment_minoracion_not_captured_diagnostics,

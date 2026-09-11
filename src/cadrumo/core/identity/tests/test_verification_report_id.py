@@ -1,4 +1,4 @@
-"""Real-behavior tests for the :data:`~core.identity.VerificationReportId` alias.
+"""Real-behavior tests for the :data:`~core.identity.hex_ids.VerificationReportId` alias.
 
 Moved here with the symbol itself. ``VerificationReportId`` was declared in the
 modelo domain until it was relocated onto the shared hex-64 primitive, and a
@@ -14,7 +14,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....tests.fixtures.identity_holder import single_field_holder
-from .. import VerificationReportId
+from ..hex_ids import VerificationReportId
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

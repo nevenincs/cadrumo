@@ -63,7 +63,7 @@ from ._modelo_rendering import (
 from .errors import CliOutboundPayloadBoundaryError
 
 if TYPE_CHECKING:
-    from ...application.aggregation import CalculationSourceDiagnostic
+    from ...application.aggregation.source_mesh import CalculationSourceDiagnostic
     from ...application.modelo.calculate_input import ModeloWorkCalculationServiceResult
     from ...domain.modelos.calculation_revision import CalculationRevision
     from ...domain.modelos.work_unit import WorkUnit

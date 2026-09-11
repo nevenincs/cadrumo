@@ -36,7 +36,7 @@ from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.descendant_relacion import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
 from ...core.errors.hierarchy import ProfileAnswerTypeError
 from ...core.flows import REPEATING_INSTANCE_SEPARATOR, FlowWidgetKind
-from ...core.identity import IdentityError, validate_identity
+from ...core.identity.documents import IdentityError, validate_identity
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.text_bounds import CALENDAR_MONTH_MAX, CALENDAR_MONTH_MIN, is_calendar_month
 from ...core.time.clock import today_madrid
@@ -264,7 +264,7 @@ def _validate_descendant_nif(page: FlowPage, canonical: str) -> ValidationVerdic
 
     A descendant may legitimately lack a NIF (a minor without one), so a
     blank canonical passes; a non-blank value must satisfy the Spanish
-    NIF / NIE / CIF checksum in :func:`cadrumo.core.identity.validate_identity`
+    NIF / NIE / CIF checksum in :func:`cadrumo.core.identity.documents.validate_identity`
     -- the same authority the identity pages bind. A malformed value
     returns the ``wizard.errors.invalid_tax_id`` verdict carrying only the
     page id; the raw answer never enters the diagnostic.

@@ -13,12 +13,12 @@ from ..domain.iva.regimen_simplificado_rows import (
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
-from ..domain.modelos.calculation_revision import FilingInstanceEvidence
 from ..domain.modelos.calculation_revision_m303_evidence import (
     M303DANA2024EligibilityEvidence,
     M303Exonerado390FilingEvidence,
 )
 from ..domain.modelos.calculation_revision_m303_handoff import (
+    FilingInstanceEvidence,
     M303FilingInstanceEvidence,
     M303RegimenSimplificadoFilingEvidence,
 )

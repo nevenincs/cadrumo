@@ -32,9 +32,9 @@ from pathlib import Path
 import pytest
 from pydantic import TypeAdapter
 
-from ....tests.cli_performance import is_non_authoritative_artifact
 from ..command_spec import CommandSpec
 from ..command_specs import COMMAND_GRAPH
+from .cli_performance import is_non_authoritative_artifact
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

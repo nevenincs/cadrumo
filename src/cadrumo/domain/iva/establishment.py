@@ -84,13 +84,13 @@ from functools import lru_cache
 from typing import Any, Final, NamedTuple
 
 from ...core.external_constants import UTF_8_ENCODING
-from ...core.identity import (
+from ...core.identity.nif_iva import (
     NifIvaPrefix,
     iso_country_for_nif_iva_prefix,
     nif_iva_format_for_country,
     normalise_nif_iva,
 )
-from ...core.parsing import normalise_iso_3166_alpha2_jurisdiction
+from ...core.parsing.codes import normalise_iso_3166_alpha2_jurisdiction
 from ...core.resources.bundled_data import bundled_path
 from ...core.type_guards import is_object_list
 from . import country_vocabulary as _country_vocabulary

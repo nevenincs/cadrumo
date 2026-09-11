@@ -13,10 +13,10 @@ from __future__ import annotations
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from ....core.identity import ContentDigest
+from ....core.identity.digest import ContentDigest
 from ....domain.buckets.event import BucketEventObjectType
-from ....entrypoints.cli.modelo_aux_payloads import EvidenceRecordRefPayload
 from ..models import EvidenceRecordRef
+from ..payloads import EvidenceRecordRefPayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -50,7 +50,7 @@ class TestEvidenceRecordRefDigest:
 
 
 class TestEvidenceRecordRefPayloadDigest:
-    """The CLI projection cannot be looser than the record it mirrors."""
+    """The transport-neutral projection cannot be looser than the record."""
 
     def test_valid_hex64_digest_is_accepted(self) -> None:
         payload = EvidenceRecordRefPayload(

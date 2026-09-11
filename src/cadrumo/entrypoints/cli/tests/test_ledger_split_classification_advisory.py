@@ -19,8 +19,8 @@ from typing import Any
 
 import pytest
 
-from ....tests.cli_runner import invoke_cached_cli
 from ._ledger_seeded_profile_fixture import _isolated_backend
+from .cli_runner import invoke_cached_cli
 
 __all__ = ["_isolated_backend"]
 

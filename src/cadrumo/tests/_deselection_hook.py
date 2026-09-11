@@ -108,7 +108,7 @@ def _remediation(expression: str, markers: frozenset[str] = frozenset()) -> str:
     known, and otherwise offers only the selector that cannot be empty for
     a module that collected anything at all.
     """
-    universal = "re-run with -m '' to select every lane, or `just test-both-lanes`"
+    universal = "re-run with -m '' to select every lane, or `just test-integration`"
     actual = sorted(markers - {"parametrize", "usefixtures", "filterwarnings", "skip", "skipif", "xfail"})
     if actual:
         return f"These tests carry: {', '.join(actual)}. Select one of those, or {universal}."
@@ -193,5 +193,5 @@ def apply(
     )
     terminalreporter.write_line(
         "Green here covers the selected lane only. Run the rest with `just test-integration`, "
-        "or both lanes with `just test-both-lanes`.",
+        "or both lanes with `just test-integration`.",
     )

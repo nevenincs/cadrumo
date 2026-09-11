@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ...core.i18n import tr
+from ...core.i18n.render import tr
 from ...core.json_contract import Notice, ResolvedNoticeAction
 from ...core.presentation import NoticePresentation
 from ...domain.user_profile.schema import ProfileFieldType

@@ -1,8 +1,8 @@
 """Strict live-test opt-in constants and predicates.
 
 This module centralises the pytest-only live-read flags consumed by
-:class:`~core.config.Settings`, re-exported by :mod:`core.config`,
-and enforced by :meth:`~core.access_gate.AeatAccessGate.require_live_read`.
+:class:`~core.config.Settings` and enforced by
+:meth:`~core.access_gate.AeatAccessGate.require_live_read`.
 The same predicate backs the generic test helper in :mod:`aeat-tests.live_gate`,
 so ordinary live tests, Google live tests, and access-gate diagnostics all
 agree that the only opt-in token is the literal string ``"1"``.

@@ -60,8 +60,8 @@ _GOOGLE_CALCULATION_HANDOFF = ExecutionPolicySpec(
 )
 
 
-_MODULE = "cadrumo.entrypoints.cli._modelo_spreadsheet_cli"
-_PAYLOADS = "cadrumo.entrypoints.cli._modelo_spreadsheet_payloads"
+_MODULE = "._modelo_spreadsheet_cli"
+_PAYLOADS = "._modelo_spreadsheet_payloads"
 
 
 def _option(
@@ -111,10 +111,10 @@ def _leaf(
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=parameters,
         policy=policy,
-        handler=LazyBinding.available(DeferredTarget(_MODULE, handler)),
+        handler=LazyBinding.available(DeferredTarget(_MODULE, handler, __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget(_PAYLOADS, schema_name),
+            target=DeferredTarget(_PAYLOADS, schema_name, __package__),
             identity=identity,
         ),
     )

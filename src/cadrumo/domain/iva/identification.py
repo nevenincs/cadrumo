@@ -25,7 +25,7 @@ demanding corroboration on one side of it.
 **Spain cannot arise from a printed IVA number here**, and that is a property of
 the prefix vocabulary rather than a judgement made in this module: Spanish
 identifiers are checksum identifiers routed through the Spanish tax-id validator
-and ``ES`` is absent from :class:`~core.identity.NifIvaPrefix`. A Spanish
+and ``ES`` is absent from :class:`~core.identity.nif_iva.NifIvaPrefix`. A Spanish
 identification is therefore established from the Spanish identifier authority or
 declared, never inferred here.
 
@@ -51,7 +51,8 @@ from __future__ import annotations
 
 from typing import Final
 
-from ...core.identity import IdentityError, validate_spanish_tax_id
+from ...core.identity.documents import IdentityError
+from ...core.identity.tax_id import validate_spanish_tax_id
 from .establishment import country_code_for_printed_tax_identifier
 from .schema import EUMemberState
 

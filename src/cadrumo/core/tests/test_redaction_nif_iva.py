@@ -32,7 +32,8 @@ from __future__ import annotations
 
 import pytest
 
-from ..identity import NIF_IVA_FORMATS, IdentityError, validate_identity
+from ..identity.documents import IdentityError, validate_identity
+from ..identity.nif_iva import NIF_IVA_FORMATS
 from ..redaction.rules import redact_for_cli_output, redact_for_log
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

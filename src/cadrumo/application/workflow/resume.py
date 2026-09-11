@@ -60,7 +60,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from ...core.hex import HEX_PATTERN_16, HEX_PATTERN_64
-from ...core.identity import CalculationRevisionId, WorkUnitId
+from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.modelos.work_unit import WorkUnitCatalogue
@@ -126,7 +126,7 @@ _NON_RESUMABLE_REASONS: frozenset[WorkflowAbortReason] = frozenset(
 
 def _captured_work_catalogue(bucket_id: str | None) -> tuple[WorkUnitCatalogue, str]:
     """Capture the catalogue once at the workflow operation boundary."""
-    from ..modelo.work_addressing import ModeloWorkSelectorRequest, resolve_modelo_work_bucket
+    from ..modelo._work_selection import ModeloWorkSelectorRequest, resolve_modelo_work_bucket
     from ..modelo.work_unit_repository import work_unit_catalogue_repository
 
     resolved_bucket_id = resolve_modelo_work_bucket(ModeloWorkSelectorRequest(bucket_id=bucket_id))

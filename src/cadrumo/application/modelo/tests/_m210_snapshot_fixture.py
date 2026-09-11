@@ -1,11 +1,9 @@
 """Canonical Modelo 210 Convenio registry snapshot fixture."""
 
 import pytest
-from test_support.registry_authoring import load_registry_tree
 
-from ....core.resources.bundled_data import bundled_path
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....tests.registry_snapshot import build_snapshot
 
 
 @pytest.fixture(scope="module")
@@ -16,10 +14,7 @@ def m210_snapshot() -> RegistrySnapshot:
     snapshot need not retain the superseded treaty projection.
     """
 
-    root = bundled_path("registry", "aeat")
-    modelos, catalogues = load_registry_tree(root)
-    modelo = next(modelo for modelo in modelos if modelo.id == "210")
-    return build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="EVENT-1")
+    return bundled_authority().snapshot("210", filing_year=2025, period="EVENT-1")
 
 
 __all__ = ["m210_snapshot"]

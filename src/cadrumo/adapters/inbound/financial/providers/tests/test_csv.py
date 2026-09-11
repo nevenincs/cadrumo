@@ -16,7 +16,7 @@ import pytest
 from ......core.config import override_settings
 from ......core.external_constants import CSV_ENCODING_FALLBACK_CHAIN
 from ......domain.transactions.enums import TransactionDirection
-from ......tests import FIXTURES_DIR
+from ......tests.inventory import FIXTURES_DIR
 from ..base import InvalidFinancialSourceError
 from ..csv import CsvProvider
 

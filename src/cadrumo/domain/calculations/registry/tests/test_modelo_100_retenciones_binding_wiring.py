@@ -29,13 +29,19 @@ from decimal import Decimal
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....domain.contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
 from ..ids import BindingId, RelationId
 from ..schema import RegistrySnapshot
-from ._modelo_100_registry_support import _m100_2024_deduccion_maternidad_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_M100_2024_MATERNIDAD_BINDINGS = {
+    "renta-2024-profile-deduccion-maternidad": Decimal(
+        compute_deduccion_maternidad_0611([], filing_year=2024),
+    ),
+}
 
 _M100_MINIMO_PERSONAL_CASILLA: CasillaId = validated_casilla_id("0003", surface="_M100_MINIMO_PERSONAL_CASILLA")
 _M100_RETENCIONES_M111_CASILLA: CasillaId = validated_casilla_id("0596", surface="_M100_RETENCIONES_M111_CASILLA")
@@ -78,7 +84,7 @@ def _base_binding_values(
         "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
         # Art. 81.1 LIRPF maternity deduction: zero in these retenciones scenarios,
         # which declare no qualifying descendant.
-        **_m100_2024_deduccion_maternidad_bindings(),
+        **_M100_2024_MATERNIDAD_BINDINGS,
         # Art. 81.2 LIRPF guarderia bindings (b7ad3a993): zero in non-guarderia scenarios.
         "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
         "renta-2024-profile-incremento-guarderia": Decimal("0"),

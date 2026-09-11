@@ -7,9 +7,8 @@ everywhere. ``_ROOT_LOCATIONS`` / ``_BUCKET_LOCATIONS`` are the DATA -- one
 entry per application-chosen location, and the fastest-growing part of the
 taxonomy by construction, since every new governed path adds a member here.
 Keeping them together pushed the combined module past its reviewed size
-band; this module is the other half, consumed only through
-``_storage_taxonomy``'s re-export (see its own ``__all__``), never imported
-directly by anything outside ``core``.
+band; this module is the data and resolver half, imported directly by the
+consumers that need those canonical definitions.
 """
 
 from __future__ import annotations

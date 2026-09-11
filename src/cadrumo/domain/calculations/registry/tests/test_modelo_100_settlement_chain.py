@@ -67,12 +67,18 @@ from decimal import Decimal
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....domain.contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
 from ..formula_runtime import calculate_registry_snapshot
 from ..ids import BindingId, RelationId
 from ..schema import RegistrySnapshot
-from ._modelo_100_registry_support import _m100_2024_deduccion_maternidad_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_M100_2024_MATERNIDAD_BINDINGS = {
+    "renta-2024-profile-deduccion-maternidad": Decimal(
+        compute_deduccion_maternidad_0611([], filing_year=2024),
+    ),
+}
 
 # ---------------------------------------------------------------------------
 # Oracle constants derived from LIRPF 2024 + Madrid escala 2024 — see module
@@ -170,7 +176,7 @@ def _binding_values() -> dict[BindingId, Decimal]:
         "renta-2024-profile-incremento-guarderia": Decimal("0"),
         "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
         "renta-2024-profile-descendientes-guarderia": Decimal("0"),
-        **_m100_2024_deduccion_maternidad_bindings(),
+        **_M100_2024_MATERNIDAD_BINDINGS,
         "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
         "renta-2024-profile-marriage-full-year": Decimal("0"),

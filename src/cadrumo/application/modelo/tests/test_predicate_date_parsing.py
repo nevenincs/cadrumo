@@ -19,7 +19,7 @@ from datetime import date
 
 import pytest
 
-from ....core.parsing import parse_date
+from ....core.parsing.dates import parse_date
 from .._verification_predicates import _parse_predicate_date
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -4,7 +4,7 @@ See Also:
     :class:`~core.i18n.Translatable`
         Translation-key value object whose declaration and import alias are
         guarded by this module.
-    :func:`~core.i18n.tr`
+    :func:`~cadrumo.core.i18n.render.tr`
         Reserved runtime translation function whose ``tr`` binding must not be
         shadowed outside the i18n renderer.
     :func:`~tests._inventory.package_ast_items`

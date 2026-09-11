@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, NoReturn
 import typer
 
 from ....core.external_constants import OutputLanguage
-from ....core.i18n import tr
+from ....core.i18n.render import tr
 from .._common import activate_subcommand_output_language as _activate_output_language
 from .._common import emit_envelope, resolve_cli_precondition_action
 

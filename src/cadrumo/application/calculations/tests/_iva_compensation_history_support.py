@@ -9,7 +9,6 @@ from typing import Literal
 
 from pydantic import AnyHttpUrl
 
-from ....adapters.outbound.aeat.sede._iva_compensation_wallet_parsing import WALLET_URL
 from ....adapters.outbound.aeat.sede.schema import (
     FiledDeclaracionArtefact,
     FiledDeclaracionObservation,
@@ -20,6 +19,7 @@ from ....adapters.outbound.aeat.sede.schema import (
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.casilla_value_kind import CasillaValueKind
+from ....core.external_constants import load_external_constants
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.modelo import Modelo
 from ....core.period import Period
@@ -27,9 +27,12 @@ from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+
+_EXTERNAL = load_external_constants()
+WALLET_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
 from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ....tests.registry_snapshot import build_snapshot
-from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 #: A checksum-valid synthetic NIF. ``IvaCompensationPeriodState.taxpayer_nif``
 #: is a ``SubjectTaxId``, so a placeholder label is refused at the boundary

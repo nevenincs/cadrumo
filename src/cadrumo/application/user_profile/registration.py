@@ -38,7 +38,8 @@ from pydantic import BaseModel
 
 from ...core.credentials import assess_profile_password
 from ...core.errors.hierarchy import CadrumoError
-from ...core.identity import BucketId, ProfileId
+from ...core.identity.bucket import BucketId
+from ...core.identity.profile import ProfileId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now as _utc_now
 from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord, new_profile_id

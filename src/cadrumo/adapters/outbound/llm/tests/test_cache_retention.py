@@ -24,10 +24,11 @@ from pathlib import Path
 import pytest
 
 from .....core.classification.policies import SensitivityClass
+from .....core.config_support import LLMProvider
 from .....core.redaction.rules import default_rules_for_class, redact_structured
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ..cache import _CACHE_NAMESPACE, _CACHE_VERSION, LLMCache
-from ..models import CachedEntry, LLMProvider, LLMRequest, LLMResponse
+from ..models import CachedEntry, LLMRequest, LLMResponse
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

@@ -24,7 +24,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Static
 from textual.worker import Worker, WorkerCancelled, WorkerFailed
 
-from ....application.operations.frontend_contracts import (
+from ....application.operations.frontend_requests import (
     OperationCancellationRefusalCode,
     OperationCancellationSuccessV1,
     OperationDetachSuccessV1,

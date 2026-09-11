@@ -32,13 +32,9 @@ from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.engine.url import URL, make_url
 from sqlalchemy.pool import ConnectionPoolEntry
 
-from .....core.config import (
-    FORMER_PRODUCT_DATABASE_FILENAME,
-    Settings,
-    StorageRouteKind,
-    classify_storage_route,
-    load_settings,
-)
+from .....core.config import Settings, classify_storage_route, load_settings
+from .....core.config_state_root import FORMER_PRODUCT_DATABASE_FILENAME
+from .....core.config_support import StorageRouteKind
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import sha256_hex
 from .....core.logging import get_logger

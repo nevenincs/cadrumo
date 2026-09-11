@@ -11,7 +11,14 @@ from collections.abc import Iterator, Mapping
 from pathlib import Path
 from typing import Protocol, runtime_checkable
 
+from ...core.secure_object_write import SecureObjectWrite
+from ...domain.buckets.event import BucketEventHistoryCatalogue
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.invoices.models import InvoiceCatalogue
+from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.transactions.enums import TransactionDirection
+from ...domain.transactions.models import TransactionCatalogue
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.transactions.raw_transaction import RawTransaction
 
 
@@ -83,8 +90,48 @@ class FinancialProviderProtocol(Protocol):
         ...
 
 
+class TransactionCatalogueCoCommitWriterProtocol(TransactionCatalogueRepositoryProtocol, Protocol):
+    """Transaction-catalogue port for an atomic multi-object ledger write."""
+
+    def save_with_secure_object_writes(
+        self,
+        catalogue: TransactionCatalogue,
+        extra_writes: tuple[SecureObjectWrite, ...],
+    ) -> None:
+        """Persist the catalogue and related secure objects atomically."""
+        ...
+
+
+class InvoiceCatalogueCoCommitWriterProtocol(InvoiceCatalogueRepositoryProtocol, Protocol):
+    """Invoice-catalogue port for an atomic ledger co-commit."""
+
+    def load_revisioned(self) -> tuple[InvoiceCatalogue, str]:
+        """Load the catalogue with the secure-object revision observed."""
+        ...
+
+    def to_secure_object_write(
+        self,
+        catalogue: InvoiceCatalogue,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
+        """Build the invoice secure-object write without committing it."""
+        ...
+
+
+class BucketEventHistoryCoCommitWriterProtocol(BucketEventHistoryRepositoryProtocol, Protocol):
+    """Bucket-event port for a revision-guarded ledger co-commit."""
+
+    def load_revisioned(self) -> tuple[BucketEventHistoryCatalogue, str]:
+        """Load event history with the secure-object revision observed."""
+        ...
+
+
 __all__ = [
+    "BucketEventHistoryCoCommitWriterProtocol",
     "FinancialProviderProtocol",
+    "InvoiceCatalogueCoCommitWriterProtocol",
     "ParsedLedgerRowProtocol",
     "ProviderValidationProtocol",
+    "TransactionCatalogueCoCommitWriterProtocol",
 ]

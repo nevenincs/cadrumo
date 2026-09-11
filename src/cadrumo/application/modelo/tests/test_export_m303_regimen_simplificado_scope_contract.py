@@ -16,8 +16,10 @@ from ....domain.bienes_inversion.regularizacion_parameters import (
 from ....domain.calculations.registry.schema_base import ThresholdComparison
 from ....domain.deadlines.models import M303RegimeComposition
 from ....domain.prorrata_register.register import ProrrataRegister
-from ...aggregation import (
+from ...aggregation.iva_ledger import (
     IvaLedgerAggregation,
+)
+from ...aggregation.m303_arrivals import (
     resolve_m303_prorrata_transition_arrival,
     resolve_m303_supplier_regime_arrival,
 )

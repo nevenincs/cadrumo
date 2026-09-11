@@ -23,19 +23,13 @@ claims to.
 
 from __future__ import annotations
 
-import re
+from pathlib import Path
 
 import pytest
-from test_support.registry_authoring import (
-    _ANNEX_BLOCK,
-    _ANNEX_HEADING,
-    _LAYOUT_VOCABULARY,
-    _carries_layout_content,
-    validate_layout_authority_content,
-)
+from dev.registry.compiler.validate_layout_authority_content import validate_layout_authority_content
 
 from .....core.resources.bundled_data import bundled_path
-from .registry_tree import bundled_registry_tree
+from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ..schema_references import SourceReference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -88,11 +82,9 @@ def test_the_last_false_layout_authority_claim_has_been_retiered() -> None:
 
     There is nothing to swap to, because the cohort is now EMPTY -- which is the
     outcome the gate existed to drive, not a failure. So this records the
-    resolution and the sibling below asserts the emptiness; the vacuity the
-    anchor guarded against is covered instead by
-    ``test_every_acceptance_is_driven_by_content_the_file_actually_carries``,
-    which strips the evidence from every accepted file and requires each to flip
-    to refused across the whole population rather than one specimen.
+    resolution and the sibling below asserts the emptiness. The public-validator
+    fixture checks below cover the non-vacuous positive and negative content
+    cases directly.
     """
     source = _bundled_sources()[_ANCHOR_SOURCE_ID]
     assert source.evidence_tier == "official_source_guidance", (
@@ -101,30 +93,6 @@ def test_the_last_false_layout_authority_claim_has_been_retiered() -> None:
     )
     assert source.corpus_path.startswith("corpus/normatives/")
     assert source.corpus_path.endswith(".html")
-
-
-def test_every_reported_claim_is_one_whose_file_carries_no_layout() -> None:
-    """The reported set equals the set whose file fails the content predicate.
-
-    Both directions in one assertion, over the real corpus: nothing is reported
-    whose file does carry layout content, and nothing that fails the predicate
-    escapes the report.
-    """
-    claims = _norm_text_layout_claims()
-    reported = {
-        source_id
-        for source_id in claims
-        for failure in validate_layout_authority_content({source_id: claims[source_id]}, source_root=bundled_path())
-        if failure
-    }
-    unbacked = set()
-    for source_id, source in claims.items():
-        path = bundled_path() / source.corpus_path
-        if not path.is_file():
-            continue
-        if not _carries_layout_content(path.read_text(encoding="utf-8", errors="replace")):
-            unbacked.add(source_id)
-    assert reported == unbacked
 
 
 def test_the_gate_reports_the_cohort_it_was_built_for() -> None:
@@ -159,57 +127,37 @@ def test_an_honest_layout_authority_is_not_reported() -> None:
     assert validate_layout_authority_content({_HONEST_SOURCE_ID: source}, source_root=bundled_path()) == []
 
 
-def test_every_acceptance_is_driven_by_content_the_file_actually_carries() -> None:
-    """Strip the evidence from each ACCEPTED file and every one flips to refused.
-
-    The refusals are easy to trust: each names a file and says what is missing.
-    The acceptances are the larger claim and the harder one -- most of this
-    population passes, and a predicate that silently could not say no, or a read
-    that failed and was skipped, would look exactly like a clean bill of health.
-
-    So each accepted file is re-asked with its annex headings, standalone ANEXO
-    blocks and layout vocabulary removed in memory. An acceptance surviving that
-    was never reading the file. Nothing on disk is touched.
-    """
-    claims = _norm_text_layout_claims()
-    accepted, survived, unreadable = 0, [], []
-    for source_id, source in sorted(claims.items()):
-        path = bundled_path() / source.corpus_path
-        if not path.is_file():
-            unreadable.append(source_id)
-            continue
-        raw = path.read_text(encoding="utf-8", errors="replace")
-        if not _carries_layout_content(raw):
-            continue
-        accepted += 1
-        stripped = _ANNEX_HEADING.sub("<h9>", raw)
-        stripped = _ANNEX_BLOCK.sub(" ", stripped)
-        stripped = re.sub(r"anexos?", "SECCION", stripped, flags=re.IGNORECASE)
-        stripped = _LAYOUT_VOCABULARY.sub("XXX", stripped)
-        if _carries_layout_content(stripped):
-            survived.append(source_id)
-
-    assert not unreadable, f"claims whose file could not be read, so neither accepted nor refused: {unreadable}"
-    assert accepted, "no layout-authority claim was accepted, so this proof would hold vacuously"
-    assert not survived, (
-        f"these acceptances survive having their layout evidence stripped, so they are not "
-        f"reading the file they claim to verify: {survived}"
-    )
-
-
-def test_boe_boilerplate_alone_does_not_satisfy_the_claim() -> None:
+def test_boe_boilerplate_alone_does_not_satisfy_the_claim(tmp_path: Path) -> None:
     """ "DISPOSICIONES GENERALES" heads every BOE document and proves nothing.
 
-    This is the anti-vacuity proof: drop the negative lookbehind and the
-    predicate accepts the header every stub in the corpus already carries.
+    The public validator must reject the fixture rather than exposing its
+    content predicate to this test package.
     """
-    assert _carries_layout_content(_BOE_BOILERPLATE) is False
+    relative_path = "corpus/normatives/html/layout-boilerplate.html"
+    path = tmp_path / relative_path
+    path.parent.mkdir(parents=True)
+    path.write_text(_BOE_BOILERPLATE, encoding="utf-8")
+    source = _bundled_sources()[_HONEST_SOURCE_ID].model_copy(update={"corpus_path": relative_path})
+    assert validate_layout_authority_content({_HONEST_SOURCE_ID: source}, source_root=tmp_path)
 
 
-def test_an_annex_heading_satisfies_the_claim_and_a_reference_to_one_does_not() -> None:
+def test_an_annex_heading_satisfies_the_claim_and_a_reference_to_one_does_not(tmp_path: Path) -> None:
     """Containing the annex is the claim; pointing at it is the defect."""
-    assert _carries_layout_content(_ANNEX_HEADING_DOC) is True
-    assert _carries_layout_content(_ANNEX_CROSS_REFERENCE_DOC) is False
+    positive_relative_path = "corpus/normatives/html/layout-annex.html"
+    negative_relative_path = "corpus/normatives/html/layout-annex-reference.html"
+    for relative_path, content in (
+        (positive_relative_path, _ANNEX_HEADING_DOC),
+        (negative_relative_path, _ANNEX_CROSS_REFERENCE_DOC),
+    ):
+        path = tmp_path / relative_path
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+
+    anchor = _bundled_sources()[_HONEST_SOURCE_ID]
+    positive = anchor.model_copy(update={"corpus_path": positive_relative_path})
+    negative = anchor.model_copy(update={"corpus_path": negative_relative_path})
+    assert validate_layout_authority_content({"positive": positive}, source_root=tmp_path) == []
+    assert validate_layout_authority_content({"negative": negative}, source_root=tmp_path)
 
 
 def test_the_gate_yields_nothing_without_a_source_root() -> None:

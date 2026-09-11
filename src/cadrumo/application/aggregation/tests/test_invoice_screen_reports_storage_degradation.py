@@ -39,7 +39,7 @@ from .._modelo_bindings_invoice_iva import (
     screened_invoice_iva_observations,
 )
 from .._modelo_bindings_invoice_iva_refusal import raise_if_invoice_iva_would_be_silent
-from .._source_mesh import CalculationSourceContext
+from ..source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

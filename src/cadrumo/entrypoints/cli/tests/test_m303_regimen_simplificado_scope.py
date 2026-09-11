@@ -17,10 +17,10 @@ from ....domain.deadlines.models import M303RegimeComposition
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_envelope import unwrap_schema_envelope
-from ....tests.cli_runner import invoke_cached_cli
-from ....tests.modelo_cli import create_modelo_work_unit_via_cli
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from .cli_runner import invoke_cached_cli
+from .modelo_cli import create_modelo_work_unit_via_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

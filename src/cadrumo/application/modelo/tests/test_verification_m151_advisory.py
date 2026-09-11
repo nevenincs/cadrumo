@@ -5,10 +5,8 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from test_support.registry_authoring import load_registry_tree
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
@@ -39,8 +37,7 @@ def _m151_advisory_predicate() -> VerificationPredicateDefinition:
     # split moves it automatically. (The successor's name understates its
     # reach: it opens on 2023-01-01.)
     authority = bundled_authority()
-    _modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    declared_years = catalogues.supported_filing_years
+    declared_years = authority.catalogues.supported_filing_years
     assert declared_years is not None, "the bundled registry declares no supported filing years"
     revision = authority.snapshot(
         "151",

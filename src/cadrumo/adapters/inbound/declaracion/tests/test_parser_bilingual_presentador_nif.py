@@ -48,7 +48,7 @@ import pdfplumber
 import pytest
 
 from .....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from .....tests import FIXTURES_DIR
+from .....tests.inventory import FIXTURES_DIR
 from .._detect import detect_template_revision
 from ..errors import DeclaracionParseError
 from ..parser import _extract_tax_id, parse_declaracion

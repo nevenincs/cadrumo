@@ -8,7 +8,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind, ForeignAssetClass
 from ....core.foreign_asset_obligation import ForeignAssetObligationGroup
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
@@ -16,8 +16,7 @@ from ....domain.calculations.registry.detail_record_bindings import resolve_fore
 from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ..._foreign_asset_thresholds import foreign_asset_declaration_thresholds
-from .._foreign_assets import (
-    ForeignAssetClass,
+from ..foreign_assets import (
     ForeignAssetClassRollup,
     ForeignAssetIngestObservation,
     ForeignAssetsAggregation,
@@ -28,7 +27,7 @@ from .._foreign_assets import (
     declarable_asset_classes_720,
     declarable_class,
 )
-from .._source_mesh import CalculationSourceContext
+from ..source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

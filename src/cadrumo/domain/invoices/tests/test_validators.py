@@ -4,12 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.identity import (
-    NIF_IVA_FORMATS,
-    IdentityError,
-    nif_iva_prefix_for_country,
-    validate_spanish_tax_id,
-)
+from ....core.identity.documents import IdentityError
+from ....core.identity.nif_iva import NIF_IVA_FORMATS, nif_iva_prefix_for_country
+from ....core.identity.tax_id import validate_spanish_tax_id
 from ...iva.schema import EUMemberState
 from ..validators import validate_country_code, validate_iva_number
 

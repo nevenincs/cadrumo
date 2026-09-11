@@ -9,7 +9,7 @@ from types import MappingProxyType
 from pydantic import BaseModel, model_validator
 
 from ...core.identifier_grammar import NamespacedId
-from ...core.identity import CalculationRevisionId
+from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import (
     ActionArgumentSource,

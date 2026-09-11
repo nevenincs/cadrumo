@@ -13,7 +13,7 @@ from textual.screen import Screen
 
 from ....application.modelo.declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
 from ....application.modelo.workspace_models import ModeloWorkspaceProjectionV1
-from ....core.identity import BucketId
+from ....core.identity.bucket import BucketId
 from ..declarations.models import ModeloWorkspaceScreenFactoryV1
 from .routes import WORKSPACE_SELECTION_OUTCOME, resolve_destination
 from .view.controller import ModeloWorkspaceReadSession, open_workspace_read_session

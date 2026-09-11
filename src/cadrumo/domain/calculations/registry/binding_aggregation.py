@@ -12,7 +12,7 @@ See Also:
     :mod:`domain.calculations.registry._bindings`
         Cross-family binding resolver and validator dispatch that consumes this
         accessor.
-    :mod:`domain.calculations.registry._relation_aggregation`
+    :mod:`domain.calculations.registry.relation_aggregation`
         Relation sibling whose op axis is intentionally separate.
     :mod:`core.aggregation`
         Core enum/model definitions for binding source kinds and aggregation ops.

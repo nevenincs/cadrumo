@@ -641,7 +641,7 @@ class RentaFamilyProfile(BaseModel):
         surfaced separately on the calculate path, because that inference is
         the one the operator most needs to confirm.
         """
-        from ...core.i18n import tr
+        from ...core.i18n.render import tr
 
         count = self.custodia_compartida_count(filing_year, thresholds=thresholds, context=context)
         if count > 0:

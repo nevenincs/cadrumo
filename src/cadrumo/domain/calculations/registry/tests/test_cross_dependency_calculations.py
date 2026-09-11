@@ -49,7 +49,7 @@ import pytest
 from .....core.aggregation import RetencionClave
 from .....core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from .....core.period import Period
-from .....tests import FIXTURES_DIR
+from .....tests.inventory import FIXTURES_DIR
 from ....period import calculation_filing_date
 from ..authority import ValidatedRegistryAuthority
 from ..binding_selector_utils import selector_as_dict

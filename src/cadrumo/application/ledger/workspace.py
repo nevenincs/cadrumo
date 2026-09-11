@@ -22,7 +22,8 @@ from pydantic import BaseModel, NonNegativeInt, model_validator
 
 from ...core.filing_year import FilingYear
 from ...core.identifier_grammar import NamespacedId
-from ...core.identity import CalculationRevisionId, InvoiceId, TransactionId
+from ...core.identity.hex_ids import CalculationRevisionId, InvoiceId
+from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.invoices.models import InvoiceCatalogue

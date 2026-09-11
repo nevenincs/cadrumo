@@ -24,7 +24,8 @@ from ...application.modelo.reconciliation_records import (
 )
 from ...application.modelo.taxation_comparison import TaxationRecommendation
 from ...core.filing_year import FilingYear
-from ...core.identity import BucketId, WorkUnitId
+from ...core.identity.bucket import BucketId
+from ...core.identity.hex_ids import WorkUnitId
 from ...core.json_contract import OutputSchema
 from ...core.modelo import Modelo
 from ...core.text_bounds import NonEmptyStr

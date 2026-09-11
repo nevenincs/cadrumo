@@ -7,16 +7,16 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from ..application.operations.composition import OperationComposedServices, OperationSubmission
-from ..application.operations.frontend_contracts import (
+from ..application.operations.frontend_contracts import OperationReviewProjectionResultV1
+from ..application.operations.frontend_projection import OperationReviewAvailableInteractionV1
+from ..application.operations.frontend_requests import (
     OperationObservationRequestV1,
     OperationObservationSuccessV1,
     OperationResponseApplyRequestV1,
     OperationResponseControlRequestV1,
     OperationResponseMutationSuccessV1,
     OperationResponseRejectRequestV1,
-    OperationReviewAvailableInteractionV1,
     OperationReviewProjectionRequestV1,
-    OperationReviewProjectionResultV1,
     OperationReviewProjectionSuccessV1,
 )
 from ..application.operations.models import OperationRequest

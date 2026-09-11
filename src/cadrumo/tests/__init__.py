@@ -5,6 +5,4 @@ their defining modules so a package import cannot bind a cross-layer facade or
 load support for an unrelated test cohort.
 """
 
-from __future__ import annotations
-
 __all__: tuple[str, ...] = ()

@@ -31,7 +31,7 @@ import pytest
 
 from ....core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.secure_sql import reap_profile_session_keys
-from ....tests.subprocess_cli import run_cadrumo_subprocess
+from .subprocess_cli import run_cadrumo_subprocess
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

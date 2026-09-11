@@ -45,7 +45,9 @@ from ...core.casilla_value_kind import CasillaValueKind
 from ...core.classification.policies import SensitivityClass
 from ...core.decimal.constants import ZERO
 from ...core.filing_year import FilingYear
-from ...core.identity import AeatExpedienteId, ContentDigest, SubjectTaxId
+from ...core.identity.aeat_expediente import AeatExpedienteId
+from ...core.identity.digest import ContentDigest
+from ...core.identity.tax_id import SubjectTaxId
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG

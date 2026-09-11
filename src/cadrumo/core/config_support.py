@@ -2,10 +2,10 @@
 
 This module holds the closed settings enums and derived records consumed
 by :class:`~core.config.Settings`: secret storage selection
-(:class:`~core.config.SecretStoreBackend`), LLM provider selection
-(:class:`~core.config.LLMProvider`), and database routing via
-:class:`~core.config.StorageRouteKind` and
-:class:`~core.config.StorageRouteClassification`.
+(:class:`~core.config_support.SecretStoreBackend`), LLM provider selection
+(:class:`~core.config_support.LLMProvider`), and database routing via
+:class:`~core.config_support.StorageRouteKind` and
+:class:`~core.config_support.StorageRouteClassification`.
 
 The route records are produced by
 :func:`~core.config.classify_storage_route`; output language strings are

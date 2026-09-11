@@ -20,10 +20,10 @@ from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_path
 from ....domain.buckets.event import BucketEventType
-from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
 from ....tests.secure_sql import isolated_profile_storage_root, read_db_at_rest_bytes
 from ....tests.user_profile import register_cli_profile
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

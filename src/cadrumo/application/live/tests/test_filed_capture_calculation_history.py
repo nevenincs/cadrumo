@@ -30,9 +30,12 @@ from ....core.period import Period
 from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.tests.registry_observations import (
+    registry_grounded_observations,
+    revision_id_for_observation,
+)
 from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations, revision_id_for_observation
 from ....tests.secure_sql import read_db_at_rest_bytes
 from ...calculations.binding_prefill import (
     extract_modelo_303_local_iva_compensation_recurrence,

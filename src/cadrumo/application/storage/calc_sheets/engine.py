@@ -20,7 +20,7 @@ from typing import Final, Literal
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.casilla_id import CasillaId
 from ....core.hashing import sha256_hex
-from ....core.i18n import tr
+from ....core.i18n.render import tr
 from ....core.period import Period
 from ....domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from ....domain.calculations.registry.binding_selector_utils import (

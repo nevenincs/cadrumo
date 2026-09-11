@@ -73,7 +73,9 @@ from .....core.casilla_value_kind import CasillaValueKind
 from .....core.decimal.coercion import coerce_decimal_strict
 from .....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from .....core.filing_year import FilingYear
-from .....core.identity import AeatCsv, AeatExpedienteId, ContentDigest
+from .....core.identity.aeat_csv import AeatCsv
+from .....core.identity.aeat_expediente import AeatExpedienteId
+from .....core.identity.digest import ContentDigest
 from .....core.modelo import Modelo
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.observed_header_fact import ObservedHeaderFact

@@ -14,7 +14,8 @@ from pathlib import Path
 import pytest
 
 from .....core.config import override_settings
-from ..models import LLMProvider, LLMResponse
+from .....core.config_support import LLMProvider
+from ..models import LLMResponse
 from ..usage import UsageRecorder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

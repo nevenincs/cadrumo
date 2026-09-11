@@ -30,14 +30,18 @@ from ....domain.iva.oss import OssIossRegime
 from ....domain.iva.schema import EUMemberState, IvaRateKind
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....tests.secure_sql import isolated_injected_secure_object_repository, isolated_runtime_profile
-from ...aggregation import (
+from ...aggregation import oss_ioss as oss_ioss_module
+from ...aggregation.errors import (
     AggregationValidationError,
-    CalculationSourceContext,
+)
+from ...aggregation.oss_ioss import (
     OssIossLedgerCandidate,
     OssIossLedgerSourceResolver,
     aggregate_oss_ioss_bindings,
 )
-from ...aggregation import _oss_ioss as oss_ioss_module
+from ...aggregation.source_mesh import (
+    CalculationSourceContext,
+)
 from ..action_errors import CalculationRevisionStateError
 from ..calculation_actions import (
     BucketAggregationCalculationResult,

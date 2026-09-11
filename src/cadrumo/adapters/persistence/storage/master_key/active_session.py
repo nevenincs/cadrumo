@@ -41,8 +41,8 @@ from .....core.logging import get_logger
 from .....core.time.clock import now
 from ..bucket.errors import BucketLockedError
 from ..errors import SecretStoreError
-from ._live_sessions import close_all_live_bucket_sessions
 from .bucket_session import BucketSession
+from .live_sessions import close_all_live_bucket_sessions
 
 _log = get_logger(__name__)
 

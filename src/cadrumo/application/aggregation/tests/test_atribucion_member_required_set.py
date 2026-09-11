@@ -33,7 +33,7 @@ from decimal import Decimal
 import pytest
 
 from ....domain.user_profile.loader import load_user_profile_schema
-from .._atribucion_member import (
+from ..atribucion_member import (
     _REQUIRED_FIELDS,
     _detail_row_from_socio,
     _missing_field_diagnostic,

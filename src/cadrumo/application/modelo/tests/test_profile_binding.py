@@ -32,7 +32,7 @@ from ....domain.modelos.errors import ModeloError
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation import CalculationSourceResolution
+from ...aggregation.source_mesh import CalculationSourceResolution
 from ..calculation_actions import calculate_modelo_revision
 from ..profile_binding import (
     ProfileBindingResolutionError,

@@ -21,8 +21,8 @@ from ...core.classification.policies import SensitivityClass
 from ...core.decimal.coercion import coerce_decimal_strict
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.parsing import parse_bool
 from ...core.parsing.dates import parse_iso8601_date
+from ...core.parsing.utils import parse_bool
 from .errors import UserProfileNotFoundError, UserProfileValidationError
 
 _SchemaId = Annotated[

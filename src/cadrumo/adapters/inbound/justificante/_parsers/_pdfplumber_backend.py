@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .....domain.justificante import JustificanteParseError
+from .....domain.justificante.errors import JustificanteParseError
 from ...pdf.page_text_extraction import (
     extract_pages_text_concatenated,
     extract_pages_text_from_bytes,

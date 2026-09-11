@@ -26,7 +26,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from ...core.classifier_input_source import ClassifierInputSource
-from ...core.identity import ContentDigest
+from ...core.identity.digest import ContentDigest
 from ...core.json_contract import OutputSchema
 from ...core.text_bounds import NonEmptyStr
 from ...domain.iva.classification import IvaTerritorialScope

@@ -24,7 +24,7 @@ from __future__ import annotations
 import hashlib
 from uuid import UUID
 
-from ....core.identity import nif_check_letter
+from ....core.identity.documents import nif_check_letter
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_cli_profile, register_minimal_profile
 

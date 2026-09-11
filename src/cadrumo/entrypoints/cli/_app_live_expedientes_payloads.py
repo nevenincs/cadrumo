@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 from ...application.live.capture_mode import LiveCaptureMode, LiveCaptureModeValue
-from ...core.identity import (
-    AeatExpedienteId,
-    BucketId,
-    SnapshotId,
-)
+from ...core.identity.aeat_expediente import AeatExpedienteId
+from ...core.identity.bucket import BucketId
+from ...core.identity.hex_ids import SnapshotId
 from ...core.json_contract import OutputSchema
 
 

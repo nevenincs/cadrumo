@@ -37,7 +37,6 @@ from ....core.config import override_settings
 from ....core.identity_check_verdict import IdentityCheckVerdict
 from ....core.period import Period
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
-from ....tests.cli_runner import invoke_cached_cli
 from .._app_live import (
     _PROCESS_INVENTORY_TIMEOUT_SECONDS,
     _iva_remote_state_capture_lines,
@@ -54,6 +53,7 @@ from .._command_runtime import build_command_subtree
 from .._root_command_specs import ROOT_COMMAND_SPECS
 from ..command_spec import CommandSpecGraph
 from ._live_read_profile_fixture import _ACTIVE_TEST_BUCKET_ID, _isolated_backend
+from .cli_runner import invoke_cached_cli
 
 __all__ = ["_isolated_backend"]
 

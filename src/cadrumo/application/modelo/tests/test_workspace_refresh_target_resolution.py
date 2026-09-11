@@ -22,7 +22,7 @@ from ....core.operations import OperationEffect, OperationLifecycle, OperationTe
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.work_unit import derive_work_unit_id
-from ...operations.frontend_contracts import (
+from ...operations.frontend_requests import (
     OperationWorkspaceRefreshTargetRefusalCode,
     OperationWorkspaceRefreshTargetRefusalV1,
     OperationWorkspaceRefreshTargetRequestV1,

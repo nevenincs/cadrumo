@@ -36,7 +36,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, SecretStr, computed_field
 
-from ...core.identity import ProfileId
+from ...core.identity.profile import ProfileId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.user_profile.errors import ProfileExportError
 

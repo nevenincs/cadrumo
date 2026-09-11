@@ -35,7 +35,7 @@ from decimal import Decimal
 from ...core.casilla_id import CasillaId
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
 from ...domain.calculations.registry.schema import ModeloRevision
-from ..aggregation import CalculationSourceDiagnostic
+from ..aggregation.source_mesh import CalculationSourceDiagnostic
 
 __all__ = ["collect_operator_override_divergence_diagnostics"]
 

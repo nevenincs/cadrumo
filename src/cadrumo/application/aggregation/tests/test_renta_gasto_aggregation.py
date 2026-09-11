@@ -42,13 +42,13 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from .._renta_gasto_ledger import (
+from ..renta_gasto_ledger import (
     RentaGastoLedgerAggregationIssueReason,
     RentaGastoObservation,
     aggregate_renta_gasto_ledger,
     aggregate_renta_gasto_ledger_from_repositories,
 )
-from .._renta_ledger import (
+from ..renta_ledger import (
     RentaLedgerAggregationIssueReason,
     aggregate_renta_ledger_expenses,
     aggregate_renta_ledger_expenses_from_repositories,
@@ -661,7 +661,7 @@ def test_unmarked_unclassified_row_still_reports_the_generic_state() -> None:
 # IVA-deduction ratio derived from the profile's ``iva.regime`` fact and the
 # bucket's ProrrataRegister, driven through the real repository path -- the
 # SAME resolver the M100 annual first slice uses
-# (application.aggregation._renta_ledger.resolve_iva_deduction_ratio), for the
+# (application.aggregation.renta_ledger.resolve_iva_deduction_ratio), for the
 # SAME ejercicio, so the two filings cannot diverge on it.
 # ---------------------------------------------------------------------------
 

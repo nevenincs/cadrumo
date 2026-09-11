@@ -46,7 +46,7 @@ from .....core.optional_extras import (
     optional_extra_available,
     require_optional_extra,
 )
-from .....core.parsing import normalise_iso_4217_currency
+from .....core.parsing.codes import normalise_iso_4217_currency
 from .....domain.transactions.raw_transaction import SourceFormat
 from ._constants import OFX_EXTENSIONS
 from .base import (

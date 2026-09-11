@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ....core.i18n import Translatable as tr
+from ....core.i18n.translatable import Translatable as tr
 from ..catalogue import (
     AUTH_PROVIDER_CATALOGUE,
     AuthProviderListing,
@@ -15,6 +15,7 @@ from ..catalogue import (
 )
 from ..operator import list_operator_auth_providers
 from ..operator_results import AuthProvidersReport
+from ..output import AuthProvidersResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -90,24 +91,19 @@ def test_every_entry_carries_strings() -> None:
 
 
 class TestCliEnvelopeParity:
-    """The CLI envelope's rows carry the catalogue's own contract.
+    """The typed auth result carries the catalogue's own contract.
 
     ``AuthProvidersResult.providers`` was redeclared as
-    ``list[dict[str, object]]``, so the envelope accepted shapes the report it
+    ``list[dict[str, object]]``, so the result accepted shapes the report it
     wraps rejects outright — an empty row, an empty label, a non-boolean
     an unknown provider id. Nesting the canonical
     :class:`AuthProviderListing` makes the two contracts one declaration.
     """
 
-    def _envelope(self) -> type:
-        from ....entrypoints.cli.config_payloads import AuthProvidersResult
-
-        return AuthProvidersResult
-
     def test_the_real_catalogue_projects_cleanly(self) -> None:
         report = list_operator_auth_providers()
 
-        result = self._envelope()(providers=list(report.providers))
+        result = AuthProvidersResult(providers=list(report.providers))
 
         assert [row.id for row in result.providers] == [row.id for row in report.providers]
 
@@ -124,11 +120,10 @@ class TestCliEnvelopeParity:
         with pytest.raises(ValidationError):
             AuthProvidersReport(providers=[row])
         with pytest.raises(ValidationError):
-            self._envelope()(providers=[row])
+            AuthProvidersResult(providers=[row])
 
     def test_envelope_survives_a_json_round_trip(self) -> None:
         """The wire form must rebuild into the same typed rows."""
-        envelope = self._envelope()
-        result = envelope(providers=list(list_operator_auth_providers().providers))
+        result = AuthProvidersResult(providers=list(list_operator_auth_providers().providers))
 
         assert type(result).model_validate_json(result.model_dump_json()) == result

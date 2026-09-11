@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core.i18n import Translatable as tr
+from ....core.i18n.translatable import Translatable as tr
 from ..errors import WizardValidationError
 from ..models import (
     WizardChoice,
@@ -275,7 +275,7 @@ def test_error_carries_prompt_key_context() -> None:
     assert error.context is not None
     # `prompt_key` is the resolved field label, never the raw
     # translation key path.
-    from ....core.i18n import tr as _tr
+    from ....core.i18n.render import tr as _tr
 
     assert error.context["prompt_key"] == _tr(str(_TEXT_PROMPT))
     assert "prompt_key_path" not in error.context

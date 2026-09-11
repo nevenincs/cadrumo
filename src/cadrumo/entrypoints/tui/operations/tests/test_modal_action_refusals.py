@@ -22,7 +22,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from .....application.operations.frontend_contracts import (
+from .....application.operations.frontend_requests import (
     OperationCancellationRefusalCode,
     OperationResponseControlRefusalCode,
 )

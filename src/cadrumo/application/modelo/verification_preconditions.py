@@ -7,7 +7,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, model_validator
 
-from ...core.identity import CalculationRevisionId
+from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.modelos.verification_report import (

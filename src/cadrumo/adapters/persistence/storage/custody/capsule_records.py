@@ -19,7 +19,9 @@ from .....core.hashing import (
     reject_json_constant,
     validate_prefixed_digest,
 )
-from .....core.identity import PrefixedContentDigest, ProfileLabel, canonical_profile_bucket_id
+from .....core.identity.digest import PrefixedContentDigest
+from .....core.identity.profile import canonical_profile_bucket_id
+from .....core.identity.profile_label import ProfileLabel
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.profile_publication import ProfilePublicationKindValue
 from .....core.time.clock import now as _now

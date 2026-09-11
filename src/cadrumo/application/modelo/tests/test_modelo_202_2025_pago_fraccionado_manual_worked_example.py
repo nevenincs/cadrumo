@@ -77,7 +77,6 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
-from test_support.registry_authoring import compile_validated_authority
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -87,7 +86,6 @@ from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepo
 from ....application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
-from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.period import calculation_filing_date
@@ -131,9 +129,6 @@ _BASE_PRIMER_PAGO_EXPECTED = Decimal("10000.00")
 _A_INGRESAR_PRIMER_PAGO_EXPECTED = Decimal("1800.00")
 _BASE_SEGUNDO_TERCER_PAGO_EXPECTED = Decimal("2500.00")
 _A_INGRESAR_SEGUNDO_TERCER_PAGO_EXPECTED = Decimal("450.00")
-
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
-_SOURCE_ROOT = bundled_path()
 
 
 def _seed_sociedad_m_profile() -> None:
@@ -350,7 +345,7 @@ def test_m202_2025_manual_grounding_is_enrolled_and_raises_independently_grounde
     validated data, never hand-computed or asserted from a synthetic
     fixture.
     """
-    authority = compile_validated_authority(_REGISTRY_ROOT, _SOURCE_ROOT)
+    authority = bundled_authority()
     snapshot = authority.snapshot(_M202, filing_year=_FILING_YEAR, period="1P")
     policy = snapshot.verification_policy()
 

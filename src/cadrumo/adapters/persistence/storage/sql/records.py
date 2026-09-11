@@ -23,7 +23,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
-from .....core.identity import ContentDigest
+from .....core.identity.digest import ContentDigest
 from .....core.models import STRICT_FROZEN_CONFIG
 
 

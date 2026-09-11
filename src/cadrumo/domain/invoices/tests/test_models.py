@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core.identity import IdentityError
+from ....core.identity.documents import IdentityError
 from ...iva.classification import InvoiceKind, TransactionKind
 from ...iva.oss import OssIossRegime
 from ...iva.schema import EUMemberState, IvaRateKind

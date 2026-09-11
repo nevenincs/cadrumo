@@ -15,15 +15,17 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import RevisionId
 from ....domain.calculations.row_casilla import DirectRowMaterializationProvenance
+from ....domain.calculations.row_source_identity import RowSourceIdentity
 from ....tests.aeat_literal_fixtures import IVA_WALLET_SOURCE_URL_FIXTURE
-from .. import (
+from ..errors import AggregationValidationError
+from ..source_mesh import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,
     CompositeSourceResolverId,
+    SourceMeshError,
+    out_of_window_summary_source_diagnostic,
 )
-from .._source_mesh import RowSourceIdentity, SourceMeshError, out_of_window_summary_source_diagnostic
-from ..errors import AggregationValidationError
 from ..source_resolution_operations import (
     collect_unhandled_source_diagnostics,
     merge_source_resolutions,

@@ -19,19 +19,19 @@ from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-from cadrumo.domain.calculations.registry.formula_runtime import (
+
+from ..authority import bundled_authority
+from ..errors import RegistrySnapshotError, RegistryValidationError
+from ..formula_runtime import (
     RegistryCalculationEntry,
     RegistryCalculationResult,
     calculate_registry_snapshot,
 )
-from cadrumo.domain.calculations.registry.ids import BindingId, LegalRefId, RelationId, SourceRefId
-from cadrumo.domain.calculations.registry.period_selector_match import selector_period_matches_request
-from cadrumo.domain.calculations.registry.runtime_graph import expression_binding_refs
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-
-from ..compiler.authority import compile_validated_authority
+from ..ids import BindingId, LegalRefId, RelationId, SourceRefId
+from ..period_selector_match import selector_period_matches_request
+from ..runtime_graph import expression_binding_refs
+from ..schema import ModeloRevision
+from ..schema_input_kind import InputKind
 
 ScenarioStatus = Literal["match", "mismatch"]
 
@@ -250,7 +250,10 @@ def run_registry_calculation_scenario(
     Returns:
         A :class:`RegistryScenarioRunReport` with per-casilla comparison results.
     """
-    authority = compile_validated_authority(registry_root, source_root)
+    # Runtime scenarios deliberately exercise the published artifact; the
+    # path parameters remain part of this test helper's existing call shape.
+    del registry_root, source_root
+    authority = bundled_authority()
     try:
         authority.modelo(scenario.modelo)
     except RegistrySnapshotError as exc:

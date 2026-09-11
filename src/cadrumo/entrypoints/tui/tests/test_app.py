@@ -7,7 +7,7 @@ from types import SimpleNamespace
 from typing import ClassVar, cast
 
 import pytest
-from test_support.tui_home_fixtures import HomeFixtureScenario, build_home_projection_fixture
+from dev.tui.harness.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from textual.binding import Binding
 from textual.screen import Screen
 from textual.widgets import Button, Static

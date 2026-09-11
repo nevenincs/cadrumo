@@ -2,22 +2,22 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+from decimal import Decimal
+
 import pytest
 
 from ......core.casilla_id import CasillaId, validated_casilla_id
 from ......core.period import Period
+from ......domain.calculations.registry.errors import RegistryValidationError
+from ......domain.calculations.registry.relations import relation_source_requirements
+from ..errors import SedeParseError
 from ._declarations_support import (
-    UTC,
-    Decimal,
-    RegistryValidationError,
-    SedeParseError,
     _filed_observation,
     _modelo_snapshot,
     _renta_2025_relation_observations,
     _resolve_relations_from_observations,
     _whitespace_nif_session,
-    datetime,
-    relation_source_requirements,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -320,7 +320,7 @@ def test_register_capture_empty_nif_carries_translated_message() -> None:
 
 def test_capture_filed_declaration_empty_nif_locale_key_resolves_to_real_copy() -> None:
     """contract-B: the empty-identity-nif locale key resolves to non-placeholder copy."""
-    from ......core.i18n import tr
+    from ......core.i18n.render import tr
 
     resolved = tr("adapters.sede.errors.empty_identity_nif")
     assert "adapters.sede.errors.empty_identity_nif" not in resolved

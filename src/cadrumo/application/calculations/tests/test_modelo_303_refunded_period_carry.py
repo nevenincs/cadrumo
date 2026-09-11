@@ -37,6 +37,7 @@ from ....domain.calculations.registry.formula_runtime import RegistryCalculation
 from ....domain.calculations.registry.ids import RelationId
 from ....domain.calculations.registry.relations import materialize_relation_binding_values
 from ....domain.calculations.registry.temporal import select_revision
+from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -44,8 +45,7 @@ from ....domain.modelos.calculation_revision import (
 )
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....tests import general_m303_filing_evidence
-from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo.filed_revision_observation import persist_filed_revision_observation
 from ..iva_compensation_history import IvaCompensationHistoryRepository

@@ -31,7 +31,9 @@ from ...core.aggregation import RetencionClave
 from ...core.filing_year import FilingYear
 from ...core.hex import Hex64Str
 from ...core.identifier_grammar import NamespacedId
-from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, FilingRecordId, WorkUnitId
+from ...core.identity.bucket import BucketId
+from ...core.identity.digest import ContentDigest
+from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, WorkUnitId
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ...core.period import Period
 from ...core.text_bounds import NonEmptyStr, PositiveCount

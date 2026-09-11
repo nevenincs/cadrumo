@@ -44,7 +44,7 @@ from ...domain.iva_compensation.carry_forward import (
     build_iva_compensation_carry_forward_report,
     derive_iva_compensation_year_end_carry_partition,
 )
-from ..aggregation import (
+from ..aggregation.source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
@@ -343,7 +343,7 @@ class IvaCompensationAnnualPartitionSourceResolver:
         Returns:
             An empty resolution when the revision declares no such
             requirement, a degraded resolution on repository failure, or the
-            resolved :class:`~._source_mesh.CalculationSourceResolution`.
+            resolved :class:`~.source_mesh.CalculationSourceResolution`.
         """
         revision = _select_partition_revision(self._registry_snapshot, context)
         requirement = iva_compensation_annual_partition_requirement(revision)

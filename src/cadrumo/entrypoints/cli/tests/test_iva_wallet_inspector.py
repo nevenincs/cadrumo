@@ -11,9 +11,9 @@ import pytest
 from ....application.calculations.iva_compensation_history import IvaCompensationHistoryRepository
 from ....application.calculations.iva_wallet_balance import query_iva_wallet_balance
 from ....tests.cli_envelope import require_schema_envelope
-from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_runtime_profile
 from ._iva_wallet_inspector_support import _state
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

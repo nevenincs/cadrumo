@@ -57,7 +57,9 @@ LEDGER_CLASSIFICATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="classification",
                 declarations=("--classification",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.transactions.enums", "BusinessClassification")),
+                value=ValueContract(
+                    DeferredTarget("...domain.transactions.enums", "BusinessClassification", __package__)
+                ),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.ledger.classify.classification_help"),
                 metavar=None,
@@ -109,7 +111,7 @@ LEDGER_CLASSIFICATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="m210_payer_mode",
                 declarations=("--m210-payer-mode",),
-                value=ValueContract(DeferredTarget("cadrumo.core.irnr", "M210PayerMode")),
+                value=ValueContract(DeferredTarget("...core.irnr", "M210PayerMode", __package__)),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.ledger.classify.m210_payer_mode_help"),
                 metavar=None,
@@ -151,10 +153,10 @@ LEDGER_CLASSIFICATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _optional_text_option("reason", ("--reason",), "cli.ledger.classify.reason_help"),
         ),
         policy=_POLICY_7,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._ledger", "ledger_classify")),
+        handler=LazyBinding.available(DeferredTarget("._ledger", "ledger_classify", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_payloads", "LedgerClassifyResult"),
+            target=DeferredTarget("._ledger_payloads", "LedgerClassifyResult", __package__),
             identity="ledger.classify",
         ),
     ),

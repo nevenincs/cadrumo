@@ -25,8 +25,8 @@ from .....core.result_disposition import (
     derive_result_disposition,
     result_disposition_casilla_ids,
 )
+from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from .....tests.registry_snapshot import build_snapshot
-from .registry_tree import bundled_registry_tree
 from ....iva.deduction_facts import IvaDeductionClassificationProvenance, required_deduction_evidence_authority
 from ....iva.flow import IvaFlowDirection
 from ....iva.schema import IvaCategory, IvaExemptionArticle, IvaLedgerObservationRole, IvaRateKind

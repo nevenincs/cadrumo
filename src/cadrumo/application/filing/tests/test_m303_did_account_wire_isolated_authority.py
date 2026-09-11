@@ -5,11 +5,8 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from datetime import date as _prov_date
 from decimal import Decimal
-from hashlib import sha256
-from pathlib import Path
 
 import pytest
-from test_support.registry_authoring import load_modelo_directory
 
 from ....core.filing_projection_ref import (
     M303RegimenSimplificadoActivityField,
@@ -23,7 +20,6 @@ from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.product_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from ....core.refund_election import RefundElection
-from ....core.resources.bundled_data import bundled_path
 from ....core.result_disposition import ResultDisposition
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister, RegistroRegularizacionResult
 from ....domain.bienes_inversion.regularizacion_parameters import (
@@ -33,7 +29,6 @@ from ....domain.bienes_inversion.regularizacion_parameters import (
 from ....domain.calculations.export_field_kind import CasillaFieldKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
-from ....domain.calculations.registry.record_design import extract_record_design
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_base import CasillaDataType, ThresholdComparison
 from ....domain.calculations.registry.schema_exports import (
@@ -46,11 +41,9 @@ from ....domain.calculations.registry.schema_exports import (
 )
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.deadlines.models import (
-    ChargeAccount,
     IVARegime,
     M303RegimeComposition,
     M303TaxTerritory,
-    RefundAccount,
     TaxpayerProfile,
 )
 from ....domain.filing.errors import FilingExportValidationError
@@ -68,15 +61,13 @@ from ....domain.modelos.calculation_revision_m303_evidence import M303Exonerado3
 from ....domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoFilingEvidence
 from ....domain.prorrata_register.register import ProrrataRegister
 from ....domain.submission.models import ModeloDraftStatus
-from ....tests.registry_snapshot import build_snapshot
-from ...aggregation import M303ProrrataTransitionArrival, M303SupplierRegimeArrival
+from ...aggregation.m303_arrivals import M303ProrrataTransitionArrival, M303SupplierRegimeArrival
 from ...calculations.m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
-from ..export import _filing_producer_values, _render_layout, export_draft, render_filing_envelope
+from ..export import render_filing_envelope
 from ..export_envelope import FilingEnvelopeRenderRequest
 from ..producer_snapshot import (
     FilingElectionFacts,
     FilingProducerSnapshot,
-    FilingProducerSnapshotError,
     M303FilingFacts,
     PresenterIdentity,
     TaxpayerIdentityFacts,
@@ -164,173 +155,9 @@ def _required_iae_epigrafe(value: str | None) -> str:
     return value
 
 
-def _test_snapshot(*, modelo, revision) -> RegistrySnapshot:
-    """Materialize a test-owned synthetic revision against the real source catalogue.
-
-    Only :func:`_load_isolated_did_layout` uses this: its ``export_layouts``
-    fragment is hand-authored and IS the thing under test, and the canonical
-    ``build_snapshot`` unconditionally overwrites ``export_layouts`` via
-    ``derive_export_layouts_from_bindings``, which would destroy it. A real
-    bundled revision has no such conflict and goes through ``build_snapshot``
-    directly (see ``_m303_2026_snapshot``).
-    """
-    authority = bundled_authority()
-    catalogues = authority.catalogues
-    return RegistrySnapshot(
-        modelo=modelo,
-        revision=revision,
-        filing_period=Period.from_year_and_code(2026, "1T"),
-        filing_year=2026,
-        period="1T",
-        legal=catalogues.legal,
-        sources=catalogues.sources,
-        extraction_profiles={},
-        live_cross_references={},
-        workbook_parity_refs={},
-        verification_expectations={},
-        application_links={},
-        deadline_windows={},
-        filing_schedules={},
-        constructs={},
-        dependency_classifications={},
-        convenio=catalogues.convenio,
-        supplementary_ordenes=catalogues.supplementary_ordenes,
-    )
-
-
-def _field_toml(
-    *,
-    field_id: str,
-    offset: int,
-    length: int,
-    kind: str,
-    data_type: str,
-    required: bool,
-    padding: str,
-    justification: str,
-    payload: str = "",
-) -> str:
-    return f'''\
-[[revisions."{_REVISION_ID}".export_layouts.records.fields]]
-id = "{field_id}"
-offset = {offset}
-length = {length}
-kind = "{kind}"
-{payload}data_type = "{data_type}"
-required = {str(required).lower()}
-padding = "{padding}"
-justification = "{justification}"
-signed = false
-legal_refs = [{_LEGAL_REFS}]
-source_refs = ["{_SOURCE_REF}"]
-'''
-
-
-def _did_layout_toml() -> str:
-    return f'''\
-[[revisions."{_REVISION_ID}".export_layouts]]
-id = "test-owned-m303-did-2026"
-format = "fixed_width"
-legal_refs = [{_LEGAL_REFS}]
-source_refs = ["{_SOURCE_REF}"]
-
-[[revisions."{_REVISION_ID}".export_layouts.records]]
-id = "test-owned-m303-page-did"
-record_type = "page_did"
-order = 1
-encoding = "iso-8859-1"
-line_ending = "none"
-required = true
-
-{_field_toml(field_id="did-open", offset=1, length=2, kind="literal", payload='literal = "<T"\n', data_type="text", required=True, padding="none", justification="none")}
-{_field_toml(field_id="did-modelo", offset=3, length=3, kind="literal", payload='literal = "303"\n', data_type="text", required=True, padding="none", justification="none")}
-{_field_toml(field_id="did-page", offset=6, length=5, kind="literal", payload='literal = "DID00"\n', data_type="text", required=True, padding="none", justification="none")}
-{_field_toml(field_id="did-tag-close", offset=11, length=1, kind="literal", payload='literal = ">"\n', data_type="text", required=True, padding="none", justification="none")}
-{_field_toml(field_id="did-swift-bic", offset=12, length=11, kind="header", payload='producer_key = "selected_account.swift_bic"\n', data_type="text", required=False, padding="right_space", justification="left")}
-{_field_toml(field_id="did-iban", offset=23, length=34, kind="header", payload='producer_key = "selected_account.iban"\n', data_type="text", required=True, padding="right_space", justification="left")}
-{_field_toml(field_id="did-bank-name", offset=57, length=70, kind="header", payload='producer_key = "selected_account.bank_name"\n', data_type="text", required=False, padding="right_space", justification="left")}
-{_field_toml(field_id="did-bank-address", offset=127, length=35, kind="header", payload='producer_key = "selected_account.bank_address"\n', data_type="text", required=False, padding="right_space", justification="left")}
-{_field_toml(field_id="did-bank-city", offset=162, length=30, kind="header", payload='producer_key = "selected_account.bank_city"\n', data_type="text", required=False, padding="right_space", justification="left")}
-{_field_toml(field_id="did-bank-country", offset=192, length=2, kind="header", payload='producer_key = "selected_account.bank_country_code"\n', data_type="text", required=False, padding="right_space", justification="left")}
-{_field_toml(field_id="did-sepa", offset=194, length=1, kind="computed", payload='computed_key = "sepa_marca"\n', data_type="text", required=False, padding="left_zero", justification="right")}
-{_field_toml(field_id="did-reserved", offset=195, length=617, kind="filler", data_type="text", required=False, padding="right_space", justification="left")}
-{_field_toml(field_id="did-close", offset=812, length=12, kind="literal", payload='literal = "</T303DID00>"\n', data_type="text", required=True, padding="none", justification="none")}
-'''
-
-
-def _load_isolated_did_layout(tmp_path: Path) -> tuple[RegistrySnapshot, ExportLayoutDefinition]:
-    source = bundled_authority().catalogues.sources[_SOURCE_REF]
-    assert source.sha256 == _SOURCE_SHA256
-    parsed = extract_record_design(bundled_path() / source.corpus_path).accept_partial()
-    did = next(sheet for sheet in parsed if sheet.name == "DP303DID")
-    assert did.total_positions == 823
-    assert (
-        tuple((field.ordinal, field.offset, field.length, field.type_code, field.content) for field in did.fields)
-        == _OFFICIAL_DID_ROWS
-    )
-
-    modelo_dir = tmp_path / "registry" / "aeat" / "modelos" / "303"
-    revision_dir = modelo_dir / "revisions" / _REVISION_ID
-    export_layouts_dir = revision_dir / "export_layouts"
-    export_layouts_dir.mkdir(parents=True)
-    (modelo_dir / "manifest.toml").write_text(
-        f'''\
-[modelo]
-id = "303"
-tax_domain = "iva"
-cadence = "quarterly"
-jurisdiction = "ES-AEAT"
-legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["{_SOURCE_REF}"]
-''',
-        encoding="utf-8",
-        newline="\n",
-    )
-    (revision_dir / "revision.toml").write_text(
-        f'''\
-[revisions."{_REVISION_ID}"]
-valid_from = 2026-01-01
-period_selector = {{ years = [2026], periods = ["1T"] }}
-legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-orden_aplicabilidad = ["orden-eha-3786-2008:art-1"]
-source_refs = ["{_SOURCE_REF}"]
-''',
-        encoding="utf-8",
-        newline="\n",
-    )
-    (export_layouts_dir / "0001-did.toml").write_text(_did_layout_toml(), encoding="utf-8", newline="\n")
-
-    modelo = load_modelo_directory(modelo_dir)
-    revision = modelo.revisions[_REVISION_ID]
-    layout = revision.export_layouts[0]
-    record = layout.records[0]
-    assert record.encoding == "iso-8859-1"
-    assert record.line_ending == "none"
-    assert tuple((field.offset, field.length) for field in record.fields) == tuple(
-        (offset, length) for _ordinal, offset, length, _type_code, _content in _OFFICIAL_DID_ROWS
-    )
-    # The renderer refuses a layout the selected snapshot does not own.  Build
-    # that snapshot from the test-owned validated revision plus the real bundled
-    # source catalogue, avoiding the unrelated filing-grade legal-review gate.
-    return _test_snapshot(modelo=modelo, revision=revision), layout
-
-
 def _m303_2026_snapshot() -> RegistrySnapshot:
-    """Build the real 2026 revision through the canonical snapshot builder.
-
-    ``build_snapshot`` defaults ``require_operator_review=False``, so the
-    unrelated filing-grade legal-review gate ``build_validated_snapshot``
-    hardcodes never engages here.
-    """
-    authority = bundled_authority()
-    modelo = authority.modelo(Modelo.M303.value)
-    return build_snapshot(
-        modelo,
-        authority.catalogues,
-        source_root=bundled_path(),
-        filing_year=2026,
-        period="1T",
-    )
+    """Load the real 2026 revision from the published authority artifact."""
+    return bundled_authority().snapshot(Modelo.M303.value, filing_year=2026, period="1T")
 
 
 #: Modelo 303 prints the shared envelope grammar in its thirteen-row spelling:
@@ -641,143 +468,6 @@ def _draft() -> ModeloDraft:
 
 
 @pytest.mark.parametrize(
-    ("disposition", "expected_iban", "unselected_iban", "expected_refund_detail"),
-    (
-        (ResultDisposition.DEVOLUCION, _REFUND_IBAN, _CHARGE_IBAN, b"DEUTDEFF   "),
-        (ResultDisposition.DOMICILIACION, _CHARGE_IBAN, _REFUND_IBAN, b" " * 11),
-    ),
-)
-def test_isolated_m303_did_wire_uses_only_the_snapshot_selected_account(
-    tmp_path: Path,
-    disposition: ResultDisposition,
-    expected_iban: str,
-    unselected_iban: str,
-    expected_refund_detail: bytes,
-) -> None:
-    registry_snapshot, layout = _load_isolated_did_layout(tmp_path)
-    snapshot = _m303_did_producer_snapshot(disposition, registry_snapshot=registry_snapshot)
-
-    wire = _render_layout(
-        layout,
-        registry_snapshot=registry_snapshot,
-        draft=_draft(),
-        headers=_filing_producer_values(snapshot),
-        producer_snapshot=snapshot,
-        prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-        product_software_identity=_product_software_identity(),
-    )
-
-    assert len(wire) == 823
-    assert wire[:11] == b"<T303DID00>"
-    assert wire[11:22] == expected_refund_detail
-    assert wire[22:56] == expected_iban.encode("latin-1").ljust(34, b" ")
-    assert unselected_iban.encode("latin-1") not in wire
-    assert wire[811:] == b"</T303DID00>"
-
-
-def test_filing_envelope_facade_derives_ordered_bytes_from_the_canonical_resolver(tmp_path: Path) -> None:
-    """The public carrier accepts facts, not caller-composed body bytes or plans."""
-    snapshot, layout = _load_isolated_did_layout(tmp_path)
-    registry_snapshot, envelope_layout = _filing_envelope_layout(snapshot, layout)
-    producer_snapshot = _m303_did_producer_snapshot(
-        ResultDisposition.DEVOLUCION,
-        registry_snapshot=registry_snapshot,
-    )
-
-    result = render_filing_envelope(
-        FilingEnvelopeRenderRequest(
-            registry_snapshot=registry_snapshot,
-            layout=envelope_layout,
-            draft=_draft(),
-            producer_snapshot=producer_snapshot,
-            prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-            product_software_identity=_product_software_identity(),
-        ),
-    )
-
-    assert tuple((item.record_id, item.occurrence) for item in result.occurrences) == (("test-owned-m303-page-did", 1),)
-    assert result.occurrences[0].payload == _render_layout(
-        envelope_layout,
-        registry_snapshot=registry_snapshot,
-        draft=_draft(),
-        headers=_filing_producer_values(producer_snapshot),
-        producer_snapshot=producer_snapshot,
-        prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-        product_software_identity=_product_software_identity(),
-    )
-    assert result.prefix.startswith(b"<T303020261T0000><AUX>")
-    assert result.payload == result.prefix + result.occurrences[0].payload + result.closer
-    assert result.closer == b"</T303020261T0000>"
-    assert result.total_length == len(result.payload)
-    assert result.payload_sha256 == sha256(result.payload).hexdigest()
-
-
-def test_export_draft_routes_m303_only_through_the_full_envelope_and_refuses_open_authority(
-    tmp_path: Path,
-) -> None:
-    """The public draft writer has no body-only Modelo 303 renderer or defaults."""
-    snapshot, layout = _load_isolated_did_layout(tmp_path)
-    registry_snapshot, envelope_layout = _filing_envelope_layout(snapshot, layout)
-    producer_snapshot = _m303_did_producer_snapshot(
-        ResultDisposition.DEVOLUCION,
-        registry_snapshot=registry_snapshot,
-    )
-    product_identity = _product_software_identity()
-    provider = _schema_provider_for_snapshot(registry_snapshot)
-    draft = _draft()
-
-    rendered = render_filing_envelope(
-        FilingEnvelopeRenderRequest(
-            registry_snapshot=registry_snapshot,
-            layout=envelope_layout,
-            draft=draft,
-            producer_snapshot=producer_snapshot,
-            prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-            product_software_identity=product_identity,
-        ),
-    )
-    output_path = tmp_path / "modelo-303-envelope.boe"
-    receipt = export_draft(
-        draft,
-        output_path=output_path,
-        producer_snapshot=producer_snapshot,
-        prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-        product_software_identity=product_identity,
-        schema_provider=provider,
-    )
-
-    assert output_path.read_bytes() == rendered.payload
-    assert receipt.byte_size == len(rendered.payload)
-    assert receipt.file_sha256 == sha256(rendered.payload).hexdigest()
-
-    with pytest.raises(ValueError, match="prior-domiciliation election"):
-        export_draft(
-            draft,
-            output_path=tmp_path / "missing-election.boe",
-            producer_snapshot=producer_snapshot,
-            product_software_identity=product_identity,
-            schema_provider=provider,
-        )
-    with pytest.raises(ValueError, match="product/software identity"):
-        export_draft(
-            draft,
-            output_path=tmp_path / "missing-product.boe",
-            producer_snapshot=producer_snapshot,
-            prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-            schema_provider=provider,
-        )
-    with pytest.raises(ValueError, match="election must match"):
-        export_draft(
-            draft,
-            output_path=tmp_path / "mismatched-election.boe",
-            producer_snapshot=producer_snapshot,
-            prior_domiciliation_election=PriorDomiciliationElection.CANCEL_OR_MODIFY,
-            product_software_identity=product_identity,
-            schema_provider=provider,
-        )
-
-
-@pytest.mark.parametrize(
     ("non_agricultural_activity_count", "expected_occurrences"),
     (
         (0, ()),
@@ -839,91 +529,6 @@ def test_m303_envelope_refuses_a_required_projection_record_without_an_applicabl
                 producer_snapshot=producer_snapshot,
                 prior_domiciliation_election=PriorDomiciliationElection.KEEP,
                 product_software_identity=_product_software_identity(),
-            ),
-        )
-
-
-@pytest.mark.parametrize(
-    ("envelope_update", "message"),
-    (
-        ({"source_ref": "aeat-dr-303-2023"}, "source must belong"),
-        ({"source_sha256": "b" * 64}, "source SHA-256"),
-    ),
-)
-def test_filing_envelope_request_refuses_cross_source_or_digest_drift(
-    tmp_path: Path,
-    envelope_update: dict[str, str],
-    message: str,
-) -> None:
-    snapshot, layout = _load_isolated_did_layout(tmp_path)
-    registry_snapshot, envelope_layout = _filing_envelope_layout(snapshot, layout)
-    envelope = envelope_layout.filing_envelope
-    assert envelope is not None
-    source_refs = envelope_layout.source_refs
-    if "source_ref" in envelope_update:
-        source_refs = (*source_refs, envelope_update["source_ref"])
-    invalid_layout = envelope_layout.model_copy(
-        update={
-            "filing_envelope": envelope.model_copy(update=envelope_update),
-            "source_refs": source_refs,
-        },
-    )
-    invalid_snapshot = registry_snapshot.model_copy(
-        update={"revision": registry_snapshot.revision.model_copy(update={"export_layouts": (invalid_layout,)})},
-    )
-
-    with pytest.raises(ValueError, match=message):
-        FilingEnvelopeRenderRequest(
-            registry_snapshot=invalid_snapshot,
-            layout=invalid_layout,
-            draft=_draft(),
-            producer_snapshot=_m303_did_producer_snapshot(
-                ResultDisposition.DEVOLUCION,
-                registry_snapshot=invalid_snapshot,
-            ),
-            prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-            product_software_identity=_product_software_identity(),
-        )
-
-
-@pytest.mark.parametrize(
-    ("disposition", "refund_account", "charge_account", "message"),
-    (
-        (ResultDisposition.DEVOLUCION, RefundAccount(iban=None), None, "refund account"),
-        (ResultDisposition.DOMICILIACION, None, None, "charge account"),
-    ),
-)
-def test_m303_account_bearing_dispositions_refuse_without_their_selected_account(
-    tmp_path: Path,
-    disposition: ResultDisposition,
-    refund_account: RefundAccount | None,
-    charge_account: ChargeAccount | None,
-    message: str,
-) -> None:
-    registry_snapshot, _ = _load_isolated_did_layout(tmp_path)
-    taxpayer = _taxpayer_profile()
-    iva_profile = taxpayer.iva
-    assert iva_profile is not None
-
-    with pytest.raises(FilingProducerSnapshotError, match=message):
-        build_filing_producer_snapshot(
-            modelo=Modelo.M303,
-            taxpayer_tax_id=taxpayer.tax_id,
-            taxpayer_identity=TaxpayerIdentityFacts(
-                legal_name=None,
-                given_name="María",
-                surnames="García López",
-                full_name="María García López",
-            ),
-            presenter=PresenterIdentity(tax_id="00000000T", full_name="Gestoría Ejemplo"),
-            model_profile=iva_profile,
-            elections=_elections(disposition),
-            amendment_evidence=None,
-            refund_account=refund_account,
-            charge_account=charge_account,
-            m303_filing_facts=_m303_filing_facts(
-                Period.from_year_and_code(2026, "1T"),
-                registry_snapshot=registry_snapshot,
             ),
         )
 

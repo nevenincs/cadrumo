@@ -3,7 +3,7 @@
 This module classifies bucket-local
 :class:`~domain.transactions.TransactionCatalogue` rows into typed
 :class:`~domain.calculations.registry.IvaLedgerObservation` records and
-binding-ready totals. The source-mesh resolver in :mod:`~._modelo_bindings`
+binding-ready totals. The source-mesh resolver in :mod:`~.modelo_bindings`
 then applies the target
 :class:`~domain.calculations.registry.ModeloRevision`, resolves
 ``ledger_iva_aggregation`` bindings, and surfaces source diagnostics for ledger
@@ -25,13 +25,13 @@ See Also:
     :mod:`~domain.prorrata_register`
         Per-ejercicio carry home for the provisional percentage consumed by
         the IVA ledger apportionment.
-    :class:`~application.aggregation._modelo_bindings.LedgerIvaAggregationSourceResolver`
+    :class:`~application.aggregation.modelo_bindings.LedgerIvaAggregationSourceResolver`
         Source-mesh adapter that calls this projection and records prorrata
         apportionment provenance.
     :mod:`~application.aggregation.tests.test_iva_ledger_prorrata_apportionment`
         Regression coverage proving the active provisional percentage reduces
         deducible cuotas without reducing bases.
-    :mod:`~._renta_ledger`, :mod:`~._renta_income_ledger`, :mod:`~._renta_gasto_ledger`
+    :mod:`~.renta_ledger`, :mod:`~.renta_income_ledger`, :mod:`~.renta_gasto_ledger`
         Sibling Renta ledger projections.
 """
 
@@ -49,7 +49,8 @@ from ...adapters.persistence.profile.transactions import TransactionCatalogueRep
 from ...core.aggregation import BindingSourceKind
 from ...core.decimal.constants import HUNDRED
 from ...core.external_constants import DEFAULT_CURRENCY
-from ...core.i18n import tr
+from ...core.i18n.render import tr
+from ...core.i18n.translatable import Translatable as t
 from ...core.identity import TransactionId
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -99,8 +100,8 @@ from ...domain.transactions.models import OutOfWindowTransactionSummary, Transac
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from . import _shared_issue_reasons
-from ._business_proportion import business_proportion
-from .errors import AggregationValidationError, t
+from .business_proportion import business_proportion
+from .errors import AggregationValidationError
 
 _LedgerId = Annotated[
     str,
@@ -112,7 +113,7 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     """Machine-readable reasons why a ledger row did not produce IVA observations.
 
     The first five values are shared with
-    :class:`~application.aggregation._renta_ledger.RentaLedgerAggregationIssueReason`
+    :class:`~application.aggregation.renta_ledger.RentaLedgerAggregationIssueReason`
     through :mod:`~application.aggregation._shared_issue_reasons` so cross-ledger telemetry can
     group upstream filter rejections under one key. The remaining values
     are IVA-specific.

@@ -32,12 +32,10 @@ LEDGER_EVIDENCE_FOLLOWUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(),
         policy=_POLICY_5,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._ledger_evidence_consent_cli", "consent_list")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._ledger_evidence_consent_cli", "consent_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli.ledger_business_payloads", "EvidenceConsentListResult"),
+            target=DeferredTarget(".ledger_business_payloads", "EvidenceConsentListResult", __package__),
             identity="ledger.evidence.consent.list",
         ),
     ),
@@ -53,7 +51,9 @@ LEDGER_EVIDENCE_FOLLOWUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="reason",
                 declarations=("--reason",),
-                value=ValueContract(DeferredTarget("cadrumo.core.confirmation_gate", "ConfirmationBlockReason")),
+                value=ValueContract(
+                    DeferredTarget("...core.confirmation_gate", "ConfirmationBlockReason", __package__)
+                ),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.evidence.review.reason_help"),
                 metavar=None,
@@ -69,7 +69,7 @@ LEDGER_EVIDENCE_FOLLOWUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="finding",
                 declarations=("--finding",),
-                value=ValueContract(DeferredTarget("cadrumo.core.draft_discrepancy", "DraftDiscrepancyKind")),
+                value=ValueContract(DeferredTarget("...core.draft_discrepancy", "DraftDiscrepancyKind", __package__)),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.evidence.review.finding_help"),
                 metavar=None,
@@ -85,7 +85,7 @@ LEDGER_EVIDENCE_FOLLOWUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="advisory",
                 declarations=("--advisory",),
-                value=ValueContract(DeferredTarget("cadrumo.core.confirmation_gate", "ReviewAdvisoryKind")),
+                value=ValueContract(DeferredTarget("...core.confirmation_gate", "ReviewAdvisoryKind", __package__)),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.evidence.review.advisory_help"),
                 metavar=None,
@@ -116,12 +116,10 @@ LEDGER_EVIDENCE_FOLLOWUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_5,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._ledger_evidence_review_cli", "review_list")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._ledger_evidence_review_cli", "review_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli.ledger_business_payloads", "EvidenceReviewListResult"),
+            target=DeferredTarget(".ledger_business_payloads", "EvidenceReviewListResult", __package__),
             identity="ledger.evidence.review.list",
         ),
     ),
@@ -146,12 +144,10 @@ LEDGER_EVIDENCE_FOLLOWUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_5,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._ledger_evidence_review_cli", "review_view")
-        ),
+        handler=LazyBinding.available(DeferredTarget("._ledger_evidence_review_cli", "review_view", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli.ledger_business_payloads", "EvidenceReviewViewResult"),
+            target=DeferredTarget(".ledger_business_payloads", "EvidenceReviewViewResult", __package__),
             identity="ledger.evidence.review.view",
         ),
     ),

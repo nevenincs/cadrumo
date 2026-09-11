@@ -22,7 +22,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.identity import SubjectTaxId
+from .....core.identity.tax_id import SubjectTaxId
 from .....core.period import Period
 from ....filing.schema import (
     ModeloBindingValue,

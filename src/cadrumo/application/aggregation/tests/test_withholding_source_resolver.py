@@ -28,9 +28,9 @@ from ....domain.calculations.registry.schema import DataBindingDefinition, Model
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ....tests.secure_sql import isolated_runtime_profile
-from .._percepciones_observations_repository import PercepcionObservationRepository
-from .._source_mesh import CalculationSourceContext
-from .._withholding_source import WithholdingSourceResolver
+from ..percepciones_observations_repository import PercepcionObservationRepository
+from ..source_mesh import CalculationSourceContext
+from ..withholding_source import WithholdingSourceResolver
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

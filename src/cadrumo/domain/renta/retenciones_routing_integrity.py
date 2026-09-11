@@ -7,7 +7,7 @@ docstring for why that field cannot also name the output casilla) but its
 resolved value is redirected onto casilla 06 -- retenciones e ingresos a
 cuenta soportados -- by a hardcoded application-layer constant
 (:data:`RENTA_130_RETENCIONES_OUTPUT_CASILLA`, read by
-``application.aggregation._modelo_bindings._m130_retenciones_backend_inputs``).
+``application.aggregation.modelo_bindings._m130_retenciones_backend_inputs``).
 A hardcoded casilla routed to outside the registry is a routing-integrity
 hazard: nothing stops the constant from drifting out of sync with a revision
 that drops or renumbers the casilla it names, and that drift fails silently
@@ -57,7 +57,7 @@ RENTA_130_RETENCIONES_OUTPUT_CASILLA: CasillaId = validated_casilla_id(
 )
 """The M130 casilla the retenciones-a-cuenta binding's resolved value reports on.
 
-Read by ``application.aggregation._modelo_bindings`` as the single source
+Read by ``application.aggregation.modelo_bindings`` as the single source
 of truth for the redirect; a second literal declaring the same casilla id
 anywhere else is a duplication this constant exists to prevent.
 """

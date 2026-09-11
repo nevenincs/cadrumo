@@ -23,8 +23,9 @@ from pathlib import Path
 
 import pytest
 
+from .....core.config_support import LLMProvider
 from ..errors import LLMCacheError
-from ..models import LLMProvider, UsageRecord
+from ..models import UsageRecord
 from ..run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
 from ..usage import UsageRecorder
 from ._engine_binding_fixtures import _ENGINE_HOLDER, _bind_engine  # noqa: F401

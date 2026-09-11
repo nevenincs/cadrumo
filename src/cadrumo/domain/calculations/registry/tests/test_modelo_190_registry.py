@@ -6,15 +6,14 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from test_support.registry_authoring import RegistryValidator, _committed_modelo, _committed_snapshot
 
-from .....core.aggregation import RetencionClave
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources.bundled_data import bundled_path
-from .....domain.deadlines.errors import DeadlineValidationError
-from .....domain.deadlines.festivos import shift_deadline
-from .....tests.aeat_literal_fixtures import aeat_host
-from .registry_observations import registry_grounded_modelo_observation
+from cadrumo.core.aggregation import RetencionClave
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.deadlines.errors import DeadlineValidationError
+from cadrumo.domain.deadlines.festivos import shift_deadline
+from cadrumo.tests.aeat_literal_fixtures import aeat_host
+
 from .....tests.registry_snapshot import build_snapshot
 from ..authority import bundled_authority
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
@@ -27,6 +26,11 @@ from ..withholding_bindings import (
     WithholdingObservation,
     resolve_withholding_binding_values,
 )
+from ._published_authority import (
+    artifact_components,
+    artifact_snapshot,
+)
+from .registry_observations import registry_grounded_modelo_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -70,7 +74,7 @@ def _withholding_observation(source_id: str, nif: str, clave: str) -> Withholdin
 
 
 def test_modelo_190_guidance_and_layout_sources_are_separated() -> None:
-    modelo, catalogues = _committed_modelo("190")
+    modelo, catalogues = artifact_components("190")
     instructions = catalogues.sources["aeat-modelo-190-instructions-2025"]
 
     assert "aeat-modelo-190-instructions-2025" in modelo.source_refs
@@ -99,9 +103,8 @@ def test_modelo_190_guidance_and_layout_sources_are_separated() -> None:
 
 
 def test_modelo_190_validates_and_gates_workflow_surfaces_through_snapshot() -> None:
-    modelo, catalogues = _committed_modelo("190")
+    modelo, catalogues = artifact_components("190")
 
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
     snapshot = build_snapshot(
         modelo,
         catalogues,
@@ -187,9 +190,8 @@ def test_modelo_190_annual_deadline_is_grounded_to_current_revision(
     it belongs. A future split moves a window between revisions without making
     this test wrong.
     """
-    modelo, catalogues = _committed_modelo("190")
+    modelo, catalogues = artifact_components("190")
 
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
     snapshot = build_snapshot(
         modelo,
         catalogues,
@@ -248,7 +250,7 @@ def test_modelo_190_annual_deadline_is_grounded_to_current_revision(
 
 
 def test_modelo_190_filed_declarations_read_allows_live_register_host() -> None:
-    modelo, _ = _committed_modelo("190")
+    modelo, _ = artifact_components("190")
     declared = [
         ref
         for revision in modelo.revisions.values()
@@ -267,8 +269,8 @@ def test_modelo_190_filed_declarations_read_allows_live_register_host() -> None:
 
 
 def test_modelo_190_relations_resolve_against_modelo_111_registry() -> None:
-    snapshot = _committed_snapshot("190", 2025, "0A")
-    snapshot_111 = _committed_snapshot("111", 2025, "1T")
+    snapshot = artifact_snapshot("190", 2025, "0A")
+    snapshot_111 = artifact_snapshot("111", 2025, "1T")
 
     modelo_111_outputs = {casilla.id for casilla in snapshot_111.revision.casillas}
     relation_source_casilla_ids = {relation.source_casilla_id for relation in snapshot.revision.relations}
@@ -280,7 +282,7 @@ def test_modelo_190_relations_resolve_against_modelo_111_registry() -> None:
 
 
 def test_modelo_190_calculation_aggregates_modelo_111_quarterly_observations() -> None:
-    snapshot = _committed_snapshot("190", 2025, "0A")
+    snapshot = artifact_snapshot("190", 2025, "0A")
     requirements = relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
     source_values: dict[CasillaId, tuple[Decimal, ...]] = {
         _M111_IMPORTE_SOURCE_CASILLAS[0]: (Decimal("1000"), Decimal("2000"), Decimal("1500"), Decimal("2500")),

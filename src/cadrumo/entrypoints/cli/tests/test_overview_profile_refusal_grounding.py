@@ -27,13 +27,13 @@ from ....application.user_profile.preflight import (
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.profile_grounding import build_profile_grounding_index
 from ....domain.user_profile.loader import load_user_profile_schema
-from ....tests.cli_runner import invoke_cached_cli
 from .._overview import (
     _ENTITY_TYPE_SELECTOR,
     _IRPF_INCOME_CATEGORIES_SELECTOR,
     _undeclared_taxpayer_model_refusal,
 )
 from ._overview_calendar_support import _isolated_backend
+from .cli_runner import invoke_cached_cli
 
 __all__ = ["_isolated_backend"]
 

@@ -1,9 +1,9 @@
 """Errors raised while handling aggregation and source-mesh boundaries.
 
 Raised by pure rollup modules such as :mod:`~.iva_ledger`,
-:mod:`~._renta_ledger`, :mod:`~._retenciones`, :mod:`~._counterpart`, and
-:mod:`~._foreign_assets`, and by source-mesh resolvers such as
-:mod:`~._modelo_bindings` and :mod:`~._oss_ioss`, when aggregation constraints
+:mod:`~.renta_ledger`, :mod:`~.retenciones`, :mod:`~.counterpart`, and
+:mod:`~.foreign_assets`, and by source-mesh resolvers such as
+:mod:`~.modelo_bindings` and :mod:`~.oss_ioss`, when aggregation constraints
 or resolver ownership contracts are violated.
 """
 
@@ -12,7 +12,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ...core.errors.hierarchy import CadrumoError, CoreError, CoreValidationError, TerminalPreconditionErrorMixin
-from ...core.i18n import Translatable as tr
+from ...core.i18n.translatable import Translatable as tr
 from ..operator_actions.models import PreconditionVerdict
 
 
@@ -77,10 +77,6 @@ class AggregationValidationError(AggregationError, CoreValidationError):
     """
 
 
-# Local construction shorthand for this package's typed translation keys.
-t = tr
-
-
 __all__ = [
     "AggregationCategoryCoverageError",
     "AggregationConfigError",
@@ -89,5 +85,4 @@ __all__ = [
     "AggregationPeriodError",
     "AggregationUnsupportedModeloError",
     "AggregationValidationError",
-    "t",
 ]

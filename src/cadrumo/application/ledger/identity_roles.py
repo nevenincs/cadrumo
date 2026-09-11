@@ -23,7 +23,7 @@ never hold. Comparison is on the normalised form, so a printed ``B-1234567-4``
 does not evade exclusion against a stored ``B12345674``.
 
 That exclusion asks an IDENTITY question, never a validity one, and routes
-through :func:`~core.identity.same_tax_identifier` -- the same predicate
+through :func:`~core.identity.tax_id.same_tax_identifier` -- the same predicate
 :func:`~application.invoices.counterparty_is_the_filer` uses, so a document
 cannot evade one while being caught by the other. Routing it through
 :func:`canonical_identity_token` instead makes it a validity question, and then
@@ -75,13 +75,9 @@ from pydantic import BaseModel
 from ...core.draft_discrepancy import DraftDiscrepancyKind
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin
-from ...core.identity import (
-    IdentityError,
-    nif_iva_format_for_country,
-    normalise_nif_iva,
-    same_tax_identifier,
-    validate_spanish_tax_id,
-)
+from ...core.identity.documents import IdentityError
+from ...core.identity.nif_iva import nif_iva_format_for_country, normalise_nif_iva
+from ...core.identity.tax_id import same_tax_identifier, validate_spanish_tax_id
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.iva.establishment import country_code_for_printed_tax_identifier
 from .grounding_anchor import ground_ambiguous_candidates

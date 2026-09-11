@@ -135,12 +135,35 @@ def test_the_registration_binds_stable_public_schemas() -> None:
 
 def test_the_definition_module_is_public_and_importable_directly() -> None:
     """A composition root outside this package must be able to import it."""
-    module = __import__("cadrumo.application.modelo.operation_definitions", fromlist=["__all__"])
-    package = __import__("cadrumo.application.modelo", fromlist=["__name__"])
+    definition_path = Path(inspect.getfile(build_modelo_work_rename_registration))
+    definition_tree = ast.parse(definition_path.read_text(encoding="utf-8"))
+    definition_all = next(
+        node.value
+        for node in definition_tree.body
+        if isinstance(node, ast.Assign)
+        and any(isinstance(target, ast.Name) and target.id == "__all__" for target in node.targets)
+    )
+    exported_names = set(ast.literal_eval(definition_all))
 
-    assert not Path(module.__file__ or "").name.startswith("_")
-    for name in module.__all__:
-        assert not hasattr(package, name), f"the modelo package binds {name}"
+    package_path = definition_path.with_name("__init__.py")
+    package_tree = ast.parse(package_path.read_text(encoding="utf-8"))
+    package_binding_names: set[str] = set()
+    for node in package_tree.body:
+        if isinstance(node, ast.Import):
+            package_binding_names.update(alias.asname or alias.name.split(".", 1)[0] for alias in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            package_binding_names.update(alias.asname or alias.name for alias in node.names if alias.name != "*")
+        elif isinstance(node, ast.Assign):
+            package_binding_names.update(
+                target.id for target in node.targets if isinstance(target, ast.Name) and target.id != "__all__"
+            )
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.target.id != "__all__":
+            package_binding_names.add(node.target.id)
+        elif isinstance(node, (ast.AsyncFunctionDef, ast.ClassDef, ast.FunctionDef)):
+            package_binding_names.add(node.name)
+
+    assert not definition_path.name.startswith("_")
+    assert not exported_names.intersection(package_binding_names)
 
 
 def _discard_definition():

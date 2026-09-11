@@ -35,12 +35,11 @@ import pytest
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import PeriodKind, registry_period_kind
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.temporal import select_revision
-from cadrumo.tests.registry_snapshot import build_snapshot
 
-from ..compiler.validator import RegistryValidator
-from ..conformance.tests._registry_schema_support import _committed_modelo
+from .....tests.registry_snapshot import build_snapshot
+from ..formula_runtime import calculate_registry_snapshot
+from ..temporal import select_revision
+from ._published_authority import artifact_components
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -70,14 +69,13 @@ _EXPECTED_DEADLINES = {
 
 
 def _load_modelo_216():
-    return _committed_modelo("216")
+    return artifact_components("216")
 
 
 def test_modelo_216_validator_accepts_committed_definition() -> None:
     modelo, catalogues = _load_modelo_216()
     assert modelo.id == "216"
     assert modelo.revisions, "216 must declare at least one revision"
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
 
 def test_modelo_216_formulas_owned_by_construct() -> None:

@@ -7,22 +7,16 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry._formula_runtime_irnr import _irnr_resolve_tipo_gravamen_args
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.formula_runtime_ops import (
+from .._formula_runtime_irnr import _irnr_resolve_tipo_gravamen_args
+from ..authority import bundled_authority
+from ..errors import RegistryValidationError
+from ..formula_runtime import calculate_registry_snapshot
+from ..formula_runtime_ops import (
     RegistryUnresolvedOutcomeReason,
     resolve_keyed_bracket,
 )
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
-from cadrumo.tests.registry_snapshot import build_snapshot
-from cadrumo.tests.registry_tree import bundled_registry_tree
-
-from ..compiler.convenio import convenio_authority_from_facts
-from ..compiler.fact_providers import compile_registered_fact_providers
-from ..compiler.loader import load_registry_tree
+from ..schema import RegistrySnapshot
+from ..schema_formula import FormulaExpression
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -36,22 +30,12 @@ _M210_TIPO_GRAVAMEN_CASILLA = "tipo_gravamen"
 
 
 def _current_m210_rate_expression() -> FormulaExpression:
-    # Compile-only load (no full-registry validation) so the M210 rate-formula
-    # shape assertion is independent of unrelated peer modelo churn.
-    modelos, _catalogues = bundled_registry_tree()
-    revision = next(modelo for modelo in modelos if modelo.id == "210").revisions["2025"]
+    revision = bundled_authority().modelo("210").revisions["2025"]
     return next(formula.expression for formula in revision.formulas if formula.id == _M210_RATE_FORMULA_ID)
 
 
 def _current_m210_snapshot() -> RegistrySnapshot:
-    root = bundled_path("registry", "aeat")
-    modelos, catalogues = load_registry_tree(root)
-    facts = compile_registered_fact_providers(root, modelos=modelos)
-    catalogues = catalogues.model_copy(
-        update={"facts": facts, "convenio": convenio_authority_from_facts(facts, catalogues.legal)},
-    )
-    modelo = next(modelo for modelo in modelos if modelo.id == "210")
-    return build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="EVENT-1")
+    return bundled_authority().snapshot("210", filing_year=2025, period="EVENT-1")
 
 
 def test_irnr_resolve_tipo_gravamen_args_accepts_current_five_arg_contract() -> None:

@@ -42,13 +42,28 @@ def _raise_first(checks: tuple[tuple[bool, str], ...]) -> None:
             raise ValueError(message)
 
 
-def validate_deferred_target(module: str, qualname: str) -> None:
-    """Validate a dotted deferred Python identity."""
+def validate_deferred_target(module: str, qualname: str, package: str | None = None) -> None:
+    """Validate a deferred Python identity and its optional relative anchor."""
+    relative_module = module.startswith(".")
     _raise_first(
         (
             (
-                not module or any(not part.isidentifier() for part in module.split(".")),
+                not module
+                or not module.lstrip(".")
+                or any(not part.isidentifier() for part in module.lstrip(".").split(".")),
                 "deferred target module must be a dotted Python module name",
+            ),
+            (
+                relative_module and not package,
+                "relative deferred target modules require their importing package",
+            ),
+            (
+                package is not None and (not package or any(not part.isidentifier() for part in package.split("."))),
+                "deferred target package must be a dotted Python package name",
+            ),
+            (
+                module.startswith("cadrumo.") and package is None,
+                "first-party deferred target modules must use relative syntax",
             ),
             (
                 not qualname or any(not part.isidentifier() for part in qualname.split(".")),

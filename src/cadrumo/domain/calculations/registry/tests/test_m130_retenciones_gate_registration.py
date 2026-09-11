@@ -134,7 +134,7 @@ def test_m130_refuses_when_only_the_m100_gate_is_registered() -> None:
 
     result = _run_python(
         f"""
-        import cadrumo.domain.calculations.registry._snapshot_internals as internals
+        import cadrumo.domain.calculations.registry.snapshot as internals
 
         internals._CROSS_DOMAIN_CHECK_MODULES = ({_FIRST_SLICE_MODULE!r},)
 

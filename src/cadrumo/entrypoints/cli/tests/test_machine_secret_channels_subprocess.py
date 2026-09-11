@@ -12,8 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from ....tests import SRC_CADRUMO
-from ....tests.subprocess_cli import subprocess_cli_env
+from ....tests.inventory import SRC_CADRUMO
 from ._machine_secret_channels_support import (
     _CERTIFICATE_SECRET,
     _HARNESS,
@@ -30,6 +29,7 @@ from ._machine_secret_channels_support import (
     bootstrap_interpreter,
     cleanup_keychain,
 )
+from .subprocess_cli import subprocess_cli_env
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

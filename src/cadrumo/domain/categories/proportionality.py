@@ -21,7 +21,7 @@ from pydantic import AnyHttpUrl, BaseModel, Field, field_validator, model_valida
 
 from ...core.citation_grounding import CitationGrounding
 from ...core.external_constants import load_external_constants
-from ...core.i18n import Translatable as tr
+from ...core.i18n.translatable import Translatable as tr
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.unit_proportion import UnitProportion
 from ...core.url_validation import ANY_HTTP_URL_ADAPTER

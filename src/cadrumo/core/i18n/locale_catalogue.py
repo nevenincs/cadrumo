@@ -12,7 +12,7 @@ resolver reads, so a caller can prove the value it resolved and the catalogue
 it resolved against belong to the same window.
 
 See Also:
-    :func:`~cadrumo.core.i18n.tr`
+    :func:`~cadrumo.core.i18n.render.tr`
         The operator-facing translation surface resolving through the same
         catalogue this module captures.
 """

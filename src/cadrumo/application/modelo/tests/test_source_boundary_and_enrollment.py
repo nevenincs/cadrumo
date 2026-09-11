@@ -34,7 +34,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....core.aggregation import BindingSourceKind
+from ....core.aggregation import BindingSourceKind, ForeignAssetClass
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import ModeloRevision
@@ -43,7 +43,7 @@ from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation import ForeignAssetClass, ForeignAssetIngestObservation
+from ...aggregation.foreign_assets import ForeignAssetIngestObservation
 from ...user_profile.preflight import build_profile_preflight_requirement
 from ..action_errors import ModeloAggregationBindingError, ModeloProfileReadinessError
 from ..calculation_actions import (
@@ -378,9 +378,9 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
     test_modelo_130_carry_forward_continuity.py.
     """
     from ....core.period import Period
-    from ...aggregation import (
+    from ...aggregation.modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
+    from ...aggregation.source_mesh import (
         CalculationSourceContext,
-        LedgerRentaIncomeAggregationSourceResolver,
     )
     from ...aggregation.source_resolution_operations import (
         collect_unhandled_source_diagnostics,
@@ -399,11 +399,11 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
         revision=revision,
         calculated_at=_T1,
     )
-    from ...aggregation import (
-        LedgerIvaAggregationSourceResolver,
+    from ...aggregation.modelo_bindings import LedgerIvaAggregationSourceResolver
+    from ...aggregation.modelo_bindings_renta_expenses import (
         LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
-        OssIossLedgerSourceResolver,
     )
+    from ...aggregation.oss_ioss import OssIossLedgerSourceResolver
 
     source_resolution = merge_source_resolutions(
         [

@@ -35,16 +35,16 @@ _CALCULATION_WRITE = ExecutionPolicySpec(
     "compute",
     CommandWriteRoute.PROFILE_BOUND,
 )
-_LANGUAGE = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
+_LANGUAGE = ValueContract(DeferredTarget("...core.external_constants", "OutputLanguage", __package__))
 _MODELO = ValueContract(
     DeferredTarget("builtins", "str"),
-    click_type=DeferredTarget("cadrumo.entrypoints.cli._common", "MODELO_CODE_CHOICE"),
+    click_type=DeferredTarget("._common", "MODELO_CODE_CHOICE", __package__),
 )
 _AMENDMENT_KIND = ValueContract(
-    DeferredTarget("cadrumo.domain.modelos.calculation_revision_amendment", "CalculationRevisionAmendmentKind")
+    DeferredTarget("...domain.modelos.calculation_revision_amendment", "CalculationRevisionAmendmentKind", __package__)
 )
 _M303_MOTIVE = ValueContract(
-    DeferredTarget("cadrumo.domain.modelos.calculation_revision_amendment", "M303RectificativaMotive")
+    DeferredTarget("...domain.modelos.calculation_revision_amendment", "M303RectificativaMotive", __package__)
 )
 
 
@@ -88,10 +88,10 @@ def _leaf(
         InvocationSpec(context_parameter="ctx"),
         parameters,
         policy,
-        LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._modelo", handler)),
+        LazyBinding.available(DeferredTarget("._modelo", handler, __package__)),
         ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget(schema_module, schema_name),
+            DeferredTarget(schema_module, schema_name, __package__),
             identity=identity,
         ),
     )
@@ -138,7 +138,7 @@ MODELO_CORE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         _CALCULATION_READ,
-        "cadrumo.entrypoints.cli._payloads_modelo_reconcile",
+        "._payloads_modelo_reconcile",
         "WorkCompareTaxationResult",
         "modelo.work.compare_taxation",
     ),
@@ -164,7 +164,7 @@ MODELO_CORE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         _MODEL_READ,
-        "cadrumo.entrypoints.cli.modelo_aux_payloads",
+        ".modelo_aux_payloads",
         "WorkHistoryResult",
         "modelo.work.history",
     ),
@@ -212,7 +212,7 @@ MODELO_CORE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         _CALCULATION_WRITE,
-        "cadrumo.entrypoints.cli._modelo_payloads",
+        "._modelo_payloads",
         "WorkAmendResult",
         "modelo.work.amend",
     ),
@@ -234,7 +234,7 @@ MODELO_CORE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option("period", ("--period",), TEXT_VALUE, "cli.app.modelo.history.period_help"),
         ),
         _MODEL_READ,
-        "cadrumo.entrypoints.cli._modelo_payloads",
+        "._modelo_payloads",
         "ModeloHistoryResult",
         "modelo.history",
     ),

@@ -21,23 +21,23 @@ from ._spec_policies import BOOTSTRAP_DESTRUCTIVE, BOOTSTRAP_WRITE, PROFILE_READ
 _OUTPUT_LANGUAGE_OPTION = OptionSpec(
     name="output_language",
     declarations=("--output-language", "--language"),
-    value=ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage")),
+    value=ValueContract(DeferredTarget("....core.external_constants", "OutputLanguage", __package__)),
     default=ParameterDefault.value(None),
     help_key=TranslationKey("cli.config.auth.output_language_help"),
 )
-_AREA = ValueContract(DeferredTarget("cadrumo.core.storage_taxonomy", "StorageArea"))
+_AREA = ValueContract(DeferredTarget("....core.storage_taxonomy", "StorageArea", __package__))
 
 
 def _schema(name: str, identity: str) -> ResultSchemaSpec:
     return ResultSchemaSpec(
         SchemaState.TARGET,
-        target=DeferredTarget("cadrumo.entrypoints.cli.config._storage_payloads", name),
+        target=DeferredTarget("._storage_payloads", name, __package__),
         identity=identity,
     )
 
 
 def _handler(name: str) -> LazyBinding:
-    return LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli.config._storage_cli", name))
+    return LazyBinding.available(DeferredTarget("._storage_cli", name, __package__))
 
 
 CONFIG_STORAGE_COMMAND_SPECS = (

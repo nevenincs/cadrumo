@@ -25,7 +25,7 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from ...core.errors.severity import BaseSeverity
-from ...core.i18n import Translatable as tr
+from ...core.i18n.translatable import Translatable as tr
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.transactions.models import (

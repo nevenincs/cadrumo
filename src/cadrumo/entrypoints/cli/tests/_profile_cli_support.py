@@ -9,8 +9,8 @@ from contextlib import suppress
 
 from click.testing import Result
 
-from ....tests.cli_runner import invoke_cached_cli
 from ....tests.user_profile import register_cli_profile
+from .cli_runner import invoke_cached_cli
 
 
 def seed_profile(name: str, **facts: str) -> str:

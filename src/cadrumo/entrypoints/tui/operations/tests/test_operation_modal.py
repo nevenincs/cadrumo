@@ -36,14 +36,14 @@ from .....application.operations.composition import (
     OperationSubmission,
     compose_operation_services,
 )
-from .....application.operations.frontend_contracts import (
+from .....application.operations.frontend_projection import OperationReviewAvailableInteractionV1
+from .....application.operations.frontend_requests import (
     OperationCancellationSuccessV1,
     OperationDetachSuccessV1,
     OperationObservationSuccessV1,
     OperationPublicEventPageV1,
     OperationResponseApplyRequestV1,
     OperationResponseMutationSuccessV1,
-    OperationReviewAvailableInteractionV1,
     OperationReviewProjectionRefusalV1,
 )
 from .....application.operations.interactions import OperationActorReference

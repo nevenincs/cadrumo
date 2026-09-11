@@ -29,6 +29,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -39,8 +40,7 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....tests import general_m303_filing_evidence
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from ....tests.filing_evidence import general_m303_filing_evidence
 from ...workflow.persistence import workflow_state_repository
 from .._m303_m349_reconcile import m303_m349_intracom_reconcile_findings
 

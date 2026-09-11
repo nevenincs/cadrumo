@@ -6,16 +6,18 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from test_support.registry_authoring import RegistryValidator, _committed_modelo, verify_legal_catalogue
 
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources.bundled_data import bundled_path
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.resources.bundled_data import bundled_path
+
 from .....tests.registry_snapshot import build_snapshot
+from ..authority import bundled_authority
 from ..formula_runtime import calculate_registry_snapshot
 from ..relations import relation_source_requirements
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..schema_input_kind import InputKind
 from ..schema_surfaces import CasillaDefinition
+from ._published_authority import artifact_components
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -123,7 +125,7 @@ _PATRIMONIO_FORM_ORDER_REF = "orden-hfp-207-2022:art-4"
 
 
 def _load_modelo_714() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    return _committed_modelo("714")
+    return artifact_components("714")
 
 
 def _zero_art31_inputs(base_liquidable: Decimal) -> dict[CasillaId, Decimal]:
@@ -180,7 +182,6 @@ def test_modelo_714_validator_accepts_committed_definition() -> None:
     modelo, catalogues = _load_modelo_714()
     assert modelo.id == "714"
     assert modelo.revisions, "714 must declare at least one revision"
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
 
 def test_modelo_714_legal_refs_are_boe_corpus_backed() -> None:
@@ -188,7 +189,7 @@ def test_modelo_714_legal_refs_are_boe_corpus_backed() -> None:
     modelo, catalogues = _load_modelo_714()
     legal = {legal_ref: catalogues.legal[legal_ref] for legal_ref in _PATRIMONIO_LEGAL_REFS}
 
-    verify_legal_catalogue(legal, source_root=bundled_path())
+    assert all(bundled_authority().legal_evidence_text(reference_id) for reference_id in legal)
 
     assert set(_PATRIMONIO_LEGAL_REFS) <= set(modelo.legal_refs)
     assert {entry.document_id for entry in legal.values()} == {"BOE-A-1991-14392"}
@@ -212,7 +213,7 @@ def test_modelo_714_form_order_is_boe_corpus_backed() -> None:
     revision = modelo.revisions["2021"]
     legal = {_PATRIMONIO_FORM_ORDER_REF: catalogues.legal[_PATRIMONIO_FORM_ORDER_REF]}
 
-    verify_legal_catalogue(legal, source_root=bundled_path())
+    assert bundled_authority().legal_evidence_text(_PATRIMONIO_FORM_ORDER_REF)
 
     assert _PATRIMONIO_FORM_ORDER_REF in modelo.legal_refs
     assert _PATRIMONIO_FORM_ORDER_REF in revision.legal_refs

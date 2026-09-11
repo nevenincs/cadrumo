@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import pytest
 
-from ..i18n import tr
+from ..i18n.render import tr
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

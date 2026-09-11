@@ -7,14 +7,11 @@ from datetime import datetime
 from ...application.calculations.observations_repository import ObservationSourceKind
 from ...application.live.snapshot_base import SnapshotLifecycleState
 from ...core.filing_year import FilingYear
-from ...core.identity import (
-    AeatCsv,
-    AeatExpedienteId,
-    BucketId,
-    ContentDigest,
-    FilingRecordId,
-    SnapshotId,
-)
+from ...core.identity.aeat_csv import AeatCsv
+from ...core.identity.aeat_expediente import AeatExpedienteId
+from ...core.identity.bucket import BucketId
+from ...core.identity.digest import ContentDigest
+from ...core.identity.hex_ids import FilingRecordId, SnapshotId
 from ...core.json_contract import OutputSchema
 from ...core.modelo import Modelo
 from ._app_live_payloads_support import JustificantePeriodToken

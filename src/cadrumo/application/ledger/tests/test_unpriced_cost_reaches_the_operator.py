@@ -23,7 +23,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....adapters.outbound.llm.models import LLMProvider, UsageRecord
+from ....adapters.outbound.llm.models import UsageRecord
+from ....core.config_support import LLMProvider
 from ..llm_diagnostics import _aggregate_usage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

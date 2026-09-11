@@ -399,9 +399,7 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="live capture tests preserve AEAT expediente, observation, and secure-object labels",
     ),
     AllowlistRule(
-        path=_path(
-            r"^src/cadrumo/application/(?:ledger/tests/_action_test_support|workflow/tests/test_state_persistence_roundtrip)\.py$"
-        ),
+        path=_path(r"^src/cadrumo/application/workflow/tests/test_state_persistence_roundtrip\.py$"),
         reason="workflow and ledger support tests preserve external work-unit/export path labels",
     ),
     AllowlistRule(

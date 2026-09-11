@@ -11,7 +11,7 @@ from pydantic import AnyUrl, SecretStr
 
 from ......core.auth_provider import AuthProviderKind
 from ......core.config import Settings
-from ......core.i18n import tr
+from ......core.i18n.render import tr
 from ......domain.calculations.registry.errors import RegistryValidationError
 from ......domain.calculations.registry.remote_state_guard import RemoteOperation, assert_remote_operation_allowed
 from ......tests.profile_capsule import open_test_profile_session

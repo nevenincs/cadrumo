@@ -11,6 +11,8 @@ from ....core.period import Period
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.temporal import select_revision
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ....domain.modelos.calculation_revision import (
@@ -26,8 +28,6 @@ from ....domain.modelos.row_models import (
     ModeloDetailRow,
 )
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ...filing.draft_construction import build_draft
 from .._revision_replay_inputs import revision_filing_replay_inputs
 

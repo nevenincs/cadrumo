@@ -23,7 +23,7 @@ from pathlib import Path, PureWindowsPath
 
 from pydantic import BaseModel
 
-from .....core.identity import BucketId
+from .....core.identity.bucket import BucketId
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_location

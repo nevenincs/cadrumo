@@ -13,6 +13,7 @@ from ....application.workflow.persistence import workflow_state_repository
 from ....core.config import override_settings
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -22,7 +23,6 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
-from ....tests.registry_observations import registry_grounded_observations
 from .._modelo_rendering import result_summary_lines, result_summary_payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

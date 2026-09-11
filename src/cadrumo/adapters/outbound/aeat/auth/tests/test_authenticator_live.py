@@ -17,7 +17,8 @@ import pytest
 from ......application.auth.protocols import BrowserSessionFactoryPort
 from ......application.auth.session_types import AeatLoginAssertion, AeatSession
 from ......application.auth_credentials import unnamed_certificate_credentials
-from ......core.config import AEAT_CERTIFICATE_PROTECTED_URL, Settings
+from ......core.config import Settings
+from ......core.config_support import AEAT_CERTIFICATE_PROTECTED_URL
 from ......tests.live_gate import requires_live_enabled
 from ..authenticator import AeatAuthenticator
 from ..certificate import CertificateHealthSeverity, extract_nif_from_subject

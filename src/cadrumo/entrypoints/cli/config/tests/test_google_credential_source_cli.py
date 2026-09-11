@@ -69,11 +69,11 @@ from .....adapters.outbound.google.impersonation import GoogleAuthAdcUnavailable
 from .....adapters.outbound.google.session_store import load_credential_source_selection
 from .....adapters.outbound.storage.factory import build_google_credentials
 from .....core.google_credential_source import GoogleCredentialSourceKind
-from .....tests.cli_runner import invoke_cached_cli
 from .....tests.env_scope import scoped_env_var
 from .....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .....tests.secure_sql import isolated_runtime_profile
 from .....tests.user_profile import register_cli_profile
+from ...tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

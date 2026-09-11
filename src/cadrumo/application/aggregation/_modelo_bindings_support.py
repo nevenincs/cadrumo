@@ -15,7 +15,7 @@ from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.invoices.errors import InvoicePersistenceError
 from ...domain.transactions.errors import TransactionPersistenceError
 from ...domain.usage_ratios.errors import UsageRatioPersistenceError
-from ._source_mesh import CalculationSourceResolution
+from .source_mesh import CalculationSourceResolution
 
 STORAGE_DEGRADATION_ERRORS: Final[tuple[type[Exception], ...]] = (
     *_STORAGE_DEGRADATION_ERRORS,

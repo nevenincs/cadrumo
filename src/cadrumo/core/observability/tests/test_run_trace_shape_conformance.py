@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from ....tests import assert_path_matches_grammar
+from ....adapters.persistence.storage.tests.storage_path_grammar import assert_path_matches_grammar
 from ....tests.storage_scope import storage_overrides
 from ...config import override_settings
 from ...storage_taxonomy import StorageCategory

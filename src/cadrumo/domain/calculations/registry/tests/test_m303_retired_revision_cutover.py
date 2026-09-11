@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from .....core.directory_scan import scan_directory
-from .....tests import SRC_CADRUMO, package_python_files, repo_relative
+from .....tests.inventory import SRC_CADRUMO, package_python_files, repo_relative
 from ..authority import bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

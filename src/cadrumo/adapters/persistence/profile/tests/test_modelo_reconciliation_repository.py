@@ -55,8 +55,8 @@ from .....domain.calculations.registry.schema_references import RegistrySnapshot
 from .....domain.modelos.codes import ModeloCode
 from .....domain.modelos.repository import upsert_work_unit
 from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from .....tests import FIXTURES_DIR
 from .....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
+from .....tests.inventory import FIXTURES_DIR
 from ....inbound.justificante.parser import parse_justificante
 from ...storage.errors import SecureObjectRevisionConflictError
 from ...storage.secure_object_namespaces import MODELO_RECONCILIATION_RECORDS_NAMESPACE

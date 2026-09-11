@@ -37,10 +37,8 @@ from __future__ import annotations
 from collections.abc import Callable, Collection
 
 import pytest
-from test_support.registry_authoring import load_catalogue_file
 
-from ....core.directory_scan import scan_directory
-from ....core.resources.bundled_data import bundled_path
+from ...calculations.registry.authority import bundled_authority
 from ..catalogue import iva_catalogue_years
 from ..place_of_supply import place_of_supply_years
 
@@ -57,29 +55,13 @@ _YEAR_KEYED_IVA_CORPORA: tuple[tuple[str, Callable[[], Collection[int]]], ...] =
 def _supported_filing_years() -> tuple[int, ...]:
     """Return the registry's single declared supported filing window.
 
-    Read through the canonical per-file catalogue loader over ``legal/`` rather
-    than by constructing the whole validated authority. The subject here is one
-    declaration, and coupling to full-registry validation would make an
-    unrelated modelo's mid-edit surface as an opaque IVA coverage failure --
-    masking this gate's real verdict behind someone else's red.
-
-    Mirrors the shared-catalogue loader's own contract: the declaration is
-    registry-wide and lives in exactly ONE file.
+    Read from the committed authority artifact. The declaration is registry-wide
+    and is already validated before publication, so this shipped test must not
+    reopen mutable TOML or invoke the development compiler.
     """
-    declarations = {
-        path.name: catalogue.supported_filing_years.years
-        for path in scan_directory(bundled_path("registry", "aeat", "legal"), pattern="*.toml")
-        if (catalogue := load_catalogue_file(path)).supported_filing_years is not None
-    }
-    assert declarations, (
-        "the registry declares no supported filing years; aeat/legal/ carries the one "
-        "writable declaration and every year-keyed corpus is measured against it"
-    )
-    assert len(declarations) == 1, (
-        f"supported filing years are declared in more than one legal catalogue file: "
-        f"{sorted(declarations)}; the declaration is registry-wide and has exactly one home"
-    )
-    return tuple(next(iter(declarations.values())))
+    declaration = bundled_authority().catalogues.supported_filing_years
+    assert declaration is not None, "the published authority declares no supported filing years"
+    return tuple(declaration.years)
 
 
 @pytest.mark.parametrize(

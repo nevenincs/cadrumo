@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum, StrEnum
+from importlib.util import resolve_name
 from types import MappingProxyType
 from typing import Final, Literal, cast
 
@@ -211,10 +212,16 @@ class DeferredTarget:
 
     module: str
     qualname: str
+    package: str | None = None
 
     def __post_init__(self) -> None:
-        """Validate that ``module`` and ``qualname`` are dotted Python identifiers, or raise."""
-        _validate_deferred_target(self.module, self.qualname)
+        """Validate and canonicalise a target anchored to its declaring package."""
+        _validate_deferred_target(self.module, self.qualname, self.package)
+        if self.module.startswith("."):
+            if self.package is None:
+                raise ValueError("relative deferred target modules require their importing package")
+            object.__setattr__(self, "module", resolve_name(self.module, self.package))
+        object.__setattr__(self, "package", None)
 
     @property
     def identity(self) -> str:

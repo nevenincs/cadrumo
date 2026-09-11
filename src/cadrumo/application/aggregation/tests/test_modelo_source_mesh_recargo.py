@@ -19,8 +19,9 @@ from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva.classification import InvoiceKind as CatalogueInvoiceKind
-from .. import AggregationValidationError, CalculationSourceContext
-from .. import LedgerIvaAggregationSourceResolver as _LedgerIvaAggregationSourceResolver
+from ..errors import AggregationValidationError
+from ..modelo_bindings import LedgerIvaAggregationSourceResolver as _LedgerIvaAggregationSourceResolver
+from ..source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

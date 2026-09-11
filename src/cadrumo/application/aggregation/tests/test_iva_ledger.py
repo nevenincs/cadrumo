@@ -36,13 +36,15 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.secure_sql import isolated_two_bucket_runtime
 from ...ledger.preflight import OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE
-from .. import (
+from ..errors import (
     AggregationValidationError,
+)
+from ..iva_ledger import (
     IvaLedgerAggregation,
     IvaLedgerAggregationIssueReason,
     aggregate_iva_ledger_observations_from_repositories,
 )
-from .. import (
+from ..iva_ledger import (
     aggregate_iva_ledger_observations as _aggregate_iva_ledger_observations_with_authority,
 )
 from .renta_income_aggregation_support import _period

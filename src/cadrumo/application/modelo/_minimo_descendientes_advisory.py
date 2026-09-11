@@ -48,7 +48,7 @@ from ...domain.contribuyente.descendant_facts import descendant_list_from_facts
 from ...domain.contribuyente.family_fact_context import FamilyFactResolutionContext
 from ...domain.contribuyente.family_profile import RentaFamilyProfile
 from ...domain.user_profile.errors import ProfileNotFoundError
-from ..aggregation import CalculationSourceDiagnostic
+from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from .semantic_role_resolution import casilla_id_for_unambiguous_revision_semantic_role
 
 __all__ = [

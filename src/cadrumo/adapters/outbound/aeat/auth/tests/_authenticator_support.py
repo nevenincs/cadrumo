@@ -25,10 +25,10 @@ from ......application.auth.session_types import (
 from ......application.auth_credentials import unnamed_certificate_credentials
 from ......core.auth_provider import AuthProviderDescription as AuthProviderDescription
 from ......core.auth_provider import AuthProviderKind as AuthProviderKind
-from ......core.config import (
+from ......core.config import Settings
+from ......core.config_support import (
     AEAT_CERTIFICATE_PROTECTED_ORIGIN,
     AEAT_CERTIFICATE_PROTECTED_URL,
-    Settings,
 )
 from ......core.errors.hierarchy import AeatLoginAssertionError
 from .....persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture

@@ -23,7 +23,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from .....application.operations.frontend_contracts import OperationPublicProjectionV1
+from .....application.operations.frontend_projection import OperationPublicProjectionV1
 from .....application.operations.tests.test_public_contracts import _projection
 from .....core.operations import OperationLifecycle, OperationTerminalCondition
 from ..projection import OperationModalViewModelV1, build_operation_modal_view_model

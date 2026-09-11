@@ -14,7 +14,7 @@ import pytest
 
 from ....core.capabilities import ServiceCapability
 from ....core.config import load_settings
-from ....core.parsing import parse_bool
+from ....core.parsing.utils import parse_bool
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..capabilities import CapabilitySource, _parse_bool_fact, resolve_capability
 

@@ -2,30 +2,30 @@
 
 from __future__ import annotations
 
+from datetime import UTC, date, datetime
+from decimal import Decimal
+
 import pytest
 
-from ._action_test_support import (
-    _BUCKET_ID,
-    UTC,
-    BucketEventType,
-    CalculationRevisionCatalogueRepository,
-    Decimal,
-    ManualLedgerTransactionCommand,
-    SecureObjectRepository,
-    TransactionDirection,
-    TransactionLifecycleState,
-    TransactionValidationError,
-    WorkUnitCatalogueRepository,
-    _create_manual_row,
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....domain.buckets.event import BucketEventType
+from ....domain.transactions.enums import TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.errors import TransactionValidationError
+from ..actions_lifecycle import (
     archive_manual_transaction,
-    date,
-    datetime,
-    persist_verified_revision_citing_transaction,
     remove_manual_transaction,
     reset_ledger_catalogue,
     restore_manual_transaction,
     stash_manual_transaction,
-    update_manual_transaction,
+)
+from ..actions_manual import update_manual_transaction
+from ..models import ManualLedgerTransactionCommand
+from .action_fixtures import (
+    _BUCKET_ID,
+    _create_manual_row,
+    persist_verified_revision_citing_transaction,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -1,7 +1,7 @@
-"""Tests for :func:`~core.identity.validate_spanish_tax_id`.
+"""Tests for :func:`~core.identity.tax_id.validate_spanish_tax_id`.
 
-The sibling :func:`~core.identity.validate_identity` parser (covered by
-``test_documents.py``) returns an :class:`~core.identity.IdentityDocument`
+The sibling :func:`~core.identity.documents.validate_identity` parser (covered by
+``test_documents.py``) returns an :class:`~core.identity.documents.IdentityDocument`
 member; ``validate_spanish_tax_id`` returns the canonical identifier string and
 is the surface the encrypted master-key NIF canary, invoice counterparty checks,
 the PDF sanitiser, and the registry schema scalars consume. A non-resident
@@ -16,10 +16,10 @@ NIF. The known-good check letters asserted below are computed from that table,
 not copied from a validator run.
 
 See Also:
-    :mod:`~core.identity._tax_id`
+    :mod:`~core.identity.tax_id`
         Canonical string validator and shared NIF/NIE check-letter helper under
         test.
-    :mod:`~core.identity._documents`
+    :mod:`~core.identity.documents`
         Document-kind parser that shares the same Spanish identifier algorithm.
     :mod:`~domain.calculations.registry._schema_scalars`
         Registry schema consumer that re-raises identity validation failures as
@@ -30,9 +30,9 @@ from __future__ import annotations
 
 import pytest
 
-from ...i18n import tr
-from .._documents import IdentityError
-from .._tax_id import nif_check_letter, validate_spanish_tax_id
+from ...i18n.render import tr
+from ..documents import IdentityError, nif_check_letter
+from ..tax_id import validate_spanish_tax_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -85,7 +85,7 @@ def test_valid_nie_forms_are_normalised(raw: str, expected: str) -> None:
 
 # Every failure class the string validator can raise, paired with the
 # ``errors.identity.*`` key its semantics demand. The keys are chosen to
-# mirror the sibling :mod:`.._documents` parser (the canonical key set for
+# mirror the sibling :mod:`..documents` parser (the canonical key set for
 # these shared failure shapes) plus the string-validator-only triage classes
 # (blank / 9-char length / unrecognised leading character); the expected key
 # is derived from the failure semantics, never read back from the validator.

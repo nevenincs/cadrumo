@@ -24,7 +24,7 @@ from decimal import Decimal
 
 import pytest
 
-from .._atribucion_member import (
+from ..atribucion_member import (
     _decimal,
     _invalid_value_refusals,
     _missing_fields,

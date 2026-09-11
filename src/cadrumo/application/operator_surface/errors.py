@@ -15,7 +15,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
-from ...core.i18n import tr
+from ...core.i18n.render import tr
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ..operator_actions.models import PreconditionVerdict
 from ..operator_actions.preconditions import no_action_precondition_verdict

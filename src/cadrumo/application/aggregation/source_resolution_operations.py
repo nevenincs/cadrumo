@@ -1,6 +1,6 @@
 """Canonical operations over resolved calculation-source envelopes.
 
-The source-resolution contract lives in :mod:`._source_mesh`; this module owns
+The source-resolution contract lives in :mod:`.source_mesh`; this module owns
 the operations that combine resolver results, emit repeated diagnostics and
 provenance, and make unresolved or degraded sources explicit.  Keeping those
 operations together leaves the envelope module focused on its validated data
@@ -17,14 +17,16 @@ from typing import Protocol
 
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
+from ...core.i18n.translatable import Translatable as t
 from ...core.logging import get_logger
 from ...domain.calculations.registry.ids import BindingId, RelationId
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
 from ...domain.calculations.row_source_identity import RowBindingKey, RowSourceIdentity
-from ...domain.modelos.calculation_revision import M303RegimenSimplificadoAnnualSummaryHandoff
+from ...domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoAnnualSummaryHandoff
 from ...domain.modelos.row_models import ModeloDetailRow
-from ._source_mesh import (
+from .errors import AggregationValidationError
+from .source_mesh import (
     BorradorSourceProvenance,
     CalculationSourceDiagnostic,
     CalculationSourceDiagnosticReason,
@@ -32,7 +34,6 @@ from ._source_mesh import (
     CalculationSourceResolution,
     CompositeSourceResolverId,
 )
-from .errors import AggregationValidationError, t
 
 _log = get_logger(__name__)
 

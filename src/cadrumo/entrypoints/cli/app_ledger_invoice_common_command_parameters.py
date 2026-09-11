@@ -18,7 +18,7 @@ from .command_spec import (
 OPTIONAL_IVA_CATEGORY_OPTION: Final[OptionSpec] = OptionSpec(
     name="iva_category",
     declarations=("--iva-category",),
-    value=ValueContract(DeferredTarget("cadrumo.domain.iva.schema", "IvaCategory")),
+    value=ValueContract(DeferredTarget("...domain.iva.schema", "IvaCategory", __package__)),
     default=ParameterDefault.value(None),
     help_key=TranslationKey("cli.app.ledger.invoice.iva_category_help"),
     metavar=None,
@@ -36,7 +36,7 @@ INVOICE_LIFECYCLE_METADATA_OPTIONS: Final[tuple[OptionSpec, ...]] = (
     OptionSpec(
         name="operation_type",
         declarations=("--operation-type",),
-        value=ValueContract(DeferredTarget("cadrumo.core.aggregation", "IntracomOperationType")),
+        value=ValueContract(DeferredTarget("...core.aggregation", "IntracomOperationType", __package__)),
         default=ParameterDefault.value(None),
         help_key=TranslationKey("cli.app.ledger.invoice.operation_type_help"),
         metavar=None,
@@ -136,7 +136,7 @@ INVOICE_INTAKE_WIZARD_CORE_OPTIONS: Final[tuple[OptionSpec, ...]] = (
     OptionSpec(
         name="kind",
         declarations=("--kind",),
-        value=ValueContract(DeferredTarget("cadrumo.domain.iva.classification", "InvoiceKind")),
+        value=ValueContract(DeferredTarget("...domain.iva.classification", "InvoiceKind", __package__)),
         default=ParameterDefault.required(),
         help_key=TranslationKey("cli.app.ledger.invoice.kind_help"),
     ),

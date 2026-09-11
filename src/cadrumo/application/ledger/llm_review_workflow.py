@@ -38,7 +38,7 @@ from ...adapters.outbound.llm.suggestions import (
     OperatorIvaDerivationResult,
 )
 from ...core.config import Settings, load_settings
-from ...core.identity import BucketId
+from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.clock import now
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol

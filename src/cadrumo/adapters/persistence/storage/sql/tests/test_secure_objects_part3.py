@@ -2,28 +2,28 @@
 
 from __future__ import annotations
 
-import pytest
+import hashlib
+import sqlite3
+from datetime import UTC, datetime
+from pathlib import Path
 
-from ._secure_objects_support import (
-    STORAGE_NAMESPACE_REGISTRY,
-    UTC,
-    WORKFLOW_STATE_NAMESPACE,
+import pytest
+from sqlalchemy import event
+
+from ......core.classification.policies import SensitivityClass
+from ...errors import (
     ClassificationError,
     EnvelopeVersionError,
-    Path,
-    SecureObjectRecord,
-    SecureObjectRepository,
     SecureObjectRevisionConflictError,
-    SecureObjectUnreadable,
     SecureObjectUnreadableError,
-    SecureObjectWrite,
-    SensitivityClass,
     StorageValidationError,
+)
+from ...namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from ...secure_object_namespaces import WORKFLOW_STATE_NAMESPACE
+from .._secure_object_records import SecureObjectRecord, SecureObjectUnreadable
+from ..secure_objects import SecureObjectRepository, SecureObjectWrite
+from ._secure_objects_support import (
     _ephemeral_secure_repo,
-    datetime,
-    event,
-    hashlib,
-    sqlite3,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -303,7 +303,7 @@ def test_secure_object_load_many_failure_paths_match_single_load_contracts(tmp_p
     assert len(readable) == 1
     assert readable[0].payload == single.payload
     assert len(unreadable) == 1
-    from ......core.i18n import tr
+    from ......core.i18n.render import tr
 
     assert unreadable[0].schema_version == 2
     assert unreadable[0].reason == tr(

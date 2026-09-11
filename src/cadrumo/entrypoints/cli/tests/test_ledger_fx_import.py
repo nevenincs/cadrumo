@@ -19,10 +19,10 @@ from click.testing import Result
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core.bucket_pointer import resolve_active_bucket_id
-from ....tests import FIXTURES_DIR
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
-from ....tests.cli_runner import invoke_cached_cli
+from ....tests.inventory import FIXTURES_DIR
 from ._isolated_profile_storage_fixtures import live_fx_isolated_backend
+from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["live_fx_isolated_backend"]

@@ -52,6 +52,7 @@ from ..application.ledger.models import ManualLedgerTransactionPatch
 from ..core.casilla_id import CasillaId, validated_casilla_id
 from ..core.period import Period
 from ..domain.calculations.registry.authority import bundled_authority
+from ..domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ..domain.iva.schema import IvaCategory
 from ..domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -66,7 +67,6 @@ from ..domain.transactions.errors import TransactionValidationError
 from ..domain.transactions.models import Transaction, TransactionCatalogue
 from ..domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .filing_evidence import general_m303_filing_evidence
-from .registry_observations import registry_grounded_observations
 from .secure_objects_fixture import secure_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

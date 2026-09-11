@@ -19,11 +19,11 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator, model
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ...core.hashing import canonical_json_bytes, content_hash_hex
-from ...core.identity import ContentDigest, ContentDigestOrAbsent
-from ...core.identity import ProfileId as _ProfileId
+from ...core.identity.digest import ContentDigest, ContentDigestOrAbsent
+from ...core.identity.profile import ProfileId as _ProfileId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.parsing import parse_bool
 from ...core.parsing.dates import parse_iso8601_date
+from ...core.parsing.utils import parse_bool
 from ...core.time.clock import now as _utc_now
 from ...core.time.utc import UtcInstant
 from .errors import UserProfileValidationError

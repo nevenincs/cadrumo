@@ -12,7 +12,7 @@ import pytest
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.severity import BaseSeverity
-from ....core.i18n import Translatable as tr
+from ....core.i18n.translatable import Translatable as tr
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.filing.errors import ModeloBuilderError, ModeloDraftError

@@ -23,16 +23,16 @@ from ....core.config import Settings
 from ....core.image_media_type import ImageMediaType
 from ....domain.transactions.llm import prompt_spec_with_saturation_fields
 from ....domain.user_profile.values import ProfileSetupState
-from ....tests.llm_vision_evidence_support import _png_image, _transaction
+from ....tests.llm_vision_evidence_support import png_image, vision_transaction
 from ....tests.persistence_vision_evidence_support import (
-    _add_evidence,
-    _scan_only_pdf,
+    add_evidence,
+    scan_only_pdf,
 )
 from ....tests.persistence_vision_evidence_support import (
     profile as profile,
 )
 from ....tests.secure_sql import TestRuntimeProfile
-from ...provisioning import ProvisioningPreconditionCondition
+from ...provisioning_contracts import ProvisioningPreconditionCondition
 from ..evidence_errors import PurchaseInvoiceEvidenceInputError
 from ..llm_classification import ResolvedEvidence, _resolve_evidence, classify_with_evidence
 from ..preconditions import LedgerPreconditionCondition
@@ -49,14 +49,14 @@ def test_scan_only_pdf_resolves_to_images_gestor_allowed_no_consent(
     tmp_path: Path,
 ) -> None:
     """A scan-only PDF resolves to declared PNG page images on-host, even for a gestor."""
-    evidence_id = _add_evidence(profile, tmp_path, name="scan.pdf", data=_scan_only_pdf())
+    evidence_id = add_evidence(profile, tmp_path, name="scan.pdf", data=scan_only_pdf())
     # Gestor mode ON and cloud upload NOT permitted: the on-host vision path must
     # still resolve (no cloud consent needed) -- this is the gestor read path.
     gestor: Settings = profile.settings.model_copy(
         update={"cadrumo_evidence_gestor_mode": True, "cadrumo_evidence_cloud_upload_permitted": False},
     )
     resolved = _resolve_evidence(
-        _transaction(evidence_id),
+        vision_transaction(evidence_id),
         bucket_id=_BUCKET_ID,
         settings=gestor,
     )
@@ -80,21 +80,21 @@ def test_image_evidence_resolves_to_images(profile: TestRuntimeProfile, tmp_path
     the bytes. Pinning it here is what stops a PNG travelling to a vision model
     labelled as something else.
     """
-    evidence_id = _add_evidence(profile, tmp_path, name="receipt.png", data=_png_image())
+    evidence_id = add_evidence(profile, tmp_path, name="receipt.png", data=png_image())
     resolved = _resolve_evidence(
-        _transaction(evidence_id),
+        vision_transaction(evidence_id),
         bucket_id=_BUCKET_ID,
         settings=profile.settings,
     )
     assert resolved is not None
     assert resolved.text is None
-    assert [image.base64_data for image in resolved.images] == [base64.b64encode(_png_image()).decode("ascii")]
+    assert [image.base64_data for image in resolved.images] == [base64.b64encode(png_image()).decode("ascii")]
     assert [image.media_type for image in resolved.images] == [ImageMediaType.PNG]
 
 
 @pytest.mark.parametrize(
     ("name", "data_factory"),
-    [("scan.pdf", _scan_only_pdf), ("receipt.png", _png_image)],
+    [("scan.pdf", scan_only_pdf), ("receipt.png", png_image)],
     ids=["scan-pdf", "image"],
 )
 def test_llm_vision_off_refuses_both_on_host_read_modes(
@@ -127,7 +127,7 @@ def test_llm_vision_off_refuses_both_on_host_read_modes(
         ),
     )
 
-    evidence_id = _add_evidence(profile, tmp_path, name=name, data=data_factory())
+    evidence_id = add_evidence(profile, tmp_path, name=name, data=data_factory())
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
         _resolve_evidence(
             _transaction(evidence_id),
@@ -156,7 +156,7 @@ def test_unreachable_reader_preserves_the_provisioning_refusal(
         text=None,
         images=(
             MultimodalImageInput.from_base64(
-                base64.b64encode(_png_image()).decode("ascii"),
+                base64.b64encode(png_image()).decode("ascii"),
                 ImageMediaType.PNG,
             ),
         ),
@@ -165,7 +165,7 @@ def test_unreachable_reader_preserves_the_provisioning_refusal(
 
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
         classify_with_evidence(
-            _transaction("reader-unavailable"),
+            vision_transaction("reader-unavailable"),
             evidence,
             text_classifier=None,
             spec=prompt_spec_with_saturation_fields(year=2025),

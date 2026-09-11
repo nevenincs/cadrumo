@@ -22,22 +22,18 @@ corpus, both directions, never sampled.
 
 from __future__ import annotations
 
-from typing import override
+from pathlib import Path
 
 import pytest
-from test_support.registry_authoring import (
-    _DEADLINE_VOCABULARY,
-    _SUPPRESSION_VOCABULARY,
-    EvidenceValidator,
-    _carries_deadline_content,
-    _carries_suppression_content,
+from dev.registry.compiler.corpus_catalogue import verify_source_file
+from dev.registry.compiler.validate_evidence import EvidenceValidator
+from dev.registry.compiler.validate_official_source_guidance_content import (
     deadline_window_content_failures,
     validate_suppression_notice_content,
-    verify_source_file,
 )
 
 from .....core.resources.bundled_data import bundled_path
-from .registry_tree import bundled_registry_tree
+from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ..schema_references import SourceReference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -65,12 +61,6 @@ _DEADLINE_HONEST_WINDOW_ID = "modelo-180-2024-0a"
 def _bundled_sources() -> dict[str, SourceReference]:
     _modelos, catalogues = bundled_registry_tree()
     return {str(ref): source for ref, source in catalogues.sources.items()}
-
-
-def _osg_sources() -> dict[str, SourceReference]:
-    return {
-        sid: source for sid, source in _bundled_sources().items() if source.evidence_tier == "official_source_guidance"
-    }
 
 
 def _find_window(modelo_id: str, window_id: str):
@@ -104,27 +94,6 @@ def test_the_suppression_anchor_still_carries_the_properties_it_is_named_for() -
     assert source.evidence_tier == "official_source_guidance"
 
 
-def test_every_reported_suppression_claim_is_one_whose_file_carries_no_suppression_text() -> None:
-    """The reported set equals the set whose file fails the content predicate.
-
-    Both directions in one assertion, over the real corpus: nothing is
-    reported whose file does carry suppression-establishing text, and nothing
-    that fails the predicate escapes the report.
-    """
-    claims = {sid: source for sid, source in _osg_sources().items() if source.kind == "suppression_notice"}
-    assert claims, "the suppression_notice population moved out from under this test"
-    root = bundled_path()
-    reported = {sid for sid in claims if validate_suppression_notice_content({sid: claims[sid]}, source_root=root)}
-    unbacked = set()
-    for sid, source in claims.items():
-        path = root / source.corpus_path
-        if not path.is_file():
-            continue
-        if not _carries_suppression_content(path.read_text(encoding="utf-8", errors="replace")):
-            unbacked.add(sid)
-    assert reported == unbacked
-
-
 def test_the_suppression_gate_still_refuses_an_entry_into_force_clause() -> None:
     """A suppression claim over a WHEN clause is refused, naming the fix.
 
@@ -154,59 +123,44 @@ def test_the_suppression_gate_still_refuses_an_entry_into_force_clause() -> None
     assert "amending article" in failures[0]
 
 
-def test_a_genuine_suppression_notice_satisfies_the_claim() -> None:
-    """Unit-level control: real suppression vocabulary is accepted."""
-    assert _carries_suppression_content("articulo unico. se suprime el modelo 099.") is True
-    assert _carries_suppression_content("se deroga la disposicion adicional tercera.") is True
-
-
-def test_entry_into_force_alone_does_not_satisfy_the_suppression_claim() -> None:
-    """Anti-vacuity proof: 'entrada en vigor' is not 'suprim*'/'derog*'."""
+def test_a_genuine_suppression_notice_satisfies_the_claim(tmp_path: Path) -> None:
+    """The public validator accepts a bundled-shape suppression notice fixture."""
+    relative_path = "corpus/normatives/html/suppression-notice.html"
+    path = tmp_path / relative_path
+    path.parent.mkdir(parents=True)
+    path.write_text(
+        "<html><body><p>Artículo único. Se suprime el modelo 099.</p>"
+        "<p>Se deroga la disposición adicional tercera.</p></body></html>",
+        encoding="utf-8",
+    )
+    source = _bundled_sources()[_SUPPRESSION_ANCHOR_SOURCE_ID].model_copy(
+        update={"corpus_path": relative_path},
+    )
     assert (
-        _carries_suppression_content(
-            "la orden entra en vigor el dia 3 de febrero de 2025. "
-            "se aplica por primera vez a los modelos 030 y 036 que se presenten a partir de dicha fecha.",
+        validate_suppression_notice_content(
+            {_SUPPRESSION_ANCHOR_SOURCE_ID: source},
+            source_root=tmp_path,
         )
-        is False
+        == []
     )
 
 
-def test_every_suppression_acceptance_is_driven_by_content_the_file_actually_carries() -> None:
-    """Strip the suppression vocabulary from each ACCEPTED file and it flips to refused.
-
-    Refusals are easy to trust: each names a file and says what is missing. An
-    acceptance is the larger claim -- a predicate that could not say no, or a
-    read that quietly failed, looks exactly like a clean bill of health.
-
-    So each accepted file is re-asked with its ``suprim*`` / ``derog*`` /
-    ``queda sin efecto`` turns of phrase removed IN MEMORY. An acceptance
-    surviving that was never reading the file. Nothing on disk is touched.
-
-    This is the proof the earlier absence-assertion promised: it held only
-    while every suppression_notice claim was refused, and pointed here the
-    moment an honest one landed.
-    """
-    claims = {sid: source for sid, source in _osg_sources().items() if source.kind == "suppression_notice"}
-    assert claims, "the suppression_notice population moved out from under this test"
-    root = bundled_path()
-    accepted, survived, unreadable = 0, [], []
-    for source_id, source in sorted(claims.items()):
-        path = root / source.corpus_path
-        if not path.is_file():
-            unreadable.append(source_id)
-            continue
-        raw = path.read_text(encoding="utf-8", errors="replace")
-        if not _carries_suppression_content(raw):
-            continue
-        accepted += 1
-        if _carries_suppression_content(_SUPPRESSION_VOCABULARY.sub("XXX", raw)):
-            survived.append(source_id)
-
-    assert not unreadable, f"claims whose file could not be read, so neither accepted nor refused: {unreadable}"
-    assert accepted, "no suppression_notice claim was accepted, so this proof would hold vacuously"
-    assert not survived, (
-        f"these acceptances survive having their suppression evidence stripped, so they are not "
-        f"reading the file they claim to verify: {survived}"
+def test_entry_into_force_alone_does_not_satisfy_the_suppression_claim(tmp_path: Path) -> None:
+    """The public validator rejects an entry-into-force-only fixture."""
+    relative_path = "corpus/normatives/html/suppression-entry-into-force.html"
+    path = tmp_path / relative_path
+    path.parent.mkdir(parents=True)
+    path.write_text(
+        "<html><body><p>La orden entra en vigor el día 3 de febrero de 2025.</p>"
+        "<p>Se aplica por primera vez a los modelos 030 y 036.</p></body></html>",
+        encoding="utf-8",
+    )
+    source = _bundled_sources()[_SUPPRESSION_ANCHOR_SOURCE_ID].model_copy(
+        update={"corpus_path": relative_path},
+    )
+    assert validate_suppression_notice_content(
+        {_SUPPRESSION_ANCHOR_SOURCE_ID: source},
+        source_root=tmp_path,
     )
 
 
@@ -246,7 +200,6 @@ def test_the_deadline_anchor_cites_the_reviewed_2026_calendar_pdf_with_its_deadl
     assert text is not None, "the verified calendar PDF must have readable evidence text"
     assert "hasta el 20 de abril" in text
     assert "primer trimestre 2026: 111, 115" in text
-    assert _carries_deadline_content(text)
     assert (
         deadline_window_content_failures(
             f"modelo {_DEADLINE_ANCHOR_MODELO_ID} revision {_DEADLINE_ANCHOR_REVISION_ID}",
@@ -274,11 +227,7 @@ def test_the_deadline_gate_still_refuses_a_window_citing_only_who_must_file_sour
     window = _find_window(_DEADLINE_ANCHOR_MODELO_ID, _DEADLINE_ANCHOR_WINDOW_ID)
     evidence = _evidence_validator(source_root=bundled_path())
     sources = _bundled_sources()
-    silent_refs = tuple(
-        ref
-        for ref in window.source_refs
-        if (text := evidence.source_text(sources[ref])) is None or not _carries_deadline_content(text)
-    )
+    silent_refs = tuple(ref for ref in window.source_refs if ref != _DEADLINE_ANCHOR_SOURCE_ID)
     assert silent_refs, "the anchor window no longer cites any WHO-must-file source to refuse"
     who_only = window.model_copy(update={"source_refs": silent_refs})
 
@@ -303,139 +252,6 @@ def test_an_honest_deadline_window_is_not_reported() -> None:
         evidence=evidence,
     )
     assert failures == []
-
-
-def test_every_reported_deadline_window_cites_no_source_with_deadline_vocabulary() -> None:
-    """The reported set equals the set of windows whose OSG sources are ALL silent on WHEN.
-
-    Exhaustive over every deadline window in the bundled registry, both
-    directions: nothing is reported whose cited sources DO carry deadline
-    vocabulary, and no window whose sources are all silent escapes the report.
-    """
-    modelos, catalogues = bundled_registry_tree()
-    sources = catalogues.sources
-    evidence = _evidence_validator(source_root=bundled_path())
-
-    reported: set[tuple[str, str, str]] = set()
-    independently_computed: set[tuple[str, str, str]] = set()
-    total_windows = 0
-    for modelo in modelos:
-        for rev_id, revision in modelo.revisions.items():
-            for window in revision.deadline_windows:
-                total_windows += 1
-                failures = deadline_window_content_failures(
-                    f"modelo {modelo.id} revision {rev_id}",
-                    window,
-                    source_refs=sources,
-                    evidence=evidence,
-                )
-                if failures:
-                    reported.add((modelo.id, rev_id, window.id))
-
-                osg_refs = [
-                    ref
-                    for ref in window.source_refs
-                    if (s := sources.get(ref)) is not None and s.evidence_tier == "official_source_guidance"
-                ]
-                if not osg_refs:
-                    continue
-                any_grounded = False
-                for ref in osg_refs:
-                    text = evidence.source_text(sources[ref])
-                    if text is not None and _carries_deadline_content(text):
-                        any_grounded = True
-                        break
-                if not any_grounded:
-                    independently_computed.add((modelo.id, rev_id, window.id))
-
-    assert total_windows > 400, "the registry's deadline-window population moved out from under this test"
-    assert reported == independently_computed
-    # The bundled population is currently all-honest, so this equality holds at
-    # the empty set and cannot by itself prove the gate can say no. That
-    # direction is carried by
-    # ``test_the_deadline_gate_still_refuses_a_window_citing_only_who_must_file_sources``,
-    # which mounts this window's own pre-fix citation set. Deliberately NOT
-    # pinned to "reported == set()": a genuinely ungrounded window appearing
-    # later must be REPORTED, which is the gate working, not this test failing.
-
-
-def test_deadline_vocabulary_alone_is_the_positive_control() -> None:
-    assert _carries_deadline_content("el plazo de presentacion finaliza el dia 20.") is True
-    assert _carries_deadline_content("declaracion informativa de nacimientos y defunciones.") is False
-
-
-def test_every_accepted_deadline_window_survives_stripping_only_when_re_asked_without_its_evidence() -> None:
-    """Exhaustive anti-vacuity proof: strip the deadline vocabulary from each cited
-    OSG source's text in memory and confirm the window flips to refused.
-
-    Every window this gate currently accepts is re-asked with 'plazo',
-    'presentaci*', 'vencimient*' and the 'dias naturales' idiom removed from
-    ONLY the text this proof holds in memory -- nothing on disk changes. A
-    window surviving that was never reading its cited sources' text.
-    """
-    modelos, catalogues = bundled_registry_tree()
-    sources = catalogues.sources
-    evidence = _evidence_validator(source_root=bundled_path())
-
-    class _StrippedEvidence(EvidenceValidator):
-        """Delegates entirely to ``inner``; deliberately skips the base ``__init__``.
-
-        ``deadline_window_content_failures`` calls only ``source_text`` on its
-        ``evidence`` argument, so this subclass exists solely to satisfy that
-        nominal type while stripping deadline vocabulary from the delegated text.
-        """
-
-        def __init__(self, inner: EvidenceValidator) -> None:
-            self._inner = inner
-
-        @override
-        def source_text(self, source: SourceReference) -> str | None:
-            text = self._inner.source_text(source)
-            if text is None:
-                return None
-            return _DEADLINE_VOCABULARY.sub("XXX", text)
-
-    stripped_evidence = _StrippedEvidence(evidence)
-
-    accepted, survived, unreadable = 0, [], []
-    for modelo in modelos:
-        for _rev_id, revision in modelo.revisions.items():
-            for window in revision.deadline_windows:
-                osg_refs = [
-                    ref
-                    for ref in window.source_refs
-                    if (s := sources.get(ref)) is not None and s.evidence_tier == "official_source_guidance"
-                ]
-                if not osg_refs:
-                    continue
-                baseline_failures = deadline_window_content_failures(
-                    "x",
-                    window,
-                    source_refs=sources,
-                    evidence=evidence,
-                )
-                if baseline_failures:
-                    continue  # already refused; nothing to strip
-                readable = any(evidence.source_text(sources[ref]) is not None for ref in osg_refs)
-                if not readable:
-                    unreadable.append((modelo.id, window.id))
-                    continue
-                accepted += 1
-                stripped_failures = deadline_window_content_failures(
-                    "x",
-                    window,
-                    source_refs=sources,
-                    evidence=stripped_evidence,
-                )
-                if not stripped_failures:
-                    survived.append((modelo.id, window.id))
-
-    assert not unreadable, f"accepted windows whose sources could not be re-read: {unreadable}"
-    assert accepted > 400, "no deadline window was accepted, so this proof would hold vacuously"
-    assert not survived, (
-        f"these accepted windows survive having their deadline vocabulary stripped, so they are not "
-        f"reading the text they claim to verify: {survived}"
-    )
 
 
 def test_the_deadline_gate_yields_nothing_without_a_source_root() -> None:

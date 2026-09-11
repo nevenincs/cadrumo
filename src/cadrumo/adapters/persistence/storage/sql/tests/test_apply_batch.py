@@ -16,16 +16,14 @@ from pathlib import Path
 
 import pytest
 
+from ......core.classification.policies import SensitivityClass
 from ......core.secure_object_write import SecureObjectWrite
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ...crypto.encrypted_columns import secure_object_key_digest
 from ...errors import SecureObjectRevisionConflictError
 from ...tests.engine_bootstrap import bootstrap_sqlite_engine
 from .._secure_object_records import SecureObjectDeletion
-from ._secure_objects_support import (
-    SecureObjectRepository,
-    SensitivityClass,
-)
+from ..secure_objects import SecureObjectRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

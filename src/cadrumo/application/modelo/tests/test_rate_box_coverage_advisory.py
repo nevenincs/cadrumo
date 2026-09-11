@@ -35,7 +35,7 @@ from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.schema import IvaCategory, IvaRateKind
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
-from ...aggregation import CalculationSourceDiagnostic
+from ...aggregation.source_mesh import CalculationSourceDiagnostic
 from .._calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
 from .._rate_box_advisory import collect_rate_box_coverage_diagnostics
 

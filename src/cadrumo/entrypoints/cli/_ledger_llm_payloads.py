@@ -21,7 +21,7 @@ applies elsewhere, or rejects a model proposal.
 
 from __future__ import annotations
 
-from ...core.identity import TransactionId
+from ...core.identity.transaction_ids import TransactionId
 from ...core.json_contract import OutputSchema
 
 

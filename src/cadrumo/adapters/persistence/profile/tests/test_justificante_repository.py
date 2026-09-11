@@ -15,7 +15,8 @@ from .....core.classification.policies import SensitivityClass
 from .....core.period import Period
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_path
-from .....domain.justificante import Justificante, JustificanteRepositoryProtocol
+from .....domain.justificante.protocols import JustificanteRepositoryProtocol
+from .....domain.justificante.schema import Justificante
 from .....tests.aeat_literal_fixtures import JUSTIFICANTE_VERIFY_PATH_FIXTURE, aeat_url
 from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...storage.envelope.contract import Envelope

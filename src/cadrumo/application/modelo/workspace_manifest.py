@@ -28,7 +28,7 @@ from pydantic.fields import FieldInfo
 from ...core.aggregation import BindingSourceKind
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import content_hash_hex
-from ...core.identity import ContentDigest
+from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.bindings import selector_model_for_source
 from ...domain.calculations.registry.export import derive_export_layouts_from_bindings

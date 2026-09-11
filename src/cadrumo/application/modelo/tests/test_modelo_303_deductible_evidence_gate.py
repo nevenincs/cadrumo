@@ -43,9 +43,9 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....tests import general_m303_filing_evidence
 from ....tests.bucket_aggregation_calculate import calculate_modelo_revision_from_bucket_aggregation
 from ....tests.env_scope import ready_clave_settings
+from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation.ledger_filing_snapshot import (
@@ -167,7 +167,7 @@ def _raw_transaction(provider_id: str, *, booked_date: date, amount: Decimal) ->
     )
 
 
-def _iva_transaction(
+def iva_transaction(
     provider_id: str,
     *,
     direction: TransactionDirection,
@@ -215,6 +215,16 @@ def _iva_transaction(
     )
 
 
+def _iva_transaction(
+    provider_id: str,
+    *,
+    direction: TransactionDirection,
+    taxable_base: Decimal,
+) -> Transaction:
+    """Keep the protected aggregation test's private fixture reach intact."""
+    return iva_transaction(provider_id, direction=direction, taxable_base=taxable_base)
+
+
 def _repositories(
     objects: SecureObjectRepository,
 ) -> tuple[
@@ -250,12 +260,12 @@ def _calculate_irene_revision(
 ]:
     _store_profile(objects)
     wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = _repositories(objects)
-    sale = _iva_transaction(
+    sale = iva_transaction(
         "irene-sale-no-evidence",
         direction=TransactionDirection.INCOMING,
         taxable_base=Decimal("1000.00"),
     )
-    purchase = _iva_transaction(
+    purchase = iva_transaction(
         "irene-purchase-no-evidence",
         direction=TransactionDirection.OUTGOING,
         taxable_base=Decimal("200.00"),
@@ -719,7 +729,7 @@ def test_output_iva_evidence_hint_is_advisory_and_names_current_cli_limit(
     secure_objects: SecureObjectRepository,
 ) -> None:
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    sale = _iva_transaction(
+    sale = iva_transaction(
         "irene-sale-no-evidence",
         direction=TransactionDirection.INCOMING,
         taxable_base=Decimal("1000.00"),

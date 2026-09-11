@@ -1,12 +1,8 @@
-"""Strict renderer-neutral DTOs for the public operation application boundary.
-
-Definitions live in cohesive private modules while this module remains the
-canonical public import surface and preserves historical class identities.
-"""
+"""Validation helpers and local result aliases for public operation contracts."""
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Annotated
+from typing import Annotated
 
 from pydantic import BaseModel, Field
 
@@ -16,70 +12,99 @@ from ...core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
+from .frontend_projection import (
+    OperationNoPendingInteractionV1 as _OperationNoPendingInteractionV1,
+)
+from .frontend_projection import (
+    OperationPublicProjectionV1 as _OperationPublicProjectionV1,
+)
+from .frontend_projection import (
+    OperationReviewAvailableInteractionV1 as _OperationReviewAvailableInteractionV1,
+)
+from .frontend_projection import (
+    OperationUnsupportedInteractionV1 as _OperationUnsupportedInteractionV1,
+)
+from .frontend_requests import (
+    OperationCancellationRefusalV1 as _OperationCancellationRefusalV1,
+)
+from .frontend_requests import (
+    OperationCancellationSuccessV1 as _OperationCancellationSuccessV1,
+)
+from .frontend_requests import (
+    OperationDetachRefusalV1 as _OperationDetachRefusalV1,
+)
+from .frontend_requests import (
+    OperationDetachSuccessV1 as _OperationDetachSuccessV1,
+)
+from .frontend_requests import (
+    OperationObservationRefusalV1 as _OperationObservationRefusalV1,
+)
+from .frontend_requests import (
+    OperationObservationSuccessV1 as _OperationObservationSuccessV1,
+)
+from .frontend_requests import (
+    OperationPublicDiagnosticEventV1 as _OperationPublicDiagnosticEventV1,
+)
+from .frontend_requests import (
+    OperationPublicEffectEventV1 as _OperationPublicEffectEventV1,
+)
+from .frontend_requests import (
+    OperationPublicInteractionEventV1 as _OperationPublicInteractionEventV1,
+)
+from .frontend_requests import (
+    OperationPublicLogEventV1 as _OperationPublicLogEventV1,
+)
+from .frontend_requests import (
+    OperationPublicNoticeEventV1 as _OperationPublicNoticeEventV1,
+)
+from .frontend_requests import (
+    OperationPublicPhaseEventV1 as _OperationPublicPhaseEventV1,
+)
+from .frontend_requests import (
+    OperationPublicProgressEventV1 as _OperationPublicProgressEventV1,
+)
+from .frontend_requests import (
+    OperationPublicReconciliationEventV1 as _OperationPublicReconciliationEventV1,
+)
+from .frontend_requests import (
+    OperationPublicTerminalEventV1 as _OperationPublicTerminalEventV1,
+)
+from .frontend_requests import (
+    OperationResponseApplyRequestV1 as _OperationResponseApplyRequestV1,
+)
+from .frontend_requests import (
+    OperationResponseControlRefusalV1 as _OperationResponseControlRefusalV1,
+)
+from .frontend_requests import (
+    OperationResponseControlSuccessV1 as _OperationResponseControlSuccessV1,
+)
+from .frontend_requests import (
+    OperationResponseMutationSuccessV1 as _OperationResponseMutationSuccessV1,
+)
+from .frontend_requests import (
+    OperationResponseRejectRequestV1 as _OperationResponseRejectRequestV1,
+)
+from .frontend_requests import (
+    OperationResultProjectionRefusalV1 as _OperationResultProjectionRefusalV1,
+)
+from .frontend_requests import (
+    OperationResultProjectionSuccessV1 as _OperationResultProjectionSuccessV1,
+)
+from .frontend_requests import (
+    OperationReviewProjectionRefusalV1 as _OperationReviewProjectionRefusalV1,
+)
+from .frontend_requests import (
+    OperationReviewProjectionSuccessV1 as _OperationReviewProjectionSuccessV1,
+)
+from .frontend_requests import (
+    OperationWorkspaceRefreshTargetRefusalV1 as _OperationWorkspaceRefreshTargetRefusalV1,
+)
+from .frontend_requests import (
+    OperationWorkspaceRefreshTargetSuccessV1 as _OperationWorkspaceRefreshTargetSuccessV1,
+)
 
-if TYPE_CHECKING:
-    from ._frontend_projection import (
-        OperationNoPendingInteractionV1,
-        OperationPublicProgressV1,
-        OperationPublicProjectionV1,
-        OperationReviewAvailableInteractionV1,
-        OperationReviewProjectionReferenceV1,
-        OperationUnsupportedInteractionV1,
-    )
-    from ._frontend_requests import (
-        OperationCancellationRefusalCode,
-        OperationCancellationRefusalV1,
-        OperationCancellationRequestV1,
-        OperationCancellationSuccessV1,
-        OperationCancellationVersionHeader,
-        OperationDetachRefusalCode,
-        OperationDetachRefusalV1,
-        OperationDetachRequestV1,
-        OperationDetachSuccessV1,
-        OperationDetachVersionHeader,
-        OperationObservationRefusalCode,
-        OperationObservationRefusalV1,
-        OperationObservationRequestV1,
-        OperationObservationSuccessV1,
-        OperationObservationVersionHeader,
-        OperationPublicDiagnosticEventV1,
-        OperationPublicEffectEventV1,
-        OperationPublicEventPageV1,
-        OperationPublicInteractionEventV1,
-        OperationPublicLogEventV1,
-        OperationPublicNoticeEventV1,
-        OperationPublicPhaseEventV1,
-        OperationPublicProgressEventV1,
-        OperationPublicReconciliationEventV1,
-        OperationPublicTerminalEventV1,
-        OperationResponseApplyRequestV1,
-        OperationResponseControlRefusalCode,
-        OperationResponseControlRefusalV1,
-        OperationResponseControlRequestV1,
-        OperationResponseControlSuccessV1,
-        OperationResponseControlVersionHeader,
-        OperationResponseMutationSuccessV1,
-        OperationResponseRejectRequestV1,
-        OperationResultProjectionRefusalCode,
-        OperationResultProjectionRefusalV1,
-        OperationResultProjectionRequestV1,
-        OperationResultProjectionSuccessV1,
-        OperationResultProjectionVersionHeader,
-        OperationReviewProjectionRefusalCode,
-        OperationReviewProjectionRefusalV1,
-        OperationReviewProjectionRequestV1,
-        OperationReviewProjectionSuccessV1,
-        OperationReviewProjectionVersionHeader,
-        OperationSubmissionReceiptV1,
-        OperationWorkspaceRefreshTargetRefusalCode,
-        OperationWorkspaceRefreshTargetRefusalV1,
-        OperationWorkspaceRefreshTargetRequestV1,
-        OperationWorkspaceRefreshTargetSuccessV1,
-        OperationWorkspaceRefreshTargetVersionHeader,
-    )
 
-
-def validate_projection_contract(projection: OperationPublicProjectionV1) -> None:
+def validate_projection_contract(projection: _OperationPublicProjectionV1) -> None:
     contract = projection.definition_contract
     if contract.definition_id != projection.definition_id:
         raise ValueError("public projection definition does not match its contract")
@@ -89,13 +114,13 @@ def validate_projection_contract(projection: OperationPublicProjectionV1) -> Non
         raise ValueError("public projection cancellation does not match its definition contract")
 
 
-def validate_projection_settlement(projection: OperationPublicProjectionV1) -> None:
+def validate_projection_settlement(projection: _OperationPublicProjectionV1) -> None:
     _validate_projection_settlement_references(projection)
     _validate_projection_failure(projection)
     _validate_projection_nonterminal_settlement(projection)
 
 
-def _validate_projection_settlement_references(projection: OperationPublicProjectionV1) -> None:
+def _validate_projection_settlement_references(projection: _OperationPublicProjectionV1) -> None:
     references = (projection.result_ref, projection.refusal_ref)
     if all(value is not None for value in references):
         raise ValueError("public projection cannot expose result and refusal references together")
@@ -105,7 +130,7 @@ def _validate_projection_settlement_references(projection: OperationPublicProjec
         raise ValueError("refused public projection requires a refusal reference")
 
 
-def _validate_projection_failure(projection: OperationPublicProjectionV1) -> None:
+def _validate_projection_failure(projection: _OperationPublicProjectionV1) -> None:
     if (
         projection.terminal_condition is not OperationTerminalCondition.FAILED
         and projection.failure_error_code is not None
@@ -117,7 +142,7 @@ def _validate_projection_failure(projection: OperationPublicProjectionV1) -> Non
         get_registered_error_code_by_code(projection.failure_error_code)
 
 
-def _validate_projection_nonterminal_settlement(projection: OperationPublicProjectionV1) -> None:
+def _validate_projection_nonterminal_settlement(projection: _OperationPublicProjectionV1) -> None:
     references = (projection.result_ref, projection.refusal_ref)
     if projection.lifecycle is not OperationLifecycle.TERMINAL and (
         any(value is not None for value in references) or projection.failure_error_code is not None
@@ -125,7 +150,7 @@ def _validate_projection_nonterminal_settlement(projection: OperationPublicProje
         raise ValueError("nonterminal public projection cannot expose settlement references")
 
 
-def validate_projection_cancellation_facts(projection: OperationPublicProjectionV1) -> None:
+def validate_projection_cancellation_facts(projection: _OperationPublicProjectionV1) -> None:
     _validate_unsupported_cancellation_facts(projection)
     _validate_cancellation_request_fact(projection)
     _validate_cancellation_lifecycle(projection)
@@ -133,26 +158,26 @@ def validate_projection_cancellation_facts(projection: OperationPublicProjection
     _validate_cancelled_terminal_fact(projection)
 
 
-def _validate_unsupported_cancellation_facts(projection: OperationPublicProjectionV1) -> None:
+def _validate_unsupported_cancellation_facts(projection: _OperationPublicProjectionV1) -> None:
     if projection.cancellation is OperationCancellation.UNSUPPORTED and (
         projection.cancellation_requested or projection.cancellation_acknowledged
     ):
         raise ValueError("unsupported cancellation cannot carry request or acknowledgement facts")
 
 
-def _validate_cancellation_request_fact(projection: OperationPublicProjectionV1) -> None:
+def _validate_cancellation_request_fact(projection: _OperationPublicProjectionV1) -> None:
     if projection.cancellation_requested != (projection.cleanup_deadline_at is not None):
         raise ValueError("public cleanup deadline and cancellation request must be declared together")
 
 
-def _validate_cancellation_lifecycle(projection: OperationPublicProjectionV1) -> None:
+def _validate_cancellation_lifecycle(projection: _OperationPublicProjectionV1) -> None:
     if projection.lifecycle is OperationLifecycle.CANCELLATION_REQUESTED and not projection.cancellation_requested:
         raise ValueError("cancellation-requested lifecycle requires its declared request fact")
     if projection.cancellation_requested and projection.lifecycle in LIFECYCLES_BEFORE_ANY_CANCELLATION_REQUEST:
         raise ValueError("public cancellation request disagrees with the current lifecycle")
 
 
-def _validate_cancellation_acknowledgement(projection: OperationPublicProjectionV1) -> None:
+def _validate_cancellation_acknowledgement(projection: _OperationPublicProjectionV1) -> None:
     if projection.cancellation_acknowledged and not projection.cancellation_requested:
         raise ValueError("cancellation acknowledgement requires a cancellation request")
     if projection.cancellation_acknowledged and projection.lifecycle not in {
@@ -162,7 +187,7 @@ def _validate_cancellation_acknowledgement(projection: OperationPublicProjection
         raise ValueError("cancellation acknowledgement requires settling or terminal lifecycle")
 
 
-def _validate_cancelled_terminal_fact(projection: OperationPublicProjectionV1) -> None:
+def _validate_cancelled_terminal_fact(projection: _OperationPublicProjectionV1) -> None:
     if (
         projection.terminal_condition is OperationTerminalCondition.CANCELLED
         and not projection.cancellation_acknowledged
@@ -170,213 +195,93 @@ def _validate_cancelled_terminal_fact(projection: OperationPublicProjectionV1) -
         raise ValueError("cancelled public operation requires cancellation acknowledgement")
 
 
-def _load_frontend_contracts() -> None:
-    from . import _frontend_projection as _projection
-    from . import _frontend_requests as _requests
-
-    exports = {
-        "OperationNoPendingInteractionV1": _projection.OperationNoPendingInteractionV1,
-        "OperationPublicProgressV1": _projection.OperationPublicProgressV1,
-        "OperationPublicProjectionV1": _projection.OperationPublicProjectionV1,
-        "OperationReviewAvailableInteractionV1": _projection.OperationReviewAvailableInteractionV1,
-        "OperationReviewProjectionReferenceV1": _projection.OperationReviewProjectionReferenceV1,
-        "OperationUnsupportedInteractionV1": _projection.OperationUnsupportedInteractionV1,
-        "OperationCancellationRefusalCode": _requests.OperationCancellationRefusalCode,
-        "OperationCancellationRefusalV1": _requests.OperationCancellationRefusalV1,
-        "OperationCancellationRequestV1": _requests.OperationCancellationRequestV1,
-        "OperationCancellationSuccessV1": _requests.OperationCancellationSuccessV1,
-        "OperationCancellationVersionHeader": _requests.OperationCancellationVersionHeader,
-        "OperationDetachRefusalCode": _requests.OperationDetachRefusalCode,
-        "OperationDetachRefusalV1": _requests.OperationDetachRefusalV1,
-        "OperationDetachRequestV1": _requests.OperationDetachRequestV1,
-        "OperationDetachSuccessV1": _requests.OperationDetachSuccessV1,
-        "OperationDetachVersionHeader": _requests.OperationDetachVersionHeader,
-        "OperationObservationRefusalCode": _requests.OperationObservationRefusalCode,
-        "OperationObservationRefusalV1": _requests.OperationObservationRefusalV1,
-        "OperationObservationRequestV1": _requests.OperationObservationRequestV1,
-        "OperationObservationSuccessV1": _requests.OperationObservationSuccessV1,
-        "OperationObservationVersionHeader": _requests.OperationObservationVersionHeader,
-        "OperationPublicDiagnosticEventV1": _requests.OperationPublicDiagnosticEventV1,
-        "OperationPublicEffectEventV1": _requests.OperationPublicEffectEventV1,
-        "OperationPublicEventPageV1": _requests.OperationPublicEventPageV1,
-        "OperationPublicInteractionEventV1": _requests.OperationPublicInteractionEventV1,
-        "OperationPublicLogEventV1": _requests.OperationPublicLogEventV1,
-        "OperationPublicNoticeEventV1": _requests.OperationPublicNoticeEventV1,
-        "OperationPublicPhaseEventV1": _requests.OperationPublicPhaseEventV1,
-        "OperationPublicProgressEventV1": _requests.OperationPublicProgressEventV1,
-        "OperationPublicReconciliationEventV1": _requests.OperationPublicReconciliationEventV1,
-        "OperationPublicTerminalEventV1": _requests.OperationPublicTerminalEventV1,
-        "OperationResponseApplyRequestV1": _requests.OperationResponseApplyRequestV1,
-        "OperationResponseControlRefusalCode": _requests.OperationResponseControlRefusalCode,
-        "OperationResponseControlRefusalV1": _requests.OperationResponseControlRefusalV1,
-        "OperationResponseControlRequestV1": _requests.OperationResponseControlRequestV1,
-        "OperationResponseControlSuccessV1": _requests.OperationResponseControlSuccessV1,
-        "OperationResponseControlVersionHeader": _requests.OperationResponseControlVersionHeader,
-        "OperationResponseMutationSuccessV1": _requests.OperationResponseMutationSuccessV1,
-        "OperationResponseRejectRequestV1": _requests.OperationResponseRejectRequestV1,
-        "OperationResultProjectionRefusalCode": _requests.OperationResultProjectionRefusalCode,
-        "OperationResultProjectionRefusalV1": _requests.OperationResultProjectionRefusalV1,
-        "OperationResultProjectionRequestV1": _requests.OperationResultProjectionRequestV1,
-        "OperationResultProjectionSuccessV1": _requests.OperationResultProjectionSuccessV1,
-        "OperationResultProjectionVersionHeader": _requests.OperationResultProjectionVersionHeader,
-        "OperationReviewProjectionRefusalCode": _requests.OperationReviewProjectionRefusalCode,
-        "OperationReviewProjectionRefusalV1": _requests.OperationReviewProjectionRefusalV1,
-        "OperationReviewProjectionRequestV1": _requests.OperationReviewProjectionRequestV1,
-        "OperationReviewProjectionSuccessV1": _requests.OperationReviewProjectionSuccessV1,
-        "OperationReviewProjectionVersionHeader": _requests.OperationReviewProjectionVersionHeader,
-        "OperationSubmissionReceiptV1": _requests.OperationSubmissionReceiptV1,
-        "OperationWorkspaceRefreshTargetRefusalCode": _requests.OperationWorkspaceRefreshTargetRefusalCode,
-        "OperationWorkspaceRefreshTargetRefusalV1": _requests.OperationWorkspaceRefreshTargetRefusalV1,
-        "OperationWorkspaceRefreshTargetRequestV1": _requests.OperationWorkspaceRefreshTargetRequestV1,
-        "OperationWorkspaceRefreshTargetSuccessV1": _requests.OperationWorkspaceRefreshTargetSuccessV1,
-        "OperationWorkspaceRefreshTargetVersionHeader": _requests.OperationWorkspaceRefreshTargetVersionHeader,
-    }
-    for value in exports.values():
-        value.__module__ = __name__
-    globals().update(exports)
-
-
-_load_frontend_contracts()
-
 type OperationPublicPendingInteractionV1 = Annotated[
-    OperationNoPendingInteractionV1 | OperationReviewAvailableInteractionV1 | OperationUnsupportedInteractionV1,
+    _OperationNoPendingInteractionV1 | _OperationReviewAvailableInteractionV1 | _OperationUnsupportedInteractionV1,
     Field(discriminator="disposition"),
 ]
 
 
 type OperationPublicEventV1 = Annotated[
-    OperationPublicPhaseEventV1
-    | OperationPublicProgressEventV1
-    | OperationPublicLogEventV1
-    | OperationPublicEffectEventV1
-    | OperationPublicNoticeEventV1
-    | OperationPublicReconciliationEventV1
-    | OperationPublicDiagnosticEventV1
-    | OperationPublicInteractionEventV1
-    | OperationPublicTerminalEventV1,
+    _OperationPublicPhaseEventV1
+    | _OperationPublicProgressEventV1
+    | _OperationPublicLogEventV1
+    | _OperationPublicEffectEventV1
+    | _OperationPublicNoticeEventV1
+    | _OperationPublicReconciliationEventV1
+    | _OperationPublicDiagnosticEventV1
+    | _OperationPublicInteractionEventV1
+    | _OperationPublicTerminalEventV1,
     Field(discriminator="kind"),
 ]
 
 
 type OperationObservationResultV1 = Annotated[
-    OperationObservationSuccessV1 | OperationObservationRefusalV1,
+    _OperationObservationSuccessV1 | _OperationObservationRefusalV1,
     Field(discriminator="outcome"),
 ]
 
 
 type OperationReviewProjectionResultV1[ReviewProjectionT: BaseModel] = Annotated[
-    OperationReviewProjectionSuccessV1[ReviewProjectionT] | OperationReviewProjectionRefusalV1,
+    _OperationReviewProjectionSuccessV1[ReviewProjectionT] | _OperationReviewProjectionRefusalV1,
     Field(discriminator="outcome"),
 ]
 
 
 type OperationResponseControlResultV1 = Annotated[
-    OperationResponseControlSuccessV1 | OperationResponseControlRefusalV1,
+    _OperationResponseControlSuccessV1 | _OperationResponseControlRefusalV1,
     Field(discriminator="outcome"),
 ]
 
 
 type OperationResponseMutationRequestV1 = Annotated[
-    OperationResponseApplyRequestV1 | OperationResponseRejectRequestV1,
+    _OperationResponseApplyRequestV1 | _OperationResponseRejectRequestV1,
     Field(discriminator="response_action"),
 ]
 
 
 type OperationResponseMutationResultV1 = Annotated[
-    OperationResponseMutationSuccessV1 | OperationResponseControlRefusalV1,
+    _OperationResponseMutationSuccessV1 | _OperationResponseControlRefusalV1,
     Field(discriminator="outcome"),
 ]
 
 
 type OperationCancellationResultV1 = Annotated[
-    OperationCancellationSuccessV1 | OperationCancellationRefusalV1,
+    _OperationCancellationSuccessV1 | _OperationCancellationRefusalV1,
     Field(discriminator="outcome"),
 ]
 
 
 type OperationDetachResultV1 = Annotated[
-    OperationDetachSuccessV1 | OperationDetachRefusalV1,
+    _OperationDetachSuccessV1 | _OperationDetachRefusalV1,
     Field(discriminator="outcome"),
 ]
 
 
 type OperationWorkspaceRefreshTargetResultV1[RefreshTargetT: BaseModel] = Annotated[
-    OperationWorkspaceRefreshTargetSuccessV1[RefreshTargetT] | OperationWorkspaceRefreshTargetRefusalV1,
+    _OperationWorkspaceRefreshTargetSuccessV1[RefreshTargetT] | _OperationWorkspaceRefreshTargetRefusalV1,
     Field(discriminator="outcome"),
 ]
 
 
 type OperationResultProjectionResultV1[ResultProjectionT: BaseModel] = Annotated[
-    OperationResultProjectionSuccessV1[ResultProjectionT] | OperationResultProjectionRefusalV1,
+    _OperationResultProjectionSuccessV1[ResultProjectionT] | _OperationResultProjectionRefusalV1,
     Field(discriminator="outcome"),
 ]
 
 
 __all__ = [
-    "OperationCancellationRefusalCode",
-    "OperationCancellationRefusalV1",
-    "OperationCancellationRequestV1",
     "OperationCancellationResultV1",
-    "OperationCancellationSuccessV1",
-    "OperationCancellationVersionHeader",
-    "OperationDetachRefusalCode",
-    "OperationDetachRefusalV1",
-    "OperationDetachRequestV1",
     "OperationDetachResultV1",
-    "OperationDetachSuccessV1",
-    "OperationDetachVersionHeader",
-    "OperationNoPendingInteractionV1",
-    "OperationObservationRefusalCode",
-    "OperationObservationRefusalV1",
-    "OperationObservationRequestV1",
     "OperationObservationResultV1",
-    "OperationObservationSuccessV1",
-    "OperationObservationVersionHeader",
-    "OperationPublicDiagnosticEventV1",
-    "OperationPublicEffectEventV1",
-    "OperationPublicEventPageV1",
     "OperationPublicEventV1",
-    "OperationPublicInteractionEventV1",
-    "OperationPublicLogEventV1",
-    "OperationPublicNoticeEventV1",
     "OperationPublicPendingInteractionV1",
-    "OperationPublicPhaseEventV1",
-    "OperationPublicProgressEventV1",
-    "OperationPublicProgressV1",
-    "OperationPublicProjectionV1",
-    "OperationPublicReconciliationEventV1",
-    "OperationPublicTerminalEventV1",
-    "OperationResponseApplyRequestV1",
-    "OperationResponseControlRefusalCode",
-    "OperationResponseControlRefusalV1",
-    "OperationResponseControlRequestV1",
     "OperationResponseControlResultV1",
-    "OperationResponseControlSuccessV1",
-    "OperationResponseControlVersionHeader",
     "OperationResponseMutationRequestV1",
     "OperationResponseMutationResultV1",
-    "OperationResponseMutationSuccessV1",
-    "OperationResponseRejectRequestV1",
-    "OperationResultProjectionRefusalCode",
-    "OperationResultProjectionRefusalV1",
-    "OperationResultProjectionRequestV1",
     "OperationResultProjectionResultV1",
-    "OperationResultProjectionSuccessV1",
-    "OperationResultProjectionVersionHeader",
-    "OperationReviewAvailableInteractionV1",
-    "OperationReviewProjectionReferenceV1",
-    "OperationReviewProjectionRefusalCode",
-    "OperationReviewProjectionRefusalV1",
-    "OperationReviewProjectionRequestV1",
     "OperationReviewProjectionResultV1",
-    "OperationReviewProjectionSuccessV1",
-    "OperationReviewProjectionVersionHeader",
-    "OperationSubmissionReceiptV1",
-    "OperationUnsupportedInteractionV1",
-    "OperationWorkspaceRefreshTargetRefusalCode",
-    "OperationWorkspaceRefreshTargetRefusalV1",
-    "OperationWorkspaceRefreshTargetRequestV1",
     "OperationWorkspaceRefreshTargetResultV1",
-    "OperationWorkspaceRefreshTargetSuccessV1",
-    "OperationWorkspaceRefreshTargetVersionHeader",
+    "validate_projection_cancellation_facts",
+    "validate_projection_contract",
+    "validate_projection_settlement",
 ]

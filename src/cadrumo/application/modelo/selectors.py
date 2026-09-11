@@ -18,7 +18,7 @@ from typing import Literal
 from pydantic import BaseModel
 
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ...core.identity import CalculationRevisionId, WorkUnitId
+from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos.errors import ModeloError

@@ -34,7 +34,8 @@ from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...adapters.persistence.storage.secure_object_namespaces import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
 from ...core.config import Settings, load_settings
-from ...core.identity import BucketId, SnapshotId
+from ...core.identity.bucket import BucketId
+from ...core.identity.hex_ids import SnapshotId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import bundled_authority

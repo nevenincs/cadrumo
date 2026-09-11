@@ -12,18 +12,18 @@ from pydantic import ValidationError
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
-from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
-from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
-    IvaLedgerObservation,
-    resolve_ledger_iva_aggregation_binding_values,
-)
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaRateKind
 
+from ..authority import bundled_authority
+from ..binding_selector_utils import selector_as_dict
+from ..bindings import resolve_available_bound_inputs_by_casilla_id
+from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from ..ledger_iva_bindings import (
+    IvaLedgerObservation,
+    resolve_ledger_iva_aggregation_binding_values,
+)
+from ..schema import ModeloRevision
 from ._ledger_iva_aggregation_support import (
     _M303_REPERCUTIDO_GENERAL_BASE_CASILLA,
     _M303_REPERCUTIDO_GENERAL_CUOTA_CASILLA,
@@ -34,13 +34,13 @@ from ._ledger_iva_aggregation_support import (
     _calculate_303_from_observations,
     _observation,
 )
-from ._registry_schema_support import _committed_modelo
+from ._published_authority import artifact_components
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _m303_revision(revision_id: str) -> ModeloRevision:
-    modelo, _catalogues = _committed_modelo("303")
+    modelo, _catalogues = artifact_components("303")
     return modelo.revisions[revision_id]
 
 

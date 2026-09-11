@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from .....tests import production_python_files, repo_relative
+from .....tests.inventory import production_python_files, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

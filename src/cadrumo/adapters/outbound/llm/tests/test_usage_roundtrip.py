@@ -19,7 +19,8 @@ from pathlib import Path
 
 import pytest
 
-from ..models import LLMProvider, UsageRecord
+from .....core.config_support import LLMProvider
+from ..models import UsageRecord
 from ..usage import UsageRecorder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
