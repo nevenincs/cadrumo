@@ -5,14 +5,14 @@ tags:
 date: '2026-09-11'
 modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:f143bc3b344c6d0659d7e7bfa307cae311c9b3f5117c0d9cd5fe28d5ec045d3d'
+body_hash: 'sha256:59cb593611ef7774fa40da1c6255611df0ae1ef744055f4802bb74b76b836b46'
 related:
   - "[[2026-09-09-facts-registry-plan]]"
   - "[[2026-09-09-facts-registry-governed-fact-catalogue-adr]]"
 ---
 # `facts-registry` research: raw IVA authority retirement evidence
 
-The approved S81â€“S85 objective remains correct, but the steps are not implementable as written: each retained IVA legal table requires a new closed fact-family contract, and `domestic_zero` has no general legal grounding. The evidence favors a new ADR followed by an amended plan, then an explicitly approved migration and deletion sequence; removing the raw paths first or coercing them into generic mappings would lose legally operative meaning.
+The approved S81Ã¢â‚¬â€œS85 objective remains correct, but the steps are not implementable as written: each retained IVA legal table requires a new closed fact-family contract, and `domestic_zero` has no general legal grounding. The evidence favors a new ADR followed by an amended plan, then an explicitly approved migration and deletion sequence; removing the raw paths first or coercing them into generic mappings would lose legally operative meaning.
 
 ## Findings
 
@@ -28,14 +28,17 @@ The accepted governed-fact ADR requires a closed family, query, result, provider
 
 Place-of-supply uses ordered references, a distinguished establishing reference, intentional legal silence, and an exempt R99 sentinel: `src/cadrumo/domain/iva/place_of_supply.py:73`. Postal territory distinguishes malformed input from an unmatched valid prefix and combines legal and geography provenance: `src/cadrumo/_data/registry/aeat/iva/territories.toml:14`. Carve-outs encode a three-way disposition and must refuse parent cycles: `src/cadrumo/_data/registry/aeat/iva/territory_carve_outs.toml:79`. Generic mapping or override payloads would conflate those distinct states, so the no-legacy objective requires new precise models rather than adapter preservation.
 
-### S81â€“S85 need an amended deletion matrix
+### S81Ã¢â‚¬â€œS85 need an amended deletion matrix
 
 S81 omits live paths including `src/cadrumo/core/resources/_repos/iva_catalogues.py:36`, the catalogue cache/parser, `IvaCitation` and `IvaRegulation` types, the local catalogue verifier, and their consumers. The S58 audit independently records that raw readers and IVA-local grounding keep sole authority unproven: `.vault/audit/2026-09-11-facts-registry-s58-handoff-audit.md:20`. The amendment must name every deletion target and replace the ledger's obsolete suggestion to project the old `IvaCatalogue` API with direct canonical fact-result consumers or a newly defined canonical result model.
 
 ### Evidence prerequisites prevent unsupported replacement
 
-The legal variants require pinning LIVA Article 3 and Articles 68â€“70 plus category-specific provisions to their actual effective windows. Postal territory also needs a versioned authoritative postcode-prefix source for 35, 38, 51, and 52. Carve-outs need a verified technical-country identity source while retaining `country_names.toml` as technical vocabulary. The current BOE consolidated LIVA text is available at https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740&p=20260228&tn=2, but each proposed fact still needs its own source window and anchored evidence; current facts validation must not be weakened to admit an unsupported broad claim.
+The legal variants require pinning LIVA Article 3 and Articles 68Ã¢â‚¬â€œ70 plus category-specific provisions to their actual effective windows. Postal territory also needs a versioned authoritative postcode-prefix source for 35, 38, 51, and 52. Carve-outs need a verified technical-country identity source while retaining `country_names.toml` as technical vocabulary. The current BOE consolidated LIVA text is available at https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740&p=20260228&tn=2, but each proposed fact still needs its own source window and anchored evidence; current facts validation must not be weakened to admit an unsupported broad claim.
 
+### Consumer impact rules out silent retirement
+
+The primary BOE text limits Article 91.Cuatro's 0% treatment to qualifying donations, not a general domestic rate. The current rate resolver separately identifies exports, intra-Community supplies, donations, and a temporary basic-foods measure as different legal grounds: `src/cadrumo/domain/iva/lookup.py:342`. `DOMESTIC_ZERO` is currently accepted by ledger and Modelo 390 pathways and is deliberately reported as structurally unroutable on Modelo 303 rather than silently discarded: `src/cadrumo/application/aggregation/tests/test_structurally_unroutable_iva_base_categories.py:61`. Therefore neither category retirement nor a blanket zero-rate fact is evidence-preserving. The ADR must first specify selectors that identify a legally supported subcase, or preserve a typed unsupported/refusal result for the unresolved population.
 ## Sources
 
 - `.vault/adr/2026-09-09-facts-registry-governed-fact-catalogue-adr.md:109`
@@ -51,3 +54,4 @@ The legal variants require pinning LIVA Article 3 and Articles 68â€“70 plus
 - `src/cadrumo/_data/registry/aeat/iva/territories.toml:14`
 - `src/cadrumo/_data/registry/aeat/iva/territory_carve_outs.toml:79`
 - https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740&p=20260228&tn=2
+
