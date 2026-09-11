@@ -44,7 +44,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, Final, cast
+from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel, Field
 
@@ -165,7 +165,7 @@ def _resolved_scalar_parameter(
         )
     if not resolved.legal_refs:
         raise TransactionValidationError(f"retención fact {parameter_id!r} has no legal references")
-    return cast("ResolvedScalarFact", resolved)
+    return resolved
 
 
 def _legal_refs_of(

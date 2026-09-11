@@ -4,7 +4,6 @@
 
 from __future__ import annotations
 
-from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._app_live_command_spec_support import (
     _ENCRYPTED_LOCAL_READ_POLICY,
     _LEAF_INVOCATION,

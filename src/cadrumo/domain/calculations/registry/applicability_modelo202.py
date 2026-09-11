@@ -90,7 +90,7 @@ _MODELO_202_NOT_APPLICABLE_REASON = (
 def resolve_modelo_202_art_40_3_incn_threshold(
     *,
     effective_date: date,
-    authority: "ValidatedRegistryAuthority | None" = None,
+    authority: ValidatedRegistryAuthority | None = None,
 ) -> ResolvedScalarFact:
     """Resolve the LIS art. 40.3 INCN threshold with complete authority provenance."""
     if authority is None:
@@ -124,7 +124,7 @@ def modelo_202_modality_from_inputs(
     entity_type: EntityType | None,
     incn_prior_12_months: Decimal | None,
     effective_date: date,
-    authority: "ValidatedRegistryAuthority | None" = None,
+    authority: ValidatedRegistryAuthority | None = None,
 ) -> Modelo202ModalityVerdict:
     """Derive the Modelo 202 modality from the two raw inputs (entity type + INCN).
 

@@ -11,7 +11,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import TYPE_CHECKING, Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, model_validator
 
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.operator_action_enums import (
