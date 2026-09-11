@@ -42,25 +42,14 @@ def test_audit_dead_code_returns_a_valid_dimension_against_the_live_tree() -> No
     assert dimension.report.status is not Status.RED
 
 
-def test_audit_layering_reports_unavailable_rather_than_green_when_the_runner_cannot_run() -> None:
-    """A layering signal that could not be measured is AMBER, never GREEN.
-
-    The verdict axis carries no AMBER -- a contract is BROKEN or KEPT -- so
-    availability is the only AMBER this dimension can produce, and nothing
-    exercised it: audit_layering was reachable from the aggregator alone,
-    which is how its own docstring came to deny the state it returns.
-
-    Driven through a REAL failure rather than a substituted one: a working
-    directory that does not exist makes the production subprocess raise
-    OSError. The claim being pinned is that the shipped path degrades to
-    AMBER, and a stub standing in for the runner would not carry it.
-    """
+def test_audit_layering_reports_the_authoritative_gate_failure_as_red() -> None:
+    """An unavailable import-quality gate is red, never an advisory amber."""
     missing_root = Path(tempfile.gettempdir()) / "cadrumo-layering-no-such-root"
     assert not missing_root.exists(), missing_root
 
     report = audit_layering(missing_root)
 
     assert report.name == "layering"
-    assert report.status is Status.AMBER
-    assert "could not run" in report.headline
-    assert "unavailable" in report.headline
+    assert report.status is Status.RED
+    assert "exited" in report.headline or "could not run" in report.headline
+    assert report.details

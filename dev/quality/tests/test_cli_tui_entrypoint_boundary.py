@@ -1,17 +1,19 @@
-"""AST gate for the one permitted CLI-to-TUI launch seam."""
+"""AST gate for retired CLI/TUI routing vocabulary.
+
+Import edges between the sibling entrypoints are owned by Import Linter and
+proved by the real ``just check-imports`` planted-defect suite.  This retained
+test covers the separate governance predicate for legacy routing names.
+"""
 
 from __future__ import annotations
 
 import ast
 import re
-from pathlib import Path
 
 import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_CLI_ROOT = Path(__file__).parents[3] / "src" / "cadrumo" / "entrypoints" / "cli"
-_ALLOWED_LAUNCHER = _CLI_ROOT / "tui_launcher.py"
 _CROSSING_WORDS = frozenset({"capability", "destination", "outcome", "request", "route", "session"})
 
 
@@ -32,16 +34,10 @@ def _is_retired_crossing(value: str) -> bool:
 
 
 def _violations(tree: ast.AST) -> tuple[str, ...]:
-    """Return route/capability/destination crossings named by one CLI module."""
+    """Return legacy route/capability/destination names from one module."""
     findings: set[str] = set()
     for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom) and node.module and node.module.startswith("cadrumo.entrypoints.tui"):
-            findings.add(f"TUI import: {node.module}")
-        elif isinstance(node, ast.Import):
-            for alias in node.names:
-                if alias.name.startswith("cadrumo.entrypoints.tui"):
-                    findings.add(f"TUI import: {alias.name}")
-        elif isinstance(node, ast.Name) and _is_retired_crossing(node.id):
+        if isinstance(node, ast.Name) and _is_retired_crossing(node.id):
             findings.add(f"retired crossing identifier: {node.id}")
         elif isinstance(node, ast.Attribute) and _is_retired_crossing(node.attr):
             findings.add(f"retired crossing identifier: {node.attr}")
@@ -53,31 +49,11 @@ def _violations(tree: ast.AST) -> tuple[str, ...]:
     return tuple(sorted(findings))
 
 
-def _cli_production_modules() -> tuple[Path, ...]:
-    """Discover the entire CLI lane instead of maintaining a TUI module inventory."""
-    return tuple(path for path in _CLI_ROOT.rglob("*.py") if "tests" not in path.parts and path != _ALLOWED_LAUNCHER)
-
-
-def test_only_the_opaque_launcher_may_name_a_tui_crossing() -> None:
-    failures = {
-        path.relative_to(_CLI_ROOT).as_posix(): _violations(ast.parse(path.read_text(encoding="utf-8")))
-        for path in _cli_production_modules()
-    }
-    failures = {path: findings for path, findings in failures.items() if findings}
-
-    assert failures == {}
-
-
-def test_the_detector_rejects_imports_and_legacy_routing_shape() -> None:
-    """A representative forbidden crossing fails, so the gate has teeth."""
-    fixture = ast.parse(
-        "from cadrumo.entrypoints.tui import app\n"
-        "destination = FullScreenDestination.MODELO_WORK_REVIEW\n"
-        "state['tui_requested'] = True\n"
-    )
+def test_the_detector_rejects_legacy_routing_shape() -> None:
+    """A representative legacy routing shape fails, so the gate has teeth."""
+    fixture = ast.parse("destination = FullScreenDestination.MODELO_WORK_REVIEW\nstate['tui_requested'] = True\n")
 
     findings = _violations(fixture)
 
-    assert any(finding.startswith("TUI import:") for finding in findings)
     assert any("FullScreenDestination" in finding for finding in findings)
     assert any("tui_requested" in finding for finding in findings)

@@ -256,10 +256,11 @@ check-format:
 check-types:
     @uv run --no-sync python -m dev.quality.types
 
-# Verify import structure and hexagonal boundaries. Silent on success.
+# Verify the closed import boundary, Import Linter graph, and import forms.
+# This is the sole contributor-facing import-quality verdict.
 [group('check')]
 check-imports:
-    @uv run --no-sync python -m dev.quality.quiet lint-imports
+    @uv run --no-sync python -m dev.quality.import_gate
 
 # Refuse tracked identity canaries while retaining the value-free advisory report.
 [doc('Verify that tracked content contains no configured identity canary.')]
@@ -1262,11 +1263,11 @@ rag-search QUERY:
 audit-all *ARGS:
     @uv run --no-sync python -m dev.audit.advisory {{ARGS}}
 
-# Monthly code-health report: duplication, layering, complexity,
-# each classified red/amber/green. Composes the scanners above (plus
-# lint-imports) into one contributor-facing verdict. Exits 1 if any
-# dimension is RED; AMBER dimensions are advisory debt, not a gate.
-[doc('Monthly code-health report: duplication, layering, and complexity, each classified red/amber/green.')]
+# Monthly code-health report: duplication, import quality, and complexity,
+# each classified red/amber/green. Its import dimension consumes the result of
+# `just check-imports`; this broader report is not a second import verdict.
+# Exits 1 if any dimension is RED; AMBER dimensions are advisory debt, not a gate.
+[doc('Monthly code-health report: duplication, import quality, and complexity, each classified red/amber/green.')]
 [group('audit')]
 audit-health-report *ARGS:
     @uv run --no-sync python -m dev.audit.report {{ARGS}}
