@@ -195,43 +195,19 @@ def test_the_filing_capability_check_passes_a_revision_that_can_emit() -> None:
     _check_snapshot_filing_capability(modelo, resolved)
 
 
-def test_loader_tier_snapshots_in_this_module_carry_no_compiled_orden_authority() -> None:
-    """These snapshots are partial, and nothing here may assert on Orden data.
+def test_compile_tier_snapshots_in_this_module_carry_the_published_compiled_catalogues() -> None:
+    """The unvalidated tree these snapshots use is the one the authority publishes.
 
-    The tests above build snapshots from compiler-tier catalogues so they survive a
-    refusing full-tree validation. That trade is deliberate, and this is its cost:
-    ``compile_supplementary_ordenes`` runs during AUTHORITY construction, not during
-    the compile, so a loader-tier ``RegistryCatalogues`` carries an empty
-    ``supplementary_ordenes`` and every snapshot built from one inherits it.
-
-    Asserted rather than left in a comment. An invariant in a comment is a
-    convention, and conventions break at the next caller: an Orden assertion added
-    to this file would read an empty authority and pass for the wrong reason. This
-    fails instead -- both if someone asserts on Orden data here, and if loader-tier
-    catalogues ever start carrying ordenes, which would make the warning stale.
+    The tests above build snapshots from compile-tier catalogues so they survive a
+    refusing full-tree validation. That trade costs nothing only while the
+    unvalidated compile assembles the same catalogues the validated authority
+    publishes; a snapshot built from a thinner tree would read an empty Orden
+    authority or fact catalogue and pass an assertion here for the wrong reason.
     """
-    modelos, catalogues = _committed_registry()
+    _modelos, catalogues = _committed_registry()
+    published = compile_validated_authority(bundled_path("registry", "aeat"), bundled_path()).catalogues
 
-    assert not catalogues.supplementary_ordenes, (
-        "loader-tier catalogues now carry compiled ordenes, so the reason these tests avoid "
-        "asserting on Orden data no longer holds. Re-read the trade rather than deleting this."
-    )
-
-    modelo = next(candidate for candidate in modelos if candidate.id == "182")
-    revision = modelo.revisions["2025"]
-    reviewed = revision.model_copy(
-        update={
-            "review_status": RevisionReviewStatus.OPERATOR_REVIEWED,
-            "reviewed_by": "operator",
-            "reviewed_at": date(2026, 5, 5),
-            # A newer gate refuses an applicability-grade revision before the
-            # filing-capability check runs. This test is ABOUT that later check,
-            # so the fixture clears the grade gate deliberately rather than
-            # asserting the refusal that now arrives first.
-            "authority_grade": RegistryAuthorityGrade.FILING,
-        },
-    )
-    mutated = modelo.model_copy(update={"revisions": {**modelo.revisions, reviewed.id: reviewed}})
-
-    with pytest.raises(RegistryValidationError, match="declares no export layout"):
-        build_validated_snapshot(mutated, catalogues, filing_year=2025, period="0A", revision_id="2025")
+    assert catalogues.supplementary_ordenes, "compile-tier catalogues carry no compiled Orden authority"
+    assert catalogues.supplementary_ordenes == published.supplementary_ordenes
+    assert catalogues.facts.facts, "compile-tier catalogues carry no governed facts"
+    assert catalogues.facts == published.facts

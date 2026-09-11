@@ -82,8 +82,8 @@ def test_modelo_202_modalidad_chains_calculate_for_synthetic_inputs(
         inputs=inputs,
         date_context={"filing_period": date(2026, 12, 31)},
         binding_values={
-            "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores": Decimal("3000"),
-            "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior": inputs[_M202_CUOTA_BASE_CASILLA],
+            "modelo-202-pagos-fraccionados-anteriores": Decimal("3000"),
+            "modelo-202-cuota-base-ejercicio-anterior": inputs[_M202_CUOTA_BASE_CASILLA],
         },
     )
     assert {str(casilla_id) for casilla_id in inputs} <= declared_ids
@@ -153,7 +153,7 @@ def test_modelo_202_2023_2024_total_correcciones_aumentos_excludes_complementari
         inputs=inputs,
         date_context={"filing_period": date(2024, 12, 31)},
         binding_values={
-            "modelo-202-2023-2024-pagos-fraccionados-anteriores": Decimal("0"),
+            "modelo-202-pagos-fraccionados-anteriores": Decimal("0"),
         },
     )
 
@@ -222,14 +222,14 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
                 "DP200014:01034": Decimal("0"),
             },
         ),
-        enum_binding_values={"modelo-200-2024-profile-legal-entity-form": "sl"},
+        enum_binding_values={"modelo-200-profile-legal-entity-form": "sl"},
         binding_values={
-            "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
-            "modelo-200-2024-profile-incn-prior-12-months": Decimal("10000000"),
-            "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
-            "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
-            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
-            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
+            "modelo-200-profile-new-entity-flag": Decimal("0"),
+            "modelo-200-profile-incn-prior-12-months": Decimal("10000000"),
+            "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
+            "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
+            "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
+            "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
         },
         date_context={"filing_period": date(2024, 12, 31)},
         relation_values=relation_values,

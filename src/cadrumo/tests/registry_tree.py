@@ -5,8 +5,9 @@ from __future__ import annotations
 from functools import cache
 from typing import TYPE_CHECKING
 
+from dev.registry.compiler.authority import compile_registry_tree
+
 from ..core.resources.bundled_data import bundled_path
-from dev.registry.compiler.loader import load_registry_tree
 
 if TYPE_CHECKING:
     from ..domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
@@ -38,10 +39,15 @@ def bundled_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatal
     originals untouched. Were they mutable this accessor would be a hazard --
     one test's edit would reach every later test in the worker.
 
+    The catalogues come from ``compile_registry_tree``, the one assembly the
+    authority publishes: the raw tree load alone carries no governed facts,
+    convenio authority or annual Orden supplements, so a validator handed its
+    catalogues would judge a registry that is never published.
+
     Returns:
         The compiled modelos and the shared registry catalogues.
     """
-    return load_registry_tree(bundled_path("registry", "aeat"))
+    return compile_registry_tree(bundled_path("registry", "aeat"), bundled_path())
 
 
 __all__ = ["bundled_registry_tree"]
