@@ -54,18 +54,17 @@ from pydantic import ValidationError
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
-
-from .._paths import REPO_ROOT, UTF_8
-from ..docs.download_matrix import load_descriptor, required_evidence_rows
-from ..packaging.cohort_manifest import load_release_cohort
-from ..packaging.evidence import (
+from dev._paths import REPO_ROOT, UTF_8
+from dev.docs.download_matrix import load_descriptor, required_evidence_rows
+from dev.packaging.cohort_manifest import load_release_cohort
+from dev.packaging.evidence import (
     DistributionEvidence,
     EvidenceStatus,
     PackagingSmokeManifest,
     load_distribution_evidence,
 )
-from ..packaging.python_cohort import load_python_cohort
-from ..source_tree import content_digest, repository_files
+from dev.packaging.python_cohort import load_python_cohort
+from dev.source_tree import content_digest, repository_files
 
 _UTF_8: Final = UTF_8
 _VERSION_RE: Final = re.compile(r"^__version__\s*=\s*[\"']([^\"']+)[\"']", re.MULTILINE)

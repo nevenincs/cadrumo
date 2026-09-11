@@ -5,7 +5,7 @@ id = 'generated-modelo-222-2025-y-siguientes-fichero'
 id = 'm222-page-01'
 record_type = 'page-01'
 order = 0
-encoding = "iso-8859-1"
+encoding = 'iso-8859-1'
 line_ending = 'crlf'
 required = true
 
@@ -306,6 +306,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'four-digit-year'
 legal_refs = [
     'orden-hfp-227-2017:art-2',
@@ -359,6 +360,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 legal_refs = [
     'orden-hfp-227-2017:art-2',
     'ley-27-2014:art-40',
@@ -529,6 +531,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'enumerated-digits'
 allowed_values = [
     '0',
@@ -571,6 +574,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'orden-hfp-227-2017:art-2',
     'ley-27-2014:art-40',
@@ -589,6 +593,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'orden-hfp-227-2017:art-2',
     'ley-27-2014:art-40',
@@ -607,6 +612,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'orden-hfp-227-2017:art-2',
     'ley-27-2014:art-40',
@@ -619,12 +625,12 @@ offset = 304
 length = 17
 kind = 'casilla'
 casilla_id = '04'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
+design_type = 'N'
 legal_refs = [
     'orden-hfp-227-2017:art-2',
     'ley-27-2014:art-40',
@@ -643,6 +649,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'orden-hfp-227-2017:art-2',
     'ley-27-2014:art-40',
@@ -661,6 +668,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'orden-hfp-227-2017:art-2',
     'ley-27-2014:art-40',
@@ -679,6 +687,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'orden-hfp-227-2017:art-2',
     'ley-27-2014:art-40',
@@ -697,6 +706,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'orden-hfp-227-2017:art-2',
     'ley-27-2014:art-40',
@@ -715,6 +725,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'orden-hfp-227-2017:art-2',
     'ley-27-2014:art-40',
@@ -733,6 +744,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'orden-hfp-227-2017:art-2',
     'ley-27-2014:art-40',
@@ -751,6 +763,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'orden-hfp-227-2017:art-2',
     'ley-27-2014:art-40',
@@ -769,6 +782,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'orden-hfp-227-2017:art-2',
     'ley-27-2014:art-40',
@@ -787,6 +801,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'orden-hfp-227-2017:art-2',
     'ley-27-2014:art-40',
@@ -805,6 +820,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'orden-hfp-227-2017:art-2',
     'ley-27-2014:art-40',
@@ -817,12 +833,12 @@ offset = 491
 length = 17
 kind = 'casilla'
 casilla_id = '10'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
+design_type = 'N'
 legal_refs = [
     'orden-hfp-227-2017:art-2',
     'ley-27-2014:art-40',
@@ -841,6 +857,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'orden-hfp-227-2017:art-2',
     'ley-27-2014:art-40',
@@ -859,6 +876,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'orden-hfp-227-2017:art-2',
     'ley-27-2014:art-40',
@@ -871,12 +889,12 @@ offset = 542
 length = 17
 kind = 'casilla'
 casilla_id = '13'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
+design_type = 'N'
 legal_refs = [
     'orden-hfp-227-2017:art-2',
     'ley-27-2014:art-40',
@@ -889,12 +907,12 @@ offset = 559
 length = 17
 kind = 'casilla'
 casilla_id = '44'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
+design_type = 'N'
 legal_refs = [
     'orden-hfp-227-2017:art-2',
     'ley-27-2014:art-40',
@@ -907,12 +925,12 @@ offset = 576
 length = 17
 kind = 'casilla'
 casilla_id = '45'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
+design_type = 'N'
 legal_refs = [
     'orden-hfp-227-2017:art-2',
     'ley-27-2014:art-40',
@@ -931,6 +949,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'orden-hfp-227-2017:art-2',
     'ley-27-2014:art-40',
@@ -949,6 +968,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'orden-hfp-227-2017:art-2',
     'ley-27-2014:art-40',
@@ -967,6 +987,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'orden-hfp-227-2017:art-2',
     'ley-27-2014:art-40',
@@ -985,6 +1006,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'orden-hfp-227-2017:art-2',
     'ley-27-2014:art-40',
@@ -1003,6 +1025,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'orden-hfp-227-2017:art-2',
     'ley-27-2014:art-40',

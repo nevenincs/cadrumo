@@ -44,9 +44,10 @@ from pathlib import Path
 
 import pytest
 
-from ..._paths import REPO_ROOT
-from ...sanitizer.residual_identity import ResidualKind
-from ...source_tree import repository_files as _enumerated_repository_files
+from dev._paths import REPO_ROOT
+from dev.sanitizer.residual_identity import ResidualKind
+from dev.source_tree import repository_files as _enumerated_repository_files
+
 from .._tree_scan import (
     BLOCKING_KINDS,
     BLOCKING_TRACKING,

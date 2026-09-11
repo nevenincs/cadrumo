@@ -10,8 +10,6 @@ from __future__ import annotations
 
 import pytest
 
-from dev.registry.compiler.authority import compiled_bundled_authority
-
 from ..analysis.sign_position_coverage import (
     design_sign_positions,
     screen_authority,
@@ -19,6 +17,7 @@ from ..analysis.sign_position_coverage import (
     undeclared_sign_positions,
     unreadable_designs,
 )
+from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

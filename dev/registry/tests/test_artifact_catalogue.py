@@ -29,8 +29,9 @@ from cadrumo.domain.calculations.registry.artifact_catalogue import (
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
-from dev.registry.compiler.loader import load_registry_tree
-from dev.registry.compiler.validator import RegistryValidator
+
+from ..compiler.loader import load_registry_tree
+from ..compiler.validator import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

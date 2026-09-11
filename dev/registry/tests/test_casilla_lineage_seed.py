@@ -10,7 +10,6 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..analysis.casilla_lineage_seed import (
     LineagePlan,
@@ -22,6 +21,7 @@ from ..analysis.casilla_lineage_seed import (
     parse_design_inventory,
     residual_plan,
 )
+from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

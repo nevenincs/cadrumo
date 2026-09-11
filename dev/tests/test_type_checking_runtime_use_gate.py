@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from ..quality.type_checking_runtime_use_scan import (
+from dev.quality.type_checking_runtime_use_scan import (
     scan_paths_for_type_only_runtime_uses,
     scan_type_only_runtime_uses,
 )

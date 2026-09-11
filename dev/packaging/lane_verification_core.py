@@ -41,9 +41,9 @@ from pathlib import Path
 from typing import Any, Final
 
 from cadrumo.core.directory_scan import iter_directory, scan_directory
+from dev._paths import REPO_ROOT, UTF_8
+from dev.source_tree import repository_files, snapshot
 
-from .._paths import REPO_ROOT, UTF_8
-from ..source_tree import repository_files, snapshot
 from ._distribution_limits import PYPI_FILE_CAP_BYTES
 from ._distribution_names import normalise_distribution_name
 from ._proof_ledger import (

@@ -47,8 +47,7 @@ from cadrumo.core.manual_corpus_sidecar import (
     ManualCorpusTextSchemaVersion,
     ManualCorpusTextSidecar,
 )
-
-from .._paths import REPO_ROOT, UTF_8
+from dev._paths import REPO_ROOT, UTF_8
 
 _UTF_8: Final[str] = UTF_8
 _MANUAL_CORPUS_TEXT_SCHEMA_VERSION: Final[ManualCorpusTextSchemaVersion] = 2

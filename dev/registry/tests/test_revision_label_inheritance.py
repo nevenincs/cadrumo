@@ -24,7 +24,6 @@ from pathlib import Path
 from typing import NamedTuple
 
 import pytest
-from dev.registry.compiler.loader import load_modelo_directory
 
 from cadrumo.core.i18n import MissingTranslationError, lookup_translation
 from cadrumo.domain.calculations.registry.authority import bundled_authority
@@ -36,6 +35,8 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
 )
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
+from ..compiler.loader import load_modelo_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

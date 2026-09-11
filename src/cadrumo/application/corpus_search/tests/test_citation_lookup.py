@@ -6,9 +6,8 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from dev.registry.pipeline.authority_publication import publish_authority_candidate
+from test_support.registry_authoring import publish_authority_candidate
 
-from ....core.ed25519_signing import Ed25519KeypairHex, generate_ed25519_keypair_hex
 from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry import authority as authority_module
 from ..citation_lookup import CitationLookup, bundled_citation_lookup
@@ -19,32 +18,28 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 @pytest.fixture(scope="session", autouse=True)
 def compose_runtime_ports() -> Iterator[None]:
-    """Keep this signed-artifact test independent of application port setup."""
+    """Keep this published-artifact test independent of application port setup."""
     yield
 
 
 @pytest.fixture(scope="module")
-def _published_authority(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, Ed25519KeypairHex]:
-    """Publish the real compiler candidate as a signed test authority artifact."""
+def _published_authority(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """Publish the real compiler candidate as a test authority artifact."""
     root = tmp_path_factory.mktemp("citation-authority")
     artifact_path = root / "registry" / "authority" / "authority.json"
     artifact_path.parent.mkdir(parents=True)
-    keys = generate_ed25519_keypair_hex()
     publish_authority_candidate(
         registry_root=bundled_path("registry", "aeat"),
         source_root=bundled_path(),
         artifact_path=artifact_path,
-        signing_private_key_hex=keys.private_key_hex,
     )
-    return root, keys
+    return root
 
 
 @pytest.fixture
-def lookup(_published_authority: tuple[Path, Ed25519KeypairHex], monkeypatch: pytest.MonkeyPatch) -> CitationLookup:
+def lookup(_published_authority: Path, monkeypatch: pytest.MonkeyPatch) -> CitationLookup:
     """Read the staged publication through the same runtime authority boundary."""
-    root, keys = _published_authority
-    monkeypatch.setattr(authority_module, "_bundled_path", lambda *parts: root.joinpath(*parts))
-    monkeypatch.setattr(authority_module, "_BUNDLED_AUTHORITY_VERIFICATION_PUBLIC_KEY_HEX", keys.public_key_hex)
+    monkeypatch.setattr(authority_module, "_bundled_path", lambda *parts: _published_authority.joinpath(*parts))
     return bundled_citation_lookup()
 
 

@@ -14,20 +14,20 @@ from typing import Protocol
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
-from .orden_applicability import RevisionLegalApplicabilityWindow, validate_orden_aplicabilidad
-from .revision_context import records_by_id
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
 from .export import derive_export_layouts_from_bindings
 from .ids import RevisionId
 from .legal import verify_legal_reference
+from .orden_applicability import RevisionLegalApplicabilityWindow, validate_orden_aplicabilidad
 from .period_selector_match import registry_period_for_request
+from .reference_checks import check_all_id_references
+from .revision_context import records_by_id
 from .schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot, filing_period_from_scope
 from .schema_base import DateAxis
 from .schema_references import LegalReference, SourceReference, governed_period_span
 from .schema_surfaces import CasillaDefinition
 from .temporal import select_revision
 from .validate_cross_domain_snapshot import REQUIRED_CROSS_DOMAIN_CHECK_IDENTITIES
-from .reference_checks import check_all_id_references
 from .validate_revision_identity import revision_reference_identity_failures
 
 

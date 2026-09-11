@@ -25,8 +25,8 @@ from __future__ import annotations
 
 import pytest
 
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.conformance.coverage import ConstructEvidenceLedger, audit_registry_construct_evidence
+from ...compiler.authority import compiled_bundled_authority
+from ..coverage import ConstructEvidenceLedger, audit_registry_construct_evidence
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 

@@ -22,13 +22,14 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.registry_snapshot import build_snapshot
 from cadrumo.domain.calculations.registry._snapshot_internals import _SUBSTANTIVE_LAW_KINDS, collect_snapshot_ref_ids
-from dev.registry.compiler._validate_orden_aplicabilidad import RevisionLegalApplicabilityWindow
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
-from dev.registry.tests._registry_schema_support import _committed_modelo, _committed_snapshot
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ..compiler._validate_orden_aplicabilidad import RevisionLegalApplicabilityWindow
+from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

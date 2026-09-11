@@ -42,10 +42,9 @@ import tomllib
 
 import pytest
 
+from dev._paths import REPO_ROOT
+from dev.quality.unread_inputs import report_unread
 from dev.registry.compiler.authority import compiled_bundled_authority
-
-from .._paths import REPO_ROOT
-from ..quality.unread_inputs import report_unread
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.timeout(600)]
 """The 600-second budget is contention, not a slow test.

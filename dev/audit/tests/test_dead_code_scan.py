@@ -14,7 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..dead_code import DeadCodeOutcome, offered_module_population, run_dead_code_scan
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]

@@ -21,6 +21,7 @@ from ....core.filing_projection_ref import (
     filing_projection_ref_casilla_id,
     hydrate_filing_projection_ref,
 )
+from ....core.frozen_mapping import FROZEN_MAPPING
 from ....core.identity import ContentDigest
 from ..export_field_kind import CasillaFieldKind, CasillaFieldKindValue
 from .errors import RegistryValidationError
@@ -827,7 +828,9 @@ class ExportRecordDefinition(RegistryModel):
     required: bool = True
     repeat: ExportRecordRepeatField | None = None
     binding_record: str | None = None
-    row_field_casilla_ids: Mapping[str, CasillaId] = Field(default_factory=dict)
+    row_field_casilla_ids: Annotated[Mapping[str, CasillaId], FROZEN_MAPPING] = Field(
+        default_factory=dict, validate_default=True
+    )
     discriminator: RecordDiscriminator | None = None
     requires_positive_casilla_id: CasillaId | None = None
     fields: tuple[ExportFieldDefinition, ...] = Field(default_factory=tuple)

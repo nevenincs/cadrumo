@@ -14,7 +14,8 @@ import tomllib
 
 import pytest
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..security import (
     _PYTHON_LEGACY_COMPATIBILITY_RULE_IDS,
     SecurityOutcome,

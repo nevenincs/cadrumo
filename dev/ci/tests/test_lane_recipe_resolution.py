@@ -22,7 +22,8 @@ from typing import Final
 
 import pytest
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..lane_reachability import _recipe_bodies, _recipes_invoked_by, _workflow_run_steps
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

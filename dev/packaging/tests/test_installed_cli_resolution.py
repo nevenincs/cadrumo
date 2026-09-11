@@ -24,8 +24,9 @@ from pathlib import Path
 
 import pytest
 
-from ..._paths import REPO_ROOT
-from ...source_tree import content_digest, repository_files
+from dev._paths import REPO_ROOT
+from dev.source_tree import content_digest, repository_files
+
 from ..hashing import sha256_path
 from ..installed_mcp_oracle import run_installed_mcp_oracle
 from ..installed_tax_oracle import EXPECTED_LEGAL_REF

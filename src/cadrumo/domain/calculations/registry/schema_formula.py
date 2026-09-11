@@ -20,6 +20,7 @@ from pydantic import (
 )
 
 from ....core.casilla_id import CasillaId
+from ....core.frozen_mapping import FROZEN_MAPPING
 from ....core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ._formula_operator_contracts import require_formula_operator_arity
 from .errors import RegistryValidationError
@@ -151,7 +152,7 @@ class FormulaExpression(RegistryModel):
     parameter: ParameterId | None = None
     relation: RelationId | None = None
     literal: DecimalValue | None = None
-    dispatch_table: Mapping[str, ParameterId] | None = None
+    dispatch_table: Annotated[Mapping[str, ParameterId], FROZEN_MAPPING] | None = None
 
     @model_validator(mode="before")
     @classmethod

@@ -7,9 +7,9 @@ import ast
 import pytest
 
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
-from dev.registry.compiler.authority import compiled_bundled_authority
+from dev._paths import REPO_ROOT
 
-from ..._paths import REPO_ROOT
+from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

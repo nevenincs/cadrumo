@@ -11,10 +11,10 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.maintenance_support import resolved_export_endpoints
 
 from ..analysis.wire_type_compatibility import transitions_for_revision
+from ..compiler.authority import compiled_bundled_authority
+from ..maintenance_support import resolved_export_endpoints
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

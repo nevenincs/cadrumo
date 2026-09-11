@@ -41,16 +41,12 @@ def _module_binding_names(source: str) -> set[str]:
 
 def test_retired_local_numeric_interpretation_census_detects_a_legacy_binding() -> None:
     source = "def iva_rate_slot_percentage():\n    pass\n"
-    assert _module_binding_names(source) & _RETIRED_LOCAL_NUMERIC_INTERPRETATION_NAMES == {
-        "iva_rate_slot_percentage"
-    }
+    assert _module_binding_names(source) & _RETIRED_LOCAL_NUMERIC_INTERPRETATION_NAMES == {"iva_rate_slot_percentage"}
 
 
 def test_retired_local_numeric_interpretation_census_detects_a_legacy_assignment() -> None:
     source = '_NUMERIC_RATE_PREFIX = "RATE_"\n'
-    assert _module_binding_names(source) & _RETIRED_LOCAL_NUMERIC_INTERPRETATION_NAMES == {
-        "_NUMERIC_RATE_PREFIX"
-    }
+    assert _module_binding_names(source) & _RETIRED_LOCAL_NUMERIC_INTERPRETATION_NAMES == {"_NUMERIC_RATE_PREFIX"}
 
 
 def test_persisted_rate_taxonomy_exposes_no_retired_local_numeric_interpretation() -> None:

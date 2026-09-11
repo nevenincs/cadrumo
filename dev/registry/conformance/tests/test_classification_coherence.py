@@ -38,7 +38,8 @@ from cadrumo.domain.calculations.registry.schema_references import PeriodSelecto
 from cadrumo.domain.calculations.registry.schema_revision_members import DependencyClassificationDefinition
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 from cadrumo.tests.registry_tree import bundled_registry_tree
-from dev.registry.conformance.registry_classification_coherence import (
+
+from ..registry_classification_coherence import (
     _MAX_DETAIL_LENGTH,
     _TRUNCATION_SUFFIX,
     ClassificationCoherenceFinding,

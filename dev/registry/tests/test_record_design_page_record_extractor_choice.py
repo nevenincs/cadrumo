@@ -35,15 +35,16 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from dev.registry.compiler.record_design import extract_record_design
-from dev.registry.compiler.record_design_pdf_orchestration import _better_page_record_lines
-from dev.registry.compiler.record_design_pdf_repairs import collapse_stuttered_row_prefix, join_wrapped_row_descriptions
-from dev.registry.compiler.record_design_pdf_visual import (
+
+from ..compiler.record_design import extract_record_design
+from ..compiler.record_design_pdf_orchestration import _better_page_record_lines
+from ..compiler.record_design_pdf_repairs import collapse_stuttered_row_prefix, join_wrapped_row_descriptions
+from ..compiler.record_design_pdf_visual import (
     extract_pdf_text_lines,
     extract_pdfplumber_text_lines,
     uses_page_record_layout,
 )
-from dev.registry.compiler.record_design_sources import EMPTY_CORRECTIONS
+from ..compiler.record_design_sources import EMPTY_CORRECTIONS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -7,8 +7,9 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryFailureCondition, RegistryValidationError
-from dev.registry.tests._revision_span_boundary_support import _boundaries_for
-from dev.registry.tests._revision_span_design_support import _declared_revisions, _filing_revisions
+
+from ._revision_span_boundary_support import _boundaries_for
+from ._revision_span_design_support import _declared_revisions, _filing_revisions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

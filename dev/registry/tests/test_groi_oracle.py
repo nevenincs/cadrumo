@@ -28,16 +28,16 @@ from cadrumo.domain.calculations.registry.remote_state_guard import (
 )
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
 from cadrumo.tests.aeat_literal_fixtures import UNKNOWN_AEAT_STATE_SURFACE_URL_CANARY, aeat_host
-from dev.registry.maintenance_support import LiveParityCatalogue, OracleEnvironment
-from dev.registry.parity.live_parity import LiveParityOracle
-from dev.registry.tests.groi_oracle import (
+
+from ..maintenance_support import LiveParityCatalogue, OracleEnvironment
+from ..parity.live_parity import LiveParityOracle
+from ._remote_guard_support import AEAT_WRITE_FORBIDDEN_ACTIONS
+from .checker_replay_driver import CheckerReplayDriver
+from .groi_oracle import (
     GROI_ORACLE_ID,
     GroiOracle,
     register_default,
 )
-
-from ._remote_guard_support import AEAT_WRITE_FORBIDDEN_ACTIONS
-from .checker_replay_driver import CheckerReplayDriver
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -221,7 +221,7 @@ def test_replay_payload_roundtrip_via_groi_driver() -> None:
     """ReplayPayload.model_validate accepts the canonical JSON shape and the
     driver's collect_observation round-trips the same envelope faithfully."""
 
-    from dev.registry.parity.live_parity import ReplayPayload
+    from ..parity.live_parity import ReplayPayload
 
     raw = json.dumps(
         {
@@ -248,7 +248,7 @@ def test_replay_payload_roundtrip_via_groi_driver() -> None:
 def test_replay_payload_strict_rejects_extra_fields() -> None:
     """extra=forbid means unknown top-level keys raise ValidationError."""
 
-    from dev.registry.parity.live_parity import ReplayPayload
+    from ..parity.live_parity import ReplayPayload
 
     with pytest.raises(ValidationError, match="Extra"):
         ReplayPayload.model_validate({"observed": {}, "unknown_field": "x"})
@@ -257,7 +257,7 @@ def test_replay_payload_strict_rejects_extra_fields() -> None:
 def test_replay_payload_strict_rejects_non_string_value_in_observed() -> None:
     """Mapping[str, str] under strict mode rejects integer values."""
 
-    from dev.registry.parity.live_parity import ReplayPayload
+    from ..parity.live_parity import ReplayPayload
 
     with pytest.raises(ValidationError):
         ReplayPayload.model_validate({"observed": {"A28015865": 999}})

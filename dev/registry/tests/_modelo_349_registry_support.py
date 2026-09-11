@@ -5,9 +5,9 @@ from __future__ import annotations
 from functools import lru_cache
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from cadrumo.tests.aeat_literal_fixtures import aeat_host
 from cadrumo.tests.registry_tree import bundled_registry_tree
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 
 _WWW6_HOST = aeat_host("www6")
 

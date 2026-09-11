@@ -33,8 +33,8 @@ from __future__ import annotations
 import sys
 from typing import Final
 
-from dev.init.contract import Phase, Step
-from dev.init.probe import Requirement
+from .contract import Phase, Step
+from .probe import Requirement
 
 #: The ephemeral interpreter `init` is running on. Steps that are themselves
 #: Python reuse it rather than assuming a `python` on PATH, because the whole

@@ -26,8 +26,7 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core.directory_scan import scan_directory
-
-from .._paths import UTF_8
+from dev._paths import UTF_8
 
 #: Sourced from ``dev._paths`` so the dev harness has one owner for it. The
 #: directory walk is imported from its canonical defining module above; no

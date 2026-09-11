@@ -7,10 +7,11 @@ from datetime import date
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.registry_snapshot import build_snapshot
-from dev.registry.compiler.validator import RegistryValidator
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
-from dev.registry.tests._registry_schema_support import _committed_modelo
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ..compiler.validator import RegistryValidator
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -18,8 +18,9 @@ from cadrumo.domain.calculations.registry.static_inspection import (
     RegistryRevisionInspection,
     StaticGeneratedArtifactInspection,
 )
-from dev.registry.compiler.authority_state import source_root_for
-from dev.registry.maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
+
+from .compiler.authority_state import source_root_for
+from .maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
 
 if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
@@ -228,10 +229,10 @@ def load_registry_diagnostic_classification(
     residue; filing, export, and calculation callers must load a validated
     authority through :func:`dev.registry.compiler.authority.compile_validated_authority`.
     """
-    from dev.registry.compiler.authority import construct_unvalidated_authority
-    from dev.registry.compiler.authority_state import canonical_authoring_root_pair
-    from dev.registry.compiler.identity import resolve_registry_identity
-    from dev.registry.compiler.loader import collect_registry_tree_fingerprints
+    from .compiler.authority import construct_unvalidated_authority
+    from .compiler.authority_state import canonical_authoring_root_pair
+    from .compiler.identity import resolve_registry_identity
+    from .compiler.loader import collect_registry_tree_fingerprints
 
     resolved_root, resolved_source_root = canonical_authoring_root_pair(root, source_root)
     identity = resolve_registry_identity(

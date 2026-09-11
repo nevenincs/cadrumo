@@ -22,8 +22,8 @@ from pydantic import BaseModel, Field, computed_field, model_validator
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from dev.registry.compiler.authority import compiled_bundled_authority
 
+from ..compiler.authority import compiled_bundled_authority
 from ..export_proof import FilingExportProofAuthority
 from ..temporal_coverage import (
     TemporalCoverageReport,

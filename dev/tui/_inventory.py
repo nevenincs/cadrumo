@@ -21,7 +21,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-from .._paths import REPO_ROOT, UTF_8
+from dev._paths import REPO_ROOT, UTF_8
 
 TUI_ROOT: Final[Path] = REPO_ROOT / "src" / "cadrumo" / "entrypoints" / "tui"
 

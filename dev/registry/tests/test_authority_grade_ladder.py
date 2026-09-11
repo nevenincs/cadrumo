@@ -17,8 +17,9 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.schema_family_disposition import RegistrySchemaFamilyDisposition
 from cadrumo.domain.calculations.registry._schema_family_coverage import build_revision_coverage_manifest
-from dev.registry.compiler._validate_authority_grade import validate_authority_grade_section
-from dev.registry.compiler.loader import load_registry_tree
+
+from ..compiler._validate_authority_grade import validate_authority_grade_section
+from ..compiler.loader import load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

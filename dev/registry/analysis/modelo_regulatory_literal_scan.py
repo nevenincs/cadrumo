@@ -7,7 +7,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
-from ...quality.unread_inputs import report_unread
+from dev.quality.unread_inputs import report_unread
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[3] / "src" / "cadrumo"
 REGISTRY_PACKAGE_ROOT = PACKAGE_ROOT / "domain" / "calculations" / "registry"

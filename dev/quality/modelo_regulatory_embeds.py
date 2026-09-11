@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ..registry.analysis.modelo_embed_scan import census
+from dev.registry.analysis.modelo_embed_scan import census
 
 
 def main() -> None:

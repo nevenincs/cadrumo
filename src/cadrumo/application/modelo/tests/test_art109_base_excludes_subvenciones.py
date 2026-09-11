@@ -25,7 +25,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.fact_loader import load_governed_facts
+from test_support.registry_authoring import load_governed_facts
 
 from ....core.concepto_ingreso import ConceptoIngreso
 from ....core.period import Period

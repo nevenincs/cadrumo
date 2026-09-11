@@ -6,8 +6,8 @@ Tributaria (AEAT) modelo rules into the artifact the runtime reads for
 calculations and filing exports. It is a development and release operation,
 not an `aeat` command for taxpayers.
 
-The artifact is generated output. It isn't signed and needs no key. It records
-a digest of its own content and the identity of the registry and evidence it
+The artifact is generated output. It records a digest of its own content and
+the identity of the registry and evidence it
 was compiled from, so the registry gate can tell when it is out of date.
 
 For the artifact format, runtime checks, error classes, and Python application

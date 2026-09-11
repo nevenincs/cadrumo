@@ -17,7 +17,8 @@ from pathlib import Path
 
 import pytest
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..duplication import (
     DuplicationOutcome,
     run_duplication_scan,

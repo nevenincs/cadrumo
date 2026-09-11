@@ -56,9 +56,10 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
-from .._paths import REPO_ROOT, UTF_8
-from ..exit_codes import OK
-from ..test_runs.paths import allocate_run_directory
+from dev._paths import REPO_ROOT, UTF_8
+from dev.exit_codes import OK
+from dev.test_runs.paths import allocate_run_directory
+
 from .dead_code import DeadCodeOutcome, run_dead_code_scan
 from .report import DimensionReport, Status, audit_complexity, audit_duplication
 from .security import SecurityOutcome, run_security_scan

@@ -15,7 +15,8 @@ from pathlib import Path
 
 import pytest
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..security import SecurityOutcome, run_security_scan
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.timeout(900)]

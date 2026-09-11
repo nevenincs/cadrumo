@@ -43,7 +43,8 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.money.rounding import round_to_cents
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from dev.registry.tests._modelo_131_modulos_engine_support import (
+
+from ._modelo_131_modulos_engine_support import (
     _ALIMENTACION_647_1,
     _AUTOTAXI_721_2,
     _CAFETERIAS_672_1,
@@ -58,7 +59,7 @@ from dev.registry.tests._modelo_131_modulos_engine_support import (
     _expected_modulos_generales,
     _run_modulos_engine,
 )
-from dev.registry.tests._registry_schema_support import _committed_snapshot
+from ._registry_schema_support import _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

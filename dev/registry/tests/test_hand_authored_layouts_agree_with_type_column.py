@@ -22,14 +22,13 @@ from pathlib import Path
 
 import pytest
 
-from dev.registry.compiler.authority import compiled_bundled_authority
-
 from ..analysis.hand_authored_type_column import (
     Alignment,
     hand_authored_revisions,
     revision_findings,
     screen_authority,
 )
+from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

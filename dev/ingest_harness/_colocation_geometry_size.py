@@ -66,8 +66,7 @@ from cadrumo.application.ledger.party_colocation import party_regions
 from cadrumo.core.field_grounding import FieldGroundingOutcome
 from cadrumo.core.field_origin import FieldOrigin
 from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
-
-from .._paths import UTF_8
+from dev._paths import UTF_8
 
 _UTF_8: Final[str] = UTF_8
 

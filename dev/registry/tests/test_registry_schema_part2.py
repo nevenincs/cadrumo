@@ -19,14 +19,21 @@ from pydantic import ValidationError
 
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
-from dev.registry.compiler.validator import RegistryValidator
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition
-from cadrumo.domain.calculations.registry.schema_extraction import ExtractionProfileDefinition, ExtractionTargetDefinition
+from cadrumo.domain.calculations.registry.schema_extraction import (
+    ExtractionProfileDefinition,
+    ExtractionTargetDefinition,
+)
 from cadrumo.domain.calculations.registry.schema_formula import KeyedBracketEntry, ParameterDefinition
-from cadrumo.domain.calculations.registry.schema_surfaces import CalculationCompletenessCasilla, CalculationCompletenessManifest
-from dev.registry.tests._registry_schema_support import (
+from cadrumo.domain.calculations.registry.schema_surfaces import (
+    CalculationCompletenessCasilla,
+    CalculationCompletenessManifest,
+)
+
+from ..compiler.validator import RegistryValidator
+from ._registry_schema_support import (
     _NUMERIC_CASILLA_01,
     _as_communication_revision,
     _committed_modelo,
@@ -797,7 +804,7 @@ def test_keyed_bracket_table_rejects_mixed_brackets_and_keyed_brackets() -> None
     ambiguous lookup contract; the validator rejects it at
     construction time.
     """
-    from ..schema_formula import BracketEntry as _BracketEntry
+    from cadrumo.domain.calculations.registry.schema_formula import BracketEntry as _BracketEntry
 
     numeric_bracket = _BracketEntry(
         lower_bound=Decimal("0"),

@@ -20,8 +20,9 @@ from pathlib import Path
 
 import pytest
 
-from ..._paths import REPO_ROOT, UTF_8
-from ...test_runs.reaper import COMPLETED_RETENTION_SECONDS
+from dev._paths import REPO_ROOT, UTF_8
+from dev.test_runs.reaper import COMPLETED_RETENTION_SECONDS
+
 from ..clean import (
     FAMILIES,
     TEMP_FAMILY,

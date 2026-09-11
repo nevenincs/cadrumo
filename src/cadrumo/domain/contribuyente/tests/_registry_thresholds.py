@@ -27,7 +27,7 @@ from datetime import date
 from decimal import Decimal
 from functools import cache
 
-from dev.registry.compiler.loader import load_registry_tree
+from test_support.registry_authoring import load_registry_tree
 
 from ....core.resources.bundled_data import bundled_path
 from ...calculations.registry.formula_runtime_ops import resolve_parameter

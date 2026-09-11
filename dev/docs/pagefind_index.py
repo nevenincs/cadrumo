@@ -55,8 +55,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
 from cadrumo.core.directory_scan import iter_directory, scan_directory
-
-from .._paths import UTF_8
+from dev._paths import UTF_8
 
 if TYPE_CHECKING:
     from pagefind.index import PagefindIndex

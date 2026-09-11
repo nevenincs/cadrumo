@@ -40,7 +40,6 @@ from typing import Final
 from pydantic import BaseModel, ConfigDict
 
 from ..compiler.record_design_pdf_rows import ABSENT_NATURALEZA_TYPE_CODE
-
 from .record_design_intermediate import (
     RecordDesignIntermediateField,
     RecordDesignIntermediateSource,

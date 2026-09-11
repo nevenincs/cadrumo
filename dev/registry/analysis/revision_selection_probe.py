@@ -42,7 +42,8 @@ from dataclasses import dataclass
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from ..compiler.authority import compiled_bundled_authority
 
 __all__ = [
     "SelectionProbe",

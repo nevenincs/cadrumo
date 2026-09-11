@@ -34,10 +34,11 @@ import shutil
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.loader import load_registry_tree
 
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from dev.registry.tests._gate_support import fragment_declaring
+
+from ..compiler.loader import load_registry_tree
+from ._gate_support import fragment_declaring
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

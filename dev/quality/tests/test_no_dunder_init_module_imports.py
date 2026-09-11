@@ -40,7 +40,8 @@ from typing import Final
 
 import pytest
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..unread_inputs import report_unread
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

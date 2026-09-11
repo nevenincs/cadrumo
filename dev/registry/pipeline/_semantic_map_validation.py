@@ -20,8 +20,8 @@ from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import SourceRefId
 from cadrumo.domain.calculations.registry.schema_exports import ProjectionEndpointDeclaration
-from dev.registry.maintenance_support import GeneratedArtifactInspection
 
+from ..maintenance_support import GeneratedArtifactInspection
 from ._variable_envelope import validate_variable_envelope
 from .record_design_intermediate import (
     AnchorKey,

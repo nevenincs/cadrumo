@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.loader import load_catalogue_file
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from dev.registry.compiler.loader import load_catalogue_file
 
 from ..analysis.m390_2022_anchor_census import (
     M390_2022_NUMBERED_ANCHOR_COUNT,
@@ -15,6 +13,7 @@ from ..analysis.m390_2022_anchor_census import (
     M390_2022_SCALAR_CASILLA_BOXES,
     census_m390_2022_numbered_anchors,
 )
+from ..compiler.loader import load_catalogue_file
 from ..pipeline.record_design_intermediate import RecordDesignIntermediate, load_record_design_intermediate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -11,9 +11,9 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..analysis.corpus import bundled_modelo_ids
+from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

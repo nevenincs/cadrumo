@@ -9,7 +9,7 @@ from types import SimpleNamespace
 from typing import Any
 
 import pytest
-from dev.registry.compiler.loader import load_modelo_directory
+from test_support.registry_authoring import load_modelo_directory
 
 from ....adapters.outbound.fx.ecb_provider import ECB_RATE_SOURCE_ID
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository

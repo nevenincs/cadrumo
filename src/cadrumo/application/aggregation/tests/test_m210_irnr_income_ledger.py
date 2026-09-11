@@ -7,7 +7,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.loader import load_modelo_directory
+from test_support.registry_authoring import load_modelo_directory
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository

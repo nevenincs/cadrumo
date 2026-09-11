@@ -17,7 +17,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
-from .._paths import UTF_8
+from dev._paths import UTF_8
 
 _HERE = Path(__file__).resolve().parent
 _REPO_ROOT = _HERE.parents[1]
@@ -29,8 +29,8 @@ if not __package__:
     __package__ = "dev.packaging"
 
 from cadrumo.core.directory_scan import scan_directory  # noqa: E402
+from dev.source_tree import content_digest, repository_files, snapshot  # noqa: E402
 
-from ..source_tree import content_digest, repository_files, snapshot  # noqa: E402
 from .build_scratch_reclaim import (  # noqa: E402
     RELEASE_STAGING_FAMILY,
     matching_family,

@@ -8,9 +8,13 @@ import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.relations import relation_source_requirements, resolve_relation_values_from_observations
+from cadrumo.domain.calculations.registry.relations import (
+    relation_source_requirements,
+    resolve_relation_values_from_observations,
+)
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from dev.registry.tests._cross_dependency_calculation_support import (
+
+from ._cross_dependency_calculation_support import (
     _M200_CUOTA_DIFERENCIAL_CASILLA,
     _M202_CUOTA_BASE_CASILLA,
     _casilla_inputs,

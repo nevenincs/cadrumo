@@ -976,6 +976,18 @@ applies_from = 2025-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/impuesto-sobre-sociedades/modelo-202-is-i_____resencia-territorio-fraccionado_/instrucciones.html"
 review_status = "pending_review"
 
+[sources."aeat-modelo-222-instructions"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_222/files/modelo-222-instrucciones.html"
+sha256 = "55c90330904a9fcdbef770a5917faed7514d4c9cf9091de29415f003131461b3"
+bytes = 106810
+retrieved_at = 2026-09-11
+applies_from = 2025-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/impuestos-tasas/impuesto-sobre-sociedades/modelo-222-is-regimen-consolidacion-fraccionado_/instrucciones.html"
+review_status = "pending_review"
+
 [sources."aeat-dr-222-2025"]
 evidence_tier = "layout_authority"
 authority = "aeat"

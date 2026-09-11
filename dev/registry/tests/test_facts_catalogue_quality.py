@@ -11,7 +11,6 @@ import pytest
 
 from cadrumo.domain.calculations.registry.facts.resolution import ScalarFactQuery, resolve_governed_fact
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
-from dev.registry.compiler.fact_providers import FactProviderRegistration
 
 from ..analysis.facts_catalogue_quality import (
     FactQualityKind,
@@ -21,6 +20,7 @@ from ..analysis.facts_catalogue_quality import (
     migration_retirement_findings,
     resolved_fact_provenance_findings,
 )
+from ..compiler.fact_providers import FactProviderRegistration
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -253,16 +253,17 @@ def test_closed_s80_s85_holds_must_be_removed_but_need_not_remain_in_the_ledger(
     assert isinstance(tables, list)
     assert isinstance(lanes, list)
     ledger["remaining_structured_tables"] = [
-        table
-        for table in tables
-        if table["data_path"] != "src/cadrumo/_data/registry/aeat/iva/catalogues.toml"
+        table for table in tables if table["data_path"] != "src/cadrumo/_data/registry/aeat/iva/catalogues.toml"
     ]
     ledger["lanes"] = [lane for lane in lanes if lane["lane_id"] != "iva-local-grounding"]
 
-    assert migration_retirement_findings(
-        ledger,
-        open_steps={"W04.P15.S82", "W04.P15.S83", "W04.P15.S84"},
-    ) == ()
+    assert (
+        migration_retirement_findings(
+            ledger,
+            open_steps={"W04.P15.S82", "W04.P15.S83", "W04.P15.S84"},
+        )
+        == ()
+    )
 
 
 def test_live_gate_resolves_registered_modelo_projections_with_actual_modelos(
@@ -288,8 +289,7 @@ def test_live_gate_resolves_registered_modelo_projections_with_actual_modelos(
     monkeypatch.setattr(
         "dev.registry.analysis.facts_catalogue_quality.compile_registered_fact_providers",
         lambda root, *, modelos: (
-            calls.append((root, tuple(modelos)))
-            or GovernedFactCatalogue(facts={projected.fact_id: projected})
+            calls.append((root, tuple(modelos))) or GovernedFactCatalogue(facts={projected.fact_id: projected})
         ),
     )
 

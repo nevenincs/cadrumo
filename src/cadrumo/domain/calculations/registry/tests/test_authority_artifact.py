@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
 from datetime import date
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 
+from .....core.aggregation import BindingSourceKind
 from .....core.hashing import canonical_json_bytes, sha256_hex
 from ..authority_artifact import (
     AUTHORITY_ARTIFACT_SCHEMA_VERSION,
@@ -17,13 +16,9 @@ from ..authority_artifact import (
     AuthorityArtifactFormatError,
     AuthorityArtifactIntegrityError,
     AuthorityArtifactUnavailableError,
-    AuthorityEvidenceProjection,
-    PublishedSourceEvidence,
     read_authority_artifact,
     write_authority_artifact,
 )
-from ..errors import RegistryValidationError
-from ..export_parse import xml_dictionary_entries
 from ..schema import DataBindingDefinition, NoPredecessor
 from ._artifact_runtime_support import _minimal_catalogues, _minimal_modelo, _minimal_revision
 
@@ -71,10 +66,8 @@ def test_published_authority_round_trips_as_the_complete_typed_payload(tmp_path:
     assert revision.reviewed_at == date(2026, 7, 1)
 
 
-def test_published_authority_round_trips_strict_profile_selector_json(
-    tmp_path: Path, publisher_keys: Ed25519KeypairHex
-) -> None:
-    """JSON arrays in a signed selector rehydrate to the declared tuple shape."""
+def test_published_authority_round_trips_strict_profile_selector_json(tmp_path: Path) -> None:
+    """JSON arrays in a published selector rehydrate to the declared tuple shape."""
     artifact_path = tmp_path / "authority.json"
     binding = DataBindingDefinition.model_validate(
         {
@@ -94,15 +87,13 @@ def test_published_authority_round_trips_strict_profile_selector_json(
         identity_digest=_IDENTITY_DIGEST,
     )
 
-    write_authority_artifact(artifact_path, published, signing_private_key_hex=publisher_keys.private_key_hex)
+    write_authority_artifact(artifact_path, published)
 
-    consumed = _read(artifact_path, publisher_keys)
+    consumed = read_authority_artifact(artifact_path)
     assert consumed == published
 
 
-def test_published_authority_preserves_a_grounded_no_predecessor_declaration(
-    tmp_path: Path, publisher_keys: Ed25519KeypairHex
-) -> None:
+def test_published_authority_preserves_a_grounded_no_predecessor_declaration(tmp_path: Path) -> None:
     """The complete artifact honors the predecessor field's declared JSON spelling."""
     artifact_path = tmp_path / "authority.json"
     predecessor = NoPredecessor(
@@ -117,24 +108,10 @@ def test_published_authority_preserves_a_grounded_no_predecessor_declaration(
         identity_digest=_IDENTITY_DIGEST,
     )
 
-    write_authority_artifact(artifact_path, published, signing_private_key_hex=publisher_keys.private_key_hex)
+    write_authority_artifact(artifact_path, published)
 
-    consumed = _read(artifact_path, publisher_keys)
+    consumed = read_authority_artifact(artifact_path)
     assert consumed == published
-
-
-def test_the_frame_carries_exactly_a_version_a_payload_and_its_digest(tmp_path: Path) -> None:
-    """The publication is generated output: no signature, key, or certificate rides in it."""
-    artifact_path = tmp_path / "authority.json"
-    _publish(artifact_path)
-
-    frame = json.loads(artifact_path.read_bytes())
-
-    assert set(frame) == {"schema_version", "payload", "payload_sha256"}
-    assert frame["schema_version"] == AUTHORITY_ARTIFACT_SCHEMA_VERSION == "cadrumo-authority-artifact-v3"
-    assert frame["payload_sha256"] == sha256_hex(
-        canonical_json_bytes({"schema_version": frame["schema_version"], "payload": frame["payload"]})
-    )
 
 
 def test_a_payload_edited_without_its_digest_is_refused_as_corrupt(tmp_path: Path) -> None:
@@ -163,24 +140,24 @@ def test_a_digest_consistent_frame_does_not_admit_an_invalid_typed_payload(tmp_p
 
 @pytest.mark.parametrize("superseded", ["cadrumo-authority-artifact-v1", "cadrumo-authority-artifact-v2"])
 def test_a_frame_of_an_earlier_format_is_refused_by_name(tmp_path: Path, superseded: str) -> None:
-    """An earlier frame, including a signed one, names the format to republish in."""
+    """An earlier frame names the format to republish in."""
     artifact_path = tmp_path / "authority.json"
     _publish(artifact_path)
     payload = json.loads(artifact_path.read_bytes())["payload"]
-    _write_frame(artifact_path, superseded, payload, signature="00" * 64)
+    _write_frame(artifact_path, superseded, payload)
 
     with pytest.raises(AuthorityArtifactFormatError, match=f"superseded format '{superseded}'"):
         read_authority_artifact(artifact_path)
 
 
 def test_a_current_frame_with_an_extra_member_is_refused(tmp_path: Path) -> None:
-    """The reader accepts exactly the three frame members; a leftover signature is not ignored."""
+    """The reader refuses a frame that carries an unrecognized member."""
     artifact_path = tmp_path / "authority.json"
     _publish(artifact_path)
     payload = json.loads(artifact_path.read_bytes())["payload"]
-    _write_frame(artifact_path, AUTHORITY_ARTIFACT_SCHEMA_VERSION, payload, signature="00" * 64)
+    _write_frame(artifact_path, AUTHORITY_ARTIFACT_SCHEMA_VERSION, payload, unrecognized_member=True)
 
-    with pytest.raises(AuthorityArtifactFormatError, match="unexpected members \\['signature'\\]"):
+    with pytest.raises(AuthorityArtifactFormatError, match="unexpected members \\['unrecognized_member'\\]"):
         read_authority_artifact(artifact_path)
 
 
@@ -195,11 +172,12 @@ def test_malformed_or_unsupported_artifact_frame_is_refused(tmp_path: Path, arti
 
 
 def test_consumer_mutation_cannot_change_a_later_authority_read(tmp_path: Path) -> None:
-    """Each read reconstructs an isolated authority graph."""
+    """Published authority catalogues refuse consumer mutation on every read."""
     artifact_path = tmp_path / "authority.json"
     _publish(artifact_path)
     first = read_authority_artifact(artifact_path)
-    first.catalogues.legal["consumer-injected"] = next(iter(first.catalogues.legal.values()))
+    with pytest.raises(TypeError):
+        first.catalogues.legal["consumer-injected"] = next(iter(first.catalogues.legal.values()))
 
     later = read_authority_artifact(artifact_path)
 

@@ -10,7 +10,8 @@ from pathlib import Path
 
 import pytest
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..lane_verification_core import (
     build_companion_wheels,
     build_wheel,

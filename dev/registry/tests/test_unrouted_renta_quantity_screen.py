@@ -21,7 +21,8 @@ from cadrumo.domain.calculations.registry.ledger_renta_income_bindings import (
     unsupported_ledger_renta_income_observations,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from dev.registry.tests._ledger_income_chain_oracle_support import modelo_130_revision
+
+from ._ledger_income_chain_oracle_support import modelo_130_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

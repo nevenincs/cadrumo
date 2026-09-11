@@ -2,7 +2,7 @@
 
 import pytest
 
-from dev.registry.conformance.profile import RegistryConformanceProfile, audit_bundled_registry_conformance
+from ..profile import RegistryConformanceProfile, audit_bundled_registry_conformance
 
 
 @pytest.fixture(scope="module")

@@ -7,9 +7,10 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
-from dev.registry.compiler._loader_internals import _revision_section_fragment_paths, load_modelo_file
-from dev.registry.compiler.loader import load_modelo_directory
-from dev.registry.conformance.tests._loader_directory_mode_support import (
+
+from ..compiler._loader_internals import _revision_section_fragment_paths, load_modelo_file
+from ..compiler.loader import load_modelo_directory
+from ..conformance.tests._loader_directory_mode_support import (
     _COMPLETENESS_CASILLA_0001,
     _COMPLETENESS_CASILLA_0002,
     _TOML_CASILLA_ID_KEY,

@@ -11,7 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..import_hygiene_scan import module_name_for, resolve_relative_import
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -210,11 +211,16 @@ def _immediately_reads_path(node: ast.Call, parents: Mapping[int, ast.AST]) -> b
     if not isinstance(parent, ast.Attribute) or parent.value is not node:
         return False
     grandparent = parents.get(id(parent))
-    return isinstance(grandparent, ast.Call) and grandparent.func is parent and parent.attr in {
-        "open",
-        "read_bytes",
-        "read_text",
-    }
+    return (
+        isinstance(grandparent, ast.Call)
+        and grandparent.func is parent
+        and parent.attr
+        in {
+            "open",
+            "read_bytes",
+            "read_text",
+        }
+    )
 
 
 def _enclosing_reader_symbols(node: ast.AST, parents: Mapping[int, ast.AST]) -> frozenset[str]:
@@ -245,9 +251,10 @@ def _enclosing_function_invokes(node: ast.AST, symbol: str, parents: Mapping[int
         return False
     return any(
         isinstance(candidate, ast.Call)
-        and ((isinstance(candidate.func, ast.Name) and candidate.func.id == symbol) or (
-            isinstance(candidate.func, ast.Attribute) and candidate.func.attr == symbol
-        ))
+        and (
+            (isinstance(candidate.func, ast.Name) and candidate.func.id == symbol)
+            or (isinstance(candidate.func, ast.Attribute) and candidate.func.attr == symbol)
+        )
         for candidate in ast.walk(current)
     )
 
@@ -422,18 +429,24 @@ def test_detector_allows_named_s80_legal_table_exception_and_technical_vocabular
         "bundled_path('registry', 'aeat', 'iva', 'country_names.toml')\n",
     )
 
-    assert _runtime_violations(
-        legal_tree,
-        importer_module="cadrumo.domain.iva.establishment",
-        importer_is_package=False,
-        source="src/cadrumo/domain/iva/establishment.py",
-    ) == ()
-    assert _runtime_violations(
-        technical_tree,
-        importer_module="cadrumo.domain.iva.country_vocabulary",
-        importer_is_package=False,
-        source="src/cadrumo/domain/iva/country_vocabulary.py",
-    ) == ()
+    assert (
+        _runtime_violations(
+            legal_tree,
+            importer_module="cadrumo.domain.iva.establishment",
+            importer_is_package=False,
+            source="src/cadrumo/domain/iva/establishment.py",
+        )
+        == ()
+    )
+    assert (
+        _runtime_violations(
+            technical_tree,
+            importer_module="cadrumo.domain.iva.country_vocabulary",
+            importer_is_package=False,
+            source="src/cadrumo/domain/iva/country_vocabulary.py",
+        )
+        == ()
+    )
 
 
 def test_detector_rejects_builtin_loader_and_source_wide_s80_exception_bypasses() -> None:
@@ -465,9 +478,12 @@ def test_detector_rejects_builtin_loader_and_source_wide_s80_exception_bypasses(
         "unregistered governed-fact loader dev.registry.compiler.fact_loader",
         "unregistered governed IVA-table access registry/aeat/iva/place_of_supply.toml",
     }.issubset({finding.split(": ", 1)[1] for finding in findings})
-    assert _runtime_violations(
-        adapter_tree,
-        importer_module="cadrumo.core.resources._repos.iva_catalogues",
-        importer_is_package=False,
-        source="src/cadrumo/core/resources/_repos/iva_catalogues.py",
-    ) == ()
+    assert (
+        _runtime_violations(
+            adapter_tree,
+            importer_module="cadrumo.core.resources._repos.iva_catalogues",
+            importer_is_package=False,
+            source="src/cadrumo/core/resources/_repos/iva_catalogues.py",
+        )
+        == ()
+    )

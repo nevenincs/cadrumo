@@ -5,8 +5,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from .._paths import REPO_ROOT
-from ..audit.write_path_coverage import WritePathOutcome, WritePathResult, run_write_path_scan
+from dev._paths import REPO_ROOT
+from dev.audit.write_path_coverage import WritePathOutcome, WritePathResult, run_write_path_scan
 
 
 def run_gate(repo_root: Path = REPO_ROOT) -> WritePathResult:

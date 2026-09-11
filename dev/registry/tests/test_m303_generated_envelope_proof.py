@@ -14,7 +14,6 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pytest
-from dev.registry.compiler.loader import load_modelo_directory, load_registry_tree
 from pydantic import ValidationError
 
 from cadrumo.application.aggregation import IvaDifferentiatedDeductionContribution
@@ -63,10 +62,10 @@ from cadrumo.domain.prorrata_register.register import (
     SectorDefinition,
 )
 from cadrumo.tests.registry_snapshot import build_snapshot
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.compiler.loader import load_modelo_directory, load_registry_tree
-from dev.registry.compiler.supplementary_orden import compile_supplementary_ordenes
 
+from ..compiler.authority import compiled_bundled_authority
+from ..compiler.loader import load_modelo_directory, load_registry_tree
+from ..compiler.supplementary_orden import compile_supplementary_ordenes
 from ..pipeline._export_tree import render_complete_export_tree
 from ..pipeline._tree_check import GeneratedExportTreeCheckContext, check_generated_export_tree
 from ..pipeline._tree_validation import GeneratedExportTreeValidationContext

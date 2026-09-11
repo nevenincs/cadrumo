@@ -22,10 +22,10 @@ from cadrumo.domain.calculations.registry.casilla_lineage_totality import (
     unresolved_successor_rows,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..analysis.casilla_lineage_ledger import LedgerRefusal, load_ledger_refusals
 from ..analysis.corpus import bundled_modelo_ids
+from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -32,7 +32,8 @@ from cadrumo.domain.calculations.registry.schema_exports import (
 )
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.withholding_bindings import _WithholdingSelector
-from dev.registry.maintenance_support import resolved_export_casillas, resolved_export_endpoints, resolved_export_fields
+
+from ..maintenance_support import resolved_export_casillas, resolved_export_endpoints, resolved_export_fields
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

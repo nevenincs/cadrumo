@@ -29,7 +29,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.fact_providers import compile_registered_fact_providers
+from test_support.registry_authoring import compile_registered_fact_providers
 
 from ....core.directory_scan import scan_directory
 from ....core.resources.bundled_data import bundled_path
@@ -122,6 +122,7 @@ def test_the_fact_cited_provision_resolves_in_the_bundled_legal_catalogue() -> N
     lirpf_entry = entries.get(_LIRPF_REF)
     assert isinstance(lirpf_entry, dict), f"{_LIRPF_REF} is not declared in the legal catalogue"
     assert lirpf_entry["corpus_ref"] == "corpus/normatives/html/ley-35-2006-art-101.html#a101"
+
 
 def test_loader_returns_the_registry_values_as_a_typed_record() -> None:
     """Third link: the typed record carries exactly the resolved facts."""

@@ -67,8 +67,8 @@ from typing import Final, Protocol
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from dev.registry.compiler.authority import compiled_bundled_authority
 
+from ..compiler.authority import compiled_bundled_authority
 from ..pipeline.render_check import revision_render_inputs
 from .footnote_only_wire_facts import OUTSTANDING_KINDS
 from .footnote_only_wire_facts import revision_findings as pointer_wire_facts

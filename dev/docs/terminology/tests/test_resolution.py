@@ -20,9 +20,9 @@ from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ...._paths import REPO_ROOT
 from .._resolution import ChunkHit, TargetResolver
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]

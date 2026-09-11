@@ -25,8 +25,8 @@ import shlex
 from pathlib import Path
 from typing import Final, NamedTuple
 
-from ..._paths import REPO_ROOT, UTF_8
-from ...ci.workflow_run_text import executed_lines
+from dev._paths import REPO_ROOT, UTF_8
+from dev.ci.workflow_run_text import executed_lines
 
 __all__ = ["Recipe", "packaging_pytest_recipes"]
 

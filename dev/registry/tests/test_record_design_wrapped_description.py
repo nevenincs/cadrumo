@@ -23,9 +23,8 @@ from __future__ import annotations
 
 import pytest
 
-from dev.registry.compiler.record_design import extract_record_design
-from dev.registry.compiler.record_design_pdf_repairs import join_wrapped_row_descriptions
-
+from ..compiler.record_design import extract_record_design
+from ..compiler.record_design_pdf_repairs import join_wrapped_row_descriptions
 from .test_every_bundled_design_is_read_or_reported import _bundled_designs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

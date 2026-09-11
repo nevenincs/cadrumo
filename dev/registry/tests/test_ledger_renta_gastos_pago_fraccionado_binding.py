@@ -23,14 +23,15 @@ import pytest
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.registry_snapshot import build_snapshot
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.ledger_renta_gastos_pago_fraccionado_bindings import (
     resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values,
     unsupported_ledger_renta_gastos_pago_fraccionado_observations,
     validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition,
 )
-from dev.registry.tests._registry_schema_support import _committed_modelo
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -199,12 +200,16 @@ def test_reachability_probe_is_not_tautological_against_a_mistyped_casilla_id() 
     passed, the probe would be validating "same digits" rather than "the
     real matcher accepts this shape", which is not the contract it claims.
     """
-    from ..ledger_renta_gastos_pago_fraccionado_bindings import _renta_gastos_pago_fraccionado_build_matcher
+    from cadrumo.domain.calculations.registry.ledger_renta_gastos_pago_fraccionado_bindings import (
+        _renta_gastos_pago_fraccionado_build_matcher,
+    )
 
     revision = _modelo_130_snapshot().revision
     binding = next(binding for binding in revision.bindings if binding.id == _GASTOS_BINDING)
     selector_dict = selector_as_dict(binding)
-    from ..ledger_renta_gastos_pago_fraccionado_bindings import _RentaLedgerGastosPagoFraccionadoSelector
+    from cadrumo.domain.calculations.registry.ledger_renta_gastos_pago_fraccionado_bindings import (
+        _RentaLedgerGastosPagoFraccionadoSelector,
+    )
 
     selector = _RentaLedgerGastosPagoFraccionadoSelector.model_validate(selector_dict)
     matcher = _renta_gastos_pago_fraccionado_build_matcher(selector)

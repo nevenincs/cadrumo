@@ -164,7 +164,7 @@ def _runtime_rows(repo_root: Path, python_versions: Sequence[str] | None) -> tup
     if python_versions is not None:
         rows = tuple((_canonical_python_minor(value), True) for value in python_versions)
     else:
-        from ..ci.python_runtime_matrix import RuntimeMatrixError, load_runtime_inventory
+        from dev.ci.python_runtime_matrix import RuntimeMatrixError, load_runtime_inventory
 
         inventory_path = repo_root / "dev" / "ci" / "python-runtime-matrix.json"
         try:

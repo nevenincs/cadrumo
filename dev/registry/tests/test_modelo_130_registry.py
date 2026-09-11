@@ -10,8 +10,6 @@ import pytest
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.registry_observations import registry_grounded_modelo_observation
-from dev.registry.compiler.validator import RegistryValidator
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
@@ -21,7 +19,10 @@ from cadrumo.domain.calculations.registry.formula_runtime import calculate_regis
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.temporal import select_revision
-from dev.registry.tests._registry_schema_support import _committed_modelo, _committed_snapshot
+from cadrumo.tests.registry_observations import registry_grounded_modelo_observation
+
+from ..compiler.validator import RegistryValidator
+from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

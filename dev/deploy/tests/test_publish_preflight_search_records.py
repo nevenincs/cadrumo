@@ -29,13 +29,13 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
-
-from ..._paths import REPO_ROOT
-from ...docs.pagefind_index import (
+from dev._paths import REPO_ROOT
+from dev.docs.pagefind_index import (
     DECIDED_INJECTED_RECORD_KINDS,
     build_search_index,
     injected_record_kinds_in_index,
 )
+
 from ..docs_static_site import (
     _language_site_url,
     _localized_languages,
@@ -224,7 +224,7 @@ def test_decided_kinds_match_the_canonical_enum() -> None:
     from a published index while the preflight stayed green -- the pages-only
     shape this set exists to reject, one surface narrower.
     """
-    from ...docs.terminology.search_record import SearchRecordKind
+    from dev.docs.terminology.search_record import SearchRecordKind
 
     held_out = {SearchRecordKind.PAGE.value}
     assert {kind.value for kind in SearchRecordKind} == DECIDED_INJECTED_RECORD_KINDS | held_out, (

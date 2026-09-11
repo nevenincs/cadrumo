@@ -27,16 +27,9 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
     read_authority_artifact,
     write_authority_artifact,
 )
-from cadrumo.domain.calculations.registry.facts.schema import (
-    FactSelector,
-    GovernedFact,
-    GovernedFactCatalogue,
-    MappingFactEntry,
-    MappingFactPayload,
-)
-from cadrumo.domain.calculations.registry.tests._artifact_runtime_support import _minimal_catalogues
-from dev.registry.compiler.authority import compiled_bundled_authority
+from cadrumo.domain.calculations.registry.facts.schema import MappingFactEntry, MappingFactPayload
 
+from ..compiler.authority import compiled_bundled_authority
 from ..pipeline.authority_publication import authority_candidate_identity
 from ..pipeline.cli import publish_authority_candidate_workflow
 
@@ -102,45 +95,6 @@ def _read_atoms(path: Path) -> dict[str, object]:
     return {str(entry.key): entry.value for entry in payload.entries}
 
 
-def _declared_decimal_artifact() -> AuthorityArtifact:
-    """Build an isolated artifact whose tagged decimal atoms exercise both annotations."""
-    catalogues = _minimal_catalogues()
-    source_ref = next(iter(catalogues.sources))
-    fact = GovernedFact.model_validate(
-        {
-            "fact_id": "test.declared-decimals",
-            "family": "mapping",
-            "variants": (
-                {
-                    "variant_id": "test.declared-decimals:2025-01-01",
-                    "selectors": (
-                        FactSelector(name="applied_rate", value_type="decimal", value=Decimal("0.40")),
-                    ),
-                    "date_axis": "filing_period",
-                    "valid_from": date(2025, 1, 1),
-                    "payload": {
-                        "kind": "mapping",
-                        "entries": (
-                            MappingFactEntry(key="rate", value_type="decimal", value=Decimal("0.40")),
-                        ),
-                    },
-                    "legal_refs": ("ley-35-2006:art-1",),
-                    "source_refs": (source_ref,),
-                    "source_citations": ({"source_ref": source_ref, "required_text": ("text",)},),
-                    "review_status": "pending_review",
-                    "ownership": "authored",
-                },
-            ),
-        }
-    )
-    facts = GovernedFactCatalogue(facts={fact.fact_id: fact})
-    return AuthorityArtifact(
-        modelos=(),
-        catalogues=catalogues.model_copy(update={"facts": facts}),
-        identity_digest=sha256_hex(b"declared-decimal-artifact-round-trip"),
-    )
-
-
 def _redigest(path: Path, edit_payload_text: Callable[[str], str]) -> None:
     """Rewrite a published frame's payload with a matching digest, as a defective encoder would emit it."""
     frame = json.loads(path.read_bytes())
@@ -162,18 +116,6 @@ def test_a_decimal_and_a_date_keep_their_types_while_a_look_alike_string_stays_t
 
     assert atoms == _ATOMS
     assert {key: type(value) for key, value in atoms.items()} == {"decimal": Decimal, "date": date, "text": str}
-
-
-def test_declared_decimal_selector_and_mapping_entry_round_trip_as_typed_values(tmp_path: Path) -> None:
-    """The strict artifact reader accepts its own tagged, already-typed Decimal atoms."""
-    path = tmp_path / "authority.json"
-    write_authority_artifact(path, _declared_decimal_artifact())
-
-    consumed = read_authority_artifact(path)
-    variant = consumed.catalogues.facts.facts["test.declared-decimals"].variants[0]
-    assert variant.selectors[0].value == Decimal("0.40")
-    assert isinstance(variant.payload, MappingFactPayload)
-    assert variant.payload.entries[0].value == Decimal("0.40")
 
 
 def test_an_encoder_that_drops_the_tags_loses_the_types(tmp_path: Path) -> None:

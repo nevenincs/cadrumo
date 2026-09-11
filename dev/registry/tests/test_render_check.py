@@ -15,8 +15,8 @@ from pydantic import ValidationError
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from dev.registry.compiler.authority import compiled_bundled_authority
 
+from ..compiler.authority import compiled_bundled_authority
 from ..pipeline.generated_tree_dispositions import disposition_ledger_from_path, record_drift_dispositions
 from ..pipeline.render_check import (
     compare_export_tree_roots,

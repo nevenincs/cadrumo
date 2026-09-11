@@ -51,18 +51,19 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.loader import load_registry_tree
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.registry_snapshot import build_snapshot
-from cadrumo.tests.registry_tree import bundled_registry_tree
-from cadrumo.domain.period import Period, calculation_filing_date
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
+from cadrumo.domain.period import Period, calculation_filing_date
+from cadrumo.tests.registry_snapshot import build_snapshot
+from cadrumo.tests.registry_tree import bundled_registry_tree
+
+from ..compiler.loader import load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

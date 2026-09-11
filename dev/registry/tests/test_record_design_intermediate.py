@@ -7,19 +7,18 @@ import inspect
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.loader import load_catalogue_file
 from openpyxl import load_workbook
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from ..compiler.record_design import extract_record_design
 from cadrumo.domain.calculations.registry.record_design_schema import (
     RecordDesignCompositeRelativeClosing,
     RecordDesignRelativeSuffixMarker,
 )
-from dev.registry.compiler.loader import load_catalogue_file
-from dev.registry.maintenance_support import resolve_record_design_binary
 
+from ..compiler.loader import load_catalogue_file
+from ..compiler.record_design import extract_record_design
+from ..maintenance_support import resolve_record_design_binary
 from ..pipeline import record_design_intermediate
 from ..pipeline.record_design_intermediate import (
     RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,

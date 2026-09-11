@@ -26,9 +26,10 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
-from dev.registry.compiler.validator import RegistryValidator
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from dev.registry.tests._registry_schema_support import _committed_modelo, _committed_snapshot
+
+from ..compiler.validator import RegistryValidator
+from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

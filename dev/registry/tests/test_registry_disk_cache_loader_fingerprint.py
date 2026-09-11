@@ -36,7 +36,8 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
-from dev.registry.compiler._compiled_cache import (
+
+from ..compiler._compiled_cache import (
     _CADRUMO_PACKAGE_DIR,
     _DEV_COMPILER_DIR,
     _REGISTRY_PACKAGE_DIR,
@@ -48,9 +49,9 @@ from dev.registry.compiler._compiled_cache import (
     _registry_disk_cache_key,
     loader_code_fingerprint,
 )
-from dev.registry.compiler._loader_internals import _collect_registry_tree_fingerprints
-from dev.registry.compiler.loader import _load_registry_tree_cached, load_registry_tree
-from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
+from ..compiler._loader_internals import _collect_registry_tree_fingerprints
+from ..compiler.loader import _load_registry_tree_cached, load_registry_tree
+from ..compiler.loader_fingerprints import clear_fingerprint_cache
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

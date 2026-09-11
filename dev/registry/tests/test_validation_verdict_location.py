@@ -17,7 +17,9 @@ import pytest
 from cadrumo import __version__
 from cadrumo.core.config import override_settings
 from cadrumo.core.resources.bundled_data import bundled_path
-from dev.registry.compiler.verdict_cache import (
+
+from ..compiler.identity import RegistryIdentity, RegistryIdentityOrigin, compute_walked_tree_digest
+from ..compiler.verdict_cache import (
     VERDICT_OUTCOME_GREEN,
     RegistryValidationVerdict,
     bundled_verdict_path,
@@ -30,7 +32,6 @@ from dev.registry.compiler.verdict_cache import (
     verdict_cache_path,
     write_verdict,
 )
-from dev.registry.compiler.identity import RegistryIdentity, RegistryIdentityOrigin, compute_walked_tree_digest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

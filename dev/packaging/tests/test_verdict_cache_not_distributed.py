@@ -42,10 +42,9 @@ from typing import Final
 
 import pytest
 
-from dev.registry.compiler.verdict_cache import _BUNDLED_VERDICT_FILENAME
+from dev._paths import REPO_ROOT, UTF_8
 from dev.registry.compiler.identity import REGISTRY_IDENTITY_STAMP_FILENAME
-
-from ..._paths import REPO_ROOT, UTF_8
+from dev.registry.compiler.verdict_cache import _BUNDLED_VERDICT_FILENAME
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.serial]
 

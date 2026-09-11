@@ -11,16 +11,6 @@ from pydantic import ValidationError
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.registry_snapshot import build_snapshot
-from cadrumo.domain.categories.registry import resolve_category_profiles
-from cadrumo.domain.categories.spending_category import SpendingCategory
-from cadrumo.domain.renta.ledger_expenses import (
-    RentaDeductibilityContext,
-    RentaDeductibleExpenseFact,
-    RentaExpenseDirection,
-    build_renta_deductible_expense_observation,
-    evaluate_renta_deductibility,
-)
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
@@ -30,7 +20,18 @@ from cadrumo.domain.calculations.registry.ledger_renta_gastos_estimacion_directa
     validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definition,
 )
 from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision, RegistrySnapshot
-from dev.registry.tests._registry_schema_support import _committed_modelo
+from cadrumo.domain.categories.registry import resolve_category_profiles
+from cadrumo.domain.categories.spending_category import SpendingCategory
+from cadrumo.domain.renta.ledger_expenses import (
+    RentaDeductibilityContext,
+    RentaDeductibleExpenseFact,
+    RentaExpenseDirection,
+    build_renta_deductible_expense_observation,
+    evaluate_renta_deductibility,
+)
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

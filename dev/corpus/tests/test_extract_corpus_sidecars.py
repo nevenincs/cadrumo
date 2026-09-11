@@ -7,7 +7,8 @@ from pathlib import Path
 import pytest
 from openpyxl import Workbook
 
-from ...docs.preprocess.sidecar import EXTRACTED_JSON_SUFFIX, EXTRACTED_TEXT_SUFFIX
+from dev.docs.preprocess.sidecar import EXTRACTED_JSON_SUFFIX, EXTRACTED_TEXT_SUFFIX
+
 from ..extract_corpus_sidecars import check_all, enrolled_sources, extract_all
 
 pytestmark = [pytest.mark.unit, pytest.mark.docs, pytest.mark.hex_core]

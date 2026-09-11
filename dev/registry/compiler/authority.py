@@ -67,7 +67,7 @@ def compile_validated_authority(
 
     Both registry identity and a byte-accurate source-evidence receipt are
     observed before reuse. This cache is intentionally unavailable to product
-    runtime, which only reads a signed authority artifact.
+    runtime, which only reads a published authority artifact.
     """
     pair = authoring_root_pair(registry_root, source_root)
     if identity is None:

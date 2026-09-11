@@ -9,7 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..campaign import (
     _COHORT_DIR,
     _LANES,

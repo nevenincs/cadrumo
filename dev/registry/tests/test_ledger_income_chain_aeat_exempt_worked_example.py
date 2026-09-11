@@ -84,21 +84,22 @@ from cadrumo.core.aggregation import LedgerIncomeGrounding
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.registry_snapshot import build_snapshot
-from cadrumo.domain.iva.classification import InvoiceKind
-from cadrumo.domain.iva.components import category_cuota_is_zero_by_law
-from cadrumo.domain.iva.schema import IvaCategory
-from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
-from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.calculations.registry.ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from dev.registry.tests._registry_schema_support import _committed_modelo
-from dev.registry.tests._scenarios import (
+from cadrumo.domain.iva.classification import InvoiceKind
+from cadrumo.domain.iva.components import category_cuota_is_zero_by_law
+from cadrumo.domain.iva.schema import IvaCategory
+from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
+from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ._registry_schema_support import _committed_modelo
+from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
     RegistryScenarioRunReport,

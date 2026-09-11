@@ -142,7 +142,8 @@ import pytest
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
-from dev.registry.tests._revision_span_boundary_support import (
+
+from ._revision_span_boundary_support import (
     _DESCRIPTION_ONLY,
     _boundaries_for,
     _boundary_label,
@@ -150,11 +151,11 @@ from dev.registry.tests._revision_span_boundary_support import (
     _description_flip_evidence,
     _designs_claimed_by,
 )
-from dev.registry.tests._revision_span_declaration_support import (
+from ._revision_span_declaration_support import (
     _NON_EJERCICIO_COVERAGE_AXIS,
     _OPEN_BOUNDED_ERA_DESIGNS,
 )
-from dev.registry.tests._revision_span_design_support import (
+from ._revision_span_design_support import (
     _BOX_MARKER,
     _DESIGN_ROOT_PARTS,
     _DESIGN_SUFFIXES,

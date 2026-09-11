@@ -8,8 +8,9 @@
 # 'boxes 16, 22 and 32 appear twice' hazard -- see the correction above the
 # revision's valid_from. Measured: 63 own-box declarations, zero duplicates.
 #
-# input_kind is manual throughout because this revision declares no formulas;
-# no export layout is declared either, so these carry no export_refs.
+# A box is computed exactly when this revision declares a formula targeting it,
+# per the official 222 instructions (`aeat-modelo-222-instructions`); every other
+# box is filer input.
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "01"
@@ -40,9 +41,10 @@ section = ["liquidacion"]
 data_type = "money"
 semantic_role = "is_pf_grupo_mod_40_2_lis_a_ingresar"
 required = false
-input_kind = "manual"
+input_kind = "computed"
+formula = "modelo-222-modalidad-40-2-a-ingresar"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
+source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "04"
@@ -128,9 +130,10 @@ section = ["liquidacion"]
 data_type = "money"
 semantic_role = "is_pf_grupo_mod_40_3_lis_total_aumentos"
 required = false
-input_kind = "manual"
+input_kind = "computed"
+formula = "modelo-222-total-correcciones-aumentos"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
+source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "39"
@@ -139,9 +142,10 @@ section = ["liquidacion"]
 data_type = "money"
 semantic_role = "is_pf_grupo_mod_40_3_lis_total_disminuciones"
 required = false
-input_kind = "manual"
+input_kind = "computed"
+formula = "modelo-222-total-correcciones-disminuciones"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
+source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "59"
@@ -172,9 +176,10 @@ section = ["liquidacion"]
 data_type = "money"
 semantic_role = "is_pf_grupo_mod_40_3_lis_suma_de_bases_imponibles_individuales_antes_de_compensar_bases_nega"
 required = false
-input_kind = "manual"
+input_kind = "computed"
+formula = "modelo-222-suma-bases-imponibles-individuales"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
+source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "11"
@@ -205,9 +210,10 @@ section = ["liquidacion"]
 data_type = "money"
 semantic_role = "is_pf_grupo_mod_40_3_lis_base_imponible_previa"
 required = false
-input_kind = "manual"
+input_kind = "computed"
+formula = "modelo-222-base-imponible-previa"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
+source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "44"
@@ -293,9 +299,10 @@ section = ["liquidacion"]
 data_type = "money"
 semantic_role = "is_pf_grupo_mod_40_3_lis_b_1_caso_general_base_del_pago_fraccionado"
 required = false
-input_kind = "manual"
+input_kind = "computed"
+formula = "modelo-222-base-pago-fraccionado-b1"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
+source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "17"
@@ -381,9 +388,10 @@ section = ["liquidacion"]
 data_type = "money"
 semantic_role = "is_pf_grupo_mod_40_3_lis_b_1_caso_general_resutlado_previo"
 required = false
-input_kind = "manual"
+input_kind = "computed"
+formula = "modelo-222-resultado-previo-b1"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
+source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "19"
@@ -392,9 +400,10 @@ section = ["liquidacion"]
 data_type = "money"
 semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_casos_especificos_base_del_pago_fraccionado"
 required = false
-input_kind = "manual"
+input_kind = "computed"
+formula = "modelo-222-base-pago-fraccionado-b2"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
+source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "20"
@@ -429,11 +438,12 @@ section = ["liquidacion"]
 data_type = "money"
 semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_casos_especificos_importe_del_pago_fraccionado_1"
 required = false
-input_kind = "manual"
+input_kind = "computed"
+formula = "modelo-222-importe-pago-fraccionado-b2-tipo-1"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
+source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "23"
@@ -468,11 +478,12 @@ section = ["liquidacion"]
 data_type = "money"
 semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_casos_especificos_importe_del_pago_fraccionado_2"
 required = false
-input_kind = "manual"
+input_kind = "computed"
+formula = "modelo-222-importe-pago-fraccionado-b2-tipo-2"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
+source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "61"
@@ -507,11 +518,12 @@ section = ["liquidacion"]
 data_type = "money"
 semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_casos_especificos_importe_del_pago_fraccionado_3"
 required = false
-input_kind = "manual"
+input_kind = "computed"
+formula = "modelo-222-importe-pago-fraccionado-b2-tipo-3"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
+source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "64"
@@ -546,11 +558,12 @@ section = ["liquidacion"]
 data_type = "money"
 semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_casos_especificos_importe_del_pago_fraccionado_4"
 required = false
-input_kind = "manual"
+input_kind = "computed"
+formula = "modelo-222-importe-pago-fraccionado-b2-tipo-4"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
+source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "54"
@@ -625,11 +638,12 @@ section = ["liquidacion"]
 data_type = "money"
 semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_casos_especificos_resultado_previo"
 required = false
-input_kind = "manual"
+input_kind = "computed"
+formula = "modelo-222-resultado-previo-b2"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
+source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "27"
@@ -693,11 +707,12 @@ section = ["liquidacion"]
 data_type = "money"
 semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_casos_especificos_resultado"
 required = false
-input_kind = "manual"
+input_kind = "computed"
+formula = "modelo-222-modalidad-40-3-resultado"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
+source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "33"
@@ -717,9 +732,10 @@ section = ["liquidacion"]
 data_type = "money"
 semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_casos_especificos_cantidad_a_ingresar"
 required = false
-input_kind = "manual"
+input_kind = "computed"
+formula = "modelo-222-cantidad-a-ingresar"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
+source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "35"

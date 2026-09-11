@@ -38,7 +38,8 @@ from pathlib import Path
 
 import pytest
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..glossary_reference import (
     GlossaryResult,
     generate_glossary_reference,

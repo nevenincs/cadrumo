@@ -25,13 +25,13 @@ import pytest
 from cadrumo.application.wizard import compiler as _wizard  # noqa: F401  -- side-effect import: registers profile keys
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.ids import RevisionId
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 from cadrumo.tests.registry_snapshot import build_snapshot
 from cadrumo.tests.registry_tree import bundled_registry_tree
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests._formula_runtime_support import (
+
+from ..compiler.authority import compiled_bundled_authority
+from ._formula_runtime_support import (
     _committed_modelo_130_snapshot,
     _committed_modelo_180_snapshot,
 )

@@ -20,13 +20,14 @@ every individual file still parsed.
 """
 
 from __future__ import annotations
-# Development-only record-design corpus gate.
 
+# Development-only record-design corpus gate.
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_authority
-from dev.registry.compiler.record_design import extract_record_design
+
+from ..compiler.record_design import extract_record_design
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

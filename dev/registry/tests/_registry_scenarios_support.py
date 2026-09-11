@@ -10,8 +10,9 @@ from functools import lru_cache
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.ids import LegalRefId, SourceRefId
-from dev.registry.tests._registry_schema_support import _committed_modelo
-from dev.registry.tests._scenarios import (
+
+from ._registry_schema_support import _committed_modelo
+from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
 )

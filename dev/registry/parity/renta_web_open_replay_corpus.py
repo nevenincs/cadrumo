@@ -64,8 +64,8 @@ from cadrumo.domain.calculations.registry.remote_state_guard import (
 )
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision
-from dev.registry.compiler.authority import compiled_bundled_authority
 
+from ..compiler.authority import compiled_bundled_authority
 from .external_grounding import RentaWebOpenReplayPayload
 from .external_oracle_corpus import ExternalOracleCorpus
 from .live_parity import ParityFieldComparison, ParityResult, ParityVerdict, ParityVerdictKind

@@ -21,16 +21,15 @@ import tomllib
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.loader import load_modelo_directory
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.compiler.edition_materialisation import materialise_edition
-from dev.registry.compiler.loader import load_modelo_directory
 
 from ..analysis.delta_minimality import MinimalityVerdict, judge_definition
+from ..compiler.authority import compiled_bundled_authority
+from ..compiler.edition_materialisation import materialise_edition
+from ..compiler.loader import load_modelo_directory
 from ..pipeline._export_tree import _render_toml_bytes
 from ..pipeline._tree_validation import GeneratedExportTreeValidationContext
 from ..pipeline.candidate_staging import (

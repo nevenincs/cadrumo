@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from ..source_tree import content_digest, normalised_content, normalised_contents, repository_files, snapshot
+from dev.source_tree import content_digest, normalised_content, normalised_contents, repository_files, snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

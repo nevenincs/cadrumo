@@ -35,8 +35,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
-
-from ..quality.unread_inputs import report_unread
+from dev.quality.unread_inputs import report_unread
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

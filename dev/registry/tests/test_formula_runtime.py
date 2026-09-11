@@ -13,7 +13,8 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_initial_values import materialise_observations
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationEntry, calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from dev.registry.tests._formula_runtime_support import (
+
+from ._formula_runtime_support import (
     _IVA_PRORRATA_PORCENTAJE_CASILLA,
     _M130_AGRARIAN_VOLUME_CASILLA,
     _M130_AGRARIAN_WITHHELD_CASILLA,
@@ -171,7 +172,7 @@ def test_casilla_constraint_violation_message_interpolates_with_raise_site_conte
     asserts no ``{name}`` placeholder survives. The AST placeholder-parity gate
     does not cover error ``context=`` dicts, so this guard is explicit.
     """
-    from .....core.i18n import tr
+    from cadrumo.core.i18n import tr
 
     # Mirror the context built at the raise site (keep in sync with
     # _formula_runtime.calculate_registry_snapshot).

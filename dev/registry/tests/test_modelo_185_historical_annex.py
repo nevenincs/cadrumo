@@ -1,17 +1,18 @@
 """Hash-pinned primary Annex-I evidence for Modelo 185's historical span."""
 
 from __future__ import annotations
-# Development-only record-design corpus gate.
 
+# Development-only record-design corpus gate.
 from datetime import date
 
 import pytest
 
 from cadrumo.core.hashing import hash_file
 from cadrumo.core.resources.bundled_data import bundled_path
-from dev.registry.compiler.record_design import extract_record_design
-from dev.registry.compiler.record_design_pdf_visual import extract_pdf_text_lines
-from dev.registry.tests._registry_schema_support import _committed_modelo
+
+from ..compiler.record_design import extract_record_design
+from ..compiler.record_design_pdf_visual import extract_pdf_text_lines
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

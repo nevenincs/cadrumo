@@ -32,14 +32,20 @@ import pytest
 from cadrumo.core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
-from dev.registry.compiler.validator import RegistryValidator
 from cadrumo.domain.calculations.registry.bindings import (
     _BINDING_VALIDATOR_REGISTRY,
     validate_binding_selector_shape,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloDefinition, ModeloRevision, RegistryCatalogues
-from dev.registry.tests._registry_schema_support import _committed_modelo
+from cadrumo.domain.calculations.registry.schema import (
+    DataBindingDefinition,
+    ModeloDefinition,
+    ModeloRevision,
+    RegistryCatalogues,
+)
+
+from ..compiler.validator import RegistryValidator
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

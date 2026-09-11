@@ -56,8 +56,8 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.ids import RevisionId, SourceRefId
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource, RegistryRevisionInspection
-from dev.registry.compiler.authority import compiled_bundled_authority
 
+from ..compiler.authority import compiled_bundled_authority
 from ._export_tree import SERIALIZER_CONVENTION, ExportTreeTransportProfile, render_complete_export_tree
 from .export_fragment_provenance import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from .joined_record_design import JoinedRecordDesign, join_record_design_semantics

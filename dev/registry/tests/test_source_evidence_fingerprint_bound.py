@@ -15,8 +15,9 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from dev.registry.compiler import source_evidence_fingerprint as _source_evidence_fingerprint
-from dev.registry.compiler.source_evidence_fingerprint import collect_source_evidence_fingerprints
+
+from ..compiler import source_evidence_fingerprint as _source_evidence_fingerprint
+from ..compiler.source_evidence_fingerprint import collect_source_evidence_fingerprints
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

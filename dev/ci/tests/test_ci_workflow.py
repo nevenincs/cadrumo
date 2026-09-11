@@ -12,8 +12,9 @@ from typing import Any
 import pytest
 import yaml
 
-from ..._paths import REPO_ROOT
-from ...packaging.command_execution import run_command
+from dev._paths import REPO_ROOT
+from dev.packaging.command_execution import run_command
+
 from ..lane_reachability import declared_lanes, resolved_recipe_commands
 from ..workflow_run_text import executed_text
 

@@ -26,7 +26,8 @@ from cadrumo.domain.calculations.registry.ids import (
     ModeloId,
     RevisionId,
 )
-from dev.registry.maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
+
+from .maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
 
 TemporalCoverageStatus = Literal["validated", "refused"]
 TemporalCoverageFailureCode = Literal[

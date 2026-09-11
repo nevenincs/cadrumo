@@ -109,8 +109,8 @@ from typing import Protocol
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from dev.registry.compiler.authority import compiled_bundled_authority
 
+from ..compiler.authority import compiled_bundled_authority
 from ..pipeline.record_design_intermediate import (
     RecordDesignIntermediateField,
     RecordDesignIntermediateSource,

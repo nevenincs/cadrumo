@@ -22,8 +22,9 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloDefinition
 from cadrumo.domain.calculations.registry.validate_revision_identity import revision_reference_identity_failures
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.parity.renta_web_open_replay_corpus import replay_corpus_directory
+
+from ..compiler.authority import compiled_bundled_authority
+from ..parity.renta_web_open_replay_corpus import replay_corpus_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

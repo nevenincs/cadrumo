@@ -14,9 +14,9 @@ from __future__ import annotations
 
 import argparse
 
-from dev.env._dotenv import env_setup
-from dev.env._install import install
-from dev.env._workstation import workstation_tools
+from ._dotenv import env_setup
+from ._install import install
+from ._workstation import workstation_tools
 
 ACTIONS = {
     "install": install,

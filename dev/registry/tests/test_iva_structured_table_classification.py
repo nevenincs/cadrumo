@@ -48,10 +48,7 @@ def _semantic_digest(rows: object) -> str:
 def test_every_remaining_iva_table_has_a_safe_s80_disposition() -> None:
     analysis = tomllib.loads(_ANALYSIS_PATH.read_text(encoding="utf-8"))
     rows = analysis["remaining_structured_tables"]
-    actual = {
-        Path(row["data_path"]).name: (row["row_count"], row["classification"], row["decision"])
-        for row in rows
-    }
+    actual = {Path(row["data_path"]).name: (row["row_count"], row["classification"], row["decision"]) for row in rows}
     bundled_iva = bundled_path("registry", "aeat", "iva")
 
     assert analysis["classification_step"] == "W04.P15.S80"

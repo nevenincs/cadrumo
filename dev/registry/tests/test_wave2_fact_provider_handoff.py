@@ -8,9 +8,10 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
-from dev.registry.compiler import fact_providers as provider_module
-from dev.registry.compiler.fact_providers import FACT_PROVIDER_REGISTRATIONS, compile_registered_fact_providers
-from dev.registry.maintenance_support import reset_registry_caches
+
+from ..compiler import fact_providers as provider_module
+from ..compiler.fact_providers import FACT_PROVIDER_REGISTRATIONS, compile_registered_fact_providers
+from ..maintenance_support import reset_registry_caches
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

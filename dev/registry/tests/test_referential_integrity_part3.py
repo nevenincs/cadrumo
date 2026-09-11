@@ -6,14 +6,15 @@ import pytest
 
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from dev.registry.compiler.validator import RegistryValidator
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, FormulaDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import SourceCitation
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_surfaces import CalculationCompletenessCasilla
-from dev.registry.tests._referential_integrity_support import (
+
+from ..compiler.validator import RegistryValidator
+from ._referential_integrity_support import (
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,
     build_minimal_snapshot,

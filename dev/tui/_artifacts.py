@@ -24,7 +24,8 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from .._paths import REPO_ROOT, UTF_8
+from dev._paths import REPO_ROOT, UTF_8
+
 from ._inventory import InterfaceKind
 from ._viewports import VIEWPORTS, Orientation, ViewportName
 

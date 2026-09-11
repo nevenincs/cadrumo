@@ -1,25 +1,30 @@
 """Modelo 309's exact historical record-design epochs."""
 
 from __future__ import annotations
-# Development-only record-design corpus gate.
 
+# Development-only record-design corpus gate.
 from datetime import date
 from decimal import Decimal
 from functools import cache
 
 import pytest
-from dev.registry.compiler.loader import load_modelo_directory, load_shared_catalogues
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.hashing import hash_file
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.registry_snapshot import build_snapshot
-from dev.registry.compiler._validate_export_layout_coverage import validate_export_layout_record_coverage
-from dev.registry.compiler._validate_semantic_roles import semantic_role_consistency_failures
-from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError, NoRevisionForPeriodError, RegistryValidationError
-from dev.registry.compiler.record_design import extract_record_design
+from cadrumo.domain.calculations.registry.errors import (
+    AmbiguousRevisionSelectionError,
+    NoRevisionForPeriodError,
+    RegistryValidationError,
+)
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ..compiler._validate_export_layout_coverage import validate_export_layout_record_coverage
+from ..compiler._validate_semantic_roles import semantic_role_consistency_failures
+from ..compiler.loader import load_modelo_directory, load_shared_catalogues
+from ..compiler.record_design import extract_record_design
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

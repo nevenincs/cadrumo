@@ -14,7 +14,8 @@ from datetime import date
 import pytest
 
 from cadrumo.tests.registry_tree import bundled_registry_tree
-from dev.registry.compiler._validate_revision_id_window_agreement import (
+
+from ..compiler._validate_revision_id_window_agreement import (
     revision_id_claims_open_window,
     revision_window_closures,
     validate_revision_id_window_agreement,

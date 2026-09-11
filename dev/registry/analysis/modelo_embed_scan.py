@@ -38,9 +38,8 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core.directory_scan import scan_directory
-
-from ..._paths import REPO_ROOT, UTF_8
-from ...quality.unread_inputs import report_unread
+from dev._paths import REPO_ROOT, UTF_8
+from dev.quality.unread_inputs import report_unread
 
 SOURCE_ROOT: Final[Path] = REPO_ROOT / "src" / "cadrumo"
 REGISTRY_PACKAGE_ROOT: Final[Path] = SOURCE_ROOT / "domain" / "calculations" / "registry"

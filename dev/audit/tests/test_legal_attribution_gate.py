@@ -34,7 +34,8 @@ from __future__ import annotations
 
 import pytest
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..legal_attribution_screen import _modelo_refs_from_registry, approved_modelo_numbers, find_mismatches
 from ..legal_catalogue import load_legal_entries, required_text_by_entry
 

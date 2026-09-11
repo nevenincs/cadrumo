@@ -19,8 +19,9 @@ import pytest
 # snapshot check required by Modelo 100 parity scenarios run via _scenarios.
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
-from dev.registry.tests._registry_schema_support import _committed_modelo
-from dev.registry.tests._scenarios import (
+
+from ._registry_schema_support import _committed_modelo
+from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
     assert_registry_scenario_matches,

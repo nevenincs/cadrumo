@@ -15,8 +15,8 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.directory_scan import iter_directory, scan_directory
+from dev._paths import REPO_ROOT
 
-from ..._paths import REPO_ROOT
 from ..apidocs.manager import ApiStubManager
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]

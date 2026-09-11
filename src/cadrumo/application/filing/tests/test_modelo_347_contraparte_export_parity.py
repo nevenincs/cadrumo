@@ -22,7 +22,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.loader import load_registry_tree
+from test_support.registry_authoring import load_registry_tree
 
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId

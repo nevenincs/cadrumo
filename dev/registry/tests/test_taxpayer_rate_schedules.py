@@ -8,11 +8,12 @@ import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.registry_snapshot import build_snapshot
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.ids import ParameterId
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
-from dev.registry.tests._registry_schema_support import _committed_modelo
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

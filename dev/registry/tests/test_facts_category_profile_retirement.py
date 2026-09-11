@@ -20,9 +20,10 @@ from cadrumo.domain.calculations.registry.facts.schema import FactOwnership, Fac
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.categories.registry import CATEGORY_PROFILE_FACT_ID, CATEGORY_STATUTORY_CAP_FACT_ID
 from cadrumo.domain.categories.spending_category import SpendingCategory
-from dev.registry.compiler.fact_loader import load_governed_facts
-from dev.registry.compiler.fact_providers import FACT_PROVIDER_REGISTRATIONS
-from dev.registry.compiler.loader import load_registry_tree
+
+from ..compiler.fact_loader import load_governed_facts
+from ..compiler.fact_providers import FACT_PROVIDER_REGISTRATIONS
+from ..compiler.loader import load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

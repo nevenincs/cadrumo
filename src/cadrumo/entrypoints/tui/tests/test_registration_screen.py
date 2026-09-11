@@ -20,7 +20,7 @@ import unicodedata
 from pathlib import Path
 
 import pytest
-from dev.tui.harness.fixture import registration_attempt
+from test_support.tui_registration import registration_attempt
 from textual.css.query import NoMatches
 from textual.widgets import Input, Static
 

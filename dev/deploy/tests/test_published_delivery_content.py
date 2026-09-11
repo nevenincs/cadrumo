@@ -24,9 +24,9 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
+from dev._paths import REPO_ROOT
+from dev.docs.pagefind_index import build_search_index
 
-from ..._paths import REPO_ROOT
-from ...docs.pagefind_index import build_search_index
 from ..docs_static_site import (
     _assert_served_index_matches_build,
     _localized_languages,

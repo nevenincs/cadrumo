@@ -18,8 +18,8 @@ from PIL import Image, ImageDraw, ImageFont
 from cadrumo.application.filing.runtime import build_runtime_schema_provider
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
+from dev._paths import UTF_8
 
-from .._paths import UTF_8
 from .prepare_cli_demo import DEMO_ROOT, REPO_ROOT, demo_environment, prepare_demo
 
 _UTF_8: Final[str] = UTF_8

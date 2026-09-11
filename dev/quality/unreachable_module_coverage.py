@@ -11,8 +11,8 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from .._paths import REPO_ROOT
-from ..audit.unreachable_code import (
+from dev._paths import REPO_ROOT
+from dev.audit.unreachable_code import (
     ModuleFinding,
     ModuleReach,
     UnreachableCodeOutcome,

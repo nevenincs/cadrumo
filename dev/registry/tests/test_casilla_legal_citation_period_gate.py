@@ -25,7 +25,6 @@ from cadrumo.domain.calculations.registry.casilla_legal_citation_period import (
 )
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..analysis.corpus import bundled_modelo_ids
 from ..analysis.legal_citation_period_ledger import (
@@ -33,6 +32,7 @@ from ..analysis.legal_citation_period_ledger import (
     category_disagreements,
     load_citation_exceptions,
 )
+from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -77,7 +77,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compile_validated_authority
+from test_support.registry_authoring import compile_validated_authority
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository

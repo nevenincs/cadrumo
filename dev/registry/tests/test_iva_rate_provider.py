@@ -29,8 +29,9 @@ from cadrumo.domain.iva.rates import (
     iva_rate_record_from_fact,
 )
 from cadrumo.domain.iva.schema import EUMemberState, IvaRateKind
-from dev.registry.compiler.fact_loader import load_governed_facts
-from dev.registry.compiler.fact_providers import FACT_PROVIDER_REGISTRATIONS
+
+from ..compiler.fact_loader import load_governed_facts
+from ..compiler.fact_providers import FACT_PROVIDER_REGISTRATIONS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

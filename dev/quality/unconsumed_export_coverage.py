@@ -7,7 +7,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from ..audit.unreachable_code import UnreachableCodeOutcome, run_unreachable_code_scan
+from dev.audit.unreachable_code import UnreachableCodeOutcome, run_unreachable_code_scan
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _PACKAGE_ROOT = REPO_ROOT / "src" / "cadrumo"

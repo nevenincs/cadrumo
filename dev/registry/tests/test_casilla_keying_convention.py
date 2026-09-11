@@ -10,7 +10,10 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.casilla_membership import casilla_noncanonical_reference_targets, format_noncanonical_casilla_reference
+from cadrumo.domain.calculations.registry.casilla_membership import (
+    casilla_noncanonical_reference_targets,
+    format_noncanonical_casilla_reference,
+)
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot

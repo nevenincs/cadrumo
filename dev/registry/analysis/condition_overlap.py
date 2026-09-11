@@ -60,8 +60,8 @@ from dataclasses import dataclass
 from typing import Final
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from dev.registry.compiler.authority import compiled_bundled_authority
 
+from ..compiler.authority import compiled_bundled_authority
 from .corpus import bundled_modelo_ids
 from .screens import screen_findings
 

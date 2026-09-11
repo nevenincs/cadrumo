@@ -1,27 +1,28 @@
 """Tests for the committed Modelo 353 (IVA grupos agregado) registry foundation."""
 
 from __future__ import annotations
-# Development-only record-design corpus gate.
 
+# Development-only record-design corpus gate.
 from datetime import date
 from hashlib import sha256
 
 import pytest
-from dev.registry.compiler.loader import load_catalogue_file, load_modelo_directory
 
 from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.registry_snapshot import build_snapshot
-from cadrumo.domain.iva.schema import IvaLedgerObservationRole
-from dev.registry.compiler._validate import RegistryValidator
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings_previous_filing import previous_filing_source_reference
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError, RegistryValidationError
-from dev.registry.compiler.record_design import extract_record_design
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.temporal import select_revision
-from dev.registry.tests._ledger_iva_aggregation_support import _deduction_provenance
-from dev.registry.tests._registry_schema_support import _committed_modelo
+from cadrumo.domain.iva.schema import IvaLedgerObservationRole
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ..compiler._validate import RegistryValidator
+from ..compiler.loader import load_catalogue_file, load_modelo_directory
+from ..compiler.record_design import extract_record_design
+from ._ledger_iva_aggregation_support import _deduction_provenance
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -627,12 +628,12 @@ def test_modelo_353_declares_322_group_settlement_treatment(revision_id: str, de
 def test_modelo_353_iva_bindings_resolve_against_substrate_observations() -> None:
     from decimal import Decimal
 
-    from ....iva.flow import IvaFlowDirection
-    from ....iva.schema import IvaCategory, IvaRateKind
-    from ..ledger_iva_bindings import (
+    from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
     )
+    from cadrumo.domain.iva.flow import IvaFlowDirection
+    from cadrumo.domain.iva.schema import IvaCategory, IvaRateKind
 
     modelo, _ = _load_modelo_353()
     revision = modelo.revisions["2021-2025"]

@@ -5,9 +5,9 @@ from __future__ import annotations
 import pytest
 import yaml
 
-from ..._paths import REPO_ROOT
-from ...ci.workflow_permissions import jobs_granting
-from ...ci.workflow_run_text import executed_text
+from dev._paths import REPO_ROOT
+from dev.ci.workflow_permissions import jobs_granting
+from dev.ci.workflow_run_text import executed_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

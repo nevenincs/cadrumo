@@ -31,7 +31,7 @@ from typing import Final
 
 from PIL import Image, ImageDraw, ImageFont
 
-from .._paths import REPO_ROOT, UTF_8
+from dev._paths import REPO_ROOT, UTF_8
 
 FONT_PATH: Final[Path] = REPO_ROOT / "docs" / "_static" / "readme" / "fonts" / "CascadiaMono-Regular.ttf"
 FONT_SHA256: Final[str] = "06520d032ec274fa5040b22c6f4a1d829081b24ba40b2da56dae89bf10c7b481"

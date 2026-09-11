@@ -52,11 +52,12 @@ import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from dev.registry.compiler._validate_revision_rules import _bracket_coverage_gaps
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.schema_formula import ParameterDefinition
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from dev.registry.tests._registry_schema_support import _committed_snapshot
+
+from ..compiler._validate_revision_rules import _bracket_coverage_gaps
+from ._registry_schema_support import _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -107,7 +108,7 @@ def test_pyme_sl_2024_cuota_resolves_without_bracket_no_window() -> None:
     pre-2025 pyme flat rate) must now exist and the cuota calculation
     must complete without error.
     """
-    from ..formula_runtime import calculate_registry_snapshot
+    from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 
     # The micro-empresa lane applies when INCN < 1.000.000 EUR (LIS Art. 29.1).
     # Supply INCN = 500.000 EUR to route through the pyme bracket table.
@@ -180,7 +181,7 @@ def test_coverage_validator_fires_on_deliberate_gap() -> None:
     ``model_construct`` bypasses pydantic validation so the fixture can carry
     minimal fields without satisfying the production non-empty ref constraints.
     """
-    from ..schema_formula import BracketEntry
+    from cadrumo.domain.calculations.registry.schema_formula import BracketEntry
 
     bracket_2025 = BracketEntry(
         lower_bound=Decimal("0"),
@@ -214,7 +215,7 @@ def test_coverage_validator_passes_when_no_gap() -> None:
     and extend to ``revision_to`` without interruption must produce zero
     failures.  This guards against false positives in the coverage check.
     """
-    from ..schema_formula import BracketEntry
+    from cadrumo.domain.calculations.registry.schema_formula import BracketEntry
 
     bracket_2024 = BracketEntry(
         lower_bound=Decimal("0"),

@@ -23,8 +23,7 @@ identify the exact rule set.
 
 The runtime authority artifact is the versioned, digest-checked publication of
 the validated AEAT registry intended for installed calculations and filing
-exports. It is generated output, not a signed document: it carries no
-signature, key, or certificate. `bundled_authority()` reads the packaged
+exports. It is generated output. `bundled_authority()` reads the packaged
 `registry/authority/authority.json` and checks its schema version and content
 digest before reconstructing typed authority data.
 
@@ -39,8 +38,7 @@ digest before reconstructing typed authority data.
 The artifact is one canonical JSON object with exactly three members:
 `schema_version`, `payload`, and `payload_sha256`. `payload_sha256` is the
 SHA-256 digest of the canonical JSON of `schema_version` and `payload`
-together. The digest detects a truncated, corrupted, or hand-edited file. It
-doesn't authenticate the publisher.
+together. The digest detects a truncated, corrupted, or hand-edited file.
 
 The identity digest folds, for every registry file and every source-evidence
 file, its path relative to its root and the SHA-256 of its content. Registry

@@ -13,8 +13,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 from secrets import token_bytes
-from threading import Condition, RLock
-from typing import Protocol, override
+from threading import RLock
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.hashing import content_hash_hex
@@ -24,12 +23,12 @@ from ._snapshot_internals import _build_validated_snapshot
 from .authority_artifact import (
     AuthorityArtifact,
     AuthorityEvidenceProjection,
-    read_authority_artifact,
+    read_shared_authority_artifact,
 )
-from .provenance import NormativeCorpusProvenance
 from .errors import RegistrySnapshotError, RegistryValidationError
 from .facts.resolution import GovernedFactQuery, ResolvedGovernedFact, resolve_governed_fact
 from .ids import LegalRefId, ModeloId, RevisionId, SourceRefId
+from .provenance import NormativeCorpusProvenance
 from .schema import (
     ModeloDefinition,
     ModeloRevision,
@@ -207,7 +206,7 @@ class ValidatedRegistryAuthority:
     def legal_corpus_provenance(self, legal_ref_id: LegalRefId) -> NormativeCorpusProvenance:
         """Return one legal reference's provenance through this validated authority.
 
-        The publisher's signed evidence projection is the sole runtime
+        The publisher's validated evidence projection is the sole runtime
         provenance authority; product code never resolves a corpus path.
         """
         with self._state_lock:
@@ -569,11 +568,12 @@ def bundled_authority() -> ValidatedRegistryAuthority:
     Publication validates authoring inputs before producing this artifact.  A
     product process never recompiles those inputs: a missing, corrupt, or
     unsupported-version publication is refused here before a calculation or
-    filing can begin.  Each call reconstructs a distinct graph, so a consumer cannot
+    filing can begin. Each call returns distinct authority state around a
+    deeply immutable, file-identity-cached artifact graph, so consumers cannot
     mutate the authority subsequently observed by another consumer.
     """
     artifact_path = bundled_authority_artifact_path()
-    artifact = read_authority_artifact(artifact_path)
+    artifact = read_shared_authority_artifact(artifact_path)
     return _authority_from_published_artifact(artifact, artifact_path=artifact_path)
 
 

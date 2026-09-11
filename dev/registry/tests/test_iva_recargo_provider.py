@@ -25,7 +25,8 @@ from cadrumo.domain.iva.recargo_equivalencia import (
     IVA_RECARGO_FACT_ID,
     recargo_rate_record_from_fact,
 )
-from dev.registry.compiler.fact_loader import load_governed_facts
+
+from ..compiler.fact_loader import load_governed_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

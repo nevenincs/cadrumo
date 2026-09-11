@@ -29,13 +29,13 @@ from pathlib import Path
 
 import pytest
 
-from ..audit.unreachable_code import EntryPoint, ShippedTreeSpec
-from ..audit.write_path_coverage import (
+from dev.audit.unreachable_code import EntryPoint, ShippedTreeSpec
+from dev.audit.write_path_coverage import (
     PersistenceSurfaceSpec,
     WritePathOutcome,
     scan_write_path_coverage,
 )
-from ..quality.write_path_coverage import run_gate
+from dev.quality.write_path_coverage import run_gate
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.timeout(600)]
 """The 600-second budget is contention, not a slow test.

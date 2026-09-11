@@ -11,8 +11,9 @@ from cadrumo.domain.calculations.registry.ids import ModeloId, RevisionId
 from cadrumo.domain.calculations.registry.period_selector_match import selector_token_for_request
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from dev.registry.maintenance_support import ExternalOracleInventory, UnattributedOraclePayload
-from dev.registry.parity.external_grounding import ExternalGroundingModel, ExternalOracleCorpus
+
+from ..maintenance_support import ExternalOracleInventory, UnattributedOraclePayload
+from ..parity.external_grounding import ExternalGroundingModel, ExternalOracleCorpus
 
 _GroundingDetail = Annotated[str, ElidedProse(512)]
 

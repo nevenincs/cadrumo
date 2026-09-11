@@ -308,12 +308,10 @@ def _isolate_registry_caches() -> Iterator[None]:
     is needed for correctness, only for tidiness the temp directory does not
     require.
     """
-    from dev.registry.compiler import loader as registry_loader
-    from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
+    from test_support.registry_authoring import reset_registry_authoring_caches
 
     def _reset() -> None:
-        registry_loader._load_registry_tree_cached.cache_clear()
-        clear_fingerprint_cache()
+        reset_registry_authoring_caches()
 
     _reset()
     yield

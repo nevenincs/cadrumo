@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from functools import cache
 
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.casilla_id import validated_casilla_id
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_formula import KeyedBracketEntry
-from dev.registry.compiler.authority import compile_validated_authority
-from dev.registry.compiler.loader import load_registry_tree
+
+from ..compiler.authority import compile_validated_authority
+from ..compiler.loader import load_registry_tree
 
 
 @cache
@@ -49,6 +50,6 @@ def _committed_modelo(modelo_id: str) -> ModeloDefinition:
 
 @cache
 def _committed_snapshot(modelo_id: str, filing_year: int, period: str) -> RegistrySnapshot:
-    return compile_validated_authority(
-        bundled_path("registry", "aeat"), bundled_path()
-    ).snapshot(modelo_id, filing_year=filing_year, period=period)
+    return compile_validated_authority(bundled_path("registry", "aeat"), bundled_path()).snapshot(
+        modelo_id, filing_year=filing_year, period=period
+    )

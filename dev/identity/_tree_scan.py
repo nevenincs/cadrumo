@@ -92,9 +92,9 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-from .._paths import UTF_8
-from ..sanitizer.residual_identity import ResidualKind, checksum_valid_spans
-from ..source_tree import repository_files as _visible_repository_files
+from dev._paths import UTF_8
+from dev.sanitizer.residual_identity import ResidualKind, checksum_valid_spans
+from dev.source_tree import repository_files as _visible_repository_files
 
 _UTF_8: Final[str] = UTF_8
 

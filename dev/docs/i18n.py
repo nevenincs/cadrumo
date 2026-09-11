@@ -43,8 +43,8 @@ if not __package__:
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.external_constants import OutputLanguage
+from dev._paths import REPO_ROOT
 
-from .._paths import REPO_ROOT
 from .build import docs_build_jobs, ensure_isolated_storage_root
 
 _DOC_SUFFIXES: Final[frozenset[str]] = frozenset({".md", ".rst"})

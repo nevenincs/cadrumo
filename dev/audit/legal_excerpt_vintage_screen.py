@@ -184,15 +184,15 @@ from cadrumo.core.corpus_text import (
 from cadrumo.core.directory_scan import (
     scan_directory,
 )
-
-from .._paths import REPO_ROOT, UTF_8
-from ..corpus.fetch_boe_normative import (
+from dev._paths import REPO_ROOT, UTF_8
+from dev.corpus.fetch_boe_normative import (
     NormativeAcquisitionError,
     article_block_title,
     article_redaction_markup,
     assert_serves_the_article_in_force,
 )
-from ..docs.preprocess.normatives_html import render_normative_prose
+from dev.docs.preprocess.normatives_html import render_normative_prose
+
 from .legal_catalogue import load_legal_entries
 
 #: Declared locally rather than imported from ``cadrumo.core``: ``dev/`` is

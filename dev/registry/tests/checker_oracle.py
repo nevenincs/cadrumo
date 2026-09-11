@@ -17,7 +17,8 @@ from cadrumo.domain.calculations.registry.checker_oracle_flow import (
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import OracleId
 from cadrumo.domain.calculations.registry.remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
-from dev.registry.parity.live_parity import (
+
+from ..parity.live_parity import (
     OracleSurfaceKind,
     ParityFieldComparison,
     ParityResult,

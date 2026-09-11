@@ -19,7 +19,8 @@ from cadrumo.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.profile_capsule import open_test_profile_session
 from cadrumo.tests.secure_sql import isolated_profile_storage
 from cadrumo.tests.user_profile import register_cli_profile, register_minimal_profile
-from dev.registry.maintenance_support import load_modelo_path
+
+from ..maintenance_support import load_modelo_path
 
 __all__ = ["isolated_profile_storage"]
 

@@ -12,8 +12,9 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.facts.modelo_parameter_fact import ModeloParameterFact
 from cadrumo.domain.calculations.registry.facts.schema import FactSelector
-from dev.registry.compiler.fact_loader import load_governed_facts
-from dev.registry.compiler.fact_providers import (
+
+from ..compiler.fact_loader import load_governed_facts
+from ..compiler.fact_providers import (
     FACT_PROVIDER_REGISTRATIONS,
     compile_registered_fact_providers,
 )

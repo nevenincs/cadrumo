@@ -9,22 +9,23 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler import fact_providers
-from dev.registry.compiler.authority import compile_validated_authority
-from dev.registry.compiler.loader import collect_registry_tree_fingerprints
-from dev.registry.compiler.loader_cache import registry_disk_cache_dir
-from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
-from dev.registry.conformance.tests._loader_directory_mode_support import (
+
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.provenance import NormativeCorpusProvenance
+
+from ..compiler import fact_providers
+from ..compiler.authority import compile_validated_authority
+from ..compiler.loader import collect_registry_tree_fingerprints
+from ..compiler.loader_cache import registry_disk_cache_dir
+from ..compiler.loader_fingerprints import clear_fingerprint_cache
+from ..conformance.tests._loader_directory_mode_support import (
     write_extracted_corpus_sidecar,
     write_fragmented_revision,
 )
-
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.period import Period
-from ..authority import ValidatedRegistryAuthority
-from ..corpus_provenance import NormativeCorpusProvenance
-from ..errors import RegistrySnapshotError, RegistryValidationError
-from ..formula_runtime import calculate_registry_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

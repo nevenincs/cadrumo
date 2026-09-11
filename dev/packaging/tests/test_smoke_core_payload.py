@@ -13,8 +13,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.directory_scan import iter_directory
+from dev._paths import REPO_ROOT
 
-from ..._paths import REPO_ROOT
 from .._distribution_limits import PYPI_FILE_CAP_BYTES
 from ..hashing import sha256_path
 from ..lane_verification_core import (

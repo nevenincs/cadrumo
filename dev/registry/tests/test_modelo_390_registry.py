@@ -12,8 +12,6 @@ from cadrumo.core.aggregation import BindingAggregationOp, BindingSourceKind
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.iva.schema import IvaLedgerObservationRole
-from dev.registry.compiler.validator import RegistryValidator
 from cadrumo.domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.bindings import binding_source_casilla_ids, binding_source_modelo
@@ -21,7 +19,10 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from dev.registry.tests._registry_schema_support import _committed_modelo, _committed_snapshot
+from cadrumo.domain.iva.schema import IvaLedgerObservationRole
+
+from ..compiler.validator import RegistryValidator
+from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -478,7 +479,7 @@ def test_modelo_390_declares_annual_compensation_result_fields(revision_id: str)
     assert "modelo-390-rel-303-compensacion-ultimo-periodo" not in relations
     assert "modelo-390-rel-303-compensacion-generada-ejercicio-no-97" not in relations
 
-    from ..bindings import iva_compensation_annual_partition_requirement
+    from cadrumo.domain.calculations.registry.bindings import iva_compensation_annual_partition_requirement
 
     requirement = iva_compensation_annual_partition_requirement(revision)
     assert requirement is not None
@@ -576,12 +577,12 @@ def test_modelo_390_prorrata_regularizacion_is_in_annual_deducible_formula(revis
 
 @pytest.mark.parametrize("revision_id", _M390_REVISION_IDS)
 def test_modelo_390_iva_bindings_resolve_against_annual_substrate_observations(revision_id: str) -> None:
-    from ....iva.flow import IvaFlowDirection
-    from ....iva.schema import IvaCategory, IvaRateKind
-    from ..ledger_iva_bindings import (
+    from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
     )
+    from cadrumo.domain.iva.flow import IvaFlowDirection
+    from cadrumo.domain.iva.schema import IvaCategory, IvaRateKind
 
     modelo, _ = _load_modelo_390()
     revision = modelo.revisions[revision_id]

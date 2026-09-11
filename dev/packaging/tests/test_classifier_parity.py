@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from ...ci.python_runtime_matrix import load_runtime_inventory
+from dev.ci.python_runtime_matrix import load_runtime_inventory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -24,14 +24,15 @@ import pytest
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.registry_snapshot import build_snapshot
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.irnr_ledger_bindings import (
     resolve_ledger_irnr_income_aggregation_binding_values,
     unsupported_ledger_irnr_income_observations,
     validate_ledger_irnr_income_aggregation_binding_definition,
 )
-from dev.registry.tests._registry_schema_support import _committed_modelo
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

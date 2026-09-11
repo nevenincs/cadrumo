@@ -57,6 +57,7 @@ from typing import Annotated, Final
 from pydantic import BeforeValidator, Field, field_validator, model_validator
 
 from ....core.casilla_id import CasillaId
+from ....core.frozen_mapping import FROZEN_MAPPING
 from ....core.remote_authority import first_aeat_host
 from ....core.unit_proportion import UNIT_PROPORTION_MAX, UNIT_PROPORTION_MIN
 from .condition_mode import ConditionMode, ConditionModeField
@@ -446,7 +447,9 @@ class WorkbookParityReference(RegistryModel):
     fixture_id: WorkbookFixtureId
     formula_coverage: WorkbookFormulaCoverageField
     runner_required: bool
-    output_cells: Mapping[WorkbookOutputId, WorkbookCellRefStr] = Field(default_factory=dict)
+    output_cells: Annotated[Mapping[WorkbookOutputId, WorkbookCellRefStr], FROZEN_MAPPING] = Field(
+        default_factory=dict, validate_default=True
+    )
     tolerance: DecimalValue = Decimal("0.00")
     legal_refs: LegalRefs
     source_refs: SourceRefs
@@ -532,8 +535,9 @@ class VerificationExpectationDefinition(RegistryModel):
     computed_casilla_ids: tuple[CasillaId, ...]
     reconcile_when_present_casilla_ids: tuple[CasillaId, ...] = ()
     externally_grounded_casilla_ids: tuple[CasillaId, ...] = ()
-    reconciliation_total_casilla_ids: Mapping[SettlementDirectionField, CasillaId] = Field(
+    reconciliation_total_casilla_ids: Annotated[Mapping[SettlementDirectionField, CasillaId], FROZEN_MAPPING] = Field(
         default_factory=lambda: dict[SettlementDirection, CasillaId](),
+        validate_default=True,
     )
     tolerance: DecimalValue = Field(ge=Decimal("0"))
     rounding: VerificationRoundingCodeValue

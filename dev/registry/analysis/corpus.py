@@ -20,6 +20,6 @@ __all__ = ["bundled_modelo_ids"]
 
 def bundled_modelo_ids() -> tuple[str, ...]:
     """Return every bundled modelo code as a sorted tuple of strings."""
-    from dev.registry.compiler.authority import compiled_bundled_authority
+    from ..compiler.authority import compiled_bundled_authority
 
     return tuple(sorted(str(modelo.id) for modelo in compiled_bundled_authority().modelos))

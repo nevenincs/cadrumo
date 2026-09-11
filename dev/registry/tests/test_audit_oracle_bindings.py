@@ -12,14 +12,14 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
-from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
-from dev.registry.maintenance_support import (
+
+from ..conformance.tests._registry_schema_support import _committed_modelo
+from ..maintenance_support import (
     LiveParityCatalogue,
     OracleEnvironment,
     audit_oracle_bindings,
     audit_registry_oracle_bindings,
 )
-
 from .aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

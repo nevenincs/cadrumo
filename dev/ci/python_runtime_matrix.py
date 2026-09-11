@@ -20,7 +20,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any, Final
 
-from .._paths import REPO_ROOT, UTF_8
+from dev._paths import REPO_ROOT, UTF_8
 
 _INVENTORY_PATH: Final[Path] = REPO_ROOT / "dev" / "ci" / "python-runtime-matrix.json"
 _SCHEMA: Final[str] = "cadrumo.python-runtime-matrix.v1"

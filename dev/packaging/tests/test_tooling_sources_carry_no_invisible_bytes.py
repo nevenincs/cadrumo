@@ -37,7 +37,7 @@ from typing import Final
 
 import pytest
 
-from ..._paths import REPO_ROOT, UTF_8
+from dev._paths import REPO_ROOT, UTF_8
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

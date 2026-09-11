@@ -20,7 +20,8 @@ from typing import Annotated, Final
 
 import typer
 
-from ..._paths import UTF_8
+from dev._paths import UTF_8
+
 from ._query_aliases import load_query_alias_authority
 from ._sweep import (
     DEFAULT_MAX_RESULTS,

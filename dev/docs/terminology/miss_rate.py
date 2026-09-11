@@ -22,7 +22,8 @@ from typing import Annotated, Final
 
 import typer
 
-from ..._paths import UTF_8
+from dev._paths import UTF_8
+
 from ._miss_rate import MissRateEvaluation, evaluate_held_out_miss_rate
 
 _UTF_8: Final[str] = UTF_8

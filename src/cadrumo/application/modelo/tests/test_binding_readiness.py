@@ -8,7 +8,7 @@ from datetime import date
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compile_validated_authority
+from test_support.registry_authoring import compile_validated_authority
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.period import Period

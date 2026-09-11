@@ -15,12 +15,13 @@ See Also:
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler._validate_constructs import _CONSTRUCT_MEMBER_ATTRS, validate_construct_closure
-from dev.registry.compiler._validate_evidence import EvidenceValidator
-from dev.registry.compiler.validator import RegistryValidator
 
-from ..errors import RegistryValidationError
-from ..schema_revision_members import ConstructDefinition
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema_revision_members import ConstructDefinition
+
+from ..compiler._validate_constructs import _CONSTRUCT_MEMBER_ATTRS, validate_construct_closure
+from ..compiler._validate_evidence import EvidenceValidator
+from ..compiler.validator import RegistryValidator
 from ._referential_integrity_support import (
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,

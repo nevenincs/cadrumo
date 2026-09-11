@@ -10,9 +10,10 @@ from pathlib import Path
 from typing import Any
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from dev.registry.tests._revision_span_design_support import (
+from cadrumo.tests.registry_tree import bundled_registry_tree
+
+from ._revision_span_design_support import (
     _BOX_MARKER,
     _PDF_FLATTENED_SHEET,
     _RESERVED_FIELD,

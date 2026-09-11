@@ -69,9 +69,9 @@ from cadrumo.domain.calculations.registry.casilla_lineage_totality import unreso
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_overlap
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-from dev.registry.compiler.registry_scope import validate_registry_scope
-from dev.registry.compiler.authority import compiled_bundled_authority
 
+from ..compiler.authority import compiled_bundled_authority
+from ..compiler.registry_scope import validate_registry_scope
 from .casilla_id_grammar import classify_casilla_id
 from .corpus import bundled_modelo_ids
 

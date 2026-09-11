@@ -22,8 +22,8 @@ from cadrumo.domain.calculations.registry.ids import (
     RevisionId,
 )
 from cadrumo.domain.calculations.registry.schema_exports import ProjectionEndpointDeclaration
-from dev.registry.maintenance_support import GeneratedArtifactInspection
 
+from ..maintenance_support import GeneratedArtifactInspection
 from ._semantic_map_validation import (
     SemanticMapAnomalyException,
     _validate_semantic_map_with_admissions,

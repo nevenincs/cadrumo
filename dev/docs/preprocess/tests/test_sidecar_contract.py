@@ -21,7 +21,8 @@ from pathlib import Path
 
 import pytest
 
-from ...._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..normatives_html import build_outputs
 from ..schema import (
     PREPROCESS_SCHEMA_VERSION,

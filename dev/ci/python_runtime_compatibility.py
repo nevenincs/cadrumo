@@ -32,11 +32,11 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any, Final, TypedDict, cast
 
-from .._paths import REPO_ROOT, UTF_8
-from ..packaging.command_execution import CommandResult, run_command
-from ..packaging.evidence import artifact_map_digest
-from ..packaging.hashing import sha256_path, sha256_text
-from ..packaging.lane_verification_core import (
+from dev._paths import REPO_ROOT, UTF_8
+from dev.packaging.command_execution import CommandResult, run_command
+from dev.packaging.evidence import artifact_map_digest
+from dev.packaging.hashing import sha256_path, sha256_text
+from dev.packaging.lane_verification_core import (
     build_companion_wheels,
     build_root_snapshot,
     build_sdist,
@@ -47,9 +47,9 @@ from ..packaging.lane_verification_core import (
     venv_cadrumo_path,
     venv_python_path,
 )
-from ..packaging.python_cohort import digest_install_target, load_python_cohort
-from ..packaging.runtime_wheelhouse import extract_runtime_wheelhouse, load_runtime_wheelhouse
-from ..source_tree import content_digest, repository_files
+from dev.packaging.python_cohort import digest_install_target, load_python_cohort
+from dev.packaging.runtime_wheelhouse import extract_runtime_wheelhouse, load_runtime_wheelhouse
+from dev.source_tree import content_digest, repository_files
 
 _UTF_8: Final[str] = UTF_8
 _SCHEMA: Final[str] = "cadrumo.python-runtime-compatibility.v1"
@@ -783,7 +783,7 @@ def _load_binary_artifacts(
     builder_python: str | None = None
     release_manifest = resolved / "release-cohort.json"
     if release_manifest.is_file():
-        from ..packaging.cohort_manifest import load_release_cohort
+        from dev.packaging.cohort_manifest import load_release_cohort
 
         release = load_release_cohort(resolved)
         builder_python = release.manifest.builder.python

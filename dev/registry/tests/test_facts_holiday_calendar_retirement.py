@@ -17,8 +17,9 @@ from cadrumo.domain.deadlines.festivos import (
     HOLIDAY_CALENDAR_PUBLICATION_EVENT_FACT_ID,
     HOLIDAY_EVENT_FACT_ID,
 )
-from dev.registry.compiler.fact_loader import load_governed_facts
-from dev.registry.compiler.fact_providers import FACT_PROVIDER_REGISTRATIONS
+
+from ..compiler.fact_loader import load_governed_facts
+from ..compiler.fact_providers import FACT_PROVIDER_REGISTRATIONS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

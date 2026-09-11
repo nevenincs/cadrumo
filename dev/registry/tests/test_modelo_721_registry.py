@@ -9,13 +9,14 @@ from typing import Any
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests import REPO_ROOT
-from dev.registry.compiler.corpus_catalogue import verify_source_file
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError, RegistryValidationError
-from dev.registry.compiler.legal_grounding import verify_legal_catalogue
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from cadrumo.domain.calculations.registry.temporal import select_revision
-from dev.registry.tests._registry_schema_support import _committed_modelo
+from cadrumo.tests import REPO_ROOT
+
+from ..compiler.corpus_catalogue import verify_source_file
+from ..compiler.legal_grounding import verify_legal_catalogue
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

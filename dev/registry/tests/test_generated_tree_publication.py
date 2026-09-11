@@ -10,12 +10,11 @@ from shutil import rmtree
 from typing import Literal
 
 import pytest
-from dev.registry.compiler.loader import load_modelo_directory
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from dev.registry.compiler.loader import load_modelo_directory
 
+from ..compiler.loader import load_modelo_directory
 from ..pipeline import _tree_publication
 from ..pipeline._export_tree import RenderedExportTree
 from ..pipeline._tree_publication import (

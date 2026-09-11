@@ -8,10 +8,11 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.tests.registry_observations import registry_grounded_modelo_observation
 from cadrumo.tests.registry_snapshot import build_snapshot
-from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
-from dev.registry.tests._modelo_303_registry_support import (
+
+from ._modelo_303_registry_support import (
     _M303_COMPENSACION_APLICADA_CASILLA,
     _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
     _M303_DISPONIBLE_CASILLA,
@@ -41,11 +42,11 @@ def test_modelo_303_compensation_chain_uses_current_record_design_casillas() -> 
 
 
 def test_modelo_303_previous_quarter_compensation_binding_resolves_from_source_casilla_id() -> None:
-    from ..bindings_previous_filing import (
+    from cadrumo.domain.calculations.registry.bindings_previous_filing import (
         previous_filing_observation_requirements,
         resolve_previous_filing_binding_values,
     )
-    from ..relations import (
+    from cadrumo.domain.calculations.registry.relations import (
         materialize_relation_binding_values,
         relation_source_requirements,
         resolve_relation_values_from_observations,
@@ -92,11 +93,11 @@ def test_modelo_303_previous_quarter_compensation_binding_resolves_from_source_c
 
 
 def test_modelo_303_first_quarter_compensation_resolves_from_previous_year_fourth_quarter() -> None:
-    from ..bindings_previous_filing import (
+    from cadrumo.domain.calculations.registry.bindings_previous_filing import (
         previous_filing_observation_requirements,
         resolve_previous_filing_binding_values,
     )
-    from ..relations import (
+    from cadrumo.domain.calculations.registry.relations import (
         materialize_relation_binding_values,
         relation_source_requirements,
         resolve_relation_values_from_observations,
@@ -143,7 +144,7 @@ def test_modelo_303_first_quarter_compensation_resolves_from_previous_year_fourt
 
 
 def test_modelo_303_compensation_calculation_applies_available_balance_and_carries_remainder() -> None:
-    from ..formula_runtime import calculate_registry_snapshot
+    from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 
     modelo, catalogues = load_modelo_303()
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="2T")

@@ -351,7 +351,7 @@ class RegistrySchemaAccessor:
         object.__setattr__(self, "sources", MappingProxyType(dict(self.sources)))
 
     def source_payload(self, source_ref_id: SourceRefId) -> bytes:
-        """Return signed publication bytes for one runtime source reference."""
+        """Return published authority bytes for one runtime source reference."""
         try:
             return self.evidence.source_bytes(str(source_ref_id))
         except AuthorityArtifactError as exc:

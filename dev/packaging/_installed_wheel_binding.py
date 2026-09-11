@@ -9,7 +9,7 @@ import subprocess
 import zipfile
 from pathlib import Path, PurePosixPath
 
-from .._paths import UTF_8
+from dev._paths import UTF_8
 
 _GENERATED_METADATA = frozenset({"INSTALLER", "RECORD", "REQUESTED", "direct_url.json", "uv_cache.json"})
 

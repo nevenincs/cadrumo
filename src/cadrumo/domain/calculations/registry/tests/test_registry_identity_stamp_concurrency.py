@@ -33,7 +33,7 @@ import time
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.identity import (
+from test_support.registry_authoring import (
     REGISTRY_IDENTITY_SCHEMA_VERSION,
     RegistryIdentityStamp,
     read_registry_identity_stamp,
@@ -76,7 +76,7 @@ _READER_SOURCE = f"""
 import json, os, sys, time
 from pathlib import Path
 
-from dev.registry.compiler.identity import read_registry_identity_stamp
+from test_support.registry_authoring import read_registry_identity_stamp
 
 root = Path(os.environ[{_CHILD_ROOT_ENV_VAR!r}])
 observed = []

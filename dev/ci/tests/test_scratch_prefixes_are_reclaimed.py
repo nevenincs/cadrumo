@@ -40,9 +40,8 @@ from typing import Final
 import pytest
 
 from cadrumo.tests.collection_storage_root import SETTINGS_STEM, SWEPT_SCRATCH_STEMS
-
-from ..._paths import REPO_ROOT
-from ...quality.unread_inputs import report_unread
+from dev._paths import REPO_ROOT
+from dev.quality.unread_inputs import report_unread
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

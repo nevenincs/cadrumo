@@ -26,13 +26,13 @@ import re
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.registry_snapshot import build_snapshot
-from cadrumo.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.export import resolve_export_layout
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
 from cadrumo.domain.calculations.registry.support_matrix import build_support_matrix
+from cadrumo.tests.registry_snapshot import build_snapshot
+from cadrumo.tests.registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

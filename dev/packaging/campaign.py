@@ -41,8 +41,8 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core.directory_scan import scan_directory
+from dev._paths import REPO_ROOT, UTF_8
 
-from .._paths import REPO_ROOT, UTF_8
 from . import proof_cache
 
 _UTF_8: Final[str] = UTF_8

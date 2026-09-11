@@ -26,7 +26,8 @@ from pathlib import Path
 
 import pytest
 
-from ...._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..normatives_html import (
     HTML_EXTRACTOR_ID,
     _anchor_from_heading,

@@ -1,8 +1,8 @@
 """Source-grounded temporal epochs for Modelo 308."""
 
 from __future__ import annotations
-# Development-only record-design corpus gate.
 
+# Development-only record-design corpus gate.
 from datetime import date
 
 import pytest
@@ -10,12 +10,17 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.hashing import hash_file
 from cadrumo.core.resources.bundled_data import bundled_path
-from dev.registry.compiler._validate import RegistryValidator
-from dev.registry.compiler._validate_export_layout_coverage import validate_export_layout_record_coverage
-from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError, NoRevisionForPeriodError, RegistryValidationError
-from dev.registry.compiler.record_design import extract_record_design
+from cadrumo.domain.calculations.registry.errors import (
+    AmbiguousRevisionSelectionError,
+    NoRevisionForPeriodError,
+    RegistryValidationError,
+)
 from cadrumo.domain.calculations.registry.temporal import select_revision
-from dev.registry.tests._registry_schema_support import _committed_modelo, _committed_snapshot
+
+from ..compiler._validate import RegistryValidator
+from ..compiler._validate_export_layout_coverage import validate_export_layout_record_coverage
+from ..compiler.record_design import extract_record_design
+from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

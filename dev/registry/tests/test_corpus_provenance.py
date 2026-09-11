@@ -6,12 +6,13 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.provenance import NormativeCorpusProvenance
-from dev.registry.compiler.corpus_provenance import (
+
+from ..compiler.corpus_provenance import (
     classify_normative_corpus_provenance,
     resolve_normative_corpus_path,
 )
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

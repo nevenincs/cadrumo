@@ -1,7 +1,7 @@
 """Development-only corpus checks for authored IVA tables.
 
 These checks run while a candidate registry is being compiled.  Product code
-uses the signed authority evidence projection instead; it must never open the
+uses the published authority evidence projection instead; it must never open the
 authoring corpus as a verification fallback.
 """
 

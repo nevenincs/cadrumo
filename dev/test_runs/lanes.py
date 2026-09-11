@@ -22,7 +22,8 @@ from dataclasses import dataclass
 from typing import IO, TYPE_CHECKING
 
 from dev._paths import REPO_ROOT, UTF_8
-from dev.test_runs.paths import allocate_run_directory
+
+from .paths import allocate_run_directory
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

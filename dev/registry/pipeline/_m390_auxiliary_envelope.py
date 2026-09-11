@@ -28,8 +28,8 @@ from cadrumo.domain.calculations.registry.record_design_schema import (
 )
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.domain.filing.errors import FilingExportValidationError
-from dev.registry.maintenance_support import resolve_record_design_binary
 
+from ..maintenance_support import resolve_record_design_binary
 from ._variable_envelope import AUXILIARY_TO_PREFIX_ROLE
 from .export_fragment_provenance import ExportFragmentTarget
 from .record_design_intermediate import (

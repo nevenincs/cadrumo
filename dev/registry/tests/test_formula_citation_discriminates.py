@@ -50,7 +50,7 @@ from __future__ import annotations
 
 import pytest
 
-from dev.registry.tests._registry_schema_support import _committed_registry_tree
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 

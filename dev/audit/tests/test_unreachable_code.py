@@ -17,7 +17,8 @@ from pathlib import Path
 
 import pytest
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..unreachable_code import (
     Confidence,
     EntryPoint,
@@ -987,7 +988,8 @@ def test_the_live_reference_walk_read_every_file(capsys: pytest.CaptureFixture[s
     corpus missing the named files, and the run should be repeated rather than
     acted on.
     """
-    from ..._paths import REPO_ROOT
+    from dev._paths import REPO_ROOT
+
     from ..unreachable_code import run_unreachable_code_scan
 
     result = run_unreachable_code_scan(REPO_ROOT)
@@ -1027,7 +1029,8 @@ def test_the_live_test_walk_read_every_module() -> None:
     If a tracked test module ever stops parsing, the audit now refuses instead
     of quietly reporting one fewer test-of-dead-code finding.
     """
-    from ..._paths import REPO_ROOT
+    from dev._paths import REPO_ROOT
+
     from ..unreachable_code import is_test_path, iter_python_files, parse_module
 
     src_root = REPO_ROOT / "src"

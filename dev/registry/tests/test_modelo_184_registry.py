@@ -1,8 +1,8 @@
 """Tests for the committed Modelo 184 (atribucion de rentas) registry."""
 
 from __future__ import annotations
-# Development-only record-design corpus gate.
 
+# Development-only record-design corpus gate.
 from datetime import date
 
 import pytest
@@ -10,15 +10,16 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.hashing import hash_file
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.aeat_literal_fixtures import aeat_host
-from dev.registry.compiler._validate import RegistryValidator
 from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError, RegistryValidationError
-from dev.registry.compiler.record_design import extract_record_design
 from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignSheet
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.support_matrix import revision_capability_probe
 from cadrumo.domain.calculations.registry.temporal import select_revision
-from dev.registry.tests._registry_schema_support import _committed_modelo, _committed_snapshot
+from cadrumo.tests.aeat_literal_fixtures import aeat_host
+
+from ..compiler._validate import RegistryValidator
+from ..compiler.record_design import extract_record_design
+from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW1_HOST = aeat_host("www1")
@@ -320,7 +321,7 @@ def _tipo2_sheets(design_ref: str) -> tuple[RecordDesignSheet, RecordDesignSheet
     """Return the (entidad, socio) Tipo 2 sheets of a Modelo 184 design."""
     from pathlib import Path
 
-    from dev.registry.compiler.record_design import extract_record_design
+    from ..compiler.record_design import extract_record_design
 
     _, catalogues = _load_modelo_184()
     source = catalogues.sources[design_ref]

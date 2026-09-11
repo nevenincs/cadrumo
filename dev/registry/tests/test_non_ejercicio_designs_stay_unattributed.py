@@ -28,8 +28,8 @@ from pathlib import Path
 
 import pytest
 
-from dev.registry.tests._registry_schema_support import _committed_registry_tree
-from dev.registry.tests._revision_span_design_support import _design_coverage_years, _design_sources
+from ._registry_schema_support import _committed_registry_tree
+from ._revision_span_design_support import _design_coverage_years, _design_sources
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

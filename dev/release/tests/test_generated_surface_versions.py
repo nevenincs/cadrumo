@@ -14,7 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from ...packaging.tests._cohort_attestation import make_minimal_test_python_cohort
+from dev.packaging.tests._cohort_attestation import make_minimal_test_python_cohort
+
 from ..readiness import check_generated_surface_versions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

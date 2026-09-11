@@ -27,7 +27,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from dev._paths import REPO_ROOT
-from dev.ci.python_runtime_matrix import RuntimeRecord, load_runtime_inventory
+
+from .python_runtime_matrix import RuntimeRecord, load_runtime_inventory
 
 if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence

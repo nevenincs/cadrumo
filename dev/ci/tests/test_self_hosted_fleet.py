@@ -39,8 +39,8 @@ import pytest
 import yaml
 
 from cadrumo.core.directory_scan import scan_directory
+from dev._paths import REPO_ROOT
 
-from ..._paths import REPO_ROOT
 from ..workflow_runner_targets import (
     UNRESOLVED_ZERO_TARGETS,
     is_fleet_label_set,

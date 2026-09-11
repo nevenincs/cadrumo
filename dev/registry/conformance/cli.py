@@ -76,8 +76,8 @@ import typer
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_authority_artifact_path
-from dev.registry.compiler.authority import compile_validated_authority
 
+from ..compiler.authority import compile_validated_authority
 from ..compiler.legal_grounding import verify_legal_catalogue
 from ..pipeline.authority_publication import AuthorityArtifactCurrency, authority_artifact_currency
 from ._stamp import StampableReviewStatus, StampError, bundled_registry_root, stamp_revision

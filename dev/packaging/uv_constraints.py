@@ -25,7 +25,7 @@ import subprocess
 import tomllib
 from pathlib import Path
 
-from .._paths import UTF_8
+from dev._paths import UTF_8
 
 _UTF_8 = UTF_8
 #: The distribution whose resolution is exported.

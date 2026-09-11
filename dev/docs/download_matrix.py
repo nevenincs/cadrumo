@@ -49,8 +49,8 @@ from typing import TYPE_CHECKING, Final
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, model_validator
 
-from .._paths import REPO_ROOT, UTF_8
-from ..packaging.cohort_manifest import ArtifactKind
+from dev._paths import REPO_ROOT, UTF_8
+from dev.packaging.cohort_manifest import ArtifactKind
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -343,7 +343,7 @@ def build_download_latest(
     size. When ``release_base_url`` is given each asset also carries its direct
     download URL.
     """
-    from ..packaging.cohort_manifest import CohortManifest
+    from dev.packaging.cohort_manifest import CohortManifest
 
     manifest = CohortManifest.model_validate_json(cohort_manifest_path.read_text(encoding=_UTF_8))
     base = _release_download_base_url(release_base_url) if release_base_url else None

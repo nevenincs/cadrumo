@@ -6,7 +6,8 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.tests.aeat_literal_fixtures import aeat_url
-from dev.registry.conformance.closure_models import (
+
+from ..closure_models import (
     RegistryClosureEvidence,
     RegistryClosureLimb,
     RegistryClosureLimbName,
@@ -208,8 +209,8 @@ def test_evidence_and_models_are_strict_and_immutable() -> None:
 
 def test_closure_contract_is_owned_by_its_public_defining_module() -> None:
     """Every closure symbol is defined once, publicly, and bound nowhere else."""
-    from dev.registry import conformance as conformance_namespace
-    from dev.registry.conformance.closure_models import RegistryClosureFilingChannelRefusal
+    from ... import conformance as conformance_namespace
+    from ..closure_models import RegistryClosureFilingChannelRefusal
 
     owned = (
         RegistryClosureEvidence,

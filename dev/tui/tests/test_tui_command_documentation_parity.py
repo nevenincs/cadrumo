@@ -20,7 +20,8 @@ from pathlib import Path
 import pytest
 from typer.main import get_command
 
-from ..._paths import UTF_8
+from dev._paths import UTF_8
+
 from .._artifacts import FrameFailureKind
 from ..cli import app
 

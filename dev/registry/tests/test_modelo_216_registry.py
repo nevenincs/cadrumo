@@ -31,15 +31,16 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.validator import RegistryValidator
-from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
 
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.period import PeriodKind, registry_period_kind
-from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_snapshot import build_snapshot
-from ..formula_runtime import calculate_registry_snapshot
-from ..temporal import select_revision
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.period import PeriodKind, registry_period_kind
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ..compiler.validator import RegistryValidator
+from ..conformance.tests._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -33,8 +33,9 @@ from functools import lru_cache
 import pytest
 
 from cadrumo.domain.calculations.registry.schema import CasillaId, FormulaDefinition, ModeloRevision
-from dev.registry.tests._formula_runtime_support import _evaluate
-from dev.registry.tests._registry_schema_support import _committed_modelo
+
+from ._formula_runtime_support import _evaluate
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

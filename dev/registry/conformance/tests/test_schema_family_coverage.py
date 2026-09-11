@@ -18,7 +18,6 @@ from pathlib import Path
 from typing import Annotated
 
 import pytest
-from dev.registry.compiler.loader import load_modelo_directory
 from pydantic import BaseModel, ValidationError
 
 from cadrumo.core.schema_family_disposition import (
@@ -42,9 +41,9 @@ from cadrumo.domain.calculations.registry.schema_base import (
 )
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 from cadrumo.tests.registry_tree import bundled_registry_tree
-from dev.registry.compiler.loader import load_modelo_directory
-from dev.registry.conformance.coverage import REQUIRED_COVERAGE_TIERS
 
+from ...compiler.loader import load_modelo_directory
+from ..coverage import REQUIRED_COVERAGE_TIERS
 from ._loader_directory_mode_support import _load_revision as _shared_load_revision
 from ._loader_directory_mode_support import _write_modelo as _shared_write_modelo
 from ._schema_family_support import schema_family_enrollment_failures
@@ -408,7 +407,7 @@ def test_every_bundled_revision_projects_a_coherent_manifest() -> None:
 
 def test_the_family_models_are_registry_models_under_the_strict_config() -> None:
     """The declaration rides the same strict frozen base as the rest of the schema."""
-    from ..schema import SchemaFamilyDispositionDeclaration
+    from cadrumo.domain.calculations.registry.schema import SchemaFamilyDispositionDeclaration
 
     assert issubclass(SchemaFamilyDispositionDeclaration, RegistryModel)
     assert issubclass(SchemaFamilyDispositionDeclaration, BaseModel)

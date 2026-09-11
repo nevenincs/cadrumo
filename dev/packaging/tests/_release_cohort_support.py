@@ -44,7 +44,8 @@ import zipfile
 from datetime import UTC, datetime
 from pathlib import Path
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from .._acquire_common import venv_bin_dir
 from ..cohort_manifest import (
     REQUIRED_ARTIFACT_KINDS,

@@ -11,7 +11,8 @@ from cadrumo.core.result_disposition import (
     derive_result_disposition,
     result_disposition_casilla_ids,
 )
-from dev.registry.tests._registry_schema_support import _committed_registry_tree
+
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

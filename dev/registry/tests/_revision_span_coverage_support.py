@@ -7,12 +7,13 @@ from pathlib import Path
 
 from cadrumo.core.period import PeriodKind, registry_period_kind
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
-from dev.registry.tests._revision_span_boundary_support import (
+
+from ._revision_span_boundary_support import (
     _boundaries_for,
     _compare_design_pair,
     _designs_claimed_by,
 )
-from dev.registry.tests._revision_span_design_support import (
+from ._revision_span_design_support import (
     _claimed_years,
     _design_years,
     _designs_for,

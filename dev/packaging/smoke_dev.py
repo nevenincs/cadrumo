@@ -7,7 +7,8 @@ import os
 import sys
 from pathlib import Path
 
-from .._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from .lane_verification_core import (
     assert_cadrumo_version_output,
     assert_installed_data,

@@ -22,7 +22,8 @@ import tomllib
 
 import pytest
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..uv_constraints import (
     export_runtime_constraints,
     local_product_packages,

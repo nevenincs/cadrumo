@@ -36,8 +36,8 @@ from typing import Final
 from packaging.requirements import Requirement
 
 from cadrumo.core.directory_scan import scan_directory
+from dev._paths import REPO_ROOT, UTF_8
 
-from .._paths import REPO_ROOT, UTF_8
 from ._distribution_names import normalise_distribution_name
 from .lane_verification_core import (
     assert_cadrumo_version_output,

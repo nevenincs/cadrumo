@@ -21,14 +21,15 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export import clasificar_casillas_oficiales
 from cadrumo.domain.calculations.registry.formula_initial_values import initial_value_casilla_ids, initial_values
 from cadrumo.domain.calculations.registry.m303_prorrata_activity_projection import project_m303_prorrata_activity_rows
-from ..compiler.record_design import extract_record_design
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.prorrata_register.register import ProrrataActivityRow, ProrrataRegister, ProrrataRegisterEntry
 from cadrumo.tests.registry_snapshot import build_snapshot
-from dev.registry.compiler.loader import load_catalogue_file
-from dev.registry.compiler.validator import RegistryValidator
-from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
-from dev.registry.maintenance_support import resolve_record_design_binary
+
+from ..compiler.loader import load_catalogue_file
+from ..compiler.record_design import extract_record_design
+from ..compiler.validator import RegistryValidator
+from ..conformance.tests._registry_schema_support import _committed_modelo
+from ..maintenance_support import resolve_record_design_binary
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

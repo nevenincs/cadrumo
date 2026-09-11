@@ -25,15 +25,16 @@ import pytest
 from cadrumo.core import resources as core_resources
 from cadrumo.core.config import override_settings
 from cadrumo.domain.calculations.registry import formula_runtime_ops
-from dev.registry.compiler._loader_internals import _collect_registry_tree_fingerprints_uncached
-from dev.registry.compiler.source_evidence_fingerprint import collect_source_evidence_fingerprints
-from dev.registry.compiler.verdict_cache import certify_registry_validation, compute_verdict_key
 from cadrumo.domain.calculations.registry.formula_runtime_ops import read_parameter
-from dev.registry.compiler.identity import compute_walked_tree_digest
-from dev.registry.compiler.loader_cache import _bundled_registry_root
-from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
-from dev.registry.compiler.m303_orden_manifest import collect_m303_annual_orden_fingerprints
 from cadrumo.tests.attribute_scope import scoped_attribute
+
+from ..compiler._loader_internals import _collect_registry_tree_fingerprints_uncached
+from ..compiler.identity import compute_walked_tree_digest
+from ..compiler.loader_cache import _bundled_registry_root
+from ..compiler.loader_fingerprints import clear_fingerprint_cache
+from ..compiler.m303_orden_manifest import collect_m303_annual_orden_fingerprints
+from ..compiler.source_evidence_fingerprint import collect_source_evidence_fingerprints
+from ..compiler.verdict_cache import certify_registry_validation, compute_verdict_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -110,10 +111,9 @@ def _certify_current_tree(registry_root: Path, source_root: Path) -> None:
     defect lived in.
     """
     resolved = registry_root.expanduser().resolve()
-    registry_fingerprints = (
-        _collect_registry_tree_fingerprints_uncached(resolved)
-        + collect_m303_annual_orden_fingerprints(resolved)
-    )
+    registry_fingerprints = _collect_registry_tree_fingerprints_uncached(
+        resolved
+    ) + collect_m303_annual_orden_fingerprints(resolved)
     source_evidence = collect_source_evidence_fingerprints(source_root.expanduser().resolve())
     certify_registry_validation(
         resolved,

@@ -7,8 +7,9 @@ import subprocess
 
 import pytest
 
-from ..._paths import REPO_ROOT
-from ...ci.lane_reachability import resolve_just_executable
+from dev._paths import REPO_ROOT
+from dev.ci.lane_reachability import resolve_just_executable
+
 from ..version_identity import PYPI_PROJECTS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -174,7 +175,7 @@ def test_packaging_smoke_builds_one_cohort_before_every_consumer() -> None:
     rendered = _render_recipe("packaging-smoke")
     assert "dev.packaging.campaign --profile portable" in rendered
 
-    from ...packaging.campaign import _COHORT_DIR, _PROFILES, resolve_form
+    from dev.packaging.campaign import _COHORT_DIR, _PROFILES, resolve_form
 
     assert _COHORT_DIR == "var/packaging-smoke-cohort/python"
     assert all(resolve_form(selector)[1].takes_cohort for selector in _PROFILES["portable"])

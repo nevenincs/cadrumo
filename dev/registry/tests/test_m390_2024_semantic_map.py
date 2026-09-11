@@ -6,13 +6,12 @@ from collections import Counter
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.loader import load_registry_tree
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.compiler.loader import load_registry_tree
 
+from ..compiler.authority import compiled_bundled_authority
+from ..compiler.loader import load_registry_tree
 from ..pipeline._export_tree import render_complete_export_tree
 from ..pipeline.record_design_intermediate import (
     RecordDesignIntermediate,

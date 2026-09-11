@@ -10,12 +10,13 @@ modelo-specific parser exception.
 """
 
 from __future__ import annotations
-# Development-only record-design corpus gate.
 
+# Development-only record-design corpus gate.
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from dev.registry.compiler.record_design import extract_record_design
+
+from ..compiler.record_design import extract_record_design
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -92,7 +93,7 @@ def test_modelo_180_recovered_reserved_band_still_carries_its_caption_in_the_doc
     source that drops it must make this proof fail rather than preserve a remembered
     label.
     """
-    from dev.registry.compiler.record_design_pdf_visual import extract_pdf_text_lines
+    from ..compiler.record_design_pdf_visual import extract_pdf_text_lines
 
     folder, name = _MODELO_180_DIAGRAM
     path = bundled_path("corpus", "aeat_official", "disenos_registro", folder, "files", name)

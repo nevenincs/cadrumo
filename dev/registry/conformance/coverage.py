@@ -81,7 +81,8 @@ from cadrumo.domain.calculations.registry.schema_references import SourceReferen
 from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
 from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision, WorkbookParityReference
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
-from dev.registry.maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
+
+from ..maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
 
 CoverageGateStatus = Literal["satisfied", "gap"]
 

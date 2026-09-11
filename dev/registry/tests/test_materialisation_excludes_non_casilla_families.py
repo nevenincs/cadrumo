@@ -19,12 +19,13 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.loader import load_modelo_directory
 from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.schema_surfaces import CalculationCompletenessManifest
-from dev.registry.conformance.tests._loader_directory_mode_support import _write_standard_manifest
+
+from ..compiler.loader import load_modelo_directory
+from ..conformance.tests._loader_directory_mode_support import _write_standard_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

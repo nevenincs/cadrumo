@@ -99,14 +99,14 @@ from pydantic_core.core_schema import SerializerFunctionWrapHandler
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n import lookup_translation_entry
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.compiler.authority_state import source_root_for
-from dev.registry.maintenance_support import (
+
+from ..compiler.authority import compiled_bundled_authority
+from ..compiler.authority_state import source_root_for
+from ..maintenance_support import (
     ExternalOracleInventory,
     UnattributedOraclePayload,
     load_bundled_external_oracle_inventory,
 )
-
 from .coverage import CoverageAuthorityScope
 from .profile import (
     AnnualCasillaPopulationComparison,

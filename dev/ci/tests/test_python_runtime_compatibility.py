@@ -9,7 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from ...packaging.command_execution import CommandResult
+from dev.packaging.command_execution import CommandResult
+
 from .. import python_runtime_compatibility as compatibility
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

@@ -41,8 +41,9 @@ from pathlib import Path
 
 import pytest
 
-from ..._paths import REPO_ROOT
-from ...source_tree import repository_files
+from dev._paths import REPO_ROOT
+from dev.source_tree import repository_files
+
 from ..unread_inputs import report_unread
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

@@ -24,7 +24,8 @@ from typing import override
 
 import pytest
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..serve import (
     _DEFAULT_HOST,
     _DEFAULT_PORT,

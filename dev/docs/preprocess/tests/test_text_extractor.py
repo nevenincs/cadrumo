@@ -19,7 +19,8 @@ from pathlib import Path
 
 import pytest
 
-from ...._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from .._text import (
     SUPPORTED_TEXT_EXTENSIONS,
     TEXT_EXTRACTOR_ID,

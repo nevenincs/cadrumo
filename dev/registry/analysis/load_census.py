@@ -67,9 +67,8 @@ from typing import Final, TypeGuard
 import grimp
 
 from cadrumo.core.directory_scan import scan_directory
-
-from ..._paths import REPO_ROOT
-from ...quality.unread_inputs import report_unread
+from dev._paths import REPO_ROOT
+from dev.quality.unread_inputs import report_unread
 
 SOURCE_ROOT: Final[Path] = REPO_ROOT / "src"
 ROOT_PACKAGE: Final[str] = "cadrumo"

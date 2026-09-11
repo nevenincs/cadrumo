@@ -29,7 +29,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from ..quality.unread_inputs import report_unread
+from dev.quality.unread_inputs import report_unread
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DISENOS_ROOT = REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus" / "aeat_official" / "disenos_registro"

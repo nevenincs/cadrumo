@@ -22,7 +22,8 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.core.money.rounding import round_to_cents
-from dev.registry.tests._modelo_131_modulos_engine_support import (
+
+from ._modelo_131_modulos_engine_support import (
     _AMBULANTE_ALIMENTACION_663_1,
     _AUTOESCUELA_933_1,
     _CHOCOLATERIAS_676,

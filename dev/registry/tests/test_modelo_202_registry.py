@@ -10,13 +10,14 @@ import pytest
 
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.registry_snapshot import build_snapshot
-from dev.registry.compiler._validate import RegistryValidator
 from cadrumo.domain.calculations.registry.formula_runtime import _evaluate_expression
-from dev.registry.compiler.legal_grounding import verify_legal_catalogue
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
-from dev.registry.tests._registry_schema_support import _committed_modelo
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ..compiler._validate import RegistryValidator
+from ..compiler.legal_grounding import verify_legal_catalogue
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

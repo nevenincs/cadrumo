@@ -41,9 +41,10 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from dev.registry.compiler.legal_grounding import verify_legal_catalogue
 from cadrumo.domain.calculations.registry.schema_formula import ParameterDefinition
-from dev.registry.tests._registry_schema_support import _committed_modelo, _committed_snapshot
+
+from ..compiler.legal_grounding import verify_legal_catalogue
+from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

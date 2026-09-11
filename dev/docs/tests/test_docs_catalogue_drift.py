@@ -24,7 +24,8 @@ from pathlib import Path
 import pytest
 from babel.messages.pofile import read_po
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..i18n import TARGET_LANGUAGES, extract_pot, user_scope_source_pages
 
 #: The 1800 s ceiling matches every sibling Sphinx-shelling docs gate. It is not

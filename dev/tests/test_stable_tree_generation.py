@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from ..quality.stable_tree_generation import (
+from dev.quality.stable_tree_generation import (
     TreeMovedDuringGenerationError,
     refuse_if_tree_moves,
     tree_fingerprint,

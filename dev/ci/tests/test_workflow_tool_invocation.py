@@ -28,7 +28,8 @@ from typing import Any
 import pytest
 import yaml
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..workflow_run_text import executed_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

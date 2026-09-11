@@ -33,8 +33,7 @@ from cadrumo.domain.calculations.registry.artifact_catalogue import (  # noqa: E
     compile_artifact_catalogue,
     record_design_manifest_identities,
 )
-
-from ..packaging.hashing import sha256_path  # noqa: E402
+from dev.packaging.hashing import sha256_path  # noqa: E402
 
 _CORPUS = _ROOT / "src/cadrumo/_data/corpus/aeat_official/disenos_registro"
 _HISTORICAL_EXCLUSIONS_PATH = _CORPUS / "historical_exclusions.json"

@@ -7,8 +7,8 @@ from pathlib import Path
 from typing import cast
 
 import pytest
-from dev.tui.harness.frame import geometry_band, screen_text
-from dev.tui.harness.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
+from test_support.tui_frame import geometry_band, screen_text
+from test_support.tui_home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from textual.containers import VerticalScroll
 from textual.widgets import DataTable, Static
 

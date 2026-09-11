@@ -13,7 +13,8 @@ import pytest
 from PIL import Image
 from pydantic import ValidationError
 
-from ..._paths import REPO_ROOT, UTF_8
+from dev._paths import REPO_ROOT, UTF_8
+
 from .. import _coverage, _diff, _inventory, _raster
 from .._artifacts import (
     FailedFrame,

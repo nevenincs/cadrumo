@@ -24,8 +24,8 @@ so this is not a rule proven only by synthetic mutation.
 """
 
 from __future__ import annotations
-# Development-only record-design corpus gate.
 
+# Development-only record-design corpus gate.
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -33,10 +33,11 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
-from dev.registry.compiler.record_design import extract_record_design
 from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignSheet
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
-from dev.registry.tests._registry_schema_support import _committed_registry_tree
+
+from ..compiler.record_design import extract_record_design
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -17,7 +17,8 @@ from typing import Final
 
 from packaging.requirements import Requirement
 
-from .._paths import UTF_8
+from dev._paths import UTF_8
+
 from ._distribution_names import normalise_distribution_name
 from .hashing import sha256_path
 from .installed_tax_oracle import run_installed_tax_oracle

@@ -28,13 +28,14 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
 )
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue, GovernedFactVariant
 from dev._paths import REPO_ROOT
-from dev.registry.compiler.fact_providers import (
+
+from ..compiler.fact_providers import (
     FACT_PROVIDER_REGISTRATIONS,
     FactProviderRegistration,
     compile_registered_fact_providers,
     validate_fact_provider_registrations,
 )
-from dev.registry.compiler.loader import load_registry_tree
+from ..compiler.loader import load_registry_tree
 
 __all__ = [
     "FactQualityFinding",

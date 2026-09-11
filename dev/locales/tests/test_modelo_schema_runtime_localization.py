@@ -19,15 +19,14 @@ from collections.abc import Callable, Iterable
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.loader import load_registry_tree
 
 import cadrumo.domain.calculations.registry.modelo_localization as modelo_localization
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from dev._paths import REPO_ROOT
 from dev.registry.compiler.loader import load_registry_tree
 
-from ..._paths import REPO_ROOT
 from .._registry_scanner import scan_modelo_schema_keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

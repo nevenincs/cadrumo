@@ -42,7 +42,8 @@ from cadrumo.domain.modelos.calculation_revision_m303_evidence import (
     M303RegimenSimplificadoCalculationResult,
 )
 from cadrumo.tests.registry_tree import bundled_registry_tree
-from dev.registry.compiler._validate_record_design_epochs import (
+
+from ..compiler._validate_record_design_epochs import (
     validate_record_design_epoch_uniqueness,
     validate_record_design_epoch_window,
 )

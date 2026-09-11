@@ -8,9 +8,10 @@ import pytest
 
 from cadrumo.core.period import PeriodKind, registry_period_kind
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.registry_tree import bundled_registry_tree
-from dev.registry.compiler.validator import RegistryValidator
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.tests.registry_tree import bundled_registry_tree
+
+from ..compiler.validator import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

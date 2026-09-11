@@ -36,10 +36,9 @@ import pytest
 import yaml
 
 from cadrumo.core.directory_scan import scan_directory
-
-from ..._paths import REPO_ROOT
-from ...ci.lane_reachability import resolve_just_executable
-from ...ci.workflow_run_text import executed_text
+from dev._paths import REPO_ROOT
+from dev.ci.lane_reachability import resolve_just_executable
+from dev.ci.workflow_run_text import executed_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

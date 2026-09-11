@@ -11,8 +11,7 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core.link_safety import is_link_like
-
-from .._paths import REPO_ROOT, UTF_8
+from dev._paths import REPO_ROOT, UTF_8
 
 _UTF_8: Final[str] = UTF_8
 

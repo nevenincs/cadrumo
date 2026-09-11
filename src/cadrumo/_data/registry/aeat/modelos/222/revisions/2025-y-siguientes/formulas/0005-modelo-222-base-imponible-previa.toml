@@ -1,0 +1,11 @@
+[[revisions.2025-y-siguientes.formulas]]
+id = "modelo-222-base-imponible-previa"
+target_casilla_id = "13"
+expression = { op = "subtract", args = [{ op = "add", args = [{ casilla_id = "10" }, { casilla_id = "11" }] }, { casilla_id = "12" }] }
+rounding = "money-2"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "orden-hfp-227-2017:art-2"]
+source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
+
+[[revisions.2025-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-222-instructions"
+required_text = ["clave [13]", "base imponible previa", "] = clave [10] + clave [11] - clave [12]"]

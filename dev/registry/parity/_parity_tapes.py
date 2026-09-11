@@ -27,8 +27,8 @@ from cadrumo.domain.calculations.registry.ids import (
     WorkbookOutputId,
 )
 from cadrumo.domain.calculations.registry.period_selector_match import selector_period_matches_request
-from dev.registry.compiler.authority import compile_validated_authority
 
+from ..compiler.authority import compile_validated_authority
 from ._workbook_parity import (
     SyntheticInputSet,
     WorkbookArtefactReport,

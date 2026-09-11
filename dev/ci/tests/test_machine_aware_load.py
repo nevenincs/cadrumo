@@ -21,8 +21,9 @@ from typing import Any, Final
 import pytest
 import yaml
 
-from ..._paths import REPO_ROOT
-from ...packaging.command_execution import run_command
+from dev._paths import REPO_ROOT
+from dev.packaging.command_execution import run_command
+
 from ..lane_reachability import (
     _JUST_CALL,
     Lane,

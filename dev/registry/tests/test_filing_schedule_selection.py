@@ -8,14 +8,15 @@ import pytest
 
 from cadrumo.core.errors.severity import BaseSeverity
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.deadlines.models import IVARegime, ModeloEnrollment, TaxpayerProfile
-from cadrumo.domain.user_profile.loader import load_user_profile_schema
-from cadrumo.domain.user_profile.registry_contract import validate_user_profile_registry_contract
-from dev.registry.compiler.validator import RegistryValidator
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schedules import applicable_filing_schedules
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.deadlines.models import IVARegime, ModeloEnrollment, TaxpayerProfile
+from cadrumo.domain.user_profile.loader import load_user_profile_schema
+from cadrumo.domain.user_profile.registry_contract import validate_user_profile_registry_contract
+
+from ..compiler.validator import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

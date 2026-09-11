@@ -17,8 +17,8 @@ from cadrumo.tests import (
     qualified_name,
     repo_relative,
 )
+from dev.quality.unread_inputs import report_unread
 
-from ..quality.unread_inputs import report_unread
 from ._project_inventory import all_test_control_modules
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

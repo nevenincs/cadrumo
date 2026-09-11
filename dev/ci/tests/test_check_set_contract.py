@@ -12,7 +12,8 @@ from typing import Any, Final
 import pytest
 import yaml
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..lane_reachability import _recipe_bodies, _recipes_invoked_by
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

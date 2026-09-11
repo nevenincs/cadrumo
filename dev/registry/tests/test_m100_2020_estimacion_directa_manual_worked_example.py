@@ -172,13 +172,14 @@ import pytest
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from dev.registry.tests._scenarios import (
+
+from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
     assert_registry_scenario_matches,
     run_registry_calculation_scenario,
 )
-from dev.registry.tests.manual_oracle_support import oracle_declared_figures
+from .manual_oracle_support import oracle_declared_figures
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

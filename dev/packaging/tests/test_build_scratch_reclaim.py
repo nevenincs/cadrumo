@@ -26,7 +26,8 @@ from typing import Final
 
 import pytest
 
-from ..._paths import REPO_ROOT, UTF_8
+from dev._paths import REPO_ROOT, UTF_8
+
 from ..build_scratch_reclaim import (
     COHORT_BUILD_TREE_FAMILY,
     COHORT_SOURCE_ARCHIVE_FAMILY,

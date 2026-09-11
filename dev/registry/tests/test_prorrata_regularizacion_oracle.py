@@ -52,9 +52,10 @@ from cadrumo.domain.iva.prorrata import (
     RegularizacionProrrataDireccion,
     compute_prorrata_general,
 )
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.parity.external_grounding import ManualWorkedExamplePayload
-from dev.registry.tests.manual_oracle_support import (
+
+from ..compiler.authority import compiled_bundled_authority
+from ..parity.external_grounding import ManualWorkedExamplePayload
+from .manual_oracle_support import (
     oracle_declared_figures,
     read_manual_worked_example,
 )

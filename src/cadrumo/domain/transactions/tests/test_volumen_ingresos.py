@@ -9,8 +9,7 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.compiler.fact_loader import load_governed_facts
+from test_support.registry_authoring import compiled_bundled_authority, load_governed_facts
 
 from ....core.concepto_ingreso import ConceptoIngreso
 from ....core.resources.bundled_data import bundled_path

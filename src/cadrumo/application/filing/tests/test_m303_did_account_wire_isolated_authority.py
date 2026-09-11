@@ -9,7 +9,7 @@ from hashlib import sha256
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.loader import load_modelo_directory
+from test_support.registry_authoring import load_modelo_directory
 
 from ....core.filing_projection_ref import (
     M303RegimenSimplificadoActivityField,

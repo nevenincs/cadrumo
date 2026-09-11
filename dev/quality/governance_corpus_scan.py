@@ -52,7 +52,8 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-from .._paths import REPO_ROOT, UTF_8
+from dev._paths import REPO_ROOT, UTF_8
+
 from .import_hygiene_scan import (
     DEV_TOOLING_ROOT,
     SRC_ROOT,

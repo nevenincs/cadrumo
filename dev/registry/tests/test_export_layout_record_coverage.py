@@ -27,28 +27,15 @@ something -- never that the test and the gate merely restate one rule twice.
 """
 
 from __future__ import annotations
-# Development-only record-design corpus gate.
 
+# Development-only record-design corpus gate.
 import re
 
 import pytest
 
 from cadrumo.core.export_layout_format import ExportLayoutFormat
-from dev.registry.compiler._validate_export_layout_coverage import (
-    _administration_reserved,
-    _belongs_to_layout,
-    _covers,
-    _design_sources,
-    _missing_report,
-    _omissible_reason,
-    _read_design_sheets,
-    _required_positions,
-    _sheet_constants,
-    validate_export_layout_record_coverage,
-)
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
-from dev.registry.compiler.record_design import extract_record_design
 from cadrumo.domain.calculations.registry.record_design_schema import (
     RecordDesignExtraction,
     RecordDesignField,
@@ -64,6 +51,20 @@ from cadrumo.domain.calculations.registry.schema_exports import (
     FilingEnvelopePrefixRole,
 )
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
+
+from ..compiler._validate_export_layout_coverage import (
+    _administration_reserved,
+    _belongs_to_layout,
+    _covers,
+    _design_sources,
+    _missing_report,
+    _omissible_reason,
+    _read_design_sheets,
+    _required_positions,
+    _sheet_constants,
+    validate_export_layout_record_coverage,
+)
+from ..compiler.record_design import extract_record_design
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -456,7 +457,7 @@ def test_an_unreachable_design_refuses_instead_of_passing(
 
 
 def _bundled_design_path(source: SourceReference):
-    from .....core.resources.bundled_data import resolve_corpus_binary
+    from cadrumo.core.resources.bundled_data import resolve_corpus_binary
 
     path = resolve_corpus_binary(*source.corpus_path.split("/"))
     assert path is not None, f"bundled design {source.id!r} is not resolvable"
@@ -662,7 +663,7 @@ def test_a_row_aeat_does_not_mark_constante_yields_no_constant(
     the fixed ``<T`` delimiters directly, which is how Modelo 360's design
     declares them without the word.
     """
-    from .._validate_export_layout_coverage import _IDENTIFIER_VOCABULARY
+    from ..compiler._validate_export_layout_coverage import _IDENTIFIER_VOCABULARY
 
     modelos, catalogues = registry_tree
     checked = 0
@@ -701,7 +702,7 @@ def _every_declared_design_sheet(
     finish, so the fallback assertion passed its own emptiness check and then
     proved nothing.
     """
-    from .....core.resources.bundled_data import resolve_corpus_binary
+    from cadrumo.core.resources.bundled_data import resolve_corpus_binary
 
     sheets: list[RecordDesignSheet] = []
     for source in (

@@ -7,8 +7,8 @@ from pathlib import Path
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from dev.registry.compiler.authority import compiled_bundled_authority
 
+from ..compiler.authority import compiled_bundled_authority
 from ..export_proof import FilingExportProofAuthority
 from ..filing_export_proof import canonical_two_channel_filing_export_proof_authority
 

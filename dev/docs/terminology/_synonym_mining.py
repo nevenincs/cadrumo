@@ -26,8 +26,8 @@ from typing import Annotated, Final
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
 from cadrumo.core.external_constants import OutputLanguage
+from dev._paths import UTF_8
 
-from ..._paths import UTF_8
 from ..terminology_handbook.enums import TermStatus
 from ..terminology_handbook.errors import TerminologyLoadError
 from ..terminology_handbook.loader import TerminologyHandbook, load_terminology_handbook

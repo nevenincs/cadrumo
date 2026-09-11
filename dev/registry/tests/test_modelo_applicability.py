@@ -27,7 +27,8 @@ from cadrumo.domain.deadlines.models import (
     IVARegime,
     TaxpayerProfile,
 )
-from dev.registry.tests._registry_schema_support import _committed_registry_tree
+
+from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -544,7 +545,8 @@ def test_non_impatriado_profile_does_not_route_to_modelo_151() -> None:
 
 def test_applicability_advertises_only_symbols_it_defines() -> None:
     """The public contract surface is local; borrowed owners are imported, never re-exported."""
-    from ... import registry as registry_namespace
+    from cadrumo.domain.calculations import registry as registry_namespace
+
     from .. import applicability as applicability_module
 
     assert applicability_module.__all__
@@ -558,8 +560,9 @@ def test_applicability_advertises_only_symbols_it_defines() -> None:
 
 def test_the_modelo_202_modality_family_is_reached_through_its_own_owner() -> None:
     """The modality family answers only from the module that defines it."""
+    from cadrumo.domain.calculations.registry.applicability_modelo202 import Modelo202Modality
+
     from .. import applicability as applicability_module
-    from ..applicability_modelo202 import Modelo202Modality
 
     assert Modelo202Modality.__module__ == "cadrumo.domain.calculations.registry.applicability_modelo202"
     for name in ("Modelo202Modality", "Modelo202ModalityVerdict", "derive_modelo_202_modality"):

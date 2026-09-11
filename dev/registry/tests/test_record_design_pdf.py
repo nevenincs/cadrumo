@@ -10,12 +10,12 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+
 from ..compiler.record_design import (
     extract_record_design,
     extract_record_design_pdf,
 )
 from ..compiler.record_design_pdf_orchestration import extract_record_design_pdf_stream
-
 from ._record_design_support import (
     _RECORD_DESIGN_ROOT,
     _committed_registry_tree,

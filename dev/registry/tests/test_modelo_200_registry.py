@@ -18,14 +18,15 @@ from cadrumo.core.filing_projection_ref import (
     filing_projection_ref_casilla_id,
 )
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.registry_snapshot import build_snapshot
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from dev.registry.compiler.legal_grounding import verify_legal_catalogue
-from dev.registry.compiler.validator import RegistryValidator
 from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from dev.registry.conformance.tests._registry_schema_support import _committed_modelo
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ..compiler.legal_grounding import verify_legal_catalogue
+from ..compiler.validator import RegistryValidator
+from ..conformance.tests._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

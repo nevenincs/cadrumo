@@ -27,8 +27,8 @@ from typing import Final, Literal
 
 from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from dev.registry.compiler.authority import compiled_bundled_authority
 
+from ..compiler.authority import compiled_bundled_authority
 from .capability_continuity import screen_authority as capability_continuity_screen
 from .casilla_id_grammar import screen_authority as grammar_screen
 from .continuity_integrity import screen_authority as continuity_screen

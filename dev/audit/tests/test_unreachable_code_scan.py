@@ -10,7 +10,8 @@ from __future__ import annotations
 
 import pytest
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from ..unreachable_code import ModuleReach, UnreachableCodeOutcome, run_unreachable_code_scan
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]

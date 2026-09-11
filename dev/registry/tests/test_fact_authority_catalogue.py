@@ -9,8 +9,9 @@ from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
-from dev.registry.compiler import fact_providers
-from dev.registry.compiler.fact_providers import compile_registered_fact_providers
+
+from ..compiler import fact_providers
+from ..compiler.fact_providers import compile_registered_fact_providers
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

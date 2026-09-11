@@ -24,7 +24,8 @@ from cadrumo.domain.calculations.registry.relations import (
     resolve_relation_values_from_observations,
 )
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from dev.registry.tests._cross_dependency_calculation_support import _observations_from_requirements
+
+from ._cross_dependency_calculation_support import _observations_from_requirements
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

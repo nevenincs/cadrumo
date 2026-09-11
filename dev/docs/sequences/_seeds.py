@@ -18,7 +18,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Final
 
-from ..._paths import REPO_ROOT, UTF_8
+from dev._paths import REPO_ROOT, UTF_8
+
 from .parser import _FrameBuilder, parse_frame_lines
 from .schema import FrameKind
 

@@ -15,8 +15,8 @@ from cadrumo.core.filing_projection_ref import (
 )
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
-from dev.registry.compiler.authority import compiled_bundled_authority
 
+from ..compiler.authority import compiled_bundled_authority
 from ..pipeline import _semantic_map_validation
 from ..pipeline._semantic_map_validation import (
     SemanticMapAnomalyException,

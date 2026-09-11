@@ -3,10 +3,11 @@
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.loader import load_modelo_directory, load_registry_tree, load_shared_catalogues
 
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
-from dev.registry.compiler.loader_cache import discover_modelo_sources
+
+from ..compiler.loader import load_modelo_directory, load_registry_tree, load_shared_catalogues
+from ..compiler.loader_cache import discover_modelo_sources
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

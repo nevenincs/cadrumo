@@ -6,7 +6,8 @@ import argparse
 import os
 from pathlib import Path
 
-from .._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
+
 from .lane_verification_core import (
     install_wheel,
     record_proof,

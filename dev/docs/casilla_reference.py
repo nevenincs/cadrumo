@@ -61,9 +61,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
 from cadrumo.core.directory_scan import scan_directory
+from dev._paths import REPO_ROOT, UTF_8
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from .._paths import REPO_ROOT, UTF_8
 from ._locale_chrome import docs_chrome
 from .legal_reference import legal_reference_target, load_legal_provisions
 from .terminology.casilla_anchor import CASILLA_REFERENCE_DIR, casilla_page_anchor, casilla_page_relpath

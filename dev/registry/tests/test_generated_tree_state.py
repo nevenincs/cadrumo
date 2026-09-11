@@ -11,10 +11,10 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..analysis import generated_tree_state as _generated_tree_state_module
 from ..analysis.generated_tree_state import STATES, classify_comparison, tree_states
+from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

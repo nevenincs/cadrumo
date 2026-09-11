@@ -25,9 +25,10 @@ import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
-from dev.registry.compiler.validator import RegistryValidator
 from cadrumo.domain.calculations.registry.authority import bundled_authority
-from dev.registry.tests._registry_schema_support import _committed_modelo
+
+from ..compiler.validator import RegistryValidator
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -78,7 +79,8 @@ _CASES = (
 
 @pytest.mark.parametrize("case", _CASES, ids=[case.modelo_id for case in _CASES])
 def test_modelo_220_222_validators_accept_committed_definitions(case: _ModeloCase) -> None:
-    modelo, catalogues = _committed_modelo(case.modelo_id)
+    modelo = _committed_modelo(case.modelo_id)
+    catalogues = bundled_authority().catalogues
     assert modelo.id == case.modelo_id
     assert modelo.revisions, f"{case.modelo_id} must declare at least one revision"
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
@@ -86,7 +88,7 @@ def test_modelo_220_222_validators_accept_committed_definitions(case: _ModeloCas
 
 @pytest.mark.parametrize("case", _CASES, ids=[case.modelo_id for case in _CASES])
 def test_modelo_220_222_approval_and_plazo_resolve_as_legal_authority(case: _ModeloCase) -> None:
-    _, catalogues = _committed_modelo(case.modelo_id)
+    catalogues = bundled_authority().catalogues
     approval = catalogues.legal[case.approval_ref]
     plazo = catalogues.legal[case.plazo_ref]
     assert approval.evidence_tier == "legal_authority"
@@ -97,7 +99,7 @@ def test_modelo_220_222_approval_and_plazo_resolve_as_legal_authority(case: _Mod
 
 @pytest.mark.parametrize("case", _CASES, ids=[case.modelo_id for case in _CASES])
 def test_modelo_220_222_deadline_provision_is_cited_by_every_window(case: _ModeloCase) -> None:
-    modelo, _ = _committed_modelo(case.modelo_id)
+    modelo = _committed_modelo(case.modelo_id)
     declared = [
         (revision_id, window)
         for revision_id, revision in modelo.revisions.items()
@@ -121,7 +123,8 @@ def test_modelo_220_annual_window_opens_july_and_closes_after_25_natural_days() 
 
 def test_modelo_220_2025_sources_match_the_revision_window() -> None:
     """The 2025 revision cites its own design and period-scoped approving order."""
-    modelo, catalogues = _committed_modelo("220")
+    modelo = _committed_modelo("220")
+    catalogues = bundled_authority().catalogues
     revision = modelo.revisions["2025"]
 
     assert (revision.valid_from, revision.valid_to) == (date(2025, 1, 1), date(2025, 12, 31))

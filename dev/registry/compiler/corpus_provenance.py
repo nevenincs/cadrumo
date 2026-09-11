@@ -52,11 +52,13 @@ def resolve_normative_corpus_path(source_root: Path, corpus_ref: str) -> Path | 
 def classify_normative_corpus_provenance(source_root: Path, corpus_ref: str) -> NormativeCorpusProvenance:
     """Classify source evidence while development tooling still owns the root."""
     path = resolve_normative_corpus_path(source_root, corpus_ref)
-    return NormativeCorpusProvenance.OUT_OF_SCOPE if path is None else classify_normative_corpus_bytes(path.read_bytes())
+    return (
+        NormativeCorpusProvenance.OUT_OF_SCOPE if path is None else classify_normative_corpus_bytes(path.read_bytes())
+    )
 
 
 def classify_normative_corpus_bytes(payload: bytes) -> NormativeCorpusProvenance:
-    """Classify an authored corpus payload for a signed publication projection."""
+    """Classify an authored corpus payload for a published authority projection."""
     if _EXCERPT_HEADER in payload or _BOE_DOCUMENT_ID.search(payload):
         return NormativeCorpusProvenance.BOE_ATTESTED
     if _BOE_STRUCTURAL_MARKUP.search(payload):

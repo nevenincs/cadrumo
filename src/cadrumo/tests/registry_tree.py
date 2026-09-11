@@ -5,8 +5,7 @@ from __future__ import annotations
 from functools import cache
 from typing import TYPE_CHECKING
 
-from dev.registry.compiler.fact_providers import compile_registered_fact_providers
-from dev.registry.compiler.loader import load_registry_tree
+from test_support.registry_authoring import compile_registry_tree
 
 from ..core.resources.bundled_data import bundled_path
 
@@ -40,17 +39,14 @@ def bundled_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatal
     originals untouched. Were they mutable this accessor would be a hazard --
     one test's edit would reach every later test in the worker.
 
+    The catalogues come from ``compile_registry_tree``, the one assembly the
+    authority publishes. The raw tree load alone omits governed facts,
+    convenio authority, and annual Orden supplements.
+
     Returns:
         The compiled modelos and the shared registry catalogues.
     """
-    registry_root = bundled_path("registry", "aeat")
-    modelos, catalogues = load_registry_tree(registry_root)
-    return (
-        modelos,
-        catalogues.model_copy(
-            update={"facts": compile_registered_fact_providers(registry_root, modelos=modelos)},
-        ),
-    )
+    return compile_registry_tree(bundled_path("registry", "aeat"), bundled_path())
 
 
 __all__ = ["bundled_registry_tree"]

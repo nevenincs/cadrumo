@@ -3,7 +3,7 @@
 Runtime never imports this module. A development publication captures the
 complete compiler input receipt, validates that exact candidate, and holds one
 destination lock through the atomic artifact replacement. The artifact is
-generated output, not a signed document: nothing here holds or needs a key.
+generated output.
 
 The artifact records the candidate identity it was compiled from, and
 :func:`authority_artifact_currency` compares that record with the identity of
@@ -31,6 +31,7 @@ from pathlib import Path, PurePosixPath
 from typing import Final
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
+from cadrumo.core.export_layout_format import ExportLayoutFormat
 from cadrumo.core.hashing import content_hash_hex, hash_file, sha256_hex
 from cadrumo.core.locks import exclusive_file_lock
 from cadrumo.domain.calculations.registry.authority_artifact import (
@@ -38,6 +39,7 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityArtifactError,
     AuthorityEvidenceProjection,
     PublishedLegalEvidence,
+    PublishedSourceEvidence,
     read_authority_artifact,
     write_authority_artifact,
 )
@@ -45,12 +47,13 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
-from dev.registry.compiler.authority import canonical_authoring_root_pair, compile_validated_authority
-from dev.registry.compiler.corpus_provenance import classify_normative_corpus_provenance
-from dev.registry.compiler.identity import resolve_registry_identity
-from dev.registry.compiler.legal_grounding import published_legal_evidence_text
-from dev.registry.compiler.loader import collect_registry_tree_fingerprints
-from dev.registry.compiler.source_evidence_fingerprint import (
+
+from ..compiler.authority import canonical_authoring_root_pair, compile_validated_authority
+from ..compiler.corpus_provenance import classify_normative_corpus_provenance
+from ..compiler.identity import resolve_registry_identity
+from ..compiler.legal_grounding import published_legal_evidence_text
+from ..compiler.loader import collect_registry_tree_fingerprints
+from ..compiler.source_evidence_fingerprint import (
     SourceEvidenceFingerprint,
     collect_source_evidence_fingerprints,
 )
@@ -182,7 +185,13 @@ def validate_authority_candidate(*, registry_root: Path, source_root: Path) -> V
     )
 
 
-def _project_evidence(legal: Mapping[str, LegalReference], *, source_root: Path) -> AuthorityEvidenceProjection:
+def _project_evidence(
+    legal: Mapping[str, LegalReference],
+    sources: Mapping[str, SourceReference],
+    modelos: tuple[ModeloDefinition, ...],
+    *,
+    source_root: Path,
+) -> AuthorityEvidenceProjection:
     """Capture all validated legal anchors as path-free runtime evidence."""
     entries = tuple(
         PublishedLegalEvidence(
@@ -229,7 +238,7 @@ def _runtime_xml_source_ids(
 
 
 def _project_source_evidence(reference: SourceReference, *, source_root: Path) -> PublishedSourceEvidence:
-    """Copy one compiler-validated runtime source into the signed artifact."""
+    """Copy one compiler-validated runtime source into the digest-checked artifact."""
     root = source_root.resolve()
     target = (root / reference.corpus_path).resolve()
     if root not in target.parents or not target.is_file():

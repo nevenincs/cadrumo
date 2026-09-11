@@ -35,7 +35,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from ..._paths import REPO_ROOT
+from dev._paths import REPO_ROOT
 
 DOCS = REPO_ROOT / "docs"
 

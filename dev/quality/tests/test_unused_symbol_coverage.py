@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from ...audit.unreachable_code import SymbolFinding, SymbolKind, UnreachableCodeResult
-from ...audit.unreachable_code import TestFinding as OrphanTestFinding
+from dev.audit.unreachable_code import SymbolFinding, SymbolKind, UnreachableCodeResult
+from dev.audit.unreachable_code import TestFinding as OrphanTestFinding
+
 from ..unused_symbol_coverage import from_result
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

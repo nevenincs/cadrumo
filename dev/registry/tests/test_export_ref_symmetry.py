@@ -27,9 +27,9 @@ from cadrumo.domain.calculations.registry.schema_exports import (
 )
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..analysis.export_ref_symmetry import screen_authority, unsatisfied_export_refs
+from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

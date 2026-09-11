@@ -21,7 +21,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.loader import load_registry_tree
+from test_support.registry_authoring import load_registry_tree
 
 from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.export import derive_export_layouts_from_bindings

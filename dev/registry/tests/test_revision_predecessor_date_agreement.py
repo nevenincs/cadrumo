@@ -14,13 +14,17 @@ from datetime import date
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.loader import load_modelo_directory
 
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
-from cadrumo.domain.calculations.registry.revision_predecessor_date_agreement import EditionWindow, validate_predecessor_date_agreement
+from cadrumo.domain.calculations.registry.revision_predecessor_date_agreement import (
+    EditionWindow,
+    validate_predecessor_date_agreement,
+)
 from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
-from dev.registry.conformance.tests._loader_directory_mode_support import _write_standard_manifest
+
+from ..compiler.loader import load_modelo_directory
+from ..conformance.tests._loader_directory_mode_support import _write_standard_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -21,7 +21,8 @@ from decimal import Decimal
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.money.rounding import round_to_cents
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from dev.registry.tests._registry_schema_support import _committed_snapshot
+
+from ._registry_schema_support import _committed_snapshot
 
 # Rendimiento anual por unidad antes de amortización (Orden HAC/1347/2024
 # Anexo II, filing year 2025), independently transcribed for cross-check —
