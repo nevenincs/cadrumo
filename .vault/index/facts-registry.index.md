@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#facts-registry'
 date: '2026-09-09'
-modified: '2026-09-10'
+modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:8fa5b8d1db2e54db12ce6250b76362f779422705a829918a4819fc728589893e'
+body_hash: 'sha256:80516a4eb3c3e3623a3fd10a043e13d62593bd45b56da4b593d7af8df0d88ec2'
 related:
   - '[[2026-09-09-facts-registry-W01-P01-S01]]'
   - '[[2026-09-09-facts-registry-W01-P01-S02]]'
@@ -57,12 +57,42 @@ related:
   - '[[2026-09-09-facts-registry-W03-P12-S51]]'
   - '[[2026-09-09-facts-registry-W03-P13-S52]]'
   - '[[2026-09-09-facts-registry-W03-P13-S53]]'
+  - '[[2026-09-09-facts-registry-W03-P13-S66]]'
+  - '[[2026-09-09-facts-registry-W03-P13-S68]]'
+  - '[[2026-09-09-facts-registry-W03-P13-S69]]'
+  - '[[2026-09-09-facts-registry-W03-P13-S70]]'
+  - '[[2026-09-09-facts-registry-W03-P13-S71]]'
+  - '[[2026-09-09-facts-registry-W03-P13-S72]]'
+  - '[[2026-09-09-facts-registry-W03-P13-S73]]'
+  - '[[2026-09-09-facts-registry-W03-P13-S74]]'
+  - '[[2026-09-09-facts-registry-W03-P13-S75]]'
+  - '[[2026-09-09-facts-registry-W03-P13-S76]]'
+  - '[[2026-09-09-facts-registry-W04-P15-S29]]'
   - '[[2026-09-09-facts-registry-authority-plumbing-research]]'
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
   - '[[2026-09-09-facts-registry-discovery-blast-radius-research]]'
   - '[[2026-09-09-facts-registry-governed-fact-catalogue-adr]]'
   - '[[2026-09-09-facts-registry-plan]]'
   - '[[2026-09-09-facts-registry-schema-persistence-research]]'
+  - '[[2026-09-10-facts-registry-legal-parameter-consumer-migration-reference]]'
+  - '[[2026-09-10-facts-registry-s64-consumer-migration-review-audit]]'
+  - '[[2026-09-10-facts-registry-s64-legal-parameter-consumers-audit]]'
+  - '[[2026-09-10-facts-registry-s66-legal-coordinate-review-audit]]'
+  - '[[2026-09-10-facts-registry-s68-article95-retention-review-audit]]'
+  - '[[2026-09-10-facts-registry-s69-migrated-legal-parameter-gate-audit]]'
+  - '[[2026-09-10-facts-registry-s70-administrator-retention-review-audit]]'
+  - '[[2026-09-10-facts-registry-s71-payment-fraction-selector-review-audit]]'
+  - '[[2026-09-10-facts-registry-s71-repair-review-audit]]'
+  - '[[2026-09-10-facts-registry-s72-article161-review-audit]]'
+  - '[[2026-09-10-facts-registry-s72-effect-date-repair-review-audit]]'
+  - '[[2026-09-10-facts-registry-s73-objective-exclusion-review-audit]]'
+  - '[[2026-09-10-facts-registry-s73-retirement-repair-review-audit]]'
+  - '[[2026-09-10-facts-registry-s74-activity-selector-review-audit]]'
+  - '[[2026-09-10-facts-registry-s75-legacy-provider-retirement-review-audit]]'
+  - '[[2026-09-10-facts-registry-s76-article-101-provision-path-review-audit]]'
+  - '[[2026-09-11-facts-registry-external-constants-retirement-reference]]'
+  - '[[2026-09-11-facts-registry-objective-estimation-publication-boundary-reference]]'
+  - '[[2026-09-11-facts-registry-reference]]'
 ---
 
 # `facts-registry` feature index
@@ -74,6 +104,24 @@ Auto-generated index of all documents tagged with `#facts-registry`.
 ### adr
 
 - `2026-09-09-facts-registry-governed-fact-catalogue-adr` - `facts-registry` adr: `Unify governed tax facts under a sibling registry catalogue` | (**status:** `accepted`)
+
+### audit
+
+- `2026-09-10-facts-registry-s64-consumer-migration-review-audit` - `facts-registry` audit: `S64 consumer-migration review`
+- `2026-09-10-facts-registry-s64-legal-parameter-consumers-audit` - `facts-registry` audit: `S64 legal-parameter consumer migration`
+- `2026-09-10-facts-registry-s66-legal-coordinate-review-audit` - `facts-registry` audit: `S66 legal-coordinate review`
+- `2026-09-10-facts-registry-s68-article95-retention-review-audit` - `facts-registry` audit: `S68 Article 95 retention review`
+- `2026-09-10-facts-registry-s69-migrated-legal-parameter-gate-audit` - `facts-registry` audit: `s69 migrated legal parameter gate`
+- `2026-09-10-facts-registry-s70-administrator-retention-review-audit` - `facts-registry` audit: `S70 administrator retention review`
+- `2026-09-10-facts-registry-s71-payment-fraction-selector-review-audit` - `facts-registry` audit: `S71 payment-fraction selector review`
+- `2026-09-10-facts-registry-s71-repair-review-audit` - `facts-registry` audit: `S71 applicability repair review`
+- `2026-09-10-facts-registry-s72-article161-review-audit` - `facts-registry` audit: `S72 Article 161 recargo review`
+- `2026-09-10-facts-registry-s72-effect-date-repair-review-audit` - `facts-registry` audit: `S72 Article 161 effect-date repair review`
+- `2026-09-10-facts-registry-s73-objective-exclusion-review-audit` - `facts-registry` audit: `S73 objective-estimation exclusion review`
+- `2026-09-10-facts-registry-s73-retirement-repair-review-audit` - `facts-registry` audit: `S73 adapter-retirement repair review`
+- `2026-09-10-facts-registry-s74-activity-selector-review-audit` - `facts-registry` audit: `S74 activity selector review`
+- `2026-09-10-facts-registry-s75-legacy-provider-retirement-review-audit` - `facts-registry` audit: `S75 legacy provider retirement review`
+- `2026-09-10-facts-registry-s76-article-101-provision-path-review-audit` - `facts-registry` audit: `s76 article 101 provision path review`
 
 ### exec
 
@@ -126,10 +174,28 @@ Auto-generated index of all documents tagged with `#facts-registry`.
 - `2026-09-09-facts-registry-W03-P12-S51` - Rewire extraction recargo aggregation and inventory defaults
 - `2026-09-09-facts-registry-W03-P13-S52` - Rewire treaty and authorization consumers
 - `2026-09-09-facts-registry-W03-P13-S53` - Rewire deadline notification amendment and foreign-asset facts
+- `2026-09-09-facts-registry-W03-P13-S68` - Capture hash-pinned BOE article 95 redactions and author source-cited temporal withholding-rate facts under the governed authority
+- `2026-09-09-facts-registry-W03-P13-S69` - Enforce and prove canonical tax-fact temporal coverage, date-axis selection, provenance, and refusal outside source-grounded windows
+- `2026-09-09-facts-registry-W03-P13-S70` - Capture and author the bounded administrator-retention fact slice from BOE redactions
+- `2026-09-09-facts-registry-W03-P13-S71` - Capture hash-pinned BOE articles 109 and 110 redactions, author source-cited temporal selectors by legal applicability, and rewire Modelo 131 to its form-specific authority
+- `2026-09-09-facts-registry-W03-P13-S72` - Capture hash-pinned BOE article 161 redactions and author source-cited temporal equivalence-surcharge facts under the governed authority
+- `2026-09-09-facts-registry-W03-P13-S73` - Capture hash-pinned BOE article 31 and transitional-provision redactions and author source-cited temporal objective-estimation exclusion facts under the governed authority
+- `2026-09-09-facts-registry-W03-P13-S74` - Capture the official M036 activity-code mapping, author source-cited article-95 activity-selector facts, and remove their legacy adapter definitions
+- `2026-09-09-facts-registry-W03-P13-S76` - Repair Article 101 excerpt filenames and source references so provision-tier evidence is verifiable before the cross-domain authority proof
+- `2026-09-09-facts-registry-W03-P13-S66` - Replace generic fact selectors with provider-owned validated applicability coordinates before consumer-boundary verification
+- `2026-09-09-facts-registry-W03-P13-S75` - Delete retired legal-parameter provider implementations after governed facts replace every live resolver and consumer path
+- `2026-09-09-facts-registry-W04-P15-S29` - Replace the statutory Python fact adapter with normalized scalar and decimal-mapping fragments carrying exact typed payloads, effective applicability, and official source evidence
 
 ### plan
 
 - `2026-09-09-facts-registry-plan` - `facts-registry` plan
+
+### reference
+
+- `2026-09-10-facts-registry-legal-parameter-consumer-migration-reference` - `facts-registry` reference: `Facts registry legal-parameter consumer migration reference`
+- `2026-09-11-facts-registry-external-constants-retirement-reference` - `facts-registry` reference: external constants retirement
+- `2026-09-11-facts-registry-objective-estimation-publication-boundary-reference` - `facts-registry` reference: objective-estimation publication boundary
+- `2026-09-11-facts-registry-reference` - `facts-registry` reference: retired global legal-parameter provider
 
 ### research
 
