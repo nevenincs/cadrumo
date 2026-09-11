@@ -20,8 +20,8 @@ from ..authority_artifact import (
     PublishedLegalEvidence,
     write_authority_artifact,
 )
-from ..corpus_provenance import NormativeCorpusProvenance
-from ._referential_integrity_support import _minimal_catalogues, _minimal_modelo, _minimal_revision
+from ..provenance import NormativeCorpusProvenance
+from ._artifact_runtime_support import _minimal_catalogues, _minimal_modelo, _minimal_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -118,7 +118,6 @@ def test_runtime_answers_a_citation_from_signed_evidence_without_a_corpus_root(
     _use_staged_package(monkeypatch, tmp_path, keys)
 
     authority = bundled_authority()
-    authority.source_root = tmp_path / "absent-corpus"
 
     assert authority.legal_quotation_is_grounded("test:art-1", "published provision")
 
@@ -151,7 +150,6 @@ def test_runtime_reads_signed_provenance_without_a_corpus_tree(
     )
     _use_staged_package(monkeypatch, tmp_path, keys)
     authority = bundled_authority()
-    authority.source_root = tmp_path / "absent-corpus"
 
     provenance = authority.legal_corpus_provenance(legal_id)
 

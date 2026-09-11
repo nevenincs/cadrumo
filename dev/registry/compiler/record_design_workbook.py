@@ -16,8 +16,6 @@ if TYPE_CHECKING:
     from xlrd.sheet import Sheet as XlrdSheet
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from .record_design_layout_markers import split_record_terminator
-from .record_design_pdf_rows import PdfRow
 from cadrumo.domain.calculations.registry.record_design_schema import (
     RecordDesignAuxiliaryEnvelopeHeader,
     RecordDesignAuxiliaryEnvelopeHeaderField,
@@ -34,6 +32,9 @@ from cadrumo.domain.calculations.registry.record_design_schema import (
     RecordDesignVariableEnvelope,
     RecordDesignVariableTotalMarker,
 )
+
+from .record_design_layout_markers import split_record_terminator
+from .record_design_pdf_rows import PdfRow
 from .record_design_sources import EMPTY_CORRECTIONS, CorrectionIndex, TypeCorrectionIndex
 from .record_design_workbook_headers import (
     WorkbookHeader,

@@ -13,9 +13,10 @@ if TYPE_CHECKING:
     from pdfplumber.page import Page
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignField, RecordDesignSheet
+
 from .record_design_pdf_rows import clean_pdf_line, join_pdf_parts, normalise_pdf_sheet_name, pdf_page_name
 from .record_design_pdf_state import validate_pdf_sheet
-from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignField, RecordDesignSheet
 
 _NUMERIC_TUPLE_ADAPTER: TypeAdapter[tuple[int | float, ...]] = TypeAdapter(
     tuple[int | float, ...], config=ConfigDict(strict=True)

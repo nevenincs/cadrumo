@@ -7,6 +7,12 @@ from io import BufferedReader, BytesIO
 from pathlib import Path
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.record_design_schema import (
+    RecordDesignExtraction,
+    RecordDesignSheet,
+    RecordDesignSkippedSheet,
+)
+
 from .record_design_pdf_repairs import (
     collapse_doubled_coordinate_rows,
     collapse_stuttered_row_prefix,
@@ -30,11 +36,6 @@ from .record_design_pdf_visual import (
     extract_visual_record_design_chart,
     snapshot_pdf_page,
     uses_page_record_layout,
-)
-from cadrumo.domain.calculations.registry.record_design_schema import (
-    RecordDesignExtraction,
-    RecordDesignSheet,
-    RecordDesignSkippedSheet,
 )
 from .record_design_sources import EMPTY_CORRECTIONS, CorrectionIndex, load_corrections
 

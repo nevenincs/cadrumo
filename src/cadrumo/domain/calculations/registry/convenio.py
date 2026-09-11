@@ -103,8 +103,8 @@ class ConvenioOverrideRow(RegistryModel):
 class ConvenioTreaty(RegistryModel):
     """One bilateral double-taxation treaty and its per-income-type overrides.
 
-    Authored one file per treaty under ``registry/aeat/treaties/`` and keyed by
-    the counterpart ``country_code`` (ISO 3166-1 alpha-2). The optional
+    Projected from the canonical ``irnr.convenio.override`` governed fact and
+    keyed by the counterpart ``country_code`` (ISO 3166-1 alpha-2). The optional
     permanent-establishment / employment-income surfaces are deliberately not
     modelled yet; the schema leaves room for them without foreclosing.
     """

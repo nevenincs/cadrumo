@@ -8,6 +8,15 @@ from dataclasses import dataclass, field
 from typing import Final
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.record_design_schema import (
+    RecordDesignExtraction,
+    RecordDesignField,
+    RecordDesignRangeStartCorrection,
+    RecordDesignSheet,
+    RecordDesignSinglePositionCorrection,
+    RecordDesignSkippedSheet,
+)
+
 from .record_design_pdf_repairs import REVERSED_ROW_TAIL_RE
 from .record_design_pdf_rows import (
     PdfRow,
@@ -27,14 +36,6 @@ from .record_design_pdf_rows import (
     required_pdf_group,
     split_glued_ordinal_position,
     unnamed_position_candidate,
-)
-from cadrumo.domain.calculations.registry.record_design_schema import (
-    RecordDesignExtraction,
-    RecordDesignField,
-    RecordDesignRangeStartCorrection,
-    RecordDesignSheet,
-    RecordDesignSinglePositionCorrection,
-    RecordDesignSkippedSheet,
 )
 from .record_design_sources import EMPTY_CORRECTIONS, CorrectionIndex
 from .record_design_workbook import (

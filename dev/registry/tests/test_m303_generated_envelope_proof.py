@@ -207,7 +207,7 @@ def _m303_2026_prorrata_and_differentiated_producer(*, snapshot, catalogues):
         for sector_id in ("a", "b")
         for index, kind in enumerate(contribution_kinds, start=1)
     )
-    regimen_evidence = _m303_2026_6919_regimen_evidence(snapshot, catalogues=catalogues)
+    regimen_evidence = _m303_2026_6919_regimen_evidence(snapshot)
     period = Period.from_year_and_code(filing_year, "1T")
     # From the module that owns the bundle rather than rebuilt here; the
     # projection refuses one resolved for another filing year, so it is asked
@@ -267,7 +267,7 @@ def _m303_2026_prorrata_and_differentiated_producer(*, snapshot, catalogues):
     return snapshot, producer
 
 
-def _m303_2026_6919_regimen_evidence(snapshot, *, catalogues):
+def _m303_2026_6919_regimen_evidence(snapshot):
     """Build two official 691.9 rows so the real f022 field carries their wire identity."""
     period = Period.from_year_and_code(snapshot.filing_year, "1T")
     scope = M303RegimenSimplificadoScopeDecision(
@@ -318,7 +318,6 @@ def _m303_2026_6919_regimen_evidence(snapshot, *, catalogues):
         rows=rows,
         regimen_snapshot=regimen_snapshot,
         dana_2024_eligibility=None,
-        catalogues=catalogues,
     )
     return M303RegimenSimplificadoFilingEvidence(
         scope_decision=scope,

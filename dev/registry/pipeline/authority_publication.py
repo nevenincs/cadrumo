@@ -21,12 +21,12 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
     PublishedSourceEvidence,
     write_authority_artifact,
 )
-from cadrumo.domain.calculations.registry.corpus_provenance import classify_normative_corpus_provenance
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 from dev.registry.compiler.authority import canonical_authoring_root_pair, compile_validated_authority
+from dev.registry.compiler.corpus_provenance import classify_normative_corpus_provenance
 from dev.registry.compiler.identity import resolve_registry_identity
 from dev.registry.compiler.legal_grounding import published_legal_evidence_text
 from dev.registry.compiler.loader import collect_registry_tree_fingerprints

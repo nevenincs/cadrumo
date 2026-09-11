@@ -94,7 +94,7 @@ _OUT_OF_WINDOW = (
 
 # RATE_0 is deliberately ABSENT from the set above, and must stay absent. It is
 # the one slot exempted from the in-force check, because the registry's zero
-# authority is knowingly incomplete: rates.toml registers only the RD-ley 4/2024
+# authority is knowingly incomplete: the authored rate schedule registers only the RD-ley 4/2024
 # window and deliberately does NOT register the indefinite art. 91.Cuatro 0 %
 # (entregas de donativos), since a flat `kind = "zero"` record cannot express a
 # tipo bounded to donativos and an open one would apply 0 % to every domestic

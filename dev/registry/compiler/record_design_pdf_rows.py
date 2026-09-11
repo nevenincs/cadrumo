@@ -8,12 +8,14 @@ from typing import TYPE_CHECKING, Final
 
 from cadrumo.core.text_fold import fold_diacritics
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+
 from .record_design_layout_markers import RECORD_TERMINATOR_PHRASE
 from .record_design_sources import SinglePositionCorrectionIndex
 
 if TYPE_CHECKING:
-    from .record_design_pdf_state import PdfFieldDraft
     from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignField
+
+    from .record_design_pdf_state import PdfFieldDraft
 
 #: The space between LENGTH and TYPE is optional because the PDF text layer
 #: loses it: modelo 100's 2009 through 2011 editions all write

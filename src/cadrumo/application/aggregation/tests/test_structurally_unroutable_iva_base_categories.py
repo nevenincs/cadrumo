@@ -266,7 +266,6 @@ def test_mutation_stripping_the_intra_community_supply_binding_reds_the_negative
         "iva",
         "legal",
         "topics",
-        "treaties",
     ):
         source = bundled_root / catalogue_dir
         if source.is_dir():

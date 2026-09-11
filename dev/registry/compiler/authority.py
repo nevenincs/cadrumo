@@ -4,33 +4,28 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.iva.compilation_catalogues import compiling_catalogues
+
+from .authority_state import (
+    authoring_root_pair,
+    cached_compilation,
+    canonical_authoring_root_pair,
+    register_authoring_authority,
+    source_evidence_receipt,
+)
+from .convenio import convenio_authority_from_facts
+from .fact_providers import compile_registered_fact_providers, validate_fact_provider_directory_ownership
+from .identity import RegistryIdentity, resolve_registry_identity
+from .loader import collect_registry_tree_fingerprints, load_registry_tree
 from .source_evidence_fingerprint import collect_source_evidence_fingerprints
 from .supplementary_orden import compile_supplementary_ordenes
 from .validator import RegistryValidator
-from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-from .identity import RegistryIdentity, resolve_registry_identity
-from cadrumo.domain.iva.compilation_catalogues import compiling_catalogues
-
-from .convenio import convenio_authority_from_facts
-from .fact_providers import compile_registered_fact_providers, validate_fact_provider_directory_ownership
-from .loader import collect_registry_tree_fingerprints, load_registry_tree
 
 
-def canonical_authoring_root_pair(registry_root: Path, source_root: Path) -> tuple[Path, Path]:
-    """Resolve the mutable development inputs before they are compiled."""
-    try:
-        resolved_registry = registry_root.expanduser().resolve(strict=True)
-        resolved_source = source_root.expanduser().resolve(strict=True)
-    except (OSError, RuntimeError) as exc:
-        raise RegistrySnapshotError("registry compiler roots must resolve to existing physical paths") from exc
-    if not resolved_registry.is_dir() or not resolved_source.is_dir():
-        raise RegistrySnapshotError("registry compiler roots must resolve to physical directories")
-    return resolved_registry, resolved_source
-
-
-def compile_validated_authority(
+def _compile_validated_authority_uncached(
     registry_root: Path,
     source_root: Path,
     *,
@@ -73,27 +68,66 @@ def compile_validated_authority(
             "supplementary_ordenes": supplementary_ordenes.authorities,
         }
     )
-    authority = ValidatedRegistryAuthority(
-        root=root,
+    source_evidence_fingerprint = collect_source_evidence_fingerprints(sources_root)
+    RegistryValidator(
+        catalogues,
         source_root=sources_root,
+        source_evidence_fingerprint=source_evidence_fingerprint,
+    ).validate_registry(modelos)
+    return ValidatedRegistryAuthority.from_validated_components(
         modelos=modelos,
         catalogues=catalogues,
-        _modelos_by_id={modelo.id: modelo for modelo in modelos},
-        _validator=RegistryValidator(
-            catalogues,
-            source_root=sources_root,
-            source_evidence_fingerprint=collect_source_evidence_fingerprints(sources_root),
-        ),
-        _registry_validated=False,
-        _validated_modelos=set(),
-        _snapshots={},
-        _identity_digest=identity.digest,
+        identity_digest=identity.digest,
     )
-    authority.validate_registry()
+
+
+def compile_validated_authority(
+    registry_root: Path,
+    source_root: Path,
+    *,
+    identity: RegistryIdentity | None = None,
+) -> ValidatedRegistryAuthority:
+    """Compile one mutable source candidate through the development cache.
+
+    Both registry identity and a byte-accurate source-evidence receipt are
+    observed before reuse. This cache is intentionally unavailable to product
+    runtime, which only reads a signed authority artifact.
+    """
+    pair = authoring_root_pair(registry_root, source_root)
+    if identity is None:
+        identity = resolve_registry_identity(
+            pair.registry_root,
+            collect_fingerprints=collect_registry_tree_fingerprints,
+        )
+    source_receipt = source_evidence_receipt(collect_source_evidence_fingerprints(pair.source_root))
+    authority = cached_compilation(
+        pair,
+        registry_identity_digest=identity.digest,
+        source_receipt=source_receipt,
+        build=lambda: _compile_validated_authority_uncached(
+            pair.registry_root,
+            pair.source_root,
+            identity=identity,
+        ),
+    )
+    register_authoring_authority(authority, source_root=pair.source_root)
     return authority
 
 
-_COMPILED_BUNDLED_AUTHORITIES: dict[str, ValidatedRegistryAuthority] = {}
+def construct_unvalidated_authority(
+    registry_root: Path,
+    source_root: Path,
+    *,
+    identity: RegistryIdentity,
+) -> ValidatedRegistryAuthority:
+    """Build a diagnostic-only projection without granting publication validity."""
+    root, _sources_root = canonical_authoring_root_pair(registry_root, source_root)
+    modelos, catalogues = load_registry_tree(root, identity=identity)
+    return ValidatedRegistryAuthority.from_validated_components(
+        modelos=modelos,
+        catalogues=catalogues,
+        identity_digest=identity.digest,
+    )
 
 
 def compiled_bundled_authority() -> ValidatedRegistryAuthority:
@@ -106,10 +140,4 @@ def compiled_bundled_authority() -> ValidatedRegistryAuthority:
     compiles afresh.
     """
     registry_root, source_root = canonical_authoring_root_pair(bundled_path("registry", "aeat"), bundled_path())
-    identity = resolve_registry_identity(registry_root, collect_fingerprints=collect_registry_tree_fingerprints)
-    cached = _COMPILED_BUNDLED_AUTHORITIES.get(identity.digest)
-    if cached is None:
-        cached = compile_validated_authority(registry_root, source_root, identity=identity)
-        _COMPILED_BUNDLED_AUTHORITIES.clear()
-        _COMPILED_BUNDLED_AUTHORITIES[identity.digest] = cached
-    return cached
+    return compile_validated_authority(registry_root, source_root)

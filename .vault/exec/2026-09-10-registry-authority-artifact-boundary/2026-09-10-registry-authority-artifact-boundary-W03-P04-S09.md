@@ -5,15 +5,11 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:396fb4a908642fd72042ba98bf86fc814d3313a04934940fde9faa01b212b5c3'
+body_hash: 'sha256:ae6a6afe30da6d03e2b00b6c7b4e813ebebe2354eaa5cbdf53c248d593a5a76b'
 step_id: 'S09'
 related:
   - "[[2026-09-10-registry-authority-artifact-boundary-plan]]"
 ---
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Embed signed runtime evidence projections in authority artifacts
 

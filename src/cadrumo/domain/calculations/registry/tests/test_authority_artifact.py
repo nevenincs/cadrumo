@@ -26,7 +26,7 @@ from ..authority_artifact import (
 from ..errors import RegistryValidationError
 from ..export_parse import xml_dictionary_entries
 from ..schema import DataBindingDefinition, NoPredecessor
-from ._referential_integrity_support import _minimal_catalogues, _minimal_modelo, _minimal_revision
+from ._artifact_runtime_support import _minimal_catalogues, _minimal_modelo, _minimal_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

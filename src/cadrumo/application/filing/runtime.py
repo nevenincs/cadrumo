@@ -505,7 +505,7 @@ def schema_provider_from_authority(
         filing_year=filing_year,
         period=validated_period,
         selected_tuple=_selected_modelo_tuple(modelos),
-        registry_root_name=authority.root.name,
+        registry_root_name="published authority artifact",
     )
 
 

@@ -29,12 +29,13 @@ from cadrumo.core.external_constants import XLSM_EXTENSION as _XLSM_EXTENSION
 from cadrumo.core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
 from cadrumo.core.paths import path_stat_fingerprint
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from .record_design_pdf_orchestration import extract_record_design_pdf_cached
 from cadrumo.domain.calculations.registry.record_design_schema import (
     RecordDesignExtraction,
     RecordDesignSheet,
     RecordDesignSkippedSheet,
 )
+
+from .record_design_pdf_orchestration import extract_record_design_pdf_cached
 from .record_design_sources import (
     load_corrections,
     load_declared_non_record_sheet_reasons,

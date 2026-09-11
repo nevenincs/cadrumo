@@ -30,6 +30,7 @@ from cadrumo.domain.calculations.registry.ids import (
     SourceRefId,
 )
 
+from ..compiler.authority_state import source_root_for
 from ..pipeline.record_design_intermediate import (
     RecordDesignIntermediate,
     RecordDesignIntermediateField,
@@ -288,7 +289,7 @@ def load_dp30302_epoch_intermediates(
             period=coordinate.period,
         )
         intermediate = load_record_design_intermediate(
-            authority.source_root,
+            source_root_for(authority),
             inspection.sources,
             source_ref=coordinate.source_ref,
             filing_year=coordinate.filing_year,

@@ -18,8 +18,8 @@ tests, surfaced as click ``Choice`` at the CLI):
   from a numeric coincidence (a flat treaty rate that happens to be lower than
   the domestic baseline) into a computable decision.
 
-Both enums are consumed by the cross-cutting ``registry/aeat/treaties/`` authoring
-tree and its :class:`~domain.calculations.registry.ConvenioAuthority`
+Both enums are consumed by the cross-cutting ``irnr.convenio.override`` authored
+fact and its :class:`~domain.calculations.registry.ConvenioAuthority`
 projection. The registry TOML stays free-form (a plain string token); the loader
 hydrates the enum at the boundary.
 """

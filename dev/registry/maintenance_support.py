@@ -20,13 +20,6 @@ from cadrumo.core.hashing import blake2b_hex
 from cadrumo.core.period import RegistrySelectorPeriodCode
 from cadrumo.core.prose_elision import ElidedProse
 from cadrumo.core.resources import bundled_path
-from cadrumo.domain.calculations.registry import authority as _authority
-from cadrumo.domain.calculations.registry.authority import (
-    _authority_load_barrier,
-    _authority_load_states,
-    _authority_state_lock,
-    _guard_authority_process,
-)
 from cadrumo.domain.calculations.registry.condition_mode import ConditionModeField
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.export import (
@@ -49,6 +42,7 @@ from dev.registry.compiler.authority_lifecycle import (
     SILENT_REGISTRY_AUTHORITY_LIFECYCLE_OBSERVER,
     RegistryAuthorityLifecycleObserver,
 )
+from dev.registry.compiler.authority_state import compiler_reset
 from dev.registry.compiler.fact_providers import reset_registered_fact_providers
 from dev.registry.compiler.identity import (
     _LOGGER,
@@ -131,14 +125,12 @@ def reset_registry_caches(
     that swap the registry root or rewrite bundled TOML need all three, so the
     package exposes the whole reset rather than its parts.
     """
-    _guard_authority_process()
     from dev.registry.compiler.loader import _load_registry_tree_cached
     from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
 
     lifecycle_observer.registry_cache_reset_requested()
-    with _authority_load_barrier.reset():
+    with compiler_reset():
         lifecycle_observer.registry_cache_reset_acquired()
-        _invalidate_authority_generations()
         _load_registry_tree_cached.cache_clear()
         clear_fingerprint_cache()
         reset_registered_fact_providers()
@@ -481,14 +473,6 @@ def stamp_bundled_verdict(
     verdict = RegistryValidationVerdict(verdict_key=key, package_version=package_version, outcome=VERDICT_OUTCOME_GREEN)
     write_verdict(output_path, verdict)
     return verdict
-
-
-def _invalidate_authority_generations() -> None:
-    """Invalidate all authority incarnations as one exclusive reset transition."""
-    with _authority_state_lock:
-        _authority._authority_generation += 1
-        _authority._authority_reset_epoch = int(_authority._authority_reset_epoch) + 1
-        _authority_load_states.clear()
 
 
 @dataclass(frozen=True, slots=True)

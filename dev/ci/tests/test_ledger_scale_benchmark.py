@@ -146,8 +146,8 @@ _P95_WALL_ADVISORY_SECONDS = 3.0
 #: far below anything a real block produces.
 _P95_WEDGE_WALL_TO_CPU_RATIO = 4.0
 
-#: The bundled spending-category profile registry only defines 2024/2025 (see
-#: ``src/cadrumo/_data/registry/aeat/categories/profiles.toml``); the renta-ledger
+#: The bundled spending-category profile facts only define 2024/2025 (see
+#: ``src/cadrumo/_data/registry/aeat/facts/0064-categories-profile.toml``); the renta-ledger
 #: aggregation benchmark pins its category-profile lookup to this registered
 #: year regardless of the synthetic filing years it aggregates over.
 _CATEGORY_PROFILE_YEAR = 2025
@@ -465,8 +465,8 @@ def test_annual_renta_aggregation_reports_full_scan_latency(scale_bucket: Secure
             period=period,
             transaction_repository=tx_repo,
             invoice_repository=invoice_repo,
-            # The bundled spending-category profile registry only covers
-            # (see src/cadrumo/_data/registry/aeat/categories/profiles.toml);
+            # The bundled spending-category profile facts only cover 2024/2025
+            # (see src/cadrumo/_data/registry/aeat/facts/0064-categories-profile.toml);
             # the benchmark's *period* still targets the last synthetic filing
             # year (see module docstring) -- profile_year is intentionally
             # decoupled per the function's own documented contract.

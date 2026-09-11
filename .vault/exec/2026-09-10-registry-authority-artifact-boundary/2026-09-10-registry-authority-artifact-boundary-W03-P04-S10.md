@@ -5,15 +5,11 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:c4983c1a4c6802c6878536e2d4b5c6cd20278e1673be9dd1159dda8cad930e88'
+body_hash: 'sha256:cbde295d1b75856ea7da3207ccdd2a45bedc2978b2ea7e703b29ab1be167b905'
 step_id: 'S10'
 related:
   - "[[2026-09-10-registry-authority-artifact-boundary-plan]]"
 ---
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Project runtime provenance and inspection data into signed authority artifacts
 

@@ -25,7 +25,7 @@ from pydantic import BaseModel, ValidationError
 from ....core.atomic_write import atomic_write_bytes
 from ....core.ed25519_signing import digest_signature_is_valid, sign_digest_hex
 from ....core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant, sha256_hex
-from .corpus_provenance import NormativeCorpusProvenance
+from .provenance import NormativeCorpusProvenance
 from .schema import DeclaredPredecessor, ModeloDefinition, NoPredecessor, RegistryCatalogues
 
 __all__ = [
