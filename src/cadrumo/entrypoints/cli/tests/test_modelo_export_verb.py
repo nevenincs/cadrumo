@@ -173,7 +173,7 @@ _M111_CASILLA_24: CasillaId = validated_casilla_id("24", surface="modelo 111 exp
 _M111_CASILLA_27: CasillaId = validated_casilla_id("27", surface="modelo 111 export test casilla")
 _M111_CASILLA_29: CasillaId = validated_casilla_id("29", surface="modelo 111 export test casilla")
 _M202_CASILLA_01: CasillaId = validated_casilla_id("01", surface="modelo 202 export test casilla")
-_M202_2023_2024_PRIOR_PAYMENTS_BINDING = "modelo-202-2023-2024-pagos-fraccionados-anteriores"
+_M202_2023_2024_PRIOR_PAYMENTS_BINDING = "modelo-202-pagos-fraccionados-anteriores"
 
 _MODELO_111_INPUTS: dict[CasillaId, str] = {
     _M111_CASILLA_03: "180.25",

@@ -16,10 +16,10 @@ __all__ = ["_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_M202_INCN_BINDING = "modelo-202-2025-y-siguientes-incn-prior-12-months"
-_M202_CUOTA_BASE_BINDING = "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior"
-_M202_PRIOR_PAYMENTS_BINDING = "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores"
-_M202_2023_2024_PRIOR_PAYMENTS_BINDING = "modelo-202-2023-2024-pagos-fraccionados-anteriores"
+_M202_INCN_BINDING = "modelo-202-incn-prior-12-months"
+_M202_CUOTA_BASE_BINDING = "modelo-202-cuota-base-ejercicio-anterior"
+_M202_PRIOR_PAYMENTS_BINDING = "modelo-202-pagos-fraccionados-anteriores"
+_M202_2023_2024_PRIOR_PAYMENTS_BINDING = "modelo-202-pagos-fraccionados-anteriores"
 _MISSING_M202_BINDINGS = {
     _M202_INCN_BINDING,
     _M202_CUOTA_BASE_BINDING,

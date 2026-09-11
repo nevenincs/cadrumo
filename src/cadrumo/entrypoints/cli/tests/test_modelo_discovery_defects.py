@@ -523,9 +523,9 @@ def test_modelo_readiness_reports_missing_calculation_bindings() -> None:
     assert payload["binding_ready"] is False
     missing_binding_ids = {row["binding_id"] for row in payload["missing_bindings"]}
     assert {
-        "modelo-200-2024-profile-legal-entity-form",
-        "modelo-200-2024-profile-new-entity-flag",
-        "modelo-200-2024-profile-incn-prior-12-months",
+        "modelo-200-profile-legal-entity-form",
+        "modelo-200-profile-new-entity-flag",
+        "modelo-200-profile-incn-prior-12-months",
     } <= missing_binding_ids
     missing_sources = {row["source"] for row in payload["missing_bindings"]}
     assert "profile" in missing_sources

@@ -63,9 +63,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _CLOCK = datetime(2026, 6, 5, 10, 0, tzinfo=UTC)
 _BUCKET_ID = "69ba4fa8-427a-4853-8758-9ead443fb20c"
 _TAX_ID = "B12345674"
-_M202_RELATION_BINDING = "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior"
-_M202_PRIOR_PAYMENTS_BINDING = "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores"
-_M202_INCN_BINDING = "modelo-202-2025-y-siguientes-incn-prior-12-months"
+_M202_RELATION_BINDING = "modelo-202-cuota-base-ejercicio-anterior"
+_M202_PRIOR_PAYMENTS_BINDING = "modelo-202-pagos-fraccionados-anteriores"
+_M202_INCN_BINDING = "modelo-202-incn-prior-12-months"
 _M200_CUOTA_LIQUIDA = "DP200014B:00592"
 _ZERO_M202_CASILLA_VALUES = {
     "01": Decimal("0"),
