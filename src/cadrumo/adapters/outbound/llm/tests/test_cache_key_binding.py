@@ -22,9 +22,9 @@ from pathlib import Path
 
 import pytest
 
-from .....llm.errors import LLMCacheError
-from .....llm.models import LLMProvider, LLMRequest, LLMResponse
 from ..cache import _CACHE_NAMESPACE, LLMCache
+from ..errors import LLMCacheError
+from ..models import LLMProvider, LLMRequest, LLMResponse
 from ._engine_binding_fixtures import _ENGINE_HOLDER, _bind_engine  # noqa: F401
 
 # The encrypted-SQL substrate is imported inside the helpers below, matching
@@ -78,7 +78,7 @@ def _row_payload(model: str) -> bytes:
         decrypt_secure_object_payload,
         secure_object_payload_aad,
     )
-    from ....persistence.storage.sql import SecureObjectRow
+    from ....persistence.storage.sql.orm import SecureObjectRow
     from ....persistence.storage.sql.session import session_scope
 
     with session_scope(_repository_engine()) as session:
@@ -101,7 +101,7 @@ def _substitute_row(*, victim_model: str, donor_model: str) -> None:
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
-    from ....persistence.storage.sql import SecureObjectRow
+    from ....persistence.storage.sql.orm import SecureObjectRow
     from ....persistence.storage.sql.session import session_scope
 
     donor_plaintext = _row_payload(donor_model)

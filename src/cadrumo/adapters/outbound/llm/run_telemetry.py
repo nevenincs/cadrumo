@@ -58,10 +58,10 @@ from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import canonical_json_bytes
 from ....core.time.clock import now
 from ....core.time.utc import UtcInstant
-from ....llm.errors import LLMCacheError
-from ....llm.retention import select_retention_removal_keys
 from ...persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...persistence.storage.secure_object_namespaces import LLM_RUN_TELEMETRY_NAMESPACE
+from .errors import LLMCacheError
+from .retention import select_retention_removal_keys
 
 __all__ = ["LLMRunRecord", "LLMRunTelemetryRecorder", "LLMRunTelemetrySummary"]
 

@@ -23,8 +23,8 @@ from pathlib import Path
 
 import pytest
 
-from .....llm.errors import LLMCacheError
-from .....llm.models import LLMProvider, UsageRecord
+from ..errors import LLMCacheError
+from ..models import LLMProvider, UsageRecord
 from ..run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
 from ..usage import UsageRecorder
 from ._engine_binding_fixtures import _ENGINE_HOLDER, _bind_engine  # noqa: F401
@@ -78,7 +78,7 @@ def _substitute(namespace: str, *, victim_marker: str, donor_marker: str) -> Non
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
-    from ....persistence.storage.sql import SecureObjectRow
+    from ....persistence.storage.sql.orm import SecureObjectRow
     from ....persistence.storage.sql.session import session_scope
 
     engine = _ENGINE_HOLDER[0]
@@ -153,7 +153,7 @@ def test_the_substitution_lands_a_valid_foreign_payload(tmp_path: Path) -> None:
         decrypt_secure_object_payload,
         secure_object_payload_aad,
     )
-    from ....persistence.storage.sql import SecureObjectRow
+    from ....persistence.storage.sql.orm import SecureObjectRow
     from ....persistence.storage.sql.session import session_scope
     from ..usage import _USAGE_NAMESPACE
 

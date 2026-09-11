@@ -27,16 +27,16 @@ from pathlib import Path
 import pytest
 from sqlalchemy import select
 
-from .....llm.models import LLMProvider, LLMRequest, LLMResponse, UsageRecord
 from .....tests.secure_sql import TestRuntimeProfile
 from ....persistence.storage.secure_object_namespaces import (
     LLM_CACHE_NAMESPACE,
     LLM_RUN_TELEMETRY_NAMESPACE,
     LLM_USAGE_NAMESPACE,
 )
-from ....persistence.storage.sql import SecureObjectRow
+from ....persistence.storage.sql.orm import SecureObjectRow
 from ....persistence.storage.sql.session import session_scope
 from ..cache import LLMCache
+from ..models import LLMProvider, LLMRequest, LLMResponse, UsageRecord
 from ..run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
 from ..usage import UsageRecorder
 

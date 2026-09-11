@@ -25,14 +25,14 @@ from ....core.logging import get_logger
 from ....core.redaction.rules import default_rules_for_class, redact_structured
 from ....core.time.clock import now
 from ....core.type_guards import is_object_dict
-from ....llm.errors import LLMCacheError
-from ....llm.models import CachedEntry, CacheKey, CacheStats, LLMProvider, LLMRequest, LLMResponse
-from ....llm.retention import select_retention_removal_keys
 from ...persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...persistence.storage.secure_object_namespaces import LLM_CACHE_NAMESPACE
+from .errors import LLMCacheError
+from .models import CachedEntry, CacheKey, CacheStats, LLMProvider, LLMRequest, LLMResponse
+from .retention import select_retention_removal_keys
 
 if TYPE_CHECKING:
-    from ...persistence.storage.sql import SecureObjectRepository
+    from ...persistence.storage.sql.secure_objects import SecureObjectRepository
 
 _log = get_logger(__name__)
 
