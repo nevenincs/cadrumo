@@ -22,11 +22,11 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.snapshot import SUBSTANTIVE_LAW_KINDS, collect_snapshot_ref_ids
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.orden_applicability import RevisionLegalApplicabilityWindow
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
+from cadrumo.domain.calculations.registry.snapshot import SUBSTANTIVE_LAW_KINDS, collect_snapshot_ref_ids
 from cadrumo.tests.registry_snapshot import build_snapshot
 
 from ..conformance.registry_schema_support import (
@@ -107,9 +107,7 @@ def _revision_scoped_procedural_legal_id(modelo: ModeloDefinition, catalogues: R
     (an ``orden``, not a ``ley``), not merely any revision-scoped id.
     """
     scoped = _revision_scoped_legal_ids(modelo)
-    procedural = sorted(
-        legal_id for legal_id in scoped if catalogues.legal[legal_id].kind not in SUBSTANTIVE_LAW_KINDS
-    )
+    procedural = sorted(legal_id for legal_id in scoped if catalogues.legal[legal_id].kind not in SUBSTANTIVE_LAW_KINDS)
     assert procedural, "the M100 2025 revision must own at least one procedural legal ref of its own"
     return procedural[0]
 

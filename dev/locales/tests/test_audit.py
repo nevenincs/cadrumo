@@ -7,7 +7,6 @@ from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
-from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
 
 from cadrumo.core.i18n.render import extract_placeholders
 from cadrumo.core.product_identity import (
@@ -15,6 +14,7 @@ from cadrumo.core.product_identity import (
     PRODUCT_IDENTITY,
     normalise_product_identity_references,
 )
+from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
 
 from .._paths import DOCS_SRC_DIR, HARNESS_SRC_DIR, LOCALES_DIR, SRC_DIR
 from ..cli import app

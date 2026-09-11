@@ -272,4 +272,3 @@ def _format_cross_revision_failure(
         f"{casilla_id!r} canonical revision {left_revision_id!r} "
         f"divergences {divergence_tuples!r}"
     )
-

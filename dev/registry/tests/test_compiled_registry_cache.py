@@ -111,7 +111,7 @@ def test_a_foreign_shaped_payload_is_refused_and_deleted(tmp_path: Path) -> None
         path.parent.mkdir(parents=True, exist_ok=True)
         # A frame with a valid schema version and a matching digest, but a foreign
         # payload object -- integrity passes, the structural type-check must not.
-        store_compiled_registry_cache(  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+        store_compiled_registry_cache(  # type: ignore[arg-type]
             root,
             fingerprints,
             ("not", "a", "compiled", "registry"),

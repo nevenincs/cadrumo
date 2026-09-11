@@ -24,11 +24,6 @@ from cadrumo.core.schema_family_disposition import (
     UNRESOLVED_SCHEMA_FAMILY_DISPOSITIONS,
     RegistrySchemaFamilyDisposition,
 )
-from cadrumo.domain.calculations.registry.schema_family_coverage import (
-    RevisionCoverageManifest,
-    SchemaFamilyCoverageRow,
-    build_revision_coverage_manifest,
-)
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.schema import (
     REVISION_MANIFEST_ONLY_FIELDS,
@@ -38,6 +33,11 @@ from cadrumo.domain.calculations.registry.schema import (
 from cadrumo.domain.calculations.registry.schema_base import (
     SCHEMA_FAMILY,
     RegistryModel,
+)
+from cadrumo.domain.calculations.registry.schema_family_coverage import (
+    RevisionCoverageManifest,
+    SchemaFamilyCoverageRow,
+    build_revision_coverage_manifest,
 )
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree

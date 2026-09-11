@@ -25,8 +25,8 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 
+from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from cadrumo_harness.mcp._hitl import ConfirmationPolicy, confirmation_for_tool

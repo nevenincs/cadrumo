@@ -56,7 +56,6 @@ from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
 
 from .workbook_parity_models import (
     SyntheticInputSet,
-    SyntheticInputValue,
     WorkbookArtefactReport,
     WorkbookBackendVerificationReport,
     WorkbookCellRef,
@@ -64,16 +63,13 @@ from .workbook_parity_models import (
     WorkbookExtension,
     WorkbookModeloCoverage,
     WorkbookParityComparison,
-    WorkbookParityModel,
     WorkbookParityRunReport,
     WorkbookRunnerAvailability,
 )
 from .workbook_parity_types import (
     ParityStatus,
-    WorkbookConversionStatus,
     WorkbookKind,
     WorkbookRunnerEngine,
-    WorkbookRunnerStatus,
     WorkbookScanStatus,
 )
 

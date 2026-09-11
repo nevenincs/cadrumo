@@ -16,6 +16,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader import load_catalogue_file
 from ..pipeline import m390_auxiliary_envelope
+from ..pipeline.export_fragment_provenance import ExportFragmentTarget
 from ..pipeline.m390_auxiliary_envelope import (
     M390_AUXILIARY_ENVELOPE_TARGETS,
     M390AuxiliaryEnvelopeGenerationInput,
@@ -23,7 +24,6 @@ from ..pipeline.m390_auxiliary_envelope import (
     render_m390_auxiliary_envelope_bytes,
     validate_m390_auxiliary_envelope,
 )
-from ..pipeline.export_fragment_provenance import ExportFragmentTarget
 from ..pipeline.record_design_intermediate import RecordDesignIntermediate, load_record_design_intermediate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

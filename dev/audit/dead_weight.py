@@ -16,27 +16,15 @@ def main() -> int:
     duplication = run_duplication_scan(REPO_ROOT)
     dead_code = run_dead_code_scan(REPO_ROOT)
 
-    unavailable = (
-        duplication.outcome is DuplicationOutcome.UNAVAILABLE
-        or dead_code.outcome is DeadCodeOutcome.ERROR
-    )
-    has_findings = (
-        duplication.outcome is DuplicationOutcome.CLONES
-        or dead_code.outcome is DeadCodeOutcome.FINDINGS
-    )
+    unavailable = duplication.outcome is DuplicationOutcome.UNAVAILABLE or dead_code.outcome is DeadCodeOutcome.ERROR
+    has_findings = duplication.outcome is DuplicationOutcome.CLONES or dead_code.outcome is DeadCodeOutcome.FINDINGS
     outcome = "unavailable" if unavailable else "findings" if has_findings else "clean"
     duplication_available = duplication.outcome is not DuplicationOutcome.UNAVAILABLE
     dead_code_available = dead_code.outcome is not DeadCodeOutcome.ERROR
     duplication_rate = round(float(duplication.duplicated_pct or 0) / 100, 8)
-    dead_code_rate = (
-        round(len(dead_code.findings) / dead_code.modules_offered, 8)
-        if dead_code.modules_offered
-        else 0.0
-    )
+    dead_code_rate = round(len(dead_code.findings) / dead_code.modules_offered, 8) if dead_code.modules_offered else 0.0
     headline = (
-        "dead weight: "
-        f"{duplication.clone_count} duplication clone(s); "
-        f"{len(dead_code.findings)} dead-code finding(s)"
+        f"dead weight: {duplication.clone_count} duplication clone(s); {len(dead_code.findings)} dead-code finding(s)"
     )
     if unavailable:
         headline += "; one or more scanners unavailable"
@@ -77,9 +65,7 @@ def main() -> int:
                         "scanned_total": dead_code.modules_offered,
                         "rate": dead_code_rate,
                         "high_confidence": dead_code.count_by_confidence.get("high (>=80%)", 0),
-                        "moderate_confidence": dead_code.count_by_confidence.get(
-                            "moderate (<80%)", 0
-                        ),
+                        "moderate_confidence": dead_code.count_by_confidence.get("moderate (<80%)", 0),
                     },
                 },
                 "details": {

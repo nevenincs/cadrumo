@@ -24,7 +24,6 @@ from decimal import Decimal
 
 import click
 import pytest
-from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from click.testing import CliRunner
 
 from cadrumo.adapters.persistence.profile.filing_drafts import ModeloDraftRepository
@@ -42,6 +41,7 @@ from cadrumo.domain.filing.schema import (
 )
 from cadrumo.domain.submission.models import ModeloDraftStatus
 from cadrumo.entrypoints.cli._common import resolve_notice_action
+from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices
 from cadrumo.tests.filing import build_registry_filing_draft
 

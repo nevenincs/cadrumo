@@ -30,12 +30,12 @@ from cadrumo.domain.calculations.registry.relations import derive_offset_source_
 from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
 
+from ._validate_source_casilla_ids import source_casilla_id_reference_failure
 from .validate_relation_periods import (
     RelationCoverageFailure,
     select_relation_source_revisions,
     validate_relation_source_coordinate_coverage,
 )
-from ._validate_source_casilla_ids import source_casilla_id_reference_failure
 
 __all__ = [
     "relation_is_prior_year_filing_carry",

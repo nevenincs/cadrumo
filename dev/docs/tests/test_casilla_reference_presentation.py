@@ -28,7 +28,6 @@ that does not exist, and a requiredness inverted from the declared one.
 
 from __future__ import annotations
 
-import importlib
 import inspect
 import re
 from functools import cache

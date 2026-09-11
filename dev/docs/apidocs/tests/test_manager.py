@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import ast
 import importlib
-import inspect
 from pathlib import Path
 
 import pytest
@@ -54,7 +53,10 @@ def _bound_names(tree: ast.Module) -> set[str]:
 
 
 def _defines_class_or_function(tree: ast.Module, name: str) -> bool:
-    return any(isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and node.name == name for node in tree.body)
+    return any(
+        isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and node.name == name
+        for node in tree.body
+    )
 
 
 def test_every_manual_alias_target_resolves_at_the_module_it_claims() -> None:

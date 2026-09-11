@@ -33,6 +33,7 @@ from cadrumo.domain.calculations.registry.ids import SourceRefId
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
+from ...maintenance_support import check_m303_annual_orden_census_artefact
 from .. import m303_orden_manifest
 from .._m303_orden_raw_models import M303AnnualOrdenSourceCensus
 from ..m303_orden_census_artefact import (
@@ -41,11 +42,10 @@ from ..m303_orden_census_artefact import (
     m303_orden_census_artefact_path,
 )
 from ..m303_orden_manifest import (
-    _generate_manifest_with_censuses,
     collect_m303_annual_orden_fingerprints,
+    generate_manifest_with_censuses,
     load_m303_annual_orden_authority,
 )
-from ...maintenance_support import check_m303_annual_orden_census_artefact
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 
@@ -99,7 +99,7 @@ def test_the_shipped_censuses_equal_a_fresh_extraction(
     shipped = load_m303_annual_orden_censuses(root, sources=registry_sources)
     assert shipped is not None, "the committed artefact must load against the pinned sources"
 
-    _manifest, extracted = _generate_manifest_with_censuses(
+    _manifest, extracted = generate_manifest_with_censuses(
         source_root=bundled_path(),
         sources=registry_sources,
     )

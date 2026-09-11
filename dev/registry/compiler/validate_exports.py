@@ -60,11 +60,11 @@ from cadrumo.domain.calculations.registry.schema_exports import (
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
-from .validate_export_field_widths import validate_draft_field_slot_width
 from ._validate_helpers import missing_refs as _missing_refs
-from .validate_projection_endpoints import validate_projection_endpoint_declarations
 from .corpus_catalogue import verify_source_file
 from .validate_evidence import EvidenceValidator
+from .validate_export_field_widths import validate_draft_field_slot_width
+from .validate_projection_endpoints import validate_projection_endpoint_declarations
 
 __all__ = [
     "validate_embedded_envelope_source_authority",

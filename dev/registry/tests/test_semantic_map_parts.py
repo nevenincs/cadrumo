@@ -13,10 +13,10 @@ import pytest
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..compiler.authority import compiled_bundled_authority
-from ..pipeline.semantic_map_validation import validate_declared_parts
 from ..pipeline.joined_record_design import JoinedRecordDesignField, design_view
 from ..pipeline.render_check import revision_render_inputs
 from ..pipeline.semantic_map import SemanticMapEntry
+from ..pipeline.semantic_map_validation import validate_declared_parts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

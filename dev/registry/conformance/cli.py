@@ -86,7 +86,6 @@ from cadrumo.domain.calculations.registry.authority import (
 from ..compiler.authority import compile_validated_authority
 from ..compiler.legal_grounding import verify_legal_catalogue
 from ..pipeline.authority_publication import AuthorityArtifactCurrency, authority_artifact_currency
-from .stamp import StampableReviewStatus, StampError, bundled_registry_root, stamp_revision
 from .edition import RegistryEditionView, read_registry_edition, render_registry_edition
 from .errors import RegistryApplicationInputError
 from .manager import (
@@ -97,6 +96,7 @@ from .manager import (
     render_report,
     vacuity_warning,
 )
+from .stamp import StampableReviewStatus, StampError, bundled_registry_root, stamp_revision
 
 if TYPE_CHECKING:
     from .closure import RegistryClosureReport

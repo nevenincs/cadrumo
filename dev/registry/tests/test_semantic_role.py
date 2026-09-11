@@ -28,13 +28,13 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Modelo
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaAlias, CasillaConstraints, CasillaDefinition
 
+from ..compiler.registry_scope import validate_registry_scope
 from ..compiler.validate_semantic_role_axes import semantic_roles_are_axis_siblings
 from ..compiler.validate_semantic_roles import (
     semantic_role_cardinality_failures,
     semantic_role_consistency_failures,
     semantic_role_typo_twin_failures,
 )
-from ..compiler.registry_scope import validate_registry_scope
 from ..maintenance_support import load_modelo_path
 from ._synthetic_locale_fixtures import (
     _synthetic_locale_scope,

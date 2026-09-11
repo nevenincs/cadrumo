@@ -648,7 +648,7 @@ def test_public_loader_has_one_toml_parser_owner() -> None:
             "cadrumo.domain.calculations.registry.ids",
             "cadrumo.domain.calculations.registry.schema_base",
             "cadrumo.domain.calculations.registry.schema_exports",
-        "pydantic_error_detail",
+            "pydantic_error_detail",
             "record_design_intermediate",
         }
     }

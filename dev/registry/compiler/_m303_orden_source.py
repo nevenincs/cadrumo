@@ -28,12 +28,12 @@ from cadrumo.core.orden_anual_html import (
     extract_orden_anual_iva_authority,
     orden_anual_iva_authority_units,
 )
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.m303_orden_constants import (
     EXPECTED_ACTIVITY_COUNT,
     EXPECTED_MODULE_DISTRIBUTION,
     EXTRACTOR_VERSION,
 )
-from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_base import PublishingAuthority, RegistrySourceKind
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 

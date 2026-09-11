@@ -68,7 +68,6 @@ from typing import Literal
 import keyring
 import keyring.backends.null
 import keyring.core
-from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli, semantic_cli_text
 from click.testing import Result
 from pydantic import BaseModel, Field, JsonValue
 
@@ -80,6 +79,7 @@ from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.user_profile.values import UserProfileFact
+from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli, semantic_cli_text
 from cadrumo.tests.profile_capsule import (
     bound_test_profile_record,
     open_test_profile_session,

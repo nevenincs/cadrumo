@@ -22,7 +22,6 @@ from cadrumo.domain.calculations.registry.ids import SourceRefId
 from cadrumo.domain.calculations.registry.schema_exports import ProjectionEndpointDeclaration
 
 from ..maintenance_support import GeneratedArtifactInspection
-from .variable_envelope import validate_variable_envelope
 from .record_design_intermediate import (
     AnchorKey,
     RecordDesignIntermediate,
@@ -38,6 +37,7 @@ from .semantic_map import (
     semantic_anchor_key,
     semantic_record_key,
 )
+from .variable_envelope import validate_variable_envelope
 
 __all__ = [
     "SemanticMapAnomalyException",

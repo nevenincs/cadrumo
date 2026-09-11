@@ -29,12 +29,13 @@ from types import ModuleType
 
 import pytest
 
-from .. import vulture_whitelist
 from cadrumo.adapters.outbound.google import api as google_api
 from cadrumo.adapters.outbound.google import document_link_resolver
 from cadrumo.application.ledger import evidence_input
 from cadrumo.application.storage.calc_sheets import parity_harness
 from dev.docs.terminology_handbook import _curation
+
+from .. import vulture_whitelist
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

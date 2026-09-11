@@ -13,11 +13,6 @@ from cadrumo.domain.calculations.registry.schema_exports import FilingEnvelopeCl
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader import load_registry_tree
-from ..pipeline.variable_envelope import (
-    FilingEnvelopeProvenance,
-    compile_filing_envelope_definition,
-    validate_variable_envelope,
-)
 from ..pipeline.record_design_intermediate import (
     RecordDesignIntermediateField,
     RecordDesignIntermediateRelativeSuffixMarker,
@@ -31,6 +26,11 @@ from ..pipeline.semantic_map import (
     FilingEnvelopePrefixRole,
     SemanticMapAnchor,
     VariableEnvelopeSemantic,
+)
+from ..pipeline.variable_envelope import (
+    FilingEnvelopeProvenance,
+    compile_filing_envelope_definition,
+    validate_variable_envelope,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

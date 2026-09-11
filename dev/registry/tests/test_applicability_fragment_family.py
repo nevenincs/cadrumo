@@ -24,8 +24,8 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import schema_family_fields
 from cadrumo.domain.calculations.registry.schema_revision_members import ApplicabilityRuleDefinition
 
-from ..compiler.validate_applicability_section import validate_applicability_section
 from ..compiler.loader import load_modelo_directory
+from ..compiler.validate_applicability_section import validate_applicability_section
 from ..conformance.schema_family_support import schema_family_enrollment_failures
 from ._referential_integrity_support import REFERENCE_LEGAL_ID, minimal_legal_ref, minimal_revision
 

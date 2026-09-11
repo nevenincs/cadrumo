@@ -30,12 +30,12 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 
 from ._validate_application_links import validate_application_link_closure
-from .validate_constructs import validate_construct_closure
-from .validate_formulas import validate_formula_dag
 from ._validate_helpers import missing_refs as _missing_refs
+from .validate_constructs import validate_construct_closure
+from .validate_evidence import EvidenceValidator
+from .validate_formulas import validate_formula_dag
 from .validate_parameter_temporal import validate_bracket_table_temporal_coverage
 from .validate_revision_rules import validate_reconciliation_total_closure
-from .validate_evidence import EvidenceValidator
 
 _REVISION_REFERENCE_SOURCE_TIERS = ("official_source_guidance", "layout_authority")
 

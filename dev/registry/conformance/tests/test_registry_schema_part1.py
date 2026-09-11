@@ -39,11 +39,11 @@ from cadrumo.domain.calculations.registry.schema_surfaces import (
 )
 from cadrumo.tests.registry_snapshot import build_snapshot
 
+from ...compiler.loader import load_modelo_file
 from ...compiler.validate_export_field_widths import (
     DRAFT_ATTRIBUTE_CANONICAL_WIDTHS,
     validate_draft_field_slot_width,
 )
-from ...compiler.loader import load_modelo_file
 from ...compiler.validator import RegistryValidator
 from ..coverage import build_model_law_coverage_ledger
 from ..registry_schema_support import (
