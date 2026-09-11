@@ -6,7 +6,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:8c2c9609feb986c5b78715a78da6f0d317fd4592d7e162cc5a6a2da33ff33b6a'
+body_hash: 'sha256:bc7f749deb9e9ce54931257e4b81239fb3c6ebd0912675b80898b2d17dea2840'
 related:
   - '[[2026-09-09-facts-registry-W01-P01-S01]]'
   - '[[2026-09-09-facts-registry-W01-P01-S02]]'
@@ -77,6 +77,7 @@ related:
   - '[[2026-09-09-facts-registry-W04-P16-S32]]'
   - '[[2026-09-09-facts-registry-W04-P16-S33]]'
   - '[[2026-09-09-facts-registry-W04-P17-S56]]'
+  - '[[2026-09-09-facts-registry-W04-P17-S57]]'
   - '[[2026-09-09-facts-registry-authority-plumbing-research]]'
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
   - '[[2026-09-09-facts-registry-discovery-blast-radius-research]]'
@@ -108,6 +109,7 @@ related:
   - '[[2026-09-11-facts-registry-s32-iva-interpretation-retirement-audit]]'
   - '[[2026-09-11-facts-registry-s33-routing-retirement-audit]]'
   - '[[2026-09-11-facts-registry-s56-iva-raw-retirement-audit]]'
+  - '[[2026-09-11-facts-registry-s57-iva-rate-repository-retirement-review-audit]]'
   - '[[2026-09-11-facts-registry-s77-category-retirement-audit]]'
   - '[[2026-09-11-facts-registry-s78-holiday-retirement-audit]]'
   - '[[2026-09-11-facts-registry-s79-convenio-retirement-review-audit]]'
@@ -146,6 +148,7 @@ Auto-generated index of all documents tagged with `#facts-registry`.
 - `2026-09-11-facts-registry-s32-iva-interpretation-retirement-audit` - `facts-registry` audit: `S32 IVA interpretation retirement`
 - `2026-09-11-facts-registry-s33-routing-retirement-audit` - `facts-registry` audit: `S33 routing retirement`
 - `2026-09-11-facts-registry-s56-iva-raw-retirement-audit` - `facts-registry` audit: `S56 IVA raw provider retirement review`
+- `2026-09-11-facts-registry-s57-iva-rate-repository-retirement-review-audit` - `facts-registry` audit: `S57 IVA rate repository retirement review`
 - `2026-09-11-facts-registry-s77-category-retirement-audit` - `facts-registry` audit: `S77 category adapter retirement review`
 - `2026-09-11-facts-registry-s78-holiday-retirement-audit` - `facts-registry` audit: `S78 holiday calendar adapter retirement review`
 - `2026-09-11-facts-registry-s79-convenio-retirement-review-audit` - `facts-registry` audit: `S79 convenio adapter retirement review`
@@ -222,6 +225,7 @@ Auto-generated index of all documents tagged with `#facts-registry`.
 - `2026-09-09-facts-registry-W04-P16-S32` - Delete numeric IVA interpretation but retain persisted enum tokens
 - `2026-09-09-facts-registry-W04-P16-S33` - Replace the remaining technical model-routing aliases with their specialized aggregation and calendar-policy owners, then delete the aliases
 - `2026-09-09-facts-registry-W04-P17-S56` - `facts-registry` execution: `W04.P17.S56`
+- `2026-09-09-facts-registry-W04-P17-S57` - Delete the obsolete IVA-rate resource repository after authority-backed rate resolution, while retaining IVA-local grounding only until the raw legal IVA tables have typed fact replacements
 
 ### plan
 

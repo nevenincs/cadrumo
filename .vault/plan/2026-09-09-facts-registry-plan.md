@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-11'
 body_schema: body-v2
-body_hash: 'sha256:0450eec7eb40f60d3e43f674c294880202e61b21392c5e833fe1bf05ea451bee'
+body_hash: 'sha256:51b544324bbf112678d8a38bf1d3673859a67826557f828341e973a73465b9a6'
 ---
 
 <!-- RETIRED: S65 -->
@@ -212,7 +212,8 @@ Remove retired parsers, caches, wrappers, direct readers, duplicate TOML paths, 
 
 - [ ] `W04.P17.S34` - Delete superseded legal-only adapters and provider-local caches; `src/cadrumo/domain/calculations/registry/loader.py`.
 - [x] `W04.P17.S56` - Delete the superseded IVA and recargo raw parsers, caches, provider registration, focused adapter tests, and raw TOML after authored-fact parity is proved; `dev/registry/compiler/iva.py and dev/registry/tests and src/cadrumo/domain/iva and src/cadrumo/_data/registry/aeat/iva`.
-- [ ] `W04.P17.S57` - Delete retired IVA-local grounding and obsolete repository wrapper; `src/cadrumo/domain/iva/_grounding.py and src/cadrumo/core/resources/_repos/iva_rate_tables.py`.
+- [x] `W04.P17.S57` - Delete the obsolete IVA-rate resource repository after authority-backed rate resolution, while retaining IVA-local grounding only until the raw legal IVA tables have typed fact replacements.; `src/cadrumo/core/resources/_repos/iva_rate_tables.py and src/cadrumo/core/resources/registry.py and dev/registry/analysis and dev/registry/tests`.
+- [ ] `W04.P17.S85` - Delete IVA-local grounding only after the typed IVA legal-fact migrations remove every raw-table reader and the validated authority owns equivalent evidence refusal.; `src/cadrumo/domain/iva/_grounding.py and src/cadrumo/domain/iva/place_of_supply.py and src/cadrumo/domain/iva/establishment.py and dev/registry/analysis and dev/registry/tests`.
 
 ### Phase `W04.P18` - Enforce negative architecture
 

@@ -145,7 +145,6 @@ def test_resources_factory_composes_every_repository() -> None:
         "recargo_bands",
         "topics",
         "iva_catalogues",
-        "iva_rate_tables",
     }
     assert set(registry.__dataclass_fields__.keys()) == expected_fields
 

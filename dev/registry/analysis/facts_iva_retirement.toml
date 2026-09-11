@@ -62,7 +62,7 @@ destination_id = "iva-rate-schedule"
 dependencies = ["W02.P05.S13", "W03.P12.S26", "W04.P15.S30", "W04.P17.S56", "W04.P19.S58"]
 delete_symbols = ["_load_iva_rate_table_cached", "_parse_rate", "_reference_ids", "_source_window_covers", "_source_window_failure", "_source_ref_failures", "_verify_rate_grounding", "_assert_no_overlap"]
 retain_symbols = ["IvaRateRecord", "load_iva_rate_table", "lookup_rate", "rate_table_covers", "rate_table_covers_any_positive_tier", "coexisting_tier_rates", "rate_kinds_for_declared_rate"]
-callers = ["src/cadrumo/domain/iva/lookup.py:lookup_rate", "src/cadrumo/domain/iva/lookup.py:rate_table_covers", "src/cadrumo/domain/iva/lookup.py:coexisting_tier_rates", "src/cadrumo/domain/iva/lookup.py:rate_kinds_for_declared_rate", "src/cadrumo/application/ledger/invoice_extraction_authority.py:_overlapping_iva_rate_pcts", "src/cadrumo/core/resources/_repos/iva_rate_tables.py:IvaRateTableRepository._load"]
+callers = ["src/cadrumo/domain/iva/lookup.py:lookup_rate", "src/cadrumo/domain/iva/lookup.py:rate_table_covers", "src/cadrumo/domain/iva/lookup.py:coexisting_tier_rates", "src/cadrumo/domain/iva/lookup.py:rate_kinds_for_declared_rate", "src/cadrumo/application/ledger/invoice_extraction_authority.py:_overlapping_iva_rate_pcts"]
 destination = "registered facts provider owns typed rows, member-state/tier/date selection, overlap refusal, evidence, fingerprints and invalidation; retained lookup functions project provider results"
 data_disposition = "normalize into src/cadrumo/_data/registry/aeat/facts then delete old TOML path"
 closure = "closed in W04.P17.S56: authored provider resolves every current row with provenance; all callers use authority or retained projections; raw parser, cache, registration, tests and rates.toml path are deleted"
@@ -94,6 +94,8 @@ callers = ["src/cadrumo/domain/iva/place_of_supply.py:_rules_in_table", "src/cad
 destination = "facts validation owns legal/source evidence closure and fingerprints for rates, recargo, IVA catalogue, place-of-supply, establishment territories and verification"
 data_disposition = "none"
 closure = "every listed caller uses facts validation or a registry-level evidence service; no IVA-local catalogue, fingerprint or citation-validation path remains"
+status = "blocked_pending_lossless_typed_fact_migration_or_registry_evidence_service"
+blocker = "place_of_supply.toml, territories.toml, and territory_carve_outs.toml remain direct production readers under S80 because existing facts cannot preserve their legal semantics. Their three loaders still need signed runtime citation verification. The compiler-only verifier is not installable product code, and no public registry-level runtime verifier has replaced this module."
 
 [[lanes]]
 lane_id = "iva-rate-resource-repository"
@@ -104,7 +106,7 @@ destination_id = "facts-authority-cache"
 dependencies = ["W02.P05.S13", "W03.P12.S26", "W04.P17.S57", "W04.P19.S58"]
 delete_symbols = ["IvaRateTableRepository"]
 retain_symbols = []
-callers = ["src/cadrumo/core/resources/registry.py:ResourceRegistry.iva_rate_tables"]
+callers = []
 destination = "delete when authority memoisation replaces the repository; otherwise retain only a TOML-unaware facade over authority resolution"
 data_disposition = "none"
-closure = "ResourceRegistry has no obsolete repository field, or the surviving facade performs no TOML parsing/caching and returns provenance-bearing authority projections"
+closure = "closed in W04.P17.S57: ResourceRegistry has no IVA-rate repository field; all IVA-rate consumers resolve the canonical fact-backed authority projection directly"
