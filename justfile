@@ -226,8 +226,9 @@ check-identity:
 # Verify every locale catalogue against the live code and registry surface.
 [doc('Audit locale keys, values, placeholders, and codebase enrolment.')]
 [group('check')]
+[no-exit-message]
 check-locales:
-    @uv run --no-sync python -m dev.locales audit
+    @uv run --no-sync python -m dev.test_runs.command --family test-runs --label check-locales --signal locales-status -- uv run --no-sync python -m dev.locales status --json --check
 
 # Verify the committed API-reference stub tree without rewriting it.
 [doc('Verify that generated API documentation stubs match the source module tree.')]
@@ -584,8 +585,9 @@ fix-format:
 # and curated catalogue mutation separate. The blocking audit is `check-locales`.
 [doc('Report the authored, key-echo, blank, absent, and extra state of each locale catalogue; read-only.')]
 [group('locale')]
+[no-exit-message]
 locales-status:
-    @uv run --no-sync python -m dev.locales status
+    @uv run --no-sync python -m dev.test_runs.command --family test-runs --label locales-status --signal locales-status -- uv run --no-sync python -m dev.locales status --json
 
 [doc('Generate locale catalogue leaves from the live translation-key surface; writes catalogue source state.')]
 [group('locale')]
@@ -1114,6 +1116,22 @@ report-registry-closure:
 [group('report')]
 report-registry-aeip:
     @uv run --no-sync python -m dev.registry.aeip inventory
+
+# How far each modelo has moved from full-copy editions to delta authoring, and
+# what still restates the edition its own directory names. Reads the authored
+# corpus rather than the compiled authority, because a restated reference and an
+# inherited one materialise identically and the authority cannot see the
+# difference. Sibling to `delta_minimality`, which owns the separate question of
+# whether a stated row equals the row it would inherit.
+[doc('Report edition delta-authoring status and remaining restatement per modelo; always exits zero.')]
+[group('report')]
+report-registry-edition-delta-status *ARGS:
+    @uv run --no-sync python -m dev.test_runs.command --family test-runs --label report-registry-edition-delta-status -- uv run --no-sync python -m dev.registry.analysis.edition_delta_status {{ARGS}}
+
+[doc('Report only the corpus-wide edition delta-authoring totals, without the per-modelo worklist; always exits zero.')]
+[group('report')]
+report-registry-edition-delta-totals:
+    @uv run --no-sync python -m dev.test_runs.command --family test-runs --label report-registry-edition-delta-totals -- uv run --no-sync python -m dev.registry.analysis.edition_delta_status --totals-only
 
 # ── Documentation ────────────────────────────────────────────────────────────
 
