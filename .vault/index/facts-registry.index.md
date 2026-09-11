@@ -6,7 +6,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:645c5fb045b3ebd143abeebedfa891c69741d7142f1ccb5c34ff1a8b8f9c09eb'
+body_hash: 'sha256:73160fa9b1573bf89e024b9c713df542869160bcaf3863b4c48a36c03a45e578'
 related:
   - '[[2026-09-09-facts-registry-W01-P01-S01]]'
   - '[[2026-09-09-facts-registry-W01-P01-S02]]'
@@ -93,6 +93,7 @@ related:
   - '[[2026-09-10-facts-registry-s74-activity-selector-review-audit]]'
   - '[[2026-09-10-facts-registry-s75-legacy-provider-retirement-review-audit]]'
   - '[[2026-09-10-facts-registry-s76-article-101-provision-path-review-audit]]'
+  - '[[2026-09-11-facts-registry-adapted-family-normalization-reference]]'
   - '[[2026-09-11-facts-registry-external-constants-retirement-reference]]'
   - '[[2026-09-11-facts-registry-objective-estimation-publication-boundary-reference]]'
   - '[[2026-09-11-facts-registry-reference]]'
@@ -205,6 +206,7 @@ Auto-generated index of all documents tagged with `#facts-registry`.
 ### reference
 
 - `2026-09-10-facts-registry-legal-parameter-consumer-migration-reference` - `facts-registry` reference: `Facts registry legal-parameter consumer migration reference`
+- `2026-09-11-facts-registry-adapted-family-normalization-reference` - `facts-registry` reference: adapted family normalization
 - `2026-09-11-facts-registry-external-constants-retirement-reference` - `facts-registry` reference: external constants retirement
 - `2026-09-11-facts-registry-objective-estimation-publication-boundary-reference` - `facts-registry` reference: objective-estimation publication boundary
 - `2026-09-11-facts-registry-reference` - `facts-registry` reference: retired global legal-parameter provider

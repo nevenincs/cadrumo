@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-11'
 body_schema: body-v2
-body_hash: 'sha256:b478cd2996226ea150c455bc979fa1d72d86bb8e7b4f1636a4edd03d4a955f6a'
+body_hash: 'sha256:3a2f23b463e288aa772a6a2f5e7b776448c550b7c415a5b3af4ec5a9fa121061'
 ---
 
 <!-- RETIRED: S65 -->
@@ -188,7 +188,11 @@ Move authored facts into the normalized facts corpus where approved, remove dupl
 Move approved adapted data families and Python-held facts into one-fact-per-file normalized TOML while retaining source evidence.
 
 - [x] `W04.P15.S29` - Replace the statutory Python fact adapter with normalized scalar and decimal-mapping fragments carrying exact typed payloads, effective applicability, and official source evidence; `src/cadrumo/_data/registry/aeat/facts and dev/registry/compiler/fact_providers.py and dev/registry/compiler/statutory_constants.py and dev/registry/tests and dev/registry/analysis/facts_external_constants_retirement.toml`.
-- [ ] `W04.P15.S30` - Normalize adapted families assigned to facts ownership; `src/cadrumo/_data/registry/aeat/facts`.
+- [ ] `W04.P15.S30` - Normalize IVA-rate and recargo schedules into authored one-fact-per-file fragments with typed rows, temporal applicability, and evidence; `src/cadrumo/_data/registry/aeat/facts and src/cadrumo/_data/registry/aeat/iva and dev/registry/compiler/fact_providers.py`.
+- [ ] `W04.P15.S77` - Normalize and retire the category-profile adapter only after every profile has an authored, evidence-bearing fact replacement; `src/cadrumo/_data/registry/aeat/categories and src/cadrumo/_data/registry/aeat/facts and dev/registry/compiler/categories.py and dev/registry/compiler/fact_providers.py and dev/registry/tests`.
+- [ ] `W04.P15.S78` - Normalize and retire the legal-holiday calendar adapter while preserving publication and event provenance; `src/cadrumo/_data/registry/aeat/calendars and src/cadrumo/_data/registry/aeat/facts and dev/registry/compiler/holidays.py and dev/registry/compiler/fact_providers.py and dev/registry/tests`.
+- [ ] `W04.P15.S79` - Normalize and retire the treaty-override adapter without duplicating the canonical convenio catalogue; `src/cadrumo/_data/registry/aeat/treaties and src/cadrumo/_data/registry/aeat/facts and dev/registry/compiler/convenio.py and dev/registry/compiler/fact_providers.py and dev/registry/compiler/authority.py and dev/registry/tests`.
+- [ ] `W04.P15.S80` - Classify the remaining IVA structured tables and authorize deletion only with a typed, evidence-bearing provider replacement; `src/cadrumo/_data/registry/aeat/iva and src/cadrumo/domain/iva and dev/registry/compiler and dev/registry/analysis`.
 
 ### Phase `W04.P16` - Delete Python legal constants and duplicate mappings
 
@@ -203,7 +207,7 @@ Remove migrated legal declarations and local interpretations while preserving un
 Remove retired parsers, caches, wrappers, direct readers, duplicate TOML paths, and adapter closure entries.
 
 - [ ] `W04.P17.S34` - Delete superseded legal-only adapters and provider-local caches; `src/cadrumo/domain/calculations/registry/loader.py`.
-- [ ] `W04.P17.S56` - Delete retired IVA and recargo parsers caches and raw TOML; `src/cadrumo/domain/iva and src/cadrumo/_data/registry/aeat/iva`.
+- [ ] `W04.P17.S56` - Delete the superseded IVA and recargo raw parsers, caches, provider registration, focused adapter tests, and raw TOML after authored-fact parity is proved; `dev/registry/compiler/iva.py and dev/registry/tests and src/cadrumo/domain/iva and src/cadrumo/_data/registry/aeat/iva`.
 - [ ] `W04.P17.S57` - Delete retired IVA-local grounding and obsolete repository wrapper; `src/cadrumo/domain/iva/_grounding.py and src/cadrumo/core/resources/_repos/iva_rate_tables.py`.
 
 ### Phase `W04.P18` - Enforce negative architecture
