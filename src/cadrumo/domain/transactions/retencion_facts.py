@@ -1,4 +1,4 @@
-"""Registry-backed loaders for RIRPF/LIRPF retención rate parameters.
+"""Registry-backed loaders for RIRPF/LIRPF retención rate facts.
 
 Two independent rate families live here, one per module. RD 439/2007 (RIRPF)
 art. 95 fixes rates for rendimientos de actividades económicas — 15 % general
@@ -17,7 +17,7 @@ declarations remain only for consumers that have not yet migrated.
 The loaders resolve typed scalar facts through ``ValidatedRegistryAuthority``
 at an explicit filing-period coordinate, then project only the values needed
 by their frozen pydantic records. The authority owns validation, fingerprinting
-and lifecycle identity; this module keeps neither a legal-parameter parser nor
+and lifecycle identity; this module keeps neither a legacy parser nor
 a local value cache.
 
 What the art. 95 rates are *for*: :attr:`RirpfArt95RetencionRates.general_rate`
@@ -88,25 +88,25 @@ class RirpfArt95RetencionRates(BaseModel):
     estimacion_objetiva_rate: Decimal = Field(gt=Decimal("0"), lt=Decimal("1"))
 
 
-_GENERAL_PARAM_ID: Final[str] = "rirpf-art-95:retencion-actividades-profesionales-general"
-_INICIO_PARAM_ID: Final[str] = "rirpf-art-95:retencion-actividades-profesionales-inicio"
-_AGRICOLA_GANADERA_PARAM_ID: Final[str] = "rirpf-art-95:retencion-actividades-agricolas-ganaderas-general"
-_GANADERA_ENGORDE_PARAM_ID: Final[str] = "rirpf-art-95:retencion-actividades-ganaderas-engorde-porcino-avicultura"
-_FORESTAL_PARAM_ID: Final[str] = "rirpf-art-95:retencion-actividades-forestales"
-_ESTIMACION_OBJETIVA_PARAM_ID: Final[str] = "rirpf-art-95:retencion-actividades-estimacion-objetiva"
+_GENERAL_FACT_ID: Final[str] = "rirpf-art-95:retencion-actividades-profesionales-general"
+_INICIO_FACT_ID: Final[str] = "rirpf-art-95:retencion-actividades-profesionales-inicio"
+_AGRICOLA_GANADERA_FACT_ID: Final[str] = "rirpf-art-95:retencion-actividades-agricolas-ganaderas-general"
+_GANADERA_ENGORDE_FACT_ID: Final[str] = "rirpf-art-95:retencion-actividades-ganaderas-engorde-porcino-avicultura"
+_FORESTAL_FACT_ID: Final[str] = "rirpf-art-95:retencion-actividades-forestales"
+_ESTIMACION_OBJETIVA_FACT_ID: Final[str] = "rirpf-art-95:retencion-actividades-estimacion-objetiva"
 
-#: Every art. 95 parameter this module resolves, in apartado order.
+#: Every art. 95 fact this module resolves, in apartado order.
 #:
 #: Declared once so the rate loader and the grounding lookup below cannot drift:
-#: a parameter added to one and not the other would produce a rate set whose
+#: a fact added to one and not the other would produce a rate set whose
 #: refs do not cover it.
-_ART95_PARAMETER_IDS: Final[tuple[str, ...]] = (
-    _GENERAL_PARAM_ID,
-    _INICIO_PARAM_ID,
-    _AGRICOLA_GANADERA_PARAM_ID,
-    _GANADERA_ENGORDE_PARAM_ID,
-    _FORESTAL_PARAM_ID,
-    _ESTIMACION_OBJETIVA_PARAM_ID,
+_ART95_FACT_IDS: Final[tuple[str, ...]] = (
+    _GENERAL_FACT_ID,
+    _INICIO_FACT_ID,
+    _AGRICOLA_GANADERA_FACT_ID,
+    _GANADERA_ENGORDE_FACT_ID,
+    _FORESTAL_FACT_ID,
+    _ESTIMACION_OBJETIVA_FACT_ID,
 )
 
 
@@ -126,8 +126,8 @@ def retencion_effective_date(*, value_date: date | None, booked_date: date | Non
     raise TransactionValidationError("retención fact resolution requires a transaction value or booked date")
 
 
-def _resolved_scalar_parameter(
-    parameter_id: str,
+def _resolved_scalar_fact(
+    fact_id: str,
     *,
     effective_date: date,
     expected_unit: str,
@@ -145,38 +145,38 @@ def _resolved_scalar_parameter(
     try:
         resolved = authority.resolve_governed_fact(
             ScalarFactQuery(
-                fact_id=parameter_id,
+                fact_id=fact_id,
                 date_axis=DateAxis.FILING_PERIOD,
                 effective_date=effective_date,
             )
         )
     except RegistryError as exc:
         raise TransactionValidationError(
-            f"failed to resolve retención fact {parameter_id!r}: {exc}",
+            f"failed to resolve retención fact {fact_id!r}: {exc}",
         ) from exc
     if not isinstance(resolved, ResolvedScalarFact):
-        raise TransactionValidationError(f"retención fact {parameter_id!r} did not resolve to a scalar")
+        raise TransactionValidationError(f"retención fact {fact_id!r} did not resolve to a scalar")
     if resolved.payload.unit != expected_unit:
         raise TransactionValidationError(
-            f"retención fact {parameter_id!r} carries unit {resolved.payload.unit!r}, expected {expected_unit!r}",
+            f"retención fact {fact_id!r} carries unit {resolved.payload.unit!r}, expected {expected_unit!r}",
         )
     if not resolved.legal_refs:
-        raise TransactionValidationError(f"retención fact {parameter_id!r} has no legal references")
+        raise TransactionValidationError(f"retención fact {fact_id!r} has no legal references")
     return cast("ResolvedScalarFact", resolved)
 
 
 def _legal_refs_of(
-    parameter_id: str,
+    fact_id: str,
     *,
     effective_date: date,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> tuple[str, ...]:
     """Return one resolved fact's legal references, refusing an ungrounded result."""
     return tuple(
-        _resolved_scalar_parameter(
-            parameter_id,
+        _resolved_scalar_fact(
+            fact_id,
             effective_date=effective_date,
-            expected_unit="fraction" if parameter_id != _ADMINISTRADOR_INCN_UMBRAL_PARAM_ID else "EUR",
+            expected_unit="fraction" if fact_id != _ADMINISTRADOR_INCN_UMBRAL_FACT_ID else "EUR",
             authority=authority,
         ).legal_refs
     )
@@ -193,18 +193,18 @@ def load_retencion_actividades_rates(
         A :class:`RirpfArt95RetencionRates` record with every rate value.
 
     Raises:
-        TransactionValidationError: If any expected parameter id is absent,
+        TransactionValidationError: If any expected fact id is absent,
             carries no string value, or does not parse as a ``Decimal``, or if
-            the registry parameter catalogue cannot be loaded.
+            fact authority cannot be resolved.
     """
     coordinate = effective_date
     return RirpfArt95RetencionRates(
-        general_rate=_decimal_fact(_GENERAL_PARAM_ID, coordinate, authority),
-        inicio_actividad_rate=_decimal_fact(_INICIO_PARAM_ID, coordinate, authority),
-        agricola_ganadera_rate=_decimal_fact(_AGRICOLA_GANADERA_PARAM_ID, coordinate, authority),
-        ganadera_engorde_rate=_decimal_fact(_GANADERA_ENGORDE_PARAM_ID, coordinate, authority),
-        forestal_rate=_decimal_fact(_FORESTAL_PARAM_ID, coordinate, authority),
-        estimacion_objetiva_rate=_decimal_fact(_ESTIMACION_OBJETIVA_PARAM_ID, coordinate, authority),
+        general_rate=_decimal_fact(_GENERAL_FACT_ID, coordinate, authority),
+        inicio_actividad_rate=_decimal_fact(_INICIO_FACT_ID, coordinate, authority),
+        agricola_ganadera_rate=_decimal_fact(_AGRICOLA_GANADERA_FACT_ID, coordinate, authority),
+        ganadera_engorde_rate=_decimal_fact(_GANADERA_ENGORDE_FACT_ID, coordinate, authority),
+        forestal_rate=_decimal_fact(_FORESTAL_FACT_ID, coordinate, authority),
+        estimacion_objetiva_rate=_decimal_fact(_ESTIMACION_OBJETIVA_FACT_ID, coordinate, authority),
     )
 
 
@@ -215,18 +215,18 @@ def rirpf_art95_retencion_legal_refs(
 ) -> tuple[str, ...]:
     """Return the registry legal references grounding the art. 95 rate set.
 
-    Read off the parameters this module already resolves rather than restated
+    Read off the facts this module already resolves rather than restated
     here, which is the whole point: an advisory that names an article from a
     Python literal asserts law the registry cannot confirm it still says, while
-    one carrying the parameter's own refs moves with the registry.
+    one carrying the fact's own refs moves with the registry.
 
     Returns:
         The distinct reference ids, in first-seen order so the sequence is
         stable for an operator comparing two runs.
     """
     seen: list[str] = []
-    for parameter_id in _ART95_PARAMETER_IDS:
-        for reference in _legal_refs_of(parameter_id, effective_date=effective_date, authority=authority):
+    for fact_id in _ART95_FACT_IDS:
+        for reference in _legal_refs_of(fact_id, effective_date=effective_date, authority=authority):
             if reference not in seen:
                 seen.append(reference)
     return tuple(seen)
@@ -237,7 +237,7 @@ def statutory_activity_retencion_rates(*, effective_date: date) -> frozenset[Dec
 
     The DISTINCT values, not one per apartado: art. 95.4.2.º and art. 95.5 both
     fix 2 %, and art. 95.4.1.º and art. 95.6.1.º both fix 1 %, so the six
-    declared parameters collapse to four figures. Callers that ask "is this
+    declared facts collapse to four figures. Callers that ask "is this
     amount a statutory rate product?" want the value set; callers that need to
     know WHICH apartado applies to a given row must read the named field
     instead, because that is a per-row legal determination this set discards.
@@ -311,17 +311,17 @@ class AdministradorRetencionRates(BaseModel):
     reduced_incn_threshold_eur: Decimal = Field(gt=Decimal("0"))
 
 
-_ADMINISTRADOR_GENERAL_PARAM_ID: Final[str] = "lirpf-art-101:retencion-administrador-general"
-_ADMINISTRADOR_REDUCIDA_PARAM_ID: Final[str] = "lirpf-art-101:retencion-administrador-reducida"
-_ADMINISTRADOR_INCN_UMBRAL_PARAM_ID: Final[str] = "lirpf-art-101:retencion-administrador-incn-umbral-eur"
+_ADMINISTRADOR_GENERAL_FACT_ID: Final[str] = "lirpf-art-101:retencion-administrador-general"
+_ADMINISTRADOR_REDUCIDA_FACT_ID: Final[str] = "lirpf-art-101:retencion-administrador-reducida"
+_ADMINISTRADOR_INCN_UMBRAL_FACT_ID: Final[str] = "lirpf-art-101:retencion-administrador-incn-umbral-eur"
 
-#: Every administrador parameter this module resolves. Declared once so the
+#: Every administrador fact this module resolves. Declared once so the
 #: rate loader and the grounding lookup below cannot drift, for the same
-#: reason :data:`_ART95_PARAMETER_IDS` is declared once.
-_ADMINISTRADOR_PARAMETER_IDS: Final[tuple[str, ...]] = (
-    _ADMINISTRADOR_GENERAL_PARAM_ID,
-    _ADMINISTRADOR_REDUCIDA_PARAM_ID,
-    _ADMINISTRADOR_INCN_UMBRAL_PARAM_ID,
+#: reason :data:`_ART95_FACT_IDS` is declared once.
+_ADMINISTRADOR_FACT_IDS: Final[tuple[str, ...]] = (
+    _ADMINISTRADOR_GENERAL_FACT_ID,
+    _ADMINISTRADOR_REDUCIDA_FACT_ID,
+    _ADMINISTRADOR_INCN_UMBRAL_FACT_ID,
 )
 
 
@@ -336,16 +336,16 @@ def load_administrador_retencion_rates(
         An :class:`AdministradorRetencionRates` record with every rate value.
 
     Raises:
-        TransactionValidationError: If any expected parameter id is absent,
+        TransactionValidationError: If any expected fact id is absent,
             carries no string value, or does not parse as a ``Decimal``, or if
-            the registry parameter catalogue cannot be loaded.
+            fact authority cannot be resolved.
     """
     coordinate = effective_date
     return AdministradorRetencionRates(
-        general_rate=_decimal_fact(_ADMINISTRADOR_GENERAL_PARAM_ID, coordinate, authority),
-        reduced_rate=_decimal_fact(_ADMINISTRADOR_REDUCIDA_PARAM_ID, coordinate, authority),
+        general_rate=_decimal_fact(_ADMINISTRADOR_GENERAL_FACT_ID, coordinate, authority),
+        reduced_rate=_decimal_fact(_ADMINISTRADOR_REDUCIDA_FACT_ID, coordinate, authority),
         reduced_incn_threshold_eur=_decimal_fact(
-            _ADMINISTRADOR_INCN_UMBRAL_PARAM_ID,
+            _ADMINISTRADOR_INCN_UMBRAL_FACT_ID,
             coordinate,
             authority,
             expected_unit="EUR",
@@ -360,10 +360,10 @@ def administrador_retencion_legal_refs(
 ) -> tuple[str, ...]:
     """Return the registry legal references grounding the administrador rate set.
 
-    Read off the parameters this module already resolves rather than restated
+    Read off the facts this module already resolves rather than restated
     here, for the same reason :func:`rirpf_art95_retencion_legal_refs` states:
     an advisory that names an article from a Python literal asserts law the
-    registry cannot confirm it still says, while one carrying the parameter's
+    registry cannot confirm it still says, while one carrying the fact's
     own refs moves with the registry.
 
     Returns:
@@ -371,29 +371,29 @@ def administrador_retencion_legal_refs(
         stable for an operator comparing two runs.
     """
     seen: list[str] = []
-    for parameter_id in _ADMINISTRADOR_PARAMETER_IDS:
-        for reference in _legal_refs_of(parameter_id, effective_date=effective_date, authority=authority):
+    for fact_id in _ADMINISTRADOR_FACT_IDS:
+        for reference in _legal_refs_of(fact_id, effective_date=effective_date, authority=authority):
             if reference not in seen:
                 seen.append(reference)
     return tuple(seen)
 
 
 def _decimal_fact(
-    parameter_id: str,
+    fact_id: str,
     effective_date: date,
     authority: ValidatedRegistryAuthority | None,
     *,
     expected_unit: str = "fraction",
 ) -> Decimal:
     """Return a Decimal only from a resolved scalar fact with the expected unit."""
-    value = _resolved_scalar_parameter(
-        parameter_id,
+    value = _resolved_scalar_fact(
+        fact_id,
         effective_date=effective_date,
         expected_unit=expected_unit,
         authority=authority,
     ).payload.value
     if not isinstance(value, Decimal):
-        raise TransactionValidationError(f"retención fact {parameter_id!r} has non-Decimal value {value!r}")
+        raise TransactionValidationError(f"retención fact {fact_id!r} has non-Decimal value {value!r}")
     return value
 
 

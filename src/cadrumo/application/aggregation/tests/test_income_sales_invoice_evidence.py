@@ -33,7 +33,7 @@ from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....domain.transactions.retencion_parameters import statutory_activity_retencion_rates
+from ....domain.transactions.retencion_facts import statutory_activity_retencion_rates
 from ....domain.transactions.service import link_invoice
 from .._renta_income_evidence import SalesInvoiceEvidenceRefusal
 from .._renta_income_ledger import aggregate_renta_income_ledger, aggregate_renta_m100_income_ledger

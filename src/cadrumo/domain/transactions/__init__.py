@@ -70,7 +70,7 @@ See Also:
         Proportionality profiles referenced by ledger rows before aggregation.
 
 Consumers import from the owning module -- :mod:`models`, :mod:`llm`,
-:mod:`enums`, :mod:`irpf_categories`, :mod:`retencion_parameters`,
+:mod:`enums`, :mod:`irpf_categories`, :mod:`retencion_facts`,
 :mod:`raw_transaction`, :mod:`repository`, :mod:`service`, :mod:`model_tier`,
 :mod:`classification_rule`, :mod:`model_validation`, :mod:`errors` -- rather
 than from this package root, which is inert.

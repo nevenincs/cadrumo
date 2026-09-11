@@ -5,19 +5,19 @@ not Python constants. These gates pin the chain the
 ``aeat-registry-authority-flow`` and ``aeat-calculation-grounding`` rules
 require:
 
-    bundled BOE corpus excerpt -> registry parameter -> typed record -> the
+    bundled BOE corpus excerpt -> governed fact -> typed record -> the
     rate set the statutory-rate advisory actually compares withheld amounts
     against.
 
 The expected figures are not recomputed from anything the loader does; they
 are read out of the bundled BOE corpus excerpts for LIRPF art. 101 and RIRPF
-art. 80 and compared against the registry parameters, so a drift in either the
-excerpt or the parameter reds the gate rather than agreeing with itself.
+art. 80 and compared against the governed facts, so a drift in either the
+excerpt or the fact reds the gate rather than agreeing with itself.
 
 See Also:
-    :mod:`domain.transactions.retencion_parameters`
+    :mod:`domain.transactions.retencion_facts`
         The loader under test.
-    :mod:`domain.transactions.tests.test_retencion_parameters`
+    :mod:`domain.transactions.tests.test_retencion_facts`
         The sibling RIRPF art. 95 gate this module mirrors.
 """
 
@@ -35,7 +35,7 @@ from ....core.directory_scan import scan_directory
 from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.facts.resolution import ScalarFactQuery, resolve_governed_fact
 from ....domain.calculations.registry.schema_base import DateAxis
-from ..retencion_parameters import (
+from ..retencion_facts import (
     AdministradorRetencionRates,
     administrador_retencion_legal_refs,
     load_administrador_retencion_rates,
@@ -43,9 +43,9 @@ from ..retencion_parameters import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_GENERAL_PARAM_ID = "lirpf-art-101:retencion-administrador-general"
-_REDUCIDA_PARAM_ID = "lirpf-art-101:retencion-administrador-reducida"
-_UMBRAL_PARAM_ID = "lirpf-art-101:retencion-administrador-incn-umbral-eur"
+_GENERAL_FACT_ID = "lirpf-art-101:retencion-administrador-general"
+_REDUCIDA_FACT_ID = "lirpf-art-101:retencion-administrador-reducida"
+_UMBRAL_FACT_ID = "lirpf-art-101:retencion-administrador-incn-umbral-eur"
 _LIRPF_REF = "ley-35-2006:art-101"
 _RIRPF_REF = "rd-439-2007:art-80"
 _CURRENT_EFFECTIVE_DATE = date(2026, 4, 1)
@@ -89,23 +89,23 @@ def test_the_bundled_rirpf_excerpt_states_every_administrador_figure() -> None:
 
 def test_governed_facts_match_the_percentages_the_excerpts_state() -> None:
     """Second link: the fact values equal the BOE percentages as fractions."""
-    assert _resolved_fact(_GENERAL_PARAM_ID).payload.value == Decimal("35") / Decimal("100")
-    assert _resolved_fact(_REDUCIDA_PARAM_ID).payload.value == Decimal("19") / Decimal("100")
-    assert _resolved_fact(_UMBRAL_PARAM_ID).payload.value == Decimal("100000")
+    assert _resolved_fact(_GENERAL_FACT_ID).payload.value == Decimal("35") / Decimal("100")
+    assert _resolved_fact(_REDUCIDA_FACT_ID).payload.value == Decimal("19") / Decimal("100")
+    assert _resolved_fact(_UMBRAL_FACT_ID).payload.value == Decimal("100000")
 
 
 @pytest.mark.parametrize(
-    "parameter_id",
-    (_GENERAL_PARAM_ID, _REDUCIDA_PARAM_ID, _UMBRAL_PARAM_ID),
+    "fact_id",
+    (_GENERAL_FACT_ID, _REDUCIDA_FACT_ID, _UMBRAL_FACT_ID),
     ids=("general", "reducida", "incn-umbral"),
 )
-def test_every_administrador_fact_cites_its_binding_provision(parameter_id: str) -> None:
+def test_every_administrador_fact_cites_its_binding_provision(fact_id: str) -> None:
     """A regulatory value without its binding provision is ungrounded.
 
     The LIRPF establishing provision is retained directly on every resolved
-    fact; the value does not rely on the retired global-parameter declaration.
+    fact; the value does not rely on a retired provider declaration.
     """
-    assert _LIRPF_REF in _resolved_fact(parameter_id).legal_refs
+    assert _LIRPF_REF in _resolved_fact(fact_id).legal_refs
 
 
 def test_the_fact_cited_provision_resolves_in_the_bundled_legal_catalogue() -> None:
@@ -128,9 +128,9 @@ def test_loader_returns_the_registry_values_as_a_typed_record() -> None:
     rates = load_administrador_retencion_rates(effective_date=_CURRENT_EFFECTIVE_DATE)
 
     assert isinstance(rates, AdministradorRetencionRates)
-    assert rates.general_rate == _resolved_fact(_GENERAL_PARAM_ID).payload.value
-    assert rates.reduced_rate == _resolved_fact(_REDUCIDA_PARAM_ID).payload.value
-    assert rates.reduced_incn_threshold_eur == _resolved_fact(_UMBRAL_PARAM_ID).payload.value
+    assert rates.general_rate == _resolved_fact(_GENERAL_FACT_ID).payload.value
+    assert rates.reduced_rate == _resolved_fact(_REDUCIDA_FACT_ID).payload.value
+    assert rates.reduced_incn_threshold_eur == _resolved_fact(_UMBRAL_FACT_ID).payload.value
 
 
 def test_the_reduced_rate_is_strictly_below_the_general_rate() -> None:

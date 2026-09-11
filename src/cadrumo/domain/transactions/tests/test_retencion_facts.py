@@ -4,16 +4,16 @@ The two rate figures are legal data, not Python constants. These gates pin the
 chain the ``aeat-registry-authority-flow`` and
 ``aeat-calculation-grounding`` rules require:
 
-    bundled BOE corpus excerpt → registry parameter → typed record → the
+    bundled BOE corpus excerpt → governed fact → typed record → the
     inference bound the transaction model actually applies.
 
 The expected percentages are not recomputed from anything the loader does;
 they are read out of the bundled BOE corpus excerpt for RD 439/2007 art. 95
-and compared against the registry parameter, so a drift in either the excerpt
-or the parameter reds the gate rather than agreeing with itself.
+and compared against the governed fact, so a drift in either the excerpt
+or the fact reds the gate rather than agreeing with itself.
 
 See Also:
-    :mod:`domain.transactions.retencion_parameters`
+    :mod:`domain.transactions.retencion_facts`
         The loader under test.
     :mod:`domain.iva.tests.test_legal_basis_rate_grounding`
         The sibling corpus → registry → substrate chain for IVA rates.
@@ -34,7 +34,7 @@ from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.facts.resolution import ScalarFactQuery, resolve_governed_fact
 from ....domain.calculations.registry.schema_base import DateAxis
 from ..errors import TransactionValidationError
-from ..retencion_parameters import (
+from ..retencion_facts import (
     RirpfArt95RetencionRates,
     load_retencion_actividades_rates,
     maximum_supported_activity_retencion_rate,
@@ -43,8 +43,8 @@ from ..retencion_parameters import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_GENERAL_PARAM_ID = "rirpf-art-95:retencion-actividades-profesionales-general"
-_INICIO_PARAM_ID = "rirpf-art-95:retencion-actividades-profesionales-inicio"
+_GENERAL_FACT_ID = "rirpf-art-95:retencion-actividades-profesionales-general"
+_INICIO_FACT_ID = "rirpf-art-95:retencion-actividades-profesionales-inicio"
 _LEGAL_REF = "rd-439-2007:art-95"
 _CURRENT_EFFECTIVE_DATE = date(2026, 4, 1)
 
@@ -78,18 +78,18 @@ def test_the_bundled_boe_excerpt_states_both_retencion_rates() -> None:
 
 def test_governed_facts_match_the_percentages_the_excerpt_states() -> None:
     """Second link: the fact values equal the BOE percentages as fractions."""
-    assert _resolved_fact(_GENERAL_PARAM_ID).payload.value == Decimal("15") / Decimal("100")
-    assert _resolved_fact(_INICIO_PARAM_ID).payload.value == Decimal("7") / Decimal("100")
+    assert _resolved_fact(_GENERAL_FACT_ID).payload.value == Decimal("15") / Decimal("100")
+    assert _resolved_fact(_INICIO_FACT_ID).payload.value == Decimal("7") / Decimal("100")
 
 
 @pytest.mark.parametrize(
-    "parameter_id",
-    (_GENERAL_PARAM_ID, _INICIO_PARAM_ID),
+    "fact_id",
+    (_GENERAL_FACT_ID, _INICIO_FACT_ID),
     ids=("general", "inicio-actividad"),
 )
-def test_every_retencion_fact_cites_its_binding_provision(parameter_id: str) -> None:
+def test_every_retencion_fact_cites_its_binding_provision(fact_id: str) -> None:
     """A regulatory value without its binding provision is ungrounded."""
-    assert _LEGAL_REF in _resolved_fact(parameter_id).legal_refs
+    assert _LEGAL_REF in _resolved_fact(fact_id).legal_refs
 
 
 def test_the_cited_provision_resolves_in_the_bundled_legal_catalogue() -> None:
@@ -112,8 +112,8 @@ def test_loader_returns_the_registry_values_as_a_typed_record() -> None:
     rates = load_retencion_actividades_rates(effective_date=_CURRENT_EFFECTIVE_DATE)
 
     assert isinstance(rates, RirpfArt95RetencionRates)
-    assert rates.general_rate == _resolved_fact(_GENERAL_PARAM_ID).payload.value
-    assert rates.inicio_actividad_rate == _resolved_fact(_INICIO_PARAM_ID).payload.value
+    assert rates.general_rate == _resolved_fact(_GENERAL_FACT_ID).payload.value
+    assert rates.inicio_actividad_rate == _resolved_fact(_INICIO_FACT_ID).payload.value
 
 
 def test_the_inference_bound_is_the_general_rate() -> None:

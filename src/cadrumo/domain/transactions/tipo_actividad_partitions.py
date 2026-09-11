@@ -38,7 +38,7 @@ See Also:
         The closed code set this resolves from.
     :class:`~domain.deadlines.IrpfActivityKind`
         The arm this resolves to.
-    :mod:`~domain.transactions.retencion_parameters`
+    :mod:`~domain.transactions.retencion_facts`
         Reads the rates each arm selects.
 """
 

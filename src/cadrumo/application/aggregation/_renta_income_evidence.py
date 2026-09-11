@@ -24,7 +24,7 @@ from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.components import category_cuota_is_zero_by_law
 from ...domain.transactions.irpf_categories import has_activity_irpf_category
 from ...domain.transactions.models import Transaction
-from ...domain.transactions.retencion_parameters import (
+from ...domain.transactions.retencion_facts import (
     maximum_supported_activity_retencion_rate,
     retencion_effective_date,
 )
