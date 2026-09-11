@@ -1,0 +1,284 @@
+# Cuota carriers for the two RD-ley 4/2024 transitional rungs of the
+# régimen-general devengado block. They are siblings of the three ordinary-tier
+# carriers above, not replacements: each transitional rate coexists with its
+# tier's ordinary rate, so the tier alone cannot separate them and AEAT gives
+# each its own rung with its own mandated Tipo % constant.
+[[revisions.2023.casillas]]
+id = "iva.repercutido.reducido.transitorio"
+number = "iva.repercutido.reducido.transitorio"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "iva_cuota_repercutida_reducido_transitorio"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "RD-ley 4/2024 transitional reducido rates (5pct, then 7,5pct from 10/4T 2024) coexist with the ordinary 10pct rate rather than replacing it, so this is a genuine second reducido carrier on its own AEAT rung, not a typo twin."
+continuidad_id = "iva-cuota-repercutida-reducido-transitorio"
+required = false
+input_kind = "bound"
+binding = "modelo-303-iva-repercutido-reducido-transitorio-cuota"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+# Base-imponible parity casilla for official box 10, mirroring the cuota
+# parity casilla above (box 11). Feeds box 10 via a projection formula only --
+# never the resultado, which is cuota-denominated and already carries this
+# quantity's tax through iva.autorepercutido.intracomunitaria.
+[[revisions.2023.casillas]]
+id = "iva.autorepercutido.intracomunitaria.devengado.base"
+number = "iva.autorepercutido.intracomunitaria.devengado.base"
+section = ["iva", "regimen_general", "inversion_sujeto_pasivo"]
+data_type = "money"
+semantic_role = "iva_base_autorepercutida_intracomunitaria_devengado"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Sole base-imponible parity casilla for the AIC devengado box pair (10/11); no sibling rate or category split exists on this casilla."
+continuidad_id = "iva-base-autorepercutida-intracomunitaria-devengado"
+required = false
+input_kind = "bound"
+binding = "modelo-303-iva-autorepercutido-intracomunitaria-devengado-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.casillas]]
+id = "iva.autoconsumo.promotor.base"
+continuidad_id = "iva-autoconsumo-promotor-base"
+number = "iva.autoconsumo.promotor.base"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "iva_autoconsumo_promotor_base"
+required = false
+input_kind = "bound"
+binding = "modelo-303-autoconsumo-promotor-base"
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.casillas]]
+id = "iva.autoconsumo.promotor.cuota"
+continuidad_id = "iva-autoconsumo-promotor-cuota"
+number = "iva.autoconsumo.promotor.cuota"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "iva_autoconsumo_promotor_cuota"
+required = false
+input_kind = "computed"
+formula = "modelo-303-autoconsumo-promotor-cuota"
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "ley-37-1992:art-90", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+export_exemption_reason = "feeds_addressed_casilla"
+
+[[revisions.2023.casillas]]
+id = "iva.resultado"
+continuidad_id = "iva-resultado-autoliquidacion"
+continuidad_origin = "seeded"
+number = "69"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "iva_resultado_autoliquidacion"
+required = false
+input_kind = "computed"
+formula = "modelo-303-iva-resultado"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30"]
+additional_source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2023.casillas]]
+id = "150"
+number = "150"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_150"
+continuidad_id = "dr303-150"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_303/files/03-303-ejercicio-2023-actualizado-14-12-23-376-kb-xlsx.xlsx.extracted.md:69 (sha256 72e463cb2998) prints box [150]; corpus/aeat_official/disenos_registro/modelo_303/files/02-303-ejercicio-2022-y-siguientes-actualizado-27-12-2021-332-kb-xlsx.xlsx.extracted.md (sha256 6648f6b31957) prints no box [150] and retires none"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.casillas]]
+id = "151"
+number = "151"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "ratio"
+semantic_role = "dr303_151"
+continuidad_id = "dr303-151"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_303/files/03-303-ejercicio-2023-actualizado-14-12-23-376-kb-xlsx.xlsx.extracted.md:70 (sha256 72e463cb2998) prints box [151]; corpus/aeat_official/disenos_registro/modelo_303/files/02-303-ejercicio-2022-y-siguientes-actualizado-27-12-2021-332-kb-xlsx.xlsx.extracted.md (sha256 6648f6b31957) prints no box [151] and retires none"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.casillas]]
+id = "152"
+number = "152"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_152"
+continuidad_id = "dr303-152"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_303/files/03-303-ejercicio-2023-actualizado-14-12-23-376-kb-xlsx.xlsx.extracted.md:71 (sha256 72e463cb2998) prints box [152]; corpus/aeat_official/disenos_registro/modelo_303/files/02-303-ejercicio-2022-y-siguientes-actualizado-27-12-2021-332-kb-xlsx.xlsx.extracted.md (sha256 6648f6b31957) prints no box [152] and retires none"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.casillas]]
+id = "153"
+number = "153"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_153"
+continuidad_id = "dr303-153"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_303/files/03-303-ejercicio-2023-actualizado-14-12-23-376-kb-xlsx.xlsx.extracted.md:75 (sha256 72e463cb2998) prints box [153]; corpus/aeat_official/disenos_registro/modelo_303/files/02-303-ejercicio-2022-y-siguientes-actualizado-27-12-2021-332-kb-xlsx.xlsx.extracted.md (sha256 6648f6b31957) prints no box [153] and retires none"
+required = false
+input_kind = "bound"
+binding = "modelo-303-iva-repercutido-reducido-transitorio-base"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.casillas]]
+id = "154"
+number = "154"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "ratio"
+semantic_role = "dr303_154"
+continuidad_id = "dr303-154"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_303/files/03-303-ejercicio-2023-actualizado-14-12-23-376-kb-xlsx.xlsx.extracted.md:76 (sha256 72e463cb2998) prints box [154]; corpus/aeat_official/disenos_registro/modelo_303/files/02-303-ejercicio-2022-y-siguientes-actualizado-27-12-2021-332-kb-xlsx.xlsx.extracted.md (sha256 6648f6b31957) prints no box [154] and retires none"
+required = false
+input_kind = "computed"
+formula = "modelo-303-dr303-154-rate"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.casillas]]
+id = "155"
+number = "155"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_155"
+continuidad_id = "dr303-155"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_303/files/03-303-ejercicio-2023-actualizado-14-12-23-376-kb-xlsx.xlsx.extracted.md:77 (sha256 72e463cb2998) prints box [155]; corpus/aeat_official/disenos_registro/modelo_303/files/02-303-ejercicio-2022-y-siguientes-actualizado-27-12-2021-332-kb-xlsx.xlsx.extracted.md (sha256 6648f6b31957) prints no box [155] and retires none"
+required = false
+input_kind = "computed"
+formula = "modelo-303-dr303-155-projection"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.casillas]]
+id = "156"
+number = "156"
+section = ["iva", "recargo_equivalencia", "devengado"]
+data_type = "money"
+semantic_role = "dr303_156"
+continuidad_id = "dr303-156"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_303/files/03-303-ejercicio-2023-actualizado-14-12-23-376-kb-xlsx.xlsx.extracted.md:90 (sha256 72e463cb2998) prints box [156]; corpus/aeat_official/disenos_registro/modelo_303/files/02-303-ejercicio-2022-y-siguientes-actualizado-27-12-2021-332-kb-xlsx.xlsx.extracted.md (sha256 6648f6b31957) prints no box [156] and retires none"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.casillas]]
+id = "157"
+number = "157"
+section = ["iva", "recargo_equivalencia", "devengado"]
+data_type = "ratio"
+semantic_role = "dr303_157"
+continuidad_id = "dr303-157"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_303/files/03-303-ejercicio-2023-actualizado-14-12-23-376-kb-xlsx.xlsx.extracted.md:91 (sha256 72e463cb2998) prints box [157]; corpus/aeat_official/disenos_registro/modelo_303/files/02-303-ejercicio-2022-y-siguientes-actualizado-27-12-2021-332-kb-xlsx.xlsx.extracted.md (sha256 6648f6b31957) prints no box [157] and retires none"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.casillas]]
+id = "158"
+number = "158"
+section = ["iva", "recargo_equivalencia", "devengado"]
+data_type = "money"
+semantic_role = "dr303_158"
+continuidad_id = "dr303-158"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_303/files/03-303-ejercicio-2023-actualizado-14-12-23-376-kb-xlsx.xlsx.extracted.md:92 (sha256 72e463cb2998) prints box [158]; corpus/aeat_official/disenos_registro/modelo_303/files/02-303-ejercicio-2022-y-siguientes-actualizado-27-12-2021-332-kb-xlsx.xlsx.extracted.md (sha256 6648f6b31957) prints no box [158] and retires none"
+required = false
+# The design fixes this rung's Tipo % [157] as the constant "00175" -- the LIVA
+# art. 161.4 tabaco recargo. It previously carried the super-reducido binding, so
+# the 0,5 % cuota was declared under a rate AEAT publishes as 1,75 %. That binding
+# now feeds [170], whose Tipo [169] admits "00050". This box stays operator-input
+# until the tabaco population is modelled -- an omission, not this mis-allocation.
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.casillas]]
+id = "03"
+number = "03"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_03"
+continuidad_id = "dr303-03"
+required = false
+input_kind = "computed"
+formula = "modelo-303-dr303-03-projection"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.casillas]]
+id = "06"
+number = "06"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_06"
+continuidad_id = "dr303-06"
+required = false
+input_kind = "computed"
+formula = "modelo-303-dr303-06-projection"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.casillas]]
+id = "09"
+number = "09"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_09"
+continuidad_id = "dr303-09"
+required = false
+input_kind = "computed"
+formula = "modelo-303-dr303-09-projection"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.casillas]]
+id = "10"
+number = "10"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_10"
+continuidad_id = "dr303-10"
+required = false
+input_kind = "computed"
+formula = "modelo-303-dr303-10-projection"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.casillas]]
+id = "11"
+number = "11"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_11"
+continuidad_id = "dr303-11"
+required = false
+input_kind = "computed"
+formula = "modelo-303-dr303-11-projection"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.casillas]]
+id = "13"
+number = "13"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_13"
+continuidad_id = "dr303-13"
+required = false
+input_kind = "computed"
+formula = "modelo-303-dr303-13-projection"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2023.casillas]]
+id = "18"
+number = "18"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_18"
+continuidad_id = "dr303-18"
+required = false
+input_kind = "bound"
+binding = "modelo-303-recargo-equivalencia-super-reducido-cuota"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]

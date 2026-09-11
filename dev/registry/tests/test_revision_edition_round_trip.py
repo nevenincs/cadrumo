@@ -44,29 +44,14 @@ import re
 import shutil
 import tomllib
 from collections.abc import Mapping
-from dataclasses import dataclass, field
-from decimal import Decimal
+from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Final
 
 import pytest
 
-from cadrumo.application.filing.producer_snapshot import (
-    FilingElectionFacts,
-    FilingProducerSnapshot,
-    GeneralFilingProfileFacts,
-    PresenterIdentity,
-    TaxpayerIdentityFacts,
-    build_filing_producer_snapshot,
-)
 from cadrumo.core.i18n.render import override_locales_root
-from cadrumo.core.modelo import Modelo
-from cadrumo.core.payment_election import PaymentElection
-from cadrumo.core.period import Period
-from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
-from cadrumo.core.refund_election import RefundElection
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
     casilla_occurrence_locale_key,
@@ -76,10 +61,9 @@ from dev.registry.compiler.authority import compile_validated_authority, compile
 from dev.registry.compiler.loader import load_registry_tree
 
 from ..._paths import REPO_ROOT
+from ..edition_export_scenarios import edition_export_scenarios
 from ..edition_round_trip import (
     COMMIT_ID,
-    SYNTHETIC_TAX_ID,
-    EditionExportScenario,
     ReferenceUnavailableError,
     RegistryDependencyClosureError,
     RoundTripFindingKind,
@@ -101,10 +85,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 @dataclass(frozen=True, slots=True)
 class PreMigrationBaseline:
-    """A migrated modelo compared against its directory at ``base_commit``."""
+    """A migrated modelo compared against its directory at ``base_commit``.
+
+    Its export bytes are rendered from the scenarios the canonical scenario
+    module declares for the modelo.
+    """
 
     base_commit: str
-    export_scenarios: Mapping[str, EditionExportScenario] = field(default_factory=dict)
 
 
 @dataclass(frozen=True, slots=True)
@@ -115,11 +102,11 @@ class AcceptedMigration:
     reason: str
 
 
-#: One entry per modelo whose editions name a predecessor. Empty until the
-#: first modelo migrates; see the module docstring for the entry lifecycle.
-_MIGRATIONS: Final[Mapping[str, PreMigrationBaseline | AcceptedMigration]] = dict[
-    str, PreMigrationBaseline | AcceptedMigration
-]()
+#: One entry per modelo whose editions name a predecessor; see the module
+#: docstring for the entry lifecycle.
+_MIGRATIONS: Final[Mapping[str, PreMigrationBaseline | AcceptedMigration]] = {
+    "303": PreMigrationBaseline(base_commit="784c7cdd3eef1df8abd5524fd71be6c79f65a656"),
+}
 
 _BUNDLED_REGISTRY: Final = bundled_path("registry", "aeat")
 _MODELOS_DIR: Final = "modelos"
@@ -166,7 +153,7 @@ def test_every_bundled_modelo_either_is_unmigrated_or_round_trips(modelo_id: str
         live_registry_root=live,
         reference_registry_root=reference,
         modelo_id=modelo_id,
-        export_scenarios=entry.export_scenarios,
+        export_scenarios=edition_export_scenarios(modelo_id),
     )
     assert report.findings == ()
 
@@ -235,7 +222,9 @@ def test_a_tree_missing_a_dependency_is_refused_by_the_closure_and_by_the_author
 # to the September-2024 edition, so a correct migration genuinely inherits
 # them; its 2026 edition inserts a row mid-sequence, which inheritance appends,
 # and its September-2024 edition adds several rows, whose stated order the merge
-# keeps. Modelo 131 carries the byte proof, exporting from general filing facts.
+# keeps. Those proofs declare no export scenario, so 303's bytes are reported
+# unchecked there; the byte proofs render the canonical scenarios, for Modelo 131
+# from general filing facts and for Modelo 303 through its full filing envelope.
 
 _CASILLA_ROW_HEADER = re.compile(r'^\[\[revisions\.(?:"[^"\n]+"|[^".\]\n]+)\.casillas\]\]$', re.MULTILINE)
 _SCRATCH_REGISTRY = PurePosixPath("registry/aeat")
@@ -432,7 +421,7 @@ def test_a_correct_migration_inherits_rows_and_round_trips(
 
     # Typed content and locale identity round-trip. Modelo 303 has an export
     # surface and this proof declares no scenario for it, so its bytes are
-    # reported unchecked rather than passed; the byte proof is modelo 131's.
+    # reported unchecked rather than passed; the byte proofs are separate.
     assert _kinds(report) == [(RoundTripFindingKind.EXPORT_UNCHECKED, _M303_2025)]
     # Non-vacuity: the rows really were removed from disk and came back only by
     # inheritance, carrying the extra fallback key the chain rule must admit.
@@ -584,41 +573,6 @@ def test_the_merge_order_is_the_predecessors_order_then_new_rows_in_full_copy_or
     assert merge_order((("05", None), ("01", "a")), predecessor) == (("01", "a"), ("05", None))
 
 
-def _m131_producer_snapshot() -> FilingProducerSnapshot:
-    return build_filing_producer_snapshot(
-        modelo=Modelo.M131,
-        taxpayer_tax_id=SYNTHETIC_TAX_ID,
-        taxpayer_identity=TaxpayerIdentityFacts(
-            legal_name=None, given_name="Ana", surnames="Prueba", full_name="Ana Prueba"
-        ),
-        presenter=PresenterIdentity(tax_id="00000000T", full_name="Gestoría Prueba"),
-        model_profile=GeneralFilingProfileFacts(),
-        elections=FilingElectionFacts(
-            result_disposition=ResultDisposition.INGRESO,
-            payment=PaymentElection.INGRESO,
-            refund=RefundElection.COMPENSAR,
-            prior_domiciliation=PriorDomiciliationElection.KEEP,
-        ),
-        amendment_evidence=None,
-        m303_filing_facts=None,
-        refund_account=None,
-        charge_account=None,
-    )
-
-
-_M131_2025_SCENARIO: Final = EditionExportScenario(
-    period=Period.from_year_and_code(2025, "1T"),
-    inputs={
-        "03": Decimal("1000"),
-        "05": Decimal("500"),
-        "modelo-131.page1.110-113.actividad-1-epigrafe": "722",
-        "modelo-131.page1.114-130.actividad-1-rendimiento-neto": Decimal("1200.50"),
-        "modelo-131.dpa.013-016.epigrafe-iae": ["722"],
-        "modelo-131.dpa.031-032.vehiculos-afectos": {"1": "2"},
-        "modelo-131.did.012-045.iban": "ES9121000418450200051332",
-    },
-    producer_snapshot=_m131_producer_snapshot,
-)
 _M131_2025_LAYOUTS = PurePosixPath("revisions/2025/export_layouts/0001-export-layouts.toml")
 _M131_03_FIELD_TARGET = 'casilla_id = "03"\ndata_type'
 _M131_05_FIELD_TARGET = 'casilla_id = "05"\ndata_type'
@@ -635,7 +589,8 @@ def test_export_bytes_are_compared_through_the_canonical_export_path(
     """
     correct = _live_tree(scratch_repository, _M131, tmp_path / "correct" / "registry" / "aeat")
     _migrate(correct / _MODELOS_DIR / _M131, successor=_M131_2025, predecessor=_M131_2024)
-    scenarios = {_M131_2025: _M131_2025_SCENARIO}
+    scenarios = edition_export_scenarios(_M131)
+    assert set(scenarios) == {_M131_2025}
 
     passing = edition_round_trip_report(
         live_registry_root=correct, reference_registry_root=m131_reference, modelo_id=_M131, export_scenarios=scenarios
@@ -674,6 +629,55 @@ def test_export_bytes_are_compared_through_the_canonical_export_path(
         "casilla '05' changed ['export_refs']"
     )
     assert failing.byte_compared_revisions == (_M131_2025,)
+
+
+_M303_RESULTADOS_RECORD = "id = 'm303-resultados'"
+_M303_RESULTADOS_IDENTITY_LITERAL = "literal = '03000'"
+_M303_PLANTED_IDENTITY_LITERAL = "literal = '03009'"
+
+
+def _fragment_declaring(directory: Path, declaration: str) -> Path:
+    (fragment,) = (path for path in sorted(directory.glob("*.toml")) if declaration in path.read_text(encoding="utf-8"))
+    return fragment
+
+
+def test_modelo_303_export_bytes_are_compared_through_its_filing_envelope(
+    scratch_repository: _ScratchRepository, m303_reference: Path, tmp_path: Path
+) -> None:
+    """A correct 303 migration renders the same envelope; one changed byte in its export layout does not.
+
+    The plant rewrites one character of the 2025 resultados record's identity
+    literal in the migrated tree only. The reference still renders the edition
+    as committed, so the only difference the gate can see is that byte.
+    """
+    scenarios = {_M303_2025: edition_export_scenarios(_M303)[_M303_2025]}
+    live = _live_tree(scratch_repository, _M303, tmp_path / "registry" / "aeat")
+    modelo_dir = live / _MODELOS_DIR / _M303
+    _migrate(modelo_dir, successor=_M303_2025, predecessor=_M303_SEPTEMBER_2024)
+
+    passing = edition_round_trip_report(
+        live_registry_root=live, reference_registry_root=m303_reference, modelo_id=_M303, export_scenarios=scenarios
+    )
+    assert passing.findings == ()
+    assert passing.byte_compared_revisions == (_M303_2025,)
+
+    fragment = _fragment_declaring(modelo_dir / "revisions" / _M303_2025 / "export", _M303_RESULTADOS_RECORD)
+    text = fragment.read_text(encoding="utf-8")
+    assert text.count(_M303_RESULTADOS_IDENTITY_LITERAL) == 1
+    fragment.write_text(
+        text.replace(_M303_RESULTADOS_IDENTITY_LITERAL, _M303_PLANTED_IDENTITY_LITERAL), encoding="utf-8", newline="\n"
+    )
+
+    failing = edition_round_trip_report(
+        live_registry_root=live, reference_registry_root=m303_reference, modelo_id=_M303, export_scenarios=scenarios
+    )
+    assert _kinds(failing) == [
+        (RoundTripFindingKind.CONTENT, _M303_2025),
+        (RoundTripFindingKind.EXPORT_BYTES, _M303_2025),
+    ]
+    assert failing.findings[0].detail == "edition fields changed ['export_layouts']"
+    assert failing.findings[1].detail.startswith("export bytes first differ at offset ")
+    assert failing.byte_compared_revisions == (_M303_2025,)
 
 
 def _with_casilla_keys(revision: ModeloRevision, casilla_id: str, keys: tuple[str, ...]) -> ModeloRevision:

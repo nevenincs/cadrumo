@@ -89,9 +89,9 @@ _M390_TIPO_DECLARACION_CASILLA: CasillaId = validated_casilla_id(
     surface="_M390_TIPO_DECLARACION_CASILLA",
 )
 _M202_2026_2P_REQUIRED_BINDING_OVERRIDES = {
-    "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior": "0",
-    "modelo-202-2025-y-siguientes-incn-prior-12-months": "7000000",
-    "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores": "0",
+    "modelo-202-cuota-base-ejercicio-anterior": "0",
+    "modelo-202-incn-prior-12-months": "7000000",
+    "modelo-202-pagos-fraccionados-anteriores": "0",
 }
 _CROSS_PERIOD_EXPORT_PROFILE_ID = "39000000-0000-4000-8000-000000000001"
 _CROSS_PERIOD_FILE_PROFILE_ID = "39000000-0000-4000-8000-000000000002"

@@ -1,0 +1,53 @@
+[[revisions.2026-y-siguientes.casillas]]
+id = "64"
+continuidad_id = "dr303-64"
+continuidad_origin = "seeded"
+number = "64"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_64"
+required = false
+input_kind = "computed"
+formula = "modelo-303-iva-suma-resultados"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
+
+[[revisions.2026-y-siguientes.casillas]]
+id = "66"
+continuidad_id = "dr303-66"
+continuidad_origin = "seeded"
+number = "66"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_66"
+required = false
+input_kind = "computed"
+formula = "modelo-303-iva-atribuible-estado"
+legal_refs = ["rd-1624-1992:art-71"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
+
+[[revisions.2026-y-siguientes.casillas]]
+id = "71"
+continuidad_id = "dr303-71"
+continuidad_origin = "seeded"
+number = "71"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_71"
+required = false
+input_kind = "computed"
+formula = "modelo-303-iva-resultado-final"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30"]
+additional_source_refs = ["aeat-modelo-303-procedure"]
+
+[[revisions.2026-y-siguientes.casillas]]
+id = "112"
+number = "112"
+section = ["iva", "resultado"]
+data_type = "money"
+continuidad_id = "dr303-112"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_303/files/01-303-ejercicio-2026-y-siguientes-actualizado-28-01-26-378-kb-xlsx.xlsx.extracted.md:429 (sha256 0be8b156da22) prints box [112]; corpus/aeat_official/disenos_registro/modelo_303/files/06-303-ejercicio-2025-actualizado-04-12-2025-380-kb-xlsx.xlsx.extracted.md (sha256 6c3d7eeb714e) prints no box [112] and retires none"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]

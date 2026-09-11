@@ -89,14 +89,15 @@ def _minimal_delta(
 
 
 def test_the_live_corpus_names_modelos_that_restate_their_casillas(authority: ValidatedRegistryAuthority) -> None:
-    """Every edition is a full copy today, so a modelo restating rows must be named.
+    """A full-copy modelo restating rows is named; a delta-migrated one is not.
 
-    Held by identity on modelos whose successor rows are measured copies of
-    their predecessors, not by a corpus count that would freeze today's backlog
-    as a contract.
+    Held by identity, not by a corpus count that would freeze today's backlog as
+    a contract: 131's successor editions are still full copies of their
+    predecessors, while 303's editions inherit their unchanged rows and so
+    restate none of them.
     """
     findings = screen_authority(authority, ("303", "131"))
-    assert set(restating_modelos(findings)) == {"303", "131"}
+    assert set(restating_modelos(findings)) == {"131"}
     restated = [item for item in findings if item.kind == "restated_unchanged"]
     assert all(item.predecessor is not None for item in restated)
 

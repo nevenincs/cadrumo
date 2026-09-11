@@ -229,7 +229,7 @@ def test_bindings_list_missing_m202_scopes_self_relation_guidance_by_target_peri
     )
     assert one_p.exit_code == 0, one_p.output
     assert "binding_count\t0" in one_p.output
-    assert "modelo-202-2023-2024-pagos-fraccionados-anteriores" not in one_p.output
+    assert "modelo-202-pagos-fraccionados-anteriores" not in one_p.output
     assert "modelo-202-2023-2024-rel-self-pagos-2p" not in one_p.output
     assert "modelo-202-2023-2024-rel-self-pagos-3p" not in one_p.output
 
@@ -665,7 +665,7 @@ def test_bindings_list_typed_payload_carries_relation_inputs_before_calculate() 
     # The specific M202 pagos-fraccionados fold-ins from the audit are present.
     assert (
         "modelo-200-2024-rel-202-pagos-fraccionados"
-        in rows["modelo-200-2024-pagos-fraccionados-anuales"]["relation_inputs"]
+        in rows["modelo-200-pagos-fraccionados-anuales"]["relation_inputs"]
     )
 
     # A non-relation-fed binding carries an empty relation_inputs tuple.

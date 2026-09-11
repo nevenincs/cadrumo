@@ -36,11 +36,11 @@ def test_relations_by_target_binding_preserves_real_registry_declaration_order()
 
     grouped = relations_by_target_binding(snapshot.revision)
 
-    assert tuple(relation.id for relation in grouped["modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores"]) == (
+    assert tuple(relation.id for relation in grouped["modelo-202-pagos-fraccionados-anteriores"]) == (
         "modelo-202-2025-y-siguientes-rel-self-pagos-2p",
         "modelo-202-2025-y-siguientes-rel-self-pagos-3p",
     )
-    assert tuple(relation.id for relation in grouped["modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior"]) == (
+    assert tuple(relation.id for relation in grouped["modelo-202-cuota-base-ejercicio-anterior"]) == (
         "modelo-202-2025-y-siguientes-rel-cuota-base-1p",
         "modelo-202-2025-y-siguientes-rel-cuota-base-2p-3p",
     )

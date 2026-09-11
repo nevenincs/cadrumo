@@ -133,8 +133,8 @@ _M202_PAGO_OUTPUT_40_2: CasillaId = validated_casilla_id(
     surface="_M202_PAGO_OUTPUT_40_2",
 )  # modalidad cuota (art. 40.2); folds alongside casilla 34
 _M200_CUOTA_LIQUIDA: CasillaId = validated_casilla_id("DP200014B:00592", surface="_M200_CUOTA_LIQUIDA")
-_M202_CUOTA_BASE_BINDING = "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior"
-_M202_PAGOS_ANTERIORES_BINDING = "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores"
+_M202_CUOTA_BASE_BINDING = "modelo-202-cuota-base-ejercicio-anterior"
+_M202_PAGOS_ANTERIORES_BINDING = "modelo-202-pagos-fraccionados-anteriores"
 
 # Bound casillas on the M202/2025 revision under test.
 _CASILLA_BASE: CasillaId = validated_casilla_id(
