@@ -375,9 +375,8 @@ class TestNoteGovernedAmountAdjudication:
             "note_statement": "Nota 2: estas casillas deben estar rellenas a 0",
             "integer_digits": 15,
             "decimal_digits": 2,
-            # This design pairs Tipo 'N' with an UNSIGNED fifteen-digit form:
-            # its surviving rate rows spell '15 enteros 2 decimales', which
-            # fills all seventeen bytes and leaves no room for a sign marker.
+            # An unsigned fifteen-and-two run, the shape these mechanics tests
+            # exercise; the live 390 runs are signed, as their design types them N.
             "sign_policy": "unsigned",
             "mandated_values": ("0",),
             "evidence": "the surviving rates on the same sheet state 15 enteros 2 decimales at the same width",
@@ -386,7 +385,10 @@ class TestNoteGovernedAmountAdjudication:
         return NoteGovernedAmountDeclaration.model_validate(fields)
 
     @staticmethod
-    def _joined_amount_field(*, sheet: str = "Pág. 2", length: int = 17) -> JoinedRecordDesignField:
+    def _joined_amount_field(
+        *, sheet: str = "Pág. 2", length: int = 17, aeat_type: str = "Num"
+    ) -> JoinedRecordDesignField:
+        """Build one pointer-content amount row; its design type must agree with the run's sign."""
         parser_field = RecordDesignIntermediateField.model_validate(
             {
                 "sheet": sheet,
@@ -396,7 +398,7 @@ class TestNoteGovernedAmountAdjudication:
                 "ordinal": "9",
                 "offset": 64,
                 "length": length,
-                "aeat_type": "N",
+                "aeat_type": aeat_type,
                 "normalized_description": "Reg. ordin. - Tipo 2% - Cuota [668]",
                 "content": TestNoteGovernedAmountAdjudication._POINTER,
             }
@@ -504,7 +506,7 @@ class TestNoteGovernedAmountAdjudication:
         )
 
         derived = _numeric_derivation(
-            self._joined_amount_field(),
+            self._joined_amount_field(aeat_type="N"),
             export_record_id="modelo-390-page-02",
             note_governed_amounts=(declaration,),
         )

@@ -1,4 +1,4 @@
-"""IVA grounding consumes the signed authority artifact at runtime."""
+"""IVA grounding consumes the published authority artifact at runtime."""
 
 from __future__ import annotations
 
@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pytest
 
-from ....core.ed25519_signing import Ed25519KeypairHex, generate_ed25519_keypair_hex
 from ....core.hashing import sha256_hex
 from ...calculations.registry import authority as authority_module
 from ...calculations.registry.authority_artifact import (
@@ -21,15 +20,20 @@ from ...calculations.registry.schema_base import EvidenceTier
 from ...calculations.registry.schema_references import LegalReference
 from .._grounding import registry_catalogues, verify_table_legal_refs
 from ..errors import IvaCatalogueError
-from ..schema import IvaCitation
-from ..verify import _citation_issues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_ARTICLE_90 = "ley-37-1992:art-90"
+#: Anchor text as the publisher projects it: normalised, casefolded, diacritics folded.
+_ARTICLE_90_TEXT = (
+    "el impuesto se exigira al tipo impositivo general del 21 por ciento, salvo lo dispuesto en el "
+    "articulo siguiente. el tipo impositivo aplicable a cada operacion sera el vigente en el momento del devengo."
+)
 
 
 def _article_90_reference() -> LegalReference:
     return LegalReference(
-        id="ley-37-1992:art-90",
+        id=_ARTICLE_90,
         evidence_tier=EvidenceTier.LEGAL_AUTHORITY,
         authority="boe",
         kind="ley",
@@ -46,80 +50,63 @@ def _article_90_reference() -> LegalReference:
     )
 
 
-def _stage_catalogue_artifact(root: Path) -> Ed25519KeypairHex:
-    keys = generate_ed25519_keypair_hex()
+def _stage_catalogue_artifact(root: Path, anchored_text: str) -> None:
     artifact_path = root / "registry" / "authority" / "authority.json"
     artifact_path.parent.mkdir(parents=True)
     write_authority_artifact(
         artifact_path,
         AuthorityArtifact(
             modelos=(),
-            catalogues=RegistryCatalogues(legal={"ley-37-1992:art-90": _article_90_reference()}, sources={}),
+            catalogues=RegistryCatalogues(legal={_ARTICLE_90: _article_90_reference()}, sources={}),
             identity_digest="a4c712d347701b34615314b6e3f8fdfd75ca5ee3eabe9c1c651668549fb7f66f",
             evidence=AuthorityEvidenceProjection(
                 legal=(
                     PublishedLegalEvidence(
-                        legal_reference_id="ley-37-1992:art-90",
-                        anchored_text=(
-                            "Artículo 90. Tipo impositivo general. El Impuesto se exigirá al tipo del 21 por "
-                            "ciento vigente en el momento del devengo."
-                        ),
-                        text_sha256=sha256_hex(
-                            b"Art\xc3\xadculo 90. Tipo impositivo general. El Impuesto se exigir\xc3\xa1 al tipo del 21 por "
-                            b"ciento vigente en el momento del devengo."
-                        ),
+                        legal_reference_id=_ARTICLE_90,
+                        anchored_text=anchored_text,
+                        text_sha256=sha256_hex(anchored_text.encode("utf-8")),
                     ),
                 )
             ),
         ),
-        signing_private_key_hex=keys.private_key_hex,
     )
-    return keys
 
 
-def test_iva_rate_grounding_and_quotation_read_a_staged_signed_artifact_without_a_corpus_tree(
+def _use_staged_package(monkeypatch: pytest.MonkeyPatch, root: Path) -> Path:
+    """Point the runtime's package-resource seam at ``root`` for the authority artifact only."""
+    package_data_root = authority_module._bundled_path()
+
+    def staged_path(*parts: str) -> Path:
+        if parts[:2] == ("registry", "authority"):
+            return root.joinpath(*parts)
+        return package_data_root.joinpath(*parts)
+
+    monkeypatch.setattr(authority_module, "_bundled_path", staged_path)
+    return package_data_root
+
+
+def test_iva_grounding_reads_its_legal_basis_from_a_staged_published_artifact(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A rate citation and quotation work when only the signed artifact is installed."""
-    keys = _stage_catalogue_artifact(tmp_path)
-    monkeypatch.setattr(authority_module, "_bundled_path", lambda *parts: tmp_path.joinpath(*parts))
-    monkeypatch.setattr(authority_module, "_BUNDLED_AUTHORITY_VERIFICATION_PUBLIC_KEY_HEX", keys.public_key_hex)
+    """A rate citation validates against artifact catalogues and evidence, not corpus files."""
+    _stage_catalogue_artifact(tmp_path, _ARTICLE_90_TEXT)
+    package_data_root = _use_staged_package(monkeypatch, tmp_path)
 
-    legal, _sources = registry_catalogues()
-    verify_table_legal_refs("staged IVA rate", (("es/general/2025-01-01", ("ley-37-1992:art-90",)),))
+    legal, _sources, source_root = registry_catalogues()
+    verify_table_legal_refs("iva rates", [("ES general 21", (_ARTICLE_90,))])
 
-    assert set(legal) == {"ley-37-1992:art-90"}
-    assert not (tmp_path / "corpus").exists()
-    assert not _citation_issues(
-        IvaCitation(
-            legal_reference="ley-37-1992:art-90",
-            quoted_text="El Impuesto se exigira al tipo del 21 por ciento",
-            valid_from=date(2025, 1, 1),
-            valid_to=date(2025, 12, 31),
-        ),
-        category_id="test-rate",
-        authority=authority_module.bundled_authority(),
-    )
+    assert set(legal) == {_ARTICLE_90}
+    assert source_root == package_data_root
 
 
-def test_iva_rate_grounding_refuses_a_signed_artifact_without_the_required_legal_evidence(
+def test_iva_grounding_refuses_a_citation_the_published_evidence_does_not_support(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A legal catalogue entry alone cannot stand in for signed quotation evidence."""
-    keys = generate_ed25519_keypair_hex()
-    artifact_path = tmp_path / "registry" / "authority" / "authority.json"
-    artifact_path.parent.mkdir(parents=True)
-    write_authority_artifact(
-        artifact_path,
-        AuthorityArtifact(
-            modelos=(),
-            catalogues=RegistryCatalogues(legal={"ley-37-1992:art-90": _article_90_reference()}, sources={}),
-            identity_digest="a4c712d347701b34615314b6e3f8fdfd75ca5ee3eabe9c1c651668549fb7f66f",
-        ),
-        signing_private_key_hex=keys.private_key_hex,
-    )
-    monkeypatch.setattr(authority_module, "_bundled_path", lambda *parts: tmp_path.joinpath(*parts))
-    monkeypatch.setattr(authority_module, "_BUNDLED_AUTHORITY_VERIFICATION_PUBLIC_KEY_HEX", keys.public_key_hex)
+    """Anchor text lacking a declared clause, or an uncatalogued citation, is refused."""
+    _stage_catalogue_artifact(tmp_path, "el impuesto se exigira al tipo impositivo general del 10 por ciento.")
+    _use_staged_package(monkeypatch, tmp_path)
 
-    with pytest.raises(IvaCatalogueError, match="legal grounding verification failed"):
-        verify_table_legal_refs("staged IVA rate", (("es/general/2025-01-01", ("ley-37-1992:art-90",)),))
+    with pytest.raises(IvaCatalogueError, match="missing required text '21 por ciento'"):
+        verify_table_legal_refs("iva rates", [("ES general 21", (_ARTICLE_90,))])
+    with pytest.raises(IvaCatalogueError, match="unknown legal_ref 'ley-37-1992:art-91'"):
+        verify_table_legal_refs("iva rates", [("ES reducido", ("ley-37-1992:art-91",))])

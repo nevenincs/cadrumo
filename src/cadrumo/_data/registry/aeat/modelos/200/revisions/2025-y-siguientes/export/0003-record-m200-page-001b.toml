@@ -279,6 +279,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'enumerated-digits'
 allowed_values = [
     '0',
@@ -306,6 +307,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'enumerated-digits'
 allowed_values = [
     '0',
@@ -333,6 +335,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'enumerated-digits'
 allowed_values = [
     '0',
@@ -360,6 +363,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -381,6 +385,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'selected-1-unselected-0'
 legal_refs = [
     'ley-27-2014:art-41',
@@ -402,6 +407,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-27-2014:art-41',
     'ley-27-2014:art-39',
@@ -423,6 +429,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-27-2014:art-41',
     'ley-27-2014:art-39',
@@ -444,6 +451,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = [
     'ley-27-2014:art-41',
     'ley-27-2014:art-39',

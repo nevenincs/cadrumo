@@ -268,6 +268,8 @@ src/cadrumo/_data/corpus/manuals/**/source.pdf
 !src/cadrumo/_data/corpus/manuals/renta/2025/part2-deducciones-autonomicas/source.pdf
 !src/cadrumo/_data/corpus/manuals/sociedades/2022/source.pdf
 !src/cadrumo/_data/corpus/manuals/sociedades/2023/source.pdf
+!src/cadrumo/_data/corpus/manuals/sociedades/2024/source.pdf
+!src/cadrumo/_data/corpus/manuals/sociedades/2025/source.pdf
 src/cadrumo/_data/corpus/manuals/**/source.html/
 
 # IDE
@@ -480,6 +482,8 @@ cache/
 # work, and are reclaimed on the next attempt if their holder died.
 /src/cadrumo/_data/registry/aeat/.*.lock
 /src/cadrumo/_data/registry/aeat/.*.lock.lock
+# The runtime authority publisher's destination lock; the artifact beside it is tracked.
+/src/cadrumo/_data/registry/authority/authority.json.lock
 
 # Rendered generator scratch output never enters the tree.
 dev/registry/scratch*/

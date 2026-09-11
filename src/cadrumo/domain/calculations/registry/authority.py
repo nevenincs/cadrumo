@@ -1,7 +1,7 @@
 """Validated access point for registry-backed modelo definitions.
 
 :class:`ValidatedRegistryAuthority` is the production boundary for all registry
-access. It reconstructs the signed, validated authority artifact into typed
+access. It reconstructs the published, validated authority artifact into typed
 :class:`ModeloDefinition` and :class:`ModeloRevision` objects, and produces
 :class:`RegistrySnapshot` instances on demand for each filing context.
 """
@@ -13,8 +13,8 @@ from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 from secrets import token_bytes
-from threading import RLock
-from typing import Final
+from threading import Condition, RLock
+from typing import Protocol, override
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.hashing import content_hash_hex
@@ -190,7 +190,7 @@ class ValidatedRegistryAuthority:
             raise RegistrySnapshotError(f"modelo {modelo_id!r} is not present in the calculation registry") from exc
 
     def legal_evidence_text(self, legal_ref_id: LegalRefId) -> str:
-        """Return the signed anchor text for one runtime legal citation.
+        """Return the published anchor text for one runtime legal citation.
 
         Published authorities answer this without resolving a source root.  A
         development authority has no projection until it passes publication,
@@ -200,7 +200,7 @@ class ValidatedRegistryAuthority:
             return self.evidence.legal_text(str(legal_ref_id))
 
     def legal_quotation_is_grounded(self, legal_ref_id: LegalRefId, quotation: str) -> bool:
-        """Answer one citation query entirely from signed published evidence."""
+        """Answer one citation query entirely from published evidence."""
         with self._state_lock:
             return self.evidence.quotation_is_grounded(str(legal_ref_id), quotation)
 
@@ -561,31 +561,28 @@ def _deadline_window_qualifier_sort_key(window: DeadlineWindowDefinition) -> tup
 
 
 _BUNDLED_AUTHORITY_ARTIFACT_PARTS = ("registry", "authority", "authority.json")
-_BUNDLED_AUTHORITY_VERIFICATION_PUBLIC_KEY_HEX: Final = (
-    "f7a668c2335217fedb3a7bb2c8144f9ff5ab161155c78de00bd3e72122697db7"
-)
-"""Release trust anchor, compiled separately from replaceable publication assets."""
 
 
 def bundled_authority() -> ValidatedRegistryAuthority:
-    """Return a fresh authority reconstructed from the signed bundled artifact.
+    """Return a fresh authority reconstructed from the bundled published artifact.
 
     Publication validates authoring inputs before producing this artifact.  A
-    product process never recompiles those inputs: missing, corrupt, or
-    untrusted publication is refused here before a calculation or filing can
-    begin.  Each call reconstructs a distinct graph, so a consumer cannot
+    product process never recompiles those inputs: a missing, corrupt, or
+    unsupported-version publication is refused here before a calculation or
+    filing can begin.  Each call reconstructs a distinct graph, so a consumer cannot
     mutate the authority subsequently observed by another consumer.
     """
-    artifact_path = _bundled_authority_artifact_path()
-    artifact = read_authority_artifact(
-        artifact_path,
-        verification_public_key_hex=_BUNDLED_AUTHORITY_VERIFICATION_PUBLIC_KEY_HEX,
-    )
+    artifact_path = bundled_authority_artifact_path()
+    artifact = read_authority_artifact(artifact_path)
     return _authority_from_published_artifact(artifact, artifact_path=artifact_path)
 
 
-def _bundled_authority_artifact_path() -> Path:
-    """Resolve the one package resource that constitutes runtime authority."""
+def bundled_authority_artifact_path() -> Path:
+    """Resolve the one package resource that constitutes runtime authority.
+
+    Development publication writes here and its currency check reads here, so
+    the product and its tooling cannot disagree about where the artifact lives.
+    """
     return _bundled_path(*_BUNDLED_AUTHORITY_ARTIFACT_PARTS)
 
 
@@ -596,7 +593,7 @@ def _authority_from_published_artifact(
 ) -> ValidatedRegistryAuthority:
     """Build an already-validated runtime authority without authoring inputs.
 
-    The signed artifact is the validation receipt. The marked-valid state
+    The published artifact is the validation receipt. The marked-valid state
     ensures no source evidence, compiler, repair, or conformance path is
     reached by a product authority.
     """

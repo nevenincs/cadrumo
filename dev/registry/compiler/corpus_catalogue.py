@@ -1,7 +1,7 @@
 """Development-only verification of the authored source corpus.
 
 These checks prove the mutable acquisition tree before publication.  Runtime
-uses the signed authority artifact and immutable evidence metadata instead.
+uses the published authority artifact and immutable evidence metadata instead.
 """
 
 from __future__ import annotations

@@ -44,20 +44,23 @@ import time
 from pathlib import Path
 
 import pytest
-
-from cadrumo.core.config import override_settings
-from cadrumo.core.directory_scan import scan_directory
-from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.env_scope import scoped_env_var
-from dev.registry.compiler._loader_internals import _collect_registry_tree_fingerprints
-from dev.registry.compiler.loader import _load_registry_tree_cached, load_registry_tree
+from dev.registry.compiler.loader import (
+    _load_registry_tree_cached,
+    collect_registry_tree_fingerprints,
+    load_registry_tree,
+)
 from dev.registry.compiler.loader_cache import is_bundled_registry_root, registry_disk_cache_enabled
 from dev.registry.compiler.loader_fingerprints import _registry_fingerprint_cache, clear_fingerprint_cache
 from dev.registry.conformance.tests._loader_directory_mode_support import (
     _standard_manifest_text,
     _standard_revision_preamble_text,
 )
-from dev.registry.tests._loader_cache_support import REGISTRY_DISK_CACHE_DIR_ENV_VAR
+
+from .....core.config import override_settings
+from .....core.directory_scan import scan_directory
+from .....core.resources.bundled_data import bundled_path
+from .....tests.env_scope import scoped_env_var
+from ._loader_cache_support import REGISTRY_DISK_CACHE_DIR_ENV_VAR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -113,7 +116,7 @@ def test_registry_disk_cache_enabled_without_pytest_markers() -> None:
             sys.executable,
             "-c",
             (
-                "from cadrumo.domain.calculations.registry.loader_cache import registry_disk_cache_enabled; "
+                "from dev.registry.compiler.loader_cache import registry_disk_cache_enabled; "
                 "print(registry_disk_cache_enabled())"
             ),
         ],
@@ -158,8 +161,8 @@ def test_bundled_tree_fingerprint_cache_hit_skips_the_directory_walk() -> None:
     bundled_root = bundled_path("registry", "aeat").resolve()
     assert is_bundled_registry_root(bundled_root) is True
 
-    first = _collect_registry_tree_fingerprints(bundled_root)
-    second = _collect_registry_tree_fingerprints(bundled_root)
+    first = collect_registry_tree_fingerprints(bundled_root)
+    second = collect_registry_tree_fingerprints(bundled_root)
     assert second is first, "a bundled-tree cache hit must reuse the cached fingerprint tuple, not rebuild it"
 
 
@@ -188,7 +191,7 @@ def test_bundled_tree_fingerprint_ttl_window_is_not_consumed_by_its_own_walk() -
     # The production stamp is taken from `time.time()`, so the test must compare
     # against that same clock rather than a monotonic one.
     started = time.time()
-    fingerprints = _collect_registry_tree_fingerprints(bundled_root)
+    fingerprints = collect_registry_tree_fingerprints(bundled_root)
     returned = time.time()
 
     stamped, _cached_directories, cached_value = _registry_fingerprint_cache[bundled_root]
@@ -216,9 +219,9 @@ def test_bundled_tree_fingerprint_cache_survives_past_the_mutable_tree_ttl() -> 
     clear_fingerprint_cache()
     bundled_root = bundled_path("registry", "aeat").resolve()
 
-    first = _collect_registry_tree_fingerprints(bundled_root)
+    first = collect_registry_tree_fingerprints(bundled_root)
     time.sleep(1.2)
-    second = _collect_registry_tree_fingerprints(bundled_root)
+    second = collect_registry_tree_fingerprints(bundled_root)
     assert second is first, "the bundled tree's TTL must outlive the strict 1-second mutable-tree window"
 
 
@@ -502,9 +505,7 @@ def test_synthetic_tmp_path_root_disk_cache_stays_disabled_under_pytest(tmp_path
     (legal_dir / "supported-filing-years.toml").write_text(
         "[supported_filing_years]\nyears = [2025]\n\n"
         "[sociedades_annual_manual_coverage]\n"
-        'dispositions = [{ year = 2025, status = "unpublished", '
-        'official_locator = "https://example.com/manuals", observed_at = 2026-09-10, '
-        'acquisition_condition_key = "application.registry.manuals.coverage.recheck_aeat_publication" }]\n',
+        'dispositions = [{ year = 2025, status = "unpublished", official_locator = "https://example.com/manuals", observed_at = 2026-09-10, acquisition_condition_key = "application.registry.manuals.coverage.recheck_aeat_publication" }]\n',
         encoding="utf-8",
         newline="\n",
     )

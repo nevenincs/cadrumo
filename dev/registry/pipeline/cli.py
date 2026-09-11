@@ -3,7 +3,8 @@
 This privileged development CLI intentionally has no product-CLI registration.
 It assembles one explicitly selected revision from the validated registry, then
 delegates all rendering, validation, comparison, and transactional cutover to
-the generator pipeline's canonical authorities.
+the generator pipeline's canonical authorities. ``publish-authority`` validates
+the whole registry candidate and republishes the runtime authority artifact.
 """
 
 from __future__ import annotations
@@ -21,7 +22,8 @@ import typer
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.i18n.render import locale_map, override_locales_root
 from cadrumo.core.resources.bundled_data import bundled_path
-from dev.registry.compiler.edition_materialisation import MaterialisedEdition, materialise_edition
+from cadrumo.domain.calculations.registry.authority import bundled_authority_artifact_path
+from cadrumo.domain.calculations.registry.authority_artifact import AuthorityArtifact
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
@@ -29,6 +31,7 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
 )
 from dev.locales.manager import LocaleManager, discover_locale_codes
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.compiler.edition_materialisation import MaterialisedEdition, materialise_edition
 
 from ._export_tree import RenderedExportTree, _render_toml_bytes, render_complete_export_tree
 from ._tree_check import CheckedGeneratedExportTree, GeneratedExportTreeCheckContext, check_generated_export_tree
@@ -58,7 +61,10 @@ from .source_defects import source_defects_for
 
 app = typer.Typer(
     name="pipeline",
-    help="Check, publish, or digest-bound republish one generated AEAT registry export tree.",
+    help=(
+        "Check, publish, or digest-bound republish one generated AEAT registry export tree, "
+        "or republish the runtime authority artifact."
+    ),
     no_args_is_help=True,
 )
 
@@ -70,18 +76,51 @@ def publish_authority_candidate_workflow(
     registry_root: Path,
     source_root: Path,
     artifact_path: Path,
-    signing_private_key_hex: str,
-):
+) -> AuthorityArtifact:
     """Run the dev pipeline's complete authority publication workflow.
 
-    The workflow is programmatic so callers inject a release-held signing key
-    instead of exposing it in a product or developer CLI argument.
+    Validates the candidate at ``registry_root`` and ``source_root`` and
+    atomically replaces ``artifact_path`` with its digest-checked publication,
+    which records the candidate identity it was compiled from.
     """
     return publish_authority_candidate(
         registry_root=registry_root,
         source_root=source_root,
         artifact_path=artifact_path,
-        signing_private_key_hex=signing_private_key_hex,
+    )
+
+
+@app.command("publish-authority")
+def publish_authority(
+    registry_root: Annotated[
+        Path | None,
+        typer.Option("--registry-root", help="Registry tree to publish; defaults to the bundled registry."),
+    ] = None,
+    source_root: Annotated[
+        Path | None,
+        typer.Option("--source-root", help="Source tree holding the legal corpus; defaults to bundled data."),
+    ] = None,
+    artifact: Annotated[
+        Path | None,
+        typer.Option("--artifact", help="Artifact to replace; defaults to the bundled runtime authority artifact."),
+    ] = None,
+) -> None:
+    """Validate the registry candidate and atomically republish the runtime authority artifact.
+
+    A refused validation, or a candidate that changes while it is validated,
+    leaves the previous artifact byte-for-byte in place.
+    """
+    artifact_path = artifact or bundled_authority_artifact_path()
+    published = publish_authority_candidate_workflow(
+        registry_root=registry_root or bundled_path("registry", "aeat"),
+        source_root=source_root or bundled_path(),
+        artifact_path=artifact_path,
+    )
+    typer.echo(
+        "publish-authority"
+        f"\tartifact={artifact_path}"
+        f"\tidentity_digest={published.identity_digest}"
+        f"\tmodelos={len(published.modelos)}",
     )
 
 

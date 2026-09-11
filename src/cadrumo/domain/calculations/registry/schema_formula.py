@@ -9,9 +9,18 @@ from enum import StrEnum
 from itertools import pairwise
 from typing import Annotated
 
-from pydantic import BeforeValidator, ConfigDict, Field, TypeAdapter, ValidationError, model_validator
+from pydantic import (
+    BeforeValidator,
+    ConfigDict,
+    Field,
+    TypeAdapter,
+    ValidationError,
+    field_validator,
+    model_validator,
+)
 
 from ....core.casilla_id import CasillaId
+from ....core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ._formula_operator_contracts import require_formula_operator_arity
 from .errors import RegistryValidationError
 from .ids import BindingId, ParameterId, RelationId
@@ -148,6 +157,15 @@ class FormulaExpression(RegistryModel):
     @classmethod
     def _normalise_dispatch_table_entries(cls, value: object) -> object:
         return _normalise_dispatch_table_entries(value)
+
+    @field_validator("args", mode="before")
+    @classmethod
+    def _args_from_json_array(cls, value: object) -> object:
+        # The model-level before-validator above hands pydantic a Python
+        # mapping, so a JSON array reaches this strict tuple field as a list.
+        if isinstance(value, list):
+            return OBJECT_TUPLE_ADAPTER.validate_python(value)
+        return value
 
     @model_validator(mode="after")
     def _validate_expression(self) -> FormulaExpression:

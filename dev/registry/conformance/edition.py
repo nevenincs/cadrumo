@@ -3,7 +3,7 @@
 An edition that names a predecessor states only the casillas that are new or
 that differ, so its files are a fragment of what the registry compiles. This
 service resolves the edition through
-:func:`~cadrumo.domain.calculations.registry.edition_materialisation.materialise_edition`
+:func:`~dev.registry.compiler.edition_materialisation.materialise_edition`
 and reports, beside the complete raw table, where every casilla row comes from
 and how far the edition's review stamp reaches.
 
@@ -23,13 +23,15 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
-from ...core.resources.bundled_data import bundled_path
-from dev.registry.compiler.edition_materialisation import MaterialisedEdition, materialise_edition
-from ...domain.calculations.registry.errors import RegistryLoadError
-from ...domain.calculations.registry.ids import RevisionId
-from ...domain.calculations.registry.loader_cache import ModeloSource, discover_modelo_sources
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
+from cadrumo.core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.toml import TomlTablePath, render_toml
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.ids import RevisionId
+
+from ..compiler.edition_materialisation import MaterialisedEdition, materialise_edition
+from ..compiler.loader_cache import ModeloSource, discover_modelo_sources
 from .errors import RegistryPreconditionCondition, registry_terminal_refusal
 
 __all__ = [
@@ -38,8 +40,10 @@ __all__ = [
     "EditionRowSource",
     "InheritedRowAttestation",
     "RegistryEditionReport",
+    "RegistryEditionView",
     "ReviewCoverage",
     "read_registry_edition",
+    "render_registry_edition",
 ]
 
 _CASILLAS = "casillas"
@@ -251,3 +255,74 @@ def _edition_review_status(modelo_directory: Path, revision_id: str) -> str:
 def _declared_status(table: Mapping[str, object]) -> str:
     status = table.get(_REVIEW_STATUS, _PENDING_REVIEW)
     return status if isinstance(status, str) else str(status)
+
+
+class RegistryEditionView(BaseModel):
+    """The machine-readable form of one complete edition: its TOML document and the provenance beside it."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    modelo: str
+    revision_id: RevisionId
+    inherits_from: RevisionId | None
+    document: str
+    rows: tuple[EditionCasillaRow, ...]
+    review_scope: EditionReviewScope
+
+    @classmethod
+    def from_report(cls, report: RegistryEditionReport) -> RegistryEditionView:
+        """Pair a report with the document :func:`render_registry_edition` prints for it."""
+        return cls(
+            modelo=report.modelo,
+            revision_id=report.revision_id,
+            inherits_from=report.inherits_from,
+            document=render_registry_edition(report),
+            rows=report.rows,
+            review_scope=report.review_scope,
+        )
+
+
+def render_registry_edition(report: RegistryEditionReport) -> str:
+    """Render the complete edition as TOML in the shape a revision file declares.
+
+    Comments mark the edition that states each casilla row and how far the
+    edition's review stamp reaches. A TOML parser drops them, so the text still
+    reads as the edition's raw table.
+    """
+    return render_toml({"revisions": {report.revision_id: report.table}}, comments=_edition_comments(report))
+
+
+def _edition_comments(report: RegistryEditionReport) -> dict[TomlTablePath, str]:
+    """Mark the edition header and every casilla row with stable, untranslated tokens."""
+    scope = report.review_scope
+    stated = sum(1 for row in report.rows if row.source is EditionRowSource.STATED)
+    header = [
+        _tokens("edition", modelo=report.modelo, revision=report.revision_id, inherits_from=report.inherits_from),
+        _tokens("rows", stated=stated, inherited=len(report.rows) - stated),
+        _tokens(
+            "review",
+            declared_status=scope.declared_review_status,
+            coverage=scope.coverage,
+            reviewed_against=scope.reviewed_against,
+            rendered_status=scope.rendered_review_status,
+        ),
+        *(
+            _tokens(
+                "review.inherited",
+                revision=attestation.revision_id,
+                rows=attestation.row_count,
+                review_status=attestation.review_status,
+            )
+            for attestation in scope.inherited_attestations
+        ),
+    ]
+    comments: dict[TomlTablePath, str] = {(): "\n".join(header)}
+    for index, row in enumerate(report.rows):
+        comments["revisions", report.revision_id, "casillas", index] = _tokens(
+            "row", casilla=row.casilla_id, source=row.source, inherited_from=row.inherited_from
+        )
+    return comments
+
+
+def _tokens(label: str, **values: object) -> str:
+    return " ".join((f"{label}:", *(f"{key}={value}" for key, value in values.items() if value is not None)))

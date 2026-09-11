@@ -1,4 +1,4 @@
-"""Behavioral contract tests for signed immutable authority publication."""
+"""Behavioral contract tests for the versioned, digest-checked authority publication."""
 
 from __future__ import annotations
 
@@ -10,10 +10,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from .....core.aggregation import BindingSourceKind
-from .....core.ed25519_signing import Ed25519KeypairHex, generate_ed25519_keypair_hex, sign_digest_hex
 from .....core.hashing import canonical_json_bytes, sha256_hex
 from ..authority_artifact import (
+    AUTHORITY_ARTIFACT_SCHEMA_VERSION,
     AuthorityArtifact,
     AuthorityArtifactFormatError,
     AuthorityArtifactIntegrityError,
@@ -33,18 +32,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _IDENTITY_DIGEST = "e4c712d347701b34615314b6e3f8fdfd75ca5ee3eabe9c1c651668549fb7f66f"
 
 
-@pytest.fixture(scope="session", autouse=True)
-def compose_runtime_ports() -> Iterator[None]:
-    """Keep isolated signed-artifact contracts independent of app port setup."""
-    yield
-
-
-@pytest.fixture
-def publisher_keys() -> Ed25519KeypairHex:
-    """Use a real ephemeral publisher identity for each artifact contract run."""
-    return generate_ed25519_keypair_hex()
-
-
 def _validated_authority_payload() -> AuthorityArtifact:
     """Build a real typed registry payload without requiring the authoring corpus."""
     return AuthorityArtifact(
@@ -54,26 +41,27 @@ def _validated_authority_payload() -> AuthorityArtifact:
     )
 
 
-def _publish(path: Path, keys: Ed25519KeypairHex) -> None:
-    """Publish one typed authority through the real signed writer."""
-    write_authority_artifact(path, _validated_authority_payload(), signing_private_key_hex=keys.private_key_hex)
+def _publish(path: Path) -> None:
+    """Publish one typed authority through the real writer."""
+    write_authority_artifact(path, _validated_authority_payload())
 
 
-def _read(path: Path, keys: Ed25519KeypairHex) -> AuthorityArtifact:
-    """Read one authority through the real trusted-public-key boundary."""
-    return read_authority_artifact(path, verification_public_key_hex=keys.public_key_hex)
+def _write_frame(path: Path, schema_version: str, payload: object, **extra: object) -> None:
+    """Write a frame whose digest is consistent with its content, as a correct publisher would."""
+    document = {"schema_version": schema_version, "payload": payload}
+    path.write_bytes(
+        canonical_json_bytes({**document, "payload_sha256": sha256_hex(canonical_json_bytes(document)), **extra})
+    )
 
 
-def test_published_authority_round_trips_as_the_complete_typed_payload(
-    tmp_path: Path, publisher_keys: Ed25519KeypairHex
-) -> None:
-    """A consumer receives the complete authority authenticated by its publisher."""
+def test_published_authority_round_trips_as_the_complete_typed_payload(tmp_path: Path) -> None:
+    """A consumer receives the complete authority the writer published."""
     artifact_path = tmp_path / "authority.json"
     published = _validated_authority_payload()
 
-    write_authority_artifact(artifact_path, published, signing_private_key_hex=publisher_keys.private_key_hex)
+    write_authority_artifact(artifact_path, published)
 
-    consumed = _read(artifact_path, publisher_keys)
+    consumed = read_authority_artifact(artifact_path)
 
     assert consumed == published
     assert consumed.modelos[0].title_localization_key == published.modelos[0].title_localization_key
@@ -135,144 +123,90 @@ def test_published_authority_preserves_a_grounded_no_predecessor_declaration(
     assert consumed == published
 
 
-def test_recomputed_replacement_frame_is_refused_without_a_publisher_signature(
-    tmp_path: Path, publisher_keys: Ed25519KeypairHex
-) -> None:
-    """A modifier cannot make a replacement authority trusted by recomputing its hash."""
+def test_the_frame_carries_exactly_a_version_a_payload_and_its_digest(tmp_path: Path) -> None:
+    """The publication is generated output: no signature, key, or certificate rides in it."""
     artifact_path = tmp_path / "authority.json"
-    _publish(artifact_path, publisher_keys)
-    replacement = json.loads(artifact_path.read_bytes())
-    replacement["payload"]["identity_digest"] = "0" * 64
-    replacement["payload_sha256"] = sha256_hex(
-        canonical_json_bytes({"schema_version": replacement["schema_version"], "payload": replacement["payload"]})
+    _publish(artifact_path)
+
+    frame = json.loads(artifact_path.read_bytes())
+
+    assert set(frame) == {"schema_version", "payload", "payload_sha256"}
+    assert frame["schema_version"] == AUTHORITY_ARTIFACT_SCHEMA_VERSION == "cadrumo-authority-artifact-v3"
+    assert frame["payload_sha256"] == sha256_hex(
+        canonical_json_bytes({"schema_version": frame["schema_version"], "payload": frame["payload"]})
     )
-    artifact_path.write_bytes(canonical_json_bytes(replacement))
-
-    with pytest.raises(AuthorityArtifactIntegrityError):
-        _read(artifact_path, publisher_keys)
 
 
-def test_complete_authority_signed_by_another_publisher_is_refused(
-    tmp_path: Path, publisher_keys: Ed25519KeypairHex
-) -> None:
-    """A complete alternate authority is rejected when its signer is not trusted."""
+def test_a_payload_edited_without_its_digest_is_refused_as_corrupt(tmp_path: Path) -> None:
+    """A changed payload under the old recorded digest is a corrupt artifact, never a readable one."""
     artifact_path = tmp_path / "authority.json"
-    alternate_publisher = generate_ed25519_keypair_hex()
+    _publish(artifact_path)
+    corrupted = json.loads(artifact_path.read_bytes())
+    corrupted["payload"]["identity_digest"] = "0" * 64
+    artifact_path.write_bytes(canonical_json_bytes(corrupted))
 
-    _publish(artifact_path, alternate_publisher)
-
-    with pytest.raises(AuthorityArtifactIntegrityError):
-        _read(artifact_path, publisher_keys)
+    with pytest.raises(AuthorityArtifactIntegrityError, match="content digest"):
+        read_authority_artifact(artifact_path)
 
 
-def test_trusted_signature_does_not_admit_an_invalid_typed_payload(
-    tmp_path: Path, publisher_keys: Ed25519KeypairHex
-) -> None:
-    """Authentication never substitutes for strict authority reconstruction."""
+def test_a_digest_consistent_frame_does_not_admit_an_invalid_typed_payload(tmp_path: Path) -> None:
+    """A matching digest never substitutes for strict authority reconstruction."""
     artifact_path = tmp_path / "authority.json"
-    _publish(artifact_path, publisher_keys)
-    invalid = json.loads(artifact_path.read_bytes())
-    invalid["payload"]["catalogues"] = {}
-    signed_document = {"schema_version": invalid["schema_version"], "payload": invalid["payload"]}
-    digest = sha256_hex(canonical_json_bytes(signed_document))
-    invalid["payload_sha256"] = digest
-    invalid["signature"] = sign_digest_hex(private_key_hex=publisher_keys.private_key_hex, digest_hex=digest)
-    artifact_path.write_bytes(canonical_json_bytes(invalid))
+    _publish(artifact_path)
+    frame = json.loads(artifact_path.read_bytes())
+    frame["payload"]["catalogues"] = {}
+    _write_frame(artifact_path, frame["schema_version"], frame["payload"])
 
-    with pytest.raises(AuthorityArtifactFormatError):
-        _read(artifact_path, publisher_keys)
+    with pytest.raises(AuthorityArtifactFormatError, match="invalid authority payload"):
+        read_authority_artifact(artifact_path)
+
+
+@pytest.mark.parametrize("superseded", ["cadrumo-authority-artifact-v1", "cadrumo-authority-artifact-v2"])
+def test_a_frame_of_an_earlier_format_is_refused_by_name(tmp_path: Path, superseded: str) -> None:
+    """An earlier frame, including a signed one, names the format to republish in."""
+    artifact_path = tmp_path / "authority.json"
+    _publish(artifact_path)
+    payload = json.loads(artifact_path.read_bytes())["payload"]
+    _write_frame(artifact_path, superseded, payload, signature="00" * 64)
+
+    with pytest.raises(AuthorityArtifactFormatError, match=f"superseded format '{superseded}'"):
+        read_authority_artifact(artifact_path)
+
+
+def test_a_current_frame_with_an_extra_member_is_refused(tmp_path: Path) -> None:
+    """The reader accepts exactly the three frame members; a leftover signature is not ignored."""
+    artifact_path = tmp_path / "authority.json"
+    _publish(artifact_path)
+    payload = json.loads(artifact_path.read_bytes())["payload"]
+    _write_frame(artifact_path, AUTHORITY_ARTIFACT_SCHEMA_VERSION, payload, signature="00" * 64)
+
+    with pytest.raises(AuthorityArtifactFormatError, match="unexpected members \\['signature'\\]"):
+        read_authority_artifact(artifact_path)
 
 
 @pytest.mark.parametrize("artifact_bytes", [b"not-json", b'{"schema_version":"unsupported"}'])
-def test_malformed_or_unsupported_artifact_frame_is_refused(
-    tmp_path: Path, publisher_keys: Ed25519KeypairHex, artifact_bytes: bytes
-) -> None:
+def test_malformed_or_unsupported_artifact_frame_is_refused(tmp_path: Path, artifact_bytes: bytes) -> None:
     """Malformed and unsupported wire inputs never reach authority reconstruction."""
     artifact_path = tmp_path / "authority.json"
     artifact_path.write_bytes(artifact_bytes)
 
     with pytest.raises(AuthorityArtifactFormatError):
-        _read(artifact_path, publisher_keys)
+        read_authority_artifact(artifact_path)
 
 
-def test_consumer_mutation_cannot_change_a_later_authority_read(
-    tmp_path: Path, publisher_keys: Ed25519KeypairHex
-) -> None:
-    """Each authenticated read reconstructs an isolated authority graph."""
+def test_consumer_mutation_cannot_change_a_later_authority_read(tmp_path: Path) -> None:
+    """Each read reconstructs an isolated authority graph."""
     artifact_path = tmp_path / "authority.json"
-    _publish(artifact_path, publisher_keys)
-    first = _read(artifact_path, publisher_keys)
+    _publish(artifact_path)
+    first = read_authority_artifact(artifact_path)
     first.catalogues.legal["consumer-injected"] = next(iter(first.catalogues.legal.values()))
 
-    later = _read(artifact_path, publisher_keys)
+    later = read_authority_artifact(artifact_path)
 
     assert "consumer-injected" not in later.catalogues.legal
 
 
-def test_missing_publication_refuses_without_rebuilding_from_authoring_inputs(
-    tmp_path: Path, publisher_keys: Ed25519KeypairHex
-) -> None:
+def test_missing_publication_refuses_without_rebuilding_from_authoring_inputs(tmp_path: Path) -> None:
     """An absent artifact is a deterministic runtime refusal at the publication boundary."""
     with pytest.raises(AuthorityArtifactUnavailableError):
-        _read(tmp_path / "missing-authority.json", publisher_keys)
-
-
-def test_signed_runtime_dictionary_projection_parses_without_a_corpus_tree(
-    tmp_path: Path, publisher_keys: Ed25519KeypairHex
-) -> None:
-    """A staged signed artifact supplies XML dictionary bytes directly to the parser."""
-    dictionary = b"AMOUNT=[/Declaracion/Importe][DEC][001][importe]\n"
-    artifact_path = tmp_path / "authority.json"
-    artifact = AuthorityArtifact(
-        modelos=(_minimal_modelo(_minimal_revision()),),
-        catalogues=_minimal_catalogues(),
-        identity_digest=_IDENTITY_DIGEST,
-        evidence=AuthorityEvidenceProjection(
-            sources=(
-                PublishedSourceEvidence(
-                    source_reference_id="dictionary",
-                    payload=dictionary,
-                    payload_sha256=sha256_hex(dictionary),
-                ),
-            )
-        ),
-    )
-    write_authority_artifact(artifact_path, artifact, signing_private_key_hex=publisher_keys.private_key_hex)
-    published = _read(artifact_path, publisher_keys)
-    layout = SimpleNamespace(
-        id="xml-layout",
-        dictionary_source_ref="dictionary",
-        dictionary_path_overrides=(),
-    )
-    source = SimpleNamespace(id="dictionary", supports_single_uppercase_letter_casilla_ids=False)
-
-    entries = xml_dictionary_entries(
-        layout,
-        sources={"dictionary": source},
-        source_payloads={item.source_reference_id: item.payload for item in published.evidence.sources},
-    )
-
-    assert entries[0].field_id == "AMOUNT"
-    assert entries[0].casilla_id == "001"
-
-
-def test_signed_artifact_missing_runtime_dictionary_payload_refuses_before_parsing(
-    tmp_path: Path, publisher_keys: Ed25519KeypairHex
-) -> None:
-    """A valid signature cannot substitute for a required XML runtime projection."""
-    artifact_path = tmp_path / "authority.json"
-    _publish(artifact_path, publisher_keys)
-    published = _read(artifact_path, publisher_keys)
-    layout = SimpleNamespace(
-        id="xml-layout",
-        dictionary_source_ref="dictionary",
-        dictionary_path_overrides=(),
-    )
-    source = SimpleNamespace(id="dictionary", supports_single_uppercase_letter_casilla_ids=False)
-
-    with pytest.raises(RegistryValidationError, match="no published payload"):
-        xml_dictionary_entries(
-            layout,
-            sources={"dictionary": source},
-            source_payloads={item.source_reference_id: item.payload for item in published.evidence.sources},
-        )
+        read_authority_artifact(tmp_path / "missing-authority.json")

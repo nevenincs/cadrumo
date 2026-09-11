@@ -801,3 +801,33 @@ def test_a_signed_money_domain_member_is_charged_the_implied_decimals() -> None:
 def test_a_signed_domain_is_refused_on_any_shape_but_money() -> None:
     with pytest.raises(ValidationError):
         _field(data_type="decimal", decimals=2, length=17, signed=True, allowed_values=("0",))
+
+
+@pytest.mark.parametrize(
+    ("design_type", "signed"),
+    (("N", True), ("Num", False)),
+)
+def test_a_field_whose_sign_matches_its_design_type_loads(design_type: str, signed: bool) -> None:
+    field = _field(data_type="money", length=17, signed=signed, design_type=design_type)
+
+    assert field.design_type == design_type
+
+
+@pytest.mark.parametrize(
+    ("design_type", "signed", "message"),
+    (
+        ("N", False, "typed N"),
+        ("Num", True, "typed Num"),
+    ),
+)
+def test_a_sign_contradicting_the_design_type_is_refused_at_the_registry_boundary(
+    design_type: str, signed: bool, message: str
+) -> None:
+    """The registry refuses the field rather than trusting its sign over the official type column."""
+    with pytest.raises(ValidationError, match=message):
+        _field(data_type="money", length=17, signed=signed, design_type=design_type)
+
+
+def test_a_design_type_on_a_slot_without_a_sign_is_refused() -> None:
+    with pytest.raises(ValidationError, match="has no sign"):
+        _field(data_type="text", padding="right_space", justification="left", design_type="N")

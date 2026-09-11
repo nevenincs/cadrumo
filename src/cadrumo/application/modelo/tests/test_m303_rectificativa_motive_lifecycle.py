@@ -7,6 +7,7 @@ from functools import lru_cache
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.m303_orden_manifest import load_m303_annual_orden_authority
 from pydantic import ValidationError
 
 from ....adapters.persistence.profile.justificante import JustificanteRepository
@@ -30,7 +31,6 @@ from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.calculations.registry.m303_orden_manifest import load_m303_annual_orden_authority
 from ....domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
 from ....domain.calculations.registry.m303_orden_resolution import m303_annual_orden_snapshot_from_projection
 from ....domain.calculations.registry.schema import RegistrySnapshot

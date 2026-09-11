@@ -286,6 +286,9 @@ check-docs-synonyms:
     @uv run --no-sync python -m dev.docs.terminology.synonyms validate
 
 # Verify registry integrity and the bundled parity-oracle bindings.
+# Integrity also refuses a bundled runtime authority artifact that no longer
+# records the live registry and source evidence; republish it with
+# `uv run --no-sync python -m dev.registry.pipeline publish-authority`.
 # The two commands are dependent: a failed integrity verification invalidates
 # any downstream parity claim, so this health gate stops before the audit.
 [doc('Verify registry integrity and audit every bundled parity-oracle binding.')]
@@ -814,8 +817,8 @@ test-calculations:
     #!/usr/bin/env bash
     set -uo pipefail
     failed=0
-    uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests src/cadrumo/application/registry/tests || failed=1
-    uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests src/cadrumo/application/registry/tests
+    uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests || failed=1
+    uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests
     serial_status=$?
     if [[ "$serial_status" -eq 5 ]]; then
         echo "No serial calculation tests are currently declared."
@@ -831,9 +834,9 @@ test-calculations:
     #!pwsh
     $ErrorActionPreference = 'Stop'
     $failed = $false
-    uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests src/cadrumo/application/registry/tests
+    uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests
     if ($LASTEXITCODE -ne 0) { $failed = $true }
-    uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests src/cadrumo/application/registry/tests
+    uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests
     $serialStatus = $LASTEXITCODE
     if ($serialStatus -eq 5) {
         Write-Host 'No serial calculation tests are currently declared.'

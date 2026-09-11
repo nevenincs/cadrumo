@@ -145,6 +145,7 @@ required = true
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'four-digit-year'
 legal_refs = ['orden-hfp-816-2017:art-1']
 source_refs = ['aeat-dr-232-2016']
@@ -174,6 +175,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'enumerated-digits'
 allowed_values = [
     '1',
@@ -393,6 +395,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-hfp-816-2017:art-1']
 source_refs = ['aeat-dr-232-2016']
 
@@ -533,6 +536,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-hfp-816-2017:art-1']
 source_refs = ['aeat-dr-232-2016']
 
@@ -673,6 +677,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-hfp-816-2017:art-1']
 source_refs = ['aeat-dr-232-2016']
 
@@ -813,6 +818,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-hfp-816-2017:art-1']
 source_refs = ['aeat-dr-232-2016']
 
@@ -953,6 +959,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-hfp-816-2017:art-1']
 source_refs = ['aeat-dr-232-2016']
 
@@ -1079,6 +1086,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-hfp-816-2017:art-1']
 source_refs = ['aeat-dr-232-2016']
 
@@ -1177,6 +1185,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-hfp-816-2017:art-1']
 source_refs = ['aeat-dr-232-2016']
 
@@ -1275,6 +1284,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-hfp-816-2017:art-1']
 source_refs = ['aeat-dr-232-2016']
 

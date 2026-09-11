@@ -10,6 +10,53 @@ line_ending = 'crlf'
 required = true
 
 [[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30305.f062'
+offset = 755
+length = 17
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'rd-1624-1992:art-71',
+    'orden-eha-3786-2008:art-1',
+]
+source_refs = ['aeat-dr-303-2022']
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_differentiated_deduction'
+slot = 2
+field = 'reagp_cuota'
+casilla_id = '731'
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'm303-2022.dp30305.f063'
+offset = 772
+length = 17
+kind = 'projection'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = [
+    'rd-1624-1992:art-71',
+    'orden-eha-3786-2008:art-1',
+]
+source_refs = ['aeat-dr-303-2022']
+
+[revisions.2022.export_layouts.records.fields.projection_ref]
+projection_kind = 'm303_differentiated_deduction'
+slot = 2
+field = 'rectification_base'
+casilla_id = '732'
+
+[[revisions.2022.export_layouts.records.fields]]
 id = 'm303-2022.dp30305.f064'
 offset = 789
 length = 17
@@ -19,6 +66,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'rd-1624-1992:art-71',
     'orden-eha-3786-2008:art-1',
@@ -41,6 +89,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'rd-1624-1992:art-71',
     'orden-eha-3786-2008:art-1',
@@ -63,6 +112,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'rd-1624-1992:art-71',
     'orden-eha-3786-2008:art-1',

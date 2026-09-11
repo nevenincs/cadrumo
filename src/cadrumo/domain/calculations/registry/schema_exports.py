@@ -482,6 +482,15 @@ class ExportFieldDefinition(RegistryModel):
     entity. A layout cannot know the filer, so the condition is carried here
     and evaluated at export against the filing's own taxpayer.
     """
+    design_type: Literal["N", "Num"] | None = None
+    """The numeric type the official record design prints for this slot.
+
+    AEAT's type vocabulary: "N: numerico con signo", "Num: numerico sin signo".
+    Carried by generated layouts from the design row they derive from, so the
+    sign is held to the design at the registry boundary rather than trusted:
+    a field typed N must be signed and one typed Num must not be. A hand-
+    authored layout has no design row to supply it and declares none.
+    """
     value_policy: ExportValuePolicyValue = None
     allowed_values: tuple[str, ...] | None = None
     legal_refs: LegalRefs
@@ -525,6 +534,7 @@ class ExportFieldDefinition(RegistryModel):
         _validate_field_semantic_payload(self)
         _validate_field_render_shape(self)
         _validate_required_for(self)
+        _validate_design_type(self)
         return self
 
     def wire_shape(self) -> tuple[str, str, str, bool, str | None]:
@@ -593,6 +603,32 @@ def _field_semantic_payloads(field: ExportFieldDefinition) -> dict[ExportSemanti
         ExportSemanticPayloadAxis.DRAFT_ATTRIBUTE: field.draft_attribute,
         ExportSemanticPayloadAxis.COMPUTED_KEY: field.computed_key,
     }
+
+
+_SIGN_BEARING_DATA_TYPES: Final[frozenset[str]] = frozenset({"money", "decimal", "integer"})
+
+
+def _validate_design_type(field: ExportFieldDefinition) -> None:
+    """Refuse a sign that contradicts the type the official design prints.
+
+    Only a number carries a sign: a constant slot the design types
+    numerically (the modelo-number slot is typed N and holds text) declares
+    no design type.
+    """
+    if field.design_type is None:
+        return
+    if str(field.data_type) not in _SIGN_BEARING_DATA_TYPES:
+        raise RegistryValidationError(
+            f"export field {field.id!r} declares design_type but carries {field.data_type!r}, which has no sign",
+        )
+    if field.design_type == "N" and not field.signed:
+        raise RegistryValidationError(
+            f"export field {field.id!r} is typed N (numerico con signo) by its design but declares unsigned",
+        )
+    if field.design_type == "Num" and field.signed:
+        raise RegistryValidationError(
+            f"export field {field.id!r} is typed Num (numerico sin signo) by its design but declares signed",
+        )
 
 
 def _validate_required_for(field: ExportFieldDefinition) -> None:

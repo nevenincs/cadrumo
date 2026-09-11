@@ -10,6 +10,96 @@ line_ending = 'crlf'
 required = true
 
 [[revisions.2023.export_layouts.records.fields]]
+id = 'm322-2023.page-01.f088'
+offset = 1206
+length = 17
+kind = 'casilla'
+casilla_id = '57'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-eha-3434-2007:art-1']
+source_refs = ['aeat-dr-322-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'm322-2023.page-01.f089'
+offset = 1223
+length = 17
+kind = 'casilla'
+casilla_id = '58'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-eha-3434-2007:art-1']
+source_refs = ['aeat-dr-322-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'm322-2023.page-01.f090'
+offset = 1240
+length = 17
+kind = 'casilla'
+casilla_id = '59'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-eha-3434-2007:art-1']
+source_refs = ['aeat-dr-322-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'm322-2023.page-01.f091'
+offset = 1257
+length = 17
+kind = 'casilla'
+casilla_id = '60'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-eha-3434-2007:art-1']
+source_refs = ['aeat-dr-322-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'm322-2023.page-01.f092'
+offset = 1274
+length = 17
+kind = 'casilla'
+casilla_id = '61'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-eha-3434-2007:art-1']
+source_refs = ['aeat-dr-322-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'm322-2023.page-01.f093'
+offset = 1291
+length = 17
+kind = 'casilla'
+casilla_id = '62'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-eha-3434-2007:art-1']
+source_refs = ['aeat-dr-322-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm322-2023.page-01.f094'
 offset = 1308
 length = 1
@@ -20,6 +110,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'enumerated-digits'
 allowed_values = [
     '1',

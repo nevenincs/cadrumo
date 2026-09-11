@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "iva.anual.repercutido.recargo.tipo-1.base"
+continuidad_id = "iva-anual-repercutido-recargo-tipo-1-base"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:260 (sha256 8be79bacc860) prints box [693]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [693] and retires none"
 number = "693"

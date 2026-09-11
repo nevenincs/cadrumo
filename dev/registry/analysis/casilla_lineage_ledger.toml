@@ -165,12 +165,12 @@ contradictions = 0
 
 [summary."390"]
 "declared" = 1049
+"grounded" = 8
 "new_on_form" = 110
 "not_on_form" = 22
 "predecessor_edition_silent" = 245
 "refused:absence_unclassified" = 3
 "refused:printed_box_fork" = 3
-"refused:role_absent" = 8
 contradictions = 0
 
 [summary."490"]
@@ -39006,20 +39006,6 @@ reason = "not examined; its lineage is its own campaign: no in-registry oracle: 
 [[refusal]]
 modelo = "100"
 revision = "2024"
-casilla = "DP_APENOM_C"
-category = "not_examined"
-reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
-
-[[refusal]]
-modelo = "100"
-revision = "2024"
-casilla = "DP_APENOM_D"
-category = "not_examined"
-reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
-
-[[refusal]]
-modelo = "100"
-revision = "2024"
 casilla = "DPFNAC_C"
 category = "not_examined"
 reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
@@ -39056,6 +39042,20 @@ reason = "not examined; its lineage is its own campaign: no in-registry oracle: 
 modelo = "100"
 revision = "2024"
 casilla = "DPNIF_D"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2024"
+casilla = "DP_APENOM_C"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2024"
+casilla = "DP_APENOM_D"
 category = "not_examined"
 reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
 
@@ -39181,13 +39181,6 @@ reason = "not examined; its lineage is its own campaign: no in-registry oracle: 
 [[refusal]]
 modelo = "100"
 revision = "2024"
-casilla = "prestacion-inss-maternidad-paternidad-exenta"
-category = "not_examined"
-reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
-
-[[refusal]]
-modelo = "100"
-revision = "2024"
 casilla = "RESIDENTEUE"
 category = "not_examined"
 reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
@@ -39224,6 +39217,13 @@ reason = "not examined; its lineage is its own campaign: no in-registry oracle: 
 modelo = "100"
 revision = "2024"
 casilla = "ZRUE2"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2024"
+casilla = "prestacion-inss-maternidad-paternidad-exenta"
 category = "not_examined"
 reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
 
@@ -50528,13 +50528,6 @@ reason = "not examined; its lineage is its own campaign: no in-registry oracle: 
 [[refusal]]
 modelo = "100"
 revision = "2025"
-casilla = "base-liq-neg-general-2024-aplicada-maxima"
-category = "not_examined"
-reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
-
-[[refusal]]
-modelo = "100"
-revision = "2025"
 casilla = "C"
 category = "not_examined"
 reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
@@ -50564,20 +50557,6 @@ reason = "not examined; its lineage is its own campaign: no in-registry oracle: 
 modelo = "100"
 revision = "2025"
 casilla = "DNIASDLG"
-category = "not_examined"
-reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
-
-[[refusal]]
-modelo = "100"
-revision = "2025"
-casilla = "DP_APENOM_C"
-category = "not_examined"
-reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
-
-[[refusal]]
-modelo = "100"
-revision = "2025"
-casilla = "DP_APENOM_D"
 category = "not_examined"
 reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
 
@@ -50626,6 +50605,20 @@ reason = "not examined; its lineage is its own campaign: no in-registry oracle: 
 [[refusal]]
 modelo = "100"
 revision = "2025"
+casilla = "DP_APENOM_C"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2025"
+casilla = "DP_APENOM_D"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2025"
 casilla = "E"
 category = "not_examined"
 reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
@@ -50634,13 +50627,6 @@ reason = "not examined; its lineage is its own campaign: no in-registry oracle: 
 modelo = "100"
 revision = "2025"
 casilla = "ECIVIL"
-category = "not_examined"
-reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
-
-[[refusal]]
-modelo = "100"
-revision = "2025"
-casilla = "eo-agraria-reduccion-irregularidad-base"
 category = "not_examined"
 reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
 
@@ -50752,13 +50738,6 @@ reason = "not examined; its lineage is its own campaign: no in-registry oracle: 
 [[refusal]]
 modelo = "100"
 revision = "2025"
-casilla = "prestacion-inss-maternidad-paternidad-exenta"
-category = "not_examined"
-reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
-
-[[refusal]]
-modelo = "100"
-revision = "2025"
 casilla = "RESIDENTEUE"
 category = "not_examined"
 reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
@@ -50795,6 +50774,27 @@ reason = "not examined; its lineage is its own campaign: no in-registry oracle: 
 modelo = "100"
 revision = "2025"
 casilla = "ZRUE2"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2025"
+casilla = "base-liq-neg-general-2024-aplicada-maxima"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2025"
+casilla = "eo-agraria-reduccion-irregularidad-base"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2025"
+casilla = "prestacion-inss-maternidad-paternidad-exenta"
 category = "not_examined"
 reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
 
@@ -76222,14 +76222,14 @@ reason = "not examined: export bindings are being repaired in the same tree; lin
 [[refusal]]
 modelo = "200"
 revision = "2025-y-siguientes"
-casilla = "DP200014:bin-aplicada-maxima"
+casilla = "DP200014:SAL_RESERVA_DOTACION"
 category = "not_examined"
 reason = "not examined: export bindings are being repaired in the same tree; lineage waits for the repaired declarations; no continuidad_id"
 
 [[refusal]]
 modelo = "200"
 revision = "2025-y-siguientes"
-casilla = "DP200014:SAL_RESERVA_DOTACION"
+casilla = "DP200014:bin-aplicada-maxima"
 category = "not_examined"
 reason = "not examined: export bindings are being repaired in the same tree; lineage waits for the repaired declarations; no continuidad_id"
 
@@ -76684,7 +76684,7 @@ modelo = "308"
 revision = "2019-y-siguientes"
 casilla = "decl.tipo-declaracion"
 category = "absence_unclassified"
-reason = "design corpus/aeat_official/disenos_registro/modelo_308/files/04-308-orden-eha-1033-2011-ejercicios-2016-hasta-2018.xls has no bundled extract"
+reason = "corpus/aeat_official/disenos_registro/modelo_308/files/01-308-ejercicios-2019-y-siguientes-v13.xls.extracted.md does not print 1 box(es) edition 2019-y-siguientes declares (e.g. [109]), so its inventory cannot be trusted"
 
 [[refusal]]
 modelo = "308"
@@ -76698,7 +76698,7 @@ modelo = "308"
 revision = "2019-y-siguientes"
 casilla = "decl.tipo-tributacion"
 category = "absence_unclassified"
-reason = "design corpus/aeat_official/disenos_registro/modelo_308/files/04-308-orden-eha-1033-2011-ejercicios-2016-hasta-2018.xls has no bundled extract"
+reason = "corpus/aeat_official/disenos_registro/modelo_308/files/01-308-ejercicios-2019-y-siguientes-v13.xls.extracted.md does not print 1 box(es) edition 2019-y-siguientes declares (e.g. [109]), so its inventory cannot be trusted"
 
 [[refusal]]
 modelo = "308"
@@ -76838,7 +76838,7 @@ modelo = "308"
 revision = "2019-y-siguientes"
 casilla = "decl.mtn-tipo-01"
 category = "absence_unclassified"
-reason = "design corpus/aeat_official/disenos_registro/modelo_308/files/04-308-orden-eha-1033-2011-ejercicios-2016-hasta-2018.xls has no bundled extract"
+reason = "corpus/aeat_official/disenos_registro/modelo_308/files/01-308-ejercicios-2019-y-siguientes-v13.xls.extracted.md does not print 1 box(es) edition 2019-y-siguientes declares (e.g. [109]), so its inventory cannot be trusted"
 
 [[refusal]]
 modelo = "308"
@@ -76859,7 +76859,7 @@ modelo = "308"
 revision = "2019-y-siguientes"
 casilla = "decl.mtn-tipo-04"
 category = "absence_unclassified"
-reason = "design corpus/aeat_official/disenos_registro/modelo_308/files/04-308-orden-eha-1033-2011-ejercicios-2016-hasta-2018.xls has no bundled extract"
+reason = "corpus/aeat_official/disenos_registro/modelo_308/files/01-308-ejercicios-2019-y-siguientes-v13.xls.extracted.md does not print 1 box(es) edition 2019-y-siguientes declares (e.g. [109]), so its inventory cannot be trusted"
 
 [[refusal]]
 modelo = "308"
@@ -76901,70 +76901,70 @@ modelo = "308"
 revision = "2019-y-siguientes"
 casilla = "decl.req-base-08"
 category = "absence_unclassified"
-reason = "design corpus/aeat_official/disenos_registro/modelo_308/files/04-308-orden-eha-1033-2011-ejercicios-2016-hasta-2018.xls has no bundled extract"
+reason = "corpus/aeat_official/disenos_registro/modelo_308/files/01-308-ejercicios-2019-y-siguientes-v13.xls.extracted.md does not print 1 box(es) edition 2019-y-siguientes declares (e.g. [109]), so its inventory cannot be trusted"
 
 [[refusal]]
 modelo = "308"
 revision = "2019-y-siguientes"
 casilla = "decl.req-tipo-09"
 category = "absence_unclassified"
-reason = "design corpus/aeat_official/disenos_registro/modelo_308/files/04-308-orden-eha-1033-2011-ejercicios-2016-hasta-2018.xls has no bundled extract"
+reason = "corpus/aeat_official/disenos_registro/modelo_308/files/01-308-ejercicios-2019-y-siguientes-v13.xls.extracted.md does not print 1 box(es) edition 2019-y-siguientes declares (e.g. [109]), so its inventory cannot be trusted"
 
 [[refusal]]
 modelo = "308"
 revision = "2019-y-siguientes"
 casilla = "decl.req-cuota-10"
 category = "absence_unclassified"
-reason = "design corpus/aeat_official/disenos_registro/modelo_308/files/04-308-orden-eha-1033-2011-ejercicios-2016-hasta-2018.xls has no bundled extract"
+reason = "corpus/aeat_official/disenos_registro/modelo_308/files/01-308-ejercicios-2019-y-siguientes-v13.xls.extracted.md does not print 1 box(es) edition 2019-y-siguientes declares (e.g. [109]), so its inventory cannot be trusted"
 
 [[refusal]]
 modelo = "308"
 revision = "2019-y-siguientes"
 casilla = "decl.req-base-11"
 category = "absence_unclassified"
-reason = "design corpus/aeat_official/disenos_registro/modelo_308/files/04-308-orden-eha-1033-2011-ejercicios-2016-hasta-2018.xls has no bundled extract"
+reason = "corpus/aeat_official/disenos_registro/modelo_308/files/01-308-ejercicios-2019-y-siguientes-v13.xls.extracted.md does not print 1 box(es) edition 2019-y-siguientes declares (e.g. [109]), so its inventory cannot be trusted"
 
 [[refusal]]
 modelo = "308"
 revision = "2019-y-siguientes"
 casilla = "decl.req-tipo-12"
 category = "absence_unclassified"
-reason = "design corpus/aeat_official/disenos_registro/modelo_308/files/04-308-orden-eha-1033-2011-ejercicios-2016-hasta-2018.xls has no bundled extract"
+reason = "corpus/aeat_official/disenos_registro/modelo_308/files/01-308-ejercicios-2019-y-siguientes-v13.xls.extracted.md does not print 1 box(es) edition 2019-y-siguientes declares (e.g. [109]), so its inventory cannot be trusted"
 
 [[refusal]]
 modelo = "308"
 revision = "2019-y-siguientes"
 casilla = "decl.req-cuota-13"
 category = "absence_unclassified"
-reason = "design corpus/aeat_official/disenos_registro/modelo_308/files/04-308-orden-eha-1033-2011-ejercicios-2016-hasta-2018.xls has no bundled extract"
+reason = "corpus/aeat_official/disenos_registro/modelo_308/files/01-308-ejercicios-2019-y-siguientes-v13.xls.extracted.md does not print 1 box(es) edition 2019-y-siguientes declares (e.g. [109]), so its inventory cannot be trusted"
 
 [[refusal]]
 modelo = "308"
 revision = "2019-y-siguientes"
 casilla = "decl.req-base-14"
 category = "absence_unclassified"
-reason = "design corpus/aeat_official/disenos_registro/modelo_308/files/04-308-orden-eha-1033-2011-ejercicios-2016-hasta-2018.xls has no bundled extract"
+reason = "corpus/aeat_official/disenos_registro/modelo_308/files/01-308-ejercicios-2019-y-siguientes-v13.xls.extracted.md does not print 1 box(es) edition 2019-y-siguientes declares (e.g. [109]), so its inventory cannot be trusted"
 
 [[refusal]]
 modelo = "308"
 revision = "2019-y-siguientes"
 casilla = "decl.req-tipo-15"
 category = "absence_unclassified"
-reason = "design corpus/aeat_official/disenos_registro/modelo_308/files/04-308-orden-eha-1033-2011-ejercicios-2016-hasta-2018.xls has no bundled extract"
+reason = "corpus/aeat_official/disenos_registro/modelo_308/files/01-308-ejercicios-2019-y-siguientes-v13.xls.extracted.md does not print 1 box(es) edition 2019-y-siguientes declares (e.g. [109]), so its inventory cannot be trusted"
 
 [[refusal]]
 modelo = "308"
 revision = "2019-y-siguientes"
 casilla = "decl.req-cuota-16"
 category = "absence_unclassified"
-reason = "design corpus/aeat_official/disenos_registro/modelo_308/files/04-308-orden-eha-1033-2011-ejercicios-2016-hasta-2018.xls has no bundled extract"
+reason = "corpus/aeat_official/disenos_registro/modelo_308/files/01-308-ejercicios-2019-y-siguientes-v13.xls.extracted.md does not print 1 box(es) edition 2019-y-siguientes declares (e.g. [109]), so its inventory cannot be trusted"
 
 [[refusal]]
 modelo = "308"
 revision = "2019-y-siguientes"
 casilla = "decl.req-iva-devolver-17"
 category = "absence_unclassified"
-reason = "design corpus/aeat_official/disenos_registro/modelo_308/files/04-308-orden-eha-1033-2011-ejercicios-2016-hasta-2018.xls has no bundled extract"
+reason = "corpus/aeat_official/disenos_registro/modelo_308/files/01-308-ejercicios-2019-y-siguientes-v13.xls.extracted.md does not print 1 box(es) edition 2019-y-siguientes declares (e.g. [109]), so its inventory cannot be trusted"
 
 [[refusal]]
 modelo = "309"
@@ -80335,70 +80335,6 @@ revision = "2022"
 casilla = "iva.anual.repercutido.tipo-4.cuota"
 category = "printed_box_fork"
 reason = "the predecessor edition declares printed box [2] on ['iva.anual.repercutido.super-reducido']; identity is read from form_number alone and lineage is one-to-one, so this is not an absence"
-
-[[refusal]]
-modelo = "390"
-revision = "2024"
-casilla = "iva.anual.repercutido.recargo.tipo-0-62.base"
-predecessor = "iva.anual.repercutido.recargo.tipo-0-62.base"
-category = "role_absent"
-reason = "no semantic_role on the predecessor row; identity cannot be established on role"
-
-[[refusal]]
-modelo = "390"
-revision = "2024"
-casilla = "iva.anual.repercutido.recargo.tipo-0.base"
-predecessor = "iva.anual.repercutido.recargo.tipo-0.base"
-category = "role_absent"
-reason = "no semantic_role on the predecessor row; identity cannot be established on role"
-
-[[refusal]]
-modelo = "390"
-revision = "2024"
-casilla = "iva.anual.repercutido.recargo.tipo-0.cuota"
-predecessor = "iva.anual.repercutido.recargo.tipo-0.cuota"
-category = "role_absent"
-reason = "no semantic_role on the predecessor row; identity cannot be established on role"
-
-[[refusal]]
-modelo = "390"
-revision = "2025"
-casilla = "iva.anual.repercutido.recargo.tipo-0-26.base"
-predecessor = "iva.anual.repercutido.recargo.tipo-0-26.base"
-category = "role_absent"
-reason = "no semantic_role on the predecessor row; identity cannot be established on role"
-
-[[refusal]]
-modelo = "390"
-revision = "2025"
-casilla = "iva.anual.repercutido.recargo.tipo-0-62.base"
-predecessor = "iva.anual.repercutido.recargo.tipo-0-62.base"
-category = "role_absent"
-reason = "no semantic_role on the predecessor row; identity cannot be established on role"
-
-[[refusal]]
-modelo = "390"
-revision = "2025"
-casilla = "iva.anual.repercutido.recargo.tipo-0.base"
-predecessor = "iva.anual.repercutido.recargo.tipo-0.base"
-category = "role_absent"
-reason = "no semantic_role on the predecessor row; identity cannot be established on role"
-
-[[refusal]]
-modelo = "390"
-revision = "2025"
-casilla = "iva.anual.repercutido.recargo.tipo-0.cuota"
-predecessor = "iva.anual.repercutido.recargo.tipo-0.cuota"
-category = "role_absent"
-reason = "no semantic_role on the predecessor row; identity cannot be established on role"
-
-[[refusal]]
-modelo = "390"
-revision = "2025"
-casilla = "iva.anual.repercutido.recargo.tipo-1.base"
-predecessor = "iva.anual.repercutido.recargo.tipo-1.base"
-category = "role_absent"
-reason = "no semantic_role on the predecessor row; identity cannot be established on role"
 
 [[refusal]]
 modelo = "490"

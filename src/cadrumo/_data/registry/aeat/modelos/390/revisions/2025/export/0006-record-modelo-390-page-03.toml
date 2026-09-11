@@ -10,6 +10,58 @@ line_ending = 'crlf'
 required = true
 
 [[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-390-page-03-casilla-deducible-intragrupo-inversion-total-base'
+offset = 931
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.deducible.intragrupo-inversion.total.base'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = [
+    'ley-37-1992:art-107',
+    'ley-37-1992:art-163-nonies',
+    'ley-37-1992:art-163-sexies',
+    'ley-37-1992:art-92',
+    'ley-37-1992:art-94',
+    'ley-37-1992:art-95',
+    'ley-37-1992:art-97',
+    'ley-37-1992:art-99',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-390-page-03-casilla-deducible-intragrupo-inversion-total-cuota'
+offset = 948
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.deducible.intragrupo-inversion.total.cuota'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = [
+    'ley-37-1992:art-107',
+    'ley-37-1992:art-163-nonies',
+    'ley-37-1992:art-163-sexies',
+    'ley-37-1992:art-92',
+    'ley-37-1992:art-94',
+    'ley-37-1992:art-95',
+    'ley-37-1992:art-97',
+    'ley-37-1992:art-99',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
 id = 'modelo-390-page-03-casilla-deducible-importaciones-corrientes21-base-tipo-2-base'
 offset = 965
 length = 17
@@ -20,6 +72,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-86',
     'ley-37-1992:art-92',
@@ -42,6 +95,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-86',
     'ley-37-1992:art-92',
@@ -64,6 +118,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-86',
     'ley-37-1992:art-92',
@@ -86,6 +141,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-86',
     'ley-37-1992:art-92',
@@ -108,6 +164,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-86',
     'ley-37-1992:art-92',
@@ -130,6 +187,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-86',
     'ley-37-1992:art-92',
@@ -152,6 +210,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-86',
     'ley-37-1992:art-92',
@@ -174,6 +233,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-86',
     'ley-37-1992:art-92',
@@ -196,6 +256,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-86',
     'ley-37-1992:art-92',
@@ -218,6 +279,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-86',
     'ley-37-1992:art-92',
@@ -240,6 +302,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-86',
     'ley-37-1992:art-92',
@@ -262,6 +325,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-86',
     'ley-37-1992:art-92',
@@ -284,6 +348,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-86',
     'ley-37-1992:art-92',
@@ -306,6 +371,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-17',
     'ley-37-1992:art-92',
@@ -325,6 +391,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-107',
@@ -350,6 +417,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-107',
@@ -375,6 +443,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-86',
@@ -399,6 +468,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-86',
@@ -423,6 +493,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-107',
@@ -448,6 +519,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-107',
@@ -473,6 +545,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-107',
@@ -498,6 +571,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-107',
@@ -523,6 +597,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-86',
@@ -547,6 +622,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-86',
@@ -571,6 +647,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-86',
@@ -595,6 +672,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-86',
@@ -619,6 +697,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-86',
@@ -643,6 +722,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-86',
@@ -667,6 +747,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-85',
     'ley-37-1992:art-92',
@@ -689,6 +770,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-85',
     'ley-37-1992:art-92',
@@ -711,6 +793,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-85',
     'ley-37-1992:art-92',
@@ -733,6 +816,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-85',
     'ley-37-1992:art-92',
@@ -755,6 +839,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-85',
     'ley-37-1992:art-92',
@@ -777,6 +862,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-85',
     'ley-37-1992:art-92',
@@ -799,6 +885,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-85',
     'ley-37-1992:art-92',
@@ -821,6 +908,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-85',
     'ley-37-1992:art-92',
@@ -843,6 +931,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-85',
     'ley-37-1992:art-92',
@@ -865,6 +954,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-85',
     'ley-37-1992:art-92',
@@ -887,6 +977,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-85',
     'ley-37-1992:art-92',
@@ -909,6 +1000,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-85',
     'ley-37-1992:art-92',
@@ -931,6 +1023,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-85',
     'ley-37-1992:art-92',
@@ -953,6 +1046,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = [
     'ley-37-1992:art-85',
     'ley-37-1992:art-92',

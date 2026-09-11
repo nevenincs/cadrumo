@@ -1,0 +1,39 @@
+[[revisions.2026-y-siguientes.export_layouts]]
+id = 'generated-modelo-303-2026-y-siguientes-fichero'
+
+[[revisions.2026-y-siguientes.export_layouts.records]]
+id = 'm303-declaration'
+record_type = 'declaracion'
+order = 0
+encoding = 'iso-8859-1'
+line_ending = 'crlf'
+required = true
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30301.f088'
+offset = 1557
+length = 13
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm303-2026.dp30301.f089'
+offset = 1570
+length = 12
+kind = 'literal'
+literal = '</T30301000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.row_field_casilla_ids]

@@ -132,6 +132,7 @@ required = true
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'four-digit-year'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
@@ -161,6 +162,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'enumerated-digits'
 allowed_values = [
     '1',
@@ -180,6 +182,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'enumerated-digits'
 allowed_values = [
     '1',
@@ -199,6 +202,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'enumerated-digits'
 allowed_values = [
     '1',
@@ -219,6 +223,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'enumerated-digits'
 allowed_values = [
     '1',
@@ -238,6 +243,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'enumerated-digits'
 allowed_values = [
     '1',
@@ -257,6 +263,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'enumerated-digits'
 allowed_values = [
     '1',
@@ -276,6 +283,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -290,6 +298,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -304,6 +313,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'enumerated-digits'
 allowed_values = [
     '1',
@@ -351,6 +361,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'enumerated-digits'
 allowed_values = [
     '1',
@@ -370,6 +381,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -384,6 +396,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -398,6 +411,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'enumerated-digits'
 allowed_values = [
     '0',
@@ -419,6 +433,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -448,6 +463,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -463,6 +479,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -477,6 +494,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'enumerated-digits'
 allowed_values = ['0']
 legal_refs = ['orden-eha-3786-2008:art-1']
@@ -494,6 +512,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -509,6 +528,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -538,6 +558,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -553,6 +574,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -567,6 +589,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'enumerated-digits'
 allowed_values = ['0']
 legal_refs = ['orden-eha-3786-2008:art-1']
@@ -584,6 +607,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -599,6 +623,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -628,6 +653,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -643,6 +669,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -672,6 +699,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -687,6 +715,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -702,6 +731,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -717,6 +747,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -732,6 +763,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -746,6 +778,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -760,6 +793,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -775,6 +809,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -804,6 +839,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -819,6 +855,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -833,6 +870,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'enumerated-digits'
 allowed_values = ['50']
 legal_refs = ['orden-eha-3786-2008:art-1']
@@ -850,6 +888,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -865,6 +904,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -894,6 +934,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -909,6 +950,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -938,6 +980,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -953,6 +996,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -982,6 +1026,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -996,6 +1041,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -1010,6 +1056,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -1024,6 +1071,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -1039,6 +1087,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -1054,6 +1103,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -1069,6 +1119,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -1084,6 +1135,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -1099,6 +1151,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -1114,6 +1167,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -1129,6 +1183,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -1144,6 +1199,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -1159,6 +1215,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -1174,6 +1231,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -1189,6 +1247,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -1204,6 +1263,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -1218,6 +1278,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -1232,6 +1293,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -1246,6 +1308,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -1260,6 +1323,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -1274,6 +1338,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -1288,6 +1353,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -1302,6 +1368,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 
@@ -1314,33 +1381,6 @@ data_type = 'text'
 required = false
 padding = 'right_space'
 justification = 'left'
-signed = false
-legal_refs = ['orden-eha-3786-2008:art-1']
-source_refs = ['aeat-dr-303-2026']
-
-[[revisions.2026-y-siguientes.export_layouts.records.fields]]
-id = 'm303-2026.dp30301.f088'
-offset = 1557
-length = 13
-kind = 'filler'
-data_type = 'text'
-required = false
-padding = 'right_space'
-justification = 'left'
-signed = false
-legal_refs = ['orden-eha-3786-2008:art-1']
-source_refs = ['aeat-dr-303-2026']
-
-[[revisions.2026-y-siguientes.export_layouts.records.fields]]
-id = 'm303-2026.dp30301.f089'
-offset = 1570
-length = 12
-kind = 'literal'
-literal = '</T30301000>'
-data_type = 'text'
-required = true
-padding = 'none'
-justification = 'none'
 signed = false
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']

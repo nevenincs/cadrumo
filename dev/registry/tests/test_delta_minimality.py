@@ -101,6 +101,57 @@ def test_the_live_corpus_names_modelos_that_restate_their_casillas(authority: Va
     assert all(item.predecessor is not None for item in restated)
 
 
+def _edition_keyed_pair(
+    definition: ModeloDefinition, predecessor_id: str, successor_id: str
+) -> tuple[ModeloDefinition, str, str]:
+    """Plant a binding identifier re-keyed to each edition on one real restated row pair.
+
+    Binding identifiers in the corpus are edition-free, so a restated row's
+    binding is already equal as written. The plant appends each edition's own
+    key as a whole identifier segment to the successor row and to the
+    predecessor row it continues, which is the form an edition-keyed identifier
+    takes. Returns the planted definition, the planted casilla id, and the
+    edition-free binding the plant started from.
+    """
+    predecessor, successor = definition.revisions[predecessor_id], definition.revisions[successor_id]
+    chains = {str(item.continuidad_id): item for item in predecessor.casillas if item.continuidad_id}
+    restated = {
+        item.casilla
+        for item in judge_definition(definition, modelo_id=_MODELO)
+        if item.revision == successor_id and item.kind == "restated_unchanged"
+    }
+    row = next(
+        item
+        for item in successor.casillas
+        if str(item.id) in restated
+        and item.binding is not None
+        and item.continuidad_id is not None
+        and chains[str(item.continuidad_id)].binding == item.binding
+    )
+    inherited = chains[str(row.continuidad_id)]
+    binding = row.binding
+    assert binding is not None
+    assert successor_id not in binding and predecessor_id not in binding, "the chosen binding already embeds an edition"
+
+    def _rekeyed(revision: ModeloRevision, target: str, edition: str) -> ModeloRevision:
+        casillas = tuple(
+            item.model_copy(update={"binding": f"{binding}-{edition}"}) if str(item.id) == target else item
+            for item in revision.casillas
+        )
+        return revision.model_copy(update={"casillas": casillas})
+
+    planted = definition.model_copy(
+        update={
+            "revisions": {
+                **definition.revisions,
+                predecessor.id: _rekeyed(predecessor, str(inherited.id), predecessor_id),
+                successor.id: _rekeyed(successor, str(row.id), successor_id),
+            }
+        }
+    )
+    return planted, str(row.id), binding
+
+
 def test_restatement_is_found_through_the_edition_tokens_not_in_spite_of_them(
     authority: ValidatedRegistryAuthority,
 ) -> None:
@@ -110,13 +161,13 @@ def test_restatement_is_found_through_the_edition_tokens_not_in_spite_of_them(
     its own edition key - which is exactly what a raw comparison would have
     reported as a change. The screen names the row; the raw dumps disagree.
     """
-    definition = authority.modelo(_MODELO)
-    successor, predecessor = definition.revisions["2024"], definition.revisions["2019-2023"]
+    planted, casilla_id, binding = _edition_keyed_pair(authority.modelo(_MODELO), "2019-2023", "2024")
+    successor, predecessor = planted.revisions["2024"], planted.revisions["2019-2023"]
     by_id = {str(item.id): item for item in successor.casillas}
     chains = {str(item.continuidad_id): item for item in predecessor.casillas if item.continuidad_id}
     restated = [
         item
-        for item in judge_definition(definition, modelo_id=_MODELO)
+        for item in judge_definition(planted, modelo_id=_MODELO)
         if item.revision == "2024" and item.kind == "restated_unchanged"
     ]
     assert restated
@@ -131,11 +182,13 @@ def test_restatement_is_found_through_the_edition_tokens_not_in_spite_of_them(
         for item in raw_differs
         if by_id[item.casilla].binding != chains[str(by_id[item.casilla].continuidad_id)].binding
     ]
-    assert rekeyed, "no restated row carries a binding identifier re-keyed to its own edition"
+    assert [str(item.id) for item in rekeyed] == [casilla_id], (
+        "the restated rows re-keyed to their own edition must be exactly the planted one"
+    )
     row = rekeyed[0]
     inherited = chains[str(row.continuidad_id)]
-    assert row.binding is not None
-    assert "2024" in row.binding
+    assert row.binding == f"{binding}-2024"
+    assert inherited.binding == f"{binding}-2019-2023"
     assert inheritable_value(row, successor)["binding"] == inheritable_value(inherited, predecessor)["binding"]
 
     # Normalisation removes the edition token and nothing else: a binding

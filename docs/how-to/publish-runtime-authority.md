@@ -1,76 +1,71 @@
 # How to publish a validated runtime authority
 
-Use this guide when you release Cadrumo's tax-rule authority. Publication turns
-validated Agencia Estatal de Administración Tributaria (AEAT) modelo rules into
-the signed artifact the runtime expects for calculations and filing exports.
-It is a release operation, not an `aeat` command for taxpayers. Complete the
-isolated-package gate before treating an artifact as released.
+Use this guide when you change Cadrumo's tax-rule registry or its legal
+evidence. Publication turns validated Agencia Estatal de Administración
+Tributaria (AEAT) modelo rules into the artifact the runtime reads for
+calculations and filing exports. It is a development and release operation,
+not an `aeat` command for taxpayers.
 
-For the artifact format, validation receipt, runtime checks, error classes, and
-Python application programming interface (API), see [Registry, legal sources, and Python API](../reference/registry-legal-api.md).
+The artifact is generated output. It isn't signed and needs no key. It records
+a digest of its own content and the identity of the registry and evidence it
+was compiled from, so the registry gate can tell when it is out of date.
+
+For the artifact format, runtime checks, error classes, and Python application
+programming interface (API), see [Registry, legal sources, and Python API](../reference/registry-legal-api.md).
 For an ordinary installed-command failure, use [Diagnose and repair](troubleshooting.md).
-
-## Prepare the release inputs
-
-1. Start with a clean development candidate that passes the registry validation
-   suite. Supply its registry root and its source-evidence root to the
-   publisher.
-2. Select the package destination for the authority artifact. The runtime
-   looks for `registry/authority/authority.json` in its bundled data.
-3. Arrange for your organization's approved release-secret system to provide
-   the matching Ed25519 private key only to the release process. Cadrumo does
-   doesn't configure a secret provider for this key.
-4. Confirm that the release integration provides all four publisher inputs:
-   `registry_root`, `source_root`, `artifact_path`, and
-   `signing_private_key_hex`.
-
-Never write, print, commit, or attach the private key to a release record.
-The package's public verification key is compiled into runtime code, not
-stored beside the artifact as a replaceable key file.
 
 ## Publish
 
-1. Have the release integration obtain the private key at process execution
-   time through the approved secret system.
-2. Call `publish_authority_candidate_workflow` with the four prepared inputs.
-   The publisher validates the exact candidate and signs the authority
-   artifact. It then replaces the destination atomically.
-3. If validation is refused or the candidate receipt changes, treat the
-   publication as failed. Don't replace the existing artifact by hand. Correct the
-   candidate, then start a new publication.
+1. Start from a registry that passes the registry validation suite.
+2. From the repository root, run:
 
-The publisher never records a private key. It refuses a candidate that changes
-during validation or before publication, and leaves the previous artifact
-unchanged.
+   ```powershell
+   uv run --no-sync python -m dev.registry.pipeline publish-authority
+   ```
 
-## Verify the release
+   The command validates the bundled registry and its source evidence, then
+   atomically replaces `src/cadrumo/_data/registry/authority/authority.json`.
+   It prints the artifact path and the identity digest it recorded.
+   `--registry-root`, `--source-root`, and `--artifact` select other trees or
+   another destination.
+3. Commit the regenerated `authority.json` together with the registry change
+   that required it.
 
-1. Build an isolated installed package that contains the new artifact. Treat
-   this as an outstanding release gate until the package includes the artifact.
-2. Run a supported command-line interface (CLI) calculation or filing workflow
-   against that installation.
-3. Confirm the `bundled_authority()` load used by that workflow does not fall
-   back to authoring validation, source compilation, or repair.
-4. If development registry sources change after publication, repeat the
-   installed workflow before republishing. The artifact-backed registry
-   authority must remain unchanged. Only a later successful validation and
-   publication can change that authority.
+If validation is refused, or the registry changes while it is being
+validated, publication fails and leaves the previous artifact byte-for-byte in
+place. Don't edit the artifact by hand. Correct the registry, then publish again.
+
+## Check that the artifact is current
+
+Run the registry gate:
+
+```powershell
+just check-registry
+```
+
+Its first step, `python -m dev.registry.conformance integrity`, exits 1 with a
+refusal on standard error when the artifact is stale, unreadable, or in an
+earlier format. The refusal names the recorded and the expected identity
+digests and the command that republishes the artifact.
+
+The identity depends only on file content and on paths relative to the
+registry and source roots. A fresh clone on any platform therefore agrees with
+the publisher. A change to the compiler's code that doesn't touch the registry
+or its evidence doesn't make the artifact stale. The full-registry publication
+round-trip test covers the compiler itself.
 
 ## Recover from an invalid authority
 
-When an installed workflow refuses an unavailable, malformed, altered,
-untrusted, or unsupported-version artifact, stop the workflow. The
-`bundled_authority()` load doesn't compile authoring sources or repair an
-artifact as a fallback.
+When an installed workflow refuses an unavailable, malformed, altered, or
+unsupported-version artifact, stop the workflow. The `bundled_authority()`
+load doesn't compile authoring sources or repair an artifact as a fallback.
 
 1. Preserve the failed artifact when it is present, plus the package version,
    artifact digest, error class, and redacted logs.
-2. Correct the development candidate or release configuration. Do not modify
-   the installed artifact to bypass the refusal.
-3. Repeat development validation and the secret-backed publication.
-4. Repeat the isolated installed-package workflow before releasing the
-   replacement.
+2. Republish from a validated registry, and confirm that `just check-registry`
+   passes.
+3. Rebuild the package so it contains the replacement artifact.
 
 Escalate through the [project issue tracker](https://github.com/nevenincs/cadrumo/issues)
 with the release version, artifact digest, error class, and redacted log
-context. Never include a private key or taxpayer data.
+context. Never include taxpayer data.

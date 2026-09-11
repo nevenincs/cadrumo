@@ -45,11 +45,12 @@ if TYPE_CHECKING:
     # Type-only: importing these at runtime would close the cycle the local
     # imports below exist to avoid. The registry's binding modules consume the
     # public IVA facade, and these loaders are part of that facade.
+    from ..calculations.registry.authority import ValidatedRegistryAuthority
     from ..calculations.registry.schema_references import LegalReference, SourceReference
 
 
-def registry_catalogues() -> tuple[Mapping[str, LegalReference], Mapping[str, SourceReference]]:
-    """Return catalogue facts from the one signed runtime authority.
+def registry_catalogues() -> tuple[Mapping[str, LegalReference], Mapping[str, SourceReference], Path]:
+    """Return catalogues from the published runtime authority, or from the compilation in progress.
 
     Source trees are compiler input, never a product-time verification source.
     """
@@ -59,52 +60,17 @@ def registry_catalogues() -> tuple[Mapping[str, LegalReference], Mapping[str, So
     return authority.catalogues.legal, authority.catalogues.sources
 
 
-def legal_ref_failures(
-    row: str,
-    reference_ids: Iterable[str],
-    legal: Mapping[str, LegalReference],
-    verified: set[str],
-) -> list[str]:
-    """Resolve signed legal evidence for one runtime row, memoising passed ids.
-
-    Accumulating rather than raising, so one load reports every ungrounded row
-    it found instead of the first. A caller that raises on the first failure
-    turns a table with four broken citations into four successive debugging
-    rounds.
-
-    Args:
-        row: A label identifying the row, quoted verbatim into each failure.
-        reference_ids: The provision identifiers the row cites.
-        legal: The legal catalogue the identifiers must resolve in.
-        verified: Ids already verified in this load, extended in place. Shared
-            across rows because evidence resolution is deterministic per signed
-            authority artifact.
-
-    Returns:
-        One message per failure, empty when every citation verified.
-    """
-    from ..calculations.registry.authority import bundled_authority
-
-    authority = bundled_authority()
-    failures: list[str] = []
-    for ref_id in reference_ids:
-        if ref_id in verified:
-            continue
-        reference = legal.get(ref_id)
-        if reference is None:
-            failures.append(f"{row}: unknown legal_ref {ref_id!r}")
-            continue
-        try:
-            authority.legal_evidence_text(ref_id)
-        except Exception as exc:
-            failures.append(f"{row}: invalid legal_ref {ref_id!r}: {exc}")
-            continue
-        verified.add(ref_id)
-    return failures
-
-
 def verify_table_legal_refs(table: str, citations: Sequence[tuple[str, Sequence[str]]]) -> None:
     """Verify every citation a registry table's rows carry, or refuse the table.
+
+    Outside a compilation, each cited provision must be catalogued in the published
+    authority and its declared ``required_text`` and ``forbidden_text`` must hold
+    in the anchor text the authority publishes for it. No corpus path is
+    opened: the evidence is the publisher-validated text the artifact carries.
+
+    Inside a compilation there is no published evidence yet; the cited provisions
+    must be catalogued in the authority being compiled, whose compiler verifies
+    every catalogue entry against the corpus before anything is published.
 
     Args:
         table: The table's name, used to head the refusal.
@@ -113,16 +79,66 @@ def verify_table_legal_refs(table: str, citations: Sequence[tuple[str, Sequence[
 
     Raises:
         IvaCatalogueError: When any cited provision is absent from the legal
-            catalogue, or is present but does not resolve to bundled legal text
-            carrying its declared ``required_text`` at its declared anchor. The
-            message enumerates every failure rather than the first.
+            catalogue, has no published evidence, or its published anchor text breaks
+            one of its declared clauses. The message enumerates every failure
+            rather than the first.
     """
-    legal, _sources = registry_catalogues()
-    verified: set[str] = set()
+    compiling = compiling_catalogues_in_scope()
+    if compiling is not None:
+        legal, evidence = compiling[0], None
+    else:
+        # Local import keeps the public IVA facade outside the registry's
+        # binding import cycle.
+        from ..calculations.registry.authority import bundled_authority
+
+        evidence = bundled_authority()
+        legal = evidence.catalogues.legal
+    checked: set[str] = set()
     failures: list[str] = []
     for row, reference_ids in citations:
-        failures.extend(legal_ref_failures(row, reference_ids, legal, verified))
+        failures.extend(_citation_failures(row, reference_ids, legal, evidence, checked))
     if failures:
         raise IvaCatalogueError(
             f"{table}: legal grounding verification failed:\n" + "\n".join(f" - {failure}" for failure in failures),
         )
+
+
+def _citation_failures(
+    row: str,
+    reference_ids: Iterable[str],
+    legal: Mapping[str, LegalReference],
+    evidence: ValidatedRegistryAuthority | None,
+    checked: set[str],
+) -> list[str]:
+    """Return one message per citation of ``row`` that fails, memoising the ids that pass."""
+    from ...core.corpus_text import normalise_corpus_text
+    from ..calculations.registry.authority_artifact import AuthorityArtifactFormatError
+
+    failures: list[str] = []
+    for ref_id in reference_ids:
+        if ref_id in checked:
+            continue
+        reference = legal.get(ref_id)
+        if reference is None:
+            failures.append(f"{row}: unknown legal_ref {ref_id!r}")
+            continue
+        if evidence is not None:
+            try:
+                anchored_text = evidence.legal_evidence_text(ref_id)
+            except AuthorityArtifactFormatError as exc:
+                failures.append(f"{row}: legal_ref {ref_id!r} has no published evidence: {exc}")
+                continue
+            broken = [
+                f"missing required text {required!r}"
+                for required in reference.required_text
+                if normalise_corpus_text(required) not in anchored_text
+            ] + [
+                f"contains forbidden text {forbidden!r}"
+                for forbidden in reference.forbidden_text
+                if normalise_corpus_text(forbidden) in anchored_text
+            ]
+            if broken:
+                failures.append(f"{row}: invalid legal_ref {ref_id!r}: published evidence " + "; ".join(broken))
+                continue
+        checked.add(ref_id)
+    return failures

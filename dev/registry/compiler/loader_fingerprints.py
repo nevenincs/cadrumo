@@ -141,7 +141,7 @@ def collect_registry_tree_fingerprints_for_cache(
 
     For the package-bundled tree the per-file rows carry an empty content digest
     by construction (read-only package data, see
-    :func:`~domain.calculations.registry.loader_cache.is_bundled_registry_path`),
+    :func:`~dev.registry.compiler.loader_cache.is_bundled_registry_path`),
     and its window is a declared bound on how often the 17k-entry walk is
     redone rather than a claim about file content, so the directory-level check
     is the whole of what its entry asserts. A mutable authoring tree's rows DO

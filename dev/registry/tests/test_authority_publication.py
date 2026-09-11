@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core.ed25519_signing import generate_ed25519_keypair_hex
 from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityArtifact,
     read_authority_artifact,
@@ -26,6 +25,8 @@ from dev.registry.conformance.tests._loader_directory_mode_support import (
 )
 
 from ..pipeline.authority_publication import (
+    AuthorityArtifactCurrencyStatus,
+    authority_artifact_currency,
     publish_validated_authority_candidate,
     validate_authority_candidate,
 )
@@ -180,59 +181,60 @@ def _stage_valid_candidate(root: Path) -> None:
     write_fragmented_revision(revision_dir, _REVISION)
 
 
-def test_staged_candidate_publishes_and_the_trusted_reader_consumes_it(
+def test_staged_candidate_publishes_and_the_reader_consumes_it_as_current(
     tmp_path: Path, isolated_provider_registration: None
 ) -> None:
-    """The pipeline workflow compiles a real candidate into an authenticated reader payload."""
+    """The pipeline workflow compiles a real candidate that the currency gate then accepts."""
     candidate_root = tmp_path / "candidate"
     _stage_valid_candidate(candidate_root)
-    keys = generate_ed25519_keypair_hex()
     artifact_path = tmp_path / "published" / "authority.json"
 
     published = publish_authority_candidate_workflow(
         registry_root=candidate_root / "registry" / "aeat",
         source_root=candidate_root,
         artifact_path=artifact_path,
-        signing_private_key_hex=keys.private_key_hex,
     )
 
-    consumed = read_authority_artifact(artifact_path, verification_public_key_hex=keys.public_key_hex)
+    consumed = read_authority_artifact(artifact_path)
+    currency = authority_artifact_currency(
+        artifact_path,
+        registry_root=candidate_root / "registry" / "aeat",
+        source_root=candidate_root,
+    )
 
     assert consumed == published
     assert consumed.modelos[0].id == "999"
+    assert currency.status is AuthorityArtifactCurrencyStatus.CURRENT
+    assert currency.recorded_identity_digest == published.identity_digest
 
 
 def test_published_legal_evidence_answers_citation_queries_after_its_source_is_gone(
     tmp_path: Path, isolated_provider_registration: None
 ) -> None:
-    """A signed artifact carries the validated anchor needed by a runtime citation."""
+    """A published artifact carries the validated anchor needed by a runtime citation."""
     candidate_root = tmp_path / "candidate"
     _stage_valid_candidate(candidate_root)
-    keys = generate_ed25519_keypair_hex()
     artifact_path = tmp_path / "published" / "authority.json"
 
     publish_authority_candidate_workflow(
         registry_root=candidate_root / "registry" / "aeat",
         source_root=candidate_root,
         artifact_path=artifact_path,
-        signing_private_key_hex=keys.private_key_hex,
     )
     legal_source = candidate_root / "corpus" / "test" / "test-ley-001.html.extracted.json"
     legal_source.unlink()
 
-    consumed = read_authority_artifact(artifact_path, verification_public_key_hex=keys.public_key_hex)
+    consumed = read_authority_artifact(artifact_path)
 
     assert consumed.evidence.quotation_is_grounded("test-ley-001:art-1", "test provision text")
 
 
 def test_defective_candidate_refuses_before_replacing_the_previous_artifact(tmp_path: Path) -> None:
     """A real compiler refusal leaves the prior published artifact byte-for-byte intact."""
-    keys = generate_ed25519_keypair_hex()
     artifact_path = tmp_path / "authority.json"
     write_authority_artifact(
         artifact_path,
         _previous_publication(),
-        signing_private_key_hex=keys.private_key_hex,
     )
     previous_bytes = artifact_path.read_bytes()
 
@@ -241,7 +243,6 @@ def test_defective_candidate_refuses_before_replacing_the_previous_artifact(tmp_
             registry_root=tmp_path / "defective-registry",
             source_root=tmp_path / "defective-sources",
             artifact_path=artifact_path,
-            signing_private_key_hex=keys.private_key_hex,
         )
 
     assert artifact_path.read_bytes() == previous_bytes
@@ -253,12 +254,10 @@ def test_divergent_record_design_manifest_identity_refuses_and_preserves_the_pre
     """The publish workflow refuses a registry source that no longer binds its manifest artifact."""
     candidate_root = tmp_path / "candidate"
     _stage_valid_candidate(candidate_root)
-    keys = generate_ed25519_keypair_hex()
     artifact_path = tmp_path / "authority.json"
     write_authority_artifact(
         artifact_path,
         _previous_publication(),
-        signing_private_key_hex=keys.private_key_hex,
     )
     previous_bytes = artifact_path.read_bytes()
     manifest_path = candidate_root / "corpus" / "aeat_official" / "disenos_registro" / "modelo_999" / "manifest.json"
@@ -275,7 +274,6 @@ def test_divergent_record_design_manifest_identity_refuses_and_preserves_the_pre
             registry_root=candidate_root / "registry" / "aeat",
             source_root=candidate_root,
             artifact_path=artifact_path,
-            signing_private_key_hex=keys.private_key_hex,
         )
 
     assert artifact_path.read_bytes() == previous_bytes
@@ -287,12 +285,10 @@ def test_equal_length_timestamp_restored_source_replacement_refuses_and_preserve
     """A content replacement cannot hide behind a matching evidence stat fingerprint."""
     candidate_root = tmp_path / "candidate"
     _stage_valid_candidate(candidate_root)
-    keys = generate_ed25519_keypair_hex()
     artifact_path = tmp_path / "authority.json"
     write_authority_artifact(
         artifact_path,
         _previous_publication(),
-        signing_private_key_hex=keys.private_key_hex,
     )
     previous_bytes = artifact_path.read_bytes()
     candidate = validate_authority_candidate(
@@ -316,7 +312,6 @@ def test_equal_length_timestamp_restored_source_replacement_refuses_and_preserve
         publish_validated_authority_candidate(
             candidate,
             artifact_path=artifact_path,
-            signing_private_key_hex=keys.private_key_hex,
         )
 
     assert artifact_path.read_bytes() == previous_bytes
@@ -328,12 +323,10 @@ def test_candidate_change_after_validation_refuses_and_preserves_the_previous_ar
     """A registry edit cannot replace an artifact compiled from an earlier candidate receipt."""
     candidate_root = tmp_path / "candidate"
     _stage_valid_candidate(candidate_root)
-    keys = generate_ed25519_keypair_hex()
     artifact_path = tmp_path / "authority.json"
     write_authority_artifact(
         artifact_path,
         _previous_publication(),
-        signing_private_key_hex=keys.private_key_hex,
     )
     previous_bytes = artifact_path.read_bytes()
     candidate = validate_authority_candidate(
@@ -347,7 +340,6 @@ def test_candidate_change_after_validation_refuses_and_preserves_the_previous_ar
         publish_validated_authority_candidate(
             candidate,
             artifact_path=artifact_path,
-            signing_private_key_hex=keys.private_key_hex,
         )
 
     assert artifact_path.read_bytes() == previous_bytes

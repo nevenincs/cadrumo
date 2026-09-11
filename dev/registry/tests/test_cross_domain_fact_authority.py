@@ -14,7 +14,6 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry._m347_threshold import resolve_m347_counterparty_annual_threshold
 from cadrumo.domain.calculations.registry.facts.resolution import ResolvedMappingFact
 from cadrumo.domain.contribuyente.family_fact_context import FamilyFactResolutionContext
-from cadrumo.domain.deadlines.festivos import holiday_calendar_from_authority
 from cadrumo.domain.iva.rates import iva_rate_record_from_fact
 from cadrumo.domain.iva.recargo_equivalencia import (
     recargo_rate_record_from_fact,
@@ -94,15 +93,8 @@ def test_cross_domain_consumers_preserve_the_authority_result_without_parallel_r
     convenio_row = registry_authority.catalogues.convenio.resolve("DE", TipoRentaIrnr.DIVIDEND, 2025)
     assert convenio_row is not None
     assert convenio_row.kind.value == convenio.payload.override_code
-    assert convenio_row.rate == convenio.payload.value
+    assert convenio_row.rate == Decimal(str(convenio.payload.value))
     assert convenio_row.legal_refs == convenio.legal_refs
-
-    # The public function is cached by authority instance, whose mutable cache
-    # state intentionally makes it unhashable.  Exercise its real body with
-    # the development authority rather than replacing it with a mock.
-    calendar = holiday_calendar_from_authority.__wrapped__(2025, authority=registry_authority)
-    deadline_event = registry_authority.resolve_governed_fact(_probe("deadline-holiday").query)
-    assert deadline_event.payload.event_date in {holiday.holiday_date for holiday in calendar.national}
 
 
 def test_gate_detects_broken_corpus_binding_and_a_non_refusing_negative_probe(

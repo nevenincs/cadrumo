@@ -1,9 +1,9 @@
 """The catalogues a registry compilation validates IVA grounding against.
 
-Runtime reads catalogue facts only from the signed authority artifact. Compiling
+Runtime reads catalogue facts only from the published authority artifact. Compiling
 that authority checks IVA grounding before any artifact can exist, so the
 compiler scopes the check to the catalogues it is compiling. Outside that scope
-nothing is supplied and the signed artifact remains the only source.
+nothing is supplied and the published artifact remains the only source.
 """
 
 from __future__ import annotations

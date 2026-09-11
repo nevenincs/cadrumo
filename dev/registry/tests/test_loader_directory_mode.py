@@ -52,6 +52,7 @@ from dev.registry.conformance.tests._loader_directory_mode_support import (
     _standard_manifest_text,
     _standard_revision_preamble_text,
     _write_standard_manifest,
+    write_minimal_shared_catalogues,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -443,6 +444,102 @@ required_text = ["first provision"]
         match=r"duplicate catalogue ids legal=\['ley-test:art-1'\] sources=\[\]",
     ):
         load_shared_catalogues(tmp_path)
+
+
+def test_shared_catalogues_reject_noncanonical_parameter_key(tmp_path: Path) -> None:
+    """The TOML map key must pass the canonical ParameterId boundary."""
+
+    legal_dir = tmp_path / "legal"
+    legal_dir.mkdir()
+    (legal_dir / "parameters.toml").write_text(
+        """
+[parameters."bad id with spaces"]
+evidence_tier = "legal_authority"
+value = "0.21"
+unit = "fraction"
+applies_to = "test-case"
+legal_refs = ["ley-test:art-1"]
+review_status = "pending_review"
+reviewed_at = 2026-06-28
+reviewed_by = "registry-test"
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        RegistryLoadError,
+        match=r"invalid legal parameter 'bad id with spaces'",
+    ):
+        load_shared_catalogues(tmp_path)
+
+
+def test_shared_catalogues_preserves_valid_parameter_key_identity(tmp_path: Path) -> None:
+    """A valid TOML key is the identity of the loaded typed parameter."""
+
+    legal_dir = tmp_path / "legal"
+    legal_dir.mkdir()
+    (legal_dir / "catalogue.toml").write_text(
+        """
+[legal."ley-test:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/test/ley-test.html#art-1"
+document_id = "BOE-TEST-001"
+article = "1"
+permalink = "https://example.com/ley-test"
+effective_from = 2026-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "registry-test"
+required_text = ["test provision"]
+
+[parameters."test-rate"]
+evidence_tier = "legal_authority"
+value = "0.21"
+unit = "fraction"
+applies_to = "test-case"
+legal_refs = ["ley-test:art-1"]
+review_status = "pending_review"
+reviewed_at = 2026-06-28
+reviewed_by = "registry-test"
+""".lstrip(),
+        encoding="utf-8",
+    )
+    write_minimal_shared_catalogues(legal_dir, years=(2026,))
+
+    parameters = load_shared_catalogues(tmp_path).parameters
+
+    assert tuple(parameters) == ("test-rate",)
+    assert parameters["test-rate"].id == "test-rate"
+
+
+def test_registry_tree_rejects_parameter_unknown_legal_refs(tmp_path: Path) -> None:
+    """The full registry merge validates legal-parameter legal refs before returning."""
+
+    legal_dir = tmp_path / "legal"
+    legal_dir.mkdir()
+    (tmp_path / "modelos").mkdir()
+    (legal_dir / "parameters.toml").write_text(
+        """
+[parameters."test-rate"]
+evidence_tier = "legal_authority"
+value = "0.21"
+unit = "fraction"
+applies_to = "test-case"
+legal_refs = ["ley-test:art-1"]
+review_status = "pending_review"
+reviewed_at = 2026-06-28
+reviewed_by = "registry-test"
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        RegistryLoadError,
+        match=r"legal parameter 'test-rate' references unknown legal id 'ley-test:art-1'",
+    ):
+        load_registry_tree(tmp_path)
 
 
 def test_committed_key_modelos_load_through_generic_fragment_sources() -> None:

@@ -10,6 +10,35 @@ line_ending = 'crlf'
 required = true
 
 [[revisions.2026-desde-02.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f096'
+offset = 874
+length = 9
+kind = 'binding'
+binding = 'modelo-353-2026.page_01.874-882.entidad-16-entidades-dependientes-n-i-f'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-desde-02.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f097'
+offset = 883
+length = 17
+kind = 'binding'
+binding = 'modelo-353-2026.page_01.883-899.entidad-16-entidades-dependientes-resultado'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-desde-02.export_layouts.records.fields]]
 id = 'm353-2026.pagina01.f098'
 offset = 900
 length = 5
@@ -21,6 +50,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 value_policy = 'implied-decimal'
 legal_refs = ['orden-eha-3434-2007:art-8']
 source_refs = ['aeat-dr-353-2026']
@@ -77,6 +107,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = ['orden-eha-3434-2007:art-8']
 source_refs = ['aeat-dr-353-2026']
 
@@ -92,6 +123,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 value_policy = 'implied-decimal'
 legal_refs = ['orden-eha-3434-2007:art-8']
 source_refs = ['aeat-dr-353-2026']
@@ -148,6 +180,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = ['orden-eha-3434-2007:art-8']
 source_refs = ['aeat-dr-353-2026']
 
@@ -163,6 +196,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 value_policy = 'implied-decimal'
 legal_refs = ['orden-eha-3434-2007:art-8']
 source_refs = ['aeat-dr-353-2026']
@@ -219,6 +253,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = ['orden-eha-3434-2007:art-8']
 source_refs = ['aeat-dr-353-2026']
 
@@ -234,6 +269,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 value_policy = 'implied-decimal'
 legal_refs = ['orden-eha-3434-2007:art-8']
 source_refs = ['aeat-dr-353-2026']
@@ -290,6 +326,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = ['orden-eha-3434-2007:art-8']
 source_refs = ['aeat-dr-353-2026']
 
@@ -305,6 +342,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 value_policy = 'implied-decimal'
 legal_refs = ['orden-eha-3434-2007:art-8']
 source_refs = ['aeat-dr-353-2026']
@@ -347,6 +385,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = ['orden-eha-3434-2007:art-8']
 source_refs = ['aeat-dr-353-2026']
 
@@ -362,6 +401,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3434-2007:art-8']
 source_refs = ['aeat-dr-353-2026']
 
@@ -377,6 +417,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3434-2007:art-8']
 source_refs = ['aeat-dr-353-2026']
 
@@ -392,6 +433,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3434-2007:art-8']
 source_refs = ['aeat-dr-353-2026']
 
@@ -406,6 +448,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = ['orden-eha-3434-2007:art-8']
 source_refs = ['aeat-dr-353-2026']
 
@@ -420,6 +463,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = ['orden-eha-3434-2007:art-8']
 source_refs = ['aeat-dr-353-2026']
 
@@ -435,6 +479,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3434-2007:art-8']
 source_refs = ['aeat-dr-353-2026']
 
@@ -449,6 +494,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = ['orden-eha-3434-2007:art-8']
 source_refs = ['aeat-dr-353-2026']
 

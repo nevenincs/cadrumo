@@ -68,6 +68,30 @@ not_on_form = [
 ]
 
 [[ruling]]
+modelo = "390"
+predecessor = "2023"
+successor = "2024"
+rationale = "The 2024 design moves the recargo de equivalencia block onto its own record, from position 13, and prints each of these boxes under the same campo description as the 2023 design: Recargo de equivalencia Tipo 0% Base imponible [663], Tipo 0% Cuota [664] and Tipo 0,62% Base imponible [665]."
+grounded = [
+  "iva.anual.repercutido.recargo.tipo-0.base>iva.anual.repercutido.recargo.tipo-0.base",
+  "iva.anual.repercutido.recargo.tipo-0.cuota>iva.anual.repercutido.recargo.tipo-0.cuota",
+  "iva.anual.repercutido.recargo.tipo-0-62.base>iva.anual.repercutido.recargo.tipo-0-62.base",
+]
+
+[[ruling]]
+modelo = "390"
+predecessor = "2024"
+successor = "2025"
+rationale = "The 2025 design keeps the recargo de equivalencia record of the 2024 design campo for campo, at the same positions and under the same descriptions: Tipo 0% Base imponible [663], Tipo 0% Cuota [664], Tipo 0,26% Base imponible [691], Tipo 0,62% Base imponible [665] and Tipo 1% Base imponible [693]."
+grounded = [
+  "iva.anual.repercutido.recargo.tipo-0.base>iva.anual.repercutido.recargo.tipo-0.base",
+  "iva.anual.repercutido.recargo.tipo-0.cuota>iva.anual.repercutido.recargo.tipo-0.cuota",
+  "iva.anual.repercutido.recargo.tipo-0-26.base>iva.anual.repercutido.recargo.tipo-0-26.base",
+  "iva.anual.repercutido.recargo.tipo-0-62.base>iva.anual.repercutido.recargo.tipo-0-62.base",
+  "iva.anual.repercutido.recargo.tipo-1.base>iva.anual.repercutido.recargo.tipo-1.base",
+]
+
+[[ruling]]
 modelo = "490"
 predecessor = "2022-1t"
 successor = "2022-2t-4t"

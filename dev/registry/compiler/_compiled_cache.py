@@ -50,6 +50,7 @@ from typing import Final, NamedTuple, TypeGuard
 
 from pydantic import BaseModel, TypeAdapter
 
+import cadrumo
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.atomic_write import atomic_write_best_effort_bytes
 from cadrumo.core.directory_scan import iter_directory, scan_directory
@@ -82,20 +83,38 @@ _LOGGER = logging.getLogger(__name__)
 
 _REGISTRY_TREE_CACHE_SCHEMA_VERSION = "legal-parameter-refs-v1"
 
-_COMPILER_PACKAGE_DIR: Final[Path] = Path(__file__).resolve().parent
-"""Development compiler source hashed wholesale for cache invalidation."""
+_CADRUMO_PACKAGE_DIR: Final[Path] = Path(cadrumo.__file__).resolve().parent
+"""The ``cadrumo`` package root, resolved from the imported package itself.
 
-_REGISTRY_PACKAGE_DIR: Final[Path] = Path(inspect.getsourcefile(ModeloDefinition)).resolve().parent
-"""Runtime typed-registry source hashed wholesale with compiler source."""
+Deliberately NOT derived from this file's own path: this module lives under
+``dev/registry/compiler/``, outside ``src/cadrumo`` entirely, so a path
+relative to ``__file__`` can never reach the ``cadrumo`` root. Resolving from
+``cadrumo.__file__`` is stable across a package relocation on either side.
+"""
 
-_CADRUMO_PACKAGE_DIR: Final[Path] = _REGISTRY_PACKAGE_DIR.parents[2]
-"""The ``cadrumo`` package root (``registry`` -> ``calculations`` -> ``domain`` -> ``cadrumo``).
+_REGISTRY_PACKAGE_DIR: Final[Path] = _CADRUMO_PACKAGE_DIR / "domain" / "calculations" / "registry"
+"""The compiled schema/model package -- the source surface hashed wholesale below.
 
 The boundary that separates a FIRST-PARTY embedded type (hashed) from a stdlib
 or third-party one (not ours to invalidate on). ``test_package_roots_are_the_real_directories``
-pins the parent count so a package relocation reds loudly instead of silently
-classifying every first-party type as foreign.
+pins this to the real directory so a package relocation reds loudly instead of
+silently classifying every first-party type as foreign.
 """
+
+_DEV_COMPILER_DIR: Final[Path] = Path(__file__).resolve().parent
+"""The dev compiler package directory (``dev/registry/compiler``).
+
+The compiled payload's shape is produced by this compiler as much as by the
+schema package above: a compiler change can alter compiled semantics from
+identical TOML just as a schema change can, so its source is hashed alongside
+:data:`_REGISTRY_PACKAGE_DIR` in :func:`_compute_loader_code_fingerprint`. It
+plays no role in the first-party/foreign-type boundary -- that boundary is
+about types embedded in the compiled Pydantic models, and the compiler itself
+defines none of those.
+"""
+
+_LOADER_CODE_SOURCE_ROOTS: Final[tuple[Path, ...]] = (_REGISTRY_PACKAGE_DIR, _DEV_COMPILER_DIR)
+"""Every source directory whose bytes are hashed wholesale into the loader-code fingerprint."""
 
 _UNDERIVABLE_EMBEDDED_TYPES_MARKER: Final[str] = "embedded-foreign-types-underivable"
 """Folded into the key when the derivation itself fails, keeping it deterministic."""
@@ -238,8 +257,10 @@ def _compute_loader_code_fingerprint(roots: Iterable[type[BaseModel]] | None = N
     remembers to bump it. Folding a content hash of the source into the cache key
     closes the gap automatically:
 
-    * every registry-package module (excluding its tests) -- the schema models,
-      the compiler, and the resolvers; and
+    * every module under the compiled schema/model package (excluding its
+      tests) AND every module of the dev compiler that turns TOML into those
+      models (excluding its tests) -- the schema models, the compiler, and the
+      resolvers; and
     * every first-party type embedded in the compiled objects from OUTSIDE the
       registry package, DERIVED from the compiled models' own annotations by
       :func:`_derive_embedded_foreign_types` rather than remembered in a hand
@@ -261,14 +282,15 @@ def _compute_loader_code_fingerprint(roots: Iterable[type[BaseModel]] | None = N
     """
     hasher = hashlib.sha256()
     try:
-        for source_root, label in ((_COMPILER_PACKAGE_DIR, "compiler"), (_REGISTRY_PACKAGE_DIR, "runtime-registry")):
-            for path in scan_directory(
+        for source_root in _LOADER_CODE_SOURCE_ROOTS:
+            source_files = scan_directory(
                 source_root,
                 pattern="*.py",
                 recursive=True,
                 prune_directories=("tests",),
-            ):
-                hasher.update(label.encode("utf-8"))
+            )
+            hasher.update(source_root.name.encode("utf-8"))
+            for path in source_files:
                 hasher.update(path.relative_to(source_root).as_posix().encode("utf-8"))
                 hasher.update(path.read_bytes())
     except OSError:

@@ -249,22 +249,22 @@ def test_shipped_data_inventory_refuses_a_named_path_absent_from_disk(tmp_path: 
         )
 
 
-def test_tracked_source_data_paths_refuses_a_missing_renta_pdf_allow_list_member(tmp_path: Path) -> None:
-    """A deleted Renta PDF allow-list file still fails the preflight, by name.
+def test_tracked_source_data_paths_refuses_a_missing_manual_pdf_floor_member(tmp_path: Path) -> None:
+    """A deleted manual PDF named by the presence floor still fails the preflight, by name.
 
     General shipped-data deletion is no longer detectable without a git index
     (see the sibling "reflects a deleted tracked file" test), but this
-    specific, enumerated allow-list is checked by membership rather than by
+    specific, enumerated floor is checked by membership rather than by
     comparing the inventory to itself, so a deletion inside it still fails
     closed -- the property `source_preflight` still has teeth for.
     """
     origin = tmp_path / "origin"
     origin.mkdir()
     _seed_shipped_data_repository(origin)
-    removed = next(iter(sorted(_RENTA_PDF_ALLOW_LIST)))
+    removed = next(iter(sorted(_MANUAL_PDF_PRESENCE_FLOOR)))
     (origin / removed).unlink()
 
-    with pytest.raises(SystemExit, match="missing Renta PDF allow-list files"):
+    with pytest.raises(SystemExit, match="missing required manual PDFs"):
         tracked_source_data_paths(origin)
 
 

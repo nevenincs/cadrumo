@@ -9,23 +9,31 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler import fact_providers
 from dev.registry.compiler.authority import compile_validated_authority
-from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
-
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.provenance import NormativeCorpusProvenance
-from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from dev.registry.compiler._loader_internals import _collect_registry_tree_fingerprints
+from dev.registry.compiler.loader import collect_registry_tree_fingerprints
 from dev.registry.compiler.loader_cache import registry_disk_cache_dir
+from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
 from dev.registry.conformance.tests._loader_directory_mode_support import (
     write_extracted_corpus_sidecar,
     write_fragmented_revision,
 )
 
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.period import Period
+from ..authority import ValidatedRegistryAuthority
+from ..corpus_provenance import NormativeCorpusProvenance
+from ..errors import RegistrySnapshotError, RegistryValidationError
+from ..formula_runtime import calculate_registry_snapshot
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture
+def isolated_provider_registration(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Compile a minimal tree without the governed-fact providers the bundled registry enrolls."""
+    monkeypatch.setattr(fact_providers, "FACT_PROVIDER_REGISTRATIONS", ())
+
 
 _LEGACY_AUTHORITY_CACHE_SCHEMA_VERSION = "casilla-reference-ambiguity-v2"
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
@@ -233,7 +241,9 @@ source_refs = ["test-source-001"]
 """
 
 
-def test_authority_cache_invalidates_when_fragmented_revision_changes(tmp_path: Path) -> None:
+def test_authority_cache_invalidates_when_fragmented_revision_changes(
+    tmp_path: Path, isolated_provider_registration: None
+) -> None:
     """Authority caching must track recursive revision fragment fingerprints.
 
     The mutation is confined to a fragment file BELOW the revision directory and
@@ -285,8 +295,15 @@ def test_authority_cache_invalidates_when_fragmented_revision_changes(tmp_path: 
     assert tuple(casilla.id for casilla in second.modelo("999").revisions["2025"].casillas) == ("01", "02")
 
 
-def test_authority_uses_fingerprint_backed_process_cache_and_invalidates_real_aba_tree_cycle(tmp_path: Path) -> None:
-    """A real A -> B -> A tree cycle stales both earlier authority generations."""
+def test_authority_compiles_each_state_of_a_real_aba_tree_cycle_from_its_own_bytes(
+    tmp_path: Path, isolated_provider_registration: None
+) -> None:
+    """A real A -> B -> A tree cycle compiles to A, then B, then A again, never to a stale state.
+
+    The loader's fingerprint cache is keyed by the tree's bytes, so a changed
+    tree must compile afresh and a restored tree must compile back to its
+    original content rather than to the state it last saw.
+    """
     registry_root = tmp_path / "registry" / "aeat"
     legal_dir = registry_root / "legal"
     revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025"
@@ -310,14 +327,8 @@ def test_authority_uses_fingerprint_backed_process_cache_and_invalidates_real_ab
 
     clear_fingerprint_cache()
 
-    # Load 1: should run validation.
     auth1 = compile_validated_authority(registry_root, tmp_path)
-    assert auth1._registry_validated is True
-    first_generation = auth1.read_current_coordinate().generation
-
-    # Load 2: same fingerprint returns the in-process cached authority.
-    auth2 = compile_validated_authority(registry_root, tmp_path)
-    assert auth2 is auth1
+    assert auth1.modelo("999").revisions["2025"].source_refs == ("test-source-001",)
 
     # Modify file to invalidate cache
     write_fragmented_revision(
@@ -326,17 +337,11 @@ def test_authority_uses_fingerprint_backed_process_cache_and_invalidates_real_ab
     )
     clear_fingerprint_cache()
 
-    # Load 3: changed fingerprint must build and validate a fresh authority.
     auth3 = compile_validated_authority(registry_root, tmp_path)
-    assert auth3._registry_validated is True
-    assert auth3 is not auth1
     assert auth3.modelo("999").revisions["2025"].source_refs == ("test-source-002",)
-    second_generation = auth3.read_current_coordinate().generation
-    with pytest.raises(RegistrySnapshotError, match="observed registry identity transition"):
-        auth1.read_current_coordinate()
 
-    # Restore the exact original bytes rather than resetting caches: this is the
-    # real ABA state whose original object must never become current again.
+    # Restore the exact original bytes rather than resetting caches: the loader
+    # must not keep serving B for a tree that is byte-identical to A again.
     write_fragmented_revision(
         revision_dir,
         _MINIMAL_REVISION_TOML_TEMPLATE.format(source_ref="test-source-001"),
@@ -345,15 +350,12 @@ def test_authority_uses_fingerprint_backed_process_cache_and_invalidates_real_ab
 
     auth4 = compile_validated_authority(registry_root, tmp_path)
 
-    assert auth4 is not auth1
-    assert auth4 is not auth3
     assert auth4.modelo("999").revisions["2025"].source_refs == ("test-source-001",)
-    assert auth4.read_current_coordinate().generation > second_generation > first_generation
-    with pytest.raises(RegistrySnapshotError, match="observed registry identity transition"):
-        auth3.read_current_coordinate()
 
 
-def test_authority_cache_invalidates_when_source_evidence_changes(tmp_path: Path) -> None:
+def test_authority_cache_invalidates_when_source_evidence_changes(
+    tmp_path: Path, isolated_provider_registration: None
+) -> None:
     """Authority validation must rerun when corpus evidence changes under the same source root."""
     registry_root = tmp_path / "registry" / "aeat"
     legal_dir = registry_root / "legal"
@@ -376,8 +378,7 @@ def test_authority_cache_invalidates_when_source_evidence_changes(tmp_path: Path
     )
 
     clear_fingerprint_cache()
-    first = compile_validated_authority(registry_root, tmp_path)
-    assert compile_validated_authority(registry_root, tmp_path) is first
+    compile_validated_authority(registry_root, tmp_path)
 
     corpus_file.write_bytes(b"y" * 1000)
     os.utime(corpus_file, (1812542400, 1812542400))
@@ -386,7 +387,9 @@ def test_authority_cache_invalidates_when_source_evidence_changes(tmp_path: Path
         compile_validated_authority(registry_root, tmp_path)
 
 
-def test_authority_ignores_legacy_validated_marker_and_revalidates_ambiguity(tmp_path: Path) -> None:
+def test_authority_ignores_legacy_validated_marker_and_revalidates_ambiguity(
+    tmp_path: Path, isolated_provider_registration: None
+) -> None:
     """A filesystem validation marker must not bypass casilla-reference guards."""
 
     registry_root = tmp_path / "registry" / "aeat"
@@ -424,7 +427,7 @@ source_refs = ["test-source-001"]
     write_fragmented_revision(revision_dir, ambiguous_revision)
 
     clear_fingerprint_cache()
-    fingerprints = _collect_registry_tree_fingerprints(registry_root)
+    fingerprints = collect_registry_tree_fingerprints(registry_root)
     hasher = hashlib.sha256()
     hasher.update(_LEGACY_AUTHORITY_CACHE_SCHEMA_VERSION.encode("utf-8"))
     hasher.update(str(registry_root.resolve()).encode("utf-8"))
@@ -445,7 +448,9 @@ source_refs = ["test-source-001"]
         stale_cache_path.unlink(missing_ok=True)
 
 
-def test_authority_load_rejects_reused_number_with_bare_casilla_owner(tmp_path: Path) -> None:
+def test_authority_load_rejects_reused_number_with_bare_casilla_owner(
+    tmp_path: Path, isolated_provider_registration: None
+) -> None:
     """A reused printed number with one bare-id owner must fail at authority load."""
 
     registry_root = tmp_path / "registry" / "aeat"

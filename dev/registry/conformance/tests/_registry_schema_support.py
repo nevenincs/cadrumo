@@ -32,8 +32,7 @@ from cadrumo.domain.calculations.registry.schema_surfaces import (
 )
 from cadrumo.tests.registry_snapshot import build_snapshot
 from dev.registry.compiler._loader_internals import load_modelo_file
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.compiler.loader import load_registry_tree
+from dev.registry.compiler.authority import compile_registry_tree, compiled_bundled_authority
 from dev.registry.compiler.validator import RegistryValidator
 from dev.registry.conformance.coverage import build_model_law_coverage_ledger
 
@@ -65,8 +64,9 @@ _NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_NUMERIC_CA
 
 @cache
 def _committed_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    return tuple(modelos), catalogues
+    # The compiled tree, so validation sees the governed facts and supplements
+    # the authority itself validates against, not the raw loader's catalogues.
+    return compile_registry_tree(_REGISTRY_ROOT, bundled_path())
 
 
 @cache
