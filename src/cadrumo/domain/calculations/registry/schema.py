@@ -32,6 +32,7 @@ from ....core.authority_grade import UNDECLARED_REGISTRY_AUTHORITY_GRADE, Regist
 from ....core.casilla_id import CasillaId
 from ....core.classification.policies import SensitivityClass
 from ....core.filing_projection_ref import FilingProjectionRef, filing_projection_ref_casilla_id
+from ....core.frozen_mapping import FROZEN_MAPPING
 from ....core.modelo import Modelo
 from ....core.period import Period, RegistrySelectorPeriodCode
 from ....core.revision_review import RevisionReviewStatus
@@ -970,8 +971,8 @@ class ModeloRevision(RegistryModel):
     continuidad_validation: ContinuidadValidationModeField = ContinuidadValidationMode.ADVISORY
     casilla_continuidad_evolutions: Annotated[tuple[CasillaContinuidadEvolutionDefinition, ...], SCHEMA_FAMILY] = ()
     authority_grade: Annotated[RegistryAuthorityGradeField | None, MANIFEST_ONLY] = None
-    family_dispositions: Annotated[Mapping[str, SchemaFamilyDispositionDeclaration], MANIFEST_ONLY] = Field(
-        default_factory=dict,
+    family_dispositions: Annotated[Mapping[str, SchemaFamilyDispositionDeclaration], MANIFEST_ONLY, FROZEN_MAPPING] = (
+        Field(default_factory=dict, validate_default=True)
     )
     engineered_by: Annotated[str | None, GOVERNANCE_STAMP] = None
     review_status: Annotated[RevisionReviewStatusField, GOVERNANCE_STAMP] = RevisionReviewStatus.PENDING_REVIEW
@@ -1213,7 +1214,7 @@ class ModeloDefinition(RegistryModel):
     capabilities: Annotated[frozenset[ModeloFilingCapability], BeforeValidator(frozenset)] = frozenset()
     legal_refs: LegalRefs
     source_refs: SourceRefs
-    revisions: Mapping[RevisionId, ModeloRevision]
+    revisions: Annotated[Mapping[RevisionId, ModeloRevision], FROZEN_MAPPING]
 
     def get_title(self, locale: str) -> str:
         """Resolve the Modelo title from the shared catalogue."""
@@ -1378,13 +1379,16 @@ class SociedadesAnnualManualCoverageCatalogue(RegistryModel):
 class RegistryCatalogues(RegistryModel):
     """Collect the registry-wide legal, source, fact, parameter, and support catalogues."""
 
-    legal: Mapping[LegalRefId, LegalReference]
-    sources: Mapping[SourceRefId, SourceReference]
-    parameters: Mapping[str, LegalParameter] = Field(default_factory=dict)
+    legal: Annotated[Mapping[LegalRefId, LegalReference], FROZEN_MAPPING]
+    sources: Annotated[Mapping[SourceRefId, SourceReference], FROZEN_MAPPING]
+    parameters: Annotated[Mapping[str, LegalParameter], FROZEN_MAPPING] = Field(
+        default_factory=dict, validate_default=True
+    )
     facts: GovernedFactCatalogue = Field(default_factory=GovernedFactCatalogue)
     convenio: ConvenioAuthority = Field(default_factory=ConvenioAuthority.empty)
-    supplementary_ordenes: Mapping[Modelo, M303AnnualOrdenAuthority] = Field(
+    supplementary_ordenes: Annotated[Mapping[Modelo, M303AnnualOrdenAuthority], FROZEN_MAPPING] = Field(
         default_factory=dict[Modelo, M303AnnualOrdenAuthority],
+        validate_default=True,
     )
     supported_filing_years: SupportedFilingYearsCatalogue | None = None
     sociedades_annual_manual_coverage: SociedadesAnnualManualCoverageCatalogue | None = None

@@ -11,6 +11,7 @@ from typing import Annotated, Final, Literal
 
 from pydantic import BeforeValidator, Field, ValidationInfo, field_validator, model_validator
 
+from .....core.frozen_mapping import FROZEN_MAPPING
 from ..errors import RegistryValidationError
 from ..schema_base import (
     DateAxisField,
@@ -407,7 +408,7 @@ class GovernedFact(RegistryModel):
 class GovernedFactCatalogue(RegistryModel):
     """Governed facts keyed by their stable semantic identity."""
 
-    facts: Mapping[FactId, GovernedFact] = Field(default_factory=dict)
+    facts: Annotated[Mapping[FactId, GovernedFact], FROZEN_MAPPING] = Field(default_factory=dict, validate_default=True)
 
     @model_validator(mode="after")
     def _validate_fact_keys(self) -> GovernedFactCatalogue:

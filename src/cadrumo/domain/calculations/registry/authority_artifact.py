@@ -1,7 +1,8 @@
 """Versioned, digest-checked publication format for a validated registry authority.
 
 Development writes the validated authority as canonical JSON; runtime reads it
-back and reconstructs fresh typed models. The artifact is generated output, not
+back into deeply immutable typed models, which it may share between callers
+while the file is unchanged. The artifact is generated output, not
 a signed document: it carries no signature, key, or certificate. Its digest
 detects a truncated, corrupted, or hand-edited file, and its recorded
 ``identity_digest`` names the registry and source-evidence inputs it was
@@ -28,6 +29,7 @@ refused by name.
 from __future__ import annotations
 
 import json
+import os
 import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -35,6 +37,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
 from pathlib import Path, PurePath
+from threading import Lock
 from typing import Final, cast, get_args
 
 from pydantic import BaseModel, ValidationError
@@ -54,6 +57,7 @@ __all__ = [
     "AuthorityEvidenceProjection",
     "PublishedLegalEvidence",
     "read_authority_artifact",
+    "read_shared_authority_artifact",
     "write_authority_artifact",
 ]
 
@@ -146,8 +150,9 @@ class AuthorityArtifact:
 
     ``identity_digest`` is the content-addressed identity of the registry and
     source-evidence inputs development validated to produce this authority.
-    Each read rebuilds this graph from the published JSON, isolating later reads
-    from a consumer's mutation of a prior result.
+    The graph is deeply immutable: its models are frozen and its mappings are
+    frozen mappings, so a consumer cannot change what any other holder of the
+    same instance observes.
     """
 
     modelos: tuple[ModeloDefinition, ...]
@@ -177,12 +182,65 @@ def write_authority_artifact(path: Path, artifact: AuthorityArtifact) -> None:
 
 
 def read_authority_artifact(path: Path) -> AuthorityArtifact:
-    """Read a published authority or fail closed without fallback."""
+    """Read, verify and decode a published authority from disk, failing closed without fallback."""
     try:
         raw = path.read_bytes()
     except OSError as exc:
         raise AuthorityArtifactUnavailableError(f"published authority artifact is unavailable at {path}") from exc
     return _decode_artifact(raw)
+
+
+@dataclass(frozen=True, slots=True)
+class _ArtifactFileIdentity:
+    """What a republication or in-place rewrite of the artifact file changes."""
+
+    device: int
+    inode: int
+    size: int
+    modified_ns: int
+    changed_ns: int
+
+
+_shared_artifact_lock = Lock()
+_shared_artifacts: dict[str, tuple[_ArtifactFileIdentity, AuthorityArtifact]] = {}
+
+
+def read_shared_authority_artifact(path: Path) -> AuthorityArtifact:
+    """Return the published authority at ``path``, decoding it only when the file changed.
+
+    The verified graph is deeply immutable -- every model is frozen and every
+    mapping a :class:`~cadrumo.core.frozen_mapping.FrozenMapping` -- so one
+    instance can be handed to every caller without any of them being able to
+    change what another observes. The file's identity (device, inode, size and
+    modification and change times) is read on every call, so an atomic
+    republication or an in-place rewrite is decoded and verified afresh rather
+    than served stale. A refused read is never cached: a missing or corrupt
+    artifact is refused on every call.
+    """
+    key = os.path.abspath(path)
+    identity = _artifact_file_identity(path)
+    with _shared_artifact_lock:
+        cached = _shared_artifacts.get(key)
+        if cached is not None and cached[0] == identity:
+            return cached[1]
+        _shared_artifacts.pop(key, None)
+        artifact = read_authority_artifact(path)
+        _shared_artifacts[key] = (identity, artifact)
+        return artifact
+
+
+def _artifact_file_identity(path: Path) -> _ArtifactFileIdentity:
+    try:
+        status = path.stat()
+    except OSError as exc:
+        raise AuthorityArtifactUnavailableError(f"published authority artifact is unavailable at {path}") from exc
+    return _ArtifactFileIdentity(
+        device=status.st_dev,
+        inode=status.st_ino,
+        size=status.st_size,
+        modified_ns=status.st_mtime_ns,
+        changed_ns=status.st_ctime_ns,
+    )
 
 
 def _encode_artifact(artifact: AuthorityArtifact) -> bytes:
