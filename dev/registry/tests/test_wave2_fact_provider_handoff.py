@@ -8,7 +8,6 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
-from dev.registry import maintenance_support as maintenance_support_module
 from dev.registry.compiler import fact_providers as provider_module
 from dev.registry.compiler.fact_providers import FACT_PROVIDER_REGISTRATIONS, compile_registered_fact_providers
 from dev.registry.maintenance_support import reset_registry_caches
@@ -21,7 +20,6 @@ _WAVE2_PROVIDER_IDS = (
     "convenio-overrides",
     "iva-rate-schedule",
     "legal-holiday-calendars",
-    "statutory-constants",
     "modelo-parameter-projections",
 )
 
@@ -72,8 +70,6 @@ def test_authority_reset_invokes_every_wave2_provider_reset(monkeypatch: pytest.
         for registration in FACT_PROVIDER_REGISTRATIONS
     )
     monkeypatch.setattr(provider_module, "FACT_PROVIDER_REGISTRATIONS", registrations)
-    monkeypatch.setattr(maintenance_support_module, "_invalidate_authority_generations", lambda: None)
-
     reset_registry_caches()
 
     assert resets == list(_WAVE2_PROVIDER_IDS)

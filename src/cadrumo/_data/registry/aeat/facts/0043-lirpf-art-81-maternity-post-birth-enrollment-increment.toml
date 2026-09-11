@@ -1,0 +1,19 @@
+[fact]
+fact_id = "lirpf-art-81-maternity-post-birth-enrollment-increment"
+family = "scalar"
+
+[[fact.variants]]
+variant_id = "lirpf-art-81-maternity-post-birth-enrollment-increment:2023-01-01"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+legal_refs = ["ley-35-2006:art-81"]
+source_refs = ["boe-lirpf-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-statutory-facts"
+required_text = ["150 euros"]
+[fact.variants.payload]
+kind = "scalar"
+value = 150
+unit = "eur"

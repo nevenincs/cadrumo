@@ -292,24 +292,6 @@ def _holiday_calendar_provider_registration() -> FactProviderRegistration:
     )
 
 
-def _statutory_constant_provider_registration() -> FactProviderRegistration:
-    from dev.registry.compiler.statutory_constants import (
-        STATUTORY_CONSTANTS_PROVIDER_DIRECTORY,
-        STATUTORY_CONSTANTS_PROVIDER_ID,
-        collect_statutory_constant_fingerprints,
-        compile_statutory_constant_facts,
-        reset_statutory_constant_provider,
-    )
-
-    return FactProviderRegistration(
-        provider_id=STATUTORY_CONSTANTS_PROVIDER_ID,
-        owned_directories=(STATUTORY_CONSTANTS_PROVIDER_DIRECTORY,),
-        compile=compile_statutory_constant_facts,
-        collect_fingerprints=collect_statutory_constant_fingerprints,
-        reset=reset_statutory_constant_provider,
-    )
-
-
 def _category_profile_provider_registration() -> FactProviderRegistration:
     from cadrumo.domain.categories.registry import (
         CATEGORY_FACT_PROVIDER_DIRECTORY,
@@ -366,7 +348,6 @@ FACT_PROVIDER_REGISTRATIONS = validate_fact_provider_registrations(
         ),
         _iva_rate_provider_registration(),
         _holiday_calendar_provider_registration(),
-        _statutory_constant_provider_registration(),
         _modelo_parameter_projection_registration(),
     ),
 )

@@ -1,13 +1,13 @@
 schema_version = 1
 wave = "W02"
-provider_denominator = "src/cadrumo/domain/calculations/registry/facts/providers.py:FACT_PROVIDER_REGISTRATIONS"
+provider_denominator = "dev/registry/compiler/fact_providers.py:FACT_PROVIDER_REGISTRATIONS"
 external_constants_ledger = "dev/registry/analysis/facts_external_constants_retirement.toml"
 iva_ledger = "dev/registry/analysis/facts_iva_retirement.toml"
 
 [[contracts]]
 provider_id = "authored-facts"
 family = "authored"
-denominator_source = "src/cadrumo/domain/calculations/registry/facts/providers.py:_compile_authored_facts"
+denominator_source = "dev/registry/compiler/fact_providers.py:_compile_authored_facts"
 query_type = "GovernedFactQuery"
 required_selectors = []
 temporal_axis = "declared_per_fact"
@@ -81,32 +81,6 @@ consumer_files = ["src/cadrumo/domain/deadlines"]
 legacy_facade = "business-day and holiday-domain facades remain"
 provenance_source = "calendars official BOE holiday rows"
 remaining_conditions = ["rewire deadline consumers", "do not infer years without an official publication"]
-
-[[contracts]]
-provider_id = "statutory-constants"
-family = "scalar"
-denominator_source = "dev/registry/analysis/facts_external_constants_retirement.toml:classifications[kind=governed_fact,family=scalar]"
-query_type = "ScalarFactQuery"
-required_selectors = []
-temporal_axis = "fact_specific"
-consumer_step = "W03.P10.S48,W03.P10.S49,W03.P11.S24,W03.P11.S25,W03.P11.S50,W03.P13.S53"
-consumer_files = ["src/cadrumo/domain", "src/cadrumo/application/modelo", "src/cadrumo/core"]
-legacy_facade = "existing domain calculations remain behaviorally identical while rewired"
-provenance_source = "official BOE/AEAT sources named by each variant"
-remaining_conditions = ["migrate every ledgered consumer", "delete declarations in W04.P16.S31", "retain excluded technical configuration"]
-
-[[contracts]]
-provider_id = "statutory-constants"
-family = "mapping"
-fact_ids = ["lirpf-work-income-multiple-pagadores-reduced-limit"]
-query_type = "MappingFactQuery"
-required_selectors = []
-temporal_axis = "filing_period"
-consumer_step = "W03.P11.S50"
-consumer_files = ["src/cadrumo/application/modelo"]
-legacy_facade = "current filing calculation remains until authority query migration"
-provenance_source = "LIRPF art. 96 official consolidated text"
-remaining_conditions = ["fail closed after 2026 until a published value is enrolled", "delete legacy schedule after migration"]
 
 [[contracts]]
 provider_id = "modelo-parameter-projections"

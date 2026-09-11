@@ -289,17 +289,6 @@ disposition = "delete_declaration_retain_modelo_projection"
 closure = "destination projection resolves with provenance; consumer list remains empty; declaration import count is zero"
 
 [[classifications]]
-symbol = "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_ANUAL_CAP_EUR"
-kind = "governed_fact"
-destination_id = "lirpf-art-81-maternity-post-birth-enrollment-annual-cap"
-destination_family = "scalar"
-authority = "src/cadrumo/core/external_constants.py:DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_ANUAL_CAP_EUR"
-counterparts = ["src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0067-renta-2025-maternidad-art-81-1.toml"]
-dependencies = ["W02.P08.S20", "W04.P16.S31"]
-disposition = "delete_derived_duplicate_declaration"
-closure = "annual cap is derived from resolved base and increment; consumer list remains empty; declaration import count is zero"
-
-[[classifications]]
 symbol = "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR"
 kind = "governed_fact"
 destination_id = "lirpf-art-81-maternity-post-birth-enrollment-effective-year"
@@ -609,12 +598,6 @@ consumers = []
 
 [[declarations]]
 symbol = "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_INCREMENTO_EUR"
-family = "scalar"
-migration_required = false
-consumers = []
-
-[[declarations]]
-symbol = "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_ANUAL_CAP_EUR"
 family = "scalar"
 migration_required = false
 consumers = []

@@ -12,11 +12,11 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.facts.modelo_parameter_fact import ModeloParameterFact
 from cadrumo.domain.calculations.registry.facts.schema import FactSelector
+from dev.registry.compiler.fact_loader import load_governed_facts
 from dev.registry.compiler.fact_providers import (
     FACT_PROVIDER_REGISTRATIONS,
     compile_registered_fact_providers,
 )
-from dev.registry.compiler.statutory_constants import compile_statutory_constant_facts
 
 _ROOT = Path(__file__).resolve().parents[3]
 _MANIFEST = _ROOT / "dev/registry/analysis/facts_wave2_provider_handoff.toml"
@@ -34,7 +34,7 @@ def test_handoff_covers_exact_live_provider_and_fact_family_denominator() -> Non
     registrations = {registration.provider_id: registration for registration in FACT_PROVIDER_REGISTRATIONS}
 
     assert {contract["provider_id"] for contract in contracts} == registrations.keys()
-    assert len(contracts) == 11
+    assert len(contracts) == 7
     assert all(contract.get("fact_ids") or contract.get("denominator_source") for contract in contracts)
     assert all(contract["remaining_conditions"] for contract in contracts)
 
@@ -74,7 +74,11 @@ def test_handoff_targets_live_wave3_steps_files_and_wave1_ledgers() -> None:
         (_ROOT / manifest["external_constants_ledger"]).read_text(encoding="utf-8"),
     )
     external_fact_ids = {row["destination_id"] for row in external["classifications"] if row["kind"] == "governed_fact"}
-    statutory_fact_ids = {fact.fact_id for fact in compile_statutory_constant_facts(bundled_path("registry", "aeat"))}
+    statutory_fact_ids = {
+        fact.fact_id
+        for fact in load_governed_facts(bundled_path("registry", "aeat", "facts"))
+        if fact.fact_id in external_fact_ids
+    }
     assert statutory_fact_ids == external_fact_ids - {"iva-general-rate"}
 
     iva = tomllib.loads((_ROOT / manifest["iva_ledger"]).read_text(encoding="utf-8"))

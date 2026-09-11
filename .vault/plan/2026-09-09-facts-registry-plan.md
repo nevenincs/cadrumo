@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-11'
 body_schema: body-v2
-body_hash: 'sha256:fb4f14aab20082fe0a4d83d8e785696c43953c7f89034e7bdd35b145f642785d'
+body_hash: 'sha256:d772ffbce85b2d6cb2941d06261bb98f3ccb26fc984bc6814b047f87a58d0e34'
 ---
 
 # `facts-registry` plan
@@ -185,7 +185,7 @@ Move authored facts into the normalized facts corpus where approved, remove dupl
 
 Move approved adapted data families and Python-held facts into one-fact-per-file normalized TOML while retaining source evidence.
 
-- [ ] `W04.P15.S29` - Author normalized scalar, decimal-mapping, and set fact fragments with exact typed payloads, applicability coordinates, and source evidence; `src/cadrumo/_data/registry/aeat/facts and src/cadrumo/domain/calculations/registry/facts/schema.py and dev/registry/compiler/fact_loader.py and dev/registry/tests`.
+- [x] `W04.P15.S29` - Replace the statutory Python fact adapter with normalized scalar and decimal-mapping fragments carrying exact typed payloads, effective applicability, and official source evidence; `src/cadrumo/_data/registry/aeat/facts and dev/registry/compiler/fact_providers.py and dev/registry/compiler/statutory_constants.py and dev/registry/tests and dev/registry/analysis/facts_external_constants_retirement.toml`.
 - [ ] `W04.P15.S30` - Normalize adapted families assigned to facts ownership; `src/cadrumo/_data/registry/aeat/facts`.
 
 ### Phase `W04.P16` - Delete Python legal constants and duplicate mappings
