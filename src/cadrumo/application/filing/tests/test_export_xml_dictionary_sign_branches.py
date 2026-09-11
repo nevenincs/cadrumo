@@ -29,7 +29,7 @@ from defusedxml import ElementTree as DefusedElementTree
 
 from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.export_parse import XmlDictionaryEntry, xml_dictionary_entries
-from ....tests.registry_tree import bundled_registry_tree
+from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from .._export_xml_dictionary import _modelo_100_sign_branch_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -65,7 +65,7 @@ from ....domain.modelos.repository import upsert_work_unit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.filing_evidence import general_m303_filing_evidence, regimen_simplificado_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.registry_observations import registry_grounded_observations
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import mutate_encrypted_secure_object_json
 from ...calculations.m303_regimen_simplificado_annual_summary import M303RegimenSimplificadoAnnualSummaryHandoffError
 from .._registry_helpers import assert_revision_content_integrity

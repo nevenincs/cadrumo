@@ -21,7 +21,7 @@ import pytest
 from pydantic import TypeAdapter
 from test_support.registry_authoring import load_modelo_directory
 
-from .....tests.registry_tree import bundled_registry_tree
+from .registry_tree import bundled_registry_tree
 from ..errors import RegistryLoadError
 from ..schema import DeclaredPredecessor, DeclaredPredecessorField, NoPredecessor
 from ._loader_directory_mode_support import _write_modelo as _shared_write_modelo

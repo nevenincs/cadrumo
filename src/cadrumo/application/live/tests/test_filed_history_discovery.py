@@ -32,7 +32,7 @@ from ....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ....core.period import Period
 from ....core.register_scoping_signal import RegisterScopingSignal
 from ....domain.deadlines.models import TaxpayerProfile
-from ....tests.registry_observations import revision_id_for_observation
+from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from .. import filed_data_capture as subject
 from ..filed_data_capture import (
     ExpectedFiledDeclarationGrid,
@@ -577,7 +577,7 @@ def _filed_130_observation_for_tests():
 def _stored_130_registry_observation(*, casilla_03: str):
     from ....core.casilla_id import validated_casilla_id
     from ....domain.calculations.registry.bindings import RegistryModeloObservation
-    from ....tests.registry_observations import registry_grounded_observations
+    from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 
     return RegistryModeloObservation(
         modelo="130",
@@ -617,7 +617,7 @@ def test_a_casilla_the_stored_revision_never_held_is_not_a_divergence() -> None:
     """
     from ....core.casilla_id import validated_casilla_id
     from ....domain.calculations.registry.bindings import RegistryModeloObservation
-    from ....tests.registry_observations import registry_grounded_observations
+    from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 
     stored_without_03 = RegistryModeloObservation(
         modelo="130",
@@ -666,7 +666,7 @@ def test_recapture_divergence_notices_absorbs_a_within_tolerance_change_end_to_e
     the proof is not confined to the pure comparator in isolation.
     """
     from ....domain.calculations.registry.bindings import RegistryModeloObservation
-    from ....tests.registry_observations import registry_grounded_observations
+    from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
     from ....tests.secure_sql import isolated_runtime_profile
     from ...calculations.observations_repository import CalculationObservationRepository
 
@@ -710,7 +710,7 @@ def test_recapture_divergence_notices_absorbs_a_within_tolerance_change_end_to_e
 def test_recapture_divergence_notices_fires_beyond_tolerance_end_to_end(tmp_path: Path) -> None:
     """The mutation-based counterpart: a genuine divergence still reaches the operator as a Notice."""
     from ....domain.calculations.registry.bindings import RegistryModeloObservation
-    from ....tests.registry_observations import registry_grounded_observations
+    from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
     from ....tests.secure_sql import isolated_runtime_profile
     from ...calculations.observations_repository import CalculationObservationRepository
 

@@ -25,7 +25,7 @@ from test_support.registry_authoring import load_modelo_directory
 from .....core.authority_grade import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
 from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_tree import bundled_registry_tree
+from .registry_tree import bundled_registry_tree
 from ..errors import RegistryLoadError
 from ..schema import (
     REVISION_GOVERNANCE_FIELDS,

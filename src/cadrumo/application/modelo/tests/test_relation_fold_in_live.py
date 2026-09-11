@@ -56,9 +56,9 @@ from ....domain.calculations.registry.formula_runtime import calculate_registry_
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.registry_observations import revision_id_for_observation
+from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from ....tests.registry_snapshot import build_snapshot
-from ....tests.registry_tree import bundled_registry_tree
+from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import (
     AggregationValidationError,

@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_tree import bundled_registry_tree
+from .registry_tree import bundled_registry_tree
 from ..schema import ModeloRevision
 from ._revision_span_design_support import (
     _BOX_MARKER,

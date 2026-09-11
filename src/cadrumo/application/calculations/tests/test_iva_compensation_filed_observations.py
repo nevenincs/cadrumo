@@ -23,7 +23,7 @@ from ....domain.iva_compensation.errors import (
     IvaCompensationSeedConflictError,
     IvaCompensationYearRangeError,
 )
-from ....tests.registry_observations import registry_grounded_modelo_observation, revision_id_for_observation
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ..errors import IvaCompensationModeloError
 from ..iva_compensation_history import (

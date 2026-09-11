@@ -9,7 +9,7 @@ import pytest
 
 from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_tree import bundled_registry_tree
+from .registry_tree import bundled_registry_tree
 from ._revision_span_coverage_support import (
     _covers_year,
     _current_filing_year,

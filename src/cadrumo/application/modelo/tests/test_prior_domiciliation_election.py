@@ -36,7 +36,7 @@ from ....domain.modelos.filing_record import (
 )
 from ....domain.modelos.filing_repository import upsert_filing_record
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....tests.registry_observations import revision_id_for_observation
+from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.m303_carry_ingress import M303_DECLARATION_TYPE_HEADER_KEY
 from .._prior_domiciliation import resolve_prior_domiciliation_election

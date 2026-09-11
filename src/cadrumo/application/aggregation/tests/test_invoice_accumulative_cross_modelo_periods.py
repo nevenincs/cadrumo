@@ -73,7 +73,7 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests import general_m303_filing_evidence
 from ....tests.bucket_aggregation_calculate import calculate_modelo_revision_from_bucket_aggregation
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.registry_observations import registry_grounded_observations
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ...calculations.observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
 from ...invoices.catalogue_creation import build_catalogue_invoice
 from ...invoices.transaction_linking import link_invoice_transaction_catalogues

@@ -37,7 +37,7 @@ import pytest
 from test_support.registry_authoring import validate_record_design_epoch_uniqueness, validate_record_design_epoch_window
 
 from .....core.record_design_epoch import RECORD_DESIGN_EPOCH_PATTERN
-from .....tests.registry_tree import bundled_registry_tree
+from .registry_tree import bundled_registry_tree
 from ....modelos.calculation_revision_m303_evidence import M303RegimenSimplificadoCalculationResult
 from ..errors import RegistryValidationError
 from ..schema_references import SourceReference

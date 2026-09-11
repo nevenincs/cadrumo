@@ -35,7 +35,7 @@ from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests import FIXTURES_DIR
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.registry_snapshot import build_snapshot
-from ....tests.registry_tree import bundled_registry_tree
+from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ....tests.user_profile import register_minimal_profile
 from ...workflow.persistence import workflow_state_repository

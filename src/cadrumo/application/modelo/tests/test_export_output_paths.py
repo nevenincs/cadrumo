@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ....tests.registry_observations import revision_id_for_observation
+from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from ._export_test_support import isolated_backend
 
 __all__ = ["isolated_backend"]

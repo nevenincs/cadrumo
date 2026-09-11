@@ -19,7 +19,7 @@ from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.relations import materialize_relation_binding_values
-from ....tests.registry_observations import (
+from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     registry_grounded_observations,
     revision_id_for_observation,

@@ -38,7 +38,7 @@ from ....domain.iva.schema import IvaCategory
 from ....domain.modelos.row_models import Modelo349ClaveOperacion, Modelo349CountryPrefixContextError
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.registry_tree import bundled_registry_tree
+from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import TestRuntimeProfile, isolated_two_bucket_runtime
 from ...aggregation import CalculationSourceContext
 from ..source_resolver import (

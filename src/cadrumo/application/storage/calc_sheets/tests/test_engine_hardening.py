@@ -13,7 +13,7 @@ from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.relations import relation_requirement_index, relation_source_requirements
 from .....domain.calculations.registry.schema import FormulaDefinition, RegistrySnapshot
 from .....tests.registry_snapshot import build_snapshot
-from .....tests.registry_tree import bundled_registry_tree
+from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ..engine import _rounding_rule_for, build_export_plan
 from ..errors import CalcSheetsEngineError
 from ..records import RelationValues

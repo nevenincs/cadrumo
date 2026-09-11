@@ -40,7 +40,7 @@ from ....domain.iva_compensation.filed_derivation import M303_COMPENSATION_RESUL
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
-from ....tests.registry_observations import registry_grounded_modelo_observation
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.observations_repository import CalculationObservationRepository, ResultDispositionProjection
 from ..calculation_actions import _resolve_bucket_source_mesh

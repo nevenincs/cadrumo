@@ -11,7 +11,7 @@ from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.resources.bundled_data import bundled_path
 from .....core.revision_review import RevisionReviewStatus
 from .....tests.registry_snapshot import build_validated_snapshot
-from .....tests.registry_tree import bundled_registry_tree
+from .registry_tree import bundled_registry_tree
 from .._snapshot_internals import _check_snapshot_filing_capability
 from ..errors import RegistryValidationError
 from ..export import derive_export_layouts_from_bindings

@@ -11,7 +11,7 @@ from test_support.registry_authoring import RegistryValidator, _committed_modelo
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_observations import registry_grounded_modelo_observation
+from .registry_observations import registry_grounded_modelo_observation
 from .....tests.registry_snapshot import build_snapshot
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..errors import RegistryValidationError

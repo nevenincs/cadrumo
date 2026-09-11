@@ -41,7 +41,7 @@ from test_support.registry_authoring import _committed_snapshot
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.money.rounding import round_to_cents
-from .....tests.registry_tree import bundled_registry_tree
+from .registry_tree import bundled_registry_tree
 from ..formula_runtime import calculate_registry_snapshot
 from ..temporal import select_revision
 
