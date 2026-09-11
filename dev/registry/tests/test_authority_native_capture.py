@@ -1,8 +1,8 @@
 """Concurrency and ownership proofs for native registry authority capture.
 
-Capture coordinates are minted by an authority reconstructed from a signed
-publication, the only authority the product runtime reads. These tests publish
-the compiled bundled modelo under a test key and load it through the same
+Capture coordinates are minted by an authority reconstructed from a published
+artifact, the only authority the product runtime reads. These tests publish
+the compiled bundled modelo into a staged package and load it through the same
 package-resource seam the runtime uses, so every capture below is taken from a
 real artifact-backed authority rather than a development compilation, which
 carries no capture incarnation at all.
@@ -26,7 +26,6 @@ import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.directory_scan import scan_directory
-from cadrumo.core.ed25519_signing import generate_ed25519_keypair_hex
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.identity import ContentDigest
 from cadrumo.domain.calculations.registry import authority as authority_module
@@ -78,16 +77,14 @@ class _AuthorityLifecycleProbe:
 
 @dataclass(frozen=True, slots=True)
 class _Publication:
-    """A signed, package-shaped authority publication and the key that verifies it."""
+    """A package-shaped authority publication staged under ``root``."""
 
     root: Path
-    public_key_hex: str
 
 
 def _publish(root: Path, *, identity_digest: str) -> _Publication:
-    """Sign the compiled bundled modelo under a fresh test key, laid out as the package resource."""
+    """Publish the compiled bundled modelo, laid out as the package resource."""
     compiled = compiled_bundled_authority()
-    keys = generate_ed25519_keypair_hex()
     artifact_path = root / "registry" / "authority" / "authority.json"
     artifact_path.parent.mkdir(parents=True)
     write_authority_artifact(
@@ -97,9 +94,8 @@ def _publish(root: Path, *, identity_digest: str) -> _Publication:
             catalogues=compiled.catalogues,
             identity_digest=identity_digest,
         ),
-        signing_private_key_hex=keys.private_key_hex,
     )
-    return _Publication(root=root, public_key_hex=keys.public_key_hex)
+    return _Publication(root=root)
 
 
 def _use_publication(monkeypatch: pytest.MonkeyPatch, publication: _Publication) -> None:
@@ -112,7 +108,6 @@ def _use_publication(monkeypatch: pytest.MonkeyPatch, publication: _Publication)
         return bundled_data_root.joinpath(*parts)
 
     monkeypatch.setattr(authority_module, "_bundled_path", staged_path)
-    monkeypatch.setattr(authority_module, "_BUNDLED_AUTHORITY_VERIFICATION_PUBLIC_KEY_HEX", publication.public_key_hex)
 
 
 @pytest.fixture(scope="module")
@@ -165,7 +160,7 @@ def test_native_capture_accepts_a_current_coordinate_from_its_own_domain(
 
 
 def test_a_development_compilation_mints_no_capture_coordinate() -> None:
-    """Only a signed publication can mint a coordinate; a compiled authority refuses rather than fabricating one."""
+    """Only a published artifact can mint a coordinate; a compiled authority refuses rather than fabricating one."""
     with pytest.raises(RegistrySnapshotError, match="another process incarnation"):
         compiled_bundled_authority().read_current_coordinate()
 
@@ -268,7 +263,7 @@ def test_native_capture_refuses_a_coordinate_from_a_distinct_publication(
     monkeypatch: pytest.MonkeyPatch,
     published_authority: ValidatedRegistryAuthority,
 ) -> None:
-    """Equal-looking generations from different signed publications cannot compare."""
+    """Equal-looking generations from different publications cannot compare."""
     capture = published_authority.capture_law_selected_projection(
         _MODEL0_ID,
         filing_year=_FILING_YEAR,
@@ -340,14 +335,13 @@ def test_native_capture_refuses_a_real_child_process_coordinate(
             "import sys",
             "from pathlib import Path",
             "from cadrumo.domain.calculations.registry import authority as authority_module",
-            "root, key = Path(sys.argv[1]), sys.argv[2]",
+            "root = Path(sys.argv[1])",
             "bundled_data_root = authority_module._bundled_path()",
             "def staged_path(*parts):",
             "    if parts[:2] == ('registry', 'authority'):",
             "        return root.joinpath(*parts)",
             "    return bundled_data_root.joinpath(*parts)",
             "authority_module._bundled_path = staged_path",
-            "authority_module._BUNDLED_AUTHORITY_VERIFICATION_PUBLIC_KEY_HEX = key",
             "current = authority_module.bundled_authority().read_current_coordinate()",
             "print(json.dumps({'comparison_domain': current.comparison_domain, 'generation': current.generation}))",
         )
@@ -356,7 +350,7 @@ def test_native_capture_refuses_a_real_child_process_coordinate(
     source_path = str(REPO_ROOT / "src")
     environment["PYTHONPATH"] = source_path + os.pathsep + environment.get("PYTHONPATH", "")
     child = subprocess.run(  # noqa: S603 - fixed interpreter and in-repository test program
-        (sys.executable, "-c", child_program, str(publication.root), publication.public_key_hex),
+        (sys.executable, "-c", child_program, str(publication.root)),
         cwd=REPO_ROOT,
         env=environment,
         capture_output=True,

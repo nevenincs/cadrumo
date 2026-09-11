@@ -11,7 +11,8 @@ Verbs:
 
 * ``report`` -- every conformance axis, one row per modelo revision.
 * ``coverage`` -- per-axis measured counts against their real populations.
-* ``integrity`` -- fail-closed registry and legal-corpus integrity gate.
+* ``integrity`` -- fail-closed registry, legal-corpus and authority-artifact
+  currency gate.
 * ``edition MODELO REVISION`` -- one edition as the complete edition it
   compiles to, with the provenance of every casilla row and the reach of its
   review stamp. A registry that declares no such modelo or edition is refused
@@ -69,14 +70,16 @@ from __future__ import annotations
 import json
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, NoReturn
 
 import typer
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_authority_artifact_path
 from dev.registry.compiler.authority import compile_validated_authority
 
 from ..compiler.legal_grounding import verify_legal_catalogue
+from ..pipeline.authority_publication import AuthorityArtifactCurrency, authority_artifact_currency
 from ._stamp import StampableReviewStatus, StampError, bundled_registry_root, stamp_revision
 from .edition import RegistryEditionView, read_registry_edition, render_registry_edition
 from .errors import RegistryApplicationInputError
@@ -166,15 +169,35 @@ def integrity(
         Path | None,
         typer.Option("--source-root", help="Source tree holding the legal corpus; defaults to bundled data."),
     ] = None,
+    authority_artifact: Annotated[
+        Path | None,
+        typer.Option(
+            "--authority-artifact",
+            help=(
+                "Published runtime authority artifact that must be current for the verified registry and "
+                "source trees; defaults to the bundled artifact."
+            ),
+        ),
+    ] = None,
 ) -> None:
-    """Fail closed on registry validity or a missing required legal-corpus quotation.
+    """Fail closed on a stale authority artifact, registry validity, or a missing legal-corpus quotation.
 
-    This is a development and release gate. It validates the complete registry
-    authority and every legal catalogue reference's declared corpus text; it
-    does not claim calculation or filing correctness.
+    This is a development and release gate. It first requires the published
+    runtime authority artifact to record the identity of the registry and
+    source evidence as they stand -- a stale or unreadable artifact exits 1
+    with a refusal on stderr -- then validates the complete registry authority
+    and every legal catalogue reference's declared corpus text. It does not
+    claim calculation or filing correctness.
     """
     resolved_registry_root = registry_root or bundled_path("registry", "aeat")
     resolved_source_root = source_root or bundled_path()
+    currency = authority_artifact_currency(
+        authority_artifact or bundled_authority_artifact_path(),
+        registry_root=resolved_registry_root,
+        source_root=resolved_source_root,
+    )
+    if not currency.is_current:
+        _refuse_authority_artifact(currency, as_json=as_json)
     authority = compile_validated_authority(resolved_registry_root, resolved_source_root)
     verify_legal_catalogue(authority.catalogues.legal, source_root=resolved_source_root)
     revision_count = sum(len(modelo.revisions) for modelo in authority.modelos)
@@ -188,6 +211,8 @@ def integrity(
                     "modelo_count": len(authority.modelos),
                     "revision_count": revision_count,
                     "legal_reference_count": len(authority.catalogues.legal),
+                    "authority_artifact": str(currency.artifact_path),
+                    "authority_identity_digest": currency.candidate_identity_digest,
                 },
                 indent=2,
             )
@@ -200,8 +225,31 @@ def integrity(
         "\tstatus=passed"
         f"\tmodelos={len(authority.modelos)}"
         f"\trevisions={revision_count}"
-        f"\tlegal_references={len(authority.catalogues.legal)}",
+        f"\tlegal_references={len(authority.catalogues.legal)}"
+        f"\tauthority_artifact={currency.artifact_path}"
+        f"\tauthority_identity_digest={currency.candidate_identity_digest}",
     )
+
+
+_AUTHORITY_REPUBLISH_COMMAND = "python -m dev.registry.pipeline publish-authority"
+
+
+def _refuse_authority_artifact(currency: AuthorityArtifactCurrency, *, as_json: bool) -> NoReturn:
+    """Report a stale or unreadable authority artifact on stderr and exit 1."""
+    refusal = {
+        "status": "refused",
+        "authority_artifact": str(currency.artifact_path),
+        "currency": currency.status.value,
+        "recorded_identity_digest": currency.recorded_identity_digest,
+        "candidate_identity_digest": currency.candidate_identity_digest,
+        "detail": currency.detail,
+        "republish_with": _AUTHORITY_REPUBLISH_COMMAND,
+    }
+    if as_json:
+        typer.echo(json.dumps(refusal, indent=2), err=True)
+    else:
+        typer.echo("integrity" + "".join(f"\t{key}={value}" for key, value in refusal.items()), err=True)
+    raise typer.Exit(code=1)
 
 
 _EDITION_REFUSED_EXIT_CODE = 2

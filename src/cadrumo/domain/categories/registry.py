@@ -20,6 +20,7 @@ from .proportionality import (
     CategoryCitationSource,
     ProportionalityKind,
     ProportionalityRule,
+    StatutoryCapPeriod,
     parse_http_url,
 )
 from .spending_category import SpendingCategory
@@ -50,7 +51,7 @@ def category_profile_years() -> frozenset[int]:
         category = next((s.value for s in variant.selectors if s.name == "category"), None)
         if category is not None and variant.valid_to is not None:
             grouped.setdefault(category, set()).update(range(variant.valid_from.year, variant.valid_to.year + 1))
-    return frozenset.intersection(*grouped.values()) if grouped else frozenset()
+    return frozenset(set.intersection(*grouped.values())) if grouped else frozenset()
 
 
 def resolve_category_profiles(year: int) -> Mapping[SpendingCategory, CategoryProfile]:
@@ -113,8 +114,9 @@ def _profile_from_authority_fact(
                     f"category authority has no dated statutory cap for {resolved.matched_selectors[0].value}/{year}"
                 ) from exc
             cap = values["statutory_cap_eur"]
+    cap_period = values.get("statutory_cap_period")
     rule = {
-        "kind": values["proportionality_kind"],
+        "kind": ProportionalityKind(str(values["proportionality_kind"])),
         "notes": tr(str(values["notes"])),
         "citations": tuple(citations),
         "fixed_pct": values.get("fixed_pct"),
@@ -122,7 +124,7 @@ def _profile_from_authority_fact(
         "statutory_multiplier": values.get("statutory_multiplier"),
         "statutory_cap_eur_per_day": values.get("statutory_cap_eur_per_day"),
         "statutory_cap_eur": cap,
-        "statutory_cap_period": values.get("statutory_cap_period"),
+        "statutory_cap_period": None if cap_period is None else StatutoryCapPeriod(str(cap_period)),
     }
     return CategoryProfile(
         category=SpendingCategory(resolved.matched_selectors[0].value),

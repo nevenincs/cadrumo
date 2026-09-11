@@ -204,7 +204,7 @@ MODELOS_WITHOUT_SHIFT: tuple[str, ...] = (Modelo.M369,)
 def load_holiday_calendar(year: int) -> HolidayCalendar:
     """Return the published calendar from the installed authority artifact.
 
-    A calendar is usable only when the signed artifact carries its publication
+    A calendar is usable only when the published artifact carries its publication
     event.  Runtime never parses an authoring TOML tree or treats an absent file
     as a holiday-free year.
     """

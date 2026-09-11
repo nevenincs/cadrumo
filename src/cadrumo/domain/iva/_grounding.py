@@ -64,7 +64,7 @@ if TYPE_CHECKING:
 
 
 def registry_catalogues() -> tuple[Mapping[str, LegalReference], Mapping[str, SourceReference], Path]:
-    """Return catalogues from the signed runtime authority, or from the compilation in progress.
+    """Return catalogues from the published runtime authority, or from the compilation in progress.
 
     The artifact is the only runtime source of catalogue facts. Its source root
     remains the package data root solely for resolving immutable cited corpus
@@ -159,12 +159,12 @@ def _evidence_file_fingerprint(
 def verify_table_legal_refs(table: str, citations: Sequence[tuple[str, Sequence[str]]]) -> None:
     """Verify every citation a registry table's rows carry, or refuse the table.
 
-    Outside a compilation, each cited provision must be catalogued in the signed
+    Outside a compilation, each cited provision must be catalogued in the published
     authority and its declared ``required_text`` and ``forbidden_text`` must hold
-    in the signed anchor text the authority publishes for it. No corpus path is
+    in the anchor text the authority publishes for it. No corpus path is
     opened: the evidence is the publisher-validated text the artifact carries.
 
-    Inside a compilation there is no signed evidence yet; the cited provisions
+    Inside a compilation there is no published evidence yet; the cited provisions
     must be catalogued in the authority being compiled, whose compiler verifies
     every catalogue entry against the corpus before anything is published.
 
@@ -175,7 +175,7 @@ def verify_table_legal_refs(table: str, citations: Sequence[tuple[str, Sequence[
 
     Raises:
         IvaCatalogueError: When any cited provision is absent from the legal
-            catalogue, has no signed evidence, or its signed anchor text breaks
+            catalogue, has no published evidence, or its published anchor text breaks
             one of its declared clauses. The message enumerates every failure
             rather than the first.
     """
@@ -222,7 +222,7 @@ def _citation_failures(
             try:
                 anchored_text = evidence.legal_evidence_text(ref_id)
             except AuthorityArtifactFormatError as exc:
-                failures.append(f"{row}: legal_ref {ref_id!r} has no signed evidence: {exc}")
+                failures.append(f"{row}: legal_ref {ref_id!r} has no published evidence: {exc}")
                 continue
             broken = [
                 f"missing required text {required!r}"
@@ -234,7 +234,7 @@ def _citation_failures(
                 if normalise_corpus_text(forbidden) in anchored_text
             ]
             if broken:
-                failures.append(f"{row}: invalid legal_ref {ref_id!r}: signed evidence " + "; ".join(broken))
+                failures.append(f"{row}: invalid legal_ref {ref_id!r}: published evidence " + "; ".join(broken))
                 continue
         checked.add(ref_id)
     return failures

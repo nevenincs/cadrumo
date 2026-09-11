@@ -1,22 +1,28 @@
-"""Signed, versioned publication format for a validated registry authority.
+"""Versioned, digest-checked publication format for a validated registry authority.
 
-Development signs canonical JSON with a publisher-held Ed25519 private key.
-Runtime verifies it with a trusted public key supplied by its release boundary,
-then reconstructs fresh typed models. This module neither knows a registry root
-nor compiles, repairs, or validates authoring inputs on a failed read.
+Development writes the validated authority as canonical JSON; runtime reads it
+back and reconstructs fresh typed models. The artifact is generated output, not
+a signed document: it carries no signature, key, or certificate. Its digest
+detects a truncated, corrupted, or hand-edited file, and its recorded
+``identity_digest`` names the registry and source-evidence inputs it was
+compiled from, so development can tell when it is out of date. This module
+neither knows a registry root nor compiles, repairs, or validates authoring
+inputs on a failed read.
 
-Format ``cadrumo-authority-artifact-v2`` is a canonical JSON frame holding
-``schema_version``, ``payload``, ``payload_sha256`` and ``signature``. The
-payload projects every schema field of every model, and a model that declares
-its own serialiser is written in that authored shape. Decimals and dates are
-JSON strings wherever the schema types the field as a decimal or a date.
+Format ``cadrumo-authority-artifact-v3`` is a canonical JSON frame holding
+``schema_version``, ``payload`` and ``payload_sha256``, the SHA-256 of the
+canonical JSON of ``schema_version`` and ``payload`` together. The payload
+projects every schema field of every model, and a model that declares its own
+serialiser is written in that authored shape. Decimals and dates are JSON
+strings wherever the schema types the field as a decimal or a date.
 Governed-fact atoms are typed ``str | int | Decimal | bool | date``, which JSON
 cannot tell apart, so every non-string atom in an atom position is written as a
 single-key tagged object -- ``{"$decimal": "0.40"}``, ``{"$date":
 "2025-01-01"}``, ``{"$int": 5}``, ``{"$bool": true}`` -- and a string atom stays
 a bare string. The reader decodes under the same strict schema and refuses an
-unknown tag, a malformed or non-canonical payload, and an untagged non-string
-atom. A frame of the previous format is refused by name.
+unknown tag, a malformed or non-canonical payload, an untagged non-string atom,
+and any frame member beyond the three above. A frame of an earlier format is
+refused by name.
 """
 
 from __future__ import annotations
@@ -34,7 +40,6 @@ from typing import Final, cast, get_args
 from pydantic import BaseModel, ValidationError
 
 from ....core.atomic_write import atomic_write_bytes
-from ....core.ed25519_signing import digest_signature_is_valid, sign_digest_hex
 from ....core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant, sha256_hex
 from .facts.schema import TAGGED_FACT_ATOM_CONTEXT, FactAtomField, OptionalFactAtomField, tagged_fact_atom_json
 from .schema import ModeloDefinition, RegistryCatalogues
@@ -52,8 +57,9 @@ __all__ = [
     "write_authority_artifact",
 ]
 
-AUTHORITY_ARTIFACT_SCHEMA_VERSION: Final[str] = "cadrumo-authority-artifact-v2"
-_SUPERSEDED_SCHEMA_VERSIONS: Final = frozenset({"cadrumo-authority-artifact-v1"})
+AUTHORITY_ARTIFACT_SCHEMA_VERSION: Final[str] = "cadrumo-authority-artifact-v3"
+_SUPERSEDED_SCHEMA_VERSIONS: Final = frozenset({"cadrumo-authority-artifact-v1", "cadrumo-authority-artifact-v2"})
+_FRAME_MEMBERS: Final = frozenset({"schema_version", "payload", "payload_sha256"})
 #: The validators that mark a governed-fact atom position, read from the schema's own field types.
 _FACT_ATOM_VALIDATORS: Final = frozenset(
     (get_args(FactAtomField)[1], get_args(OptionalFactAtomField)[1]),
@@ -71,7 +77,7 @@ class AuthorityArtifactUnavailableError(AuthorityArtifactError):
 
 
 class AuthorityArtifactIntegrityError(AuthorityArtifactError):
-    """The artifact has an invalid content digest or publisher signature."""
+    """The artifact's recorded payload digest does not match its content."""
 
 
 class AuthorityArtifactFormatError(AuthorityArtifactError):
@@ -138,9 +144,10 @@ class AuthorityEvidenceProjection:
 class AuthorityArtifact:
     """Complete typed authority payload emitted only after registry validation.
 
-    ``identity_digest`` identifies the source generation development validated.
-    Each read rebuilds this graph from signed JSON, isolating later reads from a
-    consumer's mutation of a prior result.
+    ``identity_digest`` is the content-addressed identity of the registry and
+    source-evidence inputs development validated to produce this authority.
+    Each read rebuilds this graph from the published JSON, isolating later reads
+    from a consumer's mutation of a prior result.
     """
 
     modelos: tuple[ModeloDefinition, ...]
@@ -162,45 +169,35 @@ class AuthorityArtifact:
             raise TypeError("authority artifact evidence must be an AuthorityEvidenceProjection")
 
 
-def write_authority_artifact(path: Path, artifact: AuthorityArtifact, *, signing_private_key_hex: str) -> None:
-    """Atomically publish an authority signed by the development publisher."""
+def write_authority_artifact(path: Path, artifact: AuthorityArtifact) -> None:
+    """Atomically publish ``artifact`` as a digest-checked canonical JSON frame."""
     if not isinstance(artifact, AuthorityArtifact):
         raise TypeError("authority artifact writer requires an AuthorityArtifact")
-    atomic_write_bytes(path, _encode_artifact(artifact, signing_private_key_hex=signing_private_key_hex))
+    atomic_write_bytes(path, _encode_artifact(artifact))
 
 
-def read_authority_artifact(path: Path, *, verification_public_key_hex: str) -> AuthorityArtifact:
-    """Read a publisher-authenticated authority or fail closed without fallback."""
+def read_authority_artifact(path: Path) -> AuthorityArtifact:
+    """Read a published authority or fail closed without fallback."""
     try:
         raw = path.read_bytes()
     except OSError as exc:
         raise AuthorityArtifactUnavailableError(f"published authority artifact is unavailable at {path}") from exc
-    return _decode_artifact(raw, verification_public_key_hex=verification_public_key_hex)
+    return _decode_artifact(raw)
 
 
-def _encode_artifact(artifact: AuthorityArtifact, *, signing_private_key_hex: str) -> bytes:
-    """Return the canonical signed JSON frame for ``artifact``."""
-    signed_document = {
+def _encode_artifact(artifact: AuthorityArtifact) -> bytes:
+    """Return the canonical digest-checked JSON frame for ``artifact``."""
+    document = {
         "schema_version": AUTHORITY_ARTIFACT_SCHEMA_VERSION,
         "payload": _artifact_document(artifact),
     }
-    digest = sha256_hex(canonical_json_bytes(signed_document))
-    return canonical_json_bytes(
-        {
-            **signed_document,
-            "payload_sha256": digest,
-            "signature": sign_digest_hex(private_key_hex=signing_private_key_hex, digest_hex=digest),
-        }
-    )
+    return canonical_json_bytes({**document, "payload_sha256": sha256_hex(canonical_json_bytes(document))})
 
 
-def _decode_artifact(raw: bytes, *, verification_public_key_hex: str) -> AuthorityArtifact:
-    """Verify one frame before reconstructing a fresh typed authority graph."""
+def _decode_artifact(raw: bytes) -> AuthorityArtifact:
+    """Check one frame's version and digest before reconstructing a fresh typed authority graph."""
     frame = _decode_json_object(raw, subject="published authority artifact")
     version = _required_string(frame, "schema_version")
-    payload = _required_mapping(frame, "payload")
-    recorded_digest = _required_string(frame, "payload_sha256")
-    signature = _required_string(frame, "signature")
     if version in _SUPERSEDED_SCHEMA_VERSIONS:
         raise AuthorityArtifactFormatError(
             f"published authority artifact uses superseded format {version!r}; "
@@ -208,20 +205,14 @@ def _decode_artifact(raw: bytes, *, verification_public_key_hex: str) -> Authori
         )
     if version != AUTHORITY_ARTIFACT_SCHEMA_VERSION:
         raise AuthorityArtifactFormatError("published authority artifact has an unsupported schema version")
-    signed_document = {"schema_version": version, "payload": payload}
-    expected_digest = sha256_hex(canonical_json_bytes(signed_document))
+    unexpected = sorted(set(frame) - _FRAME_MEMBERS)
+    if unexpected:
+        raise AuthorityArtifactFormatError(f"published authority artifact frame has unexpected members {unexpected}")
+    payload = _required_mapping(frame, "payload")
+    recorded_digest = _required_string(frame, "payload_sha256")
+    expected_digest = sha256_hex(canonical_json_bytes({"schema_version": version, "payload": payload}))
     if recorded_digest != expected_digest:
         raise AuthorityArtifactIntegrityError("published authority artifact failed its content digest check")
-    try:
-        signature_valid = digest_signature_is_valid(
-            public_key_hex=verification_public_key_hex,
-            digest_hex=expected_digest,
-            signature_hex=signature,
-        )
-    except ValueError as exc:
-        raise AuthorityArtifactFormatError("published authority artifact has an invalid signature encoding") from exc
-    if not signature_valid:
-        raise AuthorityArtifactIntegrityError("published authority artifact was not signed by the trusted publisher")
     return _artifact_from_document(payload)
 
 
@@ -245,7 +236,7 @@ def _artifact_document(artifact: AuthorityArtifact) -> dict[str, object]:
 
 
 def _artifact_from_document(payload: Mapping[str, object]) -> AuthorityArtifact:
-    """Rebuild a fresh strict authority graph from authenticated JSON data."""
+    """Rebuild a fresh strict authority graph from digest-checked JSON data."""
     try:
         modelos_document = _required_sequence(payload, "modelos")
         catalogues_document = _required_mapping(payload, "catalogues")
@@ -297,7 +288,12 @@ def _json_value(value: object) -> object:
         }
     if isinstance(value, Mapping):
         return {_json_key(key): _json_value(item) for key, item in value.items()}
-    if isinstance(value, (tuple, list, frozenset, set)):
+    if isinstance(value, (frozenset, set)):
+        # Iteration order of a set follows per-process string hashing, so an
+        # unordered collection is written in canonical-JSON order: the same
+        # authority always publishes the same bytes.
+        return sorted((_json_value(item) for item in value), key=canonical_json_bytes)
+    if isinstance(value, (tuple, list)):
         return [_json_value(item) for item in value]
     if isinstance(value, Enum):
         return _json_value(value.value)

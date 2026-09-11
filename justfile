@@ -286,6 +286,9 @@ check-docs-synonyms:
     @uv run --no-sync python -m dev.docs.terminology.synonyms validate
 
 # Verify registry integrity and the bundled parity-oracle bindings.
+# Integrity also refuses a bundled runtime authority artifact that no longer
+# records the live registry and source evidence; republish it with
+# `uv run --no-sync python -m dev.registry.pipeline publish-authority`.
 # The two commands are dependent: a failed integrity verification invalidates
 # any downstream parity claim, so this health gate stops before the audit.
 [doc('Verify registry integrity and audit every bundled parity-oracle binding.')]
