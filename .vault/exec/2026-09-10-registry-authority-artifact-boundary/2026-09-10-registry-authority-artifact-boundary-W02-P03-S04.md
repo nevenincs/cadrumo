@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-10'
-modified: '2026-09-10'
+modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:4da48acf8ce63b1643e53d0860b1e7d0ad24b22c9dfdcf17552ec51eff6b033c'
+body_hash: 'sha256:3e463dd53f51b21751a60ec8ba7f8c1aabca76dff377d9fafdddb7cb8d4f8eeb'
 step_id: 'S04'
 related:
   - "[[2026-09-10-registry-authority-artifact-boundary-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Remove runtime compiler cache and raw loader exposure
 

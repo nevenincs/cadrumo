@@ -11,7 +11,6 @@ related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
 
-
 # Capture hash-pinned BOE article 161 redactions and author source-cited temporal equivalence-surcharge facts under the governed authority
 
 ## Scope

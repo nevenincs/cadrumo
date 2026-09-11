@@ -38,6 +38,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from dev.registry.compiler._compiled_cache import (
     _CADRUMO_PACKAGE_DIR,
+    _DEV_COMPILER_DIR,
     _REGISTRY_PACKAGE_DIR,
     _classify_foreign_type,
     _compiled_payload_root_models,
@@ -135,16 +136,24 @@ def test_loader_code_fingerprint_is_a_stable_nonempty_sha256() -> None:
 def test_package_roots_are_the_real_directories() -> None:
     """The in/out boundary points at the real ``cadrumo`` and registry package dirs.
 
-    The classification predicate walks ``parents[2]`` from the registry package
-    to reach the ``cadrumo`` root. A package relocation that changed that depth
-    would silently classify every first-party type as foreign (or none of them),
-    so the depth is pinned rather than assumed.
+    ``_REGISTRY_PACKAGE_DIR`` is resolved from the imported ``cadrumo`` package,
+    not from this test module's own path, so it is checked against a module that
+    actually lives in the compiled schema package (``schema.py``, defining
+    ``ModeloDefinition``/``RegistryCatalogues``) rather than against
+    ``_compiled_cache.py`` itself -- that module now lives in the separate dev
+    compiler directory (``_DEV_COMPILER_DIR``), which the fingerprint hashes
+    alongside the schema package but which plays no part in the first-party/
+    foreign-type boundary.
     """
     assert _REGISTRY_PACKAGE_DIR.name == "registry"
-    assert (_REGISTRY_PACKAGE_DIR / "_compiled_cache.py").is_file()
+    assert (_REGISTRY_PACKAGE_DIR / "schema.py").is_file()
     assert _CADRUMO_PACKAGE_DIR.name == "cadrumo"
     assert (_CADRUMO_PACKAGE_DIR / "core").is_dir()
     assert _REGISTRY_PACKAGE_DIR.is_relative_to(_CADRUMO_PACKAGE_DIR)
+
+    assert _DEV_COMPILER_DIR.name == "compiler"
+    assert (_DEV_COMPILER_DIR / "_compiled_cache.py").is_file()
+    assert not _DEV_COMPILER_DIR.is_relative_to(_CADRUMO_PACKAGE_DIR)
 
 
 def test_derived_embedded_types_all_resolve_to_first_party_sources_outside_the_registry() -> None:

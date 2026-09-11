@@ -3,14 +3,12 @@ tags:
   - '#audit'
   - '#facts-registry'
 date: '2026-09-10'
-modified: '2026-09-10'
+modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:2eea62a2546c386f6afb07f70bc3079253b8e8afb7f4942d9e74e93acdebf3b2'
+body_hash: 'sha256:04820112b09a01fd206e5ee9816d90aab1716d465699f7bdd1b8416185aaf069'
 related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
-
-
 
 # `facts-registry` audit: `S64 legal-parameter consumer migration`
 
@@ -24,7 +22,6 @@ partitions, the legal-parameter fact provider, their focused tests, the S64 plan
 row, and this audit scaffold.
 
 ## Findings
-
 
 ### fabricated-temporal-validity | high | The provider asserts current legal parameters were valid for every filing date
 
@@ -57,7 +54,6 @@ filing period on different days can select different law, defeating
 reproducibility and the authority result's stated temporal coordinate.
 
 ## Recommendations
-
 
 - Resolve `fabricated-temporal-validity` before accepting S64: preserve each
   supported parameter's evidenced legal window in the fact projection, or

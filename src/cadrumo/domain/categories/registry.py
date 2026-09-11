@@ -21,6 +21,7 @@ from .proportionality import (
     ProportionalityKind,
     ProportionalityRule,
     StatutoryCapPeriod,
+    StatutoryCapVariant,
     parse_http_url,
 )
 from .spending_category import SpendingCategory
@@ -31,6 +32,8 @@ CATEGORY_PROFILE_FACT_ID = "categories.profile"
 CATEGORY_STATUTORY_CAP_FACT_ID = "categories.statutory-cap"
 CATEGORY_FACT_PROVIDER_ID = "category-profiles"
 CATEGORY_FACT_PROVIDER_DIRECTORY = "categories"
+_CAP_VARIANT_PREFIX = "statutory_cap_variant."
+_CAP_VARIANT_FIELDS = {"label": "label", "eur_per_day": "statutory_cap_eur_per_day", "eur": "statutory_cap_eur"}
 
 
 def load_category_profiles() -> Mapping[SpendingCategory, CategoryProfile]:
@@ -97,23 +100,30 @@ def _profile_from_authority_fact(
             )
         )
         index += 1
-    cap = None
-    if values.get("proportionality_kind") == ProportionalityKind.STATUTORY_CAP.value:
+    category = resolved.matched_selectors[0].value
+    variants = _cap_variants_from_entries(values, category=category)
+    cap = values.get("statutory_cap_eur")
+    if (
+        values.get("proportionality_kind") == ProportionalityKind.STATUTORY_CAP.value
+        and not variants
+        and cap is None
+        and "statutory_cap_eur_per_day" not in values
+    ):
+        # The profile carries no amount of its own, so the cap is year-referenced
+        # and its amount for this year lives only in the dated cap fact.
         try:
             cap = authority.resolve_governed_fact(
                 ScalarFactQuery(
                     fact_id=CATEGORY_STATUTORY_CAP_FACT_ID,
                     date_axis=DateAxis.FILING_PERIOD,
                     effective_date=date(year, 12, 31),
-                    selectors=(FactSelector(name="category", value=resolved.matched_selectors[0].value),),
+                    selectors=(FactSelector(name="category", value=category),),
                 )
             ).payload.value
         except RegistryValidationError as exc:
-            if "statutory_cap_eur" not in values:
-                raise CategoryValidationError(
-                    f"category authority has no dated statutory cap for {resolved.matched_selectors[0].value}/{year}"
-                ) from exc
-            cap = values["statutory_cap_eur"]
+            raise CategoryValidationError(
+                f"category authority has no dated statutory cap for {category}/{year}"
+            ) from exc
     cap_period = values.get("statutory_cap_period")
     rule = {
         "kind": ProportionalityKind(str(values["proportionality_kind"])),
@@ -125,6 +135,7 @@ def _profile_from_authority_fact(
         "statutory_cap_eur_per_day": values.get("statutory_cap_eur_per_day"),
         "statutory_cap_eur": cap,
         "statutory_cap_period": None if cap_period is None else StatutoryCapPeriod(str(cap_period)),
+        "statutory_cap_variants": variants,
     }
     return CategoryProfile(
         category=SpendingCategory(resolved.matched_selectors[0].value),
@@ -132,6 +143,35 @@ def _profile_from_authority_fact(
         proportionality=ProportionalityRule.model_validate(rule),
         iva_hint=IvaDeductibilityHint(str(values["iva_hint"])) if "iva_hint" in values else None,
     )
+
+
+def _cap_variants_from_entries(
+    values: Mapping[str, object], *, category: str
+) -> tuple[StatutoryCapVariant, ...]:
+    """Rebuild the condition-selected cap variants the profile fact projects.
+
+    Each variant arrives as ``statutory_cap_variant.<id>.<field>`` entries. An
+    unrecognised field is refused rather than skipped, because dropping it
+    could silently discard the amount the variant exists to carry.
+    """
+    fields: dict[str, dict[str, object]] = {}
+    for key, value in values.items():
+        if not key.startswith(_CAP_VARIANT_PREFIX):
+            continue
+        variant_id, _, field = key.removeprefix(_CAP_VARIANT_PREFIX).rpartition(".")
+        if not variant_id or field not in _CAP_VARIANT_FIELDS:
+            raise CategoryValidationError(f"category authority carries an unknown cap variant entry {key!r}")
+        fields.setdefault(variant_id, {})[_CAP_VARIANT_FIELDS[field]] = value
+    variants: list[StatutoryCapVariant] = []
+    for variant_id, declared in fields.items():
+        if "label" not in declared:
+            raise CategoryValidationError(f"category authority cap variant {category}/{variant_id} has no label")
+        variants.append(
+            StatutoryCapVariant.model_validate(
+                {**declared, "id": variant_id, "label": tr(str(declared["label"]))}
+            )
+        )
+    return tuple(variants)
 
 
 __all__ = [

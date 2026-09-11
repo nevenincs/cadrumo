@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Sequence
 from functools import cache
 from pathlib import Path
 
@@ -180,6 +181,32 @@ def _build_directory_layout(
     revisions_dir.mkdir(exist_ok=True)
     for filename, content in revision_files.items():
         (revisions_dir / filename).write_text(content, encoding="utf-8", newline="\n")
+
+
+def write_minimal_shared_catalogues(legal_dir: Path, *, years: Sequence[int] = (2025,)) -> None:
+    """Materialise the minimal ``legal/`` declarations ``load_shared_catalogues`` requires.
+
+    ``supported_filing_years`` and ``sociedades_annual_manual_coverage`` are
+    both mandatory shared-catalogue declarations; a fixture tree that does not
+    exercise filing-year or Sociedades-manual-coverage semantics still needs a
+    minimal valid pair or the loader refuses with a missing-declaration error.
+    Every year is declared ``unpublished`` (no source or corpus fixture
+    required) and the years covered are exactly ``years``, matching the
+    catalogue's own cross-check against ``supported_filing_years``.
+    """
+    legal_dir.mkdir(parents=True, exist_ok=True)
+    dispositions = ", ".join(
+        f'{{ year = {year}, status = "unpublished", '
+        f'official_locator = "https://example.com/manuals/{year}", observed_at = 2026-09-10, '
+        'acquisition_condition_key = "application.registry.manuals.coverage.recheck_aeat_publication" }'
+        for year in years
+    )
+    (legal_dir / "supported-filing-years.toml").write_text(
+        f"[supported_filing_years]\nyears = {list(years)!r}\n\n"
+        f"[sociedades_annual_manual_coverage]\ndispositions = [{dispositions}]\n",
+        encoding="utf-8",
+        newline="\n",
+    )
 
 
 def write_extracted_corpus_sidecar(corpus_path: Path, *, anchor: str, text: str) -> None:

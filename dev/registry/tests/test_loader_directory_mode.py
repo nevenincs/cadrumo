@@ -51,6 +51,7 @@ from dev.registry.conformance.tests._loader_directory_mode_support import (
     _standard_manifest_text,
     _standard_revision_preamble_text,
     _write_standard_manifest,
+    write_minimal_shared_catalogues,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -524,6 +525,7 @@ reviewed_by = "registry-test"
 """.lstrip(),
         encoding="utf-8",
     )
+    write_minimal_shared_catalogues(legal_dir, years=(2026,))
 
     parameters = load_shared_catalogues(tmp_path).parameters
 

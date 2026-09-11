@@ -11,7 +11,6 @@ related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
 
-
 # Capture hash-pinned BOE article 31 and transitional-provision redactions and author source-cited temporal objective-estimation exclusion facts under the governed authority
 
 ## Scope

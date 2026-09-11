@@ -11,7 +11,6 @@ related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
 
-
 # Capture hash-pinned BOE articles 109 and 110 redactions, author source-cited temporal selectors by legal applicability, and rewire Modelo 131 to its form-specific authority
 
 ## Scope
