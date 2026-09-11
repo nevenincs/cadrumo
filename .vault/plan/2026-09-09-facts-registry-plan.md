@@ -10,9 +10,10 @@ related:
   - '[[2026-09-09-facts-registry-schema-persistence-research]]'
   - '[[2026-09-09-facts-registry-authority-plumbing-research]]'
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
+  - '[[2026-09-11-facts-registry-s59-strict-type-repair-reference]]'
 modified: '2026-09-11'
 body_schema: body-v2
-body_hash: 'sha256:ae8eecddbb3f6d8548708feb0ff29461a81997860f59684f3fdd08cdec971269'
+body_hash: 'sha256:64a4c9df051af51d9d2ac455ef605ebeb2337eb4425c1431c2c246373472f160'
 ---
 
 <!-- RETIRED: S65 -->
@@ -228,6 +229,7 @@ Turn retirement-ledger closure, forbidden imports, unowned directories, direct r
 Prove the normalized catalogue is the sole operative authority and that all planned deletion targets are absent.
 
 - [ ] `W04.P19.S58` - Verify sole authority and retirement-ledger closure at the Wave 4 handoff; `src/cadrumo and dev/registry`.
+- [ ] `W04.P19.S86` - Repair direct facts-projection and validation type boundaries without reintroducing legacy providers or compatibility adapters; `src/cadrumo/domain/calculations/registry/facts/schema.py and src/cadrumo/domain/categories and src/cadrumo/domain/deadlines/festivos.py and src/cadrumo/domain/iva and dev/registry/analysis/facts_catalogue_quality.py and dev/registry/compiler`.
 - [ ] `W04.P19.S59` - Run canonical strict production type checking after deletion; `justfile check-types and dev/quality/types.py`.
 - [x] `W04.P19.S60` - Run both dead-code audits and remove exact orphaned code and tests; `dev/audit/dead_code.py and dev/audit/unreachable_code.py`.
 

@@ -6,7 +6,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:ad74ae9c9e06a3ef173bfb0ac73e39a329d6da607dfafbafad028391f808cc7e'
+body_hash: 'sha256:2732df3f80267a22e2abb328ef2430501869fa5a69666287abe28f367bc1c151'
 related:
   - '[[2026-09-09-facts-registry-W01-P01-S01]]'
   - '[[2026-09-09-facts-registry-W01-P01-S02]]'
@@ -117,6 +117,7 @@ related:
   - '[[2026-09-11-facts-registry-s37-provenance-retirement-gate-review-audit]]'
   - '[[2026-09-11-facts-registry-s56-iva-raw-retirement-audit]]'
   - '[[2026-09-11-facts-registry-s57-iva-rate-repository-retirement-review-audit]]'
+  - '[[2026-09-11-facts-registry-s59-strict-type-repair-reference]]'
   - '[[2026-09-11-facts-registry-s60-dead-code-audit]]'
   - '[[2026-09-11-facts-registry-s77-category-retirement-audit]]'
   - '[[2026-09-11-facts-registry-s78-holiday-retirement-audit]]'
@@ -254,6 +255,7 @@ Auto-generated index of all documents tagged with `#facts-registry`.
 - `2026-09-11-facts-registry-external-constants-retirement-reference` - `facts-registry` reference: external constants retirement
 - `2026-09-11-facts-registry-objective-estimation-publication-boundary-reference` - `facts-registry` reference: objective-estimation publication boundary
 - `2026-09-11-facts-registry-reference` - `facts-registry` reference: retired global legal-parameter provider
+- `2026-09-11-facts-registry-s59-strict-type-repair-reference` - `facts-registry` reference: `s59 strict type repair`
 
 ### research
 
