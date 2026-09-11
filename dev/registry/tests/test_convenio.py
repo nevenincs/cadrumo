@@ -132,5 +132,3 @@ def test_authority_resolve_filters_by_year_window_and_returns_none_off_window() 
     assert authority.resolve("MA", TipoRentaIrnr.INTEREST, 2026) is None  # after valid_to
     assert authority.resolve("MA", TipoRentaIrnr.GENERAL, 2025) is None  # wrong income type
     assert authority.resolve("ZW", TipoRentaIrnr.INTEREST, 2025) is None  # no treaty
-
-

@@ -115,8 +115,7 @@ def test_objective_estimation_exclusion_advisory_fires_for_settled_year_excess()
         "objective_estimation_prior_year_purchases_eur",
     }
     fact_ids_by_field = {
-        str(finding.message_facts["profile_field_id"]): str(finding.message_facts["fact_id"])
-        for finding in findings
+        str(finding.message_facts["profile_field_id"]): str(finding.message_facts["fact_id"]) for finding in findings
     }
     assert fact_ids_by_field == {
         "objective_estimation_prior_year_gross_income_eur": "lirpf-dt-32:eo-exclusion-rendimientos-conjunto-eur",

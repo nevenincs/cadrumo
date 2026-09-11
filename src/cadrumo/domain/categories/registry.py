@@ -148,9 +148,7 @@ def _profile_from_authority_fact(
     )
 
 
-def _cap_variants_from_entries(
-    values: Mapping[str, object], *, category: str
-) -> tuple[StatutoryCapVariant, ...]:
+def _cap_variants_from_entries(values: Mapping[str, object], *, category: str) -> tuple[StatutoryCapVariant, ...]:
     """Rebuild the condition-selected cap variants the profile fact projects.
 
     Each variant arrives as ``statutory_cap_variant.<id>.<field>`` entries. An
@@ -170,9 +168,7 @@ def _cap_variants_from_entries(
         if "label" not in declared:
             raise CategoryValidationError(f"category authority cap variant {category}/{variant_id} has no label")
         variants.append(
-            StatutoryCapVariant.model_validate(
-                {**declared, "id": variant_id, "label": tr(str(declared["label"]))}
-            )
+            StatutoryCapVariant.model_validate({**declared, "id": variant_id, "label": tr(str(declared["label"]))})
         )
     return tuple(variants)
 

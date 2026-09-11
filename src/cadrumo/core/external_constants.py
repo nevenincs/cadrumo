@@ -513,6 +513,7 @@ DEFAULT_OUTPUT_LANGUAGE: Final[OutputLanguage] = OutputLanguage.ES
 #: boundary.
 SUPPORTED_OUTPUT_LANGUAGES: Final[tuple[str, ...]] = tuple(lang.value for lang in OutputLanguage)
 
+
 @lru_cache(maxsize=1)
 def load_external_constants(path: Path | None = None) -> ExternalConstants:
     """Return the parsed external-constants registry.

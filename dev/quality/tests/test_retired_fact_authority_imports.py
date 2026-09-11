@@ -84,8 +84,10 @@ def _module_expression(node: ast.AST, module_aliases: Mapping[str, str]) -> str 
 
 def _names_retirement_surface(module: str, retired_symbols: Mapping[str, frozenset[str]]) -> bool:
     """Return whether a module is retired or is an ancestor of a retired surface."""
-    return _is_retired_module(module) or module in retired_symbols or any(
-        retired.startswith(f"{module}.") for retired in (*_RETIRED_MODULES, *retired_symbols)
+    return (
+        _is_retired_module(module)
+        or module in retired_symbols
+        or any(retired.startswith(f"{module}.") for retired in (*_RETIRED_MODULES, *retired_symbols))
     )
 
 
@@ -158,14 +160,11 @@ def _import_violations(tree: ast.Module, *, importer_module: str, importer_is_pa
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call):
             continue
-        is_import_module = (
-            (isinstance(node.func, ast.Name) and node.func.id in import_module_names)
-            or (
-                isinstance(node.func, ast.Attribute)
-                and isinstance(node.func.value, ast.Name)
-                and node.func.value.id in importlib_aliases
-                and node.func.attr == "import_module"
-            )
+        is_import_module = (isinstance(node.func, ast.Name) and node.func.id in import_module_names) or (
+            isinstance(node.func, ast.Attribute)
+            and isinstance(node.func.value, ast.Name)
+            and node.func.value.id in importlib_aliases
+            and node.func.attr == "import_module"
         )
         is_builtin_import = (isinstance(node.func, ast.Name) and node.func.id in builtin_import_names) or (
             isinstance(node.func, ast.Attribute)

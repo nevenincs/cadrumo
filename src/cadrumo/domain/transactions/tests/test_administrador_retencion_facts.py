@@ -123,6 +123,7 @@ def test_the_fact_cited_provision_resolves_in_the_bundled_legal_catalogue() -> N
     assert isinstance(lirpf_entry, dict), f"{_LIRPF_REF} is not declared in the legal catalogue"
     assert lirpf_entry["corpus_ref"] == "corpus/normatives/html/ley-35-2006-art-101.html#a101"
 
+
 def test_loader_returns_the_registry_values_as_a_typed_record() -> None:
     """Third link: the typed record carries exactly the resolved facts."""
     rates = load_administrador_retencion_rates(effective_date=_CURRENT_EFFECTIVE_DATE)

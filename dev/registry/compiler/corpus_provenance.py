@@ -52,7 +52,9 @@ def resolve_normative_corpus_path(source_root: Path, corpus_ref: str) -> Path | 
 def classify_normative_corpus_provenance(source_root: Path, corpus_ref: str) -> NormativeCorpusProvenance:
     """Classify source evidence while development tooling still owns the root."""
     path = resolve_normative_corpus_path(source_root, corpus_ref)
-    return NormativeCorpusProvenance.OUT_OF_SCOPE if path is None else classify_normative_corpus_bytes(path.read_bytes())
+    return (
+        NormativeCorpusProvenance.OUT_OF_SCOPE if path is None else classify_normative_corpus_bytes(path.read_bytes())
+    )
 
 
 def classify_normative_corpus_bytes(payload: bytes) -> NormativeCorpusProvenance:

@@ -67,6 +67,7 @@ def test_article_95_activity_selectors_resolve_only_from_the_grounded_m036_table
     assert resolved.variant_id.endswith(_FIRST_GROUNDED_DATE.isoformat())
     assert resolved.source_refs == (_M036_TABLE_SOURCE, _ARTICLE_95_SOURCE)
 
+
 def test_article_95_activity_selectors_refuse_before_the_first_citable_m036_table() -> None:
     with pytest.raises(RegistryValidationError, match="has no variant for the exact query context"):
         _resolve("rirpf-art-95:selector-m036-actividades-profesionales", date(2026, 3, 25))

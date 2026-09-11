@@ -110,4 +110,3 @@ def test_loader_refuses_a_verified_quotation_absent_from_its_corpus(tmp_path: Pa
 
     with pytest.raises(IvaCatalogueError, match="quotation_absent_from_corpus"):
         load_iva_catalogue(target)
-
