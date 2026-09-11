@@ -29,7 +29,7 @@ from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ....tests.registry_snapshot import build_snapshot
-from ....tests.registry_tree import bundled_registry_tree
+from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 #: A checksum-valid synthetic NIF. ``IvaCompensationPeriodState.taxpayer_nif``
 #: is a ``SubjectTaxId``, so a placeholder label is refused at the boundary

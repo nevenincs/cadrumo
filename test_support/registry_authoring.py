@@ -93,44 +93,100 @@ if TYPE_CHECKING:
 
 
 _LAZY_EXPORTS = {
-    **{name: "dev.registry.compiler.verdict_cache" for name in (
-        "RegistryValidationVerdict", "VERDICT_OUTCOME_GREEN", "bundled_verdict_path",
-        "certify_registry_validation", "compute_shipped_verdict_key", "compute_verdict_key",
-        "read_verdict", "registry_validation_is_certified", "shipped_verdict_location",
-        "verdict_cache_path", "write_verdict",
-    )},
-    **{name: "dev.registry.compiler._validate_export_layout_coverage" for name in (
-        "_administration_reserved", "_belongs_to_layout", "_covers", "_design_sources",
-        "_missing_report", "_omissible_reason", "_position", "_read_design_sheets",
-        "_required_positions", "_sheet_constants",
-    )},
-    **{name: "dev.registry.compiler._validate_layout_authority_content" for name in (
-        "_ANNEX_BLOCK", "_ANNEX_HEADING", "_LAYOUT_VOCABULARY", "_carries_layout_content",
-        "validate_layout_authority_content",
-    )},
-    **{name: "dev.registry.compiler._validate_official_source_guidance_content" for name in (
-        "_DEADLINE_VOCABULARY", "_SUPPRESSION_VOCABULARY", "_carries_deadline_content",
-        "_carries_suppression_content", "deadline_window_content_failures",
-        "validate_suppression_notice_content",
-    )},
-    **{name: "dev.registry.conformance.tests._registry_schema_support" for name in (
-        "_NUMERIC_CASILLA_01", "_as_communication_revision", "_keyed_bracket",
-    )},
-    **{name: "dev.registry.conformance.tests._loader_directory_mode_support" for name in (
-        "_standard_manifest_text", "_standard_revision_preamble_text",
-        "write_extracted_corpus_sidecar", "write_fragmented_revision",
-    )},
-    **{name: "dev.registry.compiler.loader" for name in (
-        "_load_registry_tree_cached", "collect_registry_tree_fingerprints", "load_modelo_source",
-        "load_shared_catalogues",
-    )},
-    **{name: "dev.registry.compiler.loader_cache" for name in (
-        "is_bundled_registry_root", "registry_disk_cache_dir", "registry_disk_cache_enabled",
-    )},
-    **{name: "dev.registry.compiler._validate_revision_rules" for name in (
-        "validate_deadline_window_cadence", "validate_deadline_window_ownership",
-        "validate_periodic_deadline_completeness",
-    )},
+    **{
+        name: "dev.registry.compiler.verdict_cache"
+        for name in (
+            "RegistryValidationVerdict",
+            "VERDICT_OUTCOME_GREEN",
+            "bundled_verdict_path",
+            "certify_registry_validation",
+            "compute_shipped_verdict_key",
+            "compute_verdict_key",
+            "read_verdict",
+            "registry_validation_is_certified",
+            "shipped_verdict_location",
+            "verdict_cache_path",
+            "write_verdict",
+        )
+    },
+    **{
+        name: "dev.registry.compiler._validate_export_layout_coverage"
+        for name in (
+            "_administration_reserved",
+            "_belongs_to_layout",
+            "_covers",
+            "_design_sources",
+            "_missing_report",
+            "_omissible_reason",
+            "_position",
+            "_read_design_sheets",
+            "_required_positions",
+            "_sheet_constants",
+        )
+    },
+    **{
+        name: "dev.registry.compiler._validate_layout_authority_content"
+        for name in (
+            "_ANNEX_BLOCK",
+            "_ANNEX_HEADING",
+            "_LAYOUT_VOCABULARY",
+            "_carries_layout_content",
+            "validate_layout_authority_content",
+        )
+    },
+    **{
+        name: "dev.registry.compiler._validate_official_source_guidance_content"
+        for name in (
+            "_DEADLINE_VOCABULARY",
+            "_SUPPRESSION_VOCABULARY",
+            "_carries_deadline_content",
+            "_carries_suppression_content",
+            "deadline_window_content_failures",
+            "validate_suppression_notice_content",
+        )
+    },
+    **{
+        name: "dev.registry.conformance.tests._registry_schema_support"
+        for name in (
+            "_NUMERIC_CASILLA_01",
+            "_as_communication_revision",
+            "_keyed_bracket",
+        )
+    },
+    **{
+        name: "dev.registry.conformance.tests._loader_directory_mode_support"
+        for name in (
+            "_standard_manifest_text",
+            "_standard_revision_preamble_text",
+            "write_extracted_corpus_sidecar",
+            "write_fragmented_revision",
+        )
+    },
+    **{
+        name: "dev.registry.compiler.loader"
+        for name in (
+            "_load_registry_tree_cached",
+            "collect_registry_tree_fingerprints",
+            "load_modelo_source",
+            "load_shared_catalogues",
+        )
+    },
+    **{
+        name: "dev.registry.compiler.loader_cache"
+        for name in (
+            "is_bundled_registry_root",
+            "registry_disk_cache_dir",
+            "registry_disk_cache_enabled",
+        )
+    },
+    **{
+        name: "dev.registry.compiler._validate_revision_rules"
+        for name in (
+            "validate_deadline_window_cadence",
+            "validate_deadline_window_ownership",
+            "validate_periodic_deadline_completeness",
+        )
+    },
     "_REVIEWED_PRESUMPTIVE_NORMATIVE_CORPUS": "dev.registry.compiler.legal_grounding",
     "_registry_fingerprint_cache": "dev.registry.compiler.loader_fingerprints",
     "_relation_is_prior_year_filing_carry": "dev.registry.compiler._validate_relation_sources",

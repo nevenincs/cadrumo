@@ -56,7 +56,7 @@ from test_support.registry_authoring import load_registry_tree
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_snapshot import build_snapshot
-from .....tests.registry_tree import bundled_registry_tree
+from .registry_tree import bundled_registry_tree
 from ....period import Period, calculation_filing_date
 from ..authority import bundled_authority
 from ..bindings import resolve_available_bound_inputs_by_casilla_id

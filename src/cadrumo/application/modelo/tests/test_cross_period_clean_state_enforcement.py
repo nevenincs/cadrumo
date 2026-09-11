@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
-from ....tests.registry_observations import revision_id_for_observation
+from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from ...tests.wizard_catalogue_fixtures import register_wizard_catalogue
 
 __all__ = ["register_wizard_catalogue"]
@@ -50,7 +50,7 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.env_scope import ready_clave_settings
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.registry_observations import registry_grounded_observations
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.cross_period_clean_state import (
     CrossPeriodExpectedMemberSet,

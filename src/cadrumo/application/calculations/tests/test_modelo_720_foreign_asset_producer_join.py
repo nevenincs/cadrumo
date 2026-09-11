@@ -53,7 +53,7 @@ from pathlib import Path
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
-from ....tests.registry_observations import revision_id_for_observation
+from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from ...tests.wizard_catalogue_fixtures import register_wizard_catalogue
 
 __all__ = ["register_wizard_catalogue"]
@@ -73,7 +73,7 @@ from ....domain.modelos.verification_report import VerificationReport
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.bucket_aggregation_calculate import calculate_modelo_revision_from_bucket_aggregation
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.registry_observations import registry_grounded_modelo_observation
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import ForeignAssetIngestObservation
 from ...modelo.verification_actions import verify_modelo_revision

@@ -38,7 +38,7 @@ from .....application.user_profile.censal_operation import (
 from .....application.user_profile.censo_sync import CENSO_SOURCE_TAG
 from .....core.config import Settings
 from .....tests.cli_runner import invoke_cached_cli
-from ... import app as _live_app
+from ...main import app as _live_app
 from .. import _censo_transport
 from .._censo_payloads import CensoFactPayload, CensoPullDivergencePayload, CensoPullResult
 from .._censo_review_cli import confirm_censal_review

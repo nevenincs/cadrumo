@@ -56,7 +56,7 @@ from ....core.external_constants import UTF_8_ENCODING
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.tty import stdin_is_tty
 
-_CliRefusedBoundaryError = import_module("cadrumo.entrypoints.cli.errors").CliRefusedBoundaryError
+_CliRefusedBoundaryError = import_module("..errors", __package__).CliRefusedBoundaryError
 
 MACHINE_SECRET_MAX_BYTES = 8192
 _MAX_SECRETS_BYTES = MACHINE_SECRET_MAX_BYTES

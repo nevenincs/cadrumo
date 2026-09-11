@@ -24,7 +24,7 @@ import pytest
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
-from ....tests.registry_observations import revision_id_for_observation
+from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ..errors import ObservationEvidenceDisplacementError
 from ..observations_repository import CalculationObservationRepository

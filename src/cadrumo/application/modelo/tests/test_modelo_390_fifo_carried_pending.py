@@ -77,7 +77,7 @@ from ....domain.iva_compensation.filed_derivation import (
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.registry_observations import registry_grounded_observations, revision_id_for_observation
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.observations_repository import CalculationObservationRepository, ResultDispositionProjection
 from ..calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics

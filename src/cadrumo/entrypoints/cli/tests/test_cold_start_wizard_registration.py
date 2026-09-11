@@ -89,7 +89,7 @@ def _run_cli_cold(storage_root: Path, argv: list[str]) -> subprocess.CompletedPr
         import sys
 
         sys.argv = ["cadrumo", *{argv!r}]
-        from cadrumo.entrypoints.cli import main
+        from cadrumo.entrypoints.cli.main import main
 
         try:
             main()

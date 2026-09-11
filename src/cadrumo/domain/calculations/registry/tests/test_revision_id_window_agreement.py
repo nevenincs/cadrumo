@@ -18,7 +18,7 @@ from test_support.registry_authoring import (
     validate_revision_id_window_agreement,
 )
 
-from .....tests.registry_tree import bundled_registry_tree
+from .registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

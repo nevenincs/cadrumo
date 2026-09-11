@@ -31,7 +31,7 @@ from ....domain.iva_compensation.filed_derivation import (
     M303CompensationAvailableDerivation,
     M303CompensationBasis,
 )
-from ....tests.registry_observations import revision_id_for_observation
+from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import errors as errors_module
 from .. import m303_carry_ingress as m303_module

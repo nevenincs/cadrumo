@@ -54,7 +54,7 @@ from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.prorrata_register.register import ProrrataProvisionalResolution
 from ....tests import general_m303_filing_evidence
-from ....tests.registry_observations import registry_grounded_observations
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo.revision_persistence import persist_filed_revision
 from ...prorrata_register.seed import evaluate_carried_prior_definitiva_seed

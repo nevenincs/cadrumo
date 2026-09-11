@@ -1,8 +1,4 @@
-"""Registry-grounded observation fixtures for tests.
-
-These helpers build :class:`CasillaObservation` values from the production
-registry authority so tests do not invent legal/source provenance.
-"""
+"""Registry-grounded observation fixtures for registry-aware tests."""
 
 from __future__ import annotations
 
@@ -10,33 +6,24 @@ from collections.abc import Iterable, Mapping
 from decimal import Decimal
 from functools import cache
 
-from ..core.authority_grade import RegistryAuthorityGrade
-from ..core.casilla_id import CasillaId
-from ..core.resources.bundled_data import bundled_path
-from ..domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
-from ..domain.calculations.registry.temporal import select_revision
-from ..tests.registry_tree import bundled_registry_tree
-from .registry_snapshot import build_snapshot
+from .....core.authority_grade import RegistryAuthorityGrade
+from .....core.casilla_id import CasillaId
+from ..authority import bundled_authority
+from ..bindings import CasillaObservation, RegistryModeloObservation
+from ..temporal import select_revision
+from .registry_tree import bundled_registry_tree
 
 
 @cache
 def revision_id_for_coordinates(*, modelo: str, filing_year: int, period: str) -> str:
     """Resolve the law-selected revision used by a persisted test observation."""
-
     modelos, _catalogues = bundled_registry_tree()
     modelo_definition = next(candidate for candidate in modelos if candidate.id == modelo)
-    return str(
-        select_revision(
-            modelo_definition,
-            filing_year=filing_year,
-            period=period,
-        ).id
-    )
+    return str(select_revision(modelo_definition, filing_year=filing_year, period=period).id)
 
 
 def revision_id_for_observation(observation: RegistryModeloObservation) -> str:
-    """Return the canonical revision stamp for an observation's filing coordinates."""
-
+    """Return the canonical revision stamp for an observation's coordinates."""
     return revision_id_for_coordinates(
         modelo=observation.modelo,
         filing_year=observation.filing_year,
@@ -52,8 +39,7 @@ def registry_grounded_observations(
     casilla_values: Mapping[CasillaId, Decimal],
     grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
 ) -> tuple[CasillaObservation, ...]:
-    """Return observations grounded in the selected registry snapshot."""
-
+    """Return observations grounded in the selected published snapshot."""
     return registry_grounded_observation_rows(
         modelo=modelo,
         filing_year=filing_year,
@@ -71,25 +57,9 @@ def registry_grounded_observation_rows(
     casilla_values: Iterable[tuple[CasillaId, Decimal]],
     grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
 ) -> tuple[CasillaObservation, ...]:
-    """Return ordered observations grounded in the selected registry snapshot.
-
-    Built from the compile-only registry tree, scoped to ``modelo`` alone,
-    rather than through ``bundled_authority()`` -- the authority
-    validates every modelo in the bundled tree before it returns anything, so
-    one unrelated modelo missing filing capability broke this fixture for
-    every caller, on any modelo, anywhere it was imported. ``grade`` defaults
-    to :attr:`RegistryAuthorityGrade.FILING`, preserving the prior strict
-    contract for callers that need it; a caller asking a narrower question
-    (a formula-runtime calculation, an applicability/scheduling fact) should
-    pass a lower grade explicitly.
-    """
-
-    modelos, catalogues = bundled_registry_tree()
-    modelo_definition = next(item for item in modelos if item.id == modelo)
-    snapshot = build_snapshot(
-        modelo_definition,
-        catalogues,
-        source_root=bundled_path(),
+    """Return ordered observations carrying legal and source provenance."""
+    snapshot = bundled_authority().snapshot(
+        modelo,
         filing_year=filing_year,
         period=period,
         grade=grade,
@@ -122,8 +92,7 @@ def registry_grounded_modelo_observation(
     casilla_values: Mapping[CasillaId, Decimal],
     grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
 ) -> RegistryModeloObservation:
-    """Return a RegistryModeloObservation grounded in the selected snapshot."""
-
+    """Return a registry observation grounded in a published snapshot."""
     return RegistryModeloObservation(
         modelo=modelo,
         filing_year=filing_year,
@@ -136,3 +105,12 @@ def registry_grounded_modelo_observation(
             grade=grade,
         ),
     )
+
+
+__all__ = [
+    "registry_grounded_modelo_observation",
+    "registry_grounded_observation_rows",
+    "registry_grounded_observations",
+    "revision_id_for_coordinates",
+    "revision_id_for_observation",
+]

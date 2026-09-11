@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
-from ....tests.registry_observations import revision_id_for_observation
+from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ..observations_repository import CalculationObservationRepository
 

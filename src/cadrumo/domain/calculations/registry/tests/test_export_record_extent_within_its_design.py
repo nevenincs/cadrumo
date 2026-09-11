@@ -54,7 +54,7 @@ import pytest
 from test_support.registry_authoring import compile_validated_authority
 
 from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_tree import bundled_registry_tree
+from .registry_tree import bundled_registry_tree
 from ..authority import ValidatedRegistryAuthority
 from ..record_design import extract_record_design
 from ..schema import ModeloRevision

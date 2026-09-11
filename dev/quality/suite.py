@@ -12,9 +12,10 @@ reports signal only:
 Each gate invokes its underlying tool directly (no ``just`` re-entry, no
 nested ``uv run``): this process is already started via ``uv run --no-sync
 python -m dev.quality.suite``, so the active venv's console scripts
-(``ruff``, ``lint-imports``, ``deptry``) resolve by bare name and
-``sys.executable`` already names the venv interpreter for the Python-module
-gates. This script aggregates pass/fail and surfaces the failing detail.
+(``ruff`` and ``deptry``) resolve by bare name; the import-quality row calls
+the authoritative Python driver, which resolves Import Linter itself, and
+``sys.executable`` names the venv interpreter for the Python-module gates.
+This script aggregates pass/fail and surfaces the failing detail.
 """
 
 from __future__ import annotations
@@ -38,7 +39,7 @@ GATES: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("check-style", ("ruff", "check", ".")),
     ("check-format", ("ruff", "format", "--check", ".")),
     ("check-types", (sys.executable, "-m", "dev.quality.types")),
-    ("check-imports", ("lint-imports",)),
+    ("check-imports", (sys.executable, "-m", "dev.quality.import_gate")),
     ("check-identity", (sys.executable, "-m", "dev.identity")),
     ("check-locales", (sys.executable, "-m", "dev.locales", "audit")),
     (

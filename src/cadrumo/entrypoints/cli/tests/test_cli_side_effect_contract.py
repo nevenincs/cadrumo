@@ -74,7 +74,7 @@ _PROBE = textwrap.dedent(
     import typer.main
     from click.testing import CliRunner
 
-    from cadrumo.entrypoints.cli import app
+    from cadrumo.entrypoints.cli.main import app
 
     runner = CliRunner()
     runner.invoke(typer.main.get_command(app), json.loads(sys.argv[1]))

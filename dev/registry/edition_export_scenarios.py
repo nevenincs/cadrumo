@@ -108,8 +108,8 @@ from cadrumo.domain.prorrata_register.register import (
     ProrrataRegisterEntry,
     SectorDefinition,
 )
-from dev.registry.compiler.authority import compiled_bundled_authority
 
+from .compiler.authority import compiled_bundled_authority
 from .edition_round_trip import SYNTHETIC_TAX_ID, EditionExportScenario
 
 __all__ = [
@@ -317,7 +317,7 @@ def _m303_regimen_simplificado_evidence(
             rows=rows,
             regimen_snapshot=regimen_snapshot,
             dana_2024_eligibility=None,
-            catalogues=authority.catalogues,
+            authority=authority,
         ),
     )
 

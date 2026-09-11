@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 from test_support.registry_authoring import load_modelo_directory
 
-from .....tests.registry_tree import bundled_registry_tree
+from .registry_tree import bundled_registry_tree
 from ..errors import RegistryLoadError, RegistryValidationError
 from ..revision_predecessor_forest import validate_predecessor_forest
 from ..schema import DeclaredPredecessor, ModeloDefinition, NoPredecessor

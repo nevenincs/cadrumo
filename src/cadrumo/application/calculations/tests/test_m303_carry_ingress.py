@@ -22,7 +22,7 @@ from ....domain.iva_compensation.filed_derivation import (
     M303_COMPENSATION_POSTERIOR_CASILLA,
     M303_COMPENSATION_RESULTADO_CASILLA,
 )
-from ....tests.registry_observations import revision_id_for_observation
+from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ..m303_carry_ingress import M303CarryIngressError
 from ..observations_repository import (

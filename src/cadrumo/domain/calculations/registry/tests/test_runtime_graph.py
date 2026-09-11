@@ -18,7 +18,7 @@ import pytest
 from test_support.registry_authoring import validate_formula_dag
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....tests.registry_tree import bundled_registry_tree
+from .registry_tree import bundled_registry_tree
 from ..runtime_graph import (
     enum_consumed_binding_ids,
     expression_binding_refs,

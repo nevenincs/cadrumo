@@ -26,8 +26,8 @@ from ....domain.modelos.row_models import (
     ModeloDetailRow,
 )
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....tests.registry_observations import registry_grounded_observations
-from ....tests.registry_tree import bundled_registry_tree
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ...filing.draft_construction import build_draft
 from .._revision_replay_inputs import revision_filing_replay_inputs
 

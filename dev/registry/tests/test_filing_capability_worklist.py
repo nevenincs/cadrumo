@@ -64,15 +64,14 @@ from datetime import date
 from typing import Literal
 
 import pytest
+from cadrumo.tests.registry_tree import bundled_registry_tree
 
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
-from cadrumo.tests.registry_tree import bundled_registry_tree
-
-from .test_cited_design_field_bounds_are_self_consistent import (
+from cadrumo.domain.calculations.registry.tests.test_cited_design_field_bounds_are_self_consistent import (
     _KNOWN_SELF_CONTRADICTING_DESIGN,
 )
 

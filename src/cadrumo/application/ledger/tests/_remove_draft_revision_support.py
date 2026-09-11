@@ -18,7 +18,7 @@ from ....domain.modelos.calculation_revision import (
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....tests import general_m303_filing_evidence
-from ....tests.registry_observations import registry_grounded_observations
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ._action_test_support import (
     _BUCKET_ID,
     UTC,

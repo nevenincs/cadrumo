@@ -40,7 +40,7 @@ from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests import general_m303_filing_evidence
-from ....tests.registry_observations import registry_grounded_observations
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ...workflow.persistence import workflow_state_repository
 from .._m303_m349_reconcile import m303_m349_intracom_reconcile_findings
 

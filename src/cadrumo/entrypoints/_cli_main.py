@@ -9,7 +9,7 @@ def main() -> None:
 
     defer_logging_configuration()
     try:
-        from .cli import main as cli_main
+        from .cli.main import main as cli_main
 
         cli_main()
     except ModuleNotFoundError as exc:

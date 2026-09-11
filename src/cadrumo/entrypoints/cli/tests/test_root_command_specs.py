@@ -6,10 +6,10 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from .. import app
 from .._command_runtime import resolve_deferred_target
 from .._root_command_specs import ROOT_COMMAND_SPECS
 from ..command_spec import CommandSpecGraph
+from ..main import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -29,7 +29,7 @@ from .....domain.modelos.ledger_filing_snapshot import (
     ManualFactBasisEntry,
 )
 from .....tests.registry_snapshot import build_snapshot
-from .....tests.registry_tree import bundled_registry_tree
+from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ..engine import build_export_plan
 from ..errors import CalcSheetsEngineError
 from ..evidence import sheet_evidence_from_ledger_filing

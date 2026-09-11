@@ -45,7 +45,7 @@ from ....domain.modelos.work_unit import WorkUnit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.registry_observations import registry_grounded_observations
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.observations_repository import CalculationObservationRepository
 from ..action_errors import CalculationRevisionStateError, ModeloRequiredBindingsMissingError

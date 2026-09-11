@@ -42,8 +42,8 @@ from cadrumo.core.json_contract import (
 )
 from cadrumo.core.operator_action_enums import ActionArgumentStatus, ActionConditionality, NoRecoveryOutcome
 
-from .. import iter_operator_rules, iter_personas, iter_skill_documents
 from ..mcp._capability_manifest import build_operator_surface_manifest
+from ..resources import iter_operator_rules, iter_personas, iter_skill_documents
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -123,7 +123,7 @@ def _live_root_command() -> Any:
     """Materialise the full live Click command tree (all lazy subtrees loaded)."""
     from typer.main import get_command
 
-    from cadrumo.entrypoints.cli import app
+    from cadrumo.entrypoints.cli.main import app
 
     return get_command(app)
 

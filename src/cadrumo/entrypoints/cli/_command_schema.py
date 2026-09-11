@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Literal, cast
 
 from ...core.i18n.render import output_language, tr
 from ...core.type_guards import is_object_list_or_tuple
+from ._command_target import resolve_deferred_target
 from .command_spec import (
     Capability,
     CommandNodeKind,
@@ -219,10 +220,8 @@ def _choices(parameter: ParameterSpec) -> tuple[str, ...]:
         return parameter.value.choices
     target = parameter.value.click_type or parameter.value.annotation
     try:
-        value: object = __import__(target.module, fromlist=(target.qualname.split(".", 1)[0],))
-        for segment in target.qualname.split("."):
-            value = getattr(value, segment)
-    except (ImportError, AttributeError):
+        value = resolve_deferred_target(target)
+    except (ImportError, AttributeError, RuntimeError):
         return ()
     if isinstance(value, type) and issubclass(value, Enum):
         return tuple(str(member.value) for member in value)

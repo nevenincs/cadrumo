@@ -41,7 +41,7 @@ from .....tests.cli_envelope import unwrap_schema_envelope as _payload
 from .....tests.cli_runner import invoke_typer_app
 from .....tests.secure_sql import isolated_profile_storage_root
 from .....tests.user_profile import register_cli_profile
-from ... import app as root_app
+from ...main import app as root_app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

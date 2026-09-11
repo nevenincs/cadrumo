@@ -9,7 +9,8 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.facts.resolution import ScalarFactQuery, resolve_governed_fact
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
-from dev.registry.compiler.fact_loader import load_governed_facts
+
+from ..compiler.fact_loader import load_governed_facts
 
 _IDS = frozenset(
     (

@@ -86,7 +86,7 @@ from pathlib import Path
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
-from ....tests.registry_observations import revision_id_for_observation
+from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from ...tests.wizard_catalogue_fixtures import register_wizard_catalogue
 
 __all__ = ["register_wizard_catalogue"]
@@ -102,7 +102,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.registry_observations import registry_grounded_observations
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.observations_repository import CalculationObservationRepository
 from ..action_errors import ModeloRequiredBindingsMissingError

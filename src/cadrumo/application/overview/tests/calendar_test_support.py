@@ -31,7 +31,7 @@ from ....domain.modelos.filing_record import (
     derive_filing_record_id,
 )
 from ....tests.aeat_literal_fixtures import aeat_url, justificante_cotejo_url
-from ....tests.registry_observations import registry_grounded_observations
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ...calculations.observations_repository import ObservationEnvelopePayload, ResultDispositionProjection
 from ..calendar import build_overview_calendar
 from ..calendar_models import (

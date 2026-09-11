@@ -53,7 +53,7 @@ from ....domain.calculations.registry.bindings import (
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ....domain.calculations.registry.ids import RelationId
 from ....domain.calculations.registry.relations import materialize_relation_binding_values
-from ....tests.registry_observations import (
+from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     registry_grounded_observations,
     revision_id_for_observation,

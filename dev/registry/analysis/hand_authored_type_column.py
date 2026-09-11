@@ -36,7 +36,7 @@ from __future__ import annotations
 
 import sys
 import tomllib
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
@@ -145,12 +145,32 @@ def _blocked_reason(field: dict[str, object]) -> str | None:
     return None
 
 
+def _object_mapping(value: object) -> dict[str, object] | None:
+    if not isinstance(value, Mapping):
+        return None
+    return {str(key): item for key, item in value.items()}
+
+
+def _object_mappings(value: object) -> tuple[dict[str, object], ...]:
+    if not isinstance(value, list):
+        return ()
+    return tuple(mapping for item in value if (mapping := _object_mapping(item)) is not None)
+
+
 def _shipped_records(revision_root: Path) -> Iterator[tuple[str, dict[str, object]]]:
     for layout_file in sorted((revision_root / "export_layouts").glob("*.toml")):
-        document = tomllib.loads(layout_file.read_text(encoding="utf-8"))
-        for body in document.get("revisions", {}).values():
-            for layout in body.get("export_layouts", []):
-                for record in layout.get("records", []):
+        document = _object_mapping(tomllib.loads(layout_file.read_text(encoding="utf-8")))
+        if document is None:
+            continue
+        revisions = _object_mapping(document.get("revisions"))
+        if revisions is None:
+            continue
+        for body_value in revisions.values():
+            body = _object_mapping(body_value)
+            if body is None:
+                continue
+            for layout in _object_mappings(body.get("export_layouts")):
+                for record in _object_mappings(layout.get("records")):
                     yield layout_file.name, record
 
 
@@ -162,7 +182,7 @@ def revision_findings(
     alignments: list[RecordAlignment] = []
     contradictions: list[TypeColumnContradiction] = []
     for layout_file, record in _shipped_records(revision_root):
-        fields = [item for item in record.get("fields", ()) if item.get("offset") and item.get("length")]
+        fields = [item for item in _object_mappings(record.get("fields")) if item.get("offset") and item.get("length")]
         if not fields:
             continue
         record_id = str(record.get("id", ""))

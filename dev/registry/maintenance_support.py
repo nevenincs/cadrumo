@@ -19,7 +19,7 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.hashing import blake2b_hex
 from cadrumo.core.period import RegistrySelectorPeriodCode
 from cadrumo.core.prose_elision import ElidedProse
-from cadrumo.core.resources import bundled_path
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.condition_mode import ConditionModeField
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.export import (

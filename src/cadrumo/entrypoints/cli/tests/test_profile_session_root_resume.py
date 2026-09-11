@@ -31,8 +31,6 @@ from uuid import UUID
 
 import pytest
 
-from cadrumo.tests._os_keychain_hook import require_os_credential_store
-
 from ....adapters.persistence.storage.custody.acceleration_receipt import (
     delete_profile_session,
     mint_profile_session,
@@ -47,6 +45,7 @@ from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core.config import load_settings, override_settings
 from ....core.profile_session import ProfileSessionRefusalReason
 from ....core.time.clock import now as _now
+from ....tests._os_keychain_hook import require_os_credential_store
 from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli, semantic_cli_output
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root

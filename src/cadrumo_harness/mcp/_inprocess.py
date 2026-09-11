@@ -185,7 +185,7 @@ def run_cli_in_process(
         _HOLDER_SINCE = time.monotonic()
     from typer.main import get_command
 
-    from cadrumo.entrypoints.cli import app
+    from cadrumo.entrypoints.cli.main import app
 
     command = get_command(app)
     out = io.StringIO()

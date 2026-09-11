@@ -484,7 +484,7 @@ class TestRevisionViewSurfacesDetailRows:
             os.environ["CADRUMO_SECRET_STORE_DIR"] = {str(storage_root / "fallback-store")!r}
             os.environ["CADRUMO_SECRET_PASSPHRASE"] = {_ROW_FLAG_PASSPHRASE!r}
             sys.argv = ["cadrumo", *{argv!r}]
-            from cadrumo.entrypoints.cli import main
+            from cadrumo.entrypoints.cli.main import main
 
             try:
                 main()

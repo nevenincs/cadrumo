@@ -123,8 +123,10 @@ def test_m100_dictionary_preserves_published_letter_casilla_identities(
 
     entries = xml_dictionary_entries(
         layout,
-        source_root=_source_root(),
         sources=catalogues.sources,
+        source_payloads={
+            str(source.id): (_source_root() / source.corpus_path).read_bytes() for source in catalogues.sources.values()
+        },
     )
     entry = next(item for item in entries if item.field_id == field_id)
 
@@ -141,8 +143,10 @@ def test_m100_dictionary_preserves_published_numeric_casilla_identities(filing_y
 
     entries = xml_dictionary_entries(
         layout,
-        source_root=_source_root(),
         sources=catalogues.sources,
+        source_payloads={
+            str(source.id): (_source_root() / source.corpus_path).read_bytes() for source in catalogues.sources.values()
+        },
     )
     entry = next(item for item in entries if item.field_id == "TITA")
 

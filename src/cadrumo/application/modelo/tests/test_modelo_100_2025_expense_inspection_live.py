@@ -31,7 +31,7 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.registry_observations import registry_grounded_observations, revision_id_for_observation
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations, revision_id_for_observation
 from ...aggregation import CallerOverrideDisposition, precedence_ladder_sources
 from ...calculations.observations_repository import CalculationObservationRepository
 from ..calculation_actions import (

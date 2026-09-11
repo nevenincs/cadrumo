@@ -17,7 +17,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.period import Period
-from ....tests.registry_tree import bundled_registry_tree
+from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ..runtime import build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -19,7 +19,7 @@ import ast
 
 import pytest
 
-from . import SRC_CADRUMO, ast_for_path, leaf_name, non_test_python_files_under, repo_relative
+from .inventory import SRC_CADRUMO, ast_for_path, leaf_name, non_test_python_files_under, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

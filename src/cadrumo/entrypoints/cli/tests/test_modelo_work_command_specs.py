@@ -133,7 +133,7 @@ def test_importing_modelo_work_specs_does_not_import_behavior() -> None:
     }
     for module_name in behavior_modules:
         sys.modules.pop(module_name, None)
-    importlib.reload(importlib.import_module("cadrumo.entrypoints.cli._modelo_work_command_specs"))
+    importlib.reload(importlib.import_module(".._modelo_work_command_specs", __package__))
     assert behavior_modules.isdisjoint(sys.modules)
 
 

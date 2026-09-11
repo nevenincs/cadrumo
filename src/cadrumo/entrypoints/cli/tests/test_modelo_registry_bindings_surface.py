@@ -664,8 +664,7 @@ def test_bindings_list_typed_payload_carries_relation_inputs_before_calculate() 
 
     # The specific M202 pagos-fraccionados fold-ins from the audit are present.
     assert (
-        "modelo-200-2024-rel-202-pagos-fraccionados"
-        in rows["modelo-200-pagos-fraccionados-anuales"]["relation_inputs"]
+        "modelo-200-2024-rel-202-pagos-fraccionados" in rows["modelo-200-pagos-fraccionados-anuales"]["relation_inputs"]
     )
 
     # A non-relation-fed binding carries an empty relation_inputs tuple.

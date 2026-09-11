@@ -39,7 +39,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
-from ....tests.registry_observations import registry_grounded_observations, revision_id_for_observation
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
 from ..multi_year import PreviousFilingSourceResolver

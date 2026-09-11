@@ -45,7 +45,7 @@ def test_modelo_audit_specs_own_public_handlers_and_schema_identities() -> None:
 
 def test_importing_modelo_audit_specs_does_not_import_behavior() -> None:
     sys.modules.pop("cadrumo.entrypoints.cli._modelo_audit_cli", None)
-    importlib.reload(importlib.import_module("cadrumo.entrypoints.cli._modelo_audit_command_specs"))
+    importlib.reload(importlib.import_module(".._modelo_audit_command_specs", __package__))
     assert "cadrumo.entrypoints.cli._modelo_audit_cli" not in sys.modules
 
 

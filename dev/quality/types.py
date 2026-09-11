@@ -43,7 +43,7 @@ _CWD = os.getcwd().replace("\\", "/")
 #: Admit each by burning it to zero and moving it into the list below.
 #:
 #: `dev/registry` was admitted on 2026-09-09, burned from 220 to zero. Nothing
-#: was suppressed to get there: twenty-three `# type: ignore` comments were
+#: was suppressed to get there: twenty-three typing suppression comments were
 #: REMOVED, several of them in mypy syntax this checker never honoured, so they
 #: had silenced nothing since the day they were written. Three of the fixes were
 #: real defects the checker found - a function annotated as returning a

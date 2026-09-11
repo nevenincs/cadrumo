@@ -36,7 +36,7 @@ from cadrumo.adapters.persistence.storage.master_key.bucket_session import Bucke
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.tests.profile_persistence import composed_profile_persistence_ports
 
-from ... import iter_operator_rules, iter_personas, iter_skill_documents, operator_rules_text
+from ...resources import iter_operator_rules, iter_personas, iter_skill_documents, operator_rules_text
 from .._harness_tools import (
     HARNESS_LOAD_TOOL,
     WHOAMI_TOOL,

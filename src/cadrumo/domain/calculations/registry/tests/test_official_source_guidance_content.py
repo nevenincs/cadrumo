@@ -37,7 +37,7 @@ from test_support.registry_authoring import (
 )
 
 from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_tree import bundled_registry_tree
+from .registry_tree import bundled_registry_tree
 from ..schema_references import SourceReference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

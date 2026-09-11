@@ -77,7 +77,7 @@ from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
 from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record, seed_test_profile_record
-from ....tests.registry_observations import registry_grounded_observations, revision_id_for_observation
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import (
     PercepcionObservationRepository,

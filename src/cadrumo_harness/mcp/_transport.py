@@ -86,7 +86,7 @@ def _terminal_transport_projection(
 ) -> ResolvedPreconditionAction:
     """Resolve one transport-owned terminal observation through shared authority."""
     from cadrumo.application.operator_actions.preconditions import no_action_precondition_verdict
-    from cadrumo.entrypoints.cli import resolve_cli_precondition_action
+    from cadrumo.entrypoints.cli.main import resolve_cli_precondition_action
 
     return resolve_cli_precondition_action(
         no_action_precondition_verdict(

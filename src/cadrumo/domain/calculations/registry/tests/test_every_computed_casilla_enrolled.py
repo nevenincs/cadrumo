@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....tests.registry_tree import bundled_registry_tree
+from .registry_tree import bundled_registry_tree
 from ..schema_input_kind import InputKind
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]

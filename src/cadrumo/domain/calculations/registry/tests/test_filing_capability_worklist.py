@@ -67,7 +67,7 @@ import pytest
 
 from .....core.modelo import Modelo
 from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_tree import bundled_registry_tree
+from .registry_tree import bundled_registry_tree
 from ..export import derive_export_layouts_from_bindings
 from ..schema import ModeloDefinition, ModeloRevision
 from ..schema_references import SourceReference

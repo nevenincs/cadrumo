@@ -13,8 +13,8 @@ from __future__ import annotations
 
 import pytest
 
-from .. import harness_root, iter_operator_rules, operator_rules_text
 from .._resources import packaged_data
+from ..resources import harness_root, iter_operator_rules, operator_rules_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 

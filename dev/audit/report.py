@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Monthly code-health report: duplication, layering, complexity.
+"""Monthly code-health report: duplication, import quality, complexity.
 
 Composes the EXISTING scanners already shipped under ``dev/`` into one
 red/amber/green dashboard, so a contributor gets a single command and a single
@@ -15,11 +15,9 @@ model:
   "graph broken" failure mode, so this dimension never reports RED on its own --
   it is advisory by design (mirrors ``dev/audit/duplication.py``'s own
   "duplication is advisory debt, not a gate" contract).
-* **Layering** -- reuses the ``.importlinter`` contracts already declared at
-  the repo root (the restructure EPIC's ``domain/adapters/application/
-  entrypoints/core`` layout) via the ``lint-imports`` console script. A
-  BROKEN contract is RED; all contracts KEPT is GREEN. This dimension has no
-  AMBER state: a layering contract is either satisfied or it is not.
+* **Import quality** -- consumes the authoritative ``dev.quality.import_gate``
+  process result. Any non-zero result is RED; zero is GREEN. This report does
+  not parse Import Linter output or maintain a second contract inventory.
 * **Complexity** -- reuses ``dev.audit.complexity``'s live cyclomatic,
   maintainability, and cognitive scan. Any current hotspot is RED; zero is
   GREEN. This dimension has no development-state partition.
@@ -53,7 +51,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import shutil
 import subprocess
 import sys
 from dataclasses import dataclass, field
@@ -132,44 +129,31 @@ def audit_duplication(repo_root: Path) -> DimensionReport:
 
 
 def audit_layering(repo_root: Path) -> DimensionReport:
-    """Classify the layering dimension via the ``.importlinter`` contracts.
-
-    RED: at least one contract is BROKEN. GREEN: every declared contract is
-    KEPT. The VERDICT carries no AMBER -- a layering contract is a hard
-    boundary, not a ratcheted debt ceiling (see ``.importlinter``'s own
-    per-contract ``ignore_imports`` for how sanctioned exceptions are
-    recorded instead).
-
-    AVAILABILITY is a separate axis and DOES return AMBER: a missing
-    ``lint-imports`` or a runner that could not complete reports
-    AMBER-unavailable rather than GREEN, on the same convention the
-    duplication dimension states -- we could not measure is not a clean
-    result. A reader told there is no AMBER here would read either of
-    those returns as impossible.
-    """
-    lint_imports = shutil.which("lint-imports")
-    if lint_imports is None:
-        return DimensionReport(
-            name="layering",
-            status=Status.AMBER,
-            headline="lint-imports not found on PATH; layering signal unavailable this cycle",
-        )
+    """Consume the sole import-quality gate as this report's import dimension."""
+    command = (
+        sys.executable,
+        "-m",
+        "dev.quality.import_gate",
+        "--root",
+        str(repo_root),
+    )
+    working_directory = repo_root if repo_root.is_dir() else REPO_ROOT
     try:
         result = subprocess.run(
-            [lint_imports],
+            command,
             capture_output=True,
             text=True,
             encoding=_UTF_8,
             errors="replace",
             check=False,
-            cwd=repo_root,
-            timeout=180,
+            cwd=working_directory,
+            timeout=300,
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
         return DimensionReport(
             name="layering",
-            status=Status.AMBER,
-            headline=f"lint-imports could not run ({exc}); layering signal unavailable this cycle",
+            status=Status.RED,
+            headline=f"authoritative import gate could not run ({exc})",
         )
 
     if result.returncode != 0:
@@ -177,14 +161,14 @@ def audit_layering(repo_root: Path) -> DimensionReport:
         return DimensionReport(
             name="layering",
             status=Status.RED,
-            headline=f"import-linter exited {result.returncode}; layering check failed",
-            details=[*diagnostic, "run `just check-imports` locally for the full report"],
+            headline=f"authoritative import gate exited {result.returncode}; import quality failed",
+            details=[*diagnostic, "run `just check-imports` locally for the full import-quality result"],
         )
 
     return DimensionReport(
         name="layering",
         status=Status.GREEN,
-        headline="import-linter completed successfully",
+        headline="authoritative import gate completed successfully",
     )
 
 

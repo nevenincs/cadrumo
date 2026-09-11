@@ -14,7 +14,7 @@ import pytest
 
 from ....core.corpus_text import normalise_corpus_text
 from ....core.resources.bundled_data import bundled_path
-from ....tests.registry_tree import bundled_registry_tree
+from ...calculations.registry.tests.registry_tree import bundled_registry_tree
 from ..errors import IvaRateNotFoundError
 from ..lookup import lookup_rate
 from ..rates import load_iva_rate_table

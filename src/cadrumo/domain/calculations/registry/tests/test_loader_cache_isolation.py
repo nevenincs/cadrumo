@@ -304,7 +304,7 @@ def test_bundled_root_disk_cache_is_shared_across_processes(
                 "-c",
                 (
                     "from dev.registry.compiler.loader import load_registry_tree\n"
-                    "from cadrumo.core.resources import bundled_path\n"
+                    "from cadrumo.core.resources.bundled_data import bundled_path\n"
                     "root = bundled_path('registry', 'aeat').resolve()\n"
                     "modelos, _ = load_registry_tree(root)\n"
                     "print(len(modelos))\n"
@@ -398,7 +398,7 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
         "\n"
         "import pytest\n"
         "\n"
-        "from cadrumo.core.resources import bundled_path\n"
+        "from cadrumo.core.resources.bundled_data import bundled_path\n"
         "from dev.registry.compiler.loader import load_registry_tree\n"
         "\n"
         "pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]\n"

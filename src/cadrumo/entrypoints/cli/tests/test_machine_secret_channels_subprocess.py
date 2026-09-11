@@ -512,7 +512,7 @@ def _assert_posix_recovery_descriptors_complete_real_headless_creation(tmp_path:
             [
                 sys.executable,
                 "-c",
-                "from cadrumo.entrypoints.cli import main; main()",
+                "from cadrumo.entrypoints.cli.main import main; main()",
                 "--format",
                 "json",
                 "config",

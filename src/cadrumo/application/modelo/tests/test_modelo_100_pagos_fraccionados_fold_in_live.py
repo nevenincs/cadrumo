@@ -52,7 +52,7 @@ from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.registry_observations import registry_grounded_observations, revision_id_for_observation
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations, revision_id_for_observation
 from ...calculations.observations_repository import CalculationObservationRepository
 from ..calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from ..filed_revision_observation import APP_FILING_SOURCE_KIND

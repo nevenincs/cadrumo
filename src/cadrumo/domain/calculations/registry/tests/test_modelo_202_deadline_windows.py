@@ -9,7 +9,7 @@ from test_support.registry_authoring import RegistryValidator
 
 from .....core.period import PeriodKind, registry_period_kind
 from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_tree import bundled_registry_tree
+from .registry_tree import bundled_registry_tree
 from ..temporal import select_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

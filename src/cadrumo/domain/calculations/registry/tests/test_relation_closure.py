@@ -16,7 +16,7 @@ from test_support.registry_authoring import (
 from .....core.aggregation import BindingSourceKind
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_observations import registry_grounded_modelo_observation
+from .registry_observations import registry_grounded_modelo_observation
 from ..binding_selector_utils import selector_as_dict
 from ..bindings import RegistryModeloObservation
 from ..errors import RegistryValidationError

@@ -13,13 +13,13 @@ __all__ = ["profile_storage_root_fixture"]
 
 from .....tests.secure_sql import isolated_profile_storage_root
 from .....tests.user_profile import register_cli_profile
-from ... import app as root_app
 from ...config_payloads import (
     ApoderadoCheckResult,
     ApoderadoClearResult,
     ApoderadoConfigureResult,
     ApoderadoStatusResult,
 )
+from ...main import app as root_app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 

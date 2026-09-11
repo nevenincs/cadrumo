@@ -53,7 +53,7 @@ from test_support.registry_authoring import _committed_modelo
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.directory_scan import scan_directory
 from .....tests.registry_snapshot import build_snapshot
-from .....tests.registry_tree import bundled_registry_tree
+from .registry_tree import bundled_registry_tree
 from ..errors import RegistryValidationError
 from ..schema import ModeloRevision
 from ..schema_input_kind import InputKind

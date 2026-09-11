@@ -21,7 +21,7 @@ import pytest
 
 from ....adapters.persistence.storage.secure_object_namespaces import M145_COMMUNICATION_RECORD_NAMESPACE
 from ....domain.calculations.registry.casilla_membership import undeclared_casilla_ids
-from ....tests.registry_tree import bundled_registry_tree
+from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_runtime_profile
 from ..m145_communication_period import M145CommunicationPeriod
 from ..m145_communication_records import (

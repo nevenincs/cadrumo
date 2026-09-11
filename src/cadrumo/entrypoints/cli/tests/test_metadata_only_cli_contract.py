@@ -38,7 +38,7 @@ def _probe(arguments: tuple[str, ...], *, locale: str) -> dict[str, object]:
         from typer.main import get_command
 
         os.environ["CADRUMO_OUTPUT_LANGUAGE"] = {locale!r}
-        from cadrumo.entrypoints.cli import app
+        from cadrumo.entrypoints.cli.main import app
         result = CliRunner().invoke(get_command(app), {list(arguments)!r})
         forbidden = sorted(
             name for name in sys.modules
@@ -108,7 +108,7 @@ def test_root_shell_completion_reads_registration_metadata_only(locale: str, exp
 
         import os
         os.environ["CADRUMO_OUTPUT_LANGUAGE"] = {locale!r}
-        from cadrumo.entrypoints.cli import app
+        from cadrumo.entrypoints.cli.main import app
 
         command = get_command(app)
         context = typer.Context(command, info_name="aeat")

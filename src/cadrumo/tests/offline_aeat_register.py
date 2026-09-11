@@ -13,7 +13,7 @@ from playwright.async_api import Route, async_playwright
 from ..adapters.outbound.aeat.sede.declarations import DeclaracionesRegisterSession
 from ..application.auth.session_types import AeatSession, CertificateSessionDetail
 from ..core.config import override_settings
-from . import FIXTURES_DIR
+from .inventory import FIXTURES_DIR
 
 _FIXTURE_ROOT = FIXTURES_DIR / "aeat-sede"
 _TOTAL_REGISTROS_RE = re.compile(r"de (\d+) en total")

@@ -31,9 +31,9 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
 from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor, ModeloDefinition
-from dev.registry.compiler.authority import compile_validated_authority
 
 from ..analysis.delta_minimality import LINEAGE_CLAIM_FIELDS, definition_findings, restatement_differences
+from ..compiler.authority import compile_validated_authority
 from ..edition_delta_migration import (
     BlockedCause,
     EditionPlan,

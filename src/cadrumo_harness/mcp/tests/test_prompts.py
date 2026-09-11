@@ -22,7 +22,7 @@ import pytest
 
 from cadrumo.core.period import accepted_filing_period_codes, accepted_filing_period_patterns
 
-from ... import iter_skill_documents, operator_rules_text
+from ...resources import iter_skill_documents, operator_rules_text
 from .._completions import complete_prompt_argument
 from .._prompts import (
     ORIENTATION_PROMPT_NAME,

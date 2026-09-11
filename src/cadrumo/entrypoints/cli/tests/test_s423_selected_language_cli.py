@@ -27,7 +27,7 @@ os.environ["CADRUMO_SECRET_STORE_BACKEND"] = "unsecured"
 os.environ["CADRUMO_SECRET_PASSPHRASE"] = "s423-selected-language-passphrase"
 sys.argv = ["aeat", *sys.argv[3:]]
 
-from cadrumo.entrypoints.cli import main
+from cadrumo.entrypoints.cli.main import main
 
 try:
     main()

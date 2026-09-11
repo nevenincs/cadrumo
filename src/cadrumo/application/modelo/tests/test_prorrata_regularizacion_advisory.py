@@ -43,7 +43,7 @@ from ....core.prorrata_register import ProrrataRegisterRegime
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistrySnapshotError
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
-from ....tests.registry_observations import registry_grounded_modelo_observation, revision_id_for_observation
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.iva_compensation_casillas import M303_RESULTADO_CASILLA
 from ...calculations.observations_repository import CalculationObservationRepository

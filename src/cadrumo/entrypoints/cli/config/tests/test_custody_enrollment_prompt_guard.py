@@ -101,7 +101,7 @@ try:
         verdict["profile_registered"] = True
 
         sys.argv = ["cadrumo", "config", "login", label]
-        from cadrumo.entrypoints.cli import main
+        from cadrumo.entrypoints.cli.main import main
 
         try:
             main()

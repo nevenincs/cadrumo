@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 import typer
 from pydantic import ValidationError
 
+from ...adapters.outbound.llm.suggestions import LLMSplitApplyResult
 from ...application.ledger.actions_lifecycle import (
     archive_manual_transaction,
     mark_transaction_reviewed_excluded,
@@ -33,7 +34,6 @@ from ...core.time.clock import now
 from ...domain.attachments.enums import AttachmentSource, DocumentLinkSource
 from ...domain.transactions.enums import BusinessClassification, is_classified
 from ...domain.transactions.errors import TransactionValidationError
-from ...llm.suggestions import LLMSplitApplyResult
 from ._common import bad, current_workflow_state, emit_envelope, transaction_catalogue_repo
 from ._decimal_parsing import parse_decimal_amount
 from ._ledger_support import (
@@ -44,9 +44,9 @@ from ._ledger_support import (
 )
 
 if TYPE_CHECKING:
+    from ...adapters.outbound.llm.suggestions import LLMSplitSuggestion
     from ...application.ledger.models import ManualLedgerTransactionResult, SplitTransactionResult
     from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-    from ...llm.suggestions import LLMSplitSuggestion
     from ._ledger_payloads import LedgerSplitChildIdPayload, LedgerSplitChildProposalPayload
 
 

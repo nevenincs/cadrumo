@@ -127,7 +127,7 @@ dependencies = [
 
 [project.scripts]
 aeat = "cadrumo.entrypoints._cli_main:main"
-cadrumo-mcp = "cadrumo_harness.mcp:main"
+cadrumo-mcp = "cadrumo_harness.mcp.main:main"
 
 [project.urls]
 Homepage = "https://github.com/nevenincs/cadrumo"
@@ -174,7 +174,8 @@ anthropic = [
 ofx = [
   "ofxtools>=1.1,<2",
 ]
-# Local-inference document reading (the opt-in `cadrumo.llm` subpackage).
+# Local-inference document reading (the opt-in `cadrumo.adapters.outbound.llm`
+# subpackage).
 # Gates the probabilistic reading path: rasterising a scan-only invoice
 # on-host and handing it to a local model runtime. Deliberately narrow, and
 # the narrowness is the honest result rather than an oversight -- the local
@@ -896,7 +897,6 @@ convention = "google"
 # unresolvable before any product module loads; the absent state cannot be
 # reached in-process because the dev environment installs the extra's
 # requirements so the rest of the suite runs. Argv is this repo's own literal.
-"src/cadrumo/llm/tests/test_missing_llm_extra_refuses_instructively.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_language_flag_help_honesty.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_root_help_shape.py" = ["S603"]
 # Test modules under master_key/ exercise the passphrase-rejection paths
@@ -1003,7 +1003,7 @@ ignore_missing_imports = true
 [tool.pyrefly]
 python_version = "3.13"
 search_path = ["src", "stubs"]
-project_includes = ["src/cadrumo/domain", "src/cadrumo/application", "src/cadrumo/core", "src/cadrumo/llm"]
+project_includes = ["src/cadrumo/domain", "src/cadrumo/application", "src/cadrumo/core", "src/cadrumo/adapters/outbound/llm"]
 # Tests are excluded from this checker, not overlooked. pyright reported zero
 # diagnostics across the test tree, so excluding it loses no signal that was
 # previously enforced, while pyrefly's stricter inference finds ~24 fixture
@@ -1020,7 +1020,7 @@ project_excludes = ["**/.[!/.]*", "**/tests/**"]
 # is the only honest one available: burn a tree down, THEN admit it permanently.
 # aeat-quality-gates bans baselines and ratchets, so a tree is never admitted
 # with errors outstanding and never carries a per-tree exemption.
-include = ["src/cadrumo/domain", "src/cadrumo/application", "src/cadrumo/core", "src/cadrumo/llm"]
+include = ["src/cadrumo/domain", "src/cadrumo/application", "src/cadrumo/core", "src/cadrumo/adapters/outbound/llm"]
 exclude = ["**/tests"]
 extraPaths = ["src", "stubs"]
 pythonVersion = "3.13"

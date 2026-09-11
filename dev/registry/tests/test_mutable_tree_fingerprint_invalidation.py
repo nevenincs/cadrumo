@@ -80,8 +80,8 @@ _CHILD_PROGRAM = """
 import os
 from pathlib import Path
 
-from dev.registry.compiler.loader import load_registry_tree
-from dev.registry.compiler.loader_cache import registry_disk_cache_dir
+from ..compiler.loader import load_registry_tree
+from ..compiler.loader_cache import registry_disk_cache_dir
 
 root = Path(os.environ["CADRUMO_TEST_MUTABLE_TREE_ROOT"])
 edited = Path(os.environ["CADRUMO_TEST_MUTABLE_TREE_EDITED_TEXT"])

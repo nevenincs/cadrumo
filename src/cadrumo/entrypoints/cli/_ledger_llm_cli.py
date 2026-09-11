@@ -23,6 +23,14 @@ from typing import TypedDict
 import typer
 from pydantic import BaseModel, ValidationError
 
+from ...adapters.outbound.llm.suggestions import (
+    LLMClassificationSuggestion,
+    LLMSaturatedSuggestion,
+    LLMSplitApplyResult,
+    LLMSplitSuggestion,
+    LLMSuggestionRejectionResult,
+    OperatorIvaDerivationResult,
+)
 from ...application.ledger.actions_manual import ledger_transaction_payload
 from ...application.ledger.llm_classification import (
     apply_evidence_classification,
@@ -46,14 +54,6 @@ from ...domain.iva.schema import IvaCategory
 from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from ...llm.suggestions import (
-    LLMClassificationSuggestion,
-    LLMSaturatedSuggestion,
-    LLMSplitApplyResult,
-    LLMSplitSuggestion,
-    LLMSuggestionRejectionResult,
-    OperatorIvaDerivationResult,
-)
 from ._common import bad, current_workflow_state, emit_envelope, transaction_catalogue_repo
 from ._ledger_support import (
     ledger_transaction_validation_no_recovery,
