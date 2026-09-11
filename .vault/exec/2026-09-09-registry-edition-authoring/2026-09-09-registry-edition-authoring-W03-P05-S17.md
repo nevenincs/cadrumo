@@ -53,3 +53,16 @@ Proofs:
 - S54 `test_committed_m100_continuity_surface_for_1038_retirement_is_loaded`: passes before and after (exit 0). It has no teeth here, because no 303 edition retires a lineage and modelo 100 is not migrated. Retirement is exercised instead by a planted 303 retirement in the tests.
 - S50: the left-pad resolver finds 656 exact tokens, 0 left-padded, 0 ambiguous, and 6 of 6 maps resolved, before and after. That check is vacuous for 303. Export-ref symmetry reports 0 findings before and after.
 - Determinism: two runs write byte-identical trees (290 files). Idempotency: a re-run on the migrated tree is a no-op.
+
+Export bytes proof, closed after the first dry run:
+
+- `A` `dev/registry/edition_export_scenarios.py` declares the 303 and 131 export scenarios with synthetic identities and facts from each edition's own resolvers. The migration command reads it; tests no longer supply scenarios.
+- `A` `dev/registry/edition_round_trip.py` is the gate engine. It is no longer imported from a src test, and staged copies now carry the target modelo's dependency closure.
+- The dry run on the live tree, without `--apply`, now exits 0 with `gate_findings=0`. It byte-compares 2023, 2024-hasta-08-y-2t, 2024-desde-09-y-3t, 2025 and 2026-y-siguientes, and every one is equal. Teeth: planting one changed character in the migrated 2025 resultados record yields exactly one content finding and one export_bytes finding.
+- `verify:` `pytest dev/registry/tests/test_revision_edition_round_trip.py` -> `pass` (71 passed)
+- `verify:` `pytest dev/registry/tests/test_edition_delta_migration.py` -> `pass`
+- 2022, the root edition, cannot be exported: the export path refuses its layout with "regimen-simplificado projection record must repeat projection_rows". It is a root, so the gate does not require its bytes.
+- The gate turns only a ValueError into a finding. A scenario that `build_draft` rejects (ModeloApplicationError) crashes the tool instead. This is an S18 hardening item.
+- `test_m303_generated_envelope_proof.py` fails on the migrated-fact gate for an isolated authority, e.g. `lirpf-art-101:retencion-administrador-general`. That comes from another lane's in-flight fact-provider work, not from this Step.
+
+The Step stays open. What remains: `--apply` on the live tree in a window agreed with the export lane, the 303 `_MIGRATIONS` baseline, republishing the authority, then S42, S50 and S54 against the live pilot.

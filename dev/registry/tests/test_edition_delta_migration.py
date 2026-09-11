@@ -41,9 +41,11 @@ from ..edition_delta_migration import (
     MigrationOutcome,
     MigrationRefusedError,
     PredecessorBasis,
+    main,
     migrate_modelo,
     plan_migration,
 )
+from ..edition_export_scenarios import edition_export_scenarios
 from ..edition_round_trip import RoundTripFindingKind, copy_registry_tree, edition_round_trip_report
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -498,3 +500,28 @@ def test_apply_publishes_a_modelo_whose_proof_is_clean(tmp_path: Path) -> None:
         live_registry_root=registry, reference_registry_root=pristine, modelo_id=_NO_EXPORT_SURFACE, export_scenarios={}
     )
     assert report.findings == ()
+
+
+def test_the_command_line_renders_every_successors_export_bytes_from_the_canonical_scenarios(
+    pilot_before: ModeloDefinition, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A dry run reads the declared scenarios, so every successor's bytes are compared and the proof is clean.
+
+    The successors are read from the unmigrated definition, not from the run:
+    every edition after the first is one the migration makes delta-authored,
+    and each has an export surface, so each needs a scenario.
+    """
+    successors = sorted(str(revision.id) for revision in ordered_revisions(pilot_before)[1:])
+    assert all(pilot_before.revisions[revision_id].export_layouts for revision_id in successors)
+    assert set(edition_export_scenarios(_PILOT)) == set(successors)
+    registry = _registry(tmp_path / "input", _PILOT)
+
+    exit_code = main(["--registry-root", str(registry), "--modelo", _PILOT, "--work-dir", str(tmp_path / "work")])
+
+    output = capsys.readouterr().out
+    (summary,) = [line for line in output.splitlines() if line.startswith("summary ")]
+    assert exit_code == 0, output
+    assert " gate_findings=0 " in summary, output
+    assert f" byte_compared={','.join(successors)} " in summary, output
+    assert " applied=False " in summary, output
+    assert {str(r.id) for r in _load(registry, _PILOT).revisions.values() if r.predecessor is not None} == set()
