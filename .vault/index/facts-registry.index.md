@@ -6,7 +6,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:97b4be7b7a51c04c1aa810212f8b5ab640564d65f0262b76fdf9753c6414d247'
+body_hash: 'sha256:d89ae97ba56b0368c0ab3f2e151a785e14108d152e541a4501f46b34da48f8ca'
 related:
   - '[[2026-09-09-facts-registry-W01-P01-S01]]'
   - '[[2026-09-09-facts-registry-W01-P01-S02]]'
@@ -118,6 +118,7 @@ related:
   - '[[2026-09-11-facts-registry-s37-provenance-retirement-gate-review-audit]]'
   - '[[2026-09-11-facts-registry-s56-iva-raw-retirement-audit]]'
   - '[[2026-09-11-facts-registry-s57-iva-rate-repository-retirement-review-audit]]'
+  - '[[2026-09-11-facts-registry-s58-handoff-audit]]'
   - '[[2026-09-11-facts-registry-s59-strict-type-repair-reference]]'
   - '[[2026-09-11-facts-registry-s60-dead-code-audit]]'
   - '[[2026-09-11-facts-registry-s77-category-retirement-audit]]'
@@ -162,6 +163,7 @@ Auto-generated index of all documents tagged with `#facts-registry`.
 - `2026-09-11-facts-registry-s37-provenance-retirement-gate-review-audit` - `facts-registry` audit: `S37 provenance retirement gate review`
 - `2026-09-11-facts-registry-s56-iva-raw-retirement-audit` - `facts-registry` audit: `S56 IVA raw provider retirement review`
 - `2026-09-11-facts-registry-s57-iva-rate-repository-retirement-review-audit` - `facts-registry` audit: `S57 IVA rate repository retirement review`
+- `2026-09-11-facts-registry-s58-handoff-audit` - `facts-registry` audit: S58 published-authority handoff review
 - `2026-09-11-facts-registry-s60-dead-code-audit` - `facts-registry` audit: `s60 dead code`
 - `2026-09-11-facts-registry-s77-category-retirement-audit` - `facts-registry` audit: `S77 category adapter retirement review`
 - `2026-09-11-facts-registry-s78-holiday-retirement-audit` - `facts-registry` audit: `S78 holiday calendar adapter retirement review`
