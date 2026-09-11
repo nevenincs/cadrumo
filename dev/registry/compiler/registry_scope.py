@@ -11,28 +11,24 @@ from collections.abc import Iterable
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.validate_revision_identity import duplicates as _duplicates
 
-from . import _validate_cross_revision as cross_revision_validation
-from ._validate_cross_revision import (
+from . import validate_cross_revision as cross_revision_validation
+from .validate_cross_revision import (
     cross_revision_casilla_consistency_failures as _validate_cross_revision_casilla_consistency,
 )
-from ._validate_cross_revision import (
+from .validate_cross_revision import (
     strict_cross_revision_casilla_continuity_failures as _validate_strict_cross_revision_casilla_continuity,
 )
 from ._validate_cross_revision_lineage_origin import lineage_origin_continuity_failures
-from ._validate_label_artifacts import validate_no_label_artifacts
-from ._validate_relation_sources import (
-    validate_previous_filing_binding_closure,
+from .validate_label_artifacts import validate_no_label_artifacts
+from ._validate_previous_filing_sources import validate_previous_filing_binding_closure
+from .validate_relation_sources import (
     validate_relation_closure,
     validate_slot_source_hygiene,
 )
 from ._validate_semantic_role_required import required_role_declaration_failures as _validate_required_role_declarations
-from ._validate_semantic_roles import (
+from .validate_semantic_roles import (
     semantic_role_cardinality_failures as _validate_semantic_role_cardinality,
-)
-from ._validate_semantic_roles import (
     semantic_role_consistency_failures as _validate_semantic_role_consistency,
-)
-from ._validate_semantic_roles import (
     semantic_role_typo_twin_failures as _validate_semantic_role_typo_twins,
 )
 

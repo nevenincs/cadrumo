@@ -51,9 +51,11 @@ from functools import partial
 from typing import Final
 
 from cadrumo.application.aggregation import (
-    IvaDifferentiatedDeductionContribution,
     M303ProrrataTransitionArrival,
     M303SupplierRegimeArrival,
+)
+from cadrumo.application.aggregation.iva_ledger import (
+    IvaDifferentiatedDeductionContribution,
 )
 from cadrumo.application.calculations.m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
 from cadrumo.application.filing.producer_snapshot import (

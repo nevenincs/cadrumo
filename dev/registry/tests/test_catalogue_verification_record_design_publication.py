@@ -7,10 +7,12 @@ import shutil
 from pathlib import Path, PurePosixPath
 
 import pytest
-from test_support.registry_authoring import compile_validated_authority, load_registry_tree
 
-from .....core.resources.bundled_data import bundled_path
-from ..errors import RegistryValidationError
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+
+from ..compiler.authority import compile_validated_authority
+from ..compiler.loader import load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

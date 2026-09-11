@@ -5,18 +5,18 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests import REPO_ROOT
+from cadrumo.tests.inventory import REPO_ROOT
 
 from ..compiler.corpus_catalogue import verify_source_catalogue
 from ..compiler.legal_grounding import verify_legal_catalogue_grounding
 from ..compiler.validator import RegistryValidator
-from ._catalogue_verification_support import _registry_tree
+from .catalogue_verification_support import registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_committed_registry_tree_has_coherent_shared_catalogues() -> None:
-    modelos, catalogues = _registry_tree()
+    modelos, catalogues = registry_tree()
 
     assert len(modelos) >= 5, "committed registry must declare several modelos"
     assert len(catalogues.legal) > 0, "shared legal catalogue must be non-empty"
@@ -51,7 +51,7 @@ def test_forbidden_text_clause_is_additive_over_the_full_committed_legal_catalog
     named explicitly because they legitimately contain text current law does
     not, and none of them is given a forbidden_text clause by this change.
     """
-    _modelos, catalogues = _registry_tree()
+    _modelos, catalogues = registry_tree()
 
     assert len(catalogues.legal) > 0, "control is meaningless against an empty catalogue"
     for vintaged_id in _DELIBERATELY_VINTAGED_EXCERPT_IDS:
@@ -84,7 +84,7 @@ def test_no_legal_reference_grounds_a_normatives_citation_in_a_derived_artefact(
     ``normatives``-rooted, ``.html.extracted.md``-suffixed shape the
     regression actually took.
     """
-    _modelos, catalogues = _registry_tree()
+    _modelos, catalogues = registry_tree()
 
     offending = sorted(
         f"{ref_id} -> {reference.corpus_ref!r}"
@@ -108,7 +108,7 @@ def test_the_derived_artefact_gate_still_admits_the_pdf_manual_exception() -> No
     catalogue and are exactly the ones the gate's ``corpus/normatives/`` scope
     exempts, not references that happen not to exist at all.
     """
-    _modelos, catalogues = _registry_tree()
+    _modelos, catalogues = registry_tree()
 
     manual_extracted_md_refs = [
         ref_id

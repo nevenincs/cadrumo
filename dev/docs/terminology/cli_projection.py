@@ -188,7 +188,7 @@ def _command_target(command_path: tuple[str, ...]) -> str:
 _WALK_PROGRAM = textwrap.dedent(
     """
     import json
-    from cadrumo.core.i18n import tr
+    from cadrumo.core.i18n.render import tr
     from cadrumo.entrypoints.cli.command_api import ArgumentSpec, DefaultKind
     from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 

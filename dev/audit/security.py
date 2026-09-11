@@ -5,7 +5,7 @@ Mirrors ``dev.audit.duplication``'s "the runner owns the whole measurement"
 shape: source selection, command construction, execution, timeout handling,
 parsing, and availability classification all live here, and there is
 deliberately no second semgrep invocation anywhere in the tree -- both
-``just audit-security`` and ``dev.audit.advisory``'s security dimension call
+``just audit-code-security`` and ``dev.audit.advisory``'s security dimension call
 :func:`run_security_scan`.
 
 semgrep runs through ``uvx`` (a pinned, ephemeral, network-touching tool
@@ -27,7 +27,7 @@ See Also:
     :mod:`dev.audit.duplication`
         The sibling runner this module's shape is copied from.
     :func:`run_security_scan`
-        The one entry point both ``just audit-security`` and
+        The one entry point both ``just audit-code-security`` and
         ``dev.audit.advisory`` call.
 """
 
@@ -44,6 +44,7 @@ from pathlib import Path
 from typing import Final
 
 from dev._paths import REPO_ROOT, UTF_8
+from dev.exit_codes import ADVISORY_BROKEN, OK
 
 _UTF_8: Final[str] = UTF_8
 _FINDING_CAP: Final[int] = 40
@@ -212,27 +213,54 @@ def classify_semgrep_output(raw_stdout: str) -> SecurityResult:
     except json.JSONDecodeError as exc:
         return SecurityResult.unavailable(f"semgrep produced no parseable JSON ({exc})")
 
-    scanned = payload.get("paths", {}).get("scanned", [])
-    files_scanned = len(scanned) if isinstance(scanned, list) else 0
+    if not isinstance(payload, dict):
+        return SecurityResult.unavailable("semgrep JSON root was not an object")
+
+    paths = payload.get("paths", {})
+    if not isinstance(paths, dict):
+        return SecurityResult.unavailable("semgrep JSON paths field was not an object")
+    scanned = paths.get("scanned", [])
+    if not isinstance(scanned, list) or not all(isinstance(path, str) for path in scanned):
+        return SecurityResult.unavailable("semgrep JSON paths.scanned field was not a string list")
+    files_scanned = len(scanned)
     if files_scanned <= 0:
         return SecurityResult.unavailable("semgrep analysed 0 files, so the scan proves nothing about security")
 
+    raw_errors = payload.get("errors", [])
+    if not isinstance(raw_errors, list) or not all(isinstance(error, dict) for error in raw_errors):
+        return SecurityResult.unavailable("semgrep JSON errors field was not an object list")
     parse_errors = tuple(
-        f"{err.get('path', '?')}: {err.get('message', err.get('type', 'unknown error'))}"
-        for err in payload.get("errors", [])
-        if isinstance(err, dict)
+        f"{err.get('path', '?')}: {err.get('message', err.get('type', 'unknown error'))}" for err in raw_errors
     )
 
     raw_results = payload.get("results", [])
+    if not isinstance(raw_results, list):
+        return SecurityResult.unavailable("semgrep JSON results field was not an object list")
+
     findings: list[SecurityFinding] = []
-    for entry in raw_results if isinstance(raw_results, list) else []:
+    for entry in raw_results:
+        if not isinstance(entry, dict):
+            return SecurityResult.unavailable("semgrep JSON result entry was not an object")
         extra = entry.get("extra", {})
+        start = entry.get("start", {})
+        end = entry.get("end", {})
+        if not isinstance(extra, dict) or not isinstance(start, dict) or not isinstance(end, dict):
+            return SecurityResult.unavailable("semgrep JSON result fields had an invalid object shape")
+        line = start.get("line", 0)
+        end_line = end.get("line", 0)
+        if (
+            isinstance(line, bool)
+            or not isinstance(line, int)
+            or isinstance(end_line, bool)
+            or not isinstance(end_line, int)
+        ):
+            return SecurityResult.unavailable("semgrep JSON result line fields were not integers")
         findings.append(
             SecurityFinding(
                 check_id=str(entry.get("check_id", "")),
                 path=str(entry.get("path", "")).replace("\\", "/"),
-                line=int(entry.get("start", {}).get("line", 0)),
-                end_line=int(entry.get("end", {}).get("line", 0)),
+                line=line,
+                end_line=end_line,
                 severity=str(extra.get("severity", "UNKNOWN")),
                 message=str(extra.get("message", "")).strip(),
             ),
@@ -294,7 +322,7 @@ def run_security_scan(
 
 
 def render_console_report(result: SecurityResult, *, full: bool = False, cap: int = _FINDING_CAP) -> str:
-    """Render the operator-facing console report for `just audit-security`."""
+    """Render the operator-facing console report for `just audit-code-security`."""
     out = [f"security: {result.headline()}"]
     if result.parse_errors:
         for err in result.parse_errors[: 5 if not full else len(result.parse_errors)]:
@@ -313,10 +341,8 @@ def render_console_report(result: SecurityResult, *, full: bool = False, cap: in
 def main() -> int:
     """Run the security scan and print the reduced console report.
 
-    Always exits 0: matches the `audit-security` advisory contract under
-    `--config auto` with no login/policy (verified against the live tool --
-    it exits 0 with findings present), so this is a representation change,
-    not a new gate.
+    Findings are advisory and return 0. An unavailable scan returns the shared
+    advisory-broken status so it cannot pose as a clean run.
     """
     import argparse
 
@@ -357,7 +383,7 @@ def main() -> int:
     else:
         print(render_console_report(result, full=args.full))
 
-    return 0
+    return ADVISORY_BROKEN if result.outcome is SecurityOutcome.UNAVAILABLE else OK
 
 
 if __name__ == "__main__":

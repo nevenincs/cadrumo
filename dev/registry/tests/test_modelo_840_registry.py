@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 import pytest
-from test_support.registry_authoring import RegistryValidator, _committed_modelo
 
-from .....core.resources.bundled_data import bundled_path
-from .....tests.aeat_literal_fixtures import aeat_host
-from .....tests.registry_snapshot import build_snapshot
-from ..schema_input_kind import InputKind
-from ..temporal import select_revision
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.tests.aeat_literal_fixtures import aeat_host
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ..compiler.validator import RegistryValidator
+from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW1_HOST = aeat_host("www1")

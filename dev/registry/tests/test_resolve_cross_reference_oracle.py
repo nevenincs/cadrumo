@@ -18,7 +18,7 @@ from cadrumo.domain.calculations.registry.schema_verification import (
     ProfilePredicateDefinition,
 )
 
-from ..conformance.tests._registry_schema_support import _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 from ..maintenance_support import LiveParityCatalogue, OracleEnvironment, collect_orphan_oracle_ids
 from ._remote_guard_support import AEAT_WRITE_FORBIDDEN_ACTIONS
 from .aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle

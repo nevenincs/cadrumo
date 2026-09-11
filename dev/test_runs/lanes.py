@@ -1,4 +1,4 @@
-"""Sequential execution of the full test-lane sweep, with per-lane timings.
+"""Sequential execution of named lanes, with per-lane timings.
 
 This replaced a pair of `[windows]`/`[unix]` recipe bodies totalling 75 lines
 that implemented one algorithm twice. The two halves had drifted in ways that
@@ -14,6 +14,7 @@ problem where there may be five.
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import sys
@@ -29,8 +30,8 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
     from pathlib import Path
 
-#: The environment variable each lane reads to find the run's evidence root.
-RUN_ROOT_ENV = "CADRUMO_TEST_ALL_RUN_ROOT"
+#: The private transport variable each lane reads for the run's evidence root.
+RUN_ROOT_ENV = "CADRUMO_LANE_RUN_ROOT"
 
 #: Subdirectories every lane may write into, created before the sweep starts so
 #: no lane has to defend against their absence.
@@ -112,7 +113,7 @@ def _summarise(results: Sequence[LaneResult]) -> None:
     Args:
         results: Every lane's outcome, in execution order.
     """
-    print("\nTest lane summary", flush=True)
+    print("\nLane run summary", flush=True)
     for result in results:
         print(
             f"  {result.name:<{_NAME_WIDTH}} exit={result.status:<3} {result.seconds}s",
@@ -120,7 +121,37 @@ def _summarise(results: Sequence[LaneResult]) -> None:
         )
 
 
-def run_lanes(lanes: Sequence[str], repository: Path = REPO_ROOT) -> int:
+def _run_all(lanes: Sequence[str], env: dict[str, str], *, json_events: bool) -> list[LaneResult]:
+    """Execute every requested lane, optionally bracketing it with JSON events."""
+    results: list[LaneResult] = []
+    for lane in lanes:
+        if json_events:
+            print(json.dumps({"event": "lane_started", "lane": lane}, separators=(",", ":")), flush=True)
+        result = _run_lane(lane, env)
+        results.append(result)
+        if json_events:
+            print(
+                json.dumps(
+                    {
+                        "event": "lane_finished",
+                        "exit_status": result.status,
+                        "lane": lane,
+                        "seconds": result.seconds,
+                    },
+                    separators=(",", ":"),
+                ),
+                flush=True,
+            )
+    return results
+
+
+def run_lanes(
+    lanes: Sequence[str],
+    repository: Path = REPO_ROOT,
+    *,
+    json_events: bool = False,
+    persist_evidence: bool = True,
+) -> int:
     """Run every lane in order, continuing past failures, and summarise.
 
     Args:
@@ -134,7 +165,12 @@ def run_lanes(lanes: Sequence[str], repository: Path = REPO_ROOT) -> int:
         looked exactly like a lane whose tests failed (1). See
         ``dev/EXIT-CODES.md``.
     """
-    run_root = allocate_run_directory(repository, family="test-runs", label="test-all")
+    if not persist_evidence:
+        results = _run_all(lanes, dict(os.environ), json_events=json_events)
+        _summarise(results)
+        return next((r.status for r in results if r.status != 0), 0)
+
+    run_root = allocate_run_directory(repository, family="lane-runs", label="lanes")
     for name in RUN_SUBDIRECTORIES:
         (run_root / name).mkdir(parents=True, exist_ok=True)
 
@@ -146,10 +182,10 @@ def run_lanes(lanes: Sequence[str], repository: Path = REPO_ROOT) -> int:
         sys.stdout = _Tee(original_out, handle)  # type: ignore[assignment]
         sys.stderr = _Tee(original_err, handle)  # type: ignore[assignment]
         try:
-            print(f"test-all run log: {log_path}", flush=True)
-            results = [_run_lane(lane, env) for lane in lanes]
+            print(f"lane run log: {log_path}", flush=True)
+            results = _run_all(lanes, env, json_events=json_events)
             _summarise(results)
-            print(f"test-all run log: {log_path}", flush=True)
+            print(f"lane run log: {log_path}", flush=True)
         finally:
             sys.stdout, sys.stderr = original_out, original_err
 

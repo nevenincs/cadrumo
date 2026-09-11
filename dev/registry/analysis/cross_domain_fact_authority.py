@@ -30,9 +30,9 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
 from cadrumo.domain.calculations.registry.facts.schema import FactSelector
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 
-from ..compiler._validate_evidence import EvidenceValidator
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.legal_grounding import verify_legal_reference_grounding
+from ..compiler.validate_evidence import EvidenceValidator
 
 __all__ = [
     "CROSS_DOMAIN_FACT_PROBES",

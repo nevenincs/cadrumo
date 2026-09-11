@@ -56,7 +56,7 @@ def test_cli_key_extractor_harvests_aliased_translation_calls(tmp_path: Path, mo
     cli_root = tmp_path / "entrypoints" / "cli"
     cli_root.mkdir(parents=True)
     (cli_root / "alias_fixture.py").write_text(
-        "from cadrumo.core.i18n import tr as _tr\n"
+        "from cadrumo.core.i18n.render import tr as _tr\n"
         "\n"
         '_tr("cli.config.wizard_translation_audit_alias_regression.help")\n'
         'NEARBY_LITERAL = "cli.config.wizard_translation_audit_alias_regression.literal"\n',

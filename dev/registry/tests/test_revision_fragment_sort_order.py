@@ -22,8 +22,8 @@ from pathlib import Path
 
 import pytest
 
-from ..compiler._loader_internals import _revision_section_fragment_paths
 from ..compiler.loader_cache import _revision_directory_source, fragment_sort_key
+from ..compiler.loader_grammar import revision_section_fragment_paths
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -78,7 +78,7 @@ def test_revision_section_fragment_paths_uses_the_canonical_order(tmp_path: Path
     casillas_dir = tmp_path / "casillas"
     first, second = _write_casilla_fragments(casillas_dir)
 
-    result = _revision_section_fragment_paths((casillas_dir,))
+    result = revision_section_fragment_paths((casillas_dir,))
 
     assert result == (first, second)
     assert result != _legacy_windows_path_sort((first, second))

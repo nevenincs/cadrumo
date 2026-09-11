@@ -19,9 +19,7 @@ from cadrumo.domain.calculations.registry.schema_verification import (
     verification_predicate_operator_name,
 )
 
-from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import missing_refs as _missing_refs
-from ._validate_official_source_guidance_content import deadline_window_content_failures
 from ._validate_verification_predicates import (
     _CASILLA_LIST_OPERATORS,
     _advisory_when_ratio_ge_predicate_failures,
@@ -33,6 +31,8 @@ from ._validate_verification_predicates import (
     _profile_field_required_predicate_failures,
     _profile_flag_enabled_predicate_failures,
 )
+from .validate_evidence import EvidenceValidator
+from .validate_official_source_guidance_content import deadline_window_content_failures
 
 # Operators mixing casilla ids with literal tokens, so they cannot route through the
 # generic casilla-list validators. advisory_when_ratio_ge is the sharpest case: the

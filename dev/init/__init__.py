@@ -1,11 +1,11 @@
 """Worktree initialization: the one command a fresh checkout needs.
 
-``just init`` makes the current worktree usable from a bare checkout, and is
+``just setup`` makes the current worktree usable from a bare checkout, and is
 the single command any tool - a human, a git hook, an agent, the worktree
 provisioner - calls after creating one. It never asks a question, never needs
 an argument, and is always safe to run again.
 
-This package is the implementation behind that recipe, and it is subject to
+This package is the implementation behind those recipes, and it is subject to
 three constraints the rest of ``dev/`` is not:
 
 It runs BEFORE the virtual environment exists.

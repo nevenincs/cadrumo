@@ -28,7 +28,7 @@ import pytest
 
 from cadrumo.core.config import override_settings
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
-from cadrumo.core.i18n import tr
+from cadrumo.core.i18n.render import tr
 
 from .._paths import SRC_DIR
 

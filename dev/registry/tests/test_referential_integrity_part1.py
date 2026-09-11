@@ -6,28 +6,35 @@ import re
 from datetime import date
 
 import pytest
-from test_support.registry_authoring import RegistryValidator
 
-from .....core.aggregation import BindingSourceKind
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from ..authority import ValidatedRegistryAuthority
-from ..binding_selector_utils import BindingFixedExportSelector
-from ..errors import RegistryValidationError
-from ..schema import DataBindingDefinition, FormulaDefinition, ModeloDefinition, ModeloRevision, RegistryCatalogues
-from ..schema_base import CasillaDataType
-from ..schema_extraction import (
+from cadrumo.core.aggregation import BindingSourceKind
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.binding_selector_utils import BindingFixedExportSelector
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import (
+    DataBindingDefinition,
+    FormulaDefinition,
+    ModeloDefinition,
+    ModeloRevision,
+    RegistryCatalogues,
+)
+from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
+from cadrumo.domain.calculations.registry.schema_extraction import (
     ExtractionProfileDefinition,
     ExtractionTargetDefinition,
 )
-from ..schema_formula import DatedValue, FormulaExpression, ParameterDefinition
-from ..schema_input_kind import InputKind
-from ..schema_surfaces import CasillaAlias, CasillaConstraints, RelationDefinition
-from ..schema_verification import (
+from cadrumo.domain.calculations.registry.schema_formula import DatedValue, FormulaExpression, ParameterDefinition
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaAlias, CasillaConstraints, RelationDefinition
+from cadrumo.domain.calculations.registry.schema_verification import (
     LiveCrossReferenceDecision,
     ProfilePredicateDefinition,
     VerificationExpectationDefinition,
     VerificationPredicateDefinition,
 )
+
+from ..compiler.validator import RegistryValidator
 from ._referential_integrity_support import (
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,

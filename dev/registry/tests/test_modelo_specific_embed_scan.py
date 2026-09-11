@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from ..analysis.modelo_embed_scan import EvidenceKind, census
+from ..validation.regulatory_embeds import EvidenceKind, census
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

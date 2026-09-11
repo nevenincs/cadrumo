@@ -19,10 +19,9 @@ from cadrumo.domain.calculations.registry.provenance import NormativeCorpusProve
 
 from ..compiler import fact_providers
 from ..compiler.authority import compile_validated_authority
-from ..compiler.loader import collect_registry_tree_fingerprints
 from ..compiler.loader_cache import registry_disk_cache_dir
-from ..compiler.loader_fingerprints import clear_fingerprint_cache
-from ..conformance.tests._loader_directory_mode_support import (
+from ..compiler.loader_fingerprints import clear_fingerprint_cache, collect_registry_tree_fingerprints
+from ..conformance.loader_directory_mode_support import (
     write_extracted_corpus_sidecar,
     write_fragmented_revision,
 )

@@ -1,13 +1,12 @@
-"""The ``python -m dev.test_runs`` entry point.
+"""The ``python -m dev.test_runs`` lane-transport entry point.
 
 Usage::
 
     python -m dev.test_runs lanes <lane> [<lane> ...]
 
 Runs the named just recipes in order, continuing past a failing lane, and
-prints a per-lane timing summary. The lane LIST stays in the justfile, where it
-is the declarative statement of what the sweep covers; only the sweeping is
-here.
+prints a per-lane timing summary. The caller owns the lane list; this module
+only supplies execution transport and reporting.
 """
 
 from __future__ import annotations
@@ -28,13 +27,15 @@ def main(argv: list[str] | None = None) -> int:
     """
     parser = argparse.ArgumentParser(
         prog="python -m dev.test_runs",
-        description="Run the full test-lane sweep sequentially.",
+        description="Run the named lanes sequentially.",
     )
     sub = parser.add_subparsers(dest="action", required=True)
     lanes = sub.add_parser("lanes", help="run the named lanes in order")
+    lanes.add_argument("--json-events", action="store_true", help="emit machine-readable lane boundaries")
+    lanes.add_argument("--no-evidence", action="store_true", help="leave evidence persistence to the caller")
     lanes.add_argument("lane", nargs="+", help="just recipe names")
     args = parser.parse_args(argv)
-    return run_lanes(args.lane)
+    return run_lanes(args.lane, json_events=args.json_events, persist_evidence=not args.no_evidence)
 
 
 if __name__ == "__main__":

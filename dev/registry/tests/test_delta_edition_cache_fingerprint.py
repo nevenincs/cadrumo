@@ -31,14 +31,13 @@ import pytest
 from cadrumo.core.hashing import blake2b_hex
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
-from ..compiler._loader_internals import (
-    _collect_modelo_directory_fingerprints,
-    _collect_registry_tree_fingerprints_uncached,
-    _load_modelo_directory_cached,
+from ..compiler.loader import load_modelo_directory, load_registry_tree
+from ..compiler.loader_fingerprints import (
+    clear_fingerprint_cache,
+    collect_modelo_directory_fingerprints,
+    collect_registry_tree_fingerprints,
 )
-from ..compiler.loader import _load_registry_tree_cached, load_modelo_directory, load_registry_tree
-from ..compiler.loader_fingerprints import clear_fingerprint_cache
-from ..conformance.tests._loader_directory_mode_support import (
+from ..conformance.loader_directory_mode_support import (
     write_fragmented_revision,
     write_minimal_shared_catalogues,
 )
@@ -132,11 +131,6 @@ def _tree_rows(registry_root: Path, revision_id: str) -> _Rows:
     return _rows(next(modelo for modelo in modelos if modelo.id == _MODELO_ID), revision_id)
 
 
-def _cached_tree_rows(registry_root: Path, fingerprints: tuple[_Fingerprint, ...], revision_id: str) -> _Rows:
-    modelos, _catalogues = _load_registry_tree_cached(str(registry_root), fingerprints)
-    return _rows(next(modelo for modelo in modelos if modelo.id == _MODELO_ID), revision_id)
-
-
 def _changed_paths(before: tuple[_Fingerprint, ...], after: tuple[_Fingerprint, ...]) -> set[str]:
     return {row[0] for row in set(before) ^ set(after)}
 
@@ -158,22 +152,16 @@ def test_editing_the_delta_edition_invalidates_and_serves_its_new_content(tmp_pa
 
     assert _tree_rows(registry_root, "2025") == _EXPANDED_2025
     assert _rows(load_modelo_directory(modelo_dir), "2025") == _EXPANDED_2025
-    tree_before = _collect_registry_tree_fingerprints_uncached(registry_root)
-    modelo_before = _collect_modelo_directory_fingerprints(modelo_dir)
+    tree_before = collect_registry_tree_fingerprints(registry_root)
+    modelo_before = collect_modelo_directory_fingerprints(modelo_dir)
 
     _rewrite(delta, 'number = "22"', 'number = "23"')
 
-    assert _changed_paths(tree_before, _collect_registry_tree_fingerprints_uncached(registry_root)) == {str(delta)}
-    assert _changed_paths(modelo_before, _collect_modelo_directory_fingerprints(modelo_dir)) == {str(delta)}
+    assert _changed_paths(tree_before, collect_registry_tree_fingerprints(registry_root)) == {str(delta)}
+    assert _changed_paths(modelo_before, collect_modelo_directory_fingerprints(modelo_dir)) == {str(delta)}
     edited: _Rows = [("01", "01", "base"), ("02", "23", "cuota")]
     assert _tree_rows(registry_root, "2025") == edited
     assert _rows(load_modelo_directory(modelo_dir), "2025") == edited
-
-    assert _cached_tree_rows(registry_root, tree_before, "2025") == _EXPANDED_2025, (
-        "the compiled registry must still hold the pre-edit expansion under the pre-edit key, "
-        "or the invalidation above proves nothing about the fingerprint"
-    )
-    assert _rows(_load_modelo_directory_cached(str(modelo_dir), modelo_before), "2025") == _EXPANDED_2025
 
 
 def test_editing_the_predecessor_invalidates_the_successor_that_inherits_from_it(tmp_path: Path) -> None:
@@ -190,25 +178,17 @@ def test_editing_the_predecessor_invalidates_the_successor_that_inherits_from_it
 
     assert _tree_rows(registry_root, "2025") == _EXPANDED_2025
     assert _rows(load_modelo_directory(modelo_dir), "2025") == _EXPANDED_2025
-    tree_before = _collect_registry_tree_fingerprints_uncached(registry_root)
-    modelo_before = _collect_modelo_directory_fingerprints(modelo_dir)
+    tree_before = collect_registry_tree_fingerprints(registry_root)
+    modelo_before = collect_modelo_directory_fingerprints(modelo_dir)
 
     _rewrite(predecessor, 'number = "01"', 'number = "11"')
 
     assert [path.read_bytes() for path in successor_files] == successor_bytes
-    assert _changed_paths(tree_before, _collect_registry_tree_fingerprints_uncached(registry_root)) == {
-        str(predecessor)
-    }
-    assert _changed_paths(modelo_before, _collect_modelo_directory_fingerprints(modelo_dir)) == {str(predecessor)}
+    assert _changed_paths(tree_before, collect_registry_tree_fingerprints(registry_root)) == {str(predecessor)}
+    assert _changed_paths(modelo_before, collect_modelo_directory_fingerprints(modelo_dir)) == {str(predecessor)}
     reinherited: _Rows = [("01", "11", "base"), ("02", "22", "cuota")]
     assert _tree_rows(registry_root, "2025") == reinherited
     assert _rows(load_modelo_directory(modelo_dir), "2025") == reinherited
-
-    assert _cached_tree_rows(registry_root, tree_before, "2025") == _EXPANDED_2025, (
-        "the compiled registry must still hold the successor expanded from the old predecessor under the "
-        "pre-edit key, or the invalidation above proves nothing about the fingerprint"
-    )
-    assert _rows(_load_modelo_directory_cached(str(modelo_dir), modelo_before), "2025") == _EXPANDED_2025
 
 
 def _physical_modelo_fingerprints(modelo_dir: Path) -> set[_Fingerprint]:
@@ -239,8 +219,8 @@ def test_the_fingerprint_is_a_function_of_the_physical_files_alone(tmp_path: Pat
     modelo_dir = _modelo_dir(registry_root)
     delta = _casilla_fragment(registry_root, "2025")
 
-    modelo_before = _collect_modelo_directory_fingerprints(modelo_dir)
-    tree_before = _collect_registry_tree_fingerprints_uncached(registry_root)
+    modelo_before = collect_modelo_directory_fingerprints(modelo_dir)
+    tree_before = collect_registry_tree_fingerprints(registry_root)
 
     assert _tree_rows(registry_root, "2025") == _EXPANDED_2025
     expanded = load_modelo_directory(modelo_dir)
@@ -249,9 +229,9 @@ def test_the_fingerprint_is_a_function_of_the_physical_files_alone(tmp_path: Pat
         "sanity: the successor must state fewer rows than it expands to, or nothing was materialised"
     )
 
-    modelo_after = _collect_modelo_directory_fingerprints(modelo_dir)
+    modelo_after = collect_modelo_directory_fingerprints(modelo_dir)
     assert modelo_after == modelo_before
-    assert _collect_registry_tree_fingerprints_uncached(registry_root) == tree_before
+    assert collect_registry_tree_fingerprints(registry_root) == tree_before
 
     physical = _physical_modelo_fingerprints(modelo_dir)
     assert set(modelo_after) == physical

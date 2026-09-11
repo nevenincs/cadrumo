@@ -29,7 +29,7 @@ from dataclasses import dataclass
 from datetime import date
 
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.core.i18n import lookup_translation_entry
+from cadrumo.core.i18n.render import lookup_translation_entry
 from cadrumo.core.modelo import Modelo
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision

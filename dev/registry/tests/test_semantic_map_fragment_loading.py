@@ -297,7 +297,7 @@ def test_regimen_simplificado_coherence_refusal_never_carries_pydantics_input_va
     matched the refusal message's shape; none proved the ``input_value=`` dump
     the raw exception actually carries is stripped. This submodel's fields
     are closed enums/ints today, so nothing sensitive is at stake yet, but
-    the guarantee this loader makes (:mod:`._pydantic_error_detail`: never
+    the guarantee this loader makes (:mod:`.pydantic_error_detail`: never
     build from ``str(exc)``) cannot assume a payload shape -- the leak
     mechanism is proven reachable here regardless of what a future
     projection-ref member's fields hold.
@@ -628,7 +628,7 @@ def test_public_loader_has_one_toml_parser_owner() -> None:
         "cadrumo.domain.calculations.export_field_kind",
         "cadrumo.domain.calculations.registry.schema_base",
         "cadrumo.domain.calculations.registry.schema_exports",
-        "_pydantic_error_detail",
+        "pydantic_error_detail",
         "record_design_intermediate",
     }
     imported_names_by_module = {
@@ -648,7 +648,7 @@ def test_public_loader_has_one_toml_parser_owner() -> None:
             "cadrumo.domain.calculations.registry.ids",
             "cadrumo.domain.calculations.registry.schema_base",
             "cadrumo.domain.calculations.registry.schema_exports",
-            "_pydantic_error_detail",
+        "pydantic_error_detail",
             "record_design_intermediate",
         }
     }
@@ -680,7 +680,7 @@ def test_public_loader_has_one_toml_parser_owner() -> None:
         },
         "cadrumo.domain.calculations.registry.schema_base": {"LegalRefs", "SourceRefs"},
         "cadrumo.domain.calculations.registry.schema_exports": {"FilingEnvelopePrefixRole", "RecordDiscriminator"},
-        "_pydantic_error_detail": {"validation_error_detail"},
+        "pydantic_error_detail": {"validation_error_detail"},
         "record_design_intermediate": {"AnchorKey", "RecordKey"},
     }
     assert direct_imports == {("re", None)}
@@ -703,7 +703,7 @@ def test_projection_ref_hydration_cannot_spread_beyond_the_loader() -> None:
     """
     package_root = Path(__file__).resolve().parents[1]
     for module_name in (
-        "_semantic_map_validation.py",
+        "semantic_map_validation.py",
         "joined_record_design.py",
         "_export_tree.py",
         "export_fragment_provenance.py",

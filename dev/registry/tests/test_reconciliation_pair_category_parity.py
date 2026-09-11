@@ -34,11 +34,12 @@ import re
 from collections.abc import Mapping
 
 import pytest
-from test_support.registry_authoring import _committed_registry_tree
 
-from .....core.aggregation import BindingSourceKind
-from ..binding_selector_utils import selector_as_dict
-from ..schema import ModeloRevision
+from cadrumo.core.aggregation import BindingSourceKind
+from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+
+from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

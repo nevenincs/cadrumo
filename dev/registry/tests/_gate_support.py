@@ -6,7 +6,7 @@ from pathlib import Path
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry._snapshot_internals import collect_snapshot_ref_ids
+from cadrumo.domain.calculations.registry.snapshot import collect_snapshot_ref_ids
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 
 from ..compiler.loader import load_registry_tree

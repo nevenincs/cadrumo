@@ -78,11 +78,11 @@ _HARNESS_WALL_CEILING_SECONDS = 900
 def _declared_harness_members() -> tuple[str, ...]:
     """Return the harness recipe's member paths, from the one canonical parser.
 
-    Derived, never restated: the combined real-proof line is the ``test-harness``
+    Derived, never restated: the combined real-proof line is the ``test-pytest-harness``
     lane carrying the most paths, so a member added, dropped, or renamed at its
     one declaration site (the justfile) moves this without a second edit here.
     """
-    harness_lanes = [lane for lane in declared_lanes(_REPOSITORY_ROOT) if lane.recipe == "test-harness"]
+    harness_lanes = [lane for lane in declared_lanes(_REPOSITORY_ROOT) if lane.recipe == "test-pytest-harness"]
     return max((lane.paths for lane in harness_lanes), key=len, default=())
 
 
@@ -104,18 +104,14 @@ def test_ci_workflow_runs_canonical_cadrumo_commands_and_paths() -> None:
     assert "just check-registry" in static_commands
     assert "uv run --no-sync python -m dev.registry.parity.maintenance_cli audit-oracles" not in static_commands
     assert "semgrep --config .semgrep/rules/ --error src/cadrumo/" in static_commands
-    # The dev-tree workflow/tooling conformance gates run per-push here, via the
-    # `test-dev-ci` recipe. The workflow names the recipe and the recipe owns the
+    # The CI/repository contract gates run per-push here, via the
+    # `test-ci-contracts` recipe. The workflow names the recipe and the recipe owns the
     # paths, so the per-push dev-tree selection has one declaration site; the
     # substance of the invocation is pinned in the recipe, below. That is not yet
     # true of every `dev/` lane: ci-full.yml still spells its own dev-tree paths
     # and marker expression inline, and that copy has drifted from this recipe.
-    assert "just test-dev-ci" in static_commands
-    # The four cross-layer conformance gates (rule-surface, status-frontend,
-    # self-referential-string, suggestion-command) run per-push here, via the
-    # `test-per-push-integration-gates` recipe -- previously reachable by no
-    # automatically-triggered workflow at all.
-    assert "just test-per-push-integration-gates" in static_commands
+    assert "just test-ci-contracts" in static_commands
+    assert "just test-integration-parallel" in static_commands
 
     unit = document["jobs"]["cadrumo-unit"]
     unit_commands = "\n".join(str(step.get("run", "")) for step in unit["steps"])
@@ -160,7 +156,7 @@ def test_workflow_lint_is_a_standalone_blocking_verdict_over_every_workflow() ->
     assert job["timeout-minutes"] <= 15
 
     executed = executed_text(step.get("run") for step in job["steps"])
-    assert "just check-workflow" in executed, (
+    assert "just check-workflows" in executed, (
         "the workflow lint is dispatched by recipe; a gate re-listed in YAML "
         "cannot be proven to match the gate a developer can run"
     )
@@ -220,8 +216,8 @@ def test_harness_recipe_runs_every_real_proof_outer_serially_and_non_vacuously()
     xdist pool.
     """
     members = _declared_harness_members()
-    assert members, "no justfile recipe named test-harness declares any member"
-    commands = resolved_recipe_commands(_REPOSITORY_ROOT, "test-harness")
+    assert members, "no justfile recipe named test-pytest-harness declares any member"
+    commands = resolved_recipe_commands(_REPOSITORY_ROOT, "test-pytest-harness")
 
     # A lane names only what SELECTS it: markers, paths, worker count, and the
     # wall ceiling. How pytest REPORTS is declared once in
@@ -269,7 +265,7 @@ def test_the_harness_real_proof_outruns_the_default_per_test_wall_ceiling() -> N
     no work beyond importing.
     """
     ini_ceiling = int(re.search(r"(?m)^timeout\s*=\s*(\d+)", _PYPROJECT.read_text(encoding="utf-8")).group(1))
-    commands = resolved_recipe_commands(_REPOSITORY_ROOT, "test-harness")
+    commands = resolved_recipe_commands(_REPOSITORY_ROOT, "test-pytest-harness")
     real_proof = commands[-1]
 
     assert ini_ceiling < _HARNESS_WALL_CEILING_SECONDS, (
@@ -299,12 +295,12 @@ def test_harness_member_preflight_rejects_empty_collection_even_when_another_mem
     )
 
     members = _declared_harness_members()
-    commands = resolved_recipe_commands(_REPOSITORY_ROOT, "test-harness")
+    commands = resolved_recipe_commands(_REPOSITORY_ROOT, "test-pytest-harness")
     preflight = next(
         (command for command in commands if "--collect-only" in command and members[0] in command),
         None,
     )
-    assert preflight is not None, "the resolved test-harness recipe has no worker-hook member preflight"
+    assert preflight is not None, "the resolved test-pytest-harness recipe has no worker-hook member preflight"
     command = shlex.split(preflight)
     assert command == [
         "uv",
@@ -360,29 +356,26 @@ def test_ci_harness_verdict_is_a_standalone_blocking_job() -> None:
     assert harness.get("continue-on-error") is not True
 
     commands = tuple(str(step.get("run", "")) for step in harness["steps"] if step.get("run"))
-    assert commands[-1] == "just test-harness"
-    assert sum(command == "just test-harness" for command in commands) == 1
+    assert commands[-1] == "just test-pytest-harness"
+    assert sum(command == "just test-pytest-harness" for command in commands) == 1
 
     routine_commands = "\n".join(
         str(step.get("run", ""))
         for job_name in ("cadrumo-static", "cadrumo-unit")
         for step in document["jobs"][job_name]["steps"]
     )
-    assert "just test-harness" not in routine_commands
+    assert "just test-pytest-harness" not in routine_commands
 
 
-def test_the_dev_ci_recipe_carries_the_substance_the_workflow_delegates() -> None:
+def test_the_ci_contracts_recipe_carries_the_substance_the_workflow_delegates() -> None:
     """The workflow names a recipe, so the recipe is where the pin has to bite.
 
-    Delegating the step to `just test-dev-ci` moves the paths and the marker
-    expression out of ci.yml, which is the point -- the recipe becomes the one
-    declaration site for the per-push dev-tree selection. It is not the sole
-    declaration site for every `dev/` lane: ci-full.yml's dev-tree step still
-    carries its own paths and marker expression, and that copy has already
-    drifted from this recipe. But a pin that only checked the workflow says "a
-    recipe is invoked" and nothing about what it does, so emptying the recipe
-    would pass it while running no gates at all. This asserts the substance at
-    its new home.
+    Delegating the step to `just test-ci-contracts` moves the paths and the
+    marker expression out of ci.yml, which is the point -- the recipe becomes
+    the one declaration site for the CI/repository contract population. A pin
+    that only checked the workflow says "a recipe is invoked" and nothing about
+    what it does, so emptying the recipe would pass it while running no gates at
+    all. This asserts the substance at its canonical home.
 
     Explicit -n 8, never -n auto: three runners share the machine (machine-aware
     sizing, test_machine_aware_load.py). The marker expression is explicit
@@ -399,8 +392,8 @@ def test_the_dev_ci_recipe_carries_the_substance_the_workflow_delegates() -> Non
     # reporting flags it used to restate (`-rsf --tb=short`) now live in
     # `[tool.pytest.ini_options] addopts`, pinned by
     # `test_harness_recipe_runs_every_real_proof_outer_serially_and_non_vacuously`.
-    assert 'pytest -v -n 8 --timeout=900 -m "unit or (integration and not serial)"' in recipe
-    for directory in ("dev/ci/tests", "dev/packaging/tests", "dev/quality/tests", "dev/release/tests"):
+    assert 'pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial' in recipe
+    for directory in ("dev/ci/tests", "dev/deploy/tests", "dev/release/tests"):
         assert directory in recipe, f"the delegated lane no longer reaches {directory}"
 
 
@@ -467,60 +460,33 @@ def _module_level_markers(module: Path) -> frozenset[str]:
     return frozenset(names)
 
 
-def test_the_per_push_integration_gates_recipe_carries_the_substance_the_workflow_delegates() -> None:
-    """The four named gates, not just any `integration`-marked test, must be named.
+def test_product_integration_parallel_recipe_carries_the_canonical_selection() -> None:
+    """The product integration aggregate owns the cross-layer integration population."""
+    lines = _JUSTFILE.read_text(encoding="utf-8").splitlines()
+    recipe = next((line for line in lines if line == "test-integration-parallel:"), None)
+    assert recipe is not None, "no canonical product integration recipe was declared"
 
-    Same rationale as the two recipe-substance pins above: the workflow names a
-    recipe, so the recipe -- not the workflow line -- is where the path-set and
-    marker-expression pin has to bite.
-    """
-    recipe = next(
-        (
-            line
-            for line in _JUSTFILE.read_text(encoding="utf-8").splitlines()
-            if line.startswith("test-per-push-integration-gates:")
-        ),
-        None,
-    )
-    assert recipe is not None, "no justfile recipe line named test-per-push-integration-gates"
-
-    body = next(
-        (
-            line
-            for line in _JUSTFILE.read_text(encoding="utf-8").splitlines()
-            if "test_suggestion_command_conformance.py" in line
-        ),
-        None,
-    )
-    assert body is not None, "no justfile line carries the recipe body; the delegated lane has no home"
-    assert "not serial and not perf and not external_tool and not os_keychain and not resident_service" in body
-    for target in (
-        "src/cadrumo/application/user_profile/tests/test_status_projection.py",
-        "src/cadrumo/entrypoints/cli/tests/test_self_referential_string_conformance.py",
-        "dev/tests/test_suggestion_command_conformance.py",
-    ):
-        assert target in body, f"the delegated lane no longer names {target}"
+    body = next((line for line in lines if "integration and not serial" in line), None)
+    assert body is not None, "the canonical integration recipe has no parallel marker selection"
+    assert "not perf and not external_tool and not os_keychain" in body
 
 
-def test_ci_per_push_integration_conformance_step_is_exact_and_blocking() -> None:
-    """The four-gate per-push verdict delegates once and cannot be made advisory."""
+def test_ci_product_integration_conformance_step_is_exact_and_blocking() -> None:
+    """The product integration verdict delegates once and cannot be made advisory."""
     document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
     static = document["jobs"]["cadrumo-static"]
-    step_name = (
-        "Per-push integration conformance gates "
-        "(rule-surface, status-frontend, self-referential-string, suggestion-command)"
-    )
+    step_name = "Product integration parallel population"
     step = next(
         (candidate for candidate in static["steps"] if candidate.get("name") == step_name),
         None,
     )
 
-    assert step is not None, "the per-push integration conformance step is missing"
+    assert step is not None, "the product integration step is missing"
     # One delegation and nothing else on the line. The worker override rides
     # `env:`, because `VAR=x just ...` is POSIX shell syntax that cmd.exe and
     # PowerShell both refuse - this repository schedules Windows legs, so a
     # step written that way is one they could not have run.
-    assert step["run"] == "just test-per-push-integration-gates"
+    assert step["run"] == "just test-integration-parallel"
     assert step.get("env", {}).get("CADRUMO_PYTEST_WORKERS") == "8"
     assert "continue-on-error" not in step
 
@@ -541,7 +507,7 @@ def test_ci_per_push_jobs_carry_the_speed_budget_ceilings() -> None:
     commands = "\n".join(str(step.get("run", "")) for job in document["jobs"].values() for step in job["steps"])
     assert "docs-check" not in commands
     assert "pip-audit" not in commands
-    assert "check-pre-commit" not in commands
+    assert "check-hooks" not in commands
 
 
 def test_full_lane_carries_every_slow_conformance_surface() -> None:
@@ -560,7 +526,7 @@ def test_full_lane_carries_every_slow_conformance_surface() -> None:
     commands = "\n".join(str(step.get("run", "")) for step in document["jobs"]["cadrumo-full-conformance"]["steps"])
     assert "just docs-check" in commands
     assert "pip-audit --strict" in commands
-    assert "just check-pre-commit" in commands
+    assert "just check-hooks" in commands
     # Same `test-unit` recipe ci.yml routes through, with the full lane's own
     # durations value; the recipe's substance is pinned in
     # test_the_test_unit_recipe_carries_the_substance_the_workflow_delegates.
@@ -646,7 +612,7 @@ def test_ci_workflow_provisions_browser_before_unit_tests() -> None:
     browser_step = step_names.index("Provision Playwright Chromium")
     unit_step = step_names.index("Test (unit)")
 
-    assert steps[browser_step]["run"] == "just setup-playwright"
+    assert steps[browser_step]["run"] == "just setup-browser"
     assert browser_step < unit_step
 
 

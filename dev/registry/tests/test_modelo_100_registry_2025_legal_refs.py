@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.casilla_id import validated_casilla_id
+from cadrumo.core.casilla_id import validated_casilla_id
+
 from ._modelo_100_registry_support import (
     _ANEXO_C_BASE_NEGATIVE_GENERAL_BINDING_ID,
     _ANEXO_C_BASE_NEGATIVE_GENERAL_CONSTRUCT_ID,

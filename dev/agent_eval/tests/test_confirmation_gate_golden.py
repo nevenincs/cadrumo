@@ -49,13 +49,9 @@ from pathlib import Path
 import mcp.types as mcp_types
 import pytest
 
-from cadrumo_harness.mcp import (
-    ConfirmationPolicy,
-    McpToolDescriptor,
-    build_server,
-    build_tool_descriptors,
-    confirmation_for_tool,
-)
+from cadrumo_harness.mcp._hitl import ConfirmationPolicy, confirmation_for_tool
+from cadrumo_harness.mcp._server import build_server
+from cadrumo_harness.mcp._tools import McpToolDescriptor, build_tool_descriptors
 from cadrumo_harness.mcp.tests._session import connected_server_and_client_session as connect
 
 from .._models import ConfirmationGateCheck, ConfirmationTier

@@ -52,14 +52,13 @@ from pydantic import BaseModel, TypeAdapter
 
 import cadrumo
 from cadrumo.core.aggregation import BindingSourceKind
-from cadrumo.core.atomic_write import atomic_write_best_effort_bytes
 from cadrumo.core.directory_scan import iter_directory, scan_directory
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.paths import select_filesystem_retention_survivors
 from cadrumo.domain.calculations.registry.bindings import selector_model_for_source
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 
-from .loader_cache import registry_disk_cache_dir, registry_disk_cache_max_entries
+from .loader_cache import registry_disk_cache_max_entries
 
 CompiledRegistryPayload = tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]
 """The compiled registry payload: every :class:`ModeloDefinition` plus the shared catalogues."""
@@ -319,7 +318,7 @@ def _compute_loader_code_fingerprint(roots: Iterable[type[BaseModel]] | None = N
 
 
 @cache
-def loader_code_fingerprint() -> str:
+def _loader_code_fingerprint() -> str:
     """Return the loader-source fingerprint, computed once on first use.
 
     Deriving it walks every registry source file, reads its bytes, and
@@ -359,7 +358,7 @@ def _registry_disk_cache_key(
     import time and reinstate the cost this indirection removes.
     """
     override = loader_code_fingerprint_override
-    resolved = loader_code_fingerprint() if override is None else override
+    resolved = _loader_code_fingerprint() if override is None else override
     hasher = hashlib.sha256()
     hasher.update(_REGISTRY_TREE_CACHE_SCHEMA_VERSION.encode("utf-8"))
     hasher.update(resolved.encode("utf-8"))
@@ -412,73 +411,6 @@ def _evict_stale_registry_pickles(cache_dir: Path, *, logger: logging.Logger) ->
             cache_path.unlink()
         except OSError:
             logger.debug("Could not evict stale compiled registry cache %s", cache_path, exc_info=True)
-
-
-def compiled_cache_path(root: Path, fingerprints: FingerprintTuples) -> Path:
-    """Return the compiled-cache file for ``root`` at the current fingerprint key.
-
-    The filename embeds the sha256 of the schema-version marker, the loader-code
-    fingerprint, the root path, and the per-TOML tree fingerprints, so distinct
-    trees and distinct compiler states never share a file while an identical tree
-    reuses the same path across processes.
-
-    Returns:
-        The cache file path under the settings-derived registry cache directory.
-    """
-    key_hash = _registry_disk_cache_key(str(root), fingerprints)
-    return registry_disk_cache_dir() / f"{_CACHE_FILENAME_PREFIX}{key_hash}{_CACHE_FILENAME_SUFFIX}"
-
-
-def load_compiled_registry_cache(root: Path, fingerprints: FingerprintTuples) -> CompiledRegistryPayload | None:
-    """Load the strict-validated compiled payload for ``root``, or ``None`` to recompile.
-
-    Reads the framed cache file at the current fingerprint key, verifies the
-    embedded integrity digest, deserialises the payload, and structurally
-    type-checks it. Any failure -- an absent file, a transient read race that
-    outlasts the retry, a schema-version or digest mismatch (the file was
-    mutated on disk), an unpicklable payload, or a payload that is not exactly a
-    ``(tuple[ModeloDefinition, ...], RegistryCatalogues)`` pair -- DELETES the
-    file and returns ``None`` so the caller recompiles from TOML. The cache is
-    therefore never a second authority: it can only ever serve a byte-integral
-    payload of the exact expected shape.
-
-    Returns:
-        The compiled payload on a clean hit, else ``None``.
-    """
-    path = compiled_cache_path(root, fingerprints)
-    if not path.is_file():
-        return None
-    raw = _read_cache_bytes(path)
-    if raw is None:
-        return None
-    payload = _decode_and_validate(raw)
-    if payload is None:
-        _delete_cache_file(path)
-        return None
-    return payload
-
-
-def store_compiled_registry_cache(
-    root: Path,
-    fingerprints: FingerprintTuples,
-    payload: CompiledRegistryPayload,
-) -> None:
-    """Persist ``payload`` for ``root`` at the current fingerprint key.
-
-    Writes the framed file (schema-version marker, integrity digest, pickled
-    payload) atomically via the best-effort tier's sibling temp file, then
-    prunes stale sibling pickles beyond the retained-entry ceiling.
-    Best-effort: a write failure is logged and swallowed so a cache-directory
-    permission problem never crashes a registry load -- the worst case is a
-    recompile on the next process.
-    """
-    path = compiled_cache_path(root, fingerprints)
-    frame = _encode_frame(payload)
-    try:
-        atomic_write_best_effort_bytes(path, frame)
-        _evict_stale_registry_pickles(path.parent, logger=_LOGGER)
-    except Exception:
-        _LOGGER.debug("Could not write compiled registry cache at %s", path, exc_info=True)
 
 
 def _encode_frame(payload: CompiledRegistryPayload) -> bytes:
@@ -624,10 +556,4 @@ def _delete_cache_file(path: Path) -> None:
         _LOGGER.debug("Could not delete stale compiled registry cache at %s", path, exc_info=True)
 
 
-__all__ = [
-    "CompiledRegistryPayload",
-    "FingerprintTuples",
-    "compiled_cache_path",
-    "load_compiled_registry_cache",
-    "store_compiled_registry_cache",
-]
+__all__ = []

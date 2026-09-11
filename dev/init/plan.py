@@ -100,7 +100,7 @@ PYTHON = Phase(
 
 TOOLS = Phase(
     name="tools",
-    summary="Install the Vaultspec tooling and diagnose the result.",
+    summary="Install repository tooling and diagnose the result.",
     steps=(
         Step(
             name="vaultspec-install",
@@ -116,6 +116,11 @@ TOOLS = Phase(
             summary="Report the resulting configuration.",
             advisory=True,
         ),
+        Step(
+            name="actionlint-install",
+            argv=("uv", "run", "--no-sync", "python", "-m", "dev.actionlint", "--install"),
+            summary="Provision the pinned actionlint executable for read-only workflow checks.",
+        ),
     ),
     inputs=("uv.lock",),
     artifacts=(),
@@ -123,7 +128,7 @@ TOOLS = Phase(
 
 #: The phases, keyed by name. The runner reads this and nothing else.
 #:
-#: `just setup-playwright` is deliberately absent. Downloading two browser
+#: `just setup-browser` is deliberately absent. Downloading two browser
 #: channels is minutes of network for a capability most worktrees never
 #: exercise, and CI already invokes it as its own step.
 PHASE_PLAN: Final[dict[str, Phase]] = {

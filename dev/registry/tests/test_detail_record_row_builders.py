@@ -16,16 +16,17 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from test_support.registry_authoring import _committed_registry_tree
 
-from .....core.foreign_asset_obligation import M720AssetClassCode
-from ..detail_record_bindings import (
+from cadrumo.core.foreign_asset_obligation import M720AssetClassCode
+from cadrumo.domain.calculations.registry.detail_record_bindings import (
     AtributionMemberObservation,
     Modelo720RowObservation,
     _build_foreign_asset_rows,
     resolve_atribucion_binding_row_values,
     resolve_foreign_asset_binding_row_values,
 )
+
+from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -69,7 +69,7 @@ from cadrumo.domain.calculations.registry.withholding_bindings import (
     resolve_withholding_binding_values,
 )
 from cadrumo.domain.period import calculation_filing_date
-from cadrumo.tests import FIXTURES_DIR
+from cadrumo.tests.inventory import FIXTURES_DIR
 
 from ._cross_dependency_calculation_support import (
     _casilla_inputs,

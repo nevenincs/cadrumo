@@ -13,7 +13,7 @@ with facts merged by
 :func:`~cadrumo.tests.profile_capsule.open_test_profile_session` — never a
 parallel write path), English output pinned via the central settings surface,
 and the live-AEAT gate off. Frames are invoked in-process through the cached
-Click tree (:func:`~cadrumo.tests.cli_runner.invoke_cached_cli`). Sequences never
+Click tree (:func:`~cadrumo.entrypoints.cli.tests.cli_runner.invoke_cached_cli`). Sequences never
 share state — not across pages and not within a page.
 
 Capture threading: after a frame executes, each of its
@@ -34,7 +34,7 @@ surface). The sandbox additionally refuses to open while the live-test opt-in
 is set, and never sets it.
 
 Layering note: this docs-tooling engine deliberately consumes the shared
-in-package test substrate — :mod:`cadrumo.tests.cli_runner` and
+in-package test substrate — :mod:`cadrumo.entrypoints.cli.tests.cli_runner` and
 :mod:`cadrumo.tests.secure_sql` — rather than duplicating a second engine on
 top of it. Both are public, non-underscore modules of the shipped
 ``cadrumo.tests`` package and are the canonical hermetic in-process
@@ -68,6 +68,7 @@ from typing import Literal
 import keyring
 import keyring.backends.null
 import keyring.core
+from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli, semantic_cli_text
 from click.testing import Result
 from pydantic import BaseModel, Field, JsonValue
 
@@ -79,7 +80,6 @@ from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.user_profile.values import UserProfileFact
-from cadrumo.tests.cli_runner import invoke_cached_cli, semantic_cli_text
 from cadrumo.tests.profile_capsule import (
     bound_test_profile_record,
     open_test_profile_session,
@@ -619,7 +619,7 @@ def _isolated_diagnostic_log() -> Generator[None]:
 
     An explicit ``override_settings(cadrumo_log_dir=...)`` here, not reliance on
     ``cadrumo_local_storage_root``'s automatic re-derivation
-    (:data:`~cadrumo.core.storage_taxonomy.ROOT_DERIVED_STORAGE_FIELDS`):
+    (:data:`~cadrumo.core.storage_taxonomy_locations.ROOT_DERIVED_STORAGE_FIELDS`):
     :func:`dev.docs.build.ensure_private_diagnostic_log` already set
     ``CADRUMO_LOG_DIR`` explicitly at PROCESS start, so the process-wide
     :class:`~cadrumo.core.config.Settings` carries ``cadrumo_log_dir`` in its

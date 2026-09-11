@@ -152,7 +152,7 @@ def test_every_job_is_self_hosted_and_fork_guarded() -> None:
     jobs = document["jobs"]
     assert set(jobs) == {
         "runtime-inventory",
-        "build-python-cohort",
+        "build-packaging-cohort",
         "compatibility-source",
         "compatibility-binary",
     }
@@ -186,7 +186,7 @@ def test_inventory_job_is_the_only_matrix_authority() -> None:
     source = document["jobs"]["compatibility-source"]
     binary = document["jobs"]["compatibility-binary"]
     assert source["needs"] == "runtime-inventory"
-    assert set(binary["needs"]) == {"runtime-inventory", "build-python-cohort"}
+    assert set(binary["needs"]) == {"runtime-inventory", "build-packaging-cohort"}
     for job in (source, binary):
         matrix = job["strategy"]["matrix"]
         assert matrix == "${{ fromJSON(needs.runtime-inventory.outputs.matrix) }}"
@@ -266,7 +266,7 @@ def test_evidence_uploads_are_fail_closed_and_mode_specific() -> None:
 def test_binary_rows_download_and_verify_one_cohort() -> None:
     """Binary rows consume the one run-local archive and verify its digest."""
     document = _document()
-    build = document["jobs"]["build-python-cohort"]
+    build = document["jobs"]["build-packaging-cohort"]
     build_surface = _run_surface(build)
     assert build_surface.count("python -m dev.packaging.release_cohort build") == 1
     # The cohort names its own content by digest; no step asks git for a commit.
@@ -296,7 +296,7 @@ def test_binary_rows_download_and_verify_one_cohort() -> None:
 def test_cohort_builder_preserves_the_exact_pin_lane() -> None:
     """The cohort builder does not replace the repository's exact Python pin."""
     document = _document()
-    build = document["jobs"]["build-python-cohort"]
+    build = document["jobs"]["build-packaging-cohort"]
     setup = [
         step
         for step in build["steps"]

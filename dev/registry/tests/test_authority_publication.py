@@ -15,7 +15,7 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
 from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryValidationError
 
 from ..compiler import fact_providers
-from ..conformance.tests._loader_directory_mode_support import (
+from ..conformance.loader_directory_mode_support import (
     write_extracted_corpus_sidecar,
     write_fragmented_revision,
 )

@@ -5,12 +5,13 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from test_support.registry_authoring import RegistryValidator
 
-from .....core.period import PeriodKind, registry_period_kind
-from .....core.resources.bundled_data import bundled_path
-from .registry_tree import bundled_registry_tree
-from ..temporal import select_revision
+from cadrumo.core.period import PeriodKind, registry_period_kind
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+
+from ..compiler.validator import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

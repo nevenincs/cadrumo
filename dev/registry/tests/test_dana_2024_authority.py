@@ -51,7 +51,7 @@ from cadrumo.domain.calculations.registry.facts.resolution import ScalarFactQuer
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
-from cadrumo.tests.registry_tree import bundled_registry_tree
+from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 from ..compiler.fact_providers import compile_registered_fact_providers
 from ..compiler.legal_grounding import (

@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-"""The composed `just fix-all` pass.
+"""The composed `just fix-code` pass.
 
-`fix-all` was a `just` dependency chain, `fix-all: fix-style fix-format`, and
+The former aggregate was a `just` dependency chain with style and format as
+separate steps, and
 `just` dependencies are unconditionally fail-fast. `ruff check --fix` exits 1
 whenever violations remain that carry no safe fix - the ordinary state of a
 repository midway through a burndown - so the formatter, the step most likely
@@ -10,7 +11,8 @@ failure it had not finished.
 
 This module applies the fleet aggregate rule instead, stated in
 `dev/EXIT-CODES.md`: run every step, then exit with the FIRST non-zero status
-seen. It sits beside :mod:`dev.quality.suite`, the `check-all` counterpart, and
+seen. It sits beside :mod:`dev.quality.suite`, the blocking code-check
+counterpart, and
 mirrors its shape - the two aggregates over the same tools should not need to
 be read differently.
 
@@ -66,7 +68,7 @@ def main() -> int:
 
     if worst == OK and strict and _content_state() != before:
         print(
-            "fix-all repaired files that were committed unrepaired; commit the result.",
+            "fix-code repaired files that were committed unrepaired; commit the result.",
             file=sys.stderr,
             flush=True,
         )

@@ -9,7 +9,7 @@ while the suite still reports on everything else.
 Both failures have happened here in one edit. Four ratchet commands were added
 under a single name, leaving a five-element row: the suite raised
 ``ValueError: too many values to unpack`` at import of the table, so
-``check-all`` ran nothing at all, and three of the four ratchets had no row of
+``check-code`` ran nothing at all, and three of the four ratchets had no row of
 their own to run from even once the crash was fixed. Neither condition is
 visible by reading the file -- the rows look like a list of commands either
 way -- so it is asserted here.
@@ -36,13 +36,45 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 #: need a local-only service.
 _NOT_AGGREGATED: Final[frozenset[str]] = frozenset(
     {
-        "check-pre-commit",
-        "check-all",
+        "check-code",
+        "check-repository",
+        "check-api-stubs",
+        "check-workflows",
+        "check-gate-contracts",
+        "check-hooks",
+        "check-dependency-vulnerabilities",
         "check-rag",
-        "check-semantic",
-        "check-workflow",
         "check-corpus-text",
+        "check-corpus-sidecars",
         "check-registry",
+        "check-registry-valid",
+        "check-registry-integrity",
+        "check-registry-oracles",
+        "check-registry-runtime-load",
+        "check-registry-target-current",
+        "check-identity",
+        "check-locales",
+        "check-docs-api",
+        "check-docs-synonyms",
+    }
+)
+
+# Only these rows belong to the portable code-quality aggregate. The subject
+# aggregate itself and every repository/control-plane or capability check are
+# deliberately excluded from ``dev.quality.suite.GATES``.
+_CODE_GATES: Final[frozenset[str]] = frozenset(
+    {
+        "check-style",
+        "check-format",
+        "check-types",
+        "check-import-boundaries",
+        "check-dependency-declarations",
+        "check-module-reachability",
+        "check-symbol-usage",
+        "check-export-consumption",
+        "check-secure-store-write-paths",
+        "check-persistence-write-paths",
+        "check-docstring-references",
     }
 )
 
@@ -128,7 +160,7 @@ def test_every_static_check_recipe_is_either_aggregated_or_declared_exempt() -> 
     missing = sorted(_justfile_static_checks() - {name for name, _ in GATES} - _NOT_AGGREGATED)
     assert not missing, (
         "these static-check recipes have no row in dev.quality.suite.GATES, so "
-        f"`just check-all` never runs them: {missing}"
+        f"`just check-code` never runs them: {missing}"
     )
 
 
@@ -146,9 +178,9 @@ def test_the_gate_catches_a_malformed_row() -> None:
 def test_each_gate_runs_the_same_command_its_recipe_does() -> None:
     """A gate defined twice drifts, and the halves disagree in silence.
 
-    ``check-dependencies`` is declared in the justfile and again in the suite's
+    ``check-dependency-declarations`` is declared in the justfile and again in the suite's
     table. The recipe scanned the harness package and the table did not, so
-    ``just check-dependencies`` passed while ``just check-all`` reported the
+    ``just check-dependency-declarations`` passed while ``just check-code`` reported the
     same two dependencies as declared-but-unused -- a scan-scope artefact that
     reads exactly like real debt. Only the arguments are compared: how each
     half launches the tool differs by construction.
@@ -173,28 +205,29 @@ def test_the_recipe_command_scan_reads_real_commands() -> None:
     assert commands.get("check-style"), f"check-style recipe not parsed: {commands.get('check-style')!r}"
 
 
-def test_facts_checks_are_enrolled_without_changing_modelo_commands() -> None:
+def test_only_code_quality_primitives_are_enrolled() -> None:
     commands = dict(GATES)
 
-    assert commands["check-modelo-regulatory-literals"] == (
+    assert set(commands) == _CODE_GATES
+    assert commands["check-import-boundaries"] == (
         sys.executable,
         "-m",
-        "dev.quality.modelo_regulatory_literals",
+        "dev.quality.import_gate",
     )
-    assert commands["check-modelo-regulatory-embeds"] == (
-        sys.executable,
-        "-m",
-        "dev.quality.modelo_regulatory_embeds",
+    assert commands["check-dependency-declarations"][:3] == (
+        "deptry",
+        "src/cadrumo",
+        "src/cadrumo_harness",
     )
-    assert commands["check-facts-catalogue-structure"] == (
+    assert commands["check-persistence-write-paths"] == (
         sys.executable,
         "-m",
-        "dev.registry.analysis.facts_catalogue_quality",
+        "dev.quality.write_path_coverage",
     )
-    assert commands["report-governed-literal-discovery"] == (
+    assert commands["check-secure-store-write-paths"] == (
         sys.executable,
         "-m",
-        "dev.registry.analysis.governed_literal_discovery",
+        "dev.quality.secure_store_write_path",
     )
 
 

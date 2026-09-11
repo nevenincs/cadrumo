@@ -6,15 +6,17 @@ from datetime import date
 from typing import Any
 
 import pytest
-from test_support.registry_authoring import RegistryValidator, _committed_modelo
 
-from .....core.corpus_text import normalise_corpus_text
-from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_snapshot import build_snapshot
-from ..authority import bundled_authority
-from ..ids import LegalRefId
-from ..schema import ModeloDefinition, RegistryCatalogues
-from ..temporal import select_revision
+from cadrumo.core.corpus_text import normalise_corpus_text
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.ids import LegalRefId
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ..compiler.validator import RegistryValidator
+from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

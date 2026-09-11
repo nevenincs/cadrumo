@@ -20,17 +20,18 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 import pytest
-from test_support.registry_authoring import _committed_modelo
 
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_snapshot import build_snapshot
-from ..binding_selector_utils import selector_as_dict
-from ..ledger_renta_gastos_pago_fraccionado_bindings import (
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
+from cadrumo.domain.calculations.registry.ledger_renta_gastos_pago_fraccionado_bindings import (
     resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values,
     unsupported_ledger_renta_gastos_pago_fraccionado_observations,
     validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition,
 )
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

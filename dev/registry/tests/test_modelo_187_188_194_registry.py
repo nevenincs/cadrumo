@@ -28,7 +28,7 @@ from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
 from cadrumo.domain.calculations.registry.temporal import select_revision
 
 from ..compiler.validator import RegistryValidator
-from ..conformance.tests._registry_schema_support import _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 from ..maintenance_support import resolve_record_design_binary
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

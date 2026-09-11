@@ -9,7 +9,7 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 
 from ..compiler.legal_grounding import verify_legal_catalogue_grounding
-from ._catalogue_verification_support import _catalogues
+from .catalogue_verification_support import _catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

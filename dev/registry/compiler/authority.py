@@ -22,7 +22,8 @@ from .authority_state import (
 from .convenio import convenio_authority_from_facts
 from .fact_providers import compile_registered_fact_providers, validate_fact_provider_directory_ownership
 from .identity import RegistryIdentity, resolve_registry_identity
-from .loader import collect_registry_tree_fingerprints, load_registry_tree
+from .loader import load_registry_tree
+from .loader_fingerprints import collect_registry_tree_fingerprints
 from .source_evidence_fingerprint import collect_source_evidence_fingerprints
 from .supplementary_orden import compile_supplementary_ordenes
 from .validator import RegistryValidator

@@ -55,7 +55,7 @@ from pydantic import BaseModel, ConfigDict
 
 from cadrumo.core.external_constants import UTF_8_ENCODING as _UTF_8
 from cadrumo.core.json_contract import EnvelopeStatus, ResolvedActionArgument
-from cadrumo_harness import iter_skill_documents
+from cadrumo_harness.resources import iter_skill_documents
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ._models import (
@@ -513,7 +513,7 @@ def _invoke_canonical_cli(argv: Sequence[str]):
     from click.testing import CliRunner
     from typer.main import get_command
 
-    from cadrumo.entrypoints.cli import app
+    from cadrumo.entrypoints.cli.main import app
 
     return CliRunner().invoke(get_command(app), ["--format", "json", *argv])
 

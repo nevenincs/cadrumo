@@ -21,7 +21,7 @@ from typing import Any, cast
 import pytest
 from pydantic import SecretStr, ValidationError
 
-from cadrumo.core.identity import IdentityError
+from cadrumo.core.identity.documents import IdentityError
 
 from .._records import (
     AddressReplacement,

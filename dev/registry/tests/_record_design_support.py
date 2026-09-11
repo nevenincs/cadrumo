@@ -25,14 +25,13 @@ from ..compiler.record_design import (
     extract_record_design,
     extract_record_design_pdf,
 )
-from ..conformance.tests._registry_schema_support import _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree
 
 __all__ = [
     "_MODELO_131_CURRENT",
     "_MODELO_131_WORKBOOK_ROOT",
     "_RECORD_DESIGN_ROOT",
     "CasillaFieldKind",
-    "_committed_registry_tree",
     "_fixed_export_selectors",
     "_is_page_one_structured_input_field",
     "_is_structured_input_field",
@@ -43,7 +42,6 @@ __all__ = [
     "_record_design_pdf",
     "_record_design_pdf_files",
     "_write_pdf_lines",
-    "bundled_path",
     "extract_record_design_pdf",
     "resolve_export_layout",
 ]
@@ -65,7 +63,7 @@ def _official_record_designs(paths: tuple[Path, ...]) -> dict[Path, tuple[Record
 
 
 def _modelo_131_snapshot(*, filing_year: int, period: str = "1T"):
-    modelos, catalogues = _committed_registry_tree()
+    modelos, catalogues = committed_registry_tree()
     modelo = next(item for item in modelos if item.id == "131")
     return build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=filing_year, period=period)
 

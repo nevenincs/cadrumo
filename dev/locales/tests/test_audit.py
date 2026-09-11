@@ -7,14 +7,14 @@ from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
+from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
 
-from cadrumo.core.i18n import extract_placeholders
+from cadrumo.core.i18n.render import extract_placeholders
 from cadrumo.core.product_identity import (
     AEAT_AUTHORITY_SHORT_NAME,
     PRODUCT_IDENTITY,
     normalise_product_identity_references,
 )
-from cadrumo.tests.cli_runner import invoke_typer_app
 
 from .._paths import DOCS_SRC_DIR, HARNESS_SRC_DIR, LOCALES_DIR, SRC_DIR
 from ..cli import app
@@ -138,7 +138,7 @@ def _manager_for(tmp_path: Path, values: Mapping[str, str]) -> LocaleManager:
     source_dir.mkdir()
     translation_key = "audit.message"
     (source_dir / "surface.py").write_text(
-        f"from cadrumo.core.i18n import tr\n\ndef render() -> str:\n    return tr({translation_key!r})\n",
+        f"from cadrumo.core.i18n.render import tr\n\ndef render() -> str:\n    return tr({translation_key!r})\n",
         encoding="utf-8",
     )
     for locale in _LOCALES:
@@ -170,11 +170,11 @@ def test_codebase_keys_exclude_test_module_literals(tmp_path: Path) -> None:
     tests_dir = source_dir / "tests"
     tests_dir.mkdir(parents=True)
     (source_dir / "surface.py").write_text(
-        'from cadrumo.core.i18n import tr\n\ndef render() -> str:\n    return tr("prod.message")\n',
+        'from cadrumo.core.i18n.render import tr\n\ndef render() -> str:\n    return tr("prod.message")\n',
         encoding="utf-8",
     )
     (tests_dir / "test_surface.py").write_text(
-        'from cadrumo.core.i18n import tr\n\ndef test_render() -> None:\n    assert tr("phantom.nested")\n',
+        'from cadrumo.core.i18n.render import tr\n\ndef test_render() -> None:\n    assert tr("phantom.nested")\n',
         encoding="utf-8",
     )
     (source_dir / "test_toplevel.py").write_text(

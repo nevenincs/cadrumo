@@ -17,11 +17,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from test_support.registry_authoring import _committed_modelo
+from cadrumo.core.period import Period
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.tests.registry_snapshot import build_snapshot
 
-from .....core.period import Period
-from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_snapshot import build_snapshot
+from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 
 if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.schema import ModeloRevision

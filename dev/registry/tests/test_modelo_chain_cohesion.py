@@ -23,11 +23,13 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 import pytest
-from test_support.registry_authoring import _committed_registry_tree, select_relation_source_revisions
 
-from ..binding_selector_utils import selector_as_dict
-from ..schema import ModeloDefinition
-from ..schema_surfaces import RelationDefinition
+from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
+
+from ..compiler.validate_relation_periods import select_relation_source_revisions
+from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

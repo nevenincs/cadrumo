@@ -6,13 +6,18 @@ from datetime import date
 from functools import cache
 
 import pytest
-from test_support.registry_authoring import RegistryValidator, load_modelo_directory, load_shared_catalogues
 
-from .....core.iva_deduction_fact import IvaDeductionFactKind
-from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_snapshot import build_snapshot
-from ....iva.schema import IvaLedgerObservationRole
-from ..schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.iva.schema import IvaLedgerObservationRole
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ..compiler.loader import (
+    load_modelo_directory,
+    load_shared_catalogues,
+)
+from ..compiler.validator import RegistryValidator
 from ._ledger_iva_aggregation_support import _deduction_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

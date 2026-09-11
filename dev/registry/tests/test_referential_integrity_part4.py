@@ -3,33 +3,34 @@
 from __future__ import annotations
 
 import pytest
-from test_support.registry_authoring import RegistryValidator
 
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.period import Period
-from ...export_field_kind import CasillaFieldKind
-from ..errors import RegistryValidationError
-from ..schema import (
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.period import Period
+from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import (
     FormulaDefinition,
     ModeloDefinition,
     ModeloRevision,
     RegistryCatalogues,
 )
-from ..schema_base import CasillaDataType
-from ..schema_deadlines import DeadlineWindowDefinition, ModeloScheduleDefinition
-from ..schema_exports import (
+from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
+from cadrumo.domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition, ModeloScheduleDefinition
+from cadrumo.domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
 )
-from ..schema_formula import FormulaExpression
-from ..schema_input_kind import InputKind
-from ..schema_revision_members import (
+from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.schema_revision_members import (
     ApplicationLinkDefinition,
     ConstructDefinition,
     DependencyClassificationDefinition,
 )
-from ..schema_surfaces import RelationDefinition
+from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
+
+from ..compiler.validator import RegistryValidator
 from ._referential_integrity_support import (
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,

@@ -21,10 +21,10 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .. import export_parse as export_parse_module
-from ..authority import bundled_authority
-from ..errors import RegistryValidationError
-from ..export_parse import (
+from cadrumo.domain.calculations.registry import export_parse as export_parse_module
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.export_parse import (
     _local_name,
     _matches_record_start,
     _parse_dictionary_casilla_id,
@@ -35,9 +35,10 @@ from ..export_parse import (
     _read_dictionary_text,
     xml_dictionary_entries,
 )
-from ..fixed_width_codec import ExportEncoding, parse_fixed_width_export_field
-from ..schema_exports import ExportFieldDefinition
-from ..schema_references import SourceReference
+from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding, parse_fixed_width_export_field
+from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
+
 from ._modelo_100_registry_support import _loaded_registry, _source_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -383,8 +384,8 @@ def test_payload_with_auxiliary_header_prefix_skips_the_header_before_records() 
     that follow must still match their own literals, and a payload shorter than
     the declared prefix cannot satisfy them.
     """
-    from ..export_parse import parse_export_payload
-    from ..schema_exports import (
+    from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
+    from cadrumo.domain.calculations.registry.schema_exports import (
         AuxiliaryEnvelopeHeaderDefinition,
         ExportLayoutDefinition,
         ExportRecordDefinition,

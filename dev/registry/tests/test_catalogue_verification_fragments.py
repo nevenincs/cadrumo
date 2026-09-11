@@ -10,7 +10,7 @@ from cadrumo.core.corpus_text import normalise_corpus_text, resolve_anchored_ext
 from cadrumo.core.resources.bundled_data import bundled_path
 
 from ..compiler.legal_grounding import verify_legal_catalogue
-from ._catalogue_verification_support import _catalogues
+from .catalogue_verification_support import _catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

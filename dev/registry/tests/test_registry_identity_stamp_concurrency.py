@@ -25,6 +25,7 @@ matter how the writer behaved.
 
 from __future__ import annotations
 
+import importlib
 import json
 import os
 import subprocess
@@ -33,15 +34,16 @@ import time
 from pathlib import Path
 
 import pytest
-from test_support.registry_authoring import (
+
+from cadrumo.core.atomic_write import atomic_write_best_effort_text
+
+__version__ = importlib.import_module("cadrumo").__version__
+from ..compiler.identity import (
     REGISTRY_IDENTITY_SCHEMA_VERSION,
     RegistryIdentityStamp,
     read_registry_identity_stamp,
     registry_identity_stamp_location,
 )
-
-from ..... import __version__
-from .....core.atomic_write import atomic_write_best_effort_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 
@@ -76,7 +78,7 @@ _READER_SOURCE = f"""
 import json, os, sys, time
 from pathlib import Path
 
-from test_support.registry_authoring import read_registry_identity_stamp
+from ..compiler.identity import read_registry_identity_stamp
 
 root = Path(os.environ[{_CHILD_ROOT_ENV_VAR!r}])
 observed = []

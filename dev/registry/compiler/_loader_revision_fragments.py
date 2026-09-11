@@ -11,9 +11,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
-from typing import get_args, get_origin
-
-from pydantic import BaseModel
+from typing import get_origin
 
 from cadrumo.core.toml import freeze_toml, read_toml
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
@@ -26,6 +24,7 @@ from cadrumo.domain.calculations.registry.schema import (
 )
 
 from ._toml_helpers import as_toml_table as _as_toml_table
+from .loader_grammar import REVISION_SECTION_FIELDS
 
 _REVISION_EXPORT_LAYOUTS = "export_layouts"
 _REVISION_CONSTRUCTS = "constructs"
@@ -48,20 +47,6 @@ def _compute_revision_append_arrays() -> frozenset[str]:
 _REVISION_APPEND_ARRAYS: frozenset[str] = _compute_revision_append_arrays()
 
 
-def _compute_revision_section_fields() -> frozenset[str]:
-    """Return ModeloRevision fields that are per-section fragment content."""
-    sections: set[str] = {_REVISION_COMPLETENESS_MANIFEST}
-    for field_name, field in ModeloRevision.model_fields.items():
-        if get_origin(field.annotation) is not tuple:
-            continue
-        args = get_args(field.annotation)
-        element = args[0] if args else None
-        if isinstance(element, type) and issubclass(element, BaseModel):
-            sections.add(field_name)
-    return frozenset(sections)
-
-
-REVISION_SECTION_FIELDS: frozenset[str] = _compute_revision_section_fields()
 _COMPLETENESS_MANIFEST_APPEND_ARRAYS: frozenset[str] = frozenset({"casillas"})
 _CONSTRUCT_APPEND_ARRAYS: frozenset[str] = frozenset(
     {

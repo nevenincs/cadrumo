@@ -4,12 +4,12 @@ Validates the primary record sections declared on a
 :class:`~domain.calculations.registry.ModeloRevision`: casillas, formulas,
 parameters, bindings, and extraction profiles. Each validator checks local
 reference closure plus legal/source grounding through
-:class:`~domain.calculations.registry._validate_evidence.EvidenceValidator`.
+:class:`~domain.calculations.registry.validate_evidence.EvidenceValidator`.
 
 See Also:
     :func:`~domain.calculations.registry._validate_revision_sections.validate_revision_definition`
         Per-revision dispatcher that invokes these record-section validators.
-    :mod:`~domain.calculations.registry._validate_formulas`
+    :mod:`~dev.registry.compiler.validate_formulas`
         Formula-expression validation used by the formula section.
     :mod:`~domain.calculations.registry._validate_extraction_profiles`
         Extraction-profile artefact and specimen gates used by this module.
@@ -33,7 +33,6 @@ from cadrumo.domain.calculations.registry.schema_base import REGISTRY_SOURCE_GRO
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
-from ._validate_evidence import EvidenceValidator
 from ._validate_extraction_profiles import (
     validate_bbox_anchor_consistency,
     validate_declaracion_pdf_round_trip_gate,
@@ -43,8 +42,9 @@ from ._validate_extraction_profiles import (
     validate_provisional_declaracion_pdf_evidence_state,
 )
 from ._validate_helpers import missing_refs
-from ._validate_parameter_temporal import validate_non_filing_axis_admission
-from ._validate_revision_rules import validate_dated_values
+from .validate_parameter_temporal import validate_non_filing_axis_admission
+from .validate_parameter_temporal import validate_dated_values
+from .validate_evidence import EvidenceValidator
 
 
 def _validate_casilla_grounding(

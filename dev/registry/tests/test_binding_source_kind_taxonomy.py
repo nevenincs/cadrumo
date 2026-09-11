@@ -4,15 +4,16 @@ from __future__ import annotations
 
 import pytest
 from pydantic import ValidationError
-from test_support.registry_authoring import _committed_registry_tree
 
-from .....core.aggregation import (
+from cadrumo.core.aggregation import (
     COUNTERPART_SOURCE_KINDS,
     INVOICE_BINDING_SOURCE_KINDS,
     LEDGER_BINDING_SOURCE_KINDS,
     BindingSourceKind,
 )
-from ..schema import DataBindingDefinition
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
+
+from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

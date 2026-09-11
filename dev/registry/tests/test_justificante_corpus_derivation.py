@@ -18,10 +18,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-from test_support.registry_authoring import RegistryValidator
 
-from .....core.resources.bundled_data import bundled_path
-from ..schema import RegistryCatalogues
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
+
+from ..compiler.validator import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

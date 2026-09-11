@@ -30,6 +30,7 @@ from .import_checker import Authority, CheckResult, has_architectural_warning, r
 _DEFAULT_TIMEOUT_SECONDS: Final[float] = 300.0
 _ROOT_ENV: Final[str] = "CADRUMO_IMPORT_GATE_ROOT"
 _LINTER_ENV: Final[str] = "CADRUMO_IMPORT_GATE_LINT_IMPORTS"
+_CHECKER_ENV: Final[str] = "CADRUMO_IMPORT_GATE_CHECKER"
 _FORCE_CHECKER_EXCEPTION_ENV: Final[str] = "CADRUMO_IMPORT_GATE_FORCE_CHECKER_EXCEPTION"
 _CHECKER_PATH: Final[Path] = Path(__file__).with_name("import_checker.py").resolve()
 
@@ -57,6 +58,12 @@ def run_import_linter(
             TOOL_MISSING,
             f"[TOOL_MISSING] Import Linter executable {requested!r} is unavailable",
         )
+    if timeout <= 0:
+        return ComponentResult(
+            "import-linter",
+            TOOL_BROKEN,
+            f"[TOOL_BROKEN] Import Linter timed out after {timeout:g}s",
+        )
 
     environment = os.environ.copy()
     import_paths = [str(root.source_root) for root in authority.roots]
@@ -64,6 +71,7 @@ def run_import_linter(
     if existing:
         import_paths.append(existing)
     environment["PYTHONPATH"] = os.pathsep.join(dict.fromkeys(import_paths))
+    environment["PYTHONIOENCODING"] = UTF_8
     command = (
         resolved,
         "--config",
@@ -97,6 +105,8 @@ def run_import_linter(
         )
     except OSError as exc:
         return ComponentResult("import-linter", TOOL_BROKEN, f"[TOOL_BROKEN] Import Linter could not run: {exc}")
+    except Exception as exc:  # broad: a graph component exception must fail closed
+        return ComponentResult("import-linter", TOOL_BROKEN, f"[TOOL_BROKEN] Import Linter aborted: {exc}")
 
     output = _combined_output(completed.stdout, completed.stderr)
     if completed.returncode == 0:
@@ -127,15 +137,28 @@ def run_subordinate(
                 ),
                 CheckResult((), 0),
             )
+        requested = os.environ.get(_CHECKER_ENV) or sys.executable
+        resolved = shutil.which(requested)
+        if resolved is None:
+            return (
+                ComponentResult(
+                    "subordinate-checker",
+                    TOOL_MISSING,
+                    f"[TOOL_MISSING] subordinate checker executable {requested!r} is unavailable",
+                ),
+                CheckResult((), 0),
+            )
         environment = os.environ.copy()
         import_paths = [str(_CHECKER_PATH.parents[2]), *(str(root.source_root) for root in authority.roots)]
         existing = environment.get("PYTHONPATH")
         if existing:
             import_paths.append(existing)
         environment["PYTHONPATH"] = os.pathsep.join(dict.fromkeys(import_paths))
+        environment["PYTHONIOENCODING"] = UTF_8
         command = (
-            sys.executable,
+            resolved,
             str(_CHECKER_PATH),
+            "--internal",
             "--root",
             str(authority.repository),
             "--config",
@@ -196,7 +219,19 @@ def run_import_gate(
     timeout: float = _DEFAULT_TIMEOUT_SECONDS,
 ) -> int:
     """Run the ordered authority, graph, and subordinate components."""
-    read = read_authority(repository, config_path)
+    try:
+        read = read_authority(repository, config_path)
+    except Exception as exc:  # broad: authority preflight must fail closed
+        _emit_failure(
+            [
+                ComponentResult(
+                    "authority-preflight",
+                    TOOL_BROKEN,
+                    f"[AUTHORITY_PREFLIGHT] authority preflight aborted: {exc}",
+                )
+            ]
+        )
+        return TOOL_BROKEN
     if read.authority is None:
         _emit_failure(
             [ComponentResult("authority-preflight", TOOL_BROKEN, "\n".join(read.findings))],
@@ -222,7 +257,7 @@ def run_import_gate(
         _emit_failure(components)
         return failures[0].returncode
 
-    print("check-imports: passed")
+    print("check-import-boundaries: passed")
     return 0
 
 
@@ -233,7 +268,7 @@ def _combined_output(stdout: str | None, stderr: str | None) -> str:
 
 def _emit_failure(components: list[ComponentResult]) -> None:
     """Replay only failing component diagnostics, retaining native output."""
-    print("check-imports: failed")
+    print("check-import-boundaries: failed")
     for component in components:
         if component.returncode == 0 or not component.output:
             continue

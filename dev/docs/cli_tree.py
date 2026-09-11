@@ -238,7 +238,7 @@ def _build_cli_tree_loaded() -> CliTree:
     via :func:`build_cli_tree`'s ``override_settings`` context or a subprocess
     environment) so ``tr()`` help strings resolve to English.
     """
-    from cadrumo.core.i18n import clear_output_language_cache, tr
+    from cadrumo.core.i18n.render import clear_output_language_cache, tr
     from cadrumo.entrypoints.cli.command_api import (
         ArgumentSpec,
         DefaultKind,

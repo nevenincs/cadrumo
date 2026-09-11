@@ -9,10 +9,9 @@ from itertools import pairwise
 from pathlib import Path
 from typing import Any
 
-from cadrumo.tests.registry_tree import bundled_registry_tree
-
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 from ._revision_span_design_support import (
     _BOX_MARKER,

@@ -2,16 +2,16 @@
 
 Usage, one form per justfile recipe::
 
-    python -m dev.init all      # just init
-    python -m dev.init python   # just init-python
-    python -m dev.init tools    # just init-tools
-    python -m dev.init check    # just init-check
+    python -m dev.init all      # just setup
+    python -m dev.init python   # just setup-python
+    python -m dev.init tools    # just setup-repository-tools
+    python -m dev.init check    # just setup-check
 
 The recipes are argument-free, so the two modifiers are environment variables
 as well as flags: ``VAULTSPEC_INIT_JSON=1`` for the NDJSON event stream and
 ``VAULTSPEC_INIT_FORCE=1`` to ignore the stamp.
 
-Why `init` is fail-fast, when the fleet's `-all` aggregates are not
+Why `setup` is fail-fast, when the fleet's `-all` aggregates are not
 --------------------------------------------------------------------
 
 The fleet rule is that an ``-all`` aggregate runs every step and exits with the
@@ -19,22 +19,22 @@ first non-zero status, because those aggregates chain INDEPENDENT INSPECTORS: a
 type error does not stop the markdown linter from having something true to say,
 and a developer wants the whole list in one pass.
 
-`init` is the opposite shape, and follows the opposite rule deliberately. Its
-phases are a DEPENDENCY CHAIN that builds one artifact. ``init-tools`` installs
+`setup` is the opposite shape, and follows the opposite rule deliberately. Its
+phases are a DEPENDENCY CHAIN that builds one artifact. ``setup-repository-tools`` installs
 git hooks and enrolls the framework by running executables out of the
-environment ``init-python`` creates. Running ``init-tools`` after
-``init-python`` failed does not produce a second independent finding - it
+environment ``setup-python`` creates. Running ``setup-repository-tools`` after
+``setup-python`` failed does not produce a second independent finding - it
 produces a cascade of "command not found" that buries the one real cause, and
 it produces it slowly.
 
-So `init` stops at the first failing phase. What it does NOT do is stop
+So `setup` stops at the first failing phase. What it does NOT do is stop
 REPORTING: the phases that did not run are recorded as ``skipped`` with the
 upstream failure named, so the report is always complete and a reader can see
 what was and was not attempted. Within a phase, steps stop at the first failure
 too. Advisory steps are exempt in both directions: they are
 diagnosis, they never gate, and a phase continues past one that failed.
 
-The consequence a caller should rely on: a non-zero `init` names ONE cause.
+The consequence a caller should rely on: a non-zero `setup` names ONE cause.
 """
 
 from __future__ import annotations
@@ -116,11 +116,11 @@ def _preflight(
     """Run the steps that must happen before any phase, and probe the host.
 
     Two things live here rather than in a phase. The first is `.env`
-    materialization. It is a preflight rather than a step of ``init-tools``
+    materialization. It is a preflight rather than a step of ``setup-repository-tools``
     because the file is a PRECONDITION for other recipes rather than a product
     of initialization: a worktree without one runs its services and its
     credential-scoped commands on defaults, silently. Every entry point
-    therefore fixes it, not only ``init-tools``, and it is fixed before any
+    therefore fixes it, not only ``setup-repository-tools``, and it is fixed before any
     phase runs rather than after the longest one.
 
     The second is the host-tool probe. A missing `uv` or `node` is not a step
@@ -254,7 +254,7 @@ def _check(
         return (
             results,
             INIT_STALE,
-            [f"run `just init` ({name}: {why})" for name, why in stale.items()],
+            [f"run `just setup` ({name}: {why})" for name, why in stale.items()],
         )
     return results, OK, []
 
@@ -371,7 +371,7 @@ def _finish(
         repo_root: The worktree root.
         report: The assembled report.
         emitter: The run's output channels.
-        write_file: Whether to persist the report. ``init-check`` does not,
+        write_file: Whether to persist the report. ``setup-check`` does not,
             because it is contractually non-mutating and a report file is a
             mutation like any other.
     """

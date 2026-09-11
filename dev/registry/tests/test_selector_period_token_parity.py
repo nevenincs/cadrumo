@@ -26,7 +26,7 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from cadrumo.core.period import RegistrySelectorPeriodCode
-from cadrumo.tests.registry_tree import bundled_registry_tree
+from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 

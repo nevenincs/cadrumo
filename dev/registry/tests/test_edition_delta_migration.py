@@ -31,6 +31,7 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
 from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor, ModeloDefinition
+from dev._paths import REPO_ROOT
 
 from ..analysis.delta_minimality import LINEAGE_CLAIM_FIELDS, definition_findings, restatement_differences
 from ..compiler.authority import compile_validated_authority
@@ -39,10 +40,12 @@ from ..edition_delta_migration import (
     EditionPlan,
     KeptReason,
     MigrationOutcome,
+    MigrationPlan,
     MigrationRefusedError,
     PredecessorBasis,
     main,
     migrate_modelo,
+    persist_migration_report,
     plan_migration,
 )
 from ..edition_export_scenarios import edition_export_scenarios
@@ -520,8 +523,71 @@ def test_the_command_line_renders_every_successors_export_bytes_from_the_canonic
 
     output = capsys.readouterr().out
     (summary,) = [line for line in output.splitlines() if line.startswith("summary ")]
+    (persisted_line,) = [line for line in output.splitlines() if line.startswith("report persisted to ")]
+    persisted = Path(persisted_line.removeprefix("report persisted to "))
     assert exit_code == 0, output
     assert " gate_findings=0 " in summary, output
     assert f" byte_compared={','.join(successors)} " in summary, output
     assert " applied=False " in summary, output
+    assert persisted.is_relative_to((REPO_ROOT / ".logs" / "audit-runs").resolve())
+    assert persisted.is_file()
+    assert "summary changed=True" in persisted.read_text(encoding="utf-8")
+    assert not persisted.is_relative_to((tmp_path / "work").resolve())
     assert {str(r.id) for r in _load(registry, _PILOT).revisions.values() if r.predecessor is not None} == set()
+
+
+def test_work_directory_must_not_be_inside_the_registry_root(tmp_path: Path) -> None:
+    registry = _registry(tmp_path / "target", _NO_EXPORT_SURFACE)
+    work_dir = registry / "migration-work"
+
+    with pytest.raises(MigrationRefusedError, match="inside registry root"):
+        migrate_modelo(registry_root=registry, modelo_id=_NO_EXPORT_SURFACE, work_dir=work_dir)
+
+    assert not work_dir.exists()
+
+
+def test_work_directory_must_not_be_inside_the_production_source_tree(tmp_path: Path) -> None:
+    registry = _registry(tmp_path / "target", _NO_EXPORT_SURFACE)
+    work_dir = REPO_ROOT / "src" / f".edition-delta-migration-test-work-{tmp_path.name}"
+
+    assert not work_dir.exists()
+    with pytest.raises(MigrationRefusedError, match="inside production source tree"):
+        migrate_modelo(registry_root=registry, modelo_id=_NO_EXPORT_SURFACE, work_dir=work_dir)
+
+    assert not work_dir.exists()
+
+
+def test_work_directory_must_not_exist_before_migration(tmp_path: Path) -> None:
+    registry = _registry(tmp_path / "target", _NO_EXPORT_SURFACE)
+    work_dir = tmp_path / "existing-work"
+    work_dir.mkdir()
+
+    with pytest.raises(MigrationRefusedError, match="already exists"):
+        migrate_modelo(registry_root=registry, modelo_id=_NO_EXPORT_SURFACE, work_dir=work_dir)
+
+
+def test_migration_reports_use_unique_logs_runs_and_not_the_scratch_directory(tmp_path: Path) -> None:
+    outcome = MigrationOutcome(
+        plan=MigrationPlan(
+            modelo_id="303",
+            editions=(),
+            already_delta_authored=False,
+        ),
+        staged_registry=None,
+        report=None,
+        applied=False,
+        changed=False,
+    )
+
+    first = persist_migration_report(tmp_path, outcome, ("migration", "first"))
+    second = persist_migration_report(tmp_path, outcome, ("migration", "second"))
+
+    logs_root = (tmp_path / ".logs" / "audit-runs").resolve()
+    assert first.is_relative_to(logs_root)
+    assert second.is_relative_to(logs_root)
+    assert first != second
+    assert first.name == "report.md"
+    assert second.name == "report.md"
+    assert first.read_text(encoding="utf-8").startswith("command: migration first")
+    assert second.read_text(encoding="utf-8").startswith("command: migration second")
+    assert first.parent != second.parent

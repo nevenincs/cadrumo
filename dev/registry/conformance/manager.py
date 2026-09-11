@@ -97,7 +97,7 @@ from pydantic import BaseModel, Field, model_serializer, model_validator
 from pydantic_core.core_schema import SerializerFunctionWrapHandler
 
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.core.i18n import lookup_translation_entry
+from cadrumo.core.i18n.render import lookup_translation_entry
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 
 from ..compiler.authority import compiled_bundled_authority

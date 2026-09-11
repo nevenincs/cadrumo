@@ -24,12 +24,13 @@ set is allowed to stand unconsumed by its declared role.
 from __future__ import annotations
 
 import pytest
-from test_support.registry_authoring import _committed_registry_tree
 
-from .....core.modelo import Modelo
-from ..authority import bundled_authority
-from ..handoffs import relation_consumption_channels, relation_consumption_index
-from ..schema_surfaces import CasillaDefinition
+from cadrumo.core.modelo import Modelo
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.handoffs import relation_consumption_channels, relation_consumption_index
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
+from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

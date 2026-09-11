@@ -18,7 +18,7 @@ from ..coverage import (
     audit_registry_construct_evidence,
     build_construct_evidence_ledger,
 )
-from ._registry_schema_support import _committed_modelo
+from ..registry_schema_support import committed_modelo as _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

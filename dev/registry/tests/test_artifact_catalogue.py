@@ -14,10 +14,9 @@ from datetime import date, datetime
 from pathlib import Path, PurePosixPath
 
 import pytest
-from test_support.registry_authoring import RegistryValidator, load_registry_tree
 
-from .....core.resources.bundled_data import bundled_path
-from ..artifact_catalogue import (
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.artifact_catalogue import (
     ArtifactDiagnosticKind,
     ArtifactDisposition,
     ArtifactIdentity,
@@ -27,9 +26,12 @@ from ..artifact_catalogue import (
     SemanticAnnotation,
     compile_artifact_catalogue,
 )
-from ..errors import RegistryValidationError
-from ..facts.schema import GovernedFactCatalogue
-from ..schema import RegistryCatalogues
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
+
+from ..compiler.loader import load_registry_tree
+from ..compiler.validator import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

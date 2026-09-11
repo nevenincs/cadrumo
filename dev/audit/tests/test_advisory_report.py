@@ -1,4 +1,4 @@
-"""The composed `audit-all` dashboard: aggregation, rendering, and persistence.
+"""The composed `audit-code` dashboard: aggregation, rendering, and persistence.
 
 In-process checks over constructed ``AdvisoryDimension`` fixtures (plain
 data, no mocking) cover overall-status precedence, JSON serialisation, text
@@ -41,7 +41,7 @@ def test_allocate_run_dir_uses_logs_date_partition_and_unique_run_identity(tmp_p
     second = allocate_run_dir(tmp_path, now=instant)
 
     assert first.parent == tmp_path / ".logs" / "audit-runs" / "2026-09-08"
-    assert first.name.startswith("20260908T123456.123456Z-audit-all-")
+    assert first.name.startswith("20260908T123456.123456Z-audit-code-")
     assert first != second
 
 

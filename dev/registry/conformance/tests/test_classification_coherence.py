@@ -37,7 +37,7 @@ from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.schema_revision_members import DependencyClassificationDefinition
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-from cadrumo.tests.registry_tree import bundled_registry_tree
+from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 from ..registry_classification_coherence import (
     _MAX_DETAIL_LENGTH,

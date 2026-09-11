@@ -57,7 +57,6 @@ from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncodin
 from cadrumo.domain.calculations.registry.ids import RevisionId, SourceRefId
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource, RegistryRevisionInspection
 
-from ..compiler.authority import compiled_bundled_authority
 from ._export_tree import SERIALIZER_CONVENTION, ExportTreeTransportProfile, render_complete_export_tree
 from .export_fragment_provenance import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from .joined_record_design import JoinedRecordDesign, join_record_design_semantics
@@ -432,7 +431,7 @@ def compare_export_tree_roots(
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Compare one revision and report; exit non-zero only under ``--check``."""
+    """Delegate the legacy entry point to canonical target-currentness semantics."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
     parser.add_argument("modelo")
     parser.add_argument("revision")
@@ -443,26 +442,21 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    comparison = compare_revision_against_committed(
-        compiled_bundled_authority(), modelo=args.modelo, revision=args.revision
-    )
-    for name in comparison.differing:
+    from .cli import target_currentness
+
+    fact = target_currentness(args.modelo, args.revision, None, None, None)
+    for name in fact.differing:
         sys.stdout.write(f"render_check differs file={name}\n")
-    for name in comparison.only_committed:
+    for name in fact.only_committed:
         sys.stdout.write(f"render_check only_committed file={name}\n")
-    for name in comparison.only_rendered:
+    for name in fact.only_rendered:
         sys.stdout.write(f"render_check only_rendered file={name}\n")
     sys.stdout.write(
-        f"summary modelo={comparison.modelo} revision={comparison.revision} "
-        f"layout={comparison.layout_id} compared={comparison.files_compared} "
-        f"reproduced={comparison.reproduced} "
-        f"record_drift={len(comparison.record_differing)} "
-        f"serialization_only={len(comparison.serialization_only)} "
-        f"semantically_reproduced={comparison.semantically_reproduced} "
-        f"provenance_only={comparison.provenance_only} "
-        f"note='record_drift means a record now MEANS what its inputs do not produce'\n"
+        f"summary modelo={fact.modelo} revision={fact.revision} state={fact.state.value} "
+        f"differing={len(fact.differing)} serialization_only={len(fact.serialization_only)} "
+        f"detail={fact.detail!r}\n"
     )
-    return 1 if args.check and not comparison.reproduced else 0
+    return 1 if args.check and fact.state.value != "current" else 0
 
 
 if __name__ == "__main__":

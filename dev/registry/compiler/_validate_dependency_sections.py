@@ -39,8 +39,8 @@ from cadrumo.domain.calculations.registry.schema_revision_members import (
 from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
 from cadrumo.domain.calculations.registry.validate_revision_identity import duplicates
 
-from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import missing_refs
+from .validate_evidence import EvidenceValidator
 
 
 def validate_relation_section(

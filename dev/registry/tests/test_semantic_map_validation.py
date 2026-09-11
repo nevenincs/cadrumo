@@ -17,8 +17,8 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
 from ..compiler.authority import compiled_bundled_authority
-from ..pipeline import _semantic_map_validation
-from ..pipeline._semantic_map_validation import (
+from ..pipeline import semantic_map_validation
+from ..pipeline.semantic_map_validation import (
     SemanticMapAnomalyException,
     resolve_semantic_map_casilla_tokens,
     validate_semantic_map,
@@ -692,13 +692,13 @@ def test_projection_admission_uses_the_real_revision_declaration_bijection(_m303
     """A selected M303 snapshot admits its complete typed endpoint matrix only."""
     references = tuple(declaration.projection_ref for declaration in _m303_snapshot.projection_endpoints)
 
-    _semantic_map_validation._validate_projection_ref_bijection(
+    semantic_map_validation._validate_projection_ref_bijection(
         references,
         projection_endpoints=_m303_snapshot.projection_endpoints,
     )
 
     with pytest.raises(RegistryValidationError, match="omits target-revision projection declarations"):
-        _semantic_map_validation._validate_projection_ref_bijection(
+        semantic_map_validation._validate_projection_ref_bijection(
             references[1:],
             projection_endpoints=_m303_snapshot.projection_endpoints,
         )
@@ -859,7 +859,7 @@ def test_variable_envelope_boundary_refuses_reviewed_contract_without_parser_env
         RegistryValidationError,
         match="declares a variable-envelope contract but parser output contains no variable envelope",
     ):
-        _semantic_map_validation._validate_variable_envelope_boundary(semantic_map, intermediate)
+        semantic_map_validation._validate_variable_envelope_boundary(semantic_map, intermediate)
 
 
 def test_variable_envelope_boundary_refuses_more_than_one_parser_envelope() -> None:
@@ -886,7 +886,7 @@ def test_variable_envelope_boundary_refuses_more_than_one_parser_envelope() -> N
         RegistryValidationError,
         match="variable-envelope composition authority admits exactly one parser envelope per design",
     ):
-        _semantic_map_validation._validate_variable_envelope_boundary(semantic_map, intermediate)
+        semantic_map_validation._validate_variable_envelope_boundary(semantic_map, intermediate)
 
 
 @pytest.mark.parametrize("declared_envelope_count", (0, 2))
@@ -918,7 +918,7 @@ def test_variable_envelope_boundary_refuses_wrong_number_of_reviewed_contracts(d
         RegistryValidationError,
         match=(f"requires exactly one reviewed variable-envelope semantic contract, found {declared_envelope_count}"),
     ):
-        _semantic_map_validation._validate_variable_envelope_boundary(semantic_map, intermediate)
+        semantic_map_validation._validate_variable_envelope_boundary(semantic_map, intermediate)
 
 
 def test_variable_envelope_boundary_refuses_record_identity_mismatch() -> None:
@@ -947,12 +947,12 @@ def test_variable_envelope_boundary_refuses_record_identity_mismatch() -> None:
         RegistryValidationError,
         match="reviewed variable-envelope contract names 'envelope-other' but the parser owns 'envelope-wrap'",
     ):
-        _semantic_map_validation._validate_variable_envelope_boundary(semantic_map, intermediate)
+        semantic_map_validation._validate_variable_envelope_boundary(semantic_map, intermediate)
 
 
 def test_validation_module_carries_no_legacy_layout_dependency() -> None:
     """Structural guard: validation cannot read a legacy layout as an admission oracle."""
-    module = ast.parse(inspect.getsource(_semantic_map_validation))
+    module = ast.parse(inspect.getsource(semantic_map_validation))
     attribute_names = {node.attr for node in ast.walk(module) if isinstance(node, ast.Attribute)}
     referenced_names = {node.id for node in ast.walk(module) if isinstance(node, ast.Name)}
     string_constants = {

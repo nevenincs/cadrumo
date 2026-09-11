@@ -7,18 +7,8 @@ from typing import TypedDict
 
 import pytest
 from pydantic import ValidationError
-from test_support.registry_authoring import _committed_registry_tree
 
-from ....contribuyente.entity_type import EntityType, LegalEntityForm
-from ....deadlines.models import (
-    FiscalResidency,
-    IrpfEstimationRegime,
-    IrpfIncomeCategory,
-    IrpfSpecialRegime,
-    IVARegime,
-    TaxpayerProfile,
-)
-from ..applicability import (
+from cadrumo.domain.calculations.registry.applicability import (
     _MODELO_APPLICABILITY_RULES,
     ApplicabilityVerdict,
     ModeloApplicability,
@@ -26,8 +16,19 @@ from ..applicability import (
     derive_modelo_applicability,
     iter_modelo_applicability_rules,
 )
-from ..applicability_modelo202 import Modelo202Modality, Modelo202ModalityVerdict
-from ..authority import bundled_authority
+from cadrumo.domain.calculations.registry.applicability_modelo202 import Modelo202Modality, Modelo202ModalityVerdict
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.contribuyente.entity_type import EntityType, LegalEntityForm
+from cadrumo.domain.deadlines.models import (
+    FiscalResidency,
+    IrpfEstimationRegime,
+    IrpfIncomeCategory,
+    IrpfSpecialRegime,
+    IVARegime,
+    TaxpayerProfile,
+)
+
+from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

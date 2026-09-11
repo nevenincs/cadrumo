@@ -29,7 +29,7 @@ import pytest
 
 from cadrumo.core.corpus_text import CorpusAnchorResolutionError, resolve_anchored_extracted_unit
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.registry_tree import bundled_registry_tree
+from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

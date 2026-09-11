@@ -14,15 +14,15 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry._snapshot_internals import check_snapshot_filing_review_tier
+from cadrumo.domain.calculations.registry.snapshot import check_snapshot_filing_review_tier
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError, RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import filing_period_from_scope
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.domain.calculations.registry.temporal import select_revision
-from cadrumo.tests import REPO_ROOT
 from cadrumo.tests.aeat_literal_fixtures import RECORD_DESIGN_ROUTE_BASE_FIXTURE
+from cadrumo.tests.inventory import REPO_ROOT
 from cadrumo.tests.registry_snapshot import build_snapshot
 
 from ...compiler.authority import compile_validated_authority, compiled_bundled_authority
@@ -34,14 +34,14 @@ from ...maintenance_support import (
     resolve_record_design_binary,
     revision_selection_coordinates,
 )
-from ...tests._catalogue_verification_support import _registry_tree
+from ...tests.catalogue_verification_support import registry_tree
 from ..coverage import (
     EvidenceTierCoverageGate,
     _snapshot_filing_review_proof,
     audit_registry_model_law_coverage,
     build_model_law_coverage_ledger,
 )
-from ._loader_directory_mode_support import (
+from ..loader_directory_mode_support import (
     write_extracted_corpus_sidecar,
     write_fragmented_revision,
 )
@@ -68,7 +68,7 @@ def test_supported_period_matrix_has_applicable_record_design_sources() -> None:
     period token alone; the canonical period end only verifies the selected
     design source, never chooses the revision.
     """
-    modelos, catalogues = _registry_tree()
+    modelos, catalogues = registry_tree()
     missing: list[str] = []
     checked: set[tuple[str, str, int]] = set()
     required_modelos: set[str] = set()
@@ -152,7 +152,7 @@ def _record_design_sources_cover(sources: Sequence[SourceReference], evidence_da
 
 def test_modelo_220_2025_scope_refuses_an_unevidenced_2026_successor() -> None:
     """The shared source-matrix predicate must bite if M220 is widened again."""
-    modelos, catalogues = _registry_tree()
+    modelos, catalogues = registry_tree()
     modelo = next(candidate for candidate in modelos if candidate.id == "220")
     revision = modelo.revisions["2025"]
 
@@ -180,7 +180,7 @@ def test_modelo_220_2025_scope_refuses_an_unevidenced_2026_successor() -> None:
 
 def test_modelo_038_refuses_unevidenced_history_and_keeps_historical_pdf_unselected() -> None:
     """M038's legal cutover and inspection receipt cannot select pre-June history."""
-    modelos, catalogues = _registry_tree()
+    modelos, catalogues = registry_tree()
     modelo = next(candidate for candidate in modelos if candidate.id == "038")
     june_2024 = modelo.revisions["2024-desde-06"]
     current_source = catalogues.sources["aeat-dr-038-2024"]
@@ -519,7 +519,7 @@ def test_coverage_gate_rejects_satisfied_without_evidence_refs() -> None:
 
 def test_public_model_law_ledger_keeps_unproven_snapshot_inspection_only() -> None:
     """A snapshot-shaped value cannot self-attest filing authority."""
-    modelos, catalogues = _registry_tree()
+    modelos, catalogues = registry_tree()
     modelo = next(modelo for modelo in modelos if modelo.id == "182")
     # Build at the rung modelo 182 declares, not the FILING default. Demanding a
     # filing-grade build in order to prove the ledger reports NOT filing-eligible

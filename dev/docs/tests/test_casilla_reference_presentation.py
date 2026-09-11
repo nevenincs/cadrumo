@@ -576,8 +576,7 @@ def test_a_closed_family_that_cannot_be_read_raises_rather_than_emptying() -> No
     """
     from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
-    module = importlib.import_module(display_locale_keys.__module__)
-    source = inspect.getsource(module)
+    source = inspect.getsource(display_locale_keys)
 
     assert "raise LookupError" in source, "the derivation must refuse an unreadable field, not return empty"
     assert CasillaDefinition.model_fields.get("data_type") is not None, (

@@ -19,10 +19,12 @@ as invariants rather than counts.
 
 from __future__ import annotations
 
+import importlib
 import sys
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from types import ModuleType
 from typing import Final, Literal
 
 from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
@@ -71,8 +73,48 @@ __all__ = [
     "run_corpus_screens",
     "run_screens",
     "screen_findings",
+    "screen_module",
     "screen_module_names",
 ]
+
+
+# The analysis package has a finite, explicit screen population. Keep the
+# module objects in a closed map so callers that need a screen's own docstring
+# or finding declarations do not reconstruct import paths from discovered
+# names. A computed import is an open-ended dependency and cannot tell the
+# boundary checker which modules the runner actually owns.
+_SCREEN_MODULES: dict[str, ModuleType] = {
+    "capability_continuity": importlib.import_module("dev.registry.analysis.capability_continuity"),
+    "casilla_id_grammar": importlib.import_module("dev.registry.analysis.casilla_id_grammar"),
+    "continuity_integrity": importlib.import_module("dev.registry.analysis.continuity_integrity"),
+    "cross_revision_wire_shape": importlib.import_module("dev.registry.analysis.cross_revision_wire_shape"),
+    "delta_minimality": importlib.import_module("dev.registry.analysis.delta_minimality"),
+    "export_derivation_attestation": importlib.import_module("dev.registry.analysis.export_derivation_attestation"),
+    "export_ref_symmetry": importlib.import_module("dev.registry.analysis.export_ref_symmetry"),
+    "fabricated_required_ness": importlib.import_module("dev.registry.analysis.fabricated_required_ness"),
+    "footnote_only_wire_facts": importlib.import_module("dev.registry.analysis.footnote_only_wire_facts"),
+    "grade_earned": importlib.import_module("dev.registry.analysis.grade_earned"),
+    "hand_authored_type_column": importlib.import_module("dev.registry.analysis.hand_authored_type_column"),
+    "manifest_uncited_references": importlib.import_module("dev.registry.analysis.manifest_uncited_references"),
+    "modelo_capability": importlib.import_module("dev.registry.analysis.modelo_capability"),
+    "monetary_scale": importlib.import_module("dev.registry.analysis.monetary_scale"),
+    "note_label_scope": importlib.import_module("dev.registry.analysis.note_label_scope"),
+    "note_text_drift": importlib.import_module("dev.registry.analysis.note_text_drift"),
+    "provenance_consistency": importlib.import_module("dev.registry.analysis.provenance_consistency"),
+    "revision_name_window": importlib.import_module("dev.registry.analysis.revision_name_window"),
+    "rule_grounding_coverage": importlib.import_module("dev.registry.analysis.rule_grounding_coverage"),
+    "sign_position_coverage": importlib.import_module("dev.registry.analysis.sign_position_coverage"),
+    "temporal_site_agreement": importlib.import_module("dev.registry.analysis.temporal_site_agreement"),
+    "type_convention_notes": importlib.import_module("dev.registry.analysis.type_convention_notes"),
+    "unnumbered_note_scope": importlib.import_module("dev.registry.analysis.unnumbered_note_scope"),
+    "unresolvable_note_pointers": importlib.import_module("dev.registry.analysis.unresolvable_note_pointers"),
+    "wire_type_compatibility": importlib.import_module("dev.registry.analysis.wire_type_compatibility"),
+}
+
+
+def screen_module(name: str) -> ModuleType:
+    """Return the explicitly enrolled analysis module named ``name``."""
+    return _SCREEN_MODULES[name]
 
 
 @dataclass(frozen=True, slots=True)
@@ -392,11 +434,9 @@ def screen_findings(
     for the runner and wrong for a gate, which is why the two now read different
     functions.
     """
-    import importlib
-
     findings: list[tuple[str, tuple[object, ...]]] = []
     for name in sorted(screen_module_names()):
-        module = importlib.import_module(f"{__package__}.{name}")
+        module = screen_module(name)
         authority_entry = getattr(module, "screen_authority", None)
         if authority_entry is not None:
             findings.append((name, tuple(authority_entry(authority, modelo_ids))))

@@ -164,6 +164,27 @@ def test_malformed_json_is_unavailable_not_zero() -> None:
     assert result.is_green is False
 
 
+@pytest.mark.parametrize(
+    "payload",
+    (
+        "[]",
+        json.dumps({"paths": {"scanned": ["src/cadrumo/core.py"]}, "results": [None]}),
+        json.dumps(
+            {
+                "paths": {"scanned": ["src/cadrumo/core.py"]},
+                "results": [{"start": {"line": "one"}}],
+            },
+        ),
+    ),
+)
+def test_malformed_json_shape_is_unavailable_not_a_traceback(payload: str) -> None:
+    """A structurally invalid semgrep response must fail closed as advisory-broken."""
+    result = classify_semgrep_output(payload)
+
+    assert result.outcome is SecurityOutcome.UNAVAILABLE
+    assert result.is_green is False
+
+
 def test_zero_findings_over_real_scanned_files_is_green() -> None:
     """A scan that demonstrably inspected files and found nothing is the only honest GREEN."""
     clean_payload = json.dumps(

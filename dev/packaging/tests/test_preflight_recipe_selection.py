@@ -102,8 +102,10 @@ _COLLECT_TIMEOUT_SECONDS: Final = 600
 #: of reporting an empty corpus as a clean pass.
 _ANCHOR_RECIPES: Final = frozenset(
     {
-        "packaging-smoke-preflight-tests",
-        "packaging-smoke-installed-oracles",
+        "test-packaging-contracts",
+        "test-installed-oracles",
+        "test-packaging-serial",
+        "test-packaging-ci",
     },
 )
 

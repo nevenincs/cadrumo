@@ -65,7 +65,7 @@ _SRC_ROOT = SRC_DIR
 # The exact historical shape ``5a6fcd09e4`` orphaned: a dict constant without
 # the required suffix, read through a lowercase local into ``tr()``.
 _HISTORICAL_SHAPE = (
-    "from cadrumo.core.i18n import tr\n"
+    "from cadrumo.core.i18n.render import tr\n"
     "\n"
     "_PROFILE_STATUS_KEYS = {\n"
     '    "active": "flows.status.profiles.status.active",\n'
@@ -138,7 +138,7 @@ def test_rule_passes_on_a_correctly_suffixed_dict_registry() -> None:
     name, so it must not additionally trip this gate.
     """
     tree = ast.parse(
-        "from cadrumo.core.i18n import tr\n"
+        "from cadrumo.core.i18n.render import tr\n"
         "\n"
         "_PROFILE_STATUS_LOCALE_KEYS = {\n"
         '    "active": "flows.status.profiles.status.active",\n'
@@ -245,7 +245,7 @@ def test_rule_ignores_a_local_scope_dict_even_when_flow_confirmed() -> None:
     file represents.
     """
     tree = ast.parse(
-        "from cadrumo.core.i18n import tr\n"
+        "from cadrumo.core.i18n.render import tr\n"
         "\n"
         "\n"
         "def label_for(token: str) -> str:\n"
@@ -267,7 +267,7 @@ def test_rule_ignores_an_unshaped_dict_with_one_non_dotted_value() -> None:
     values.
     """
     tree = ast.parse(
-        "from cadrumo.core.i18n import tr\n"
+        "from cadrumo.core.i18n.render import tr\n"
         "\n"
         "_MIXED_TABLE = {\n"
         '    "a": "cli.app.some.key",\n'

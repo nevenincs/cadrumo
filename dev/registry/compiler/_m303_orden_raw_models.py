@@ -9,9 +9,9 @@ from typing import Literal
 from pydantic import Field, model_validator
 
 from cadrumo.core.filing_year import FilingYear
-from cadrumo.core.identity import ContentDigest
+from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.percentage import Percentage
-from cadrumo.domain.calculations.registry._m303_orden_constants import (
+from cadrumo.domain.calculations.registry.m303_orden_constants import (
     EXPECTED_ACTIVITY_COUNT,
     EXPECTED_AGRICULTURAL_AXIS_COUNTS,
     EXPECTED_MODULE_COUNT,

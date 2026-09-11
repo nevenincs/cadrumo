@@ -207,9 +207,7 @@ def test_workflow_runs_canonical_cadrumo_packaging_gates() -> None:
     # The Ubuntu leg captures the aggregate's exit status (`|| status=$?`) so the
     # evidence checkpoint still runs when the gate fails, so the canonical gate is
     # asserted as a line prefix rather than an exact match.
-    assert any(
-        line == "just test-packaging-smoke-ci" or line.startswith("just test-packaging-smoke-ci ") for line in commands
-    )
+    assert any(line == "just test-packaging-ci" or line.startswith("just test-packaging-ci ") for line in commands)
     assert "uv run --no-sync python -m dev.packaging.evidence" in commands
     assert "just packaging-smoke-linux" not in commands
     assert "just packaging-smoke-split" not in commands
@@ -223,13 +221,13 @@ def test_workflow_runs_canonical_cadrumo_packaging_gates() -> None:
         # The portable legs run the host-portable aggregate and the same
         # evidence checkpoint, and never the Ubuntu-only CI / Docker / Linux
         # lanes (Docker is ubuntu-only; the browser-linux lane installs host
-        # system deps). `just test-packaging-smoke` is an exact run line here, not a
-        # prefix of `just test-packaging-smoke-ci`.
+        # system deps). `just test-packaging-portable` is an exact run line here, not a
+        # prefix of `just test-packaging-ci`.
         assert {
-            "just test-packaging-smoke",
+            "just test-packaging-portable",
             "uv run --no-sync python -m dev.packaging.evidence",
         } <= leg_commands
-        assert "just test-packaging-smoke-ci" not in leg_commands
+        assert "just test-packaging-ci" not in leg_commands
         assert "just packaging-smoke-linux" not in leg_commands
         assert "just packaging-smoke-docker" not in leg_commands
         # The Linux-only disk reclamation and bash resource sampler never run on
@@ -243,7 +241,7 @@ def test_workflow_evidence_and_product_identity_follow_the_binding_tuple() -> No
     job = document["jobs"]["cadrumo-packaging-smoke"]
     cohort_publish = next(step for step in job["steps"] if step.get("name") == _COHORT_PUBLISH_STEP)
     evidence_publish = next(step for step in job["steps"] if step.get("name") == _EVIDENCE_PUBLISH_STEP)
-    campaign = next(step for step in job["steps"] if "just test-packaging-smoke-ci" in str(step.get("run", "")))
+    campaign = next(step for step in job["steps"] if "just test-packaging-ci" in str(step.get("run", "")))
     checkpoint = next(
         step for step in job["steps"] if step.get("run") == "uv run --no-sync python -m dev.packaging.evidence"
     )
@@ -266,7 +264,7 @@ def test_workflow_evidence_and_product_identity_follow_the_binding_tuple() -> No
         leg = document["jobs"][key]
         leg_cohort = next(s for s in leg["steps"] if s.get("name") == _COHORT_PUBLISH_STEP)
         leg_evidence = next(s for s in leg["steps"] if s.get("name") == _EVIDENCE_PUBLISH_STEP)
-        leg_campaign = next(s for s in leg["steps"] if s.get("run") == "just test-packaging-smoke")
+        leg_campaign = next(s for s in leg["steps"] if s.get("run") == "just test-packaging-portable")
         leg_checkpoint = next(
             s for s in leg["steps"] if s.get("run") == "uv run --no-sync python -m dev.packaging.evidence"
         )

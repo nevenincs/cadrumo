@@ -32,7 +32,7 @@ from .._golden_queries import (
     run_query,
 )
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.resident_service]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 # dev/docs/preprocess/tests/test_golden_queries.py -> parents[4] is repo root.
 _REPO_ROOT = REPO_ROOT
@@ -48,6 +48,7 @@ def test_xlsm_record_design_is_a_corpus_and_diseno_source() -> None:
     GOLDEN_QUERIES,
     ids=[g.surface.value + ":" + g.query[:24] for g in GOLDEN_QUERIES],
 )
+@pytest.mark.resident_service
 def test_golden_query_reaches_its_surface(golden: GoldenQuery) -> None:
     """Each golden query hits its pinned surface above its score floor.
 
@@ -64,6 +65,7 @@ def test_golden_query_reaches_its_surface(golden: GoldenQuery) -> None:
     )
 
 
+@pytest.mark.resident_service
 def test_extraction_sidecars_are_deduplicated_out_of_the_index() -> None:
     """A corpus query returns NO sidecar hits - only hook-fed source hits.
 

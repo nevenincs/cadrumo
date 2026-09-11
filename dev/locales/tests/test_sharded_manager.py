@@ -94,7 +94,7 @@ def test_sharded_scaffold_partitions_keys() -> None:
         src_dir = tmp / "src"
         src_dir.mkdir()
         (src_dir / "main.py").write_text(
-            "from cadrumo.core.i18n import tr\n"
+            "from cadrumo.core.i18n.render import tr\n"
             'tr("cli.cmd.start")\n'
             'tr("modelo.schema.303.casilla.01.label")\n'
             'tr("other.unclassified.key")\n',

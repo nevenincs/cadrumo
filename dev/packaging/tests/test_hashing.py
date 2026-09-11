@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import ast
 import hashlib
-import importlib
 import subprocess
 import sys
 from pathlib import Path
@@ -15,6 +14,7 @@ import pytest
 from dev._paths import REPO_ROOT
 
 from ..hashing import sha256_path, sha256_text
+from .. import cohort_manifest, distribution_evidence_emit, evidence, proof_cache, smoke_homebrew
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -216,12 +216,10 @@ def test_rehomed_text_digest_site_declares_no_private_text_helper(relative_path:
     assert [node.name for node in defined if _encodes_sha256(node)] == []
 
 
-@pytest.mark.parametrize("module_name", ("smoke_homebrew", "distribution_evidence_emit", "evidence", "proof_cache"))
-def test_rehomed_text_digest_module_uses_the_canonical_helper(module_name: str) -> None:
+@pytest.mark.parametrize("module", (smoke_homebrew, distribution_evidence_emit, evidence, proof_cache))
+def test_rehomed_text_digest_module_uses_the_canonical_helper(module: object) -> None:
     """The re-homed module resolves string digests through the one owner."""
-    module = importlib.import_module(f"dev.packaging.{module_name}")
-
-    assert module.sha256_text is sha256_text
+    assert getattr(module, "sha256_text") is sha256_text
 
 
 def test_an_in_memory_digest_is_not_a_streamed_duplicate() -> None:
@@ -260,12 +258,10 @@ def test_rehomed_digest_site_declares_no_private_digest_helper(relative_path: st
     assert streaming_helpers == []
 
 
-@pytest.mark.parametrize("module_name", ("cohort_manifest", "smoke_homebrew"))
-def test_rehomed_digest_module_uses_the_canonical_helper(module_name: str) -> None:
+@pytest.mark.parametrize("module", (cohort_manifest, smoke_homebrew))
+def test_rehomed_digest_module_uses_the_canonical_helper(module: object) -> None:
     """The re-homed module resolves file digests through the one owner."""
-    module = importlib.import_module(f"dev.packaging.{module_name}")
-
-    assert module.sha256_path is sha256_path
+    assert getattr(module, "sha256_path") is sha256_path
 
 
 @pytest.mark.parametrize(

@@ -5,17 +5,18 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from test_support.registry_authoring import (
-    _committed_registry_tree,
+
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
+from ..compiler.validate_label_artifacts import (
     collect_label_artifact_findings,
     validate_no_label_artifacts,
-    validate_registry_scope,
 )
-
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from ..schema import ModeloDefinition, ModeloRevision
-from ..schema_references import PeriodSelector
-from ..schema_surfaces import CasillaDefinition
+from ..compiler.registry_scope import validate_registry_scope
+from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 from ._synthetic_locale_fixtures import _synthetic_locale_scope, _write_test_label
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -26,7 +26,7 @@ from .._ast_scanner import scan_source_tree
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _FIXTURE_MODULE = """
-from cadrumo.core.i18n import tr
+from cadrumo.core.i18n.render import tr
 
 
 def render_state(condition: bool) -> str:

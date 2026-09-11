@@ -64,16 +64,17 @@ from datetime import date
 from typing import Literal
 
 import pytest
-from cadrumo.tests.registry_tree import bundled_registry_tree
+
+# The former sibling gate was removed with the registry test split; retain its
+# reviewed corpus anchor here because this worklist uses the same disposition.
+_KNOWN_SELF_CONTRADICTING_DESIGN = "aeat-dr-038-2024"
 
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
-from cadrumo.domain.calculations.registry.tests.test_cited_design_field_bounds_are_self_consistent import (
-    _KNOWN_SELF_CONTRADICTING_DESIGN,
-)
+from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -8,17 +8,31 @@ import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 
-from ..compiler._loader_internals import _revision_section_fragment_paths, load_modelo_file
-from ..compiler.loader import load_modelo_directory
-from ..conformance.tests._loader_directory_mode_support import (
-    _COMPLETENESS_CASILLA_0001,
-    _COMPLETENESS_CASILLA_0002,
-    _TOML_CASILLA_ID_KEY,
-    _minimal_fragment_revision_layout,
-    _standard_manifest_text,
-    _standard_revision_preamble_text,
-    _write_standard_manifest,
-    _write_standard_revision_preamble,
+from ..compiler.loader import load_modelo_directory, load_modelo_file
+from ..compiler.loader_grammar import revision_section_fragment_paths
+from ..conformance.loader_directory_mode_support import (
+    COMPLETENESS_CASILLA_0001 as _COMPLETENESS_CASILLA_0001,
+)
+from ..conformance.loader_directory_mode_support import (
+    COMPLETENESS_CASILLA_0002 as _COMPLETENESS_CASILLA_0002,
+)
+from ..conformance.loader_directory_mode_support import (
+    TOML_CASILLA_ID_KEY as _TOML_CASILLA_ID_KEY,
+)
+from ..conformance.loader_directory_mode_support import (
+    minimal_fragment_revision_layout as _minimal_fragment_revision_layout,
+)
+from ..conformance.loader_directory_mode_support import (
+    standard_manifest_text as _standard_manifest_text,
+)
+from ..conformance.loader_directory_mode_support import (
+    standard_revision_preamble_text as _standard_revision_preamble_text,
+)
+from ..conformance.loader_directory_mode_support import (
+    write_standard_manifest as _write_standard_manifest,
+)
+from ..conformance.loader_directory_mode_support import (
+    write_standard_revision_preamble as _write_standard_revision_preamble,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -585,7 +599,7 @@ def test_a_section_holding_only_a_nested_fragment_is_refused_as_empty(tmp_path: 
     (nested / "extra.toml").write_text('[[revisions."2025".casillas]]\nid = "0001"\n', encoding="utf-8")
 
     with pytest.raises(RegistryLoadError, match="contains no TOML fragments"):
-        _revision_section_fragment_paths((section_dir,))
+        revision_section_fragment_paths((section_dir,))
 
 
 def test_directory_mode_rejects_fragment_revision_id_mismatch(tmp_path: Path) -> None:

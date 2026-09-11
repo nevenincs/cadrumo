@@ -20,7 +20,7 @@ from cadrumo.domain.calculations.registry.relations import (
     resolve_relation_values_from_observations,
 )
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.tests.registry_observations import registry_grounded_modelo_observation
+from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 
 from ._formula_runtime_support import (
     _M100_PAGOS_FRACCIONADOS_CASILLA,

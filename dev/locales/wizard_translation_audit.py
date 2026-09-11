@@ -24,8 +24,8 @@ from pathlib import Path
 from cadrumo.application.wizard.catalogue import WIZARD_FLOWS
 from cadrumo.application.wizard.models import WizardFlow, WizardQuestion
 from cadrumo.core.directory_scan import scan_directory
-from cadrumo.core.external_constants import UTF_8_ENCODING
-from cadrumo.core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
+from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, UTF_8_ENCODING
+from cadrumo.core.i18n.render import tr
 
 from ._paths import SRC_DIR
 

@@ -2,14 +2,21 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
+from datetime import date
+from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.core.aggregation import BindingAggregation, BindingAggregationOp
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.identity import SPANISH_TAX_ID_WIDTH, IdentityError, validate_spanish_tax_id
+from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.identity.documents import IdentityError
+from cadrumo.core.identity.tax_id import SPANISH_TAX_ID_WIDTH, validate_spanish_tax_id
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
@@ -32,35 +39,82 @@ from cadrumo.domain.calculations.registry.schema_surfaces import (
 )
 from cadrumo.tests.registry_snapshot import build_snapshot
 
-from ...compiler._loader_internals import load_modelo_file
-from ...compiler._validate_export_field_widths import (
+from ...compiler.validate_export_field_widths import (
     DRAFT_ATTRIBUTE_CANONICAL_WIDTHS,
     validate_draft_field_slot_width,
 )
+from ...compiler.loader import load_modelo_file
 from ...compiler.validator import RegistryValidator
 from ..coverage import build_model_law_coverage_ledger
-from ._registry_schema_support import (
-    _EXPECTED_LIVE_CROSS_REFERENCES,
-    _NUMERIC_CASILLA_01,
-    _REQUIRED_APPLICATION_LINKS,
-    _SNAPSHOT_HEADER_EXPECTATIONS,
-    Path,
-    ValidationError,
-    _committed_modelo,
-    _committed_registry,
-    _copy_committed_modelo,
-    _revision,
-    _with_first_export_field,
-    _with_revision,
-    bundled_path,
-    date,
-    re,
+from ..registry_schema_support import (
+    NUMERIC_CASILLA_01 as _NUMERIC_CASILLA_01,
+)
+from ..registry_schema_support import (
+    committed_modelo as _committed_modelo,
+)
+from ..registry_schema_support import (
+    committed_registry as _committed_registry,
+)
+from ..registry_schema_support import (
+    revision as _revision,
+)
+from ..registry_schema_support import (
+    with_revision as _with_revision,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _MISSING_CASILLA: CasillaId = validated_casilla_id("missing", surface="_MISSING_CASILLA")
 _NAMED_LABEL_CASILLA: CasillaId = validated_casilla_id("my-label", surface="_NAMED_LABEL_CASILLA")
 _DECL_CNAE_CASILLA: CasillaId = validated_casilla_id("decl.cnae", surface="_DECL_CNAE_CASILLA")
+_MODELO_130_DIR = bundled_path("registry", "aeat", "modelos", "130")
+
+
+def _copy_committed_modelo(path: Path) -> None:
+    revision_dir = _MODELO_130_DIR / "revisions" / "2019-y-siguientes"
+    fragments = [revision_dir / "revision.toml"]
+    fragments.extend(
+        item
+        for item in scan_directory(revision_dir, pattern="*.toml", recursive=True, prune_directories=("locales",))
+        if item.name != "revision.toml"
+    )
+    text = _MODELO_130_DIR.joinpath("manifest.toml").read_text(encoding="utf-8")
+    text += "".join(fragment.read_text(encoding="utf-8") for fragment in fragments)
+    path.write_text(text, encoding="utf-8", newline="\n")
+
+
+def _with_first_export_field(revision: ModeloRevision, field: ExportFieldDefinition) -> ModeloRevision:
+    layout = revision.export_layouts[0]
+    record = layout.records[0]
+    updated_record = record.model_copy(update={"fields": (field, *record.fields[1:])})
+    updated_layout = layout.model_copy(update={"records": (updated_record, *layout.records[1:])})
+    return revision.model_copy(update={"export_layouts": (updated_layout, *revision.export_layouts[1:])})
+
+
+_SNAPSHOT_HEADER_EXPECTATIONS = (
+    ("modelo.id", "130"),
+    ("revision.id", "2019-y-siguientes"),
+    ("filing_year", 2024),
+    ("period", "3T"),
+)
+
+_EXPECTED_LIVE_CROSS_REFERENCES = frozenset({"modelo-130-static-official", "modelo-130-filed-declarations-read"})
+
+# Modelo 130's snapshot must carry these links as a floor rather than an
+# inventory: the revision declares additional links that are not part of this
+# focused assertion.
+_REQUIRED_APPLICATION_LINKS = frozenset(
+    {
+        "modelo-130-approval",
+        "modelo-130-calculation",
+        "modelo-130-deadline",
+        "modelo-130-export",
+        "modelo-130-extractor",
+        "modelo-130-filed-declarations-observation",
+        "modelo-130-filing",
+        "modelo-130-portal-cross-reference",
+        "modelo-130-review",
+    },
+)
 _EXPECTED_COMMITTED_M130_DEADLINE_WINDOWS = (
     "modelo-130-2024-1t",
     "modelo-130-2024-2t",

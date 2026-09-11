@@ -3,10 +3,17 @@
 from __future__ import annotations
 
 import pytest
-from test_support.registry_authoring import RegistryValidator, _committed_modelo, _with_revision
 
-from .....core.resources.bundled_data import bundled_path
-from ..errors import RegistryValidationError
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+
+from ..compiler.validator import RegistryValidator
+from ..conformance.registry_schema_support import (
+    committed_modelo as _committed_modelo,
+)
+from ..conformance.registry_schema_support import (
+    with_revision as _with_revision,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

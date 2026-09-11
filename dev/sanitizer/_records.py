@@ -28,7 +28,7 @@ from pydantic import (
 )
 
 from cadrumo.core.hashing import sha256_hex
-from cadrumo.core.identity import validate_spanish_tax_id
+from cadrumo.core.identity.tax_id import validate_spanish_tax_id
 
 from .errors import SanitizerValidationError
 

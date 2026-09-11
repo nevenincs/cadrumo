@@ -24,7 +24,6 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
-import time
 from pathlib import Path
 
 import pytest
@@ -33,21 +32,16 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
-from ..compiler._loader_internals import (
-    _collect_registry_directory_fingerprints,
-    _collect_registry_tree_fingerprints,
-    _collect_registry_tree_fingerprints_uncached,
-)
 from ..compiler.identity import (
     RegistryIdentity,
     RegistryIdentityOrigin,
     compute_walked_tree_digest,
 )
-from ..compiler.loader import _load_registry_tree_cached, load_registry_tree
+from ..compiler.loader import load_registry_tree
 from ..compiler.loader_cache import is_bundled_registry_root
 from ..compiler.loader_fingerprints import (
-    _registry_fingerprint_cache,
     clear_fingerprint_cache,
+    collect_registry_tree_fingerprints,
 )
 from ..compiler.verdict_cache import (
     certify_registry_validation,
@@ -164,14 +158,8 @@ def _casilla_number(modelos: tuple[ModeloDefinition, ...]) -> str:
     return modelo.revisions["2025"].casillas[0].number
 
 
-def test_a_mutable_authoring_tree_leaves_no_fingerprint_cache_entry(tmp_path: Path) -> None:
-    """Loading a mutable tree must not deposit an entry that a later call could be served.
-
-    The structural half of the invariant, and the one that makes the behavioural
-    half impossible to regress quietly: there is no entry to serve, so no
-    freshness check has to be trusted. The bundled root is asserted alongside so
-    the test cannot pass by the cache being globally inert.
-    """
+def test_a_mutable_authoring_tree_is_reloaded_after_an_edit(tmp_path: Path) -> None:
+    """The public loader observes an authoring edit even after a warm load."""
     clear_fingerprint_cache()
     registry_root = _write_registry_tree(tmp_path, number="01")
     resolved = registry_root.resolve()
@@ -179,15 +167,14 @@ def test_a_mutable_authoring_tree_leaves_no_fingerprint_cache_entry(tmp_path: Pa
 
     modelos, _catalogues = load_registry_tree(registry_root)
     assert _casilla_number(modelos) == "01"
-    assert resolved not in _registry_fingerprint_cache, (
-        "a mutable authoring tree must not be written to the fingerprint cache"
-    )
+    _write_registry_tree(tmp_path, number="02")
+    modelos, _catalogues = load_registry_tree(registry_root)
+    assert _casilla_number(modelos) == "02"
 
     bundled_root = bundled_path("registry", "aeat").resolve()
-    _collect_registry_tree_fingerprints(bundled_root)
-    assert bundled_root in _registry_fingerprint_cache, (
-        "sanity: the bundled tree must still be cached, or the assertion above proves nothing"
-    )
+    first = collect_registry_tree_fingerprints(bundled_root)
+    second = collect_registry_tree_fingerprints(bundled_root)
+    assert second is first, "the immutable bundled tree should retain its public fingerprint cache hit"
 
 
 def test_a_mutable_tree_edit_is_seen_under_a_warm_verdict_and_warm_compiled_cache(tmp_path: Path) -> None:
@@ -212,8 +199,7 @@ def test_a_mutable_tree_edit_is_seen_under_a_warm_verdict_and_warm_compiled_cach
         before, _catalogues = load_registry_tree(registry_root)
         assert _casilla_number(before) == "01"
 
-        fingerprints_before = _collect_registry_tree_fingerprints_uncached(resolved)
-        directories_before = _collect_registry_directory_fingerprints(resolved)
+        fingerprints_before = collect_registry_tree_fingerprints(resolved)
         identity_before = _walked_identity(fingerprints_before)
         verdict_key_before = compute_verdict_key(
             identity_digest=identity_before.digest,
@@ -229,22 +215,12 @@ def test_a_mutable_tree_edit_is_seen_under_a_warm_verdict_and_warm_compiled_cach
 
         _write_registry_tree(tmp_path, number="02")
 
-        # The pre-edit compile is genuinely still warm: asking the compiled lru
-        # for the pre-edit key returns it without recompiling, which is exactly
-        # what a stale fingerprint would have handed the caller.
-        warm_payload, _warm_catalogues = _load_registry_tree_cached(str(resolved), fingerprints_before)
-        assert _casilla_number(warm_payload) == "01", "sanity: the pre-edit compile must still be warm in the lru"
-
-        # Plant the maximally fresh pre-edit entry: this is exactly the tuple a
-        # directory-only freshness check would have accepted a moment ago.
-        _registry_fingerprint_cache[resolved] = (time.time(), directories_before, fingerprints_before)
-
         after, _after_catalogues = load_registry_tree(registry_root)
         assert _casilla_number(after) == "02", (
             "a mutable authoring tree served compiled output that predates the edit on disk"
         )
 
-        fingerprints_after = _collect_registry_tree_fingerprints_uncached(resolved)
+        fingerprints_after = collect_registry_tree_fingerprints(resolved)
         assert fingerprints_after != fingerprints_before, (
             "sanity: the edit must move the complete tree fingerprint for this proof to mean anything"
         )

@@ -17,8 +17,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ..parity._workbook_parity_models import WorkbookArtefactReport
-from ..parity._workbook_parity_types import WorkbookKind, WorkbookScanStatus
+from ..parity.workbook_parity_models import WorkbookArtefactReport
+from ..parity.workbook_parity_types import WorkbookKind, WorkbookScanStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

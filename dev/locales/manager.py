@@ -17,7 +17,7 @@ import yaml
 
 from cadrumo.core.directory_scan import iter_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
-from cadrumo.core.i18n import extract_placeholders
+from cadrumo.core.i18n.render import extract_placeholders
 from cadrumo.core.logging import get_logger
 from cadrumo.core.product_identity import normalise_product_identity_references
 

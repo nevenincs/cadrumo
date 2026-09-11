@@ -22,11 +22,13 @@ from datetime import date
 from typing import NamedTuple
 
 import pytest
-from test_support.registry_authoring import RegistryValidator, _committed_modelo
 
-from .....core.authority_grade import RegistryAuthorityGrade
-from .....core.resources.bundled_data import bundled_path
-from ..authority import bundled_authority
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+
+from ..compiler.validator import RegistryValidator
+from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

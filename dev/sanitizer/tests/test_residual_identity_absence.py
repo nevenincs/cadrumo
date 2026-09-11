@@ -82,7 +82,7 @@ import pytest
 from pydantic import SecretStr
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
-from cadrumo.tests import SRC_CADRUMO
+from cadrumo.tests.inventory import SRC_CADRUMO
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
 from .._pipeline import sanitize_pdf

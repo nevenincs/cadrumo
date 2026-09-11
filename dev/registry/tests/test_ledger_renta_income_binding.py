@@ -23,26 +23,27 @@ from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
-from test_support.registry_authoring import _committed_modelo
 
-from .....application.aggregation import RentaIncomeObservation
-from .....core.aggregation import (
+from cadrumo.application.aggregation import RentaIncomeObservation
+from cadrumo.core.aggregation import (
     BindingAggregation,
     BindingAggregationOp,
     BindingSourceKind,
     LedgerIncomeGrounding,
 )
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_snapshot import build_snapshot
-from ..binding_selector_utils import selector_as_dict
-from ..ledger_renta_income_bindings import (
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
+from cadrumo.domain.calculations.registry.ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
     unsupported_ledger_renta_income_observations,
     validate_ledger_renta_income_aggregation_binding_definition,
 )
-from ..schema import DataBindingDefinition
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

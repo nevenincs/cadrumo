@@ -12,7 +12,7 @@ See Also:
         Selector parsing into canonical source modelo, period, and casilla ids.
     :mod:`cadrumo.domain.calculations.registry._validate_source_casilla_ids`
         Shared source-revision membership check and non-canonical diagnostics.
-    :mod:`cadrumo.domain.calculations.registry._validate_relation_sources`
+    :mod:`dev.registry.compiler.validate_relation_sources`
         Sibling closure validation for relation source selectors.
 """
 

@@ -24,7 +24,7 @@ from cadrumo.core.schema_family_disposition import (
     UNRESOLVED_SCHEMA_FAMILY_DISPOSITIONS,
     RegistrySchemaFamilyDisposition,
 )
-from cadrumo.domain.calculations.registry._schema_family_coverage import (
+from cadrumo.domain.calculations.registry.schema_family_coverage import (
     RevisionCoverageManifest,
     SchemaFamilyCoverageRow,
     build_revision_coverage_manifest,
@@ -40,13 +40,13 @@ from cadrumo.domain.calculations.registry.schema_base import (
     RegistryModel,
 )
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-from cadrumo.tests.registry_tree import bundled_registry_tree
+from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 from ...compiler.loader import load_modelo_directory
 from ..coverage import REQUIRED_COVERAGE_TIERS
-from ._loader_directory_mode_support import _load_revision as _shared_load_revision
-from ._loader_directory_mode_support import _write_modelo as _shared_write_modelo
-from ._schema_family_support import schema_family_enrollment_failures
+from ..loader_directory_mode_support import load_revision as _shared_load_revision
+from ..loader_directory_mode_support import write_modelo as _shared_write_modelo
+from ..schema_family_support import schema_family_enrollment_failures
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

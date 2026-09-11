@@ -2,18 +2,24 @@
 
 from __future__ import annotations
 
+import os
 import time
 from collections.abc import Callable
 from pathlib import Path
 from typing import Protocol
 
+from cadrumo.core.directory_scan import scan_directory
 from cadrumo.domain.calculations.registry.errors import (
     RegistryFailureClassification,
     RegistryFailureCondition,
     RegistryLoadError,
 )
 
-from .loader_cache import toml_file_fingerprint
+from .loader_cache import (
+    BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS,
+    is_bundled_registry_root,
+    toml_file_fingerprint,
+)
 
 type RegistryPathFingerprint = tuple[str, int, int, str]
 type RegistryPathFingerprints = tuple[RegistryPathFingerprint, ...]
@@ -196,10 +202,151 @@ def collect_registry_tree_fingerprints_for_cache(
     return fingerprints
 
 
+def _live_cached_fingerprints(
+    resolved: Path,
+    *,
+    now: float,
+    ttl: float,
+    directory_fingerprints: RegistryPathFingerprints | None,
+) -> RegistryPathFingerprints | None:
+    """Return the cached fingerprints when the entry is still live, else ``None``."""
+    entry = _registry_fingerprint_cache.get(resolved)
+    if entry is None:
+        return None
+    cached_time, cached_directories, cached_value = entry
+    if now - cached_time >= ttl:
+        return None
+    if directory_fingerprints is None or cached_directories == directory_fingerprints:
+        return cached_value
+    _registry_fingerprint_cache.pop(resolved, None)
+    return None
+
+
+def _registry_source_fingerprints(resolved: Path) -> RegistryPathFingerprints:
+    """Fingerprint every catalogue TOML the loader will subsequently re-open."""
+    fingerprints: list[RegistryPathFingerprint] = []
+    for path in scan_directory(resolved / "legal", pattern="*.toml"):
+        fingerprints.append(toml_file_fingerprint(path))
+    modelos_dir = resolved / "modelos"
+    for path in scan_directory(modelos_dir, pattern="*.toml"):
+        fingerprints.append(toml_file_fingerprint(path))
+    for entry in scan_directory(modelos_dir):
+        fingerprints.extend(_modelo_directory_fingerprints(entry))
+    schema_path = resolved / "user_profile" / "schema.toml"
+    if schema_path.is_file():
+        fingerprints.append(toml_file_fingerprint(schema_path))
+    return tuple(fingerprints)
+
+
+def _store_registry_fingerprints(
+    resolved: Path,
+    *,
+    directory_fingerprints: RegistryPathFingerprints,
+    fingerprints: RegistryPathFingerprints,
+    walk_started: float,
+    bundled: bool,
+) -> None:
+    """Record freshly walked fingerprints for the bundled-root TTL window."""
+    stamped = time.time() if bundled else walk_started
+    _registry_fingerprint_cache[resolved] = (stamped, directory_fingerprints, fingerprints)
+
+
+def collect_registry_directory_fingerprints(resolved: Path) -> RegistryPathFingerprints:
+    """Collect the directory-layout rows used to validate a registry walk."""
+    if not resolved.is_dir():
+        return ()
+
+    def _raise_walk_error(exc: OSError) -> None:
+        raise RegistryLoadError(
+            f"{resolved}: registry directory could not be walked during cache fingerprinting; {exc}",
+            registry_failure=RegistryFailureClassification(
+                condition=RegistryFailureCondition.TREE_QUIESCENT,
+                facts={"path": str(resolved), "registry_tree_quiescent": False, "operation": "directory_walk"},
+            ),
+        ) from exc
+
+    fingerprints: list[RegistryPathFingerprint] = []
+    for dirpath, dirnames, _filenames in os.walk(resolved, onerror=_raise_walk_error):
+        dirnames.sort()
+        fingerprints.append(_directory_fingerprint(Path(dirpath)))
+    return tuple(fingerprints)
+
+
+def collect_modelo_directory_fingerprints(resolved: Path) -> RegistryPathFingerprints:
+    """Collect all directory-mode source rows for one modelo."""
+    manifest_path = resolved / "manifest.toml"
+    fingerprints: list[RegistryPathFingerprint] = list(collect_registry_directory_fingerprints(resolved))
+    fingerprints.append(toml_file_fingerprint(manifest_path))
+    for path in scan_directory(resolved / "locales", pattern="*.toml"):
+        fingerprints.append(toml_file_fingerprint(path))
+    for path in scan_directory(resolved / "revisions", pattern="*.toml", recursive=True):
+        fingerprints.append(toml_file_fingerprint(path))
+    return tuple(fingerprints)
+
+
+def _modelo_directory_fingerprints(entry: Path) -> RegistryPathFingerprints:
+    """Return fingerprints for one directory-mode modelo entry."""
+    if not (entry.is_dir() and (entry / "manifest.toml").is_file()):
+        return ()
+    fingerprints: list[RegistryPathFingerprint] = [toml_file_fingerprint(entry / "manifest.toml")]
+    for path in scan_directory(entry / "locales", pattern="*.toml", recursive=True):
+        fingerprints.append(toml_file_fingerprint(path))
+    for rev_path in scan_directory(entry / "revisions", pattern="*.toml", recursive=True):
+        fingerprints.append(toml_file_fingerprint(rev_path))
+    return tuple(fingerprints)
+
+
+def _directory_fingerprint(path: Path) -> RegistryPathFingerprint:
+    try:
+        stat = path.stat()
+    except OSError as exc:
+        raise RegistryLoadError(
+            f"{path}: registry directory could not be fingerprinted; {exc}",
+            registry_failure=RegistryFailureClassification(
+                condition=RegistryFailureCondition.TREE_QUIESCENT,
+                facts={"path": str(path), "registry_tree_quiescent": False, "operation": "directory_stat"},
+            ),
+        ) from exc
+    return str(path), stat.st_size, stat.st_mtime_ns, ""
+
+
+def _collect_registry_tree_fingerprints_uncached(resolved: Path) -> RegistryPathFingerprints:
+    return collect_registry_tree_fingerprints_for_cache(
+        resolved,
+        use_cache=False,
+        fingerprint_cache=_registry_fingerprint_cache,
+        is_bundled_root=is_bundled_registry_root,
+        bundled_ttl=BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS,
+        live_cached=_live_cached_fingerprints,
+        collect_directory=collect_registry_directory_fingerprints,
+        collect_sources=_registry_source_fingerprints,
+        store=_store_registry_fingerprints,
+    )
+
+
+def collect_registry_tree_fingerprints(resolved: Path) -> RegistryPathFingerprints:
+    """Collect the complete canonical cache key for one registry tree."""
+    return collect_registry_tree_fingerprints_for_cache(
+        resolved,
+        use_cache=True,
+        fingerprint_cache=_registry_fingerprint_cache,
+        is_bundled_root=is_bundled_registry_root,
+        bundled_ttl=BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS,
+        live_cached=_live_cached_fingerprints,
+        collect_directory=collect_registry_directory_fingerprints,
+        collect_sources=_registry_source_fingerprints,
+        store=_store_registry_fingerprints,
+    )
+
+
+def _toml_fingerprint(path: Path) -> RegistryPathFingerprint:
+    return toml_file_fingerprint(path)
+
+
 __all__ = [
-    "_registry_fingerprint_cache",
-    "bind_tree_fingerprint_collectors",
     "clear_fingerprint_cache",
-    "collect_registry_tree_fingerprints_for_cache",
+    "collect_modelo_directory_fingerprints",
+    "collect_registry_directory_fingerprints",
+    "collect_registry_tree_fingerprints",
     "refresh_toml_fingerprint_after_load_error",
 ]

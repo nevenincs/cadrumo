@@ -2,9 +2,9 @@
 
 Two canonical forms exist and each answers exactly one question:
 
-* :func:`core.identity.same_tax_identifier` -- "do these two name the same
+* :func:`core.identity.tax_id.same_tax_identifier` -- "do these two name the same
   bearer", comparing on separator-stripped ``normalise_nif_iva``;
-* :func:`core.identity.tax_id_identity_token` -- the trim-and-uppercase form
+* :func:`core.identity.tax_id.tax_id_identity_token` -- the trim-and-uppercase form
   used to KEY a stored object.
 
 A site that writes ``value.strip().upper()`` by hand is a respelling of one of

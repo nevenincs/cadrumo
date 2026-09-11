@@ -31,7 +31,8 @@ from typing import Any
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
-from cadrumo.tests import FIXTURES_DIR, parse_committed_justificante_fixture
+from cadrumo.tests.inventory import FIXTURES_DIR
+from cadrumo.tests.justificante_parse_cache import parse_committed_justificante_fixture
 
 from ..residual_identity import is_self_replacement
 

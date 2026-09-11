@@ -68,7 +68,9 @@ carry ``reviewed_against`` on a reviewed delta edition or it does not load, so
 the carry-forward is decided at publication: ``--apply`` replaces the modelo in
 the target registry only when the gate reports nothing at all, including no
 edition whose export bytes went unchecked. Without ``--apply`` nothing outside
-the work directory is written.
+the work directory is written by the migration; the command-line report is
+persisted separately under the repository's ``.logs/audit-runs`` evidence
+hierarchy.
 
 Determinism and idempotency. Every choice is a function of the input tree, taken
 in sorted or validity order, so two runs over the same tree write the same
@@ -111,6 +113,8 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.identifier_lineage import identifier_lineage
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_overlap
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from dev._paths import REPO_ROOT
+from dev.test_runs.paths import allocate_run_directory
 
 from .analysis.delta_minimality import restatement_differences
 from .compiler.authority import compile_validated_authority
@@ -136,6 +140,7 @@ __all__ = [
     "PredecessorBasis",
     "main",
     "migrate_modelo",
+    "persist_migration_report",
     "plan_migration",
     "render_outcome",
 ]
@@ -148,6 +153,8 @@ _ROW_SOURCE_ADDITIONS: Final = "additional_source_refs"
 _ROW_LEGAL: Final = "legal_refs"
 _LINEAGE_CLAIMS: Final = frozenset({"continuidad_origin", "continuidad_evidence"})
 _CONSTRAINTS: Final = "constraints"
+_REPORT_FAMILY: Final = "audit-runs"
+_REPORT_LABEL: Final = "report-registry-edition-migration"
 _LINEAGE: Final = "continuidad_id"
 _REFERENCE_SECTIONS: Final[Mapping[str, str]] = {
     "formula": "formulas",
@@ -1185,6 +1192,41 @@ def _inside(path: Path, root: Path) -> bool:
     return path.resolve().is_relative_to(root.resolve())
 
 
+def _resolve_work_directory(registry_root: Path, work_dir: Path) -> tuple[Path, Path]:
+    """Resolve and validate source and scratch roots before any tree read or write.
+
+    Migration scratch is deliberately kept away from both the registry it is
+    about to copy and the repository's production ``src`` tree. Resolving
+    first also closes symlink and ``..`` spellings of those forbidden
+    locations. The directory must not exist: the migration owns its complete
+    contents and cannot safely merge into a caller's existing tree.
+    """
+    resolved_registry_root = registry_root.resolve()
+    resolved_work_dir = work_dir.resolve()
+    production_src_root = (REPO_ROOT / "src").resolve()
+    if _inside(resolved_work_dir, resolved_registry_root):
+        raise MigrationRefusedError(
+            f"work directory {resolved_work_dir} is inside registry root {resolved_registry_root}; "
+            "choose a separate scratch directory",
+        )
+    if _inside(resolved_work_dir, production_src_root):
+        raise MigrationRefusedError(
+            f"work directory {resolved_work_dir} is inside production source tree {production_src_root}; "
+            "choose a separate scratch directory",
+        )
+    if resolved_work_dir.exists() or work_dir.is_symlink():
+        raise MigrationRefusedError(f"work directory {resolved_work_dir} already exists")
+    return resolved_registry_root, resolved_work_dir
+
+
+def _scratch_path(work_dir: Path, *parts: str) -> Path:
+    """Return a scratch child and refuse path components that escape ``work_dir``."""
+    candidate = work_dir.joinpath(*parts).resolve()
+    if not _inside(candidate, work_dir):
+        raise MigrationRefusedError(f"scratch path {candidate} escapes work directory {work_dir}")
+    return candidate
+
+
 def migrate_modelo(
     *,
     registry_root: Path,
@@ -1196,16 +1238,16 @@ def migrate_modelo(
 ) -> MigrationOutcome:
     """Plan, stage and prove one modelo's migration; publish it only when the gate reports nothing.
 
-    ``work_dir`` must not exist; the unmigrated reference and the staged
-    migration are written under it and left for inspection.
+    ``work_dir`` must not exist and must be outside both ``registry_root`` and
+    the production ``src`` tree. The unmigrated reference, staged migration,
+    and any displaced target are written beneath it and left for inspection.
 
     Raises:
         MigrationRefusedError: When the migration cannot be planned or written,
             or ``apply`` is asked of a tree that is already delta-authored but
             not a fixed point.
     """
-    if work_dir.exists():
-        raise MigrationRefusedError(f"work directory {work_dir} already exists")
+    registry_root, work_dir = _resolve_work_directory(registry_root, work_dir)
     modelo_dir = registry_root / _MODELOS / modelo_id
     if not modelo_dir.is_dir() or not _inside(modelo_dir, registry_root):
         raise MigrationRefusedError(f"{registry_root} holds no modelo {modelo_id!r}")
@@ -1220,10 +1262,30 @@ def migrate_modelo(
         )
     if not any(_edition_changes(work) for work in works):
         return MigrationOutcome(plan=plan, staged_registry=None, report=None, applied=False, changed=False)
-    reference = copy_registry_tree(registry_root, work_dir / "reference" / "registry" / "aeat", modelo_id=modelo_id)
-    staged = copy_registry_tree(registry_root, work_dir / "migrated" / "registry" / "aeat", modelo_id=modelo_id)
+    reference = copy_registry_tree(
+        registry_root,
+        _scratch_path(work_dir, "reference", "registry", "aeat"),
+        modelo_id=modelo_id,
+    )
+    staged = copy_registry_tree(
+        registry_root,
+        _scratch_path(work_dir, "migrated", "registry", "aeat"),
+        modelo_id=modelo_id,
+    )
     for work in works:
-        _write_edition(staged / _MODELOS / modelo_id / "revisions" / work.plan.revision_id, work)
+        _write_edition(
+            _scratch_path(
+                work_dir,
+                "migrated",
+                "registry",
+                "aeat",
+                _MODELOS,
+                modelo_id,
+                "revisions",
+                work.plan.revision_id,
+            ),
+            work,
+        )
     report = edition_round_trip_report(
         live_registry_root=staged,
         reference_registry_root=reference,
@@ -1233,7 +1295,7 @@ def migrate_modelo(
     applied = False
     if apply and not report.findings:
         target = modelo_dir.resolve()
-        displaced = work_dir / "displaced" / modelo_id
+        displaced = _scratch_path(work_dir, "displaced", modelo_id)
         shutil.move(target, displaced)
         try:
             shutil.copytree(staged / _MODELOS / modelo_id, target)
@@ -1281,6 +1343,37 @@ def render_outcome(outcome: MigrationOutcome) -> str:
     return "\n".join(lines) + "\n"
 
 
+def persist_migration_report(
+    repository: Path,
+    outcome: MigrationOutcome,
+    command: Sequence[str],
+) -> Path:
+    """Persist one rendered migration outcome under the canonical audit log hierarchy.
+
+    ``allocate_run_directory`` supplies a date, process, and UUID identity;
+    creating that directory without ``exist_ok`` preserves earlier evidence if
+    two invocations ever receive the same generated name. The returned
+    ``report.md`` is the human-readable authority; ``report.json`` carries the
+    same rendered text and command for mechanical consumers. Neither path is
+    derived from the caller's scratch directory.
+    """
+    run_dir = allocate_run_directory(repository.resolve(), family=_REPORT_FAMILY, label=_REPORT_LABEL)
+    run_dir.mkdir(parents=True, exist_ok=False)
+    rendered = render_outcome(outcome)
+    report_path = run_dir / "report.md"
+    report_path.write_text(
+        f"command: {' '.join(command)}\n\n{rendered}",
+        encoding="utf-8",
+        newline="\n",
+    )
+    (run_dir / "report.json").write_text(
+        json.dumps({"command": list(command), "report": rendered}, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    return report_path
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Run the migration; exit 0 when the staged tree round-trips clean or nothing changes, 1 otherwise."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
@@ -1302,7 +1395,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     except MigrationRefusedError as exc:
         sys.stderr.write(f"refused: {exc}\n")
         return 1
+    command = tuple(sys.argv) if argv is None else (sys.argv[0], *argv)
+    report_path = persist_migration_report(REPO_ROOT, outcome, command)
     sys.stdout.write(render_outcome(outcome))
+    sys.stdout.write(f"report persisted to {report_path}\n")
     if outcome.report is not None and outcome.report.findings:
         return 1
     return 0

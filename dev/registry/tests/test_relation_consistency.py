@@ -3,16 +3,17 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 
 import pytest
-from test_support.registry_authoring import (
-    _committed_registry_tree,
-    _relation_is_prior_year_filing_carry,
+
+from cadrumo.domain.calculations.registry.bindings_previous_filing import previous_filing_source_reference
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
+
+from ..compiler.validate_relation_periods import (
     select_relation_source_revisions,
     validate_relation_source_coordinate_coverage,
 )
-
-from ..bindings_previous_filing import previous_filing_source_reference
-from ..schema import DataBindingDefinition, ModeloDefinition, ModeloRevision
-from ..schema_surfaces import RelationDefinition
+from ..compiler.validate_relation_sources import relation_is_prior_year_filing_carry
+from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -64,7 +65,7 @@ def _relation_consistency_errors(
         target_selector=revision.period_selector,
         source_revisions=matching_revisions,
         source_periods=relation.source_periods,
-        source_is_observation_history=_relation_is_prior_year_filing_carry(relation, revision),
+        source_is_observation_history=relation_is_prior_year_filing_carry(relation, revision),
     )
     errors.extend(failure.message for failure in coverage_failures)
     for source_revision, covered_periods in covered_revisions:

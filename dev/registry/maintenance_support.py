@@ -59,14 +59,14 @@ from .compiler.identity import (
     registry_identity_stamp_location,
 )
 from .compiler.loader import (
-    collect_registry_tree_fingerprints as collect_registry_identity_fingerprints,
-)
-from .compiler.loader import (
     load_modelo_directory,
     load_modelo_file,
 )
+from .compiler.loader_fingerprints import (
+    collect_registry_tree_fingerprints as collect_registry_identity_fingerprints,
+)
+from cadrumo.domain.calculations.registry.m303_orden_constants import EXTRACTOR_VERSION
 from .compiler.m303_orden_census_artefact import (
-    EXTRACTOR_VERSION,
     M303_ORDEN_CENSUS_SCHEMA_VERSION,
     M303AnnualOrdenCensusArtefact,
     M303AnnualOrdenSourceCensus,
@@ -125,13 +125,13 @@ def reset_registry_caches(
     that swap the registry root or rewrite bundled TOML need all three, so the
     package exposes the whole reset rather than its parts.
     """
-    from .compiler.loader import _load_registry_tree_cached
+    from .compiler.loader import clear_registry_tree_cache
     from .compiler.loader_fingerprints import clear_fingerprint_cache
 
     lifecycle_observer.registry_cache_reset_requested()
     with compiler_reset():
         lifecycle_observer.registry_cache_reset_acquired()
-        _load_registry_tree_cached.cache_clear()
+        clear_registry_tree_cache()
         clear_fingerprint_cache()
         reset_registered_fact_providers()
 

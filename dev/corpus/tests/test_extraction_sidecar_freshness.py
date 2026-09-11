@@ -162,7 +162,7 @@ def test_manual_pdf_corpus_text_sidecars_exist_and_match_source_sha256() -> None
 
     Ensures that dev/corpus/extract_manual_corpus_text.py was re-run after
     any corpus PDF changed, so the shipped sidecars are always in sync with
-    the source PDFs that _validate_evidence._read_manual_pdf_sidecar reads.
+    the source PDFs that validate_evidence._read_manual_pdf_sidecar reads.
     """
     sidecars = scan_directory(_MANUAL_CORPUS_TEXT_ROOT, pattern=f"*{_CORPUS_TEXT_SUFFIX}", recursive=True)
     failures: list[str] = []

@@ -69,6 +69,7 @@ an enumeration nobody extends is how every hole above was dug.
 
 from __future__ import annotations
 
+import functools
 from pathlib import Path
 
 import pytest
@@ -115,6 +116,101 @@ _CI_INCAPABLE_MARKERS: frozenset[str] = frozenset(
         "resident_service",
     },
 )
+
+
+# Exhaustive populations. Focused selectors such as ``test-cli`` deliberately
+# do not appear here: they are useful developer views over a canonical subject,
+# not a second owner of the same corpus.
+_CANONICAL_POPULATION_RECIPES: frozenset[str] = frozenset(
+    {
+        "test-pytest-harness",
+        "test-unit",
+        "test-integration-parallel",
+        "test-integration-serial",
+        "test-calculations",
+        "test-registry-conformance",
+        "test-test-policy",
+        "test-repository-contracts",
+        "test-ci-contracts",
+        "test-packaging-contracts",
+        "test-packaging-serial",
+        "test-installed-oracles",
+        "test-channel-artifacts",
+        "test-packaging-ci",
+        "test-devcontainer",
+        "test-runner-image",
+        "test-windows",
+        "test-tui-render",
+        "test-os-keychain",
+        "test-resident-service",
+        "test-registry-live",
+        "test-workbook-parity",
+    },
+)
+_FOCUSED_SELECTORS: frozenset[str] = frozenset({"test-cli", "test-tui", "test-smoke"})
+
+
+@functools.lru_cache(maxsize=1)
+def _canonical_population_rows() -> tuple[tuple[str, frozenset[str], tuple[str, ...]], ...]:
+    """Return each tracked test's canonical justfile owners and markers."""
+    lanes = tuple(lane for lane in declared_lanes(_ROOT) if lane.recipe in _CANONICAL_POPULATION_RECIPES)
+    rows: list[tuple[str, frozenset[str], tuple[str, ...]]] = []
+    for relative in tracked_test_files(_ROOT):
+        relative_path = str(relative).replace("\\", "/")
+        markers = marker_sets_in(_ROOT / relative)
+        assert markers is not None, f"tracked test markers could not be read: {relative_path}"
+        for item in markers:
+            owners = tuple(
+                sorted(
+                    {
+                        lane.recipe
+                        for lane in lanes
+                        if lane.covers(relative_path) and expression_selects(lane.marker_expression, item.markers)
+                    }
+                )
+            )
+            rows.append((f"{relative_path}::{item.test}", item.markers, owners))
+    return tuple(rows)
+
+
+def test_canonical_population_ownership_is_exhaustive_and_unique() -> None:
+    """Every non-held-out test has exactly one canonical subject owner."""
+    rows = _canonical_population_rows()
+    assert len(rows) > 10_000, "the ownership inventory became vacuous"
+
+    unowned = [(node_id, markers) for node_id, markers, owners in rows if not owners]
+    multiply_owned = [(node_id, owners) for node_id, _markers, owners in rows if len(owners) != 1]
+
+    assert not unowned, "non-resident tests have no canonical owner:\n" + "\n".join(node_id for node_id, _ in unowned)
+    assert not multiply_owned, "canonical populations overlap:\n" + "\n".join(
+        f"{node_id}: {owners}" for node_id, owners in multiply_owned
+    )
+
+    counts = {
+        recipe: sum(recipe in owners for _node_id, _markers, owners in rows) for recipe in _CANONICAL_POPULATION_RECIPES
+    }
+    assert all(counts.values()), f"a canonical population selected nothing: {counts}"
+
+
+def test_resident_service_population_and_retired_backstop_are_explicit() -> None:
+    """Resident-service tests have one capability lane and the old backstop is gone."""
+    rows = _canonical_population_rows()
+    resident_owners = {owners for _node_id, markers, owners in rows if "resident_service" in markers}
+    assert resident_owners == {("test-resident-service",)}
+
+    assert not any(lane.recipe == "test-dev-tooling" for lane in declared_lanes(_ROOT))
+    assert not [node_id for node_id, _markers, owners in rows if not owners], (
+        "the retired backstop left an unowned test"
+    )
+
+
+def test_focused_selectors_and_measurement_profile_are_not_population_owners() -> None:
+    """Focused developer selectors and coverage measurement stay outside the census."""
+    declared = {lane.recipe for lane in declared_lanes(_ROOT)}
+    assert declared >= _FOCUSED_SELECTORS
+    assert "test-coverage" in declared
+    assert not (_FOCUSED_SELECTORS & _CANONICAL_POPULATION_RECIPES)
+    assert "test-coverage" not in _CANONICAL_POPULATION_RECIPES
 
 
 #: A module whose one test is module-marked ``unit``, so a lane accepting
@@ -170,7 +266,7 @@ def test_every_test_ci_cannot_run_declares_why() -> None:
     a reader usually means, because a recipe no workflow invokes is a lane that
     has never run. Two of them proved it at once: ``just test-integration``
     (370 integration-marked modules under ``src/`` -- every cross-layer test in
-    the product) and ``just test-dev-tooling`` (ten ``dev/`` subsystems, whose
+    the product) and ``just test-tooling`` (the canonical ``dev/`` subject aggregate, whose
     own recipe docstring says "the gates that no other lane reaches") were both
     declared, both healthy, and named by no workflow. The declared-lane gate
     reported full coverage over tests CI had never once executed.
@@ -201,7 +297,7 @@ def test_the_ci_invoked_model_is_strictly_stronger_than_the_declared_one() -> No
     the gate above would still pass while asking nothing -- the exact
     false-green shape this module exists to refuse, one level up. This pins the
     gap as real: recipes exist that no workflow invokes (``test-os-keychain``,
-    ``test-workbook-parity``, ``test-live``, ``test-resident-service``, the
+    ``test-workbook-parity``, ``test-registry-live``, and the
     coverage and smoke conveniences), and they must stay excluded.
     """
     declared = declared_lanes(_ROOT)
@@ -222,14 +318,19 @@ def test_the_ci_invoked_model_is_strictly_stronger_than_the_declared_one() -> No
     # hole -- the union of the two passes covers exactly what it selects.
     expected_invoked = {
         "test-unit",
-        "test-dev-ci",
+        "test-ci-contracts",
         "test-integration-parallel",
         "test-integration-serial",
-        "test-dev-tooling",
+        "test-tooling",
+        "test-pytest-harness",
+        "test-registry-conformance",
+        "test-packaging-serial",
+        "test-packaging-ci",
+        "test-packaging-portable",
         "docs-check",
     }
     assert expected_invoked <= invoked_recipes
-    assert not ({"test-os-keychain", "test-workbook-parity", "test-live"} & invoked_recipes)
+    assert not ({"test-os-keychain", "test-workbook-parity", "test-registry-live"} & invoked_recipes)
 
 
 def test_a_recipe_no_workflow_invokes_is_declared_but_not_ci_invoked(tmp_path: Path) -> None:
@@ -369,7 +470,7 @@ def test_no_test_directory_sits_outside_every_lane_path() -> None:
     reports the hole while it is still empty.
 
     The concrete case it was built from: ``dev/harness/tests`` held one module,
-    ``just test-harness`` named that module by path, and so the file was
+    ``just test-pytest-harness`` named that module by path, and so the file was
     covered, its markers were selected, and both file-level checks above passed
     -- while the DIRECTORY sat inside no lane's scope at all. A second proof
     added beside the first would have been collected by no lane, no CI job and
@@ -711,7 +812,7 @@ def test_an_unresolved_template_residue_does_not_silently_widen_a_lanes_paths() 
     A justfile edit moved literal recipe paths behind `{{name}}` variables.
     Before template resolution existed, `_paths_of` found no positional-path
     token on the affected lines, so `_pytest_invocations` fell back to the
-    configured testpaths -- and `test-harness`'s lane silently widened from two
+    configured testpaths -- and `test-pytest-harness`'s lane silently widened from two
     named files to the WHOLE `src/cadrumo` tree. Nothing reds when this
     happens: a wider lane only ever makes MORE tests look reachable, so the
     unreachable-test gate stays green throughout. The only way to catch a

@@ -16,25 +16,44 @@ from typing import Any
 
 import pytest
 from pydantic import ValidationError
-from test_support.registry_authoring import (
-    _NUMERIC_CASILLA_01,
-    RegistryValidator,
-    _as_communication_revision,
-    _committed_modelo,
-    _committed_registry,
-    _keyed_bracket,
-    _revision,
-    _with_revision,
+
+from cadrumo.core.period import Period
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition
+from cadrumo.domain.calculations.registry.schema_extraction import (
+    ExtractionProfileDefinition,
+    ExtractionTargetDefinition,
+)
+from cadrumo.domain.calculations.registry.schema_formula import KeyedBracketEntry, ParameterDefinition
+from cadrumo.domain.calculations.registry.schema_surfaces import (
+    CalculationCompletenessCasilla,
+    CalculationCompletenessManifest,
 )
 
-from .....core.period import Period
-from .....core.resources.bundled_data import bundled_path
-from ..errors import RegistryValidationError
-from ..schema import ModeloRevision
-from ..schema_deadlines import DeadlineWindowDefinition
-from ..schema_extraction import ExtractionProfileDefinition, ExtractionTargetDefinition
-from ..schema_formula import KeyedBracketEntry, ParameterDefinition
-from ..schema_surfaces import CalculationCompletenessCasilla, CalculationCompletenessManifest
+from ..compiler.validator import RegistryValidator
+from ..conformance.registry_schema_support import (
+    NUMERIC_CASILLA_01 as _NUMERIC_CASILLA_01,
+)
+from ..conformance.registry_schema_support import (
+    as_communication_revision as _as_communication_revision,
+)
+from ..conformance.registry_schema_support import (
+    committed_modelo as _committed_modelo,
+)
+from ..conformance.registry_schema_support import (
+    committed_registry as _committed_registry,
+)
+from ..conformance.registry_schema_support import (
+    keyed_bracket as _keyed_bracket,
+)
+from ..conformance.registry_schema_support import (
+    revision as _revision,
+)
+from ..conformance.registry_schema_support import (
+    with_revision as _with_revision,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

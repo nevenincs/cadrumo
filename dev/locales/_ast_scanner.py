@@ -265,7 +265,7 @@ def _translation_call_names(tree: ast.AST) -> frozenset[str]:
     """Return every local name that resolves to the ``tr`` / ``t`` translator.
 
     Always includes the canonical ``tr`` / ``t`` names, plus any module-local
-    alias introduced by an aliased import (``from ...core.i18n import tr as
+    alias introduced by an aliased import (``from ...core.i18n.render import tr as
     _tr`` - the underscore-aliased module-level import convention). Without
     alias resolution an aliased call site like ``_tr("cli.root.verbose_help")``
     is invisible to the scanner, so its genuinely-live locale keys are wrongly

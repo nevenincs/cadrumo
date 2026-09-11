@@ -18,14 +18,14 @@ import json
 from pathlib import Path
 
 import pytest
-from cadrumo.tests.registry_tree import bundled_registry_tree
 from pydantic import TypeAdapter
 
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor, DeclaredPredecessorField, NoPredecessor
+from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 from ..compiler.loader import load_modelo_directory
-from ..conformance.tests._loader_directory_mode_support import _write_modelo as _shared_write_modelo
+from ..conformance.loader_directory_mode_support import write_modelo as _shared_write_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

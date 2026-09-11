@@ -17,21 +17,25 @@ from datetime import date
 from pathlib import Path
 
 import pytest
-from test_support.registry_authoring import (
-    RegistryValidator,
-    _committed_registry_tree,
+
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.ids import LegalRefId
+from cadrumo.domain.calculations.registry.modelo_localization import (
+    ModeloLocalizationFieldKind,
+    casilla_occurrence_locale_key,
+)
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaConstraints, CasillaDefinition
+
+from ..compiler.validate_cross_revision import (
     cross_revision_casilla_consistency_failures,
     declared_cross_revision_continuity_semantic_linkage_failures,
-    load_modelo_directory,
-    validate_registry_scope,
 )
-
-from .....core.resources.bundled_data import bundled_path
-from ..ids import LegalRefId
-from ..modelo_localization import ModeloLocalizationFieldKind, casilla_occurrence_locale_key
-from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
-from ..schema_references import PeriodSelector
-from ..schema_surfaces import CasillaConstraints, CasillaDefinition
+from ..compiler.loader import load_modelo_directory
+from ..compiler.registry_scope import validate_registry_scope
+from ..compiler.validator import RegistryValidator
+from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 from ._synthetic_locale_fixtures import (
     _synthetic_locale_scope,
     _write_test_label,

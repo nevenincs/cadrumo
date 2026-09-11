@@ -37,7 +37,7 @@ from cadrumo.domain.contribuyente.entity_type import EntityType
 from cadrumo.domain.deadlines.models import FiscalResidency, IVARegime, TaxpayerProfile
 
 from ..compiler.authority import compile_validated_authority
-from ..conformance.tests._loader_directory_mode_support import (
+from ..conformance.loader_directory_mode_support import (
     write_extracted_corpus_sidecar,
     write_fragmented_revision,
 )

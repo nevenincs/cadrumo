@@ -73,6 +73,7 @@ from pathlib import Path
 from typing import Final
 
 from dev._paths import REPO_ROOT, UTF_8
+from dev.exit_codes import ADVISORY_BROKEN, OK
 
 _UTF_8: Final[str] = UTF_8
 _ANSI: Final = re.compile(r"\x1b\[[0-9;]*m")
@@ -428,12 +429,13 @@ def render_console_report(result: DuplicationResult) -> str:
 def main() -> int:
     """Run the duplication scan and print the reduced console report.
 
-    Always exits 0: duplication is advisory debt, not a gate. An unavailable
-    scan still says so out loud rather than posing as a clean run.
+    Findings are advisory and return 0. An unavailable scan returns the shared
+    advisory-broken status so it cannot pose as a clean run.
     """
     repo_root = REPO_ROOT
-    print(render_console_report(run_duplication_scan(repo_root)))
-    return 0
+    result = run_duplication_scan(repo_root)
+    print(render_console_report(result))
+    return ADVISORY_BROKEN if result.outcome is DuplicationOutcome.UNAVAILABLE else OK
 
 
 if __name__ == "__main__":

@@ -13,8 +13,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.tests.storage_path_grammar import assert_path_matches_grammar
 from cadrumo.core.config import override_settings
-from cadrumo.tests import assert_path_matches_grammar
 
 from ..compiler.verdict_cache import (
     VERDICT_OUTCOME_GREEN,

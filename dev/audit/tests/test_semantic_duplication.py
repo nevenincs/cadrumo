@@ -4,10 +4,10 @@
 ``dev.audit.semantic_duplication`` ships seven detectors behind a ``_DETECTORS``
 dispatch table and a ``run`` driver, and nothing reached any of them. Its sibling
 ``dev.audit.duplication`` measures COPY-PASTE through jscpd, is wired to
-``just audit-duplication``, and carries two test modules. This one has no justfile
-recipe, no workflow lane, and is composed by neither ``advisory`` nor ``report``;
-``just check-semantic`` drives ``dev.audit.semantic``, a different module. The only
-test references it had were the private ``_load_modules`` helper and the
+``just audit-duplication``, and carries two test modules. This one has no public
+justfile recipe, no workflow lane, and is composed by neither ``advisory`` nor
+``report``; its semantic driver is deliberately outside the public Just surface.
+The only test references it had were the private ``_load_modules`` helper and the
 ``Candidate`` type, so every detector and the dispatch keying them were undriven.
 
 The module's own docstring says why it exists: jscpd matches token sequences, so

@@ -1,18 +1,20 @@
-# `just init` — worktree initialization
+# `just setup` — worktree initialization
 
-`just init` makes the current worktree usable from a bare checkout. It is the
+`just setup` makes the current worktree usable from a bare checkout. It is the
 single command any tool — a person, a git hook, an agent, the worktree
 provisioner — calls after creating a worktree. It takes no arguments, asks no
 questions, and is always safe to run again.
 
 The recipes:
 
-| Recipe             | What it does                                                  |
-| ------------------ | ------------------------------------------------------------- |
-| `just init`        | Everything, in dependency order.                              |
-| `just init-python` | The Python environment and its locked dependencies.           |
-| `just init-tools`  | Framework enrollment, git hooks, and host-tool diagnosis.     |
-| `just init-check`  | Reports whether the worktree is initialized. Mutates nothing. |
+| Recipe                        | What it does                                                  |
+| ----------------------------- | ------------------------------------------------------------- |
+| `just setup`                  | Everything, in dependency order.                              |
+| `just setup-python`           | The Python environment and its locked dependencies.           |
+| `just setup-repository-tools` | Framework enrollment and git hooks.                           |
+| `just setup-check`            | Reports whether the worktree is initialized. Mutates nothing. |
+| `just setup-workstation-tools` | Optional workstation CLI provisioning.                       |
+| `just setup-browser`          | Optional browser-channel provisioning.                        |
 
 ## The contract
 
@@ -25,10 +27,11 @@ somebody deleted. A no-op run does not invoke `uv`, `npm`, or anything else.
 
 **Fail-fast, and complete in what it reports.** Unlike the fleet's `-all`
 aggregates, which run every step because they chain independent inspectors,
-`init`'s phases are a dependency chain building one artifact — `init-tools`
-runs executables out of the environment `init-python` created. So it stops at
+`setup`'s phases are a dependency chain building one artifact —
+`setup-repository-tools` runs executables out of the environment
+`setup-python` created. So it stops at
 the first failing phase, and records the phases it did not attempt as `skipped`
-with the upstream cause named. A non-zero `init` names exactly one cause.
+with the upstream cause named. A non-zero `setup` names exactly one cause.
 
 **Machine-readable.** Every run writes `.venv/init-report.json` (or
 `.init-report.json` when the environment does not exist yet — the path is
@@ -40,7 +43,7 @@ NDJSON events on stdout while human prose stays on stderr. Exit codes come from
 | ---- | ------------------------------------------------------------------------ |
 | `0`  | Initialized, or already initialized.                                     |
 | `2`  | A required host tool is absent. The report names it and where to get it. |
-| `3`  | `init-check` only: the worktree is not initialized, or is stale.         |
+| `3`  | `setup-check` only: the worktree is not initialized, or is stale.         |
 | `4`  | A bootstrap step ran and failed.                                         |
 | `5`  | Drift: a lockfile no longer matches its project metadata.                |
 | `6`  | The environment is held open by another process. Close it and re-run.    |
@@ -55,15 +58,15 @@ the repository.
 command. There are no `[windows]`/`[unix]` recipe pairs and no shell logic,
 which is what lets one implementation serve `cmd.exe`, `pwsh` and `sh` alike.
 
-**It provisions the worktree, not the workstation.** `uv`, `just`, `node`,
-`rustup` and `mise` are the operator's responsibility; `init` probes for them,
-reports the complete list of what is missing with installation URLs, and exits
-`2`. It never installs system packages — a bootstrap that does cannot be run on
-a machine you do not administer, or in a sandbox.
+**It provisions the worktree, not the workstation.** `uv`, `just`, and the
+required repository tools are the operator's responsibility; `setup` converges
+the managed Python environment and repository tooling, while `doctor-dev`
+probes readiness without mutation. Optional workstation tools are installed
+only by `setup-workstation-tools`.
 
 **Network-heavy optional provisioning is out of scope.** Playwright browser
 downloads, RAG model and Qdrant provisioning, and `cargo install` of dev gates
-stay behind their own named recipes. `init` restores what the lockfiles pin.
+stay behind their own named recipes. `setup` restores what the lockfiles pin.
 
 ## Layout
 

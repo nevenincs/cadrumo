@@ -11,12 +11,19 @@ from __future__ import annotations
 
 import pytest
 from pydantic import ValidationError
-from test_support.registry_authoring import RegistryValidator, _committed_modelo, _committed_registry_tree
 
-from .....core.resources.bundled_data import bundled_path
-from ..errors import RegistryValidationError
-from ..schema import ModeloDefinition, ModeloRevision
-from ..schema_verification import LiveCrossReferenceDecision
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision
+
+from ..compiler.validator import RegistryValidator
+from ..conformance.registry_schema_support import (
+    committed_modelo as _committed_modelo,
+)
+from ..conformance.registry_schema_support import (
+    committed_registry_tree as _committed_registry_tree,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

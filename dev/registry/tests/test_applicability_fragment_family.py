@@ -12,18 +12,21 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from test_support.registry_authoring import (
-    load_modelo_directory,
-    schema_family_enrollment_failures,
-    validate_applicability_section,
-)
 
-from .....core.modelo import Modelo
-from ..applicability import ModeloApplicabilityRule, hydrate_applicability_rule, modelo_requires_iva_regime
-from ..errors import RegistryLoadError, RegistryValidationError
-from ..schema import ModeloRevision
-from ..schema_base import schema_family_fields
-from ..schema_revision_members import ApplicabilityRuleDefinition
+from cadrumo.core.modelo import Modelo
+from cadrumo.domain.calculations.registry.applicability import (
+    ModeloApplicabilityRule,
+    hydrate_applicability_rule,
+    modelo_requires_iva_regime,
+)
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_base import schema_family_fields
+from cadrumo.domain.calculations.registry.schema_revision_members import ApplicabilityRuleDefinition
+
+from ..compiler.validate_applicability_section import validate_applicability_section
+from ..compiler.loader import load_modelo_directory
+from ..conformance.schema_family_support import schema_family_enrollment_failures
 from ._referential_integrity_support import REFERENCE_LEGAL_ID, minimal_legal_ref, minimal_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

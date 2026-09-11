@@ -22,7 +22,7 @@ import pikepdf
 import pytest
 from pydantic import SecretStr
 
-from cadrumo.tests import FIXTURES_DIR
+from cadrumo.tests.inventory import FIXTURES_DIR
 
 from .. import fixtures
 from .._pipeline import sanitize_pdf

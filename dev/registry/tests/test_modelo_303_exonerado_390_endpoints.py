@@ -15,7 +15,7 @@ from cadrumo.tests.registry_snapshot import build_snapshot
 from ..compiler.loader import load_catalogue_file
 from ..compiler.record_design import extract_record_design
 from ..compiler.validator import RegistryValidator
-from ..conformance.tests._registry_schema_support import _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 from ..maintenance_support import resolve_record_design_binary
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

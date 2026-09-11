@@ -16,7 +16,7 @@ from cadrumo.domain.calculations.registry.schema_surfaces import (
 )
 
 from ..compiler.validator import RegistryValidator
-from ._record_design_support import _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 from ._referential_integrity_support import (
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,
@@ -672,7 +672,7 @@ def test_filing_modelo_with_formula_passes_invariant() -> None:
     from cadrumo.domain.calculations.registry.schema import FormulaDefinition
     from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 
-    from ..compiler._validate_revision_rules import validate_informative_class_invariant
+    from ..compiler.validate_revision_rules import validate_informative_class_invariant
 
     formula = FormulaDefinition(
         id="test.formula",

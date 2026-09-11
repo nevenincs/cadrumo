@@ -10,10 +10,10 @@ import pytest
 from cadrumo.core.external_constants import PDF_EXTENSION, XLS_EXTENSION, XLSM_EXTENSION, XLSX_EXTENSION
 from cadrumo.core.record_design_epoch import RECORD_DESIGN_EPOCH_RE
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests import REPO_ROOT
+from cadrumo.tests.inventory import REPO_ROOT
 
 from ..compiler.corpus_catalogue import verify_source_file
-from ._catalogue_verification_support import _catalogues, _registry_tree
+from .catalogue_verification_support import _catalogues, registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -216,7 +216,7 @@ def test_every_record_design_source_declares_a_unique_well_formed_epoch() -> Non
         "aeat-dr-353-2008-orden": "the historical orden declares no filing window and no revision cites it",
     }
 
-    modelos, catalogues = _registry_tree()
+    modelos, catalogues = registry_tree()
     designs = [source for source in catalogues.sources.values() if source.kind == "record_design"]
     assert designs, "the catalogue must declare record-design sources for this gate to mean anything"
 
@@ -351,7 +351,7 @@ def _manual_extracted_text(corpus_path: str) -> str:
 
 
 def test_modelo_100_2021_deportistas_0489_is_grounded_in_dictionary_and_manual() -> None:
-    modelos, catalogues = _registry_tree()
+    modelos, catalogues = registry_tree()
     modelo = next(modelo for modelo in modelos if modelo.id == "100")
     revision = modelo.revisions["2021"]
     casilla = next(casilla for casilla in revision.casillas if casilla.id == "0489")
@@ -370,7 +370,7 @@ def test_modelo_100_2021_deportistas_0489_is_grounded_in_dictionary_and_manual()
 
 
 def test_modelo_100_2021_forestal_0302_prefers_manual_year_over_dictionary_drift() -> None:
-    modelos, catalogues = _registry_tree()
+    modelos, catalogues = registry_tree()
     modelo = next(modelo for modelo in modelos if modelo.id == "100")
     revision = modelo.revisions["2021"]
     casilla = next(casilla for casilla in revision.casillas if casilla.id == "0302")

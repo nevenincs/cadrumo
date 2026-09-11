@@ -44,7 +44,7 @@ import pikepdf
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
-from cadrumo.tests import FIXTURES_DIR
+from cadrumo.tests.inventory import FIXTURES_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

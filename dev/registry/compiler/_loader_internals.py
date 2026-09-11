@@ -8,7 +8,6 @@ contract does not promise.
 
 from __future__ import annotations
 
-import os
 from collections import Counter
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -23,8 +22,6 @@ from cadrumo.core.directory_scan import (
     DirectoryEntryKind,
     scan_directory,
 )
-from cadrumo.core.filing_producer_key import FilingProducerKey
-from cadrumo.core.filing_projection_ref import compile_filing_projection_ref
 from cadrumo.core.toml import freeze_toml, read_toml
 from cadrumo.domain.calculations.registry.errors import (
     RegistryFailureClassification,
@@ -33,7 +30,6 @@ from cadrumo.domain.calculations.registry.errors import (
     RegistryValidationError,
 )
 from cadrumo.domain.calculations.registry.export_field_casilla import derive_casilla_export_refs
-from cadrumo.domain.calculations.registry.export_semantics import ExportComputedKey, ExportDraftAttribute
 from cadrumo.domain.calculations.registry.identifier_lineage import identifier_lineage
 from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.calculations.registry.modelo_localization import (
@@ -62,9 +58,6 @@ from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefiniti
 from cadrumo.domain.calculations.registry.validate_revision_identity import revision_reference_identity_failures
 
 from ._loader_revision_fragments import (
-    REVISION_SECTION_FIELDS as _REVISION_SECTION_FIELDS,
-)
-from ._loader_revision_fragments import (
     merge_revision_fragment as _merge_revision_fragment,
 )
 from ._loader_revision_fragments import (
@@ -75,26 +68,20 @@ from ._loader_revision_fragments import (
 )
 from ._toml_helpers import as_toml_table as _as_toml_table
 from .loader_cache import (
-    BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS,
-    is_bundled_registry_root,
-    toml_file_fingerprint,
-)
-from .loader_cache import (
     ModeloRevisionSource as _ModeloRevisionSource,
 )
 from .loader_cache import (
-    fragment_sort_key as _fragment_sort_key,
+    toml_file_fingerprint,
 )
 from .loader_fingerprints import (
-    _registry_fingerprint_cache,
-    bind_tree_fingerprint_collectors,
+    _collect_registry_tree_fingerprints_uncached,
+    collect_modelo_directory_fingerprints,
 )
 from .loader_fingerprints import (
     clear_fingerprint_cache as _clear_fingerprint_cache,
 )
-from .loader_fingerprints import (
-    refresh_toml_fingerprint_after_load_error as _refresh_toml_fingerprint_after_load_error,
-)
+from .loader_grammar import revision_section_fragment_paths
+from .loader_semantics import compile_export_semantic_field, compile_projection_endpoint_declaration
 
 _PREDECESSOR_FIELD: Final = "predecessor"
 _AUTHORITY_GRADE_FIELD: Final = "authority_grade"
@@ -125,23 +112,6 @@ REVISION_GOVERNANCE_FIELDS = _REVISION_GOVERNANCE_FIELDS
 REVISION_MANIFEST_ONLY_FIELDS = _REVISION_MANIFEST_ONLY_FIELDS
 type _RegistryPathFingerprint = tuple[str, int, int, str]
 type _RegistryPathFingerprints = tuple[_RegistryPathFingerprint, ...]
-
-
-def load_modelo_file(path: Path) -> ModeloDefinition:
-    """Load one modelo TOML file into strict schema objects.
-
-    Returns:
-        The compiled :class:`ModeloDefinition` from the TOML file.
-    """
-    resolved = path.resolve()
-    fingerprint = _toml_fingerprint(resolved)
-    try:
-        return _load_modelo_file_cached(str(resolved), fingerprint[1], fingerprint[2], fingerprint[3])
-    except RegistryLoadError as exc:
-        refreshed = _refresh_toml_fingerprint_after_load_error(resolved, exc)
-        if refreshed == fingerprint:
-            raise
-        return _load_modelo_file_cached(str(resolved), refreshed[1], refreshed[2], refreshed[3])
 
 
 @lru_cache(maxsize=256)
@@ -1044,66 +1014,6 @@ def _passthrough_toml_row(raw: object) -> dict[str, object]:
     return dict(cast(Mapping[str, object], raw)) if isinstance(raw, Mapping) else {"value": raw}
 
 
-def _compile_export_semantic_field(source_path: Path, raw_field: object) -> dict[str, object]:
-    """Construct closed export selector enums at the TOML compiler boundary.
-
-    Strict registry models deliberately accept only enum members.  This is the
-    one boundary where committed TOML's scalar token becomes that member; no
-    model validator, renderer, or application call site may repeat it.
-    """
-    field = _as_toml_table(raw_field)
-    if field is None:
-        return _passthrough_toml_row(raw_field)
-    if "header_key" in field:
-        raise RegistryLoadError(
-            f"{source_path}: legacy export field header_key is not accepted; use producer_key with a canonical "
-            "FilingProducerKey identity",
-        )
-    payload = dict(field)
-    for name, enum_type in (
-        ("producer_key", FilingProducerKey),
-        ("draft_attribute", ExportDraftAttribute),
-        ("computed_key", ExportComputedKey),
-    ):
-        raw_value = payload.get(name)
-        if raw_value is None or isinstance(raw_value, enum_type):
-            continue
-        if not isinstance(raw_value, str):
-            raise RegistryLoadError(
-                f"{source_path}: export field {name} must be a canonical string token, got "
-                f"{type(raw_value).__name__!r}",
-            )
-        try:
-            payload[name] = enum_type(raw_value)
-        except ValueError as exc:
-            raise RegistryLoadError(
-                f"{source_path}: export field {name} {raw_value!r} is not a canonical {enum_type.__name__}",
-            ) from exc
-    raw_projection_ref = payload.get("projection_ref")
-    if raw_projection_ref is not None:
-        try:
-            payload["projection_ref"] = compile_filing_projection_ref(raw_projection_ref)
-        except (ValidationError, ValueError) as exc:
-            raise RegistryLoadError(
-                f"{source_path}: export field projection_ref is not a canonical FilingProjectionRef: {exc}",
-            ) from exc
-    return payload
-
-
-def _compile_projection_endpoint_declaration(source_path: Path, raw_declaration: object) -> dict[str, object]:
-    """Hydrate one revision-owned projection declaration at the TOML boundary."""
-    declaration = _as_toml_table(raw_declaration)
-    if declaration is None:
-        return _passthrough_toml_row(raw_declaration)
-    payload = dict(declaration)
-    if "projection_ref" in payload:
-        try:
-            payload["projection_ref"] = compile_filing_projection_ref(payload["projection_ref"])
-        except (ValidationError, ValueError) as exc:
-            raise RegistryLoadError(f"{source_path}: {exc}") from exc
-    return payload
-
-
 def _compile_revision_projection_record(source_path: Path, raw_record: object) -> dict[str, object]:
     record = _as_toml_table(raw_record)
     if record is None:
@@ -1111,7 +1021,7 @@ def _compile_revision_projection_record(source_path: Path, raw_record: object) -
     compiled = dict(record)
     fields = as_toml_array(record.get("fields"))
     if fields is not None:
-        compiled["fields"] = tuple(_compile_export_semantic_field(source_path, raw_field) for raw_field in fields)
+        compiled["fields"] = tuple(compile_export_semantic_field(source_path, raw_field) for raw_field in fields)
     return compiled
 
 
@@ -1134,7 +1044,7 @@ def _compile_revision_projection_semantics(source_path: Path, payload: Mapping[s
     declarations = as_toml_array(payload.get("projection_endpoints"))
     if declarations is not None:
         compiled["projection_endpoints"] = tuple(
-            _compile_projection_endpoint_declaration(source_path, raw_declaration) for raw_declaration in declarations
+            compile_projection_endpoint_declaration(source_path, raw_declaration) for raw_declaration in declarations
         )
     layouts = as_toml_array(payload.get("export_layouts"))
     if layouts is not None:
@@ -1216,7 +1126,7 @@ def _merge_revision_directory(path: Path, merged_revisions: dict[str, object]) -
     revision_manifest = path / "revision.toml"
     if not revision_manifest.is_file():
         raise RegistryLoadError(f"{path}: revision fragment directory must contain revision.toml")
-    section_fragments = _revision_section_fragment_paths(_revision_section_directories(path))
+    section_fragments = revision_section_fragment_paths(_revision_section_directories(path))
     merged_revision: dict[str, object] = {}
     _merge_revision_manifest(revision_manifest, revision_id, merged_revision)
     for fragment_path in section_fragments:
@@ -1234,34 +1144,6 @@ def _revision_section_directories(path: Path) -> tuple[Path, ...]:
         for entry in scan_directory(path, select=DirectoryEntryKind.DIRECTORIES, require_root=True)
         if entry.name != "locales"
     )
-
-
-def _revision_section_fragment_paths(section_dirs: tuple[Path, ...]) -> tuple[Path, ...]:
-    """Collect every section directory's fragments, refusing an empty section.
-
-    One listing per section directory answers both questions the loader asks
-    of it -- "is this section populated" and "which files does it hold" -- so
-    the two cannot disagree. They were previously two independent one-level
-    walks kept textually identical by hand, on the reasoning that a guard
-    seeing more than the collector could call a section "populated" while the
-    collector read nothing from it. Deriving both from a single listing makes
-    that agreement structural rather than editorial, and halves the walks.
-
-    The listing is narrowed to files, which is what the emptiness question
-    always meant: a directory named ``*.toml`` is not a fragment. Nothing of
-    the sort can exist anyway -- :func:`_validate_section_fragment_names`
-    (``loader_cache.py``, run for every section directory before a fragment
-    tree is merged) refuses ANY subdirectory nested inside a section
-    directory outright -- so the narrowing restates an upstream categorical
-    block rather than introducing a new rule.
-    """
-    fragments: list[Path] = []
-    for section_dir in section_dirs:
-        section_fragments = scan_directory(section_dir, pattern="*.toml", select=DirectoryEntryKind.FILES)
-        if not section_fragments:
-            raise RegistryLoadError(f"{section_dir}: revision section fragment directory contains no TOML fragments")
-        fragments.extend(section_fragments)
-    return tuple(sorted(fragments, key=_fragment_sort_key))
 
 
 @lru_cache(maxsize=128)
@@ -1349,123 +1231,6 @@ def _validate_catalogue_section[T: BaseModel](
     return out
 
 
-def _live_cached_fingerprints(
-    resolved: Path,
-    *,
-    now: float,
-    ttl: float,
-    directory_fingerprints: _RegistryPathFingerprints | None,
-) -> _RegistryPathFingerprints | None:
-    """Return the cached fingerprints when the entry is still live, else ``None``.
-
-    ``directory_fingerprints`` is ``None`` for the pre-walk bundled
-    short-circuit, where the entry's own age is the only question. When it is
-    supplied, a live entry must ALSO agree with the freshly walked directory
-    fingerprints; a disagreement means the tree's layout changed under the entry,
-    so it is evicted rather than served. An entry that has merely aged out is
-    left in place for the caller to overwrite.
-    """
-    entry = _registry_fingerprint_cache.get(resolved)
-    if entry is None:
-        return None
-    cached_time, cached_directories, cached_value = entry
-    if now - cached_time >= ttl:
-        return None
-    if directory_fingerprints is None or cached_directories == directory_fingerprints:
-        return cached_value
-    _registry_fingerprint_cache.pop(resolved, None)
-    return None
-
-
-def _registry_source_fingerprints(resolved: Path) -> tuple[_RegistryPathFingerprint, ...]:
-    """Fingerprint every catalogue TOML the loader will subsequently re-open.
-
-    Ordering is part of the cache key, so the sequence here (legal, single-file
-    modelos, directory-mode modelos, user-profile schema) is load-bearing and
-    must not be reordered.
-    """
-    fingerprints: list[_RegistryPathFingerprint] = []
-    for path in scan_directory(resolved / "legal", pattern="*.toml"):
-        fingerprints.append(_toml_fingerprint(path))
-    modelos_dir = resolved / "modelos"
-    for path in scan_directory(modelos_dir, pattern="*.toml"):
-        fingerprints.append(_toml_fingerprint(path))
-    for entry in scan_directory(modelos_dir):
-        fingerprints.extend(_modelo_directory_fingerprints(entry))
-    schema_path = resolved / "user_profile" / "schema.toml"
-    if schema_path.is_file():
-        fingerprints.append(_toml_fingerprint(schema_path))
-    return tuple(fingerprints)
-
-
-def _store_registry_fingerprints(
-    resolved: Path,
-    *,
-    directory_fingerprints: _RegistryPathFingerprints,
-    fingerprints: _RegistryPathFingerprints,
-    walk_started: float,
-    bundled: bool,
-) -> None:
-    """Record the freshly walked fingerprints, stamped for their TTL window.
-
-    The bundled tree is read-only package data, so its TTL bounds how often we
-    redo the expensive walk rather than how stale the observation may be: stamp
-    it at walk COMPLETION so the full window is available to callers. Stamping at
-    walk start instead charges the walk's own cost (~1s idle, several times that
-    on a loaded machine) against the window, which on a busy host can consume it
-    entirely and defeat the cache exactly when it is worth most. A mutable
-    authoring tree keeps the conservative start stamp: there the TTL is a
-    staleness bound on a tree that can change under us.
-    """
-    import time
-
-    stamped = time.time() if bundled else walk_started
-    _registry_fingerprint_cache[resolved] = (stamped, directory_fingerprints, fingerprints)
-
-
-def _collect_registry_directory_fingerprints(resolved: Path) -> _RegistryPathFingerprints:
-    if not resolved.is_dir():
-        return ()
-
-    def _raise_walk_error(exc: OSError) -> None:
-        raise RegistryLoadError(
-            f"{resolved}: registry directory could not be walked during cache fingerprinting; {exc}",
-            registry_failure=RegistryFailureClassification(
-                condition=RegistryFailureCondition.TREE_QUIESCENT,
-                facts={"path": str(resolved), "registry_tree_quiescent": False, "operation": "directory_walk"},
-            ),
-        ) from exc
-
-    fingerprints: list[_RegistryPathFingerprint] = []
-    for dirpath, dirnames, _filenames in os.walk(resolved, onerror=_raise_walk_error):
-        dirnames.sort()
-        fingerprints.append(_directory_fingerprint(Path(dirpath)))
-    return tuple(fingerprints)
-
-
-def _collect_modelo_directory_fingerprints(resolved: Path) -> _RegistryPathFingerprints:
-    manifest_path = resolved / "manifest.toml"
-    fingerprints: list[_RegistryPathFingerprint] = list(_collect_registry_directory_fingerprints(resolved))
-    fingerprints.append(_toml_fingerprint(manifest_path))
-    for path in scan_directory(resolved / "locales", pattern="*.toml"):
-        fingerprints.append(_toml_fingerprint(path))
-    for path in scan_directory(resolved / "revisions", pattern="*.toml", recursive=True):
-        fingerprints.append(_toml_fingerprint(path))
-    return tuple(fingerprints)
-
-
-def _modelo_directory_fingerprints(entry: Path) -> _RegistryPathFingerprints:
-    """Return fingerprints for one directory-mode modelo entry, or ``()`` if not in that layout."""
-    if not (entry.is_dir() and (entry / "manifest.toml").is_file()):
-        return ()
-    fingerprints: list[_RegistryPathFingerprint] = [_toml_fingerprint(entry / "manifest.toml")]
-    for path in scan_directory(entry / "locales", pattern="*.toml", recursive=True):
-        fingerprints.append(_toml_fingerprint(path))
-    for rev_path in scan_directory(entry / "revisions", pattern="*.toml", recursive=True):
-        fingerprints.append(_toml_fingerprint(rev_path))
-    return tuple(fingerprints)
-
-
 def _validate_legal_directory(legal_dir: Path) -> None:
     """Require the shared legal catalogue to remain one flat TOML directory."""
     if not legal_dir.is_dir():
@@ -1484,7 +1249,7 @@ def _refresh_modelo_directory_fingerprints_after_load_error(
     initial_error: RegistryLoadError,
 ) -> _RegistryPathFingerprints:
     try:
-        return _collect_modelo_directory_fingerprints(resolved)
+        return collect_modelo_directory_fingerprints(resolved)
     except RegistryLoadError as refresh_error:
         raise RegistryLoadError(
             f"{resolved}: modelo directory changed during load. "
@@ -1517,23 +1282,6 @@ def _refresh_registry_tree_fingerprints_after_load_error(
         ) from refresh_error
 
 
-def _directory_fingerprint(path: Path) -> _RegistryPathFingerprint:
-    try:
-        stat = path.stat()
-    except OSError as exc:
-        raise RegistryLoadError(
-            f"{path}: registry directory could not be fingerprinted; {exc}",
-            registry_failure=RegistryFailureClassification(
-                condition=RegistryFailureCondition.TREE_QUIESCENT,
-                facts={"path": str(path), "registry_tree_quiescent": False, "operation": "directory_stat"},
-            ),
-        ) from exc
-    # A directory has no hashable content of its own; layout changes are what
-    # its stat observes, and member-file content is covered by the per-file
-    # digests, so the content slot stays empty.
-    return str(path), stat.st_size, stat.st_mtime_ns, ""
-
-
 def _toml_fingerprint(path: Path) -> _RegistryPathFingerprint:
     """Return the ``(path, size, mtime_ns, content_digest)`` fingerprint for one TOML file.
 
@@ -1545,17 +1293,6 @@ def _toml_fingerprint(path: Path) -> _RegistryPathFingerprint:
     return toml_file_fingerprint(path)
 
 
-_TREE_FINGERPRINT_COLLECTORS = bind_tree_fingerprint_collectors(
-    is_bundled_root=is_bundled_registry_root,
-    bundled_ttl=BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS,
-    live_cached=_live_cached_fingerprints,
-    collect_directory=_collect_registry_directory_fingerprints,
-    collect_sources=_registry_source_fingerprints,
-    store=_store_registry_fingerprints,
-)
-_collect_registry_tree_fingerprints = _TREE_FINGERPRINT_COLLECTORS[0]
-_collect_registry_tree_fingerprints_uncached = _TREE_FINGERPRINT_COLLECTORS[1]
-
 #: This module's docstring already states the boundary this enforces: a
 #: caller OUTSIDE the package cannot bind to a compilation step or cache this
 #: module does not promise. Within the package, :mod:`loader` is the one
@@ -1564,20 +1301,11 @@ _collect_registry_tree_fingerprints_uncached = _TREE_FINGERPRINT_COLLECTORS[1]
 #: module boundary -- never a wildcard, and never widened to symbols nothing
 #: outside this file uses.
 __all__ = [
-    "_REVISION_SECTION_FIELDS",
     "_RegistryPathFingerprints",
-    "_collect_modelo_directory_fingerprints",
-    "_collect_registry_directory_fingerprints",
-    "_collect_registry_tree_fingerprints",
-    "_collect_registry_tree_fingerprints_uncached",
-    "_compile_export_semantic_field",
-    "_compile_projection_endpoint_declaration",
     "_load_catalogue_file_cached",
     "_load_modelo_directory_cached",
     "_refresh_modelo_directory_fingerprints_after_load_error",
     "_refresh_registry_tree_fingerprints_after_load_error",
-    "_revision_section_fragment_paths",
     "_toml_fingerprint",
     "_validate_legal_directory",
-    "load_modelo_file",
 ]

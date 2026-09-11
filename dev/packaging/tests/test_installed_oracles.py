@@ -245,7 +245,7 @@ def test_installed_cli_and_mcp_are_one_hashed_cohort(installed_cohort: Installed
     # The package split is internal to one distribution: the wheel target packs
     # both source packages, so the root distribution declares the server script
     # and installing the root wheel is what puts `cadrumo_harness` on disk.
-    assert metadata["console_scripts"]["cadrumo-mcp"] == "cadrumo_harness.mcp:main"
+    assert metadata["console_scripts"]["cadrumo-mcp"] == "cadrumo_harness.mcp.main:main"
     assert {"cadrumo", "cadrumo_harness"} <= set(metadata["root_top_level"])
     # No harness distribution is required to obtain either command.
     assert not any(_requirement_name(requirement) == "cadrumo-harness" for requirement in requirements)

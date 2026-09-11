@@ -13,11 +13,13 @@ import tomllib
 from typing import Any, TypedDict
 
 import pytest
-from test_support.registry_authoring import _committed_registry_tree, verify_legal_catalogue
 
-from .....core.resources.bundled_data import bundled_path
-from ....user_profile.loader import load_user_profile_schema
-from ....user_profile.schema import ProfileFieldType
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.user_profile.loader import load_user_profile_schema
+from cadrumo.domain.user_profile.schema import ProfileFieldType
+
+from ..compiler.legal_grounding import verify_legal_catalogue
+from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

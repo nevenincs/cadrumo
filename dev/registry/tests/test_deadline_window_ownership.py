@@ -5,18 +5,19 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from test_support.registry_authoring import (
-    RegistryValidator,
+
+from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import SupportedFilingYearsCatalogue
+from cadrumo.domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition, ModeloScheduleDefinition
+from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+
+from ..compiler.validate_revision_rules import (
     validate_deadline_window_cadence,
     validate_deadline_window_ownership,
     validate_periodic_deadline_completeness,
 )
-
-from .....core.period import Period
-from ..errors import RegistryValidationError
-from ..schema import SupportedFilingYearsCatalogue
-from ..schema_deadlines import DeadlineWindowDefinition, ModeloScheduleDefinition
-from ..schema_references import PeriodSelector
+from ..compiler.validator import RegistryValidator
 from ._referential_integrity_support import minimal_catalogues, minimal_modelo, minimal_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

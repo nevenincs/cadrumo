@@ -69,17 +69,19 @@ from cadrumo.application.modelo.declarations_workspace import (
     project_declarations_workspace,
 )
 from cadrumo.application.operations.composition import OperationComposedServices, OperationSubmission
-from cadrumo.application.operations.frontend_contracts import (
+from cadrumo.application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
+    OperationPublicProjectionV1,
+)
+from cadrumo.application.operations.frontend_requests import (
     OperationObservationRequestV1,
     OperationObservationSuccessV1,
     OperationPublicEventPageV1,
-    OperationPublicProjectionV1,
-    OperationReplayStatus,
     OperationSubmissionReceiptV1,
 )
 from cadrumo.application.operations.interactions import OperationActorReference
 from cadrumo.application.operations.models import OperationId
+from cadrumo.application.operations.persistence.replay import OperationReplayStatus
 from cadrumo.application.operations.registry import OperationPublicContractSetV1
 from cadrumo.application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, lookup_action
 from cadrumo.application.operator_actions.models import ActionReference

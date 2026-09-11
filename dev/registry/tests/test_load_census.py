@@ -88,7 +88,7 @@ def test_no_registry_dynamic_import_site_is_left_unresolved() -> None:
     no failure of its own - it surfaced one directory away, as classification
     rules that had apparently gone stale.
 
-    That is what happened here. `_snapshot_internals` imports the cross-domain
+    That is what happened here. `snapshot` imports the cross-domain
     check modules from a tuple built out of another module's mapping values
     rather than from a literal, which the static resolver cannot read, so the
     renta package left the universe and the rule describing it started
@@ -126,7 +126,7 @@ def test_the_evaluator_reads_a_constant_whatever_shape_it_is_built_from() -> Non
     from ..analysis.load_census import evaluated_string_sequence
 
     members = evaluated_string_sequence(
-        "cadrumo.domain.calculations.registry._snapshot_internals",
+        "cadrumo.domain.calculations.registry.snapshot",
         "_CROSS_DOMAIN_CHECK_MODULES",
     )
 
@@ -145,10 +145,10 @@ def test_the_evaluator_returns_none_rather_than_guessing() -> None:
     from ..analysis.load_census import evaluated_string_sequence
 
     assert evaluated_string_sequence("cadrumo.module.that.does.not.exist", "ANY") is None
-    assert evaluated_string_sequence("cadrumo.domain.calculations.registry._snapshot_internals", "NO_SUCH_NAME") is None
+    assert evaluated_string_sequence("cadrumo.domain.calculations.registry.snapshot", "NO_SUCH_NAME") is None
     assert (
         evaluated_string_sequence(
-            "cadrumo.domain.calculations.registry._snapshot_internals",
+            "cadrumo.domain.calculations.registry.snapshot",
             "_install_cross_domain_snapshot_checks",
         )
         is None

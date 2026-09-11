@@ -865,7 +865,7 @@ def build_sdist(work_dir: Path, uv: str, *, build_root: Path) -> Path:
     content rather than to whatever the shared worktree happened to hold; pass
     a :func:`build_root_snapshot` tree. This is the lane that caught a torn
     peer edit live, shipping an sdist whose ``application/aggregation`` import
-    did not resolve against its own ``_source_mesh`` and failing as if it were
+    did not resolve against its own ``source_mesh`` and failing as if it were
     a packaging regression.
     """
     sdist_dir = work_dir / "sdist"
@@ -1070,9 +1070,9 @@ import os
 from datetime import UTC, datetime
 from pathlib import Path
 
-from cadrumo.llm.client import LLMClient
-from cadrumo.llm.errors import LLMConfigError
-from cadrumo.llm.models import LLMProvider
+from cadrumo.adapters.outbound.llm.client import LLMClient
+from cadrumo.adapters.outbound.llm.errors import LLMConfigError
+from cadrumo.adapters.outbound.llm.models import LLMProvider
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
 from cadrumo.adapters.persistence.storage.master_key.active_session import activate_session
 from cadrumo.adapters.persistence.storage.master_key.bucket_session import BucketSession

@@ -37,7 +37,7 @@ from cadrumo.domain.calculations.registry.support_matrix import revision_capabil
 from cadrumo.tests.registry_snapshot import build_snapshot, build_validated_snapshot
 
 from ..compiler.validator import RegistryValidator
-from ..conformance.tests._registry_schema_support import _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

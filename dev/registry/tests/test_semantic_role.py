@@ -28,17 +28,11 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Modelo
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaAlias, CasillaConstraints, CasillaDefinition
 
-from ..compiler._validate_semantic_role_axes import semantic_roles_are_axis_siblings
-from ..compiler._validate_semantic_role_typos import (
-    _build_semantic_role_typo_index,
-    _candidate_is_typo_twin,
-    _scan_length_buckets_for_typo_twin,
-    _SemanticRoleTypoIndex,
-)
-from ..compiler._validate_semantic_roles import (
-    _validate_semantic_role_cardinality,
-    _validate_semantic_role_consistency,
-    _validate_semantic_role_typo_twins,
+from ..compiler.validate_semantic_role_axes import semantic_roles_are_axis_siblings
+from ..compiler.validate_semantic_roles import (
+    semantic_role_cardinality_failures,
+    semantic_role_consistency_failures,
+    semantic_role_typo_twin_failures,
 )
 from ..compiler.registry_scope import validate_registry_scope
 from ..maintenance_support import load_modelo_path
@@ -232,21 +226,21 @@ class TestSemanticRoleFieldShape:
 class TestValidateSemanticRoleConsistency:
     def test_no_role_declarations_passes(self) -> None:
         m = _registry_modelo("180", "2023", [_casilla()])
-        assert _validate_semantic_role_consistency([m]) == ()
+        assert semantic_role_consistency_failures([m]) == ()
 
     def test_matching_role_declarations_pass(self) -> None:
         a = _casilla(cid="a", semantic_role="taxpayer_nif", data_type="nif")
         b = _casilla(cid="b", semantic_role="taxpayer_nif", data_type="nif")
         m1 = _registry_modelo("180", "2023", [a])
         m2 = _registry_modelo("184", "2023", [b])
-        assert _validate_semantic_role_consistency([m1, m2]) == ()
+        assert semantic_role_consistency_failures([m1, m2]) == ()
 
     def test_diverging_data_type_rejected(self) -> None:
         a = _casilla(cid="a", semantic_role="taxpayer_nif", data_type="nif")
         b = _casilla(cid="b", semantic_role="taxpayer_nif", data_type="text")
         m1 = _registry_modelo("180", "2023", [a])
         m2 = _registry_modelo("184", "2023", [b])
-        failures = _validate_semantic_role_consistency([m1, m2])
+        failures = semantic_role_consistency_failures([m1, m2])
         assert any("data_type" in f for f in failures)
         assert any("taxpayer_nif" in f for f in failures)
 
@@ -259,7 +253,7 @@ class TestValidateSemanticRoleConsistency:
         b = _casilla(cid="b", semantic_role="retenciones", data_type="money", constraints=unconstrained)
         m1 = _registry_modelo("180", "2023", [a])
         m2 = _registry_modelo("184", "2023", [b])
-        failures = _validate_semantic_role_consistency([m1, m2])
+        failures = semantic_role_consistency_failures([m1, m2])
         assert any("constraints" in f for f in failures)
 
     def test_record_design_width_change_must_use_a_distinct_role(self) -> None:
@@ -281,7 +275,7 @@ class TestValidateSemanticRoleConsistency:
             ),
         )
 
-        failures = _validate_semantic_role_consistency(
+        failures = semantic_role_consistency_failures(
             [_registry_modelo("303", "2025", [historical]), _registry_modelo("303", "2026", [widened])]
         )
 
@@ -296,7 +290,7 @@ class TestValidateSemanticRoleCardinality:
             semantic_role_cardinality_reason="2025-only legal slot",
         )
         m = _registry_modelo("202", "2025-y-siguientes", [c])
-        assert _validate_semantic_role_cardinality([m]) == ()
+        assert semantic_role_cardinality_failures([m]) == ()
 
     def test_intentional_singleton_role_repeated_within_one_revision_fails(self) -> None:
         """POSITIVE CONTROL: the gate must still bite on a real duplicate.
@@ -314,7 +308,7 @@ class TestValidateSemanticRoleCardinality:
         )
         b = _casilla(cid="b", semantic_role="is_pf_mod_40_3_b2_base_tipo_3")
         m = _registry_modelo("202", "2025-y-siguientes", [a, b])
-        failures = _validate_semantic_role_cardinality([m])
+        failures = semantic_role_cardinality_failures([m])
         assert failures == (
             "semantic_role 'is_pf_mod_40_3_b2_base_tipo_3': casilla "
             "202.2025-y-siguientes.a declares semantic_role_cardinality "
@@ -338,7 +332,7 @@ class TestValidateSemanticRoleCardinality:
         b = _casilla(cid="b", semantic_role="is_pf_mod_40_3_b2_base_tipo_3")
         m1 = _registry_modelo("202", "2025-y-siguientes", [a])
         m2 = _registry_modelo("303", "2025-y-siguientes", [b])
-        failures = _validate_semantic_role_cardinality([m1, m2])
+        failures = semantic_role_cardinality_failures([m1, m2])
         assert failures == (
             "semantic_role 'is_pf_mod_40_3_b2_base_tipo_3': casilla "
             "202.2025-y-siguientes.a declares semantic_role_cardinality "
@@ -370,7 +364,7 @@ class TestValidateSemanticRoleCardinality:
         )
         m1 = _registry_modelo("202", "2025-y-siguientes", [a])
         m2 = _registry_modelo("202", "2026-y-siguientes", [b])
-        assert _validate_semantic_role_cardinality([m1, m2]) == ()
+        assert semantic_role_cardinality_failures([m1, m2]) == ()
 
 
 class TestTypoTwinWarning:
@@ -842,7 +836,7 @@ class TestTypoTwinWarning:
             "iva_oss_union_servicios_destino_fr_cuota",
         }
 
-        failures = _validate_semantic_role_typo_twins(reviewed_modelos)
+        failures = semantic_role_typo_twin_failures(reviewed_modelos)
 
         for role in reviewed_roles:
             assert not any(role in failure for failure in failures)
@@ -850,7 +844,7 @@ class TestTypoTwinWarning:
     def test_single_occurrence_role_emits_warning(self) -> None:
         a = _casilla(cid="a", semantic_role="taxpayer-nif", data_type="nif")  # note hyphen typo
         m = _registry_modelo("180", "2023", [a])
-        failures = _validate_semantic_role_typo_twins([m])
+        failures = semantic_role_typo_twin_failures([m])
         assert any("taxpayer-nif" in failure for failure in failures)
 
     def test_single_occurrence_near_duplicate_role_emits_warning(self) -> None:
@@ -858,7 +852,7 @@ class TestTypoTwinWarning:
         canonical_a = _casilla(cid="b", semantic_role="taxpayer_nif", data_type="nif")
         canonical_b = _casilla(cid="c", semantic_role="taxpayer_nif", data_type="nif")
         m = _registry_modelo("180", "2023", [typo, canonical_a, canonical_b])
-        failures = _validate_semantic_role_typo_twins([m])
+        failures = semantic_role_typo_twin_failures([m])
         assert any("taxpayer_niff" in failure for failure in failures)
 
     def test_typo_twin_blocks_registry_scope(self) -> None:
@@ -909,14 +903,14 @@ class TestTypoTwinWarning:
             semantic_role_cardinality_reason="legacy source spelling is legally unique",
         )
         m = _registry_modelo("180", "2023", [a])
-        assert _validate_semantic_role_typo_twins([m]) == ()
+        assert semantic_role_typo_twin_failures([m]) == ()
 
     def test_repeated_role_does_not_warn(self) -> None:
         a = _casilla(cid="a", semantic_role="taxpayer_nif", data_type="nif")
         b = _casilla(cid="b", semantic_role="taxpayer_nif", data_type="nif")
         m1 = _registry_modelo("180", "2023", [a])
         m2 = _registry_modelo("184", "2023", [b])
-        failures = _validate_semantic_role_typo_twins([m1, m2])
+        failures = semantic_role_typo_twin_failures([m1, m2])
         role_failures = [f for f in failures if "taxpayer_nif" in f]
         assert role_failures == []
 
@@ -930,7 +924,7 @@ class TestTypoTwinWarning:
             semantic_role="is_correccion_operaciones_a_plazos_art11_4_permanente_disminucion",
         )
         m = _registry_modelo("200", "2024", [aumento, disminucion])
-        assert _validate_semantic_role_typo_twins([m]) == ()
+        assert semantic_role_typo_twin_failures([m]) == ()
 
     def test_quarter_axis_siblings_do_not_warn_as_typos(self) -> None:
         """Modelo 347's four quarterly columns are an axis, not four spellings.
@@ -946,7 +940,7 @@ class TestTypoTwinWarning:
         ]
         m = _registry_modelo("347", "2011-2024", quarters)
 
-        assert _validate_semantic_role_typo_twins([m]) == ()
+        assert semantic_role_typo_twin_failures([m]) == ()
 
     def test_a_misspelt_stem_under_the_same_quarter_token_still_warns(self) -> None:
         """The control: the exemption is scoped to the token, never the stem.
@@ -960,7 +954,7 @@ class TestTypoTwinWarning:
         canonical_b = _casilla(cid="c", semantic_role="importe_transmisiones_q1", data_type="money")
         m = _registry_modelo("347", "2011-2024", [typo, canonical_a, canonical_b])
 
-        failures = _validate_semantic_role_typo_twins([m])
+        failures = semantic_role_typo_twin_failures([m])
 
         assert any("transmisionse_q1" in failure for failure in failures)
 
@@ -974,7 +968,7 @@ class TestTypoTwinWarning:
             semantic_role="is_correccion_operaciones_a_plazos_art11_4_permanente_aumento",
         )
         m = _registry_modelo("200", "2024", [typo, canonical])
-        failures = _validate_semantic_role_typo_twins([m])
+        failures = semantic_role_typo_twin_failures([m])
         assert any("permanent_aumento" in failure for failure in failures)
 
     def test_non_axis_token_pairs_are_not_axis_siblings(self) -> None:
@@ -1087,58 +1081,15 @@ class TestTypoTwinWarning:
         first_slot = _casilla(cid="a", semantic_role="related_party_nif_1", data_type="nif")
         second_slot = _casilla(cid="b", semantic_role="related_party_nif_2", data_type="nif")
         m = _registry_modelo("232", "2018-y-siguientes", [first_slot, second_slot])
-        assert _validate_semantic_role_typo_twins([m]) == ()
+        assert semantic_role_typo_twin_failures([m]) == ()
 
     def test_coti_scope_marker_is_not_optional_axis_token(self) -> None:
         coti = _casilla(cid="a", semantic_role="irpf_ganancia_fondos_coti_ganancia")
         general_a = _casilla(cid="b", semantic_role="irpf_ganancia_fondos_ganancia")
         general_b = _casilla(cid="c", semantic_role="irpf_ganancia_fondos_ganancia")
         m = _registry_modelo("100", "2025", [coti, general_a, general_b])
-        failures = _validate_semantic_role_typo_twins([m])
+        failures = semantic_role_typo_twin_failures([m])
         assert any("irpf_ganancia_fondos_coti_ganancia" in failure for failure in failures)
-
-
-class TestSemanticRoleTypoTwinHelpers:
-    """Direct coverage of the extracted near-match scan helpers.
-
-    The end-to-end surface above exercises these through
-    ``_validate_semantic_role_typo_twins``; these tests pin the filter-chain
-    contract at the helper boundary so the cheap-to-expensive ordering and the
-    sibling exemptions cannot silently regress.
-    """
-
-    @staticmethod
-    def _index(*known_roles: str) -> _SemanticRoleTypoIndex:
-        return _build_semantic_role_typo_index(known_roles)
-
-    def test_candidate_typo_twin_cases(self) -> None:
-        cases = (
-            ("identity", "taxpayer_nif", "taxpayer_nif", False),
-            ("single-char-substitution", "taxpayer_niff", "taxpayer_nif", True),
-            (
-                "relationship-not-axis-exempt",
-                "irpf_ascendiente_fecha_nacimiento",
-                "irpf_descendiente_fecha_nacimiento",
-                True,
-            ),
-        )
-
-        for case_id, role, known, expected in cases:
-            index = self._index(known)
-            max_diff = max(1, int(0.08 * (len(role) + len(known))))
-            assert (
-                _candidate_is_typo_twin(role, set(role), len(role), known, len(known), max_diff, index) is expected
-            ), case_id
-
-    def test_scan_length_buckets_for_typo_twin_cases(self) -> None:
-        cases = (
-            ("near-duplicate", "taxpayer_niff", ("taxpayer_nif", "unrelated_role_value"), True),
-            ("distinct", "completely_distinct_role", ("taxpayer_nif", "counterparty_amount"), False),
-        )
-
-        for case_id, candidate, known_roles, expected in cases:
-            index = self._index(*known_roles)
-            assert _scan_length_buckets_for_typo_twin(candidate, index) is expected, case_id
 
 
 class TestSignedCuotaResultadoRoles:

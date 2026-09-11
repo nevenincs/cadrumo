@@ -36,7 +36,8 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.calculations.registry.tests._modelo_100_registry_support import (
+
+from ._modelo_100_registry_support import (
     _m100_2024_deduccion_maternidad_bindings,
 )
 

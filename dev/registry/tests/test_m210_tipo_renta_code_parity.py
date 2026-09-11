@@ -15,9 +15,10 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.irnr import M210_TIPO_RENTA_CODE_PROJECTION
-from .. import _validate_revision_rules as rules
-from ..authority import bundled_authority
+from cadrumo.core.irnr import M210_TIPO_RENTA_CODE_PROJECTION
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+
+from ..compiler import validate_revision_rules as rules
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 

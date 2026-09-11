@@ -76,8 +76,8 @@ def test_unread_input_is_announced_but_does_not_hide_healthy_candidates(
     assert "broken.py" in capsys.readouterr().err
 
 
-def test_modelo_specific_scanner_is_left_in_place() -> None:
-    from ..analysis.modelo_regulatory_literal_scan import derive_regulatory_literal_findings
+def test_modelo_specific_scanner_uses_registry_validation_owner() -> None:
+    from ..validation.regulatory_literals import derive_regulatory_literal_findings
 
     assert callable(derive_regulatory_literal_findings)
 

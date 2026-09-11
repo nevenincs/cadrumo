@@ -5,12 +5,13 @@ from __future__ import annotations
 from datetime import date, timedelta
 
 import pytest
-from test_support.registry_authoring import RegistryValidator
 
-from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_snapshot import build_snapshot
-from ..errors import NoRevisionForPeriodError
-from ..temporal import select_revision
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
+from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ..compiler.validator import RegistryValidator
 from ._modelo_303_registry_support import (
     _M303_ANNUAL_ORDEN_SOURCE_BY_REVISION,
     _M303_EXPLICIT_RECORD_DESIGN_REVISIONS,

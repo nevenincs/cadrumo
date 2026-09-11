@@ -258,8 +258,8 @@ autodoc_typehints_format = "short"
 
 _PUBLIC_TYPE_ALIAS_TARGETS = {
     "CasillaId": "cadrumo.core.CasillaId",
-    "SubjectTaxId": "cadrumo.core.identity.SubjectTaxId",
-    "TaxIdIdentityToken": "cadrumo.core.identity.TaxIdIdentityToken",
+    "SubjectTaxId": "cadrumo.core.identity.tax_id.SubjectTaxId",
+    "TaxIdIdentityToken": "cadrumo.core.identity.tax_id.TaxIdIdentityToken",
 }
 
 # Be tolerant of the wider AEAT dep tree at autodoc-import time. These are

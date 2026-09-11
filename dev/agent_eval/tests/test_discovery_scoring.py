@@ -25,7 +25,7 @@ from typing import TypedDict, Unpack
 
 import pytest
 
-from cadrumo_harness.mcp import build_tool_descriptors
+from cadrumo_harness.mcp._tools import build_tool_descriptors
 
 from .._live_scoring import (
     DiscoveryScore,

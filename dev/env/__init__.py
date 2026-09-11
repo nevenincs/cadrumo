@@ -1,1 +1,1 @@
-"""Workstation environment provisioning-verification tooling (`just doctor-playwright` et al.)."""
+"""Workstation environment provisioning and read-only readiness tooling."""

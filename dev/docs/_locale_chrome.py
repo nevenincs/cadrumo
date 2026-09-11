@@ -25,7 +25,7 @@ written.
 from __future__ import annotations
 
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.core.i18n import lookup_translation
+from cadrumo.core.i18n.render import lookup_translation
 
 __all__ = ["DocsChromeError", "docs_chrome"]
 

@@ -15,7 +15,7 @@ difference decides everything else about how each is handled:
 file whose entire contents are the owning session's PID, so liveness is
 *observed*: the PID goes to the OS and the answer is about that process. That
 family is reclaimed automatically at every pytest session start (see
-``cadrumo.tests.reap_abandoned_numbered_dirs``); this module only reports on it,
+``cadrumo.tests.collection_storage_root.reap_abandoned_numbered_dirs``); this module only reports on it,
 so an operator running one command sees both.
 
 **Claude Code session scratchpads carry no owner at all.** The directory name is
@@ -45,7 +45,10 @@ from typing import TextIO
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.link_safety import is_link_like
-from cadrumo.tests import pytest_numbered_dir_root, reap_abandoned_numbered_dirs
+from cadrumo.tests.collection_storage_root import (
+    pytest_numbered_dir_root,
+    reap_abandoned_numbered_dirs,
+)
 from dev._paths import REPO_ROOT
 from dev.test_runs.reaper import assess_run_directories, reclaim_run_directories
 

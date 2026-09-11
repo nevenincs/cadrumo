@@ -23,32 +23,37 @@ whitelist that rotted and said nothing at all.
 from __future__ import annotations
 
 import ast
-import importlib
 import inspect
 import pathlib
+from types import ModuleType
 
 import pytest
 
 from .. import vulture_whitelist
+from cadrumo.adapters.outbound.google import api as google_api
+from cadrumo.adapters.outbound.google import document_link_resolver
+from cadrumo.application.ledger import evidence_input
+from cadrumo.application.storage.calc_sheets import parity_harness
+from dev.docs.terminology_handbook import _curation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_CITATIONS: dict[str, tuple[str, str | None, str]] = {
-    "_execute": ("cadrumo.adapters.outbound.google.api", "_ExecutableRequest", "execute"),
+_CITATIONS: dict[str, tuple[ModuleType, str | None, str]] = {
+    "_execute": (google_api, "_ExecutableRequest", "execute"),
     "_get_media": (
-        "cadrumo.adapters.outbound.google.document_link_resolver",
+        document_link_resolver,
         "_DriveFilesResource",
         "get_media",
     ),
     "_list_files": (
-        "cadrumo.adapters.outbound.google.document_link_resolver",
+        document_link_resolver,
         "_DriveFilesResource",
         "list",
     ),
-    "_reduce_ex": ("cadrumo.application.ledger.evidence_input", "EvidenceInput", "__reduce_ex__"),
-    "_set_language_field": ("dev.docs.terminology_handbook._curation", None, "set_language_field"),
+    "_reduce_ex": (evidence_input, "EvidenceInput", "__reduce_ex__"),
+    "_set_language_field": (_curation, None, "set_language_field"),
     "_sheets_discovery_build": (
-        "cadrumo.application.storage.calc_sheets.parity_harness",
+        parity_harness,
         "_SheetsDiscoveryBuilder",
         "__call__",
     ),
@@ -65,8 +70,7 @@ def _declared_parameters(source: str) -> dict[str, tuple[str, ...]]:
     return declared
 
 
-def _cited_parameters(module_name: str, class_name: str | None, attribute: str) -> frozenset[str]:
-    module = importlib.import_module(module_name)
+def _cited_parameters(module: ModuleType, class_name: str | None, attribute: str) -> frozenset[str]:
     owner = getattr(module, class_name) if class_name is not None else module
     return frozenset(inspect.signature(getattr(owner, attribute)).parameters)
 

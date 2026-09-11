@@ -93,27 +93,27 @@ _CLAIM_UNINSTALL_RESTORES_REFUSAL: Final[str] = "uninstalling the extra returns 
 #: the lane pass by driving things that were never gated.
 _INFERENCE_SURFACES: Final[tuple[tuple[str, str, str], ...]] = (
     (
-        "cadrumo.llm.providers.local",
+        "cadrumo.adapters.outbound.llm.providers.local",
         "rasterise_pdf_pages_to_base64_png",
         "rasterise_pdf_pages_to_base64_png(b'%PDF-1.4\\n')",
     ),
     (
-        "cadrumo.llm.evidence_draft_vision",
+        "cadrumo.adapters.outbound.llm.evidence_draft_vision",
         "transcribe_document_images",
         "transcribe_document_images(_PAGES, source_content_sha256='0' * 64)",
     ),
     (
-        "cadrumo.llm.evidence_draft_text",
+        "cadrumo.adapters.outbound.llm.evidence_draft_text",
         "extract_invoice_fields_from_text",
         "extract_invoice_fields_from_text(_TRANSCRIPTION)",
     ),
     (
-        "cadrumo.llm.vision_classifier",
+        "cadrumo.adapters.outbound.llm.vision_classifier",
         "LocalVisionLLMClassifier",
         "LocalVisionLLMClassifier(spec=None)",
     ),
     (
-        "cadrumo.llm.text_classifier",
+        "cadrumo.adapters.outbound.llm.text_classifier",
         "LocalTextLLMClassifier",
         "LocalTextLLMClassifier(spec=None)",
     ),
@@ -125,26 +125,26 @@ _INFERENCE_SURFACES: Final[tuple[tuple[str, str, str], ...]] = (
     # a bare construction reaches it before any settings or model resolution
     # could raise something else.
     (
-        "cadrumo.llm.evidence_draft_vision",
+        "cadrumo.adapters.outbound.llm.evidence_draft_vision",
         "LocalVisionDocumentTranscriber",
         "LocalVisionDocumentTranscriber()",
     ),
     (
-        "cadrumo.llm.evidence_draft_text",
+        "cadrumo.adapters.outbound.llm.evidence_draft_text",
         "TextInvoiceFieldExtractor",
         "TextInvoiceFieldExtractor()",
     ),
     # The tabular lane's split point: a known fixed-layout file never reaches
     # this call, an unknown header vocabulary does.
     (
-        "cadrumo.llm.column_role_mapping",
+        "cadrumo.adapters.outbound.llm.column_role_mapping",
         "SemanticColumnRoleMapper",
         "SemanticColumnRoleMapper()",
     ),
     # Every argument is keyword-only with a default, so a bare construction
     # reaches the guard before any model-role resolution could raise instead.
     (
-        "cadrumo.llm.supply_nature_proposal",
+        "cadrumo.adapters.outbound.llm.supply_nature_proposal",
         "SupplyNatureProposer",
         "SupplyNatureProposer()",
     ),
@@ -381,7 +381,7 @@ from cadrumo.application.ledger.document_transcription import DocumentTranscript
 from cadrumo.core.field_origin import FieldOrigin
 from cadrumo.core.image_media_type import ImageMediaType
 from cadrumo.core.optional_extras import MissingOptionalExtraError
-from cadrumo.llm.models import MultimodalImageInput
+from cadrumo.adapters.outbound.llm.models import MultimodalImageInput
 {_surface_imports()}
 
 # Both surfaces take a TYPED argument, so the driver builds each one here rather
@@ -579,7 +579,7 @@ from cadrumo.application.ledger.document_transcription import DocumentTranscript
 from cadrumo.core.field_origin import FieldOrigin
 from cadrumo.core.image_media_type import ImageMediaType
 from cadrumo.core.optional_extras import MissingOptionalExtraError
-from cadrumo.llm.models import MultimodalImageInput
+from cadrumo.adapters.outbound.llm.models import MultimodalImageInput
 {_surface_imports()}
 
 # Both surfaces take a TYPED argument, so the driver builds each one here rather

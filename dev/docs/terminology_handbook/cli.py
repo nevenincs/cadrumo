@@ -29,7 +29,7 @@ from typing import Annotated
 import typer
 
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.core.i18n import tr
+from cadrumo.core.i18n.render import tr
 
 from ._curation import (
     CurationError,

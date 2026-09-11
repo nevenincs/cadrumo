@@ -9,11 +9,11 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.revision_review import RevisionReviewStatus
-from cadrumo.domain.calculations.registry._snapshot_internals import _check_snapshot_filing_capability
+from cadrumo.domain.calculations.registry.snapshot import check_snapshot_filing_capability
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
+from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from cadrumo.tests.registry_snapshot import build_validated_snapshot
-from cadrumo.tests.registry_tree import bundled_registry_tree
 
 from ..compiler.authority import compile_validated_authority
 
@@ -193,7 +193,7 @@ def test_the_filing_capability_check_passes_a_revision_that_can_emit() -> None:
     modelo, revision = emitting[0]
     resolved = revision.model_copy(update={"export_layouts": derive_export_layouts_from_bindings(revision)})
 
-    _check_snapshot_filing_capability(modelo, resolved)
+    check_snapshot_filing_capability(modelo, resolved)
 
 
 def test_compile_tier_snapshots_in_this_module_carry_the_published_compiled_catalogues() -> None:

@@ -16,7 +16,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
-from ..pipeline._tree_paths import contains, require_existing_non_link
+from ..pipeline.tree_paths import contains, require_existing_non_link
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

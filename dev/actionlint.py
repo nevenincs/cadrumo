@@ -153,6 +153,26 @@ def _extract_member(archive: Path, suffix: str, destination: Path) -> None:
             destination.write_bytes(extracted.read())
 
 
+def _cached_binary() -> Path | None:
+    """Return the platform-specific cache path, when this platform is pinned."""
+    key = _platform_key()
+    if key not in ARCHIVES:
+        return None
+    root = _cache_root()
+    return root / ("actionlint.exe" if key[0] == "windows" else "actionlint")
+
+
+def find() -> Path | None:
+    """Find an actionlint executable without creating files or using the network."""
+    on_path = shutil.which("actionlint")
+    if on_path:
+        return Path(on_path)
+    cached = _cached_binary()
+    if cached is not None and cached.is_file():
+        return cached
+    return None
+
+
 def ensure() -> Path:
     """Return a verified actionlint executable, downloading it once if needed.
 
@@ -161,9 +181,9 @@ def ensure() -> Path:
     second copy downloaded behind their back, and the version skew that
     creates is visible in the report actionlint prints.
     """
-    on_path = shutil.which("actionlint")
-    if on_path:
-        return Path(on_path)
+    existing = find()
+    if existing is not None:
+        return existing
 
     key = _platform_key()
     if key not in ARCHIVES:
@@ -175,10 +195,10 @@ def ensure() -> Path:
             "reached an ARM runner and passed its own digest check."
         )
     suffix, expected = ARCHIVES[key]
-    root = _cache_root()
-    binary = root / ("actionlint.exe" if key[0] == "windows" else "actionlint")
-    if binary.is_file():
-        return binary
+    binary = _cached_binary()
+    if binary is None:  # pragma: no cover - guarded by the ARCHIVES check above
+        raise SystemExit(f"no pinned actionlint archive for {key[0]}/{key[1]}")
+    root = binary.parent
 
     root.mkdir(parents=True, exist_ok=True)
     url = f"{BASE_URL}/v{VERSION}/actionlint_{VERSION}_{suffix}"
@@ -200,16 +220,25 @@ def ensure() -> Path:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Run actionlint over the repository's workflows."""
+    """Run actionlint, or explicitly provision it when ``--install`` is passed."""
     args = list(sys.argv[1:] if argv is None else argv)
+    install = "--install" in args
+    if install:
+        args.remove("--install")
     try:
-        binary = ensure()
+        binary = ensure() if install else find()
     except SystemExit as failure:
         print(str(failure), file=sys.stderr)
         return TOOL_MISSING
     except OSError as failure:
         print(f"could not provision actionlint: {failure}", file=sys.stderr)
         return TOOL_MISSING
+    if binary is None:
+        print("actionlint is unavailable; run `just setup-repository-tools`.", file=sys.stderr)
+        return TOOL_MISSING
+    if install:
+        print(f"actionlint ready: {binary}")
+        return OK
     # shellcheck and pyflakes are disabled EXPLICITLY rather than left to
     # whether a runner happens to carry them. actionlint silently skips a
     # missing external linter, so leaving them implicit means the gate checks

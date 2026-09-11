@@ -38,7 +38,7 @@ from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
 
 from ..compiler.legal_grounding import verify_legal_reference, verify_legal_reference_grounding
-from ._catalogue_verification_support import _registry_tree
+from .catalogue_verification_support import registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -220,7 +220,7 @@ def test_no_committed_legal_entry_cites_a_fused_redaction_history() -> None:
     contain text current law does not -- a refusal catching one of those would
     be wrong, and this control is what would say so.
     """
-    _modelos, catalogues = _registry_tree()
+    _modelos, catalogues = registry_tree()
 
     assert len(catalogues.legal) > 0, "the control is meaningless against an empty catalogue"
     for vintaged_id in _DELIBERATELY_VINTAGED_EXCERPT_IDS:

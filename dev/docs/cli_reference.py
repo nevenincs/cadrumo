@@ -204,7 +204,7 @@ def _rst_heading(text: str, char: str) -> str:
 
 def _render_graph_command(language: OutputLanguage, path: tuple[str, ...], spec: object) -> str:
     """Render one authored command specification without runtime tree inspection."""
-    from cadrumo.core.i18n import tr
+    from cadrumo.core.i18n.render import tr
     from cadrumo.entrypoints.cli.command_api import ArgumentSpec, CommandSpec
 
     if not isinstance(spec, CommandSpec):

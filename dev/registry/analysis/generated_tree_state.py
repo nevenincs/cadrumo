@@ -52,8 +52,12 @@ __all__ = [
     "STATES",
     "GeneratedTreeState",
     "classify_comparison",
+    "generated_state_facts",
+    "generated_state_inventory",
     "tree_states",
 ]
+
+type ExcludedGeneratedTree = tuple[str, str, str]
 
 #: Every state this report can assign, declared once and used at each emission
 #: site so the set cannot be recovered by reading the source wrong.
@@ -111,8 +115,11 @@ def classify_comparison(
     return "record_drift"
 
 
-def tree_states(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]) -> tuple[GeneratedTreeState, ...]:
-    """Classify every revision that can render, committed or not.
+def generated_state_inventory(
+    authority: ValidatedRegistryAuthority,
+    modelo_ids: tuple[str, ...],
+) -> tuple[tuple[GeneratedTreeState, ...], tuple[ExcludedGeneratedTree, ...]]:
+    """Classify renderable revisions and retain every excluded target identity.
 
     A revision whose comparison itself fails is excluded rather than folded
     into a state: substituting an empty diff for a raised ``ValueError``,
@@ -161,7 +168,21 @@ def tree_states(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ..
             f"{len(inapplicable)} could not be re-rendered for comparison and were excluded, so the "
             "census below is not corpus-wide\n"
         )
-    return tuple(states)
+    return tuple(states), tuple(inapplicable)
+
+
+def tree_states(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]) -> tuple[GeneratedTreeState, ...]:
+    """Classify every revision that can render, committed or not."""
+    states, _ = generated_state_inventory(authority, modelo_ids)
+    return states
+
+
+def generated_state_facts(
+    authority: ValidatedRegistryAuthority,
+    modelo_ids: tuple[str, ...],
+) -> tuple[GeneratedTreeState, ...]:
+    """Expose the canonical generated-state facts for read-only status reports."""
+    return tree_states(authority, modelo_ids)
 
 
 def main() -> int:

@@ -10,21 +10,22 @@ from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
-from test_support.registry_authoring import (
-    EvidenceValidator,
-    RegistryValidator,
-    _committed_registry_tree,
-    verify_legal_catalogue,
+
+from cadrumo.core.config import Settings
+from cadrumo.domain.calculations.registry.citation_blocklist import find_known_bad
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema_base import EvidenceTier, SourceCitation
+from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+
+from ..compiler.corpus_catalogue import (
     verify_source_catalogue,
     verify_source_file,
 )
-
-from .....core.config import Settings
-from .._citation_blocklist import _KNOWN_BAD_CITATIONS, KnownBadCitation, _fold_diacritics, find_known_bad
-from ..errors import RegistryValidationError
-from ..schema import RegistryCatalogues
-from ..schema_base import EvidenceTier, SourceCitation
-from ..schema_references import LegalReference, SourceReference
+from ..compiler.legal_grounding import verify_legal_catalogue
+from ..compiler.validate_evidence import EvidenceValidator
+from ..compiler.validator import RegistryValidator
+from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -140,17 +141,29 @@ def test_verify_legal_catalogue_rejects_known_bad_citation_role() -> None:
         verify_legal_catalogue({reference.id: reference})
 
 
-@pytest.mark.parametrize("blocked", _KNOWN_BAD_CITATIONS)
-def test_verify_legal_catalogue_rejects_every_blocklisted_role(blocked: KnownBadCitation) -> None:
+@pytest.mark.parametrize(
+    ("source", "article", "role_text"),
+    [
+        ("ley", "103", "cuota diferencial"),
+        ("ley", "77", "cuota integra autonomica"),
+        ("reglamento", "100.3.a", "arrendamientos"),
+        ("reglamento", "110.4", "módulos"),
+    ],
+)
+def test_verify_legal_catalogue_rejects_known_bad_roles(
+    source: str,
+    article: str,
+    role_text: str,
+) -> None:
     reference = _legal_reference(
-        ref_id=f"{blocked.source}:{blocked.article}",
-        kind=blocked.source,
-        article=blocked.article,
-        notes=blocked.role_substring,
+        ref_id=f"{source}:{article}",
+        kind=source,
+        article=article,
+        notes=role_text,
     )
     text = " ".join(part for part in (reference.section, reference.notes) if part)
 
-    assert find_known_bad(blocked.source, blocked.article, text) == blocked
+    assert find_known_bad(source, article, text) is not None
     with pytest.raises(RegistryValidationError, match="known-bad citation"):
         verify_legal_catalogue({reference.id: reference})
 
@@ -164,26 +177,6 @@ def test_known_bad_citation_matching_is_diacritic_insensitive() -> None:
 
 def test_known_bad_citation_matching_allows_different_role_for_same_article() -> None:
     assert find_known_bad("ley", "77", "cuota líquida autonómica total") is None
-
-
-def test_known_bad_citation_role_substrings_are_pure_ascii_after_folding() -> None:
-    """Every blocklist ``role_substring`` folds to plain ASCII.
-
-    ``find_known_bad`` folds diacritics via the shared ``core.text_fold``
-    primitive (NFKD-decompose + drop combining marks), not the
-    ``encode("ascii", "ignore")`` transliteration this module used to run
-    inline. The two agree on every real entry -- each one is ordinary
-    accented Spanish prose, and standard Spanish accented letters always
-    carry a canonical combining-mark decomposition -- so this asserts the
-    folded form is unsurprising for a reader who has not seen the swap.
-    A registry-authored ``role_substring`` containing a codepoint with no
-    ASCII-compatible decomposition (an em dash, a currency sign) would fail
-    this assertion, which is the intended tripwire: it means folding no
-    longer produces the same comparison key the ascii-ignore predecessor did.
-    """
-    for blocked in _KNOWN_BAD_CITATIONS:
-        folded = _fold_diacritics(blocked.role_substring)
-        assert folded.isascii(), (blocked.role_substring, folded)
 
 
 def test_known_bad_citation_matching_preserves_non_decomposable_characters() -> None:

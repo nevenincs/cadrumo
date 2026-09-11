@@ -52,7 +52,7 @@ from ..compiler.authority import canonical_authoring_root_pair, compile_validate
 from ..compiler.corpus_provenance import classify_normative_corpus_provenance
 from ..compiler.identity import resolve_registry_identity
 from ..compiler.legal_grounding import published_legal_evidence_text
-from ..compiler.loader import collect_registry_tree_fingerprints
+from ..compiler.loader_fingerprints import collect_registry_tree_fingerprints
 from ..compiler.source_evidence_fingerprint import (
     SourceEvidenceFingerprint,
     collect_source_evidence_fingerprints,

@@ -25,7 +25,7 @@ from typing import NamedTuple
 
 import pytest
 
-from cadrumo.core.i18n import MissingTranslationError, lookup_translation
+from cadrumo.core.i18n.render import MissingTranslationError, lookup_translation
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.modelo_localization import (

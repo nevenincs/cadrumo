@@ -1,21 +1,21 @@
 #!/usr/bin/env python
-"""The composed `just audit-all` dashboard: one concise summary, full results on disk.
+"""The composed `just audit-code` dashboard: one concise summary, full results on disk.
 
-Replaces the old ``audit-all`` recipe, which chained five raw tool
+This replaces the former flat audit composition, which chained raw tool
 passthroughs (`complexity`, `dead code`, `duplication`,
 `security`) with no structure and no persistence. Measured on this tree, the
-raw `audit-security` step alone produced 55,378 lines for 365 findings --
+raw security step alone produced 55,378 lines for 365 findings --
 each rendering matched code plus surrounding context, and several bundled
 corpus/HTML fixtures carry single "lines" thousands of characters wide that
 wrap across dozens of terminal rows.
 
-This module composes the five EXISTING scanners rather than re-implementing
-any of them -- ``dev.audit.report``'s `audit_complexity` / `audit_duplication`
-are reused verbatim (report.py itself is untouched: it is wired into
-``.github/workflows/code-health-report.yml`` and
+This module composes the four existing scanner runners rather than
+re-implementing any of them. The complexity and duplication dimensions are
+reused from ``dev.audit.report``, while ``dev.audit.dead_code`` and
+``dev.audit.security`` supply the other two dimensions. The report module is
+wired into ``.github/workflows/code-health-report.yml`` and
 ``src/cadrumo/tests/test_dev_audit_report.py`` pins its `to_json()` shape and
-four-dimension composition), and `dev.audit.dead_code` / `dev.audit.security`
-/ `dev.audit.security` supply the other two.
+three-dimension composition.
 
 Two things this module adds that no existing `dev/audit` scanner has:
 
@@ -29,11 +29,11 @@ Two things this module adds that no existing `dev/audit` scanner has:
   than the trimmed structured findings). Both summaries identify the exact
   command that produced them.
 
-This module is deliberately advisory throughout: `main()` always exits 0,
-matching today's `audit-all` contract (the old recipe chained every step with
-`-@just ...` for exactly this reason), and none of the three new dimensions
-invent a new blocking gate -- see each `audit_*` function's docstring for the
-existing policy it reuses.
+This module is advisory for findings: `main()` exits 0 when every scanner ran,
+regardless of what it found. A scanner that is unavailable returns the shared
+advisory-broken status instead of posing as a clean run. None of the retained
+dimensions invents a blocking finding gate; see each `audit_*` function's
+docstring for the existing policy it reuses.
 
 See Also:
     :mod:`dev.audit.report`
@@ -50,6 +50,7 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 import sys
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -57,7 +58,7 @@ from pathlib import Path
 from typing import Final
 
 from dev._paths import REPO_ROOT, UTF_8
-from dev.exit_codes import OK
+from dev.exit_codes import ADVISORY_BROKEN, OK
 from dev.test_runs.paths import allocate_run_directory
 
 from .dead_code import DeadCodeOutcome, run_dead_code_scan
@@ -118,7 +119,7 @@ def audit_dead_code(repo_root: Path) -> AdvisoryDimension:
 
     if result.outcome is DeadCodeOutcome.ERROR:
         return AdvisoryDimension(
-            DimensionReport(name="dead_code", status=Status.AMBER, headline=result.headline()),
+            DimensionReport(name="dead_code", status=Status.AMBER, headline=result.headline(), available=False),
         )
     if result.outcome is DeadCodeOutcome.CLEAN:
         return AdvisoryDimension(DimensionReport(name="dead_code", status=Status.GREEN, headline=result.headline()))
@@ -168,7 +169,7 @@ def audit_security(repo_root: Path) -> AdvisoryDimension:
 
     if result.outcome is SecurityOutcome.UNAVAILABLE:
         return AdvisoryDimension(
-            DimensionReport(name="security", status=Status.AMBER, headline=result.headline()),
+            DimensionReport(name="security", status=Status.AMBER, headline=result.headline(), available=False),
         )
     if result.outcome is SecurityOutcome.OBSERVED_ZERO:
         return AdvisoryDimension(
@@ -198,6 +199,21 @@ def _wrap(report: DimensionReport) -> AdvisoryDimension:
     return AdvisoryDimension(report, count_by_severity=count_by_severity)
 
 
+def _complexity_dimension() -> AdvisoryDimension:
+    """Run the complexity scanner and preserve unavailable evidence."""
+    try:
+        return _wrap(audit_complexity())
+    except (OSError, RuntimeError, subprocess.SubprocessError) as exc:
+        return _wrap(
+            DimensionReport(
+                name="complexity",
+                status=Status.AMBER,
+                headline=f"complexity signal unavailable this cycle: {exc}",
+                available=False,
+            ),
+        )
+
+
 # ---------------------------------------------------------------------------
 # Aggregation
 # ---------------------------------------------------------------------------
@@ -213,7 +229,7 @@ def build_advisory_report(repo_root: Path) -> tuple[AdvisoryDimension, ...]:
     boundary, not by line-count thresholds or snapshots of temporary debt.
     """
     return (
-        _wrap(audit_complexity()),
+        _complexity_dimension(),
         audit_dead_code(repo_root),
         _wrap(audit_duplication(repo_root)),
         audit_security(repo_root),
@@ -292,6 +308,7 @@ def to_json(
                 "name": dimension.report.name,
                 "status": dimension.report.status.value,
                 "headline": dimension.report.headline,
+                "available": dimension.report.available,
                 "count_by_severity": dimension.count_by_severity,
                 "total_findings": _total_findings(dimension),
                 "details": dimension.report.details,
@@ -339,7 +356,7 @@ def persist(
 
 def allocate_run_dir(repository: Path, *, now: datetime | None = None) -> Path:
     """Return one collision-resistant, date-partitioned audit run directory."""
-    return allocate_run_directory(repository, family=_RUN_FAMILY, label="audit-all", now=now)
+    return allocate_run_directory(repository, family=_RUN_FAMILY, label="audit-code", now=now)
 
 
 # ---------------------------------------------------------------------------
@@ -350,12 +367,10 @@ def allocate_run_dir(repository: Path, *, now: datetime | None = None) -> Path:
 def main() -> int:
     """Run every advisory-audit dimension, print the dashboard, persist the full result.
 
-    ADVISORY: exits 0 when every dimension RAN, whatever it found. `audit` is
+    ADVISORY: exits 0 when every dimension ran, whatever it found. `audit` is
     advisory across this fleet except for the dependency audit, which gates --
-    see ``dev/EXIT-CODES.md``. This is not the `; exit 0` the contract forbids:
-    a scanner that crashes or is absent raises out of its dimension and this
-    function never returns, so "could not run" stays distinguishable from "ran
-    and found nothing".
+    see ``dev/EXIT-CODES.md``. Scanner findings are normalized to zero, while
+    unavailable scanner data returns the shared advisory-broken status.
     """
     import argparse
 
@@ -378,7 +393,7 @@ def main() -> int:
     if not args.json:
         print(f"\nfull report persisted to {run_dir / 'summary.json'} and {run_dir / 'summary.md'}")
 
-    return OK
+    return ADVISORY_BROKEN if any(not dimension.report.available for dimension in dimensions) else OK
 
 
 if __name__ == "__main__":

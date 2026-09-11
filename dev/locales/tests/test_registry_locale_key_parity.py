@@ -21,7 +21,7 @@ from typing import cast
 
 import pytest
 
-from cadrumo.core.i18n import tr
+from cadrumo.core.i18n.render import tr
 
 from .._paths import LOCALES_DIR
 from .._registry_scanner import scan_registry_keys

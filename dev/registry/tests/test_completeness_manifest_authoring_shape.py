@@ -7,9 +7,10 @@ from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
-from test_support.registry_authoring import _committed_registry_tree
 
-from .....core.resources.bundled_data import bundled_path
+from cadrumo.core.resources.bundled_data import bundled_path
+
+from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -17,7 +17,8 @@ from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 from cadrumo.application.calculations.revision_carry_gate import revision_carry_outcome
 from cadrumo.application.filing.producer_snapshot import FilingProducerSnapshot
 from cadrumo.core.filing_year import FilingYear
-from cadrumo.core.identity import CalculationRevisionId, ContentDigest
+from cadrumo.core.identity import CalculationRevisionId
+from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from cadrumo.core.period import Period
 from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection

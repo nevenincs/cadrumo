@@ -285,7 +285,7 @@ def test_homebrew_matrix_is_parallelism_bounded_with_per_leg_make_jobs() -> None
 # excludes it. One control still runs real pytest collection, so the static
 # model is proven against ground truth rather than trusted on its own say-so.
 
-_HARNESS_RECIPE: Final = "test-harness"
+_HARNESS_RECIPE: Final = "test-pytest-harness"
 _COLLECTION_TIMEOUT_SECONDS: Final = 300
 # A directory containing the harness members, so collection walks to them the
 # way a path-unrestricted lane does. Passing the member FILES directly would not
@@ -294,10 +294,10 @@ _MEMBER_PARENT: Final = "src/cadrumo/tests"
 
 
 def _harness_members(root: Path) -> tuple[str, ...]:
-    """Return the member paths the enrolling ``test-harness`` recipe runs.
+    """Return the member paths the enrolling ``test-pytest-harness`` recipe runs.
 
     Derived from the declared-lane authority as the UNION of every
-    ``test-harness`` lane's paths, order-preserved by first appearance: each of
+    ``test-pytest-harness`` lane's paths, order-preserved by first appearance: each of
     the recipe's three pytest lines is its own :class:`Lane`, and a member can
     appear in a per-member preflight line without (yet) appearing in the
     combined ``{{harness_members}}`` line the aggregate run uses. Picking only

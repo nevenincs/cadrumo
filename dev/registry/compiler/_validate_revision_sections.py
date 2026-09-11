@@ -34,22 +34,21 @@ from cadrumo.domain.calculations.registry.validate_revision_identity import (
     revision_reference_identity_failures,
 )
 
-from ._validate_applicability_section import validate_applicability_section
-from ._validate_authority_grade import validate_authority_grade_section
+from .validate_applicability_section import validate_applicability_section
+from .validate_authority_grade import validate_authority_grade_section
 from ._validate_completeness import emit_completeness_gate_failures as _emit_completeness_gate_failures
 from ._validate_dependency_sections import (
     validate_dependency_classification_section,
     validate_filing_schedule_section,
     validate_relation_section,
 )
-from ._validate_evidence import EvidenceValidator
 from ._validate_export_exemption import (
     modelo_publishes_a_record_design,
     validate_export_exemption_declarations,
 )
-from ._validate_export_layout_coverage import validate_export_layout_record_coverage
-from ._validate_exports import validate_export_layout_section
-from ._validate_formulas import validate_formula_section
+from .validate_export_layout_coverage import validate_export_layout_record_coverage
+from .validate_exports import validate_export_layout_section
+from .validate_formulas import validate_formula_section
 from ._validate_helpers import missing_refs as _missing_refs
 from ._validate_record_sections import (
     validate_binding_section,
@@ -59,7 +58,6 @@ from ._validate_record_sections import (
 )
 from ._validate_revision_closure import validate_revision_closure_sections as _validate_revision_closure_sections
 from ._validate_revision_closure import validate_revision_reference_surfaces as _validate_revision_reference_surfaces
-from ._validate_revision_id_window_agreement import validate_revision_id_window_agreement
 from ._validate_surfaces import (
     validate_application_link_section,
     validate_cross_reference_section,
@@ -68,6 +66,8 @@ from ._validate_surfaces import (
     validate_workbook_parity_section,
 )
 from ._validate_valid_from_ejercicio_convention import validate_valid_from_ejercicio_convention
+from .validate_evidence import EvidenceValidator
+from .validate_revision_id_window_agreement import validate_revision_id_window_agreement
 
 
 def _requires_workbook_parity_coverage(revision: ModeloRevision) -> bool:

@@ -19,6 +19,8 @@ from pathlib import Path
 from typing import Any
 
 from cadrumo.core.directory_scan import scan_directory
+from dev._paths import UTF_8
+from dev.exit_codes import ADVISORY_BROKEN, OK
 
 _TARGET = "src/cadrumo"
 _PROD_EXCLUDE = (
@@ -107,7 +109,19 @@ def _radon(args: list[str], exclude: str) -> list[str]:
     command = ["uv", "run", "--no-sync", "radon", *args]
     if exclude:
         command.extend(["-e", exclude])
-    return subprocess.run(command, capture_output=True, text=True, check=False).stdout.splitlines()
+    completed = subprocess.run(
+        command,
+        capture_output=True,
+        text=True,
+        encoding=UTF_8,
+        errors="replace",
+        check=False,
+    )
+    if completed.returncode != 0:
+        detail = (completed.stderr or completed.stdout or "").strip().splitlines()
+        tail = detail[-1] if detail else "no diagnostic output"
+        raise RuntimeError(f"radon exited {completed.returncode}: {tail}")
+    return completed.stdout.splitlines()
 
 
 def collect_cc(exclude: str) -> list[CcHit]:
@@ -138,7 +152,7 @@ def collect_mi(exclude: str) -> list[MiHit]:
 def collect_cog(root: Path, is_test_run: bool, threshold: int) -> list[CogHit]:
     """Collect cognitive hits, refusing an empty source population."""
     if file_complexity is None:
-        return []
+        raise RuntimeError("complexipy is unavailable; cognitive-complexity coverage is unproven")
 
     def is_production(path: Path) -> bool:
         return "_data" not in path.parts and "tests" not in path.parts and not path.name.startswith(("test_", "_test_"))
@@ -158,8 +172,8 @@ def collect_cog(root: Path, is_test_run: bool, threshold: int) -> list[CogHit]:
     for path in files:
         try:
             result = file_complexity(str(path))
-        except Exception:
-            result = None
+        except Exception as exc:
+            raise RuntimeError(f"complexipy could not analyze {path}: {exc}") from exc
         if result is not None:
             hits.extend(
                 CogHit(str(path).replace("\\", "/"), function.name, function.complexity)
@@ -180,17 +194,21 @@ def scan_complexity(*, tests: bool = False, cognitive_threshold: int = 20) -> Co
 
 
 def main() -> int:
-    """Render the live scan and fail while any hotspot exists."""
+    """Render the live scan; findings are advisory and tool failure is not."""
     parser = argparse.ArgumentParser(description="Report every current code-complexity hotspot.")
     parser.add_argument("--tests", action="store_true", help="Audit test files instead of production packages.")
     parser.add_argument("--threshold", type=int, default=20, help="Cognitive complexity threshold for Complexipy.")
     args = parser.parse_args()
-    scan = scan_complexity(tests=args.tests, cognitive_threshold=args.threshold)
+    try:
+        scan = scan_complexity(tests=args.tests, cognitive_threshold=args.threshold)
+    except (OSError, RuntimeError, subprocess.SubprocessError) as exc:
+        print(f"complexity audit unavailable: {exc}", file=sys.stderr)
+        return ADVISORY_BROKEN
     scope = "test files" if args.tests else "production code"
     print(f"complexity ({scope}): {scan.finding_count} current hotspot(s)")
     for line in scan.rendered_findings():
         print(f"  {line}")
-    return int(scan.finding_count > 0)
+    return OK
 
 
 if __name__ == "__main__":

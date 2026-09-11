@@ -5,15 +5,17 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from test_support.registry_authoring import RegistryValidator, _committed_modelo
 
-from .....core.export_layout_format import ExportLayoutFormat
-from .....core.resources.bundled_data import bundled_path
-from .....tests.aeat_literal_fixtures import aeat_host
-from ..schema import ModeloRevision
-from ..schema_exports import ExportRecordDefinition
-from ..schema_input_kind import InputKind
-from ..temporal import select_revision
+from cadrumo.core.export_layout_format import ExportLayoutFormat
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_exports import ExportRecordDefinition
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.tests.aeat_literal_fixtures import aeat_host
+
+from ..compiler.validator import RegistryValidator
+from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW1_HOST = aeat_host("www1")

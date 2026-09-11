@@ -20,15 +20,21 @@ from datetime import date
 
 import pytest
 from pydantic import ValidationError
-from test_support.registry_authoring import _committed_modelo, _committed_snapshot
 
-from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_snapshot import build_snapshot
-from .._snapshot_internals import _SUBSTANTIVE_LAW_KINDS, collect_snapshot_ref_ids
-from ..errors import RegistryValidationError
-from ..orden_applicability import RevisionLegalApplicabilityWindow
-from ..schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
-from ..schema_references import LegalReference
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.snapshot import SUBSTANTIVE_LAW_KINDS, collect_snapshot_ref_ids
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.orden_applicability import RevisionLegalApplicabilityWindow
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_references import LegalReference
+from cadrumo.tests.registry_snapshot import build_snapshot
+
+from ..conformance.registry_schema_support import (
+    committed_modelo as _committed_modelo,
+)
+from ..conformance.registry_schema_support import (
+    committed_snapshot as _committed_snapshot,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -93,7 +99,7 @@ def _revision_scoped_procedural_legal_id(modelo: ModeloDefinition, catalogues: R
     """Return one non-substantive-law scoped legal id (e.g. an orden ministerial).
 
     ``_legal_window_covers_devengo`` checks a substantive-law reference
-    (``kind`` in ``_SUBSTANTIVE_LAW_KINDS`` -- a rate scale, a deduction limit)
+    (``kind`` in ``SUBSTANTIVE_LAW_KINDS`` -- a rate scale, a deduction limit)
     against the revision's own devengo date (``revision.valid_to``), never the
     presentation-tolerant :class:`RevisionLegalApplicabilityWindow`. The
     applicability-window boundary tests exercise that presentation-tolerant
@@ -102,7 +108,7 @@ def _revision_scoped_procedural_legal_id(modelo: ModeloDefinition, catalogues: R
     """
     scoped = _revision_scoped_legal_ids(modelo)
     procedural = sorted(
-        legal_id for legal_id in scoped if catalogues.legal[legal_id].kind not in _SUBSTANTIVE_LAW_KINDS
+        legal_id for legal_id in scoped if catalogues.legal[legal_id].kind not in SUBSTANTIVE_LAW_KINDS
     )
     assert procedural, "the M100 2025 revision must own at least one procedural legal ref of its own"
     return procedural[0]
@@ -528,7 +534,7 @@ def test_a_declared_retroactive_provision_grounds_a_devengo_before_it_took_force
     reference = catalogues.legal[_RETRO_LEGAL_ID]
 
     assert revision.valid_to is not None
-    assert reference.kind in _SUBSTANTIVE_LAW_KINDS, "the devengo axis only applies to substantive law"
+    assert reference.kind in SUBSTANTIVE_LAW_KINDS, "the devengo axis only applies to substantive law"
     assert reference.effective_from > revision.valid_to, (
         "precondition: the RDL must take force after the devengo it grounds"
     )

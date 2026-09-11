@@ -68,7 +68,7 @@ See Also:
     :mod:`dev.audit.dead_code`
         The heuristic vulture runner; it does not model entrypoint reach.
     :func:`run_unreachable_code_scan`
-        The one entry point ``just audit-unreachable-code`` calls.
+        The one entry point ``just report-product-reachability`` calls.
 """
 
 from __future__ import annotations
@@ -1802,7 +1802,7 @@ def run_unreachable_code_scan(
 ) -> UnreachableCodeResult:
     """Scan this repository's shipped tree from its declared console scripts.
 
-    The one entry point ``just audit-unreachable-code`` calls.
+    The one entry point ``just report-product-reachability`` calls.
     """
     try:
         spec = ShippedTreeSpec.from_repository(repo_root, extra_roots=extra_roots)
@@ -1851,7 +1851,7 @@ def _capped[T](items: tuple[T, ...], *, full: bool, cap: int) -> tuple[tuple[T, 
 
 
 def render_console_report(result: UnreachableCodeResult, *, full: bool = False, cap: int = _FINDING_CAP) -> str:
-    """Render the operator-facing console report for `just audit-unreachable-code`."""
+    """Render the operator-facing console report for `just report-product-reachability`."""
     out = [f"unreachable code: {result.headline()}"]
     if result.outcome is UnreachableCodeOutcome.ERROR:
         return out[0]
