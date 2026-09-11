@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-11'
 body_schema: body-v2
-body_hash: 'sha256:30687aec318beb5891851e776491186a38ad602c2c629e02719b6579abd30003'
+body_hash: 'sha256:4703faac1203ef0ad1a61b33b3a1c87f501ddf2ed3e64782cf429fe5a6f638aa'
 ---
 
 # `facts-registry` plan
@@ -162,7 +162,7 @@ Rewire treaty and deadline consumers, retain apoderamientos as non-governed voca
 - [ ] `W03.P13.S64` - Migrate remaining governed-fact consumers only after their facts carry source-grounded temporal applicability; `src/cadrumo/application/modelo/_objective_estimation_advisory.py and src/cadrumo/domain/transactions and dev/registry/compiler/fact_validation.py`.
 - [x] `W03.P13.S75` - Delete retired legal-parameter provider implementations after governed facts replace every live resolver and consumer path; `dev/registry/compiler/legal_parameters.py and dev/registry/tests/test_legal_parameter_provider.py and src/cadrumo/domain and src/cadrumo/application`.
 - [ ] `W03.P13.S69` - Enforce and prove canonical tax-fact temporal coverage, date-axis selection, provenance, and refusal outside source-grounded windows; `dev/registry/compiler/fact_validation.py and dev/registry/compiler/validator.py and dev/registry/tests/test_migrated_legal_parameter_fact_gate.py`.
-- [ ] `W03.P13.S76` - Repair Article 101 excerpt filenames and source references so provision-tier evidence is verifiable before the cross-domain authority proof; `src/cadrumo/_data/corpus/normatives/html and src/cadrumo/_data/registry/aeat/legal and src/cadrumo/_data/registry/aeat/facts`.
+- [x] `W03.P13.S76` - Repair Article 101 excerpt filenames and source references so provision-tier evidence is verifiable before the cross-domain authority proof; `src/cadrumo/_data/corpus/normatives/html and src/cadrumo/_data/registry/aeat/legal and src/cadrumo/_data/registry/aeat/facts`.
 
 ### Phase `W03.P14` - Verify consumer boundary
 

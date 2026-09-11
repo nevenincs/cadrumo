@@ -3,14 +3,13 @@ tags:
   - '#exec'
   - '#facts-registry'
 date: '2026-09-10'
-modified: '2026-09-10'
+modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:485a31e0330a819114b3aa87130391d5ca4bf0e2bb607169e2f59372daec93ae'
+body_hash: 'sha256:4693432e4db1953eb659f7e3d228255f63efa56eadcbbee55b47ef0c2c678392'
 step_id: 'S76'
 related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
-
 # Repair Article 101 excerpt filenames and source references so provision-tier evidence is verifiable before the cross-domain authority proof
 
 ## Scope
@@ -28,7 +27,4 @@ related:
 - `M` `src/cadrumo/_data/registry/aeat/legal/statutory-constant-sources.toml`
 - `A` `.vault/audit/2026-09-10-facts-registry-s76-article-101-provision-path-review-audit.md`
 - `verify:` `uv run python -c "... verify_source_file(...) ..."` -> `pass`
-
-## Notes
-
-`uv run pytest dev/registry/tests/test_catalogue_verification_catalogues.py -q` had no terminal receipt under shared-host Python saturation. S76 remains open pending that broader proof.
+- `verify:` `uv run pytest -q dev/registry/tests/test_catalogue_verification_catalogues.py::test_committed_registry_tree_has_coherent_shared_catalogues` -> `pass`
