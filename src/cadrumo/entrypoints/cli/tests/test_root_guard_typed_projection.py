@@ -15,7 +15,7 @@ from ....core.config import Settings, override_settings
 from ....tests.cli_runner import cadrumo_click_command
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_cli_profile
-from ...cli import app
+from ...cli.main import app
 from .._common import (
     RequestedCliLeaf,
     attach_cli_policy_refusal_projection,
