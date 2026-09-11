@@ -30,6 +30,7 @@ _AUTHORED_FACT_FAMILIES = {
     "categories.statutory-cap": "scalar",
     "deadlines.holiday-calendar-publication": "event",
     "deadlines.public-holiday": "event",
+    "irnr.convenio.override": "override",
 }
 
 
