@@ -72,10 +72,10 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
     casilla_occurrence_locale_key,
 )
 from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor, ModeloDefinition, ModeloRevision
-from cadrumo.tests.inventory import REPO_ROOT
+from dev.registry.compiler.authority import compile_validated_authority, compiled_bundled_authority
+from dev.registry.compiler.loader import load_registry_tree
 
-from ..compiler.authority import compile_validated_authority, compiled_bundled_authority
-from ..compiler.loader import load_registry_tree
+from ..._paths import REPO_ROOT
 from ..edition_round_trip import (
     COMMIT_ID,
     SYNTHETIC_TAX_ID,

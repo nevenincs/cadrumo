@@ -34,10 +34,10 @@ from decimal import Decimal
 from typing import Any
 
 import pytest
+from test_support.registry_authoring import read_manual_worked_example
 
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.calculations.registry.tests.manual_oracle_support import read_manual_worked_example
 from ....domain.contribuyente.renta_codes import RentaMaritalStatus
 from ....domain.user_profile.values import UserProfileFactValue
 from ..profile_binding import (

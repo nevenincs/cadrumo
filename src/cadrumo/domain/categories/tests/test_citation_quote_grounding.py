@@ -26,11 +26,10 @@ corpus. Each test states whether it is DISCRIMINATING or SUPPORTING.
 from __future__ import annotations
 
 import pytest
-from test_support.registry_authoring import load_catalogue_file
+from test_support.registry_authoring import legal_reference_quotes_corpus, load_catalogue_file
 
 from ....core.citation_grounding import CitationGrounding
 from ....core.resources.bundled_data import bundled_path
-from ....domain.calculations.registry.legal import legal_reference_quotes_corpus
 from ..proportionality import CategoryCitation
 from ..registry import load_category_profiles
 from ..spending_category import SpendingCategory

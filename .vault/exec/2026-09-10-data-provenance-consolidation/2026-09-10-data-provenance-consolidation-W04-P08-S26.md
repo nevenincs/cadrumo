@@ -5,7 +5,7 @@ tags:
 date: '2026-09-11'
 modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:0d8ca37d6bd3ef3a42d6b15e1e67bf7b9c7886e14636ccecd85b0efb5c306f8a'
+body_hash: 'sha256:7ae0d012613304de6082259befab4a758618e123fa815b8fb47a8dd25caac45c'
 step_id: 'S26'
 related:
   - "[[2026-09-10-data-provenance-consolidation-plan]]"
@@ -39,4 +39,4 @@ related:
 
 ## Notes
 
-The final export-reproduction gate is held open by a concurrent Modelo 222 state transition: its records now reproduce, but `dev/registry/pipeline/generated_tree_dispositions.toml` still carries a `record_drift` row and the paired reproduction pin still treats the revision as below calculation grade. The full live run otherwise passed every generated-tree case. No files in that registry work were altered here.
+The final export-reproduction gate is held open by an unresolved add/add merge conflict in `src/cadrumo/core/frozen_mapping.py`. The merged Modelo 222 state correctly retires its drift disposition and declares calculation authority, but pytest cannot import the registry harness while the conflict markers remain. No files in that concurrent merge were altered here.

@@ -104,7 +104,7 @@ _BASE_BINDINGS_2025 = {
 
 def test_0461_casilla_grounding_uses_art84_not_base_liquidable_art50() -> None:
     """Casilla 0461 itself is the Art. 84 joint-taxation reduction amount."""
-    from ._registry_schema_support import _committed_modelo
+    from test_support.registry_authoring import _committed_modelo
 
     modelo, catalogues = _committed_modelo("100")
     art_84 = catalogues.legal["ley-35-2006:art-84"]

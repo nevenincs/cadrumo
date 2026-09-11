@@ -123,9 +123,8 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
 from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor, ModeloDefinition, ModeloRevision
 from cadrumo.domain.filing.protocols import ModeloInputs
 from cadrumo.domain.submission.models import ModeloDraftStatus
-
-from .compiler.authority import compile_validated_authority
-from .compiler.loader import load_registry_tree
+from dev.registry.compiler.authority import compile_validated_authority
+from dev.registry.compiler.loader import load_registry_tree
 
 __all__ = [
     "COMMIT_ID",
