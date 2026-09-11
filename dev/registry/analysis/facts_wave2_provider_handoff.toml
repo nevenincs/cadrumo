@@ -19,32 +19,6 @@ provenance_source = "authored fact TOML legal_refs/source_refs/source_citations,
 remaining_conditions = ["delete the retained raw IVA compiler and source paths in W04.P17.S56-S57", "delete no authority-owned source"]
 
 [[contracts]]
-provider_id = "category-profiles"
-family = "mapping"
-fact_ids = ["categories.profile"]
-query_type = "MappingFactQuery"
-required_selectors = ["category"]
-temporal_axis = "filing_period"
-consumer_step = "W03.P10.S49"
-consumer_files = ["src/cadrumo/application/aggregation/_service.py"]
-legacy_facade = "resolve_category_profiles and category_profile_years remain"
-provenance_source = "categories/profiles.toml"
-remaining_conditions = ["rewire facade input to facts authority", "retire category-local parser/cache after last caller"]
-
-[[contracts]]
-provider_id = "category-profiles"
-family = "scalar"
-fact_ids = ["categories.statutory-cap"]
-query_type = "ScalarFactQuery"
-required_selectors = ["category"]
-temporal_axis = "filing_period"
-consumer_step = "W03.P10.S49"
-consumer_files = ["src/cadrumo/application/aggregation/_service.py"]
-legacy_facade = "category domain facade remains"
-provenance_source = "categories/profiles.toml statutory caps"
-remaining_conditions = ["remove duplicated defaults after consumer migration"]
-
-[[contracts]]
 provider_id = "convenio-overrides"
 family = "override"
 fact_ids = ["irnr.convenio.override"]

@@ -258,26 +258,6 @@ def _holiday_calendar_provider_registration() -> FactProviderRegistration:
     )
 
 
-def _category_profile_provider_registration() -> FactProviderRegistration:
-    from cadrumo.domain.categories.registry import (
-        CATEGORY_FACT_PROVIDER_DIRECTORY,
-        CATEGORY_FACT_PROVIDER_ID,
-    )
-    from dev.registry.compiler.categories import (
-        collect_category_profile_fact_fingerprints,
-        compile_category_profile_facts,
-        reset_category_profile_fact_provider,
-    )
-
-    return FactProviderRegistration(
-        provider_id=CATEGORY_FACT_PROVIDER_ID,
-        owned_directories=(CATEGORY_FACT_PROVIDER_DIRECTORY,),
-        compile=compile_category_profile_facts,
-        collect_fingerprints=collect_category_profile_fact_fingerprints,
-        reset=reset_category_profile_fact_provider,
-    )
-
-
 def _modelo_parameter_projection_registration() -> FactProviderRegistration:
     from dev.registry.compiler.modelo_projections import (
         MODELO_PARAMETER_PROJECTION_PROVIDER_ID,
@@ -304,7 +284,6 @@ FACT_PROVIDER_REGISTRATIONS = validate_fact_provider_registrations(
             collect_fingerprints=_collect_authored_fact_fingerprints,
             reset=_reset_authored_fact_provider,
         ),
-        _category_profile_provider_registration(),
         FactProviderRegistration(
             provider_id="convenio-overrides",
             owned_directories=("treaties",),
