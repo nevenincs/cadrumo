@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#registry-edition-authoring'
 date: '2026-09-10'
-modified: '2026-09-10'
+modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:bbe92952de0aa6db747444a47ded1226b2dda7d7947e4f92c8c17d985a7de183'
+body_hash: 'sha256:c8e91a29bd436177d3fda49c26637b035f2d0f0bff132e45ec6fc1001452a86b'
 step_id: 'S15'
 related:
   - "[[2026-09-09-registry-edition-authoring-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # [M | sonnet-high] Remove the edition key from formula and binding identifiers by programmatic rewrite, with every reference updated in the same pass. Bounded rename, but references must not break. Proof: no identifier in these two families contains an edition key, and registry validation is clean.
 

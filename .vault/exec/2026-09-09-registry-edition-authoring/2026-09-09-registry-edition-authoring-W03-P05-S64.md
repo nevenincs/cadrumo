@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#registry-edition-authoring'
 date: '2026-09-10'
-modified: '2026-09-10'
+modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:50d0270233626564fd91d8330f9ad62a443ea03ddbe1a20c8cb0662e57f0038c'
+body_hash: 'sha256:ccb2bcae06c945e6ffded88881e06d3413580a66cbd424a4d0c0ac93034458ec'
 step_id: 'S64'
 related:
   - "[[2026-09-09-registry-edition-authoring-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # [M | opus-medium] Translate the continuity-key locale entries that copy the Spanish source text, before the live pilot. The 303 dry run showed inherited rows resolving a predecessor's real translation where the full copy fell through to a continuity-key entry holding untranslated Spanish in ca, en and hu (84 casillas per 303 edition). A copied source string does not satisfy locale coverage, so this is a catalogue defect that inheritance exposes, not a migration error. Through the canonical locale workflow only, give each affected continuity key a real translation in every supported locale, grounded in the lineage's existing translations, and add a locale-coverage check that fails when a continuity-key entry equals its Spanish source in a non-Spanish locale unless it is classified as untranslatable. Proof: the round-trip gate's locale identity passes on the migrated 303 dry run; the new check fails on a planted copied entry.
 
