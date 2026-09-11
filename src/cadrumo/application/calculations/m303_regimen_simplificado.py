@@ -3,15 +3,19 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from decimal import Decimal, InvalidOperation
+from datetime import date
+from decimal import Decimal
+from typing import cast
 
 from ...core.decimal.constants import HUNDRED
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.money.rounding import round_to_cents
 from ...core.period import Period
+from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
+from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
 from ...domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
-from ...domain.calculations.registry.schema import RegistryCatalogues
-from ...domain.calculations.registry.schema_references import LegalParameter
+from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.iva.refund_eligibility import is_last_filing_period_of_year
 from ...domain.iva.regimen_simplificado_rows import (
     ActividadNoAgricolaSimplificado,
@@ -28,22 +32,7 @@ from ...domain.modelos.calculation_revision_m303_evidence import (
     M303RegimenSimplificadoModuleCalculationResult,
 )
 
-_DANA_2024_PARAMETER_ID = "rdl-7-2024-art-11-2:iva-simplificado-reduccion-cuota-devengada-2024"
-_DANA_2024_PARAMETER_LEGAL_REFS = (
-    "real-decreto-ley-7-2024:art-11.2",
-    "real-decreto-ley-7-2024:df-14",
-    "real-decreto-ley-6-2024:anexo",
-)
-_DANA_2024_LEGAL_REFS = (
-    *_DANA_2024_PARAMETER_LEGAL_REFS,
-    "real-decreto-ley-6-2024:art-1",
-    "correccion-errores-rdl-6-2024",
-)
-_DANA_2024_SOURCE_REFS = (
-    "boe-rdl-7-2024-dana-authority",
-    "boe-rdl-6-2024-dana-authority",
-    "boe-correccion-errores-rdl-6-2024",
-)
+_DANA_2024_REDUCTION_FACT_ID = "rdl-7-2024-art-11-2:iva-simplificado-reduccion-cuota-devengada"
 
 
 class M303RegimenSimplificadoCalculationError(CoreValidationError):
@@ -64,7 +53,7 @@ def calculate_m303_regimen_simplificado_result(
     rows: RegimenSimplificadoFilingRows,
     regimen_snapshot: M303RegimenSimplificadoSnapshot,
     dana_2024_eligibility: M303DANA2024EligibilityEvidence | None,
-    catalogues: RegistryCatalogues,
+    authority: ValidatedRegistryAuthority | None = None,
 ) -> M303RegimenSimplificadoCalculationResult:
     """Calculate one immutable, source-pinned annual result from filing rows.
 
@@ -80,7 +69,13 @@ def calculate_m303_regimen_simplificado_result(
         dana_2024_eligibility=dana_2024_eligibility,
     )
     _validate_rows_against_annual_orden(rows=rows, regimen_snapshot=regimen_snapshot, scope_decision=scope_decision)
-    dana_authority = _resolve_dana_2024_authority(catalogues) if dana_2024_eligibility is not None else None
+    dana_authority = None
+    if dana_2024_eligibility is not None:
+        if authority is None:
+            raise M303RegimenSimplificadoCalculationError(
+                "DANA 2024 eligibility requires a validated registry authority",
+            )
+        dana_authority = _resolve_dana_2024_authority(authority=authority, effective_date=period.end_date)
     annual_by_id = {activity.orden_id: activity for activity in regimen_snapshot.orden.activities}
     activities = tuple(
         _calculate_no_agricultural_activity(
@@ -281,47 +276,40 @@ def _activity_provenance(
 class _DANA2024Authority:
     """Resolved DANA parameter with all legal/source provenance retained."""
 
-    def __init__(self, *, rate: Decimal) -> None:
+    def __init__(self, *, rate: Decimal, legal_refs: tuple[str, ...], source_refs: tuple[str, ...]) -> None:
         self.rate = rate
+        self.legal_refs = legal_refs
+        self.source_refs = source_refs
 
 
-def _resolve_dana_2024_authority(catalogues: RegistryCatalogues) -> _DANA2024Authority:
-    parameter = catalogues.parameters.get(_DANA_2024_PARAMETER_ID)
-    if parameter is None:
-        raise M303RegimenSimplificadoCalculationError("DANA 2024 IVA simplified-regime authority is unavailable")
-    _validate_dana_parameter_shape(parameter)
-    _validate_dana_provenance(catalogues)
-    return _DANA2024Authority(rate=_dana_rate(parameter.value))
-
-
-def _validate_dana_parameter_shape(parameter: LegalParameter) -> None:
-    if (
-        parameter.unit != "fraction"
-        or parameter.applies_to != "iva-regimen-simplificado"
-        or tuple(parameter.legal_refs) != _DANA_2024_PARAMETER_LEGAL_REFS
-    ):
-        raise M303RegimenSimplificadoCalculationError(
-            "DANA 2024 IVA simplified-regime authority is not the exact legal parameter",
-        )
-
-
-def _validate_dana_provenance(catalogues: RegistryCatalogues) -> None:
-    if any(reference not in catalogues.legal for reference in _DANA_2024_LEGAL_REFS):
-        raise M303RegimenSimplificadoCalculationError("DANA 2024 legal provenance is incomplete")
-    if any(reference not in catalogues.sources for reference in _DANA_2024_SOURCE_REFS):
-        raise M303RegimenSimplificadoCalculationError("DANA 2024 source provenance is incomplete")
-
-
-def _dana_rate(value: str) -> Decimal:
+def _resolve_dana_2024_authority(*, authority: ValidatedRegistryAuthority, effective_date: date) -> _DANA2024Authority:
     try:
-        rate = Decimal(value)
-    except InvalidOperation as exc:
-        raise M303RegimenSimplificadoCalculationError("DANA 2024 reduction rate is not a decimal") from exc
+        resolved = authority.resolve_governed_fact(
+            ScalarFactQuery(
+                fact_id=_DANA_2024_REDUCTION_FACT_ID,
+                date_axis=DateAxis.FILING_PERIOD,
+                effective_date=effective_date,
+            ),
+        )
+    except RegistryValidationError as exc:
+        raise M303RegimenSimplificadoCalculationError(
+            "DANA 2024 IVA simplified-regime authority is unavailable",
+        ) from exc
+    scalar = cast("ResolvedScalarFact", resolved)
+    if scalar.payload.unit != "fraction" or not isinstance(scalar.payload.value, Decimal):
+        raise M303RegimenSimplificadoCalculationError(
+            "DANA 2024 IVA simplified-regime authority is not the exact fraction",
+        )
+    rate = scalar.payload.value
     if not Decimal("0") < rate < Decimal("1"):
         raise M303RegimenSimplificadoCalculationError(
             "DANA 2024 reduction rate must be a fraction between zero and one",
         )
-    return rate
+    return _DANA2024Authority(
+        rate=rate,
+        legal_refs=tuple(scalar.legal_refs),
+        source_refs=tuple(scalar.source_refs),
+    )
 
 
 def _calculate_dana_2024_reduction(
@@ -341,8 +329,8 @@ def _calculate_dana_2024_reduction(
         rate=authority.rate,
         amount=round_to_cents(cuota_devengada * authority.rate) if eligibility.eligible else Decimal("0"),
         evidence_reference=eligibility.evidence_reference,
-        legal_refs=_DANA_2024_LEGAL_REFS,
-        source_refs=_DANA_2024_SOURCE_REFS,
+        legal_refs=authority.legal_refs,
+        source_refs=authority.source_refs,
     )
 
 

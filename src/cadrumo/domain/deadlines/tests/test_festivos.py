@@ -2,7 +2,7 @@
 
 Every test grounds its expected value in an external authority — either
 the BOE-published Resolución de fiestas laborales for that year (cited
-in the calendar TOML and re-cited inline here), the AEAT Calendario del
+by the governed holiday facts and re-cited inline here), the AEAT Calendario del
 Contribuyente shift rule, or a structural / wiring / error-path
 property. No test computes the expected adjusted date by re-applying
 the shift formula to a freshly-invented date.
@@ -13,8 +13,6 @@ The BOE-cited fixed dates used as anchors:
 * 2025-05-01 = Fiesta del Trabajo (Thursday; national).
 * 2025-11-01 = Todos los Santos (Saturday; national + weekend).
 * 2025-12-25 = Navidad (Thursday; national).
-* 2026-04-03 = Viernes Santo (national).
-* 2026-08-15 = Asunción (Saturday; national + weekend).
 * 2025-09-11 = Diada Nacional de Cataluña (CCAA ES-CT only).
 * 2025-02-28 = Día de Andalucía (CCAA ES-AN only).
 """
@@ -131,7 +129,7 @@ _SHIFT_DEADLINE_CASES = (
 
 
 def test_load_calendar_2025_returns_boe_anchored_year() -> None:
-    """The 2025 calendar TOML cites BOE-A-2024-22011 as its source."""
+    """The 2025 governed calendar facts cite BOE-A-2024-22011 as their source."""
 
     calendar = load_holiday_calendar(2025)
     assert calendar.year == 2025
@@ -162,7 +160,7 @@ def test_load_calendar_2025_separates_national_from_ccaa() -> None:
 
 
 def test_load_calendar_missing_year_raises_validation_error() -> None:
-    """A year with no registered TOML produces a recoverable error."""
+    """A year with no governed publication produces a recoverable error."""
 
     with pytest.raises(DeadlineValidationError, match=r"1999|year|calendar|range"):
         load_holiday_calendar(1999)
@@ -386,7 +384,7 @@ def test_no_parallel_festivos_implementation_exists() -> None:
 def test_no_hardcoded_festivos_table_in_cli() -> None:
     """The CLI tree must not embed a hardcoded calendar table. The
     ``entrypoints/cli/`` source tree owns no holiday list; the
-    calendar lives only under ``registry/aeat/calendars/``."""
+    calendar is resolved only through governed holiday facts."""
 
     from pathlib import Path
 
@@ -411,7 +409,7 @@ def test_no_hardcoded_festivos_table_in_cli() -> None:
         for needle in forbidden_dates:
             assert needle not in text, (
                 f"hardcoded festivos data detected in CLI file {py_file}: "
-                f"`{needle}`. Holiday data must live in "
-                f"`registry/aeat/calendars/` and reach the CLI through "
+                f"`{needle}`. Holiday data must live in governed facts and "
+                f"reach the CLI through "
                 f"`cadrumo.domain.deadlines`."
             )

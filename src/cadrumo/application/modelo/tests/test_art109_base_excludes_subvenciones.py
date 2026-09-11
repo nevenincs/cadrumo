@@ -25,7 +25,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.loader import load_shared_catalogues
+from dev.registry.compiler.fact_loader import load_governed_facts
 
 from ....core.concepto_ingreso import ConceptoIngreso
 from ....core.period import Period
@@ -107,9 +107,11 @@ def _coverage(*rows: Transaction):
     return derive_art109_activity_income_coverage(catalogue, period=_PERIOD)
 
 
-def _declared_concepts(parameter_id: str) -> frozenset[ConceptoIngreso]:
-    parameter = load_shared_catalogues(bundled_path("registry", "aeat")).parameters[parameter_id]
-    return frozenset(ConceptoIngreso(token.strip()) for token in parameter.value.split(",") if token.strip())
+def _declared_concepts(fact_id: str) -> frozenset[ConceptoIngreso]:
+    fact = next(
+        fact for fact in load_governed_facts(bundled_path("registry", "aeat", "facts")) if fact.fact_id == fact_id
+    )
+    return frozenset(ConceptoIngreso(token) for token in fact.variants[0].payload.entities)
 
 
 def test_the_two_provisions_disagree_on_exactly_one_concept() -> None:
@@ -148,15 +150,17 @@ def test_each_concept_lands_where_its_provision_puts_it(
     "excluded" would shrink the denominator and inflate the ratio, handing out
     exemptions nobody proved -- the under-declaration direction.
     """
-    assert counts_toward_art_109_activity_income(concepto) is art109
-    assert counts_toward_volumen_de_ingresos(concepto) is art110
+    assert counts_toward_art_109_activity_income(concepto, effective_date=_PERIOD.end_date) is art109
+    assert counts_toward_volumen_de_ingresos(concepto, effective_date=_PERIOD.end_date) is art110
 
 
 def test_the_registry_declares_the_set_the_predicate_applies() -> None:
     """Parity anchor: the exclusion is registry data, not a list living only in Python."""
-    from ....core.concepto_ingreso import INGRESO_CONCEPTS_OUTSIDE_THE_ART_109_BASE
-
-    assert _declared_concepts(_ART_109_CONCEPTS) == INGRESO_CONCEPTS_OUTSIDE_THE_ART_109_BASE
+    assert _declared_concepts(_ART_109_CONCEPTS) == {
+        ConceptoIngreso.SUBVENCION_CORRIENTE,
+        ConceptoIngreso.SUBVENCION_CAPITAL,
+        ConceptoIngreso.INDEMNIZACION,
+    }
 
 
 def test_the_exempt_activity_set_is_the_classes_art_109_names() -> None:

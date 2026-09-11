@@ -103,7 +103,7 @@ def test_simplified_regime_evidence_projects_real_nonnumbered_dp30302_fields() -
             rows=rows,
             regimen_snapshot=regimen_snapshot,
             dana_2024_eligibility=None,
-            catalogues=bundled_authority().catalogues,
+            authority=bundled_authority(),
         ),
     )
 
@@ -255,7 +255,7 @@ def test_every_declared_module_cuota_endpoint_selects_the_complete_typed_result(
             rows=rows,
             regimen_snapshot=regimen_snapshot,
             dana_2024_eligibility=None,
-            catalogues=bundled_authority().catalogues,
+            authority=bundled_authority(),
         ),
     )
     module_refs = tuple(

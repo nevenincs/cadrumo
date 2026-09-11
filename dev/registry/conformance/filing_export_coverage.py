@@ -22,7 +22,6 @@ from cadrumo.core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES
 from cadrumo.core.time.clock import now
 from cadrumo.core.time.utc import UtcInstant
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from ..compiler.corpus_catalogue import verify_source_file
 from cadrumo.domain.calculations.registry.errors import (
     RegistrySnapshotError,
     RegistryValidationError,
@@ -30,6 +29,8 @@ from cadrumo.domain.calculations.registry.errors import (
 from cadrumo.domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef, SourceReference
 
+from ..compiler.authority_state import source_root_for
+from ..compiler.corpus_catalogue import verify_source_file
 from ..export_proof import (
     FilingExportProofAssessment,
     FilingExportProofAuthority,
@@ -232,7 +233,7 @@ def _layout_byte_evidence(
     evidence: list[RegistryClosureEvidence] = []
     for source in sorted({source.id: source for source in sources}.values(), key=lambda item: item.id):
         try:
-            verify_source_file(authority.source_root, source)
+            verify_source_file(source_root_for(authority), source)
         except RegistryValidationError as exc:
             return (), _LayoutEvidenceFailure(reason="stale_evidence", detail=_failure_detail(exc))
         evidence.append(

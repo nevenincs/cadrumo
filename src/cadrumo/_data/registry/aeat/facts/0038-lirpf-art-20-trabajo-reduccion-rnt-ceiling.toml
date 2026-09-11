@@ -1,0 +1,20 @@
+[fact]
+fact_id = "lirpf-art-20-trabajo-reduccion-rnt-ceiling"
+family = "scalar"
+
+[[fact.variants]]
+variant_id = "lirpf-art-20-trabajo-reduccion-rnt-ceiling:2024-01-01"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+legal_refs = ["ley-35-2006:art-20"]
+source_refs = ["boe-lirpf-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-statutory-facts"
+required_text = ["19.747,5 euros"]
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "19747.50"
+unit = "eur"

@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 
 from ..apoderamientos import ApoderamientosRepository
-from ..iva_rate_tables import IvaRateTableRepository
 from ..recargo_bands import RecargoBandsRepository
 from ..topics import TopicCatalogueRepository
 
@@ -56,14 +55,4 @@ def test_recargo_bands_singleton_loads_real_tuple() -> None:
 
     assert isinstance(result, tuple)
     assert len(result) > 0
-    assert repo.singleton is result
-
-
-def test_iva_rate_table_singleton_loads_real_mapping() -> None:
-    repo = IvaRateTableRepository()
-
-    result = repo.singleton
-
-    assert result is not None
-    assert len(result) > 0  # at least one EU member state
     assert repo.singleton is result

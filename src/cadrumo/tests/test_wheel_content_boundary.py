@@ -47,6 +47,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _WHEEL_PREFIX = "cadrumo"
 _WHEEL_DATA_PREFIX = "cadrumo/_data"
 _WHEEL_CORPUS_PREFIX = f"{_WHEEL_DATA_PREFIX}/corpus/"
+_WHEEL_AUTHORITY_ARTIFACT = f"{_WHEEL_DATA_PREFIX}/registry/authority/authority.json"
+_WHEEL_AUTHORED_REGISTRY_PREFIX = f"{_WHEEL_DATA_PREFIX}/registry/aeat/"
 # Members the build backend places in an archive on its own behalf whatever the
 # project declares: its own generated metadata, and the version-control ignore
 # file hatchling ships so a rebuild from the archive reproduces. Both survive an
@@ -264,10 +266,19 @@ def test_wheel_keeps_corpus_derived_surfaces(wheel_members: frozenset[str]) -> N
 
 
 def test_wheel_keeps_registry_payload(wheel_members: frozenset[str]) -> None:
-    """Representative registry members still ship."""
+    """The built wheel carries only the published authority, never its authoring tree.
 
-    def _count(prefix: str) -> int:
-        return sum(1 for member in wheel_members if member.startswith(prefix))
+    This is deliberately an archive-level release gate: it exercises Hatch's
+    actual selection rules and detects both ways the boundary can regress.  A
+    missing signed artifact makes the product unusable, while a retained TOML
+    tree would make a future compiler fallback shippable again.
+    """
 
-    registry_count = _count(f"{_WHEEL_DATA_PREFIX}/registry/")
-    assert registry_count > 0, "the wheel ships no registry members; the split over-stripped the registry payload"
+    assert _WHEEL_AUTHORITY_ARTIFACT in wheel_members, (
+        "the built wheel has no signed runtime authority artifact; publication must complete before release"
+    )
+    authored_members = sorted(member for member in wheel_members if member.startswith(_WHEEL_AUTHORED_REGISTRY_PREFIX))
+    assert not authored_members, (
+        "the built wheel retains registry authoring input(s), which must stay development-only; "
+        f"first ten: {authored_members[:10]!r}"
+    )

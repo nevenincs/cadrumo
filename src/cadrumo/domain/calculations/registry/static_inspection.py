@@ -202,7 +202,12 @@ class RegistryRevisionInspection(RegistryModel):
     """The revision's declared not-applicable schema families and their
     grounding reason/legal_refs/source_refs -- classification metadata, not
     filing-grade content, so it stays in scope for a static inspection."""
-    source_root: Path
+    source_root: Path | None
+    """Development source root when the inspection was built by the compiler.
+
+    Published inspections intentionally carry no corpus root; runtime source
+    consumers must request an explicit signed projection instead.
+    """
     revision_source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
     sources: Mapping[SourceRefId, SourceReference]
     """The exact source catalogue slice exercised by this model/revision."""
@@ -240,7 +245,7 @@ class RegistryRevisionInspection(RegistryModel):
         *,
         modelo: ModeloDefinition,
         revision: ModeloRevision,
-        source_root: Path,
+        source_root: Path | None,
         sources: Mapping[SourceRefId, SourceReference],
         legal_ref_ids: frozenset[LegalRefId],
     ) -> RegistryRevisionInspection:

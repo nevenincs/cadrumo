@@ -15,7 +15,7 @@ from cadrumo.domain.calculations.registry.schema_surfaces import (
     CasillaContinuidadEvolutionDefinition,
     CasillaDefinition,
 )
-from cadrumo.domain.calculations.registry.tests._referential_integrity_support import (
+from dev.registry.tests._referential_integrity_support import (
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,
     ValidationError,

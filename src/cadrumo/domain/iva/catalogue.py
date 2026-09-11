@@ -18,7 +18,6 @@ from collections.abc import Mapping
 from datetime import date
 from functools import lru_cache
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
@@ -27,12 +26,8 @@ from ...core.resources.bundled_data import bundled_path
 from ...core.toml import read_toml
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ...core.validity_window import years_covered_by_every_group
-from ._grounding import legal_evidence_fingerprints, registry_catalogues
 from .errors import IvaCatalogueError
 from .schema import IvaCatalogue, IvaCategory, IvaCitation, IvaRegulation
-
-if TYPE_CHECKING:
-    from ..calculations.registry.schema_references import LegalReference
 
 
 def load_iva_catalogue(
@@ -48,20 +43,7 @@ def load_iva_catalogue(
         stat = resolved.stat()
     except OSError as exc:
         raise IvaCatalogueError(f"{resolved}: cannot stat IVA catalogue: {exc}") from exc
-    parsed = _load_iva_catalogue_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
-    legal, _sources, loaded_source_root = registry_catalogues()
-    evidence_fingerprints = legal_evidence_fingerprints(
-        (citation.legal_reference for regulation in parsed for citation in regulation.citations),
-        legal=legal,
-        source_root=loaded_source_root,
-    )
-    return _load_verified_iva_catalogue_cached(
-        str(resolved),
-        stat.st_size,
-        stat.st_mtime_ns,
-        str(loaded_source_root),
-        evidence_fingerprints,
-    )
+    return _load_verified_iva_catalogue_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
 
 
 @lru_cache(maxsize=32)
@@ -97,14 +79,10 @@ def _load_verified_iva_catalogue_cached(
     path: str,
     byte_count: int,
     modified_ns: int,
-    source_root: str,
-    evidence_fingerprints: tuple[tuple[str, ...], ...],
 ) -> IvaCatalogue:
     """Return a parsed catalogue only after its cited evidence cache key is green."""
-    del evidence_fingerprints
     catalogue = _load_iva_catalogue_cached(path, byte_count, modified_ns)
-    legal, _sources, loaded_source_root = registry_catalogues()
-    _require_verified_catalogue(catalogue, target=Path(path), legal=legal, source_root=loaded_source_root)
+    _require_verified_catalogue(catalogue, target=Path(path))
     return catalogue
 
 
@@ -112,8 +90,6 @@ def _require_verified_catalogue(
     catalogue: IvaCatalogue,
     *,
     target: Path,
-    legal: Mapping[str, LegalReference],
-    source_root: Path,
 ) -> None:
     """Refuse a parsed catalogue whose legal evidence fails cross-record review."""
     # Keep the verifier import local.  Its legal-catalogue access is deliberately
@@ -121,7 +97,7 @@ def _require_verified_catalogue(
     # catalogue and must not construct the full validated registry authority.
     from .verify import verify_catalogue_against_legal
 
-    report = verify_catalogue_against_legal(catalogue, legal=legal, source_root=source_root)
+    report = verify_catalogue_against_legal(catalogue)
     if report.ok:
         return
     failures = "\n".join(f" - [{issue.category_id}] {issue.code}: {issue.message}" for issue in report.errors)

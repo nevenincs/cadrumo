@@ -3,7 +3,7 @@
 ``WorkIncomeRetencionTreatment`` carries only the STRUCTURAL fact of which
 procedure a scheme follows (personalised progressive vs fixed statutory rate);
 the fixed-rate VALUES themselves are registry data covered by
-``domain/transactions/tests/test_administrador_retencion_parameters.py``, not
+``domain/transactions/tests/test_administrador_retencion_facts.py``, not
 here (``aeat-registry-authority-flow``: this ``core`` layer is imported BY the
 registry schema and must not import back from it).
 """

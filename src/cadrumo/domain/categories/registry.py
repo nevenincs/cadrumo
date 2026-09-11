@@ -28,11 +28,10 @@ if TYPE_CHECKING:
     from ..calculations.registry.authority import ValidatedRegistryAuthority
 CATEGORY_PROFILE_FACT_ID = "categories.profile"
 CATEGORY_STATUTORY_CAP_FACT_ID = "categories.statutory-cap"
-CATEGORY_FACT_PROVIDER_ID = "category-profiles"
-CATEGORY_FACT_PROVIDER_DIRECTORY = "categories"
 
 
 def load_category_profiles() -> Mapping[SpendingCategory, CategoryProfile]:
+    """Return profiles for the latest year fully covered by the authority."""
     years = category_profile_years()
     if not years:
         raise CategoryValidationError("installed authority has no complete category profile coverage")
@@ -40,6 +39,7 @@ def load_category_profiles() -> Mapping[SpendingCategory, CategoryProfile]:
 
 
 def category_profile_years() -> frozenset[int]:
+    """Return filing years fully covered by every authored category profile."""
     from ..calculations.registry.authority import bundled_authority
 
     fact = bundled_authority().catalogues.facts.facts.get(CATEGORY_PROFILE_FACT_ID)
@@ -54,6 +54,7 @@ def category_profile_years() -> frozenset[int]:
 
 
 def resolve_category_profiles(year: int) -> Mapping[SpendingCategory, CategoryProfile]:
+    """Resolve every category profile for one exact filing year."""
     from ..calculations.registry.authority import bundled_authority
 
     authority = bundled_authority()
@@ -133,8 +134,6 @@ def _profile_from_authority_fact(
 
 
 __all__ = [
-    "CATEGORY_FACT_PROVIDER_DIRECTORY",
-    "CATEGORY_FACT_PROVIDER_ID",
     "CATEGORY_PROFILE_FACT_ID",
     "CATEGORY_STATUTORY_CAP_FACT_ID",
     "category_profile_years",

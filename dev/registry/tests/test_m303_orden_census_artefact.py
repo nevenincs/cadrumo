@@ -28,7 +28,7 @@ from shutil import copyfile
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry import m303_orden_manifest
+from dev.registry.compiler import m303_orden_manifest
 from dev.registry.compiler._m303_orden_raw_models import M303AnnualOrdenSourceCensus
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.ids import SourceRefId

@@ -1,0 +1,120 @@
+"""An empty Dise�o pair set is no evidence, and that premise is checked rather than assumed.
+
+``derive_calculation_completeness_casillas`` refuses a casilla pinned to a
+segmento the AEAT Dise�o does not carry it under. That refusal is suppressed
+when the design yields NO ``(sheet, number)`` pairs at all, because refusing
+from an empty set asserts absence out of ignorance.
+
+The suppression is sound only while its premise holds: that the design really
+prints no bracketed casilla tags, rather than the parser having failed to read
+the ones it prints. That premise is an implicit allowlist entry, and nothing
+made it fail when it went stale. This module is that missing half.
+
+Modelo 184 is the case the tolerance was written for. Its two designs read
+WHOLE -- three sheets each, nothing skipped -- and still carry zero bracketed
+tags, so the emptiness is a fact about AEAT's document and not about this
+parser. If a future parser improvement starts recovering tags from these
+designs, the tolerance stops applying to them, and the second test states what
+then has to be confronted: modelo 184's segmentos are registry slugs that name
+no sheet in its own design, so every declared casilla would refuse at once.
+
+THAT REFUSAL WOULD BE THE MATCH'S DEFECT, NOT THE REGISTRY'S, and the remedy is
+not to re-slug the segmentos. :mod:`test_modelo_184_segmento_claims_resolve_by_position`
+proves every one of modelo 184's segmento-bearing claims against the design on the
+axis its completeness manifest actually uses -- ``number`` here is a design POSITION,
+not a box number -- and finds each one landing exactly, on exactly one of the two
+Tipo 2 records, in both published editions. The assignments are correct; only the
+sheet-name comparison cannot see them. So the day tags appear, the fix is to match
+the claim where the manifest already states it, and renaming the slugs to equal
+parser-derived truncations of AEAT's headings would trade a provable assignment for
+an extraction artefact.
+"""
+
+from __future__ import annotations
+# Development-only record-design corpus gate.
+
+import re
+
+import pytest
+
+from cadrumo.core.resources.bundled_data import bundled_path
+from dev.registry.compiler.record_design import extract_record_design
+from dev.registry.tests._registry_schema_support import _committed_registry_tree
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_MODELO_184_DESIGNS = (
+    "02-184-orden-hap-2250-2015-actualizado-por-orden-hfp-1284-2023-de-28-de-noviembre-263-kb-pdf.pdf",
+    "01-184-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1430-2025-de-3-de-diciembre-365-kb.pdf",
+)
+
+_TAG = re.compile(r"\[(\d+)\]")
+
+
+def _design(name: str):
+    return extract_record_design(
+        bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_184", "files", name),
+    )
+
+
+@pytest.mark.parametrize("name", _MODELO_184_DESIGNS)
+def test_the_design_is_read_whole_yet_prints_no_casilla_tags(name: str) -> None:
+    """The premise behind the tolerance, stated as two facts that must hold together.
+
+    Read whole AND silent on tags. Either alone would be misleading: a design
+    that yielded no tags because it could not be read would be a parser gap
+    wearing the tolerance as a disguise.
+    """
+    extraction = _design(name)
+
+    assert not extraction.skipped, [(sheet.name, sheet.reason) for sheet in extraction.skipped]
+    assert extraction.sheets, "the design produced no sheets at all"
+
+    tags = [
+        number
+        for sheet in extraction.sheets
+        for field in sheet.fields
+        for text in (field.description, field.validation, field.content)
+        if text
+        for number in _TAG.findall(text)
+    ]
+
+    assert tags == [], f"the design now prints casilla tags, so the evidence tolerance no longer applies: {tags[:8]}"
+
+
+def test_this_modelo_s_segmentos_name_no_sheet_in_its_own_design() -> None:
+    """What the tolerance is currently standing in front of.
+
+    The refusal matches a segmento against a design SHEET NAME. Modelo 184's
+    segmentos are registry slugs -- ``184-2-entidad`` -- while its design names
+    the same record ``Tipo 2 - Registro De Rentas De La ...``. So the match
+    would fail for every casilla, not just a misplaced one.
+
+    Pinned as the current state rather than fixed here: the sheet names are
+    parser-derived truncations of AEAT's headings, so making the slugs equal
+    them would pin the registry to an extraction artefact. What the assignment
+    IS proven against is position, in
+    :mod:`test_modelo_184_segmento_claims_resolve_by_position`, so this failure
+    is already explained and already answered -- it records that the name axis
+    is blind here, not that the registry is wrong.
+    """
+    modelos, _ = _committed_registry_tree()
+    modelo = next(candidate for candidate in modelos if candidate.id == "184")
+    segmentos = {
+        casilla.segmento for revision in modelo.revisions.values() for casilla in revision.casillas if casilla.segmento
+    }
+    assert segmentos, "modelo 184 declares no segmentos, so this module is testing nothing"
+
+    sheet_names = {sheet.name for name in _MODELO_184_DESIGNS for sheet in _design(name).sheets}
+
+    matched = {
+        segmento
+        for segmento in segmentos
+        for sheet_name in sheet_names
+        if segmento == sheet_name or sheet_name.startswith(f"{segmento} ")
+    }
+
+    assert matched == set(), (
+        f"a segmento now names a design sheet, so the segmento-to-sheet match is live "
+        f"for modelo 184 and this module's premise has changed: {sorted(matched)}"
+    )

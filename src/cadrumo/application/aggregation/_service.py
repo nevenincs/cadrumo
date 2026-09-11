@@ -38,10 +38,10 @@ from ._counterpart import (
     aggregate_counterpart_349,
 )
 from ._foreign_assets import ForeignAssetIngestObservation, ForeignAssetsAggregation, aggregate_foreign_assets_720
-from ._modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from ._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
 from ._retenciones import RetencionesAggregation, RetencionObservation
 from .errors import AggregationConfigError, AggregationUnsupportedModeloError, t
+from .modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.schema import DataBindingDefinition, ModeloDefinition

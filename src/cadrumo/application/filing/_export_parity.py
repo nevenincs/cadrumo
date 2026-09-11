@@ -197,8 +197,8 @@ def boe_representable_casilla_ids(
     if layout.format is ExportLayoutFormat.XML_DICTIONARY:
         entries = xml_dictionary_entries(
             layout,
-            source_root=schema_provider.source_root,
             sources=schema_provider.sources,
+            source_payloads=schema_provider.source_payloads,
         )
         return frozenset(entry.casilla_id for entry in entries if entry.casilla_id is not None)
     return fixed_width_record_casilla_ids(

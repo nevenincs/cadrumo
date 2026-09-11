@@ -31,8 +31,8 @@ from pathlib import Path
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.record_design import extract_record_design
-from cadrumo.domain.calculations.registry.record_design_pdf_visual import extract_pdf_text_lines
+from ..compiler.record_design import extract_record_design
+from ..compiler.record_design_pdf_visual import extract_pdf_text_lines
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from dev.registry.compiler.authority import compiled_bundled_authority
 

@@ -329,8 +329,8 @@ def test_iva_rate_zero_resolves_outside_the_food_window_because_zero_rating_outl
     while the CLI still offered the slot. Intra-community supplies (art. 25) sit
     in the same position.
 
-    The root cause is that ``rates.toml`` models only the food window on the flat
-    ``kind = "zero"`` axis, and says so itself: the art. 91.Cuatro tipo is left
+    The root cause is that the authored rate schedule models only the food
+    window on the flat ``kind = "zero"`` axis: the art. 91.Cuatro tipo is left
     unregistered because a flat record cannot be bounded to donativos. Export and
     intra-EU zero-rating are likewise not expressible there. So the absence of a
     zero record means "this registry cannot say", and testing in-force against a

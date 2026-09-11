@@ -32,7 +32,7 @@ phantom gates go red; if it merged the two reasons the split gate goes red; and
 if it promoted the profile hint into a filter, the no-profile gate goes red.
 
 The expected figures are invoice arithmetic (declared gross minus declared cash)
-and the statutory RIRPF art. 95 rates read from the registry parameter catalogue,
+and the statutory RIRPF art. 95 rates read from governed facts,
 not the output of any formula under test.
 """
 
@@ -50,7 +50,7 @@ from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....domain.transactions.retencion_parameters import (
+from ....domain.transactions.retencion_facts import (
     load_retencion_actividades_rates,
     statutory_activity_retencion_rates,
 )

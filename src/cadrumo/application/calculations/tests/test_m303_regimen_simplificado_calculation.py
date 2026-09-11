@@ -97,7 +97,7 @@ def test_2024_annual_dana_reduces_each_eligible_activity_once_from_bundled_autho
         rows=rows,
         regimen_snapshot=snapshot,
         dana_2024_eligibility=eligibility,
-        catalogues=bundled_authority().catalogues,
+        authority=bundled_authority(),
     )
 
     activity = result.activities[0]
@@ -125,7 +125,7 @@ def test_2024_annual_dana_reduces_each_eligible_activity_once_from_bundled_autho
         rows=rows,
         regimen_snapshot=snapshot,
         dana_2024_eligibility=eligibility,
-        catalogues=bundled_authority().catalogues,
+        authority=bundled_authority(),
     )
 
 
@@ -144,5 +144,5 @@ def test_dana_eligibility_is_refused_outside_the_2024_annual_result() -> None:
             rows=rows,
             regimen_snapshot=snapshot,
             dana_2024_eligibility=eligibility,
-            catalogues=bundled_authority().catalogues,
+            authority=bundled_authority(),
         )

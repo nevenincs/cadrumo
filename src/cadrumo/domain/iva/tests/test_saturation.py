@@ -5,8 +5,8 @@ resolution against the registry rate authority, and the not-derivable
 surfacing for every non-domestic category) and
 :func:`cadrumo.domain.iva.split_gross_at_rate` (the inverse gross→base/IVA split
 with AEAT half-up rounding). Expected rate fractions are asserted against the
-grounded ``rates.toml`` values (Spain general 21 / reduced 10 / super-reduced 4
-/ zero 0), not hand-computed from a formula under test.
+grounded authored rate-schedule fact (Spain general 21 / reduced 10 /
+super-reduced 4 / zero 0), not hand-computed from a formula under test.
 
 Authority: ``llm-ledger-classification-design``.
 """

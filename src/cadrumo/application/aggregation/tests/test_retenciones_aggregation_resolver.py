@@ -25,12 +25,12 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ....tests.secure_sql import isolated_runtime_profile
-from .._modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from .._preconditions import AggregationPreconditionCondition
 from .._retencion_observations_repository import RetencionObservationRepository
 from .._retenciones import RetencionObservation, RetencionScheme
 from .._source_mesh import CalculationSourceContext
 from ..errors import AggregationValidationError
+from ..modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -48,6 +48,16 @@ _M111_BINDING_VALUES = {
     "modelo-111-premios-dinerario-base": Decimal("400.00"),
     "modelo-111-premios-dinerario-retenciones": Decimal("40.00"),
 }
+
+
+@pytest.mark.parametrize("modelo", ("111", "115", "123", "180", "190", "193"))
+def test_public_retenciones_resolver_owns_each_retenciones_modelo(modelo: str) -> None:
+    """The public aggregation owner, not an entrypoint tuple, classifies retenciones modelos."""
+    assert RetencionesAggregationSourceResolver.supports_modelo(modelo)
+
+
+def test_public_retenciones_resolver_rejects_non_retenciones_modelos() -> None:
+    assert not RetencionesAggregationSourceResolver.supports_modelo("303")
 
 
 @cache

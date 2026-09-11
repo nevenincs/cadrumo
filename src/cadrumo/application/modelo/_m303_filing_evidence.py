@@ -145,7 +145,7 @@ def _validate_m303_simplified_filing_evidence(
         rows=regimen.rows,
         regimen_snapshot=regimen.regimen_snapshot,
         dana_2024_eligibility=regimen.dana_2024_eligibility,
-        catalogues=bundled_authority().catalogues,
+        authority=bundled_authority(),
     )
     if regimen.calculation_result != expected_result:
         raise M303FilingEvidenceError(

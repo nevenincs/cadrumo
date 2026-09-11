@@ -1,0 +1,20 @@
+[fact]
+fact_id = "rebeca-maritime-exemption-fraction"
+family = "scalar"
+
+[[fact.variants]]
+variant_id = "rebeca-maritime-exemption-fraction:1994-07-08"
+date_axis = "devengo_date"
+valid_from = 1994-07-08
+legal_refs = ["ley-19-1994:art-75"]
+source_refs = ["boe-ley-19-1994-art-75-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-ley-19-1994-art-75-statutory-facts"
+required_text = ["renta exenta el 50 por 100"]
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "0.50"
+unit = "ratio"

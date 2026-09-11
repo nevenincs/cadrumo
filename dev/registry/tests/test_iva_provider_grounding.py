@@ -7,8 +7,8 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
+from dev.registry.compiler.fact_loader import load_governed_facts
 from dev.registry.compiler.fact_validation import governed_fact_catalogue_failures
-from dev.registry.compiler.iva import compile_iva_rate_facts, compile_iva_recargo_facts
 from dev.registry.compiler.loader import load_shared_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -35,13 +35,21 @@ def _grounding_failures(
 
 def test_iva_and_recargo_provider_facts_are_grounded_by_registry_evidence() -> None:
     root = bundled_path("registry", "aeat")
-    facts = (*compile_iva_rate_facts(root), *compile_iva_recargo_facts(root))
+    facts = tuple(
+        fact
+        for fact in load_governed_facts(root / "facts")
+        if fact.fact_id in {"iva-rate-schedule", "iva-recargo-by-applied-rate"}
+    )
 
     assert _grounding_failures(GovernedFactCatalogue(facts={fact.fact_id: fact for fact in facts})) == ()
 
 
 def test_iva_provider_validation_rejects_source_citation_text_not_in_evidence() -> None:
-    (fact,) = compile_iva_rate_facts(bundled_path("registry", "aeat"))
+    fact = next(
+        fact
+        for fact in load_governed_facts(bundled_path("registry", "aeat", "facts"))
+        if fact.fact_id == "iva-rate-schedule"
+    )
     foreign_index = next(index for index, variant in enumerate(fact.variants) if variant.source_citations)
     foreign = fact.variants[foreign_index]
     broken_citations = tuple(
@@ -58,7 +66,11 @@ def test_iva_provider_validation_rejects_source_citation_text_not_in_evidence() 
 
 
 def test_recargo_provider_validation_rejects_legal_text_not_in_anchored_corpus() -> None:
-    (fact,) = compile_iva_recargo_facts(bundled_path("registry", "aeat"))
+    fact = next(
+        fact
+        for fact in load_governed_facts(bundled_path("registry", "aeat", "facts"))
+        if fact.fact_id == "iva-recargo-by-applied-rate"
+    )
     catalogue = GovernedFactCatalogue(facts={fact.fact_id: fact})
     shared = load_shared_catalogues(bundled_path("registry", "aeat"))
     ref_id = "ley-37-1992:art-161"

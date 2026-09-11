@@ -1,0 +1,45 @@
+[fact]
+fact_id = "deadlines.holiday-calendar-publication"
+family = "event"
+
+[[fact.variants]]
+variant_id = "holiday-calendar-publication:2024"
+date_axis = "submission_date"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2024"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2024"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2024-01-01
+event_code = "holiday_calendar_published"
+outputs = [
+  { name = "boe_ref", value = "boe-resolucion-festivos-2024" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2023-21965" },
+]
+
+[[fact.variants]]
+variant_id = "holiday-calendar-publication:2025"
+date_axis = "submission_date"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+legal_refs = ["ley-39-2015:art-30.5"]
+source_refs = ["aeat-calendario-contribuyente-2025"]
+review_status = "pending_review"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-calendario-contribuyente-2025"
+required_text = ["Calendario del contribuyente"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2025-01-01
+event_code = "holiday_calendar_published"
+outputs = [
+  { name = "boe_ref", value = "boe-resolucion-festivos-2025" },
+  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-22011" },
+]

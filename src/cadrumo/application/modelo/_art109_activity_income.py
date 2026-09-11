@@ -270,6 +270,7 @@ def _current_period_income_contribution(
         return None, None
     if activity in net_of_subvenciones_activities and not counts_toward_art_109_activity_income(
         transaction.concepto_ingreso,
+        effective_date=period.end_date,
     ):
         # Apartados 3 and 4 measure the 70 per cent net of subvenciones and
         # indemnizaciones. A subsidy carries no retencion, so leaving it in the

@@ -1,9 +1,8 @@
-"""Read-only IVA rate registry.
+"""Read-only IVA rate projections from the published registry authority.
 
-:func:`load_iva_rate_table` validates committed rate TOML into mappings from
-:class:`EUMemberState` to dated :class:`IvaRateRecord` windows partitioned by
-:class:`IvaRateKind`, rejecting same-kind overlaps with
-:class:`IvaRateOverlapError`.
+:func:`load_iva_rate_table` projects the signed ``iva-rate-schedule`` fact
+into mappings from :class:`EUMemberState` to dated :class:`IvaRateRecord`
+windows partitioned by :class:`IvaRateKind`.  It does not read authoring TOML.
 """
 
 from __future__ import annotations
@@ -16,7 +15,6 @@ from ..calculations.registry.facts.resolution import ResolvedMappingFact
 from .errors import IvaCatalogueError
 from .schema import EUMemberState, IvaRateKind, IvaRateRecord
 
-IVA_RATE_PROVIDER_ID = "iva-rate-schedule"
 IVA_RATE_FACT_ID = "iva-rate-schedule"
 """Jurisdictions that must carry rate rows.
 
@@ -75,7 +73,6 @@ def iva_rate_record_from_fact(resolved: ResolvedMappingFact) -> IvaRateRecord:
 
 __all__ = [
     "IVA_RATE_FACT_ID",
-    "IVA_RATE_PROVIDER_ID",
     "iva_rate_record_from_fact",
     "load_iva_rate_table",
 ]

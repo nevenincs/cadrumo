@@ -5,6 +5,7 @@ from __future__ import annotations
 from functools import cache
 from typing import TYPE_CHECKING
 
+from dev.registry.compiler.fact_providers import compile_registered_fact_providers
 from dev.registry.compiler.loader import load_registry_tree
 
 from ..core.resources.bundled_data import bundled_path
@@ -42,7 +43,14 @@ def bundled_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatal
     Returns:
         The compiled modelos and the shared registry catalogues.
     """
-    return load_registry_tree(bundled_path("registry", "aeat"))
+    registry_root = bundled_path("registry", "aeat")
+    modelos, catalogues = load_registry_tree(registry_root)
+    return (
+        modelos,
+        catalogues.model_copy(
+            update={"facts": compile_registered_fact_providers(registry_root, modelos=modelos)},
+        ),
+    )
 
 
 __all__ = ["bundled_registry_tree"]

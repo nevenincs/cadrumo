@@ -1,0 +1,108 @@
+[fact]
+fact_id = "categories.statutory-cap"
+family = "scalar"
+
+[[fact.variants]]
+variant_id = "categories.statutory-cap:mutualidad_alternativa:2022"
+selectors = [
+  { name = "category", value = "mutualidad_alternativa" },
+]
+date_axis = "filing_period"
+valid_from = 2022-01-01
+valid_to = 2022-12-31
+legal_refs = ["ley-35-2006:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["tendrán la consideración de gasto deducible las cantidades abonadas en virtud de contratos de seguro, concertados con mutualidades de previsión social por profesionales no integrados en el régimen especial de la Seguridad Social"]
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "14057.40"
+unit = "eur"
+
+[[fact.variants]]
+variant_id = "categories.statutory-cap:mutualidad_alternativa:2023"
+selectors = [
+  { name = "category", value = "mutualidad_alternativa" },
+]
+date_axis = "filing_period"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+legal_refs = ["ley-35-2006:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["tendrán la consideración de gasto deducible las cantidades abonadas en virtud de contratos de seguro, concertados con mutualidades de previsión social por profesionales no integrados en el régimen especial de la Seguridad Social"]
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "15266.72"
+unit = "eur"
+
+[[fact.variants]]
+variant_id = "categories.statutory-cap:mutualidad_alternativa:2024"
+selectors = [
+  { name = "category", value = "mutualidad_alternativa" },
+]
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+legal_refs = ["ley-35-2006:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["tendrán la consideración de gasto deducible las cantidades abonadas en virtud de contratos de seguro, concertados con mutualidades de previsión social por profesionales no integrados en el régimen especial de la Seguridad Social"]
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "16030.82"
+unit = "eur"
+
+[[fact.variants]]
+variant_id = "categories.statutory-cap:mutualidad_alternativa:2025"
+selectors = [
+  { name = "category", value = "mutualidad_alternativa" },
+]
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+legal_refs = ["ley-35-2006:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["tendrán la consideración de gasto deducible las cantidades abonadas en virtud de contratos de seguro, concertados con mutualidades de previsión social por profesionales no integrados en el régimen especial de la Seguridad Social"]
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "16672.66"
+unit = "eur"
+
+[[fact.variants]]
+variant_id = "categories.statutory-cap:mutualidad_alternativa:2026"
+selectors = [
+  { name = "category", value = "mutualidad_alternativa" },
+]
+date_axis = "filing_period"
+valid_from = 2026-01-01
+valid_to = 2026-12-31
+legal_refs = ["ley-35-2006:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["tendrán la consideración de gasto deducible las cantidades abonadas en virtud de contratos de seguro, concertados con mutualidades de previsión social por profesionales no integrados en el régimen especial de la Seguridad Social"]
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "17323.68"
+unit = "eur"

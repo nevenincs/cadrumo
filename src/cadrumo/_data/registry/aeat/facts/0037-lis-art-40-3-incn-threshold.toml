@@ -1,0 +1,20 @@
+[fact]
+fact_id = "lis-art-40-3-incn-threshold"
+family = "scalar"
+
+[[fact.variants]]
+variant_id = "lis-art-40-3-incn-threshold:2015-01-01"
+date_axis = "filing_period"
+valid_from = 2015-01-01
+legal_refs = ["ley-27-2014:art-40-3"]
+source_refs = ["boe-lis-art-40-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-lis-art-40-statutory-facts"
+required_text = ["6 millones de euros durante los 12 meses anteriores"]
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "6000000"
+unit = "eur"

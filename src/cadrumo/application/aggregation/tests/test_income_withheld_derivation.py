@@ -19,7 +19,7 @@ break in a way that silently changes a declared figure:
 
 Withholding figures here are invoice arithmetic (declared gross minus declared
 cash), not the output of a registry formula under test. The 15 % bound is read
-from the registry parameter rather than restated.
+from the governed fact rather than restated.
 """
 
 from __future__ import annotations
@@ -36,7 +36,7 @@ from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....domain.transactions.retencion_parameters import maximum_supported_activity_retencion_rate
+from ....domain.transactions.retencion_facts import maximum_supported_activity_retencion_rate
 from .._renta_income_evidence import income_withheld_amount as income_withheld_amount
 from .._renta_income_ledger import RentaIncomeObservation, aggregate_renta_income_ledger
 

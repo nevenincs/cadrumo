@@ -8,7 +8,6 @@ them against a :class:`RegistrySnapshot`. The resolved layout is a
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from pathlib import Path
 from typing import Literal
 
 from ....core.aggregation import BindingAggregationOp
@@ -236,8 +235,8 @@ def fixed_width_record_casilla_ids(records: Sequence[ExportRecordDefinition]) ->
 def clasificar_casillas_oficiales(
     revision: ModeloRevision,
     *,
-    source_root: Path | None = None,
     sources: Mapping[str, SourceReference] | None = None,
+    source_payloads: Mapping[str, bytes] | None = None,
 ) -> Mapping[CasillaId, EstadoCasillaOficial]:
     """Classify every revision casilla by its official export representation.
 
@@ -249,13 +248,13 @@ def clasificar_casillas_oficiales(
     remaining casillas are explicitly undefined.
 
     XML dictionaries are external registry evidence. A revision containing one
-    therefore requires the validated source root and catalogue rather than
+    therefore requires the signed source projection and catalogue rather than
     silently treating an unavailable dictionary as an undefined export surface.
     """
     addressed, has_binding_fields = _canales_representacion_casillas_oficiales(
         revision,
-        source_root=source_root,
         sources=sources,
+        source_payloads=source_payloads,
     )
     return {
         casilla.id: _estado_casilla_oficial(
@@ -271,8 +270,8 @@ def clasificar_casillas_oficiales(
 def _canales_representacion_casillas_oficiales(
     revision: ModeloRevision,
     *,
-    source_root: Path | None,
     sources: Mapping[str, SourceReference] | None,
+    source_payloads: Mapping[str, bytes] | None,
 ) -> tuple[set[CasillaId], bool]:
     """Resolve the direct-address and binding-representation channels in layout order."""
     addressed: set[CasillaId] = set()
@@ -285,7 +284,11 @@ def _canales_representacion_casillas_oficiales(
         if layout.format is ExportLayoutFormat.XML_DICTIONARY:
             addressed.update(
                 entry.casilla_id
-                for entry in xml_dictionary_entries(layout, source_root=source_root, sources=sources)
+                for entry in xml_dictionary_entries(
+                    layout,
+                    sources=sources,
+                    source_payloads=source_payloads,
+                )
                 if entry.casilla_id is not None
             )
     # A typed numbered endpoint addresses the official casilla even before the

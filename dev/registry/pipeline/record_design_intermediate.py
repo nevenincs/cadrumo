@@ -36,7 +36,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import SourceRefId
-from cadrumo.domain.calculations.registry.record_design import extract_record_design
+from ..compiler.record_design import extract_record_design
 from cadrumo.domain.calculations.registry.record_design_schema import (
     AUXILIARY_ENVELOPE_HEADER_LENGTHS,
     AUXILIARY_ENVELOPE_HEADER_ORDINALS,

@@ -17,7 +17,7 @@ from cadrumo.domain.calculations.registry.binding_selector_utils import (
     binding_export_selector,
 )
 from cadrumo.domain.calculations.registry.export import resolve_export_layout
-from cadrumo.domain.calculations.registry.record_design import (
+from ..compiler.record_design import (
     extract_record_design,
     extract_record_design_pdf,
 )

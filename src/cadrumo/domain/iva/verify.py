@@ -16,10 +16,10 @@ already performs:
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ...core.citation_grounding import CitationGrounding
+from ...core.corpus_text import normalise_corpus_text
 from ...core.errors.severity import BaseSeverity
 from ...core.logging import get_logger
 from .schema import (
@@ -30,22 +30,19 @@ from .schema import (
     IvaVerificationReport,
 )
 
-if TYPE_CHECKING:
-    from collections.abc import Mapping
-
-    from ..calculations.registry.ids import LegalRefId
-    from ..calculations.registry.schema_references import LegalReference
-
 _logger = get_logger(__name__)
+
+if TYPE_CHECKING:
+    from ..calculations.registry.authority import ValidatedRegistryAuthority
 
 
 def verify_catalogue_against_legal(
     catalogue: IvaCatalogue,
-    *,
-    legal: Mapping[LegalRefId, LegalReference],
-    source_root: Path,
 ) -> IvaVerificationReport:
-    """Verify one catalogue against already-loaded cycle-safe legal evidence."""
+    """Verify one catalogue against signed, published legal evidence."""
+    from ..calculations.registry.authority import bundled_authority
+
+    authority = bundled_authority()
     issues: list[IvaVerificationIssue] = []
     present = set(catalogue.regulations.keys())
     missing = [member for member in IvaCategory if member not in present]
@@ -74,8 +71,7 @@ def verify_catalogue_against_legal(
                 _citation_issues(
                     citation,
                     category_id=regulation.category.value,
-                    legal=legal,
-                    source_root=source_root,
+                    authority=authority,
                 ),
             )
     _logger.debug("verify_catalogue_against_legal produced %d issue(s)", len(issues))
@@ -86,8 +82,7 @@ def _citation_issues(
     citation: IvaCitation,
     *,
     category_id: str,
-    legal: Mapping[LegalRefId, LegalReference],
-    source_root: Path,
+    authority: ValidatedRegistryAuthority,
 ) -> list[IvaVerificationIssue]:
     """Run every registry and corpus check for one citation, in refusal order.
 
@@ -96,8 +91,6 @@ def _citation_issues(
     citation's remaining checks, which would otherwise report a second failure
     caused solely by the first.
     """
-    from ..calculations.registry.legal import legal_reference_quotes_corpus, verify_legal_reference
-
     issues: list[IvaVerificationIssue] = []
     # An UNRESOLVED citation is empty by design: it was read against
     # the corpus and refused, and its reason is recorded beside it.
@@ -112,6 +105,7 @@ def _citation_issues(
                 category_id=category_id,
             ),
         )
+    legal = authority.catalogues.legal
     reference = legal.get(citation.legal_reference)
     if reference is None:
         issues.append(
@@ -136,7 +130,7 @@ def _citation_issues(
         )
         return issues
     try:
-        verify_legal_reference(reference, source_root=source_root)
+        authority.legal_evidence_text(citation.legal_reference)
     except Exception as exc:
         issues.append(
             IvaVerificationIssue(
@@ -153,10 +147,8 @@ def _citation_issues(
     if citation.grounding is not CitationGrounding.VERIFIED:
         return issues
     try:
-        quoted = legal_reference_quotes_corpus(
-            reference,
-            citation.quoted_text,
-            source_root=source_root,
+        quoted = normalise_corpus_text(citation.quoted_text) in normalise_corpus_text(
+            authority.legal_evidence_text(citation.legal_reference)
         )
     except Exception as exc:
         issues.append(

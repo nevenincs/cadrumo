@@ -62,7 +62,7 @@ def _art52_reduccion_advisory_finding(
     """Warn when the previsión-social reducción exceeds the individual sub-limit.
 
     A taxpayer whose reducción (role ``irpf_reduccion_prevision_social_total``)
-    exceeds :data:`~core.external_constants.MODELO_100_ART_52_INDIVIDUAL_SUBLIMIT_EUR`
+    exceeds the fact-resolved individual sub-limit
     while the plan-de-empleo worker contribution (role
     ``irpf_red_prevision_social_aportaciones_trabajador_con_contribucion_empresarial``),
     the contribución empresarial (role

@@ -238,25 +238,3 @@ required_text = [
     "Disposición final decimocuarta. Entrada en vigor.",
     "Este real decreto-ley entrará en vigor el día siguiente al de su publicación en el «Boletín Oficial del Estado»",
 ]
-
-[parameters."rdl-7-2024-art-11-2:iva-simplificado-reduccion-cuota-devengada-2024"]
-evidence_tier = "legal_authority"
-value = "0.25"
-unit = "fraction"
-applies_to = "iva-regimen-simplificado"
-legal_refs = [
-    "real-decreto-ley-7-2024:art-11.2",
-    "real-decreto-ley-7-2024:df-14",
-    "real-decreto-ley-6-2024:anexo",
-]
-review_status = "agent_reviewed"
-reviewed_at = 2026-08-13
-reviewed_by = "agent-prepared-pending-operator"
-notes = """\
-Reduccion del 25 por ciento de la cuota devengada por operaciones corrientes del regimen especial \
-simplificado del IVA correspondiente al ano 2024, para sujetos pasivos que desarrollen actividades \
-en los terminos municipales del anexo del RDL 6/2024. Se aplica al calculo de la CUOTA ANUAL de \
-2024, no a cada cuota trimestral. Los tres legal_refs son las tres piezas que la medida necesita y \
-ninguna es prescindible: el apartado que fija el porcentaje, la disposicion final que dice desde \
-cuando rige, y el anexo que dice donde. Esta entrada NO enumera municipios; quien resuelva la \
-aplicabilidad debe leer el anexo citado con su consolidated_as_of."""

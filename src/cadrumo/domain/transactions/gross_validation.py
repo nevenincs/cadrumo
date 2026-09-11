@@ -17,7 +17,7 @@ from .irpf_categories import (
     has_non_work_irpf_category,
     has_rent_irpf_category,
 )
-from .retencion_parameters import maximum_supported_activity_retencion_rate
+from .retencion_facts import maximum_supported_activity_retencion_rate
 
 _SELF_ASSESSED_IVA_CATEGORIES: frozenset[IvaCategory] = frozenset(
     {

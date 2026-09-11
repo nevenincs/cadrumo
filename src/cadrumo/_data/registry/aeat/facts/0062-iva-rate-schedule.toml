@@ -1,0 +1,1639 @@
+[fact]
+fact_id = "iva-rate-schedule"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "iva-rate.es.general.2012-09-01.ordinary"
+selectors = [
+  { name = "member_state", value = "es" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2012-09-01
+valid_to = 2024-12-31
+legal_refs = ["ley-37-1992:art-90", "real-decreto-ley-20-2012:art-23-dos"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "21" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.es.reduced.2012-09-01.ordinary"
+selectors = [
+  { name = "member_state", value = "es" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2012-09-01
+valid_to = 2024-12-31
+legal_refs = ["ley-37-1992:art-91", "real-decreto-ley-20-2012:art-23-tres"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "10" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.es.super_reduced.1995-01-01.ordinary"
+selectors = [
+  { name = "member_state", value = "es" },
+  { name = "kind", value = "super_reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 1995-01-01
+valid_to = 2024-12-31
+legal_refs = ["ley-37-1992:art-91", "ley-41-1994:art-78-segundo"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "4" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.es.zero.2023-01-01.ordinary"
+selectors = [
+  { name = "member_state", value = "es" },
+  { name = "kind", value = "zero" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2023-01-01
+valid_to = 2024-06-30
+legal_refs = ["real-decreto-ley-20-2022:art-72"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "0" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.es.zero.2024-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "es" },
+  { name = "kind", value = "zero" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2024-07-01
+valid_to = 2024-09-30
+legal_refs = ["real-decreto-ley-4-2024:art-1"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "0" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.es.general.2025-01-01.ordinary"
+selectors = [
+  { name = "member_state", value = "es" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-01-01
+legal_refs = ["ley-37-1992:art-90"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "21" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.es.reduced.2025-01-01.ordinary"
+selectors = [
+  { name = "member_state", value = "es" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-01-01
+legal_refs = ["ley-37-1992:art-91"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "10" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.es.super_reduced.2025-01-01.ordinary"
+selectors = [
+  { name = "member_state", value = "es" },
+  { name = "kind", value = "super_reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-01-01
+legal_refs = ["ley-37-1992:art-91"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "4" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.de.general.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "de" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["19"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["19"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "19" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.de.reduced.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "de" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["7"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["7"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "7" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.fr.general.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "fr" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["20"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["20"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "20" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.fr.reduced.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "fr" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["10"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["10"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "10" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.fr.super_reduced.2026-07-13.ordinary"
+selectors = [
+  { name = "member_state", value = "fr" },
+  { name = "kind", value = "super_reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2026-07-13
+source_refs = ["eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["2.1"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "2.1" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.it.general.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "it" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["22"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["22"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "22" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.it.reduced.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "it" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["10"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["10"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "10" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.it.super_reduced.2026-07-13.ordinary"
+selectors = [
+  { name = "member_state", value = "it" },
+  { name = "kind", value = "super_reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2026-07-13
+source_refs = ["eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["4"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "4" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.nl.general.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "nl" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["21"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["21"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "21" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.nl.reduced.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "nl" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["9"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["9"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "9" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.be.general.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "be" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["21"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["21"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "21" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.be.reduced.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "be" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["12"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["12"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "12" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.at.general.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "at" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["20"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["20"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "20" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.at.reduced.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "at" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["10"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["10"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "10" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.pt.general.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "pt" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["23"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["23"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "23" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.pt.reduced.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "pt" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["13"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["13"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "13" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.ie.general.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "ie" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["23"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["23"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "23" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.ie.reduced.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "ie" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["13.5"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["13.5"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "13.5" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.pl.general.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "pl" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["23"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["23"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "23" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.pl.reduced.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "pl" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["8"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["8"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "8" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.se.general.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "se" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["25"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["25"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "25" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.se.reduced.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "se" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["12"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["12"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "12" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.dk.general.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "dk" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["25"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["25"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "25" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.fi.general.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "fi" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["25.5"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["25.5"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "25.5" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.fi.reduced.2025-01-01.ordinary"
+selectors = [
+  { name = "member_state", value = "fi" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "fi-vero-iva-rate-change-2026"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["14"]
+[[fact.variants.source_citations]]
+source_ref = "fi-vero-iva-rate-change-2026"
+required_text = ["14"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "14" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.fi.reduced.2026-01-01.ordinary"
+selectors = [
+  { name = "member_state", value = "fi" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2026-01-01
+source_refs = ["fi-vero-iva-rate-change-2026", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "fi-vero-iva-rate-change-2026"
+required_text = ["13.5"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["13.5"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "13.5" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.hu.general.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "hu" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["27"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["27"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "27" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.hu.reduced.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "hu" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["18"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["18"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "18" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.gr.general.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "gr" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["24"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["24"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "24" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.gr.reduced.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "gr" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["13"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["13"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "13" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.cz.general.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "cz" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["21"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["21"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "21" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.cz.reduced.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "cz" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["12"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["12"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "12" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.sk.general.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "sk" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["23"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["23"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "23" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.sk.reduced.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "sk" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["5"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["5"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "5" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.lu.general.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "lu" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["17"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["17"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "17" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.lu.reduced.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "lu" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["8"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["8"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "8" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.bg.general.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "bg" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["20"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["20"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "20" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.hr.general.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "hr" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["25"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["25"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "25" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.hr.reduced.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "hr" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["13"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["13"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "13" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.cy.general.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "cy" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["19"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["19"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "19" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.cy.reduced.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "cy" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["9"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["9"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "9" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.ee.general.2025-01-01.ordinary"
+selectors = [
+  { name = "member_state", value = "ee" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-01-01
+valid_to = 2025-06-30
+source_refs = ["ee-emta-iva-rate-change-2025"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "ee-emta-iva-rate-change-2025"
+required_text = ["22"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "22" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.ee.general.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "ee" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["ee-emta-iva-rate-change-2025", "eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "ee-emta-iva-rate-change-2025"
+required_text = ["24"]
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["24"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["24"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "24" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.lv.general.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "lv" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["21"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["21"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "21" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.lv.reduced.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "lv" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["12"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["12"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "12" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.lt.general.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "lt" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["21"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["21"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "21" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.lt.reduced.2025-01-01.ordinary"
+selectors = [
+  { name = "member_state", value = "lt" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "lt-vmi-iva-rate-change-2026"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["9"]
+[[fact.variants.source_citations]]
+source_ref = "lt-vmi-iva-rate-change-2026"
+required_text = ["9"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "9" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.lt.reduced.2026-01-01.ordinary"
+selectors = [
+  { name = "member_state", value = "lt" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2026-01-01
+source_refs = ["lt-vmi-iva-rate-change-2026", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "lt-vmi-iva-rate-change-2026"
+required_text = ["12"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["12"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "12" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.mt.general.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "mt" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["18"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["18"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "18" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.mt.reduced.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "mt" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["7"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["7"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "7" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.ro.general.2025-01-01.ordinary"
+selectors = [
+  { name = "member_state", value = "ro" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-01-01
+valid_to = 2025-07-31
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "ro-anaf-iva-rate-change-2025"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["19"]
+[[fact.variants.source_citations]]
+source_ref = "ro-anaf-iva-rate-change-2025"
+required_text = ["19"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "19" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.ro.general.2025-08-01.ordinary"
+selectors = [
+  { name = "member_state", value = "ro" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-08-01
+source_refs = ["ro-anaf-iva-rate-change-2025", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "ro-anaf-iva-rate-change-2025"
+required_text = ["21"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["21"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "21" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.ro.reduced.2025-01-01.ordinary"
+selectors = [
+  { name = "member_state", value = "ro" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-01-01
+valid_to = 2025-07-31
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "ro-anaf-iva-rate-change-2025"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["9"]
+[[fact.variants.source_citations]]
+source_ref = "ro-anaf-iva-rate-change-2025"
+required_text = ["9"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "9" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.ro.reduced.2025-08-01.ordinary"
+selectors = [
+  { name = "member_state", value = "ro" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-08-01
+source_refs = ["ro-anaf-iva-rate-change-2025", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "ro-anaf-iva-rate-change-2025"
+required_text = ["11"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["11"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "11" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.si.general.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "si" },
+  { name = "kind", value = "general" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["22"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["22"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "22" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.si.reduced.2025-07-01.ordinary"
+selectors = [
+  { name = "member_state", value = "si" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "ordinary" },
+]
+date_axis = "devengo_date"
+valid_from = 2025-07-01
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["9.5"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
+required_text = ["9.5"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "9.5" },
+  { key = "supersedes_tier_default", value = false },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.es.reduced.2023-01-01.coexisting-5"
+selectors = [
+  { name = "member_state", value = "es" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "coexisting-5" },
+]
+date_axis = "devengo_date"
+valid_from = 2023-01-01
+valid_to = 2024-06-30
+legal_refs = ["real-decreto-ley-20-2022:art-72"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "5" },
+  { key = "supersedes_tier_default", value = true },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.es.reduced.2024-07-01.coexisting-5"
+selectors = [
+  { name = "member_state", value = "es" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "coexisting-5" },
+]
+date_axis = "devengo_date"
+valid_from = 2024-07-01
+valid_to = 2024-09-30
+legal_refs = ["real-decreto-ley-4-2024:art-1"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "5" },
+  { key = "supersedes_tier_default", value = true },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.es.super_reduced.2024-10-01.coexisting-2"
+selectors = [
+  { name = "member_state", value = "es" },
+  { name = "kind", value = "super_reduced" },
+  { name = "rate_role", value = "coexisting-2" },
+]
+date_axis = "devengo_date"
+valid_from = 2024-10-01
+valid_to = 2024-12-31
+legal_refs = ["real-decreto-ley-4-2024:art-1"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "2" },
+  { key = "supersedes_tier_default", value = true },
+]
+
+[[fact.variants]]
+variant_id = "iva-rate.es.reduced.2024-10-01.coexisting-7.5"
+selectors = [
+  { name = "member_state", value = "es" },
+  { name = "kind", value = "reduced" },
+  { name = "rate_role", value = "coexisting-7.5" },
+]
+date_axis = "devengo_date"
+valid_from = 2024-10-01
+valid_to = 2024-12-31
+legal_refs = ["real-decreto-ley-4-2024:art-1"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "pct", value_type = "decimal", value = "7.5" },
+  { key = "supersedes_tier_default", value = true },
+]

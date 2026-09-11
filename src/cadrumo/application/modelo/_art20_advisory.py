@@ -47,7 +47,7 @@ def _art20_reduccion_advisory_finding(
     """Warn when RNT is within the art. 20 band but no general reduction is declared.
 
     The art. 20 LIRPF reducción por obtención de rendimientos del trabajo decays to
-    zero at :data:`MODELO_100_ART_20_TRABAJO_REDUCCION_RNT_CEILING_EUR`. When the
+    zero at the fact-resolved ceiling. When the
     rendimiento neto del trabajo (casilla role
     ``irpf_rendimiento_trabajo_rendimiento_neto``) is strictly positive and below that
     ceiling but the general-reducción casilla

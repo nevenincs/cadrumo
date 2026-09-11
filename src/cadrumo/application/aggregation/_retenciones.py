@@ -7,7 +7,7 @@ Observations must carry canonical source kinds from
 is rejected in favour of ``payable_invoice`` or ``collectible_invoice``.
 
 The live calculation mesh uses these primitives through
-:class:`~._modelo_bindings.RetencionesAggregationSourceResolver` for the
+:class:`~.modelo_bindings_retenciones.RetencionesAggregationSourceResolver` for the
 Modelo 180/193 distinct-NIF perceptor count. Modelo 190's distinct
 perceptor/clave/subclave percepciones count is intentionally handled by
 :class:`~._withholding_source.WithholdingSourceResolver`, not by this rollup

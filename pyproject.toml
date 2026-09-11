@@ -236,6 +236,10 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.sdist]
 include = [
   "src/cadrumo",
+  # The source archive must retain the release authority so rebuilding the
+  # product does not silently turn an artifact-only distribution into one that
+  # can only fail at first use.
+  "src/cadrumo/_data/registry/authority/authority.json",
   "src/cadrumo_harness",
   "pyproject.toml",
   "README.md",
@@ -261,6 +265,13 @@ exclude = [
   "src/cadrumo_harness/**/tests/**",
   "src/cadrumo/**/tests",
   "src/cadrumo/**/tests/**",
+  # Registry TOML, source manifests, and cached compiler receipts are
+  # development authoring inputs.  A released product consumes exactly one
+  # signed authority artifact, so no authored registry tree may reach an
+  # sdist from which a downstream wheel could accidentally restore a compiler
+  # fallback.
+  "src/cadrumo/_data/registry/aeat",
+  "src/cadrumo/_data/registry/aeat/**",
   "src/cadrumo/_data/corpus/**/*.pdf",
   "src/cadrumo/_data/corpus/**/*.docx",
   "src/cadrumo/_data/corpus/**/*.xls",
@@ -290,6 +301,12 @@ exclude = [
   "src/cadrumo_harness/tests/**",
   "src/cadrumo_harness/**/tests",
   "src/cadrumo_harness/**/tests/**",
+  # The immutable signed publication is the only registry payload a product
+  # process may consume.  Its evidence projection is authenticated inside the
+  # same frame, so it needs no parallel corpus-quality or registry-source
+  # payload in the wheel.
+  "src/cadrumo/_data/registry/aeat",
+  "src/cadrumo/_data/registry/aeat/**",
   # The registry verdict cache is written by a validating load, not by the
   # repository, so capturing it makes the build depend on whether local tooling
   # has run. A tree that has validated otherwise yields a wheel two files
@@ -322,6 +339,9 @@ exclude = [
 # wheels; `py.typed` marks the package PEP 561 typed so consumers read the
 # inline types; `external_constants.toml` carries the curated leaf constants.
 include = [
+  # Release tooling creates this only after the full development compiler has
+  # validated the authored registry and signed the resulting authority.
+  "src/cadrumo/_data/registry/authority/authority.json",
   "src/cadrumo/py.typed",
   "src/cadrumo/adapters/persistence/storage/_bip39_wordlist.txt",
   "src/cadrumo/core/external_constants.toml",

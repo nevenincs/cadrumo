@@ -312,7 +312,7 @@ def overview_deemed_served_notification_notices(events: Sequence[OverviewCalenda
     """Surface notifications the law already deems served, whatever their procedural kind.
 
     A DEHu notification left unopened for the
-    :data:`~cadrumo.core.external_constants.DEHU_RECHAZO_TACITO_DIAS_NATURALES` window is *rechazada*
+    statutorily prescribed window is *rechazada*
     under Ley 39/2015 art. 43.2 — served, with every downstream plazo already
     running, even though the taxpayer never read it. That consequence attaches to
     the notification's delivery state, not to its

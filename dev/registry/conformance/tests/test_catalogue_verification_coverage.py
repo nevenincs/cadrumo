@@ -330,7 +330,7 @@ def _synthetic_reviewed_coverage_authority(tmp_path: Path) -> ValidatedRegistryA
     legal_dir.joinpath("supported-filing-years.toml").unlink()
     legal_dir.joinpath("sociedades-annual-manual-coverage.toml").unlink()
     revision_dir.mkdir(parents=True)
-    for directory in ("facts", "categories", "treaties", "iva", "holidays"):
+    for directory in ("facts", "categories", "iva", "holidays"):
         source_directory = bundled_registry_root / directory
         if source_directory.exists():
             shutil.copytree(source_directory, registry_root / directory)

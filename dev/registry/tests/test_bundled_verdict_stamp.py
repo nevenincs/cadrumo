@@ -43,9 +43,9 @@ def _build_tiny_registry(root: Path) -> None:
     modelos = aeat / "modelos"
     modelos.mkdir()
     (modelos / "303.toml").write_text('[[revisions]]\nid = "2023"\n', encoding="utf-8")
-    treaties = aeat / "treaties"
-    treaties.mkdir()
-    (treaties / "es-de.toml").write_text('[treaty]\nname = "es-de"\n', encoding="utf-8")
+    facts = aeat / "facts"
+    facts.mkdir()
+    (facts / "0001-value.toml").write_text("[fact]\nfact_id = 'test.value'\n", encoding="utf-8")
 
 
 def _stamp_key(registry_root: Path, *, package_version: str) -> str:

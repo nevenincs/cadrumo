@@ -8,14 +8,14 @@ from functools import cache
 import pytest
 
 from cadrumo.core.aggregation import BindingSourceKind
-from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry import bindings as _bindings
 from cadrumo.domain.calculations.registry.bindings import ProfileSelector, selector_model_for_source
 from cadrumo.domain.calculations.registry.schema import RegistryCatalogues, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.tests.registry_snapshot import build_snapshot
-from dev.registry.compiler.loader import load_catalogue_file
+from dev.registry.compiler.fact_providers import compile_registered_fact_providers
+from dev.registry.compiler.loader import load_shared_catalogues
 from dev.registry.compiler.validator import RegistryValidator
 from dev.registry.maintenance_support import load_modelo_path
 
@@ -75,15 +75,9 @@ def _profile_selector(value: object) -> ProfileSelector:
 
 @cache
 def _shared_catalogues() -> RegistryCatalogues:
-    legal = {}
-    sources = {}
-    parameters = {}
-    for path in scan_directory(bundled_path("registry", "aeat", "legal"), pattern="*.toml"):
-        catalogue = load_catalogue_file(path)
-        legal.update(catalogue.legal)
-        sources.update(catalogue.sources)
-        parameters.update(catalogue.parameters)
-    return RegistryCatalogues(legal=legal, sources=sources, parameters=parameters)
+    registry_root = bundled_path("registry", "aeat")
+    catalogue = load_shared_catalogues(registry_root)
+    return catalogue.model_copy(update={"facts": compile_registered_fact_providers(registry_root)})
 
 
 @cache

@@ -2,7 +2,7 @@
 
 The value tokens are asserted against the TRLIRNR / treaty vocabulary the
 registry stores (``tipo_renta`` casilla tokens and the override-kind tokens the
-``treaties/`` authoring tree will carry); a drift in a stored token would be a
+``irnr.convenio.override`` fact carries); a drift in a stored token would be a
 boundary-hydration break, so the tests pin the exact strings.
 
 See Also:

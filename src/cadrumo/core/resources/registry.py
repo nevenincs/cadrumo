@@ -18,7 +18,6 @@ from ._repos.apoderamientos import ApoderamientosRepository
 from ._repos.category_profiles import CategoryProfileRepository
 from ._repos.holiday_calendars import HolidayCalendarRepository
 from ._repos.iva_catalogues import IvaCatalogueRepository
-from ._repos.iva_rate_tables import IvaRateTableRepository
 from ._repos.manuals import ManualRepository
 from ._repos.recargo_bands import RecargoBandsRepository
 
@@ -40,7 +39,6 @@ class ResourceRegistry:
     manuals: ManualRepository = field(default_factory=ManualRepository)
     recargo_bands: RecargoBandsRepository = field(default_factory=RecargoBandsRepository)
     iva_catalogues: IvaCatalogueRepository = field(default_factory=IvaCatalogueRepository)
-    iva_rate_tables: IvaRateTableRepository = field(default_factory=IvaRateTableRepository)
 
     def clear(self) -> None:
         """Clear every Repository's Identity Map."""

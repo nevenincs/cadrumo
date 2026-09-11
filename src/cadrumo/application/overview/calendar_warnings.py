@@ -23,11 +23,13 @@ from collections.abc import Mapping
 from functools import lru_cache
 from types import MappingProxyType
 
-from ...core.external_constants import IVA_REGIME_MODELOS
 from ...core.modelo import Modelo as _Modelo
 from ...core.period import Period as _Period
 from ...domain.calculations.registry.applicability import (
     iter_modelo_applicability_rules as _iter_modelo_applicability_rules,
+)
+from ...domain.calculations.registry.applicability import (
+    modelo_requires_iva_regime as _modelo_requires_iva_regime,
 )
 from ...domain.calculations.registry.applicability_payer_facts import PayerFact as _PayerFact
 from ...domain.calculations.registry.authority import bundled_authority
@@ -96,7 +98,6 @@ _ESTIMATION_REGIME_PROFILE_KEY: dict[_IrpfEstimationRegime, tuple[str, str]] = {
     ),
 }
 
-_IVA_REGIME_MODELOS = IVA_REGIME_MODELOS
 _CORPORATE_CENSO_ENROLMENT_PROFILE_KEYS: MappingProxyType[str, frozenset[str]] = MappingProxyType(
     {
         _Modelo.M200.value: frozenset(
@@ -168,6 +169,13 @@ def _gating_fields() -> MappingProxyType[str, tuple[tuple[str, ...], str, str]]:
                     key_to_modelos=key_to_modelos,
                     key_to_meta=key_to_meta,
                 )
+        if rule.applicable_iva_regimes:
+            _record_gating_field(
+                profile_key="iva.regime",
+                modelo=rule.modelo,
+                key_to_modelos=key_to_modelos,
+                key_to_meta=key_to_meta,
+            )
 
     for modelo, profile_keys in _deadline_window_profile_keys_by_modelo().items():
         for profile_key in profile_keys:
@@ -177,14 +185,6 @@ def _gating_fields() -> MappingProxyType[str, tuple[tuple[str, ...], str, str]]:
                 key_to_modelos=key_to_modelos,
                 key_to_meta=key_to_meta,
             )
-
-    for modelo in _IVA_REGIME_MODELOS:
-        _record_gating_field(
-            profile_key="iva.regime",
-            modelo=modelo,
-            key_to_modelos=key_to_modelos,
-            key_to_meta=key_to_meta,
-        )
 
     return MappingProxyType(
         {
@@ -245,7 +245,7 @@ def calendar_applicability_profile_keys_for_modelo(modelo: str) -> tuple[str, ..
             keys.update(_PAYER_FACT_PROFILE_KEYS.get(rule.required_payer_fact, ()))
         break
     keys.update(_deadline_window_profile_keys_by_modelo().get(modelo, ()))
-    if modelo in _IVA_REGIME_MODELOS:
+    if _modelo_requires_iva_regime(modelo):
         keys.add("iva.regime")
     keys.update(_CORPORATE_CENSO_ENROLMENT_PROFILE_KEYS.get(modelo, frozenset()))
     return tuple(sorted(keys))

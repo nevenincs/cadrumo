@@ -82,8 +82,11 @@ _LOGGER = logging.getLogger(__name__)
 
 _REGISTRY_TREE_CACHE_SCHEMA_VERSION = "legal-parameter-refs-v1"
 
-_REGISTRY_PACKAGE_DIR: Final[Path] = Path(__file__).resolve().parent
-"""The registry package directory -- the source surface hashed wholesale below."""
+_COMPILER_PACKAGE_DIR: Final[Path] = Path(__file__).resolve().parent
+"""Development compiler source hashed wholesale for cache invalidation."""
+
+_REGISTRY_PACKAGE_DIR: Final[Path] = Path(inspect.getsourcefile(ModeloDefinition)).resolve().parent
+"""Runtime typed-registry source hashed wholesale with compiler source."""
 
 _CADRUMO_PACKAGE_DIR: Final[Path] = _REGISTRY_PACKAGE_DIR.parents[2]
 """The ``cadrumo`` package root (``registry`` -> ``calculations`` -> ``domain`` -> ``cadrumo``).
@@ -258,15 +261,16 @@ def _compute_loader_code_fingerprint(roots: Iterable[type[BaseModel]] | None = N
     """
     hasher = hashlib.sha256()
     try:
-        source_files = scan_directory(
-            _REGISTRY_PACKAGE_DIR,
-            pattern="*.py",
-            recursive=True,
-            prune_directories=("tests",),
-        )
-        for path in source_files:
-            hasher.update(path.relative_to(_REGISTRY_PACKAGE_DIR).as_posix().encode("utf-8"))
-            hasher.update(path.read_bytes())
+        for source_root, label in ((_COMPILER_PACKAGE_DIR, "compiler"), (_REGISTRY_PACKAGE_DIR, "runtime-registry")):
+            for path in scan_directory(
+                source_root,
+                pattern="*.py",
+                recursive=True,
+                prune_directories=("tests",),
+            ):
+                hasher.update(label.encode("utf-8"))
+                hasher.update(path.relative_to(source_root).as_posix().encode("utf-8"))
+                hasher.update(path.read_bytes())
     except OSError:
         hasher.update(sys.version.encode("utf-8"))
         hasher.update((sys.implementation.cache_tag or "").encode("utf-8"))

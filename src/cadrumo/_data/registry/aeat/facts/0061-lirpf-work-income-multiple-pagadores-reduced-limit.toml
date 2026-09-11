@@ -1,0 +1,28 @@
+[fact]
+fact_id = "lirpf-work-income-multiple-pagadores-reduced-limit"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "lirpf-work-income-multiple-pagadores-reduced-limit:2019-2026"
+date_axis = "filing_period"
+valid_from = 2019-01-01
+valid_to = 2026-12-31
+legal_refs = ["ley-35-2006:art-96"]
+source_refs = ["boe-lirpf-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-statutory-facts"
+required_text = ["15.876 euros"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = 2019, value_type = "decimal", value = "14000" },
+  { key = 2020, value_type = "decimal", value = "14000" },
+  { key = 2021, value_type = "decimal", value = "14000" },
+  { key = 2022, value_type = "decimal", value = "14000" },
+  { key = 2023, value_type = "decimal", value = "15000" },
+  { key = 2024, value_type = "decimal", value = "15876" },
+  { key = 2025, value_type = "decimal", value = "15876" },
+  { key = 2026, value_type = "decimal", value = "15876" },
+]

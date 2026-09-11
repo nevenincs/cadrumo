@@ -20,29 +20,7 @@ from cadrumo.core.hashing import blake2b_hex
 from cadrumo.core.period import RegistrySelectorPeriodCode
 from cadrumo.core.prose_elision import ElidedProse
 from cadrumo.core.resources import bundled_path
-from cadrumo.domain.calculations.registry import authority as _authority
-from dev.registry.compiler.verdict_cache import (
-    VERDICT_OUTCOME_GREEN,
-    RegistryValidationVerdict,
-    compute_shipped_verdict_key,
-    shipped_verdict_location,
-    write_verdict,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    _SILENT_AUTHORITY_LIFECYCLE_OBSERVER,
-    RegistryAuthorityLifecycleObserver,
-    _authority_load_barrier,
-    _authority_load_states,
-    _authority_state_lock,
-    _guard_authority_process,
-)
 from cadrumo.domain.calculations.registry.condition_mode import ConditionModeField
-from .compiler.corpus_catalogue import (
-    GeneratedArtifactSource,
-    RegistrySourceKind,
-    RegistryValidationError,
-    verify_source_file,
-)
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.export import (
     CasillaId,
@@ -51,6 +29,21 @@ from cadrumo.domain.calculations.registry.export import (
     ResolvedExportEndpointPath,
     derive_export_layouts_from_bindings,
 )
+from cadrumo.domain.calculations.registry.ids import CrossReferenceId, OracleId
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.static_inspection import (
+    BindingId,
+    LegalRefId,
+    ModeloId,
+    ProjectionEndpointDeclaration,
+    RevisionId,
+)
+from dev.registry.compiler.authority_lifecycle import (
+    SILENT_REGISTRY_AUTHORITY_LIFECYCLE_OBSERVER,
+    RegistryAuthorityLifecycleObserver,
+)
+from dev.registry.compiler.authority_state import compiler_reset
+from dev.registry.compiler.fact_providers import reset_registered_fact_providers
 from dev.registry.compiler.identity import (
     _LOGGER,
     REGISTRY_IDENTITY_SCHEMA_VERSION,
@@ -58,7 +51,13 @@ from dev.registry.compiler.identity import (
     RegistryIdentityStamp,
     registry_identity_stamp_location,
 )
-from cadrumo.domain.calculations.registry.ids import CrossReferenceId, OracleId
+from dev.registry.compiler.loader import (
+    collect_registry_tree_fingerprints as collect_registry_identity_fingerprints,
+)
+from dev.registry.compiler.loader import (
+    load_modelo_directory,
+    load_modelo_file,
+)
 from dev.registry.compiler.m303_orden_census_artefact import (
     EXTRACTOR_VERSION,
     M303_ORDEN_CENSUS_SCHEMA_VERSION,
@@ -74,21 +73,12 @@ from dev.registry.compiler.m303_orden_manifest import (
     _generate_manifest_with_censuses,
     _render_generated_manifest,
 )
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
-from cadrumo.domain.calculations.registry.static_inspection import (
-    BindingId,
-    LegalRefId,
-    ModeloId,
-    ProjectionEndpointDeclaration,
-    RevisionId,
-)
-from dev.registry.compiler.fact_providers import reset_registered_fact_providers
-from dev.registry.compiler.loader import (
-    collect_registry_tree_fingerprints as collect_registry_identity_fingerprints,
-)
-from dev.registry.compiler.loader import (
-    load_modelo_directory,
-    load_modelo_file,
+from dev.registry.compiler.verdict_cache import (
+    VERDICT_OUTCOME_GREEN,
+    RegistryValidationVerdict,
+    compute_shipped_verdict_key,
+    shipped_verdict_location,
+    write_verdict,
 )
 from dev.registry.parity.external_grounding import (
     ExternalGroundingModel,
@@ -100,6 +90,13 @@ from dev.registry.parity.external_grounding import (
 )
 from dev.registry.parity.live_parity import LiveParityOracle, _ParityModel
 from dev.registry.parity.renta_web_open_replay_corpus import replay_corpus_directory
+
+from .compiler.corpus_catalogue import (
+    GeneratedArtifactSource,
+    RegistrySourceKind,
+    RegistryValidationError,
+    verify_source_file,
+)
 
 
 class OracleEnvironment(StrEnum):
@@ -118,7 +115,7 @@ class OracleEnvironment(StrEnum):
 
 
 def reset_registry_caches(
-    *, lifecycle_observer: RegistryAuthorityLifecycleObserver = _SILENT_AUTHORITY_LIFECYCLE_OBSERVER
+    *, lifecycle_observer: RegistryAuthorityLifecycleObserver = SILENT_REGISTRY_AUTHORITY_LIFECYCLE_OBSERVER
 ) -> None:
     """Drop every memoised registry layer so the next read recompiles from disk.
 
@@ -128,14 +125,12 @@ def reset_registry_caches(
     that swap the registry root or rewrite bundled TOML need all three, so the
     package exposes the whole reset rather than its parts.
     """
-    _guard_authority_process()
-    from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
     from dev.registry.compiler.loader import _load_registry_tree_cached
+    from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
 
     lifecycle_observer.registry_cache_reset_requested()
-    with _authority_load_barrier.reset():
+    with compiler_reset():
         lifecycle_observer.registry_cache_reset_acquired()
-        _invalidate_authority_generations()
         _load_registry_tree_cached.cache_clear()
         clear_fingerprint_cache()
         reset_registered_fact_providers()
@@ -478,14 +473,6 @@ def stamp_bundled_verdict(
     verdict = RegistryValidationVerdict(verdict_key=key, package_version=package_version, outcome=VERDICT_OUTCOME_GREEN)
     write_verdict(output_path, verdict)
     return verdict
-
-
-def _invalidate_authority_generations() -> None:
-    """Invalidate all authority incarnations as one exclusive reset transition."""
-    with _authority_state_lock:
-        _authority._authority_generation += 1
-        _authority._authority_reset_epoch = int(_authority._authority_reset_epoch) + 1
-        _authority_load_states.clear()
 
 
 @dataclass(frozen=True, slots=True)

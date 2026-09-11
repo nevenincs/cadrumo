@@ -54,7 +54,7 @@ from .corpus_catalogue import (
     verify_catalogue_identity_bindings,
     verify_source_catalogue,
 )
-from .fact_validation import governed_fact_catalogue_failures, migrated_legal_parameter_fact_failures
+from .fact_validation import governed_fact_catalogue_failures, retired_fact_provider_closure_failures
 from .legal_grounding import verify_legal_catalogue_grounding
 from .registry_scope import validate_registry_scope
 from .source_evidence_fingerprint import (
@@ -66,6 +66,7 @@ from .validation_memoization import (
     MODELO_VALIDATION_CACHE,
     REGISTRY_VALIDATION_CACHE,
 )
+
 if TYPE_CHECKING:
     from cadrumo.domain.user_profile.schema import ProfileSchemaDefinition
 
@@ -89,6 +90,7 @@ class RegistryValidator:
         user_profile_schema: ProfileSchemaDefinition | None = None,
         source_evidence_fingerprint: SourceEvidenceFingerprint | None = None,
     ) -> None:
+        """Bind one compiler validation run to its exact catalogue inputs."""
         self._legal = catalogues.legal
         self._sources = catalogues.sources
         self._facts = catalogues.facts
@@ -229,7 +231,7 @@ class RegistryValidator:
                 source_root=self._source_root,
             ),
         )
-        failures.extend(migrated_legal_parameter_fact_failures(self._facts, source_refs=self._sources))
+        failures.extend(retired_fact_provider_closure_failures(self._facts, source_refs=self._sources))
         self._catalogue_failures = tuple(failures)
         CATALOGUE_FAILURE_CACHE[cache_key] = (self._legal, self._sources, self._facts, self._catalogue_failures)
         return self._catalogue_failures

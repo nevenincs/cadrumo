@@ -6,8 +6,6 @@ import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
-from functools import lru_cache
-from pathlib import Path
 from xml.etree.ElementTree import Element
 
 from defusedxml import ElementTree
@@ -16,7 +14,6 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.decimal.coercion import normalize_decimal_separators
 from ....core.export_layout_format import ExportLayoutFormat
 from ....core.external_constants import LATIN_1_ENCODING as _LATIN_1_ENCODING
-from ....core.paths import path_stat_fingerprint
 from ..export_field_kind import CasillaFieldKind
 from .errors import RegistryValidationError
 from .export_value_policy import ParsedExportPolicyValue
@@ -79,12 +76,12 @@ def parse_export_payload(
     layout: ExportLayoutDefinition,
     payload: bytes,
     *,
-    source_root: Path | None = None,
     sources: Mapping[str, SourceReference] | None = None,
+    source_payloads: Mapping[str, bytes] | None = None,
 ) -> ParsedExportPayload:
     """Parse a complete AEAT payload and return a :class:`ParsedExportPayload`."""
     if layout.format is ExportLayoutFormat.XML_DICTIONARY:
-        return _parse_xml_dictionary_payload(layout, payload, source_root=source_root, sources=sources)
+        return _parse_xml_dictionary_payload(layout, payload, sources=sources, source_payloads=source_payloads)
 
     cursor = 0
     if layout.auxiliary_envelope_header is not None:
@@ -152,10 +149,10 @@ def _parse_xml_dictionary_payload(
     layout: ExportLayoutDefinition,
     payload: bytes,
     *,
-    source_root: Path | None,
     sources: Mapping[str, SourceReference] | None,
+    source_payloads: Mapping[str, bytes] | None,
 ) -> ParsedExportPayload:
-    entries = xml_dictionary_entries(layout, source_root=source_root, sources=sources)
+    entries = xml_dictionary_entries(layout, sources=sources, source_payloads=source_payloads)
     try:
         root = ElementTree.fromstring(payload)
     except ElementTree.ParseError as exc:
@@ -184,19 +181,24 @@ def _parse_xml_dictionary_payload(
 def _xml_dictionary_source(
     layout: ExportLayoutDefinition,
     *,
-    source_root: Path | None,
     sources: Mapping[str, SourceReference] | None,
-) -> tuple[SourceReference, Path]:
+    source_payloads: Mapping[str, bytes] | None,
+) -> tuple[SourceReference, bytes]:
     if layout.dictionary_source_ref is None:
         raise RegistryValidationError(f"XML export layout {layout.id!r} has no dictionary source")
-    if source_root is None or sources is None:
-        raise RegistryValidationError(f"XML export layout {layout.id!r} requires source_root and sources")
+    if sources is None or source_payloads is None:
+        raise RegistryValidationError(f"XML export layout {layout.id!r} requires published sources and source payloads")
     source = sources.get(str(layout.dictionary_source_ref))
     if source is None:
         raise RegistryValidationError(
             f"XML export layout {layout.id!r} has unresolved dictionary source {layout.dictionary_source_ref!r}",
         )
-    return source, source_root / Path(source.corpus_path)
+    try:
+        return source, source_payloads[str(source.id)]
+    except KeyError as exc:
+        raise RegistryValidationError(
+            f"XML export layout {layout.id!r} has no published payload for dictionary source {source.id!r}"
+        ) from exc
 
 
 def _parse_xml_dictionary_line(
@@ -227,18 +229,18 @@ def _parse_xml_dictionary_line(
 def xml_dictionary_entries(
     layout: ExportLayoutDefinition,
     *,
-    source_root: Path | None,
     sources: Mapping[str, SourceReference] | None,
+    source_payloads: Mapping[str, bytes] | None,
 ) -> tuple[XmlDictionaryEntry, ...]:
     """Resolve official AEAT XML dictionary :class:`XmlDictionaryEntry` rows for ``layout``."""
-    source, dictionary_path = _xml_dictionary_source(layout, source_root=source_root, sources=sources)
+    source, dictionary_payload = _xml_dictionary_source(layout, sources=sources, source_payloads=source_payloads)
     # Applied here rather than at either consumer: the renderer and
     # :func:`parse_export_payload` both resolve their rows from this call, so a
     # correction reaching only one of them would make an exported artefact
     # verify as drift against itself.
     overrides = {override.field_id: override.path for override in layout.dictionary_path_overrides}
     entries: list[XmlDictionaryEntry] = []
-    for line in _read_dictionary_text(dictionary_path).splitlines():
+    for line in _read_dictionary_text(dictionary_payload).splitlines():
         entry = _parse_xml_dictionary_line(line, source=source, overrides=overrides)
         if entry is not None:
             entries.append(entry)
@@ -271,15 +273,8 @@ def _assert_every_override_was_applied(
         )
 
 
-def _read_dictionary_text(path: Path) -> str:
-    resolved = path.expanduser().resolve()
-    return _read_dictionary_text_cached(*path_stat_fingerprint(resolved))
-
-
-@lru_cache(maxsize=256)
-def _read_dictionary_text_cached(path: str, byte_count: int, modified_ns: int) -> str:
-    del byte_count, modified_ns
-    body = Path(path).read_bytes()
+def _read_dictionary_text(body: bytes) -> str:
+    """Decode publisher-projected dictionary bytes without a filesystem read."""
     try:
         return body.decode("utf-8")
     except UnicodeDecodeError:

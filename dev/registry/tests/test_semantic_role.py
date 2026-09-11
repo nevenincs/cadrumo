@@ -39,7 +39,7 @@ from dev.registry.compiler._validate_semantic_roles import (
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaAlias, CasillaConstraints, CasillaDefinition
-from cadrumo.domain.calculations.registry.tests._synthetic_locale_fixtures import (
+from dev.registry.tests._synthetic_locale_fixtures import (
     _synthetic_locale_scope,
     _write_test_label,
 )

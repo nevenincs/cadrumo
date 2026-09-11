@@ -18,7 +18,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, cast
 
 from .errors import RegistryValidationError
-from .facts.modelo_projections import ModeloParameterFact
+from .facts.modelo_parameter_fact import ModeloParameterFact
 from .facts.resolution import ResolvedScalarFact, ScalarFactQuery
 from .facts.schema import FactSelector
 from .schema_base import DateAxis

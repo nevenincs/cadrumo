@@ -100,6 +100,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n import lookup_translation_entry
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.compiler.authority_state import source_root_for
 from dev.registry.maintenance_support import (
     ExternalOracleInventory,
     UnattributedOraclePayload,
@@ -802,7 +803,7 @@ def build_annual_coordinate_matrix() -> ConformanceCoordinateMatrix:
             filing_year=filing_year,
             period=period,
             sources=inspection.sources,
-            source_root=authority.source_root,
+            source_root=source_root_for(authority),
         )
         coordinate_items.append(
             ConformanceCoordinate(

@@ -40,9 +40,9 @@ the cent regardless of the rounding residual, which is exactly the
 invariant the :class:`cadrumo.domain.transactions.Transaction` model
 enforces.
 
-The rate values
-are grounded in ``registry/aeat/iva/rates.toml`` (Spain general 21 /
-reduced 10 / super-reduced 4 / zero 0; LIVA art. 90/91, year-scoped).
+The rate values are grounded in the authored ``iva-rate-schedule`` fact
+(Spain general 21 / reduced 10 / super-reduced 4 / zero 0; LIVA art. 90/91,
+year-scoped).
 """
 
 from __future__ import annotations

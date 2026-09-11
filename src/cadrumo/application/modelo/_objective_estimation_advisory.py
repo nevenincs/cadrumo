@@ -4,8 +4,8 @@ The verification path calls this helper for each revision :class:`WorkUnit` and
 workflow :class:`TaxpayerProfile`. It applies only to objective-estimation
 profiles for Modelo 100 and Modelo 131 in the settled official-source range
 (filing years 2016-2026). For those years, the helper compares the
-profile-declared prior-year objective-estimation volumes against the bundled
-legal-parameter thresholds and emits non-blocking
+profile-declared prior-year objective-estimation volumes against dated governed
+fact thresholds and emits non-blocking
 :class:`ModeloVerificationFinding` warnings when a declared volume exceeds a
 threshold.
 
@@ -44,7 +44,7 @@ if TYPE_CHECKING:
 _SETTLED_YEAR_MIN = 2016
 _SETTLED_YEAR_MAX = 2026
 _AFFECTED_MODELOS = frozenset({Modelo.M100.value, Modelo.M131.value})
-_PARAMETER_BY_PROFILE_FIELD = (
+_FACT_BY_PROFILE_FIELD = (
     (
         "objective_estimation_prior_year_gross_income_eur",
         "lirpf-dt-32:eo-exclusion-rendimientos-conjunto-eur",
@@ -109,23 +109,23 @@ def _objective_estimation_exclusion_advisory_findings(
         return ()
 
     declared_values = tuple(
-        (profile_field, parameter_id, getattr(profile, profile_field))
-        for profile_field, parameter_id, _label in _PARAMETER_BY_PROFILE_FIELD
+        (profile_field, fact_id, getattr(profile, profile_field))
+        for profile_field, fact_id, _label in _FACT_BY_PROFILE_FIELD
     )
     if all(raw_value is None for *_prefix, raw_value in declared_values):
         return ()
 
     findings: list[ModeloVerificationFinding] = []
-    for profile_field, parameter_id, raw_value in declared_values:
+    for profile_field, fact_id, raw_value in declared_values:
         if raw_value is None:
             continue
         declared = _as_decimal(raw_value, profile_field)
         threshold_fact = _resolve_objective_estimation_threshold(
-            parameter_id=parameter_id,
+            fact_id=fact_id,
             filing_year=work_unit.filing_year,
             authority=authority,
         )
-        threshold = _as_decimal(threshold_fact.payload.value, parameter_id)
+        threshold = _as_decimal(threshold_fact.payload.value, fact_id)
         if declared <= threshold:
             continue
         findings.append(
@@ -137,7 +137,7 @@ def _objective_estimation_exclusion_advisory_findings(
                     "modelo_id": modelo,
                     "filing_year": work_unit.filing_year,
                     "profile_field_id": profile_field,
-                    "parameter_id": parameter_id,
+                    "fact_id": fact_id,
                     "declared": declared,
                     "threshold": threshold,
                 },
@@ -154,7 +154,7 @@ def _uses_objective_estimation(profile: TaxpayerProfile) -> bool:
 
 def _resolve_objective_estimation_threshold(
     *,
-    parameter_id: str,
+    fact_id: str,
     filing_year: int,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> ResolvedScalarFact:
@@ -168,7 +168,7 @@ def _resolve_objective_estimation_threshold(
     try:
         resolved = authority.resolve_governed_fact(
             ScalarFactQuery(
-                fact_id=parameter_id,
+                fact_id=fact_id,
                 date_axis=DateAxis.FILING_PERIOD,
                 effective_date=date(filing_year, 12, 31),
             )
@@ -176,17 +176,17 @@ def _resolve_objective_estimation_threshold(
     except RegistryError as exc:
         raise ModeloValidationError(
             translated_message="errors.error.error_modelos_validation",
-            context={"parameter_id": parameter_id, "filing_year": filing_year, "fact_resolved": False},
+            context={"fact_id": fact_id, "filing_year": filing_year, "fact_resolved": False},
         ) from exc
     if not isinstance(resolved, ResolvedScalarFact):
         raise ModeloValidationError(
             translated_message="errors.error.error_modelos_validation",
-            context={"parameter_id": parameter_id, "filing_year": filing_year, "fact_scalar": False},
+            context={"fact_id": fact_id, "filing_year": filing_year, "fact_scalar": False},
         )
     if not resolved.legal_refs:
         raise ModeloValidationError(
             translated_message="errors.error.error_modelos_validation",
-            context={"parameter_id": parameter_id, "filing_year": filing_year, "fact_legal_refs": False},
+            context={"fact_id": fact_id, "filing_year": filing_year, "fact_legal_refs": False},
         )
     return cast("ResolvedScalarFact", resolved)
 
@@ -194,8 +194,8 @@ def _resolve_objective_estimation_threshold(
 def _as_decimal(value: object, surface: str) -> Decimal:
     try:
         # DECIMAL-TEXT-RATIONALE-EO-THRESHOLD-COMPARISON: two callers, both
-        # non-operator. ``parameter.value`` is a registry-authored legal
-        # parameter, which is committed data in canonical dot-decimal form. The
+        # non-operator. A governed fact payload is committed data in canonical
+        # dot-decimal form. The
         # profile-field caller reads a fact the profile write boundary already
         # promoted, the same posture the rule-3 exemption for
         # ``domain/deadlines/profiles.py`` records -- and it is the same

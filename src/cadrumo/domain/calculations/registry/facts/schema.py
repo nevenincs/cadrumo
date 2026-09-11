@@ -85,7 +85,24 @@ class FactSelector(RegistryModel):
     """One typed, exact-match coordinate of a governed variant."""
 
     name: str = Field(min_length=1, max_length=64, pattern=r"^[a-z][a-z0-9_]*$")
+    value_type: Literal["decimal"] | None = None
     value: FactAtom
+
+    @field_validator("value", mode="after")
+    @classmethod
+    def _materialise_declared_decimal(cls, value: FactAtom, info: ValidationInfo) -> FactAtom:
+        """Materialise exact authored decimal selectors without float coercion."""
+        if info.data.get("value_type") != "decimal":
+            return value
+        if not isinstance(value, str):
+            raise RegistryValidationError("decimal fact selector value_type requires a decimal string")
+        try:
+            decimal = Decimal(value)
+        except ValueError as exc:
+            raise RegistryValidationError("decimal fact selector value_type requires a valid decimal string") from exc
+        if not decimal.is_finite():
+            raise RegistryValidationError("decimal fact selector value_type requires a finite decimal")
+        return decimal
 
 
 class NamedFactValue(RegistryModel):
@@ -157,7 +174,24 @@ class MappingFactEntry(RegistryModel):
     """One exact key-to-value mapping entry."""
 
     key: FactAtom
+    value_type: Literal["decimal"] | None = None
     value: FactAtom
+
+    @field_validator("value", mode="after")
+    @classmethod
+    def _materialise_declared_decimal(cls, value: FactAtom, info: ValidationInfo) -> FactAtom:
+        """Materialise an authored mapping Decimal without coercing ordinary strings."""
+        if info.data.get("value_type") != "decimal":
+            return value
+        if not isinstance(value, str):
+            raise RegistryValidationError("decimal mapping value_type requires a decimal string")
+        try:
+            decimal = Decimal(value)
+        except ValueError as exc:
+            raise RegistryValidationError("decimal mapping value_type requires a valid decimal string") from exc
+        if not decimal.is_finite():
+            raise RegistryValidationError("decimal mapping value_type requires a finite decimal")
+        return decimal
 
 
 class MappingFactPayload(RegistryModel):

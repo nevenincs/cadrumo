@@ -1,0 +1,19 @@
+[fact]
+fact_id = "dehu-tacit-rejection-natural-days"
+family = "scalar"
+
+[[fact.variants]]
+variant_id = "dehu-tacit-rejection-natural-days:2016-10-02"
+date_axis = "submission_date"
+valid_from = 2016-10-02
+legal_refs = ["ley-39-2015:art-43.2"]
+source_refs = ["boe-ley-39-2015-art-43-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-ley-39-2015-art-43-statutory-facts"
+required_text = ["diez días naturales"]
+[fact.variants.payload]
+kind = "scalar"
+value = 10
+unit = "natural_days"

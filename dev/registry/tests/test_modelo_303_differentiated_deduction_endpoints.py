@@ -36,7 +36,7 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import IvaLedgerOb
 from cadrumo.domain.calculations.registry.m303_differentiated_deduction_projection import (
     project_m303_differentiated_deduction_rows,
 )
-from cadrumo.domain.calculations.registry.record_design import extract_record_design
+from ..compiler.record_design import extract_record_design
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva.flow import IvaFlowDirection

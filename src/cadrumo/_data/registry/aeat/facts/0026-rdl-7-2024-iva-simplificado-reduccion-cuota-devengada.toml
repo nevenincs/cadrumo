@@ -1,0 +1,41 @@
+[fact]
+fact_id = "rdl-7-2024-art-11-2:iva-simplificado-reduccion-cuota-devengada"
+family = "scalar"
+
+[[fact.variants]]
+variant_id = "rdl-7-2024-art-11-2:iva-simplificado-reduccion-cuota-devengada:2024-11-13"
+date_axis = "filing_period"
+valid_from = 2024-11-13
+valid_to = 2024-12-31
+legal_refs = [
+    "real-decreto-ley-7-2024:art-11.2",
+    "real-decreto-ley-7-2024:df-14",
+    "real-decreto-ley-6-2024:anexo",
+    "real-decreto-ley-6-2024:art-1",
+    "correccion-errores-rdl-6-2024",
+]
+source_refs = [
+    "boe-rdl-7-2024-dana-authority",
+    "boe-rdl-6-2024-dana-authority",
+    "boe-correccion-errores-rdl-6-2024",
+]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-rdl-7-2024-dana-authority"
+required_text = ["podrán reducir en un 25 por ciento el importe de las cuotas devengadas por operaciones corrientes correspondiente a tales actividades en el año 2024"]
+
+[[fact.variants.source_citations]]
+source_ref = "boe-rdl-6-2024-dana-authority"
+required_text = ["en los municipios incluidos en el anexo de esta norma entre el 28 de octubre y el 4 de noviembre de 2024"]
+
+[[fact.variants.source_citations]]
+source_ref = "boe-correccion-errores-rdl-6-2024"
+required_text = ["Advertidos errores en el Real Decreto-ley 6/2024, de 5 de noviembre"]
+
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "0.25"
+unit = "fraction"

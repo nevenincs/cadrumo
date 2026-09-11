@@ -309,7 +309,6 @@ def _isolate_registry_caches() -> Iterator[None]:
     require.
     """
     from dev.registry.compiler import loader as registry_loader
-
     from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
 
     def _reset() -> None:

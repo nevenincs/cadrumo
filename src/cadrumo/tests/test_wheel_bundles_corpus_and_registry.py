@@ -32,7 +32,9 @@ from __future__ import annotations
 import re
 import shutil
 import subprocess
+import tomllib
 import zipfile
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -51,6 +53,28 @@ _WHEEL_DATA_PREFIX = "cadrumo/_data"
 # Mirrors the ``tool.hatch.build`` exclude patterns in ``pyproject.toml`` and
 # the companion builders' suffix sets (``packaging/*/hatch_build.py``).
 _CORPUS_BINARY_SUFFIXES = (".pdf", ".docx", ".xls", ".xlsm", ".xlsx", ".zip")
+
+
+@cache
+def _wheel_exclusion_patterns() -> tuple[str, ...]:
+    """Return Hatch's declared non-runtime source patterns once per test run."""
+
+    config = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    return tuple(config["tool"]["hatch"]["build"]["targets"]["wheel"].get("exclude", []))
+
+
+def _wheel_excludes(source_relative: str) -> bool:
+    """Whether Hatch declares this repository-relative source path non-runtime.
+
+    This parity gate deliberately reads the build declaration instead of
+    reproducing its registry-authoring exclusion.  The wheel is then compared
+    with the *declared* runtime data set, so an intentional distribution-boundary
+    change is tested through the real archive rather than a second hand-written
+    inventory.
+    """
+
+    source_path = Path(source_relative)
+    return any(source_path.match(pattern) for pattern in _wheel_exclusion_patterns())
 
 
 def _is_corpus_source_binary(source_relative: str) -> bool:
@@ -107,7 +131,7 @@ def _expected_archive_paths(tracked: list[str]) -> set[str]:
     for path in tracked:
         if not path.startswith(prefix):
             raise AssertionError(f"git ls-files returned a path outside src/cadrumo/_data/: {path!r}")
-        if _is_corpus_source_binary(path):
+        if _is_corpus_source_binary(path) or _wheel_excludes(path):
             continue
         relative = path[len(prefix) :]
         if any(part == "tests" for part in Path(relative).parts):
