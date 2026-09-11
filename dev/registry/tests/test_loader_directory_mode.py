@@ -26,6 +26,7 @@ from cadrumo.domain.calculations.registry.errors import (
 )
 from dev.registry.compiler._loader_internals import load_modelo_file
 from dev.registry.compiler.loader import (
+    load_catalogue_file,
     load_modelo_directory,
     load_modelo_source,
     load_registry_tree,
@@ -389,8 +390,8 @@ def test_committed_registry_tree_loads_directory_modelos() -> None:
     assert all(source.layout == "directory" for source in sources)
 
 
-def test_shared_catalogues_reject_unknown_legal_refs(tmp_path: Path) -> None:
-    """The cycle-safe parameter loader must not return ungrounded legal refs."""
+def test_catalogue_rejects_the_retired_global_parameters_section(tmp_path: Path) -> None:
+    """The shared legal loader must not silently revive the retired provider."""
 
     legal_dir = tmp_path / "legal"
     legal_dir.mkdir()
@@ -409,11 +410,8 @@ reviewed_by = "registry-test"
         encoding="utf-8",
     )
 
-    with pytest.raises(
-        RegistryLoadError,
-        match=r"legal parameter 'test-rate' references unknown legal id 'ley-test:art-1'",
-    ):
-        load_shared_catalogues(tmp_path)
+    with pytest.raises(RegistryLoadError, match=r"retired global \[parameters\] catalogue section is forbidden"):
+        load_catalogue_file(legal_dir / "parameters.toml")
 
 
 def test_shared_catalogues_reject_duplicate_legal_ids_across_fragments(tmp_path: Path) -> None:
@@ -435,138 +433,16 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "registry-test"
 required_text = ["first provision"]
-
-[parameters."test-rate"]
-evidence_tier = "legal_authority"
-value = "0.21"
-unit = "fraction"
-applies_to = "test-case"
-legal_refs = ["ley-test:art-1"]
-review_status = "pending_review"
-reviewed_at = 2026-06-28
-reviewed_by = "registry-test"
 """.lstrip()
-    second_fragment = (
-        first_fragment.replace("first", "second")
-        .replace("BOE-FIRST", "BOE-SECOND")
-        .replace(
-            '[parameters."test-rate"]',
-            '[parameters."other-rate"]',
-        )
-    )
+    second_fragment = first_fragment.replace("first", "second").replace("BOE-FIRST", "BOE-SECOND")
     (legal_dir / "a.toml").write_text(first_fragment, encoding="utf-8")
     (legal_dir / "b.toml").write_text(second_fragment, encoding="utf-8")
 
     with pytest.raises(
         RegistryLoadError,
-        match=r"duplicate catalogue ids legal=\['ley-test:art-1'\] sources=\[\] parameters=\[\]",
+        match=r"duplicate catalogue ids legal=\['ley-test:art-1'\] sources=\[\]",
     ):
         load_shared_catalogues(tmp_path)
-
-
-def test_shared_catalogues_reject_noncanonical_parameter_key(tmp_path: Path) -> None:
-    """The TOML map key must pass the canonical ParameterId boundary."""
-
-    legal_dir = tmp_path / "legal"
-    legal_dir.mkdir()
-    (legal_dir / "parameters.toml").write_text(
-        """
-[parameters."bad id with spaces"]
-evidence_tier = "legal_authority"
-value = "0.21"
-unit = "fraction"
-applies_to = "test-case"
-legal_refs = ["ley-test:art-1"]
-review_status = "pending_review"
-reviewed_at = 2026-06-28
-reviewed_by = "registry-test"
-""".lstrip(),
-        encoding="utf-8",
-    )
-
-    with pytest.raises(
-        RegistryLoadError,
-        match=r"invalid legal parameter 'bad id with spaces'",
-    ):
-        load_shared_catalogues(tmp_path)
-
-
-def test_shared_catalogues_preserves_valid_parameter_key_identity(tmp_path: Path) -> None:
-    """A valid TOML key is the identity of the loaded typed parameter."""
-
-    legal_dir = tmp_path / "legal"
-    legal_dir.mkdir()
-    (legal_dir / "catalogue.toml").write_text(
-        """
-[legal."ley-test:art-1"]
-evidence_tier = "legal_authority"
-authority = "boe"
-kind = "ley"
-corpus_ref = "corpus/test/ley-test.html#art-1"
-document_id = "BOE-TEST-001"
-article = "1"
-permalink = "https://example.com/ley-test"
-effective_from = 2026-01-01
-review_status = "agent_reviewed"
-reviewed_at = 2026-06-28
-reviewed_by = "registry-test"
-required_text = ["test provision"]
-
-[parameters."test-rate"]
-evidence_tier = "legal_authority"
-value = "0.21"
-unit = "fraction"
-applies_to = "test-case"
-legal_refs = ["ley-test:art-1"]
-review_status = "pending_review"
-reviewed_at = 2026-06-28
-reviewed_by = "registry-test"
-
-[supported_filing_years]
-years = [2025]
-
-[sociedades_annual_manual_coverage]
-""".lstrip()
-        + (
-            'dispositions = [{ year = 2025, status = "unpublished", '
-            'official_locator = "https://example.com/manuals", observed_at = 2026-09-10, '
-            'acquisition_condition_key = "application.registry.manuals.coverage.recheck_aeat_publication" }]\n'
-        ),
-        encoding="utf-8",
-    )
-
-    parameters = load_shared_catalogues(tmp_path).parameters
-
-    assert tuple(parameters) == ("test-rate",)
-    assert parameters["test-rate"].id == "test-rate"
-
-
-def test_registry_tree_rejects_parameter_unknown_legal_refs(tmp_path: Path) -> None:
-    """The full registry merge validates legal-parameter legal refs before returning."""
-
-    legal_dir = tmp_path / "legal"
-    legal_dir.mkdir()
-    (tmp_path / "modelos").mkdir()
-    (legal_dir / "parameters.toml").write_text(
-        """
-[parameters."test-rate"]
-evidence_tier = "legal_authority"
-value = "0.21"
-unit = "fraction"
-applies_to = "test-case"
-legal_refs = ["ley-test:art-1"]
-review_status = "pending_review"
-reviewed_at = 2026-06-28
-reviewed_by = "registry-test"
-""".lstrip(),
-        encoding="utf-8",
-    )
-
-    with pytest.raises(
-        RegistryLoadError,
-        match=r"legal parameter 'test-rate' references unknown legal id 'ley-test:art-1'",
-    ):
-        load_registry_tree(tmp_path)
 
 
 def test_committed_key_modelos_load_through_generic_fragment_sources() -> None:

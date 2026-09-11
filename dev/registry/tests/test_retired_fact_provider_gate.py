@@ -1,4 +1,4 @@
-"""Cross-slice gate for facts that displaced the retired legal-parameter provider."""
+"""Cross-slice gate for facts that closed the retired global provider."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalo
 from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from dev.registry.compiler.fact_providers import compile_registered_fact_providers
-from dev.registry.compiler.fact_validation import migrated_legal_parameter_fact_failures
+from dev.registry.compiler.fact_validation import retired_fact_provider_closure_failures
 from dev.registry.compiler.loader import load_shared_catalogues
 from dev.registry.compiler.validator import RegistryValidator
 
@@ -69,11 +69,11 @@ def _resolve_entities(fact_id: str, effective_date: date) -> ResolvedEntitySetFa
     return resolved
 
 
-def test_direct_canonical_compilation_closes_the_retired_legal_parameter_slices() -> None:
+def test_direct_canonical_compilation_closes_the_retired_provider_slices() -> None:
     root = _registry_root()
     shared = load_shared_catalogues(root)
 
-    assert migrated_legal_parameter_fact_failures(_catalogue(), source_refs=shared.sources) == ()
+    assert retired_fact_provider_closure_failures(_catalogue(), source_refs=shared.sources) == ()
 
 
 def test_gate_detects_a_missing_fact_and_non_filing_date_axis() -> None:
@@ -91,8 +91,8 @@ def test_gate_detects_a_missing_fact_and_non_filing_date_axis() -> None:
     )
     sources = load_shared_catalogues(_registry_root()).sources
 
-    missing_failures = migrated_legal_parameter_fact_failures(missing, source_refs=sources)
-    wrong_axis_failures = migrated_legal_parameter_fact_failures(wrong_axis, source_refs=sources)
+    missing_failures = retired_fact_provider_closure_failures(missing, source_refs=sources)
+    wrong_axis_failures = retired_fact_provider_closure_failures(wrong_axis, source_refs=sources)
 
     assert any("is not authored" in failure for failure in missing_failures)
     assert any("must use the filing_period date axis" in failure for failure in wrong_axis_failures)
@@ -105,7 +105,7 @@ def test_gate_detects_a_gap_in_source_grounded_temporal_coverage() -> None:
     gapped_fact = fact.model_copy(update={"variants": (gapped_variant, *fact.variants[1:])})
     gapped = GovernedFactCatalogue(facts={**catalogue.facts, gapped_fact.fact_id: gapped_fact})
 
-    failures = migrated_legal_parameter_fact_failures(
+    failures = retired_fact_provider_closure_failures(
         gapped,
         source_refs=load_shared_catalogues(_registry_root()).sources,
     )
@@ -124,7 +124,7 @@ def test_canonical_compiler_validator_reports_a_missing_migrated_fact() -> None:
     )
     malformed_catalogues = catalogues.model_copy(update={"facts": missing})
 
-    expected = "migrated legal-parameter fact 'liva-art-161:recargo-rate-general' is not authored"
+    expected = "retired-provider fact 'liva-art-161:recargo-rate-general' is not authored"
     with pytest.raises(RegistryValidationError, match=expected):
         RegistryValidator(malformed_catalogues, source_root=bundled_path()).validate_registry(())
 

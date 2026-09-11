@@ -22,9 +22,8 @@ casillas by activity type can route each row to the right one. The worked case i
 Modelo 131, where casilla 01 carries the estimación-objetiva volume and casilla 08 the
 agrarian one; without an activity axis the same rows would feed both and double-count.
 It is also the selector for the RIRPF art. 95 retención partitions, whose
-code-to-partition correspondence is registry data in
-``registry/aeat/legal/irpf-retencion-actividades.toml`` under the
-``rirpf-art-95:selector-m036-*`` parameters — never a mapping inlined here.
+code-to-partition correspondence is registry data in the
+``rirpf-art-95:selector-m036-*`` governed facts — never a mapping inlined here.
 
 The correspondence does not cover art. 95 completely, and the gap is declared rather
 than hidden: art. 95.4.1.º fixes 1 % for *engorde de porcino y avicultura*

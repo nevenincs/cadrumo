@@ -3,9 +3,8 @@
 RIRPF art. 95 fixes a different retención rate per kind of activity, and Modelo 036
 codes the taxpayer's activity. Which code falls in which arm is a legal
 correspondence, so it lives in the registry as data — the
-``rirpf-art-95:selector-m036-*`` parameters in
-``registry/aeat/legal/irpf-retencion-actividades.toml``, each carrying its own
-``legal_refs`` — and this module reads it. There is deliberately no code-to-arm
+``rirpf-art-95:selector-m036-*`` governed facts, each carrying its own
+``legal_refs`` — and this module reads them. There is deliberately no code-to-arm
 mapping written here: a literal map would be a second authority for the same fact,
 and the registry's is the one that carries its legal basis.
 
@@ -15,7 +14,7 @@ the derivation as impossible for want of an input, not for want of authority; a
 declared ``tipo_actividad`` on a ledger row is that input, so this module closes it.
 The apartado-level detail — that agrícola/ganadera comes from art. 95.4.2.º and
 forestal from art. 95.5, both yielding 2 % — stays where it belongs, on the
-registry parameters' own ``legal_refs``, instead of becoming a second public
+registry facts' own ``legal_refs``, instead of becoming a second public
 classifier that would then have to be kept true.
 
 Two of the correspondences would be plausible inferences and are not inferred:
@@ -65,13 +64,13 @@ __all__ = [
 ]
 
 
-#: The art. 95 selector parameters, and which arm of :class:`IrpfActivityKind` each
-#: one feeds. Keyed by parameter id rather than by a second enum: the apartado-level
-#: detail is already carried by the registry parameter's own ``legal_refs``, and
+#: The art. 95 selector facts, and which arm of :class:`IrpfActivityKind` each
+#: one feeds. Keyed by fact id rather than by a second enum: the apartado-level
+#: detail is already carried by the registry fact's own ``legal_refs``, and
 #: minting an enum for it would be a second public answer to the question
 #: ``IrpfActivityKind`` exists to answer.
 #:
-#: The engorde parameter is listed even though its code set is empty, because the
+#: The engorde fact is listed even though its code set is empty, because the
 #: emptiness is a finding rather than an omission -- art. 95.4.1.º fixes 1 % for
 #: engorde de porcino y avicultura and the Modelo 036 table's finest livestock grain
 #: is ``B02``, so no code reaches it. Dropping the entry would hide that.
@@ -107,7 +106,7 @@ def resolve_tipo_actividad_selector(
     """
     if parameter_id not in _GOVERNED_ACTIVITY_SELECTOR_IDS:
         raise TransactionValidationError(
-            f"registry parameter {parameter_id!r} has no typed governed Modelo 036 activity-selector fact",
+            f"registry fact {parameter_id!r} has no typed governed Modelo 036 activity-selector fact",
         )
     if authority is None:
         from ..calculations.registry.authority import bundled_authority
@@ -140,7 +139,7 @@ def _typed_code_set(selector: ResolvedEntitySetFact) -> frozenset[TipoActividad]
             codes.add(TipoActividad(token))
         except ValueError as exc:
             raise TransactionValidationError(
-                f"registry parameter {selector.fact_id!r} names {token!r}, which is not a "
+                f"registry fact {selector.fact_id!r} names {token!r}, which is not a "
                 f"Modelo 036 activity code; accepted: {', '.join(sorted(t.value for t in TipoActividad))}",
             ) from exc
     return frozenset(codes)
@@ -152,23 +151,23 @@ def tipo_actividad_code_set(
     effective_date: date,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> frozenset[TipoActividad]:
-    """Return the Modelo 036 codes a registry selector parameter declares.
+    """Return the Modelo 036 codes a registry selector fact declares.
 
-    The ONE way to read a ``m036-tipo-actividad-code-set`` parameter. Several
+    The ONE way to read a ``m036-tipo-actividad-code-set`` fact. Several
     unrelated selectors exist -- the four art. 95 partitions and the art. 110.1.c)
     agrarian set -- and each additional caller that splits the string itself is a
     second place the unit check, the unknown-token refusal and the typing can drift.
 
     Args:
-        parameter_id: The registry parameter to read.
+        parameter_id: The registry fact to read.
         effective_date: Filing-period coordinate for the exact fact variant.
         authority: Optional validated authority used for fact resolution.
 
     Returns:
-        The declared codes, empty when the parameter declares none.
+        The declared codes, empty when the fact declares none.
 
     Raises:
-        TransactionValidationError: If the parameter is absent, carries the wrong
+        TransactionValidationError: If the fact is absent, carries the wrong
             unit, names a non-code token, or the catalogue cannot be loaded.
     """
     return _typed_code_set(
@@ -181,7 +180,7 @@ def tipo_actividad_code_set(
 
 
 def load_tipo_actividad_selectors(*, effective_date: date) -> Mapping[str, frozenset[TipoActividad]]:
-    """Return the codes each art. 95 selector parameter declares.
+    """Return the codes each art. 95 selector fact declares.
 
     Every selector is present, including the engorde one whose set is empty. An
     empty set is data, not an absence: it records that the Modelo 036 axis cannot

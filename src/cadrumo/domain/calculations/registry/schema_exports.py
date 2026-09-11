@@ -1011,9 +1011,8 @@ class ExportLayoutDefinition(RegistryModel):
     declaration in the fixture corpus carries ``<VERSION>2.02</VERSION>``, which
     is a redaction placeholder — the sanitiser assigned sequential field-position
     indices, and its siblings include an ``ECIVIL`` of ``6`` where the schema
-    admits only 1-4. And the registry's own ``LegalParameter`` surface, the
-    obvious home for a "declared parameter", requires a legal citation this value
-    has none of; declaring it there would have meant inventing one.
+    admits only 1-4. A governed fact would require legal evidence that this
+    value lacks; declaring one would have meant inventing a citation.
 
     Absent, the export refuses rather than emitting a partial ``Aux`` — which
     would be invalid regardless, since the element is ``minOccurs="1"``.

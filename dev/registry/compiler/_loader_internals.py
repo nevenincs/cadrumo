@@ -57,7 +57,7 @@ from cadrumo.domain.calculations.registry.schema import (
     SociedadesAnnualManualCoverageCatalogue,
     SupportedFilingYearsCatalogue,
 )
-from cadrumo.domain.calculations.registry.schema_references import LegalParameter, LegalReference, SourceReference
+from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition, CasillaEvolutionKind
 from cadrumo.domain.calculations.registry.validate_revision_identity import revision_reference_identity_failures
 
@@ -1271,6 +1271,11 @@ def _load_catalogue_file_cached(
     del byte_count, modified_ns, content_digest
     source_path = Path(path)
     data = freeze_toml(read_toml(source_path, error_factory=RegistryLoadError))
+    if "parameters" in data:
+        raise RegistryLoadError(
+            f"{source_path}: retired global [parameters] catalogue section is forbidden; "
+            "author a governed fact instead",
+        )
     legal = _validate_catalogue_section(
         source_path,
         raw=data.get("legal"),
@@ -1282,12 +1287,6 @@ def _load_catalogue_file_cached(
         raw=data.get("sources") or data.get("source"),
         kind="source reference",
         model=SourceReference,
-    )
-    parameters = _validate_catalogue_section(
-        source_path,
-        raw=data.get("parameters"),
-        kind="legal parameter",
-        model=LegalParameter,
     )
     supported_filing_years = None
     raw_supported_filing_years = data.get("supported_filing_years")
@@ -1310,7 +1309,6 @@ def _load_catalogue_file_cached(
     return RegistryCatalogues(
         legal=legal,
         sources=sources,
-        parameters=parameters,
         supported_filing_years=supported_filing_years,
         sociedades_annual_manual_coverage=sociedades_annual_manual_coverage,
     )
@@ -1331,8 +1329,7 @@ def _validate_catalogue_section[T: BaseModel](
     Each ``(id, payload)`` pair is fed through ``model.model_validate``
     with ``id`` injected; type-shape errors raise the typed
     ``RegistryLoadError`` envelope so the catalogue loader's failure
-    mode stays uniform across the three sections (legal, sources,
-    parameters).
+    mode stays uniform across the legal and source sections.
     """
     table = _as_toml_table(raw)
     if table is None:
@@ -1347,24 +1344,6 @@ def _validate_catalogue_section[T: BaseModel](
         except ValidationError as exc:
             raise RegistryLoadError(f"{source_path}: invalid {kind} {ref_id!r}: {exc}") from exc
     return out
-
-
-def _validate_legal_parameter_refs(
-    scope: Path,
-    *,
-    parameters: Mapping[str, LegalParameter],
-    legal: Mapping[str, LegalReference],
-) -> None:
-    failures = [
-        f"legal parameter {parameter_id!r} references unknown legal id {legal_ref!r}"
-        for parameter_id, parameter in sorted(parameters.items())
-        for legal_ref in parameter.legal_refs
-        if legal_ref not in legal
-    ]
-    if failures:
-        raise RegistryLoadError(
-            f"{scope}: unresolved legal parameter references:\n" + "\n".join(f" - {failure}" for failure in failures),
-        )
 
 
 def _live_cached_fingerprints(
@@ -1597,6 +1576,5 @@ __all__ = [
     "_revision_section_fragment_paths",
     "_toml_fingerprint",
     "_validate_legal_directory",
-    "_validate_legal_parameter_refs",
     "load_modelo_file",
 ]

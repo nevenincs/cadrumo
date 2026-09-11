@@ -16,13 +16,13 @@ from cadrumo.domain.calculations.registry.schema_references import LegalReferenc
 from ._validate_evidence import EvidenceValidator
 from .legal_grounding import verify_legal_reference_grounding
 
-__all__ = ["governed_fact_catalogue_failures", "migrated_legal_parameter_fact_failures"]
+__all__ = ["governed_fact_catalogue_failures", "retired_fact_provider_closure_failures"]
 
 
-# These facts replaced the former global legal-parameter provider.  Keep the
+# These facts replaced the retired global provider. Keep the
 # campaign boundary as identities rather than copying its legally operative
 # values into Python: the fragments remain the one value authority.
-_MIGRATED_LEGAL_PARAMETER_FACT_IDS = frozenset(
+_RETIRED_FACT_PROVIDER_IDS = frozenset(
     {
         "lirpf-art-101:retencion-administrador-general",
         "lirpf-art-101:retencion-administrador-reducida",
@@ -133,7 +133,7 @@ def governed_fact_catalogue_failures(
     return tuple(failures)
 
 
-def migrated_legal_parameter_fact_failures(
+def retired_fact_provider_closure_failures(
     catalogue: GovernedFactCatalogue,
     *,
     source_refs: Mapping[str, SourceReference],
@@ -145,14 +145,14 @@ def migrated_legal_parameter_fact_failures(
     declaration of rates, thresholds, or activity classifications.
     """
     failures: list[str] = []
-    for fact_id in sorted(_MIGRATED_LEGAL_PARAMETER_FACT_IDS):
+    for fact_id in sorted(_RETIRED_FACT_PROVIDER_IDS):
         fact = catalogue.facts.get(fact_id)
         if fact is None:
-            failures.append(f"migrated legal-parameter fact {fact_id!r} is not authored")
+            failures.append(f"retired-provider fact {fact_id!r} is not authored")
             continue
         failures.extend(_temporal_coverage_failures(fact))
         for variant in fact.variants:
-            context = f"migrated legal-parameter fact {fact_id!r} variant {variant.variant_id!r}"
+            context = f"retired-provider fact {fact_id!r} variant {variant.variant_id!r}"
             if variant.date_axis is not DateAxis.FILING_PERIOD:
                 failures.append(f"{context} must use the filing_period date axis")
             if not variant.source_refs or not variant.source_citations:
@@ -173,11 +173,11 @@ def _temporal_coverage_failures(fact: GovernedFact) -> tuple[str, ...]:
     for current, successor in pairwise(variants):
         if current.valid_to is None or current.valid_to + timedelta(days=1) != successor.valid_from:
             failures.append(
-                f"migrated legal-parameter fact {fact.fact_id!r} has a gap in its source-grounded temporal coverage",
+                f"retired-provider fact {fact.fact_id!r} has a gap in its source-grounded temporal coverage",
             )
     if variants[-1].valid_to is not None:
         failures.append(
-            f"migrated legal-parameter fact {fact.fact_id!r} must retain an open current applicability window",
+            f"retired-provider fact {fact.fact_id!r} must retain an open current applicability window",
         )
     return tuple(failures)
 
