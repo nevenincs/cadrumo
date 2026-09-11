@@ -8,14 +8,15 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from cadrumo.domain.calculations.registry.facts.modelo_projections import ModeloParameterFact
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.facts.schema import FactSelector
-from dev.registry.compiler.fact_providers import (
+
+from ..compiler.fact_providers import (
     FACT_PROVIDER_REGISTRATIONS,
     compile_registered_fact_providers,
 )
+from ..compiler.modelo_projections import ModeloParameterFact
 
 _ROOT = Path(__file__).resolve().parents[3]
 _MANIFEST = _ROOT / "dev/registry/analysis/facts_wave2_provider_handoff.toml"

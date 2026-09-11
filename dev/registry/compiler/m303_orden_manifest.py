@@ -9,7 +9,9 @@ from typing import TYPE_CHECKING
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING
+from cadrumo.core.hashing import blake2b_hex
 from cadrumo.core.modelo import Modelo
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry._m303_orden_constants import EXTRACTOR_VERSION
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import LegalRefId, SourceRefId

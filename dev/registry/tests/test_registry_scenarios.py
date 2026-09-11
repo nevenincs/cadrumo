@@ -10,8 +10,7 @@ from pydantic import ValidationError
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-
-from ._registry_scenarios_support import (
+from cadrumo.domain.calculations.registry.tests._registry_scenarios_support import (
     _REGISTRY_ROOT,
     _estimacion_objetiva_modulos_archetype_scenario,
     _expected,
@@ -26,6 +25,7 @@ from ._registry_scenarios_support import (
     _simplified_direct_estimation_cap_scenario,
     _tributacion_conjunta_family_joint_archetype_scenario,
 )
+
 from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,

@@ -43,8 +43,10 @@ def _modelo_100_entries(filing_year: int) -> tuple[XmlDictionaryEntry, ...]:
     _modelos_by_id, catalogues = _loaded_registry()
     return xml_dictionary_entries(
         _modelo_100_layout(filing_year),
-        source_root=_source_root(),
         sources=catalogues.sources,
+        source_payloads={
+            str(source.id): (_source_root() / source.corpus_path).read_bytes() for source in catalogues.sources.values()
+        },
     )
 
 
@@ -139,7 +141,14 @@ def test_an_override_naming_an_absent_field_is_refused() -> None:
     )
 
     with pytest.raises(RegistryValidationError, match="PH18_TYPO"):
-        xml_dictionary_entries(typo, source_root=_source_root(), sources=catalogues.sources)
+        xml_dictionary_entries(
+            typo,
+            sources=catalogues.sources,
+            source_payloads={
+                str(source.id): (_source_root() / source.corpus_path).read_bytes()
+                for source in catalogues.sources.values()
+            },
+        )
 
 
 def test_a_fixed_width_layout_may_not_declare_an_override() -> None:

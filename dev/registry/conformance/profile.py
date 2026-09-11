@@ -478,8 +478,12 @@ def _compare_dictionary_layout(
     try:
         entries = _xml_dictionary_entries(
             layout,
-            source_root=source_root,
             sources=sources,
+            source_payloads=(
+                None
+                if source_root is None
+                else {str(source.id): (source_root / source.corpus_path).read_bytes() for source in sources.values()}
+            ),
         )
     except (_RegistryValidationError, OSError) as exc:
         return measured(

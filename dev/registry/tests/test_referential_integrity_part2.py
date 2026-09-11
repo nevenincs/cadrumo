@@ -14,7 +14,6 @@ from cadrumo.domain.calculations.registry.schema_surfaces import (
     CasillaContinuidadEvolutionDefinition,
     CasillaDefinition,
 )
-from dev.registry.compiler.validator import RegistryValidator
 
 from ..compiler.validator import RegistryValidator
 from ._record_design_support import _committed_registry_tree

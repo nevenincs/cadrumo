@@ -280,7 +280,8 @@ def _resolved_variants(facts: Iterable[GovernedFact]) -> tuple[ResolvedGovernedF
 
 def _open_plan_steps(plan_text: str) -> frozenset[str]:
     """Return the exact open step ids from the active facts-registry plan."""
-    return frozenset(re.findall(r"^- \[ \] `([^`]+)`", plan_text, flags=re.MULTILINE))
+    step_ids = re.findall(r"^- \[ \] `([^`]+)`", plan_text, flags=re.MULTILINE)
+    return frozenset(step_ids)
 
 
 def migration_retirement_findings(
@@ -291,9 +292,11 @@ def migration_retirement_findings(
     """Admit only complete, named S80/S85 temporary migration holds while their steps remain open."""
     open_step_ids = frozenset(open_steps)
     findings: list[FactQualityFinding] = []
+    remaining_tables = iva_ledger.get("remaining_structured_tables")
+    table_entries = remaining_tables if isinstance(remaining_tables, (list, tuple)) else ()
     tables = {
         str(table.get("data_path", "")): table
-        for table in iva_ledger.get("remaining_structured_tables", ())
+        for table in table_entries
         if isinstance(table, Mapping)
     }
     for data_path, step_id in _S80_TEMPORARY_HOLD_STEPS.items():
@@ -349,9 +352,11 @@ def migration_retirement_findings(
             )
         )
 
+    remaining_lanes = iva_ledger.get("lanes")
+    lane_entries = remaining_lanes if isinstance(remaining_lanes, (list, tuple)) else ()
     lanes = {
         str(lane.get("lane_id", "")): lane
-        for lane in iva_ledger.get("lanes", ())
+        for lane in lane_entries
         if isinstance(lane, Mapping) and "status" in lane
     }
     for lane_id, step_id in _S85_TEMPORARY_HOLD_STEPS.items():

@@ -126,7 +126,7 @@ def test_epoch_admission_refuses_real_horno_fact_shapes_outside_the_selected_des
 def test_projection_identity_never_uses_json_serialisation() -> None:
     import inspect
 
-    from .. import m303_regimen_simplificado_projection as module
+    from cadrumo.domain.calculations.registry import m303_regimen_simplificado_projection as module
 
     source = inspect.getsource(module)
     assert "model_dump_json" not in source

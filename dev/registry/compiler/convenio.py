@@ -51,7 +51,12 @@ def convenio_authority_from_facts(
             raise RegistryValidationError(
                 f"convenio fact variant {variant.variant_id!r} must select exactly country_code and tipo_renta",
             )
-        country_code = selector_values["country_code"].upper()
+        country_code_value = selector_values["country_code"]
+        if not isinstance(country_code_value, str):
+            raise RegistryValidationError(
+                f"convenio fact variant {variant.variant_id!r} country_code must be text",
+            )
+        country_code = country_code_value.upper()
         if len(country_code) != 2 or not country_code.isalpha():
             raise RegistryValidationError(
                 f"convenio fact variant {variant.variant_id!r} has invalid country_code {country_code!r}",
@@ -75,9 +80,14 @@ def convenio_authority_from_facts(
                 f"convenio country {country_code!r} cannot combine legal documents "
                 f"{previous_document_id!r} and {document_id!r}",
             )
+        tipo_renta_value = selector_values["tipo_renta"]
+        if not isinstance(tipo_renta_value, str):
+            raise RegistryValidationError(
+                f"convenio fact variant {variant.variant_id!r} tipo_renta must be text",
+            )
         rows_by_country.setdefault(country_code, []).append(
             ConvenioOverrideRow(
-                tipo_renta=TipoRentaIrnr(selector_values["tipo_renta"]),
+                tipo_renta=TipoRentaIrnr(tipo_renta_value),
                 kind=ConvenioOverrideKind(variant.payload.override_code),
                 rate=str(variant.payload.value) if variant.payload.value is not None else None,
                 legal_ref_anchor=legal_ref_anchor,

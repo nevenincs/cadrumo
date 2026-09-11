@@ -26,6 +26,7 @@ import pytest
 
 from cadrumo.core.export_layout_format import ExportLayoutFormat
 from cadrumo.core.modelo import NON_REGISTRY_MODELOS, Modelo
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.revision_review import RevisionReviewStatus
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.export_parse import xml_dictionary_entries
@@ -528,8 +529,10 @@ def test_annual_casilla_comparison_uses_the_selected_year_dictionary(
 
     entries = xml_dictionary_entries(
         dictionary_layout,
-        source_root=registry_authority.source_root,
         sources=snapshot.sources,
+        source_payloads={
+            str(source.id): (bundled_path() / source.corpus_path).read_bytes() for source in snapshot.sources.values()
+        },
     )
     dictionary_ids = {str(entry.casilla_id) for entry in entries if entry.casilla_id is not None}
     registry_ids = {str(casilla.id) for casilla in snapshot.revision.casillas if not casilla.internal_only}
