@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-11'
 body_schema: body-v2
-body_hash: 'sha256:7031005de16546f577d5fb657ad1cf9e0d270c504dd88a5d49e478b277972456'
+body_hash: 'sha256:ae8eecddbb3f6d8548708feb0ff29461a81997860f59684f3fdd08cdec971269'
 ---
 
 <!-- RETIRED: S65 -->
@@ -229,7 +229,7 @@ Prove the normalized catalogue is the sole operative authority and that all plan
 
 - [ ] `W04.P19.S58` - Verify sole authority and retirement-ledger closure at the Wave 4 handoff; `src/cadrumo and dev/registry`.
 - [ ] `W04.P19.S59` - Run canonical strict production type checking after deletion; `justfile check-types and dev/quality/types.py`.
-- [ ] `W04.P19.S60` - Run both dead-code audits and remove exact orphaned code and tests; `dev/audit/dead_code.py and dev/audit/unreachable_code.py`.
+- [x] `W04.P19.S60` - Run both dead-code audits and remove exact orphaned code and tests; `dev/audit/dead_code.py and dev/audit/unreachable_code.py`.
 
 ## Wave `W05` - Integrate and verify campaign closure
 
