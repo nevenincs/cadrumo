@@ -1,8 +1,8 @@
 """Real-behaviour tests for the edition-delta migration.
 
 Every proof runs the migration over a temporary copy of the bundled registry
-holding one real modelo, loads the result through the validated authority, and
-judges it with the round-trip gate. Each rule the migration applies is shown
+holding one real modelo and its dependency closure, loads the result through
+the validated authority, and judges it with the round-trip gate. Each rule the migration applies is shown
 biting: a planted defect changes the plan, or dropping a row the rule kept makes
 the gate fail, and the unplanted tree shows the normal path.
 
@@ -31,11 +31,6 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
 from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor, ModeloDefinition
-from cadrumo.domain.calculations.registry.tests.test_revision_edition_round_trip import (
-    RoundTripFindingKind,
-    copy_registry_tree,
-    edition_round_trip_report,
-)
 from dev.registry.compiler.authority import compile_validated_authority
 
 from ..analysis.delta_minimality import LINEAGE_CLAIM_FIELDS, definition_findings, restatement_differences
@@ -49,6 +44,7 @@ from ..edition_delta_migration import (
     migrate_modelo,
     plan_migration,
 )
+from ..edition_round_trip import RoundTripFindingKind, copy_registry_tree, edition_round_trip_report
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

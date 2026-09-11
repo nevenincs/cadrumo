@@ -106,12 +106,14 @@ from typing import Final
 
 from cadrumo.core.authority_grade import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from dev.registry.compiler.edition_materialisation import materialise_edition
 from cadrumo.domain.calculations.registry.identifier_lineage import identifier_lineage
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_overlap
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.tests.test_revision_edition_round_trip import (
+from dev.registry.compiler.authority import compile_validated_authority
+from dev.registry.compiler.edition_materialisation import materialise_edition
+
+from .analysis.delta_minimality import restatement_differences
+from .edition_round_trip import (
     EditionExportScenario,
     RoundTripReport,
     RowKey,
@@ -119,9 +121,6 @@ from cadrumo.domain.calculations.registry.tests.test_revision_edition_round_trip
     edition_round_trip_report,
     merge_order,
 )
-from dev.registry.compiler.authority import compile_validated_authority
-
-from .analysis.delta_minimality import restatement_differences
 
 __all__ = [
     "BlockedCause",
