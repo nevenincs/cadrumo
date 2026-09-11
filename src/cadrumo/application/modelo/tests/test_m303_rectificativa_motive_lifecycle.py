@@ -7,8 +7,8 @@ from functools import lru_cache
 from pathlib import Path
 
 import pytest
-from test_support.registry_authoring import load_m303_annual_orden_authority
 from pydantic import ValidationError
+from test_support.registry_authoring import load_m303_annual_orden_authority
 
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository

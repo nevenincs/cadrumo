@@ -16,8 +16,8 @@ from decimal import Decimal
 from typing import TypedDict, Unpack
 
 import pytest
-from test_support.registry_authoring import load_registry_tree
 from pydantic import ValidationError
+from test_support.registry_authoring import load_registry_tree
 
 from ....core.casilla_id import CasillaId
 from ....domain.calculations.registry.detail_record_bindings import (

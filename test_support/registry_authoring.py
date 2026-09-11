@@ -34,6 +34,7 @@ def reset_registry_authoring_caches() -> None:
     registry_loader._load_registry_tree_cached.cache_clear()
     clear_fingerprint_cache()
 
+
 __all__ = [
     "REGISTRY_IDENTITY_SCHEMA_VERSION",
     "RegistryIdentityStamp",
@@ -50,6 +51,6 @@ __all__ = [
     "load_registry_tree",
     "publish_authority_candidate",
     "read_registry_identity_stamp",
-    "reset_registry_authoring_caches",
     "registry_identity_stamp_location",
+    "reset_registry_authoring_caches",
 ]

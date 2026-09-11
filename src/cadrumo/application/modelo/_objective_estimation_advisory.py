@@ -23,7 +23,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal, InvalidOperation
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from ...core.decimal.coercion import coerce_decimal_strict
 from ...core.modelo import Modelo
