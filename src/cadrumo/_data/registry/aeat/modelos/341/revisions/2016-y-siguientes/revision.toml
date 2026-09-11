@@ -29,19 +29,3 @@ source_refs = [
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
-
-[revisions."2016-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
-reason = """
-The 2016 design proves a material wire-layout change but does not adjudicate
-casilla identity across that boundary. No continuity evolution is asserted
-without separate identity evidence; the family is empty pending that evidence."""
-legal_refs = [
-    "orden-min-2000-12-15-m341:art-1",
-    "orden-min-2000-12-15-m341:art-2",
-    "ley-58-2003:art-93",
-]
-source_refs = [
-    "enrolled-modelo-341-procedure",
-    "enrolled-modelo-341-layout",
-    "aeat-dr-341-2016",
-]

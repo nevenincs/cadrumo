@@ -33,15 +33,15 @@ import time
 from pathlib import Path
 
 import pytest
-
-from ..... import __version__
-from .....core.atomic_write import atomic_write_best_effort_text
-from ..identity import (
+from dev.registry.compiler.identity import (
     REGISTRY_IDENTITY_SCHEMA_VERSION,
     RegistryIdentityStamp,
     read_registry_identity_stamp,
     registry_identity_stamp_location,
 )
+
+from ..... import __version__
+from .....core.atomic_write import atomic_write_best_effort_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 
@@ -76,7 +76,7 @@ _READER_SOURCE = f"""
 import json, os, sys, time
 from pathlib import Path
 
-from cadrumo.domain.calculations.registry.identity import read_registry_identity_stamp
+from dev.registry.compiler.identity import read_registry_identity_stamp
 
 root = Path(os.environ[{_CHILD_ROOT_ENV_VAR!r}])
 observed = []

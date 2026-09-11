@@ -3,14 +3,12 @@ tags:
   - '#audit'
   - '#facts-registry'
 date: '2026-09-10'
-modified: '2026-09-10'
+modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:6cf19ac4e9fb7bfa29670913969739956d40af5259bec02bac1b9ce8370804f5'
+body_hash: 'sha256:80331d0063176fba0312373ecc697e61dbe75da7d896cf978fa74f74240bee3e'
 related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
-
-
 
 # `facts-registry` audit: `s69 migrated legal parameter gate`
 

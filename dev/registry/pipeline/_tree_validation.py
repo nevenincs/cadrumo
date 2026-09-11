@@ -17,13 +17,13 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.directory_scan import iter_directory
 from cadrumo.core.link_safety import is_link_like
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from dev.registry.compiler.identity import resolve_registry_identity
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
-from dev.registry.compiler.registry_scope import validate_registry_scope
 from cadrumo.tests.registry_snapshot import build_snapshot
-from dev.registry.compiler.authority import compile_validated_authority
-from dev.registry.compiler.loader import collect_registry_tree_fingerprints, load_modelo_directory, load_registry_tree
+from dev.registry.compiler.authority import compile_registry_tree, compile_validated_authority
+from dev.registry.compiler.identity import resolve_registry_identity
+from dev.registry.compiler.loader import collect_registry_tree_fingerprints, load_modelo_directory
+from dev.registry.compiler.registry_scope import validate_registry_scope
 
 from ._export_tree import RenderedExportTree
 from ._tree_paths import require_existing_non_link
@@ -225,7 +225,7 @@ def _validated_target_snapshot(
         modelo_id=modelo_id,
         revision_id=revision_id,
     )
-    loaded_modelos, catalogues = load_registry_tree(registry_root)
+    loaded_modelos, catalogues = compile_registry_tree(registry_root, source_root)
     loaded_target = next((modelo for modelo in loaded_modelos if str(modelo.id) == modelo_id), None)
     if loaded_target is None:
         raise RegistryValidationError(f"generated target modelo {modelo_id!r} is absent from the isolated registry")

@@ -28,8 +28,6 @@ from pathlib import Path
 from typing import Literal
 
 import pytest
-from dev.registry.compiler.loader import _load_registry_tree_cached, load_registry_tree
-from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
 from pydantic import BaseModel
 
 from cadrumo.core.auth_provider import AuthProviderKind
@@ -37,9 +35,10 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from dev.registry.compiler._compiled_cache import (
     _CADRUMO_PACKAGE_DIR,
-    _COMPILER_PACKAGE_DIR,
+    _DEV_COMPILER_DIR,
     _REGISTRY_PACKAGE_DIR,
     _classify_foreign_type,
     _compiled_payload_root_models,
@@ -50,7 +49,8 @@ from dev.registry.compiler._compiled_cache import (
     loader_code_fingerprint,
 )
 from dev.registry.compiler._loader_internals import _collect_registry_tree_fingerprints
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from dev.registry.compiler.loader import _load_registry_tree_cached, load_registry_tree
+from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -136,18 +136,24 @@ def test_loader_code_fingerprint_is_a_stable_nonempty_sha256() -> None:
 def test_package_roots_are_the_real_directories() -> None:
     """The in/out boundary points at the real ``cadrumo`` and registry package dirs.
 
-    The classification predicate walks ``parents[2]`` from the registry package
-    to reach the ``cadrumo`` root. A package relocation that changed that depth
-    would silently classify every first-party type as foreign (or none of them),
-    so the depth is pinned rather than assumed.
+    ``_REGISTRY_PACKAGE_DIR`` is resolved from the imported ``cadrumo`` package,
+    not from this test module's own path, so it is checked against a module that
+    actually lives in the compiled schema package (``schema.py``, defining
+    ``ModeloDefinition``/``RegistryCatalogues``) rather than against
+    ``_compiled_cache.py`` itself -- that module now lives in the separate dev
+    compiler directory (``_DEV_COMPILER_DIR``), which the fingerprint hashes
+    alongside the schema package but which plays no part in the first-party/
+    foreign-type boundary.
     """
     assert _REGISTRY_PACKAGE_DIR.name == "registry"
-    assert _REGISTRY_PACKAGE_DIR.joinpath("schema.py").is_file()
-    assert _COMPILER_PACKAGE_DIR.name == "compiler"
-    assert _COMPILER_PACKAGE_DIR.joinpath("_compiled_cache.py").is_file()
+    assert (_REGISTRY_PACKAGE_DIR / "schema.py").is_file()
     assert _CADRUMO_PACKAGE_DIR.name == "cadrumo"
     assert (_CADRUMO_PACKAGE_DIR / "core").is_dir()
     assert _REGISTRY_PACKAGE_DIR.is_relative_to(_CADRUMO_PACKAGE_DIR)
+
+    assert _DEV_COMPILER_DIR.name == "compiler"
+    assert (_DEV_COMPILER_DIR / "_compiled_cache.py").is_file()
+    assert not _DEV_COMPILER_DIR.is_relative_to(_CADRUMO_PACKAGE_DIR)
 
 
 def test_derived_embedded_types_all_resolve_to_first_party_sources_outside_the_registry() -> None:
@@ -397,8 +403,7 @@ def test_the_fingerprint_is_not_computed_at_import_time() -> None:
         [
             sys.executable,
             "-c",
-            "import cadrumo.domain.calculations.registry._compiled_cache as c;"
-            "print(c.loader_code_fingerprint.cache_info().currsize)",
+            "import dev.registry.compiler._compiled_cache as c;print(c.loader_code_fingerprint.cache_info().currsize)",
         ],
         capture_output=True,
         text=True,

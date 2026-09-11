@@ -57,7 +57,7 @@ refuses on content, because size alone would misclassify a genuine layout that
 happens to be terse and would accept a long document that says nothing.
 
 See Also:
-    :func:`cadrumo.domain.calculations.registry.corpus_catalogue._validate_source_corpus_tier_declaration`
+    :func:`dev.registry.compiler.corpus_catalogue._validate_source_corpus_tier_declaration`
         The sibling check that verifies a declared ``corpus_tier`` against the
         bundled file rather than trusting the declaration.
 """

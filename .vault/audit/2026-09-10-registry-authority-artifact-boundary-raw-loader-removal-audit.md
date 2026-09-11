@@ -3,13 +3,11 @@ tags:
   - '#audit'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-10'
-modified: '2026-09-10'
+modified: '2026-09-11'
 body_schema: 'body-v2'
 body_hash: 'sha256:3bf118dbd56892f1e4bf186f068505228b032fcba059c1c81e9b8df26a77c2fe'
 related: []
 ---
-
-
 
 # `registry-authority-artifact-boundary` audit: `raw loader removal`
 

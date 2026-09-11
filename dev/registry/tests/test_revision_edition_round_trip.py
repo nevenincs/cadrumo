@@ -142,21 +142,22 @@ from cadrumo.application.filing.producer_snapshot import (
     TaxpayerIdentityFacts,
     build_filing_producer_snapshot,
 )
-from cadrumo.application.filing.runtime import ModeloOperatorProfile, schema_provider_from_authority
-from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
-from cadrumo.core.i18n.render import override_locales_root
-from cadrumo.core.modelo import Modelo
-from cadrumo.core.payment_election import PaymentElection
-from cadrumo.core.period import Period
-from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
-from cadrumo.core.refund_election import RefundElection
-from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.core.result_disposition import ResultDisposition
-from cadrumo.domain.filing.protocols import ModeloInputs
-from cadrumo.domain.submission.models import ModeloDraftStatus
-from cadrumo.tests.inventory import REPO_ROOT
-from cadrumo.domain.calculations.registry.errors import RegistryError
-from cadrumo.domain.calculations.registry.modelo_localization import (
+from .....application.filing.runtime import ModeloOperatorProfile, schema_provider_from_authority
+from .....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+from .....core.i18n.render import override_locales_root
+from .....core.modelo import Modelo
+from .....core.payment_election import PaymentElection
+from .....core.period import Period
+from .....core.prior_domiciliation_election import PriorDomiciliationElection
+from .....core.product_identity import AeatProductSoftwareIdentity
+from .....core.refund_election import RefundElection
+from .....core.resources.bundled_data import bundled_path
+from .....core.result_disposition import ResultDisposition
+from .....domain.filing.protocols import ModeloInputs
+from .....domain.submission.models import ModeloDraftStatus
+from .....tests.inventory import REPO_ROOT
+from ..errors import RegistryError
+from ..modelo_localization import (
     ModeloLocalizationFieldKind,
     casilla_occurrence_locale_key,
     resolve_modelo_localization,
@@ -200,11 +201,19 @@ class RoundTripReport:
 
 @dataclass(frozen=True, slots=True)
 class EditionExportScenario:
-    """The filing inputs one edition's export bytes are rendered from on both sides."""
+    """The filing inputs one edition's export bytes are rendered from on both sides.
+
+    ``prior_domiciliation_election`` and ``product_software_identity`` are
+    carried only where the modelo's export path requires them: Modelo 303's
+    layout renders an envelope prefix and a Nota-3 DID predicate, and refuses
+    to run without both, while every other modelo carries neither.
+    """
 
     period: Period
     inputs: ModeloInputs
     producer_snapshot: Callable[[], FilingProducerSnapshot]
+    prior_domiciliation_election: PriorDomiciliationElection | None = None
+    product_software_identity: AeatProductSoftwareIdentity | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -661,6 +670,8 @@ def _export_bytes_finding(
                 draft,
                 payload_consumer=sink,
                 producer_snapshot=scenario.producer_snapshot(),
+                prior_domiciliation_election=scenario.prior_domiciliation_election,
+                product_software_identity=scenario.product_software_identity,
                 schema_provider=provider,
             )
         except ValueError as exc:

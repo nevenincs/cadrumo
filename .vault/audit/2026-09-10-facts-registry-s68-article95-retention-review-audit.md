@@ -10,8 +10,6 @@ related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
 
-
-
 # `facts-registry` audit: `S68 Article 95 retention review`
 
 ## Scope

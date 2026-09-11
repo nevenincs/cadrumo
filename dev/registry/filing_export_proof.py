@@ -42,7 +42,7 @@ from cadrumo.application.filing.producer_snapshot import (
 from cadrumo.application.filing.runtime import (
     ModeloOperatorProfile,
     RegistrySchemaAccessor,
-    build_runtime_schema_provider,
+    schema_provider_from_authority,
 )
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.hashing import sha256_hex
@@ -67,6 +67,7 @@ from cadrumo.domain.filing.protocols import ModeloInputs
 from cadrumo.domain.filing.schema import ModeloDraft
 from cadrumo.domain.invoices.models import InvoiceCatalogue
 from cadrumo.domain.transactions.models import TransactionCatalogue
+from dev.registry.compiler.authority import compile_validated_authority
 from dev.registry.maintenance_support import GeneratedArtifactInspection
 
 from .diagnostic_classification import (
@@ -542,9 +543,8 @@ class ModeloSociedadesConformanceVectorBuilder:
             The :class:`FilingExportConformanceRenderInputs` for ``evidence``.
         """
         modelo_id = str(evidence.coordinate.modelo)
-        schema_provider = build_runtime_schema_provider(
-            self.registry_root,
-            source_root=self.source_root,
+        schema_provider = schema_provider_from_authority(
+            compile_validated_authority(self.registry_root, self.source_root),
             filing_year=evidence.filing_year,
             period=evidence.period,
             modelos=(modelo_id,),
@@ -1384,9 +1384,8 @@ class CanonicalTwoChannelFilingExportProofAuthority:
         evidence: FilingExportConformanceVectorEvidence,
     ):
         """Build the canonical law-selection provider for one public vector."""
-        return build_runtime_schema_provider(
-            self._registry_root,
-            source_root=self._source_root,
+        return schema_provider_from_authority(
+            self._authority,
             filing_year=evidence.filing_year,
             period=evidence.period,
             modelos=(str(evidence.coordinate.modelo),),

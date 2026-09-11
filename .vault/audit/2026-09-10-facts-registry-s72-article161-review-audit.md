@@ -10,8 +10,6 @@ related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
 
-
-
 # `facts-registry` audit: `S72 Article 161 recargo review`
 
 ## Scope

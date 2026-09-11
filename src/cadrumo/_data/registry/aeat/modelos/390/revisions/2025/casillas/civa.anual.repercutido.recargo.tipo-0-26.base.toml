@@ -1,5 +1,8 @@
 [[revisions."2025".casillas]]
 id = "iva.anual.repercutido.recargo.tipo-0-26.base"
+continuidad_id = "iva-anual-repercutido-recargo-tipo-0-26-base"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:254 (sha256 8be79bacc860) box [691] (8 47 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - Reca...) continues as corpus/aeat_official/disenos_registro/modelo_390/files/01-390-ejercicio-2025-actualizado-05-12-2025-544-kb-xlsx.xlsx.extracted.md:255 (sha256 6d33d8a42459) box [691] (8 47 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - Reca...)."
 number = "691"
 section = ["operaciones_regimen_general", "recargo_equivalencia"]
 data_type = "money"

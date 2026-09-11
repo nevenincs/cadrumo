@@ -11,7 +11,6 @@ related:
   - "[[2026-09-10-registry-authority-artifact-boundary-plan]]"
 ---
 
-
 # Implement the artifact reader and writer contract
 
 ## Scope

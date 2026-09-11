@@ -228,21 +228,9 @@ def load_registry_diagnostic_classification(
     residue; filing, export, and calculation callers must load a validated
     authority through :func:`dev.registry.compiler.authority.compile_validated_authority`.
     """
-    from dev.registry.compiler.authority import construct_unvalidated_authority
-    from dev.registry.compiler.authority_state import canonical_authoring_root_pair
-    from dev.registry.compiler.identity import resolve_registry_identity
-    from dev.registry.compiler.loader import collect_registry_tree_fingerprints
+    from dev.registry.compiler.authority import compile_unvalidated_authority
 
-    resolved_root, resolved_source_root = canonical_authoring_root_pair(root, source_root)
-    identity = resolve_registry_identity(
-        resolved_root,
-        collect_fingerprints=collect_registry_tree_fingerprints,
-    )
-    authority = construct_unvalidated_authority(
-        resolved_root,
-        resolved_source_root,
-        identity=identity,
-    )
+    authority = compile_unvalidated_authority(root, source_root)
     return UnvalidatedRegistryClassification(
         strict_validation_error=str(strict_validation_error),
         filing_revisions=derive_filing_revision_classifications(authority),

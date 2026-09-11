@@ -151,6 +151,7 @@ required = true
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'four-digit-year'
 legal_refs = ['orden-eha-3111-2009:art-1']
 source_refs = ['aeat-dr-390-2023']
@@ -365,6 +366,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'enumerated-digits'
 allowed_values = [
     '0',
@@ -387,6 +389,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'enumerated-digits'
 allowed_values = [
     '0',

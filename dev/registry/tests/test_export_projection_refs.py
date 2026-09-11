@@ -19,15 +19,8 @@ from cadrumo.core.filing_projection_ref import (
     M303RegimenSimplificadoModuleProjectionRef,
     M303RegimenSimplificadoModuleValue,
 )
-from dev.registry.compiler._loader_internals import _compile_export_semantic_field, _compile_projection_endpoint_declaration
 from cadrumo.domain.calculations.registry._snapshot_internals import _validate_materialized_export_record_families
-from dev.registry.compiler._validate_evidence import EvidenceValidator
-from dev.registry.compiler._validate_exports import (
-    _validate_export_record,
-    _validate_generated_projection_layout_bijection,
-    _validate_projection_endpoint_declarations,
-)
-from dev.registry.compiler.authority import compiled_bundled_authority
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
@@ -40,6 +33,16 @@ from cadrumo.domain.calculations.registry.schema_exports import (
     ProjectionEndpointDeclaration,
 )
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+from dev.registry.compiler._loader_internals import (
+    _compile_export_semantic_field,
+    _compile_projection_endpoint_declaration,
+)
+from dev.registry.compiler._validate_evidence import EvidenceValidator
+from dev.registry.compiler._validate_exports import (
+    _validate_export_record,
+    _validate_generated_projection_layout_bijection,
+    _validate_projection_endpoint_declarations,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -5,11 +5,12 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:81904dc20917e23b3153e7eed77ceda46aa242a78cee6834b1b2d48b9be77b61'
+body_hash: 'sha256:4011eb249da38b659001f21733569cde494033ec82706472ba43a40f2339fd74'
 step_id: 'S69'
 related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
+
 # Enforce and prove canonical tax-fact temporal coverage, date-axis selection, provenance, and refusal outside source-grounded windows
 
 ## Scope

@@ -306,7 +306,8 @@ class ConformanceCoordinate(ConformanceModel):
     ) -> dict[str, object]:
         """Expose computed divergence properties in the JSON projection."""
         wrapped = handler(self)
-        assert isinstance(wrapped, dict)
+        if not isinstance(wrapped, dict):
+            raise TypeError(f"conformance row serialised to {type(wrapped).__name__}, not a mapping")
         payload: dict[str, object] = {str(key): value for key, value in wrapped.items()}
         comparison = self.schema_comparison
         comparison_payload = comparison.model_dump(mode="json")
@@ -357,7 +358,7 @@ class ConformanceCoordinateMatrix(ConformanceModel):
 class RevisionConformancePayload(ConformanceModel):
     """One modelo revision's conformance signals, flattened for rendering.
 
-    A projection of :class:`~application.registry.RevisionConformanceRow`, not a
+    A projection of :class:`~dev.registry.conformance.profile.RevisionConformanceRow`, not a
     second computation of it. Optional fields are :data:`None` exactly where the
     composer left the axis unmeasured or the revision makes no claim.
 

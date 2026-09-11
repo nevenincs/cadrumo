@@ -1,7 +1,7 @@
 """Development compiler for mutable registry authoring trees.
 
 This is deliberately outside ``src/``.  It is the only place that turns TOML
-sources into registry schema models; shipped runtime reads a signed artifact.
+sources into registry schema models; shipped runtime reads a published, digest-checked artifact.
 """
 
 from __future__ import annotations

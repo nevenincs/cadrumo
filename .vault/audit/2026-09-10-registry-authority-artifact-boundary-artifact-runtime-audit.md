@@ -9,8 +9,6 @@ body_hash: 'sha256:bfa0083d5e26d3eb2441acda06acf50677d5d19273389eacaec1172e0ab08
 related: []
 ---
 
-
-
 # `registry-authority-artifact-boundary` audit: `artifact runtime`
 
 ## Scope

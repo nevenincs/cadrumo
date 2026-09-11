@@ -10,17 +10,17 @@ from typing import Literal
 import pytest
 from pydantic import ValidationError as ValidationError
 
-from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.classification.policies import SensitivityClass
-from cadrumo.core.config import Settings
-from cadrumo.core.tax_domain import TaxDomain
-from cadrumo.core.toml import freeze_toml
-from cadrumo.domain.calculations.registry._snapshot_internals import _build_validated_snapshot as build_snapshot_at_grade
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.reference_checks import check_all_id_references
-from cadrumo.domain.calculations.registry.schema import (
+from .....core.authority_grade import RegistryAuthorityGrade
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.classification.policies import SensitivityClass
+from .....core.config import Settings
+from .....core.tax_domain import TaxDomain
+from .....core.toml import freeze_toml
+from .._snapshot_internals import _build_validated_snapshot as build_snapshot_at_grade
+from ..authority import ValidatedRegistryAuthority
+from ..errors import RegistryValidationError
+from ..reference_checks import check_all_id_references
+from ..schema import (
     DataBindingDefinition,
     FormulaDefinition,
     ModeloDefinition,
@@ -53,7 +53,7 @@ from cadrumo.domain.calculations.registry.schema_surfaces import (
     CasillaDefinition,
     RelationDefinition,
 )
-from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision, VerificationExpectationDefinition, WorkbookParityReference
+from ..schema_verification import LiveCrossReferenceDecision, VerificationExpectationDefinition, WorkbookParityReference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

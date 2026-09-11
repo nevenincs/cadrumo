@@ -82,6 +82,9 @@ from .loader_cache import (
 from .loader_cache import (
     ModeloRevisionSource as _ModeloRevisionSource,
 )
+from .loader_cache import (
+    fragment_sort_key as _fragment_sort_key,
+)
 from .loader_fingerprints import (
     _registry_fingerprint_cache,
     bind_tree_fingerprint_collectors,
@@ -1258,7 +1261,7 @@ def _revision_section_fragment_paths(section_dirs: tuple[Path, ...]) -> tuple[Pa
         if not section_fragments:
             raise RegistryLoadError(f"{section_dir}: revision section fragment directory contains no TOML fragments")
         fragments.extend(section_fragments)
-    return tuple(sorted(fragments))
+    return tuple(sorted(fragments, key=_fragment_sort_key))
 
 
 @lru_cache(maxsize=128)

@@ -34,7 +34,7 @@ running package; anything else falls back to the full walk. Per
 falls back and recomputes, and no shape but the current one is ever read.
 
 See Also:
-    :func:`~domain.calculations.registry.loader_cache.is_bundled_registry_root`
+    :func:`~dev.registry.compiler.loader_cache.is_bundled_registry_root`
         Why a bundled root is not by itself an immutability claim, and why stamp
         presence is the discriminator this module adds on top of it.
 """

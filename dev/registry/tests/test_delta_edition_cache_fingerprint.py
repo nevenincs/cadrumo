@@ -27,17 +27,20 @@ import os
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.loader import _load_registry_tree_cached, load_modelo_directory, load_registry_tree
-from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
 
 from cadrumo.core.hashing import blake2b_hex
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from dev.registry.compiler._loader_internals import (
     _collect_modelo_directory_fingerprints,
     _collect_registry_tree_fingerprints_uncached,
     _load_modelo_directory_cached,
 )
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition
-from dev.registry.conformance.tests._loader_directory_mode_support import write_fragmented_revision
+from dev.registry.compiler.loader import _load_registry_tree_cached, load_modelo_directory, load_registry_tree
+from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
+from dev.registry.conformance.tests._loader_directory_mode_support import (
+    write_fragmented_revision,
+    write_minimal_shared_catalogues,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -86,10 +89,7 @@ def _casilla(revision_id: str, casilla_id: str, *, number: str, lineage: str) ->
 def _write_tree(tmp_path: Path) -> Path:
     """A 2024 edition with two rows and a 2025 delta edition restating one of them."""
     registry_root = tmp_path / "registry" / "aeat"
-    (registry_root / "legal").mkdir(parents=True)
-    (registry_root / "legal" / "supported-filing-years.toml").write_text(
-        "[supported_filing_years]\nyears = [2024, 2025]\n", encoding="utf-8", newline="\n"
-    )
+    write_minimal_shared_catalogues(registry_root / "legal", years=(2024, 2025))
     modelo_dir = registry_root / "modelos" / _MODELO_ID
     modelo_dir.mkdir(parents=True)
     (modelo_dir / "manifest.toml").write_text(_MANIFEST_TOML, encoding="utf-8", newline="\n")

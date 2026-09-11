@@ -24,6 +24,7 @@ source_refs = ["enrolled-modelo-341-procedure"]
 
 [[revisions."2005-2015".casillas]]
 id = "wire.letras-etiqueta"
+continuidad_id = "letras-etiqueta-persona-fisica"
 number = "letras-etiqueta"
 section = ["presentacion", "identificacion"]
 data_type = "text"
@@ -35,6 +36,7 @@ source_refs = ["aeat-dr-341-2005-2015"]
 
 [[revisions."2005-2015".casillas]]
 id = "wire.codigo-cuenta-cliente"
+continuidad_id = "codigo-cuenta-cliente"
 number = "codigo-cuenta-cliente"
 section = ["reintegro", "cuenta"]
 data_type = "text"
@@ -48,6 +50,7 @@ source_refs = ["aeat-dr-341-2005-2015"]
 
 [[revisions."2005-2015".casillas]]
 id = "wire.observaciones"
+continuidad_id = "observaciones-presentacion"
 number = "observaciones"
 section = ["presentacion"]
 data_type = "text"

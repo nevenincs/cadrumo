@@ -3,14 +3,13 @@ tags:
   - '#exec'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-10'
-modified: '2026-09-10'
+modified: '2026-09-11'
 body_schema: 'body-v2'
 body_hash: 'sha256:3e463dd53f51b21751a60ec8ba7f8c1aabca76dff377d9fafdddb7cb8d4f8eeb'
 step_id: 'S04'
 related:
   - "[[2026-09-10-registry-authority-artifact-boundary-plan]]"
 ---
-
 
 # Remove runtime compiler cache and raw loader exposure
 

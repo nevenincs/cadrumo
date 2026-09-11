@@ -1550,6 +1550,7 @@ def _schema_field(
                 "decimals": decimals,
                 "signed": signed,
                 "required_for": _qualified_requirement(parser_field.validation),
+                "design_type": _design_type(parser_field.aeat_type, data_type),
                 "value_policy": value_policy,
                 "allowed_values": allowed_values,
                 "legal_refs": semantic_entry.legal_refs,
@@ -1584,6 +1585,18 @@ _QUALIFIED_REQUIREMENTS: Final[dict[str, Literal["natural_person"]]] = {
 #: sentence; it does not qualify the requirement, and reading it as though it
 #: did is what silently downgraded twelve stated requirements in modelo 390.
 _REQUIREMENT_SENTENCE_PUNCTUATION: Final[str] = ".:;"
+
+
+def _design_type(aeat_type: str, data_type: str) -> Literal["N", "Num"] | None:
+    """Return the design's numeric type for a sign-bearing field, when it prints one exactly.
+
+    Only the design's own two-letter vocabulary is carried; a spelled-out type
+    such as "Numerico" states no sign, and a text slot has none to hold.
+    """
+    code = aeat_type.strip()
+    if data_type not in {"money", "decimal", "integer"} or code not in {"N", "Num"}:
+        return None
+    return "N" if code == "N" else "Num"
 
 
 def _qualified_requirement(validation: str | None) -> Literal["natural_person"] | None:

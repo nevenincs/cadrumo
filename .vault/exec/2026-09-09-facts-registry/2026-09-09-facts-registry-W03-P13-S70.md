@@ -11,7 +11,6 @@ related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
 
-
 # Capture and author the bounded administrator-retention fact slice from BOE redactions
 
 ## Scope

@@ -10,8 +10,6 @@ related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
 
-
-
 # `facts-registry` audit: `S73 adapter-retirement repair review`
 
 ## Scope

@@ -246,6 +246,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = false
+design_type = 'Num'
 value_policy = 'four-digit-year'
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
@@ -1234,6 +1235,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
@@ -1249,6 +1251,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
@@ -1263,6 +1266,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
@@ -1277,6 +1281,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
@@ -1291,6 +1296,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
+design_type = 'N'
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
@@ -1320,6 +1326,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
@@ -1335,6 +1342,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
@@ -1377,20 +1385,7 @@ required = false
 padding = 'left_zero'
 justification = 'right'
 signed = true
-legal_refs = ['orden-eha-3316-2010:art-1']
-source_refs = ['aeat-dr-210-2022']
-
-[[revisions.2025.export_layouts.records.fields]]
-id = 'm210-2022.pagina01.f093'
-offset = 1536
-length = 17
-kind = 'casilla'
-casilla_id = 'ganancia_valor_adquisicion'
-data_type = 'money'
-required = false
-padding = 'left_zero'
-justification = 'right'
-signed = true
+design_type = 'N'
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 

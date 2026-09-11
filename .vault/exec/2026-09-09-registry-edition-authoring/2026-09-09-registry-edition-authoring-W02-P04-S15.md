@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#registry-edition-authoring'
 date: '2026-09-10'
-modified: '2026-09-10'
+modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:bbe92952de0aa6db747444a47ded1226b2dda7d7947e4f92c8c17d985a7de183'
+body_hash: 'sha256:c8e91a29bd436177d3fda49c26637b035f2d0f0bff132e45ec6fc1001452a86b'
 step_id: 'S15'
 related:
   - "[[2026-09-09-registry-edition-authoring-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # [M | sonnet-high] Remove the edition key from formula and binding identifiers by programmatic rewrite, with every reference updated in the same pass. Bounded rename, but references must not break. Proof: no identifier in these two families contains an edition key, and registry validation is clean.
 
@@ -36,3 +31,5 @@ related:
 
 - Modelo 390 is excluded from this rewrite by design, not oversight: its generated `revisions/*/export/` trees (2022-2025) copy the pre-rename binding ids into field and provenance records, and `registry verify` refuses a renamed source map sitting beside a not-yet-regenerated tree (confirmed empirically: exactly 707 "unknown binding" failures, one per renamed reference, all in modelo 390). The tool measures and reports modelo 390's 707 embedding bindings but never writes them; its rename and the export lane's republish of those four trees must land in the same change. That list is handed to the export lane rather than regenerated here.
 - Another session committed an equivalent rename (`562fcb9848 refactor(registry): normalize binding and formula identifiers`) to this shared worktree's branch while this Step was in progress; the two converged on byte-identical output for the 7 applied modelos and the rewrite script. That commit's copy of `test_revision_edition_round_trip.py` still carried the stale hardcoded modelo-131 binding-id literals fixed here; that fix remains uncommitted, as this persona never stages or commits.
+
+- Modelos 100, 131, 200, 202, 210, 353 and 714 landed in 562fcb9848 (6,390 identifiers, 2,765 files, no collisions; uniqueness is per revision). Modelo 390's 707 binding ids are copied into generated trees, so they landed together with their republish, by the export lane, in 15845cd069; all four 390 trees reproduce exactly. Modelos 185, 222 and 347 keep their ids by agreement with the export lane. The reviewer persona could not be launched; the orchestrating session reviewed the rename rule, which shares `identifier_lineage`'s whole-segment span, and the collision and uniqueness evidence.

@@ -160,6 +160,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-hfp-816-2017:art-1']
 source_refs = ['aeat-dr-232-2016']
 
@@ -244,6 +245,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-hfp-816-2017:art-1']
 source_refs = ['aeat-dr-232-2016']
 
@@ -328,6 +330,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-hfp-816-2017:art-1']
 source_refs = ['aeat-dr-232-2016']
 
@@ -412,6 +415,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-hfp-816-2017:art-1']
 source_refs = ['aeat-dr-232-2016']
 
@@ -496,6 +500,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-hfp-816-2017:art-1']
 source_refs = ['aeat-dr-232-2016']
 
@@ -580,6 +585,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-hfp-816-2017:art-1']
 source_refs = ['aeat-dr-232-2016']
 
@@ -664,6 +670,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-hfp-816-2017:art-1']
 source_refs = ['aeat-dr-232-2016']
 
@@ -748,6 +755,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-hfp-816-2017:art-1']
 source_refs = ['aeat-dr-232-2016']
 
@@ -832,6 +840,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-hfp-816-2017:art-1']
 source_refs = ['aeat-dr-232-2016']
 
@@ -916,6 +925,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-hfp-816-2017:art-1']
 source_refs = ['aeat-dr-232-2016']
 
@@ -1000,6 +1010,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-hfp-816-2017:art-1']
 source_refs = ['aeat-dr-232-2016']
 
@@ -1084,6 +1095,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-hfp-816-2017:art-1']
 source_refs = ['aeat-dr-232-2016']
 
@@ -1154,6 +1166,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-hfp-816-2017:art-1']
 source_refs = ['aeat-dr-232-2016']
 
@@ -1169,6 +1182,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-hfp-816-2017:art-1']
 source_refs = ['aeat-dr-232-2016']
 
@@ -1239,6 +1253,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-hfp-816-2017:art-1']
 source_refs = ['aeat-dr-232-2016']
 
@@ -1254,6 +1269,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-hfp-816-2017:art-1']
 source_refs = ['aeat-dr-232-2016']
 
@@ -1324,6 +1340,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-hfp-816-2017:art-1']
 source_refs = ['aeat-dr-232-2016']
 
@@ -1339,6 +1356,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+design_type = 'Num'
 legal_refs = ['orden-hfp-816-2017:art-1']
 source_refs = ['aeat-dr-232-2016']
 
@@ -1362,19 +1380,6 @@ offset = 2129
 length = 60
 kind = 'binding'
 binding = 'modelo-232-2016.page_02.2129-2188.paraiso-valor-4-entidad'
-data_type = 'text'
-required = false
-padding = 'right_space'
-justification = 'left'
-signed = false
-legal_refs = ['orden-hfp-816-2017:art-1']
-source_refs = ['aeat-dr-232-2016']
-
-[[revisions.2016-2017.export_layouts.records.fields]]
-id = 'm232-2016.dr23202.f098'
-offset = 2189
-length = 20
-kind = 'filler'
 data_type = 'text'
 required = false
 padding = 'right_space'

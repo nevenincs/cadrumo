@@ -10,8 +10,6 @@ related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
 
-
-
 # `facts-registry` audit: `S64 consumer-migration review`
 
 ## Scope

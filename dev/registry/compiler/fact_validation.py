@@ -13,6 +13,7 @@ from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, Gove
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 
+from . import fact_providers
 from ._validate_evidence import EvidenceValidator
 from .legal_grounding import verify_legal_reference_grounding
 
@@ -143,7 +144,16 @@ def retired_fact_provider_closure_failures(
     The test-facing gate deliberately checks identities, filing-period
     coordinates, and source-backed windows only.  It must never become another
     declaration of rates, thresholds, or activity classifications.
+
+    The gate stops where the migration does. The retired parameters became
+    governed facts, so the obligation to author them exists only in a registry
+    that enrolls governed-fact providers. A registry that enrolls no fact
+    providers has no migration to close and yields no failure. Enrollment is
+    read from the canonical provider declaration at call time, never from a
+    path or a modelo.
     """
+    if not fact_providers.FACT_PROVIDER_REGISTRATIONS:
+        return ()
     failures: list[str] = []
     for fact_id in sorted(_RETIRED_FACT_PROVIDER_IDS):
         fact = catalogue.facts.get(fact_id)
@@ -186,7 +196,7 @@ def _source_window_covers_variant(
     source: SourceReference | None,
     variant: GovernedFactVariant,
 ) -> bool:
-    if source is None or source.applies_from > variant.valid_from:
+    if source is None or source.applies_from is None or source.applies_from > variant.valid_from:
         return False
     return source.applies_to is None or (variant.valid_to is not None and source.applies_to >= variant.valid_to)
 

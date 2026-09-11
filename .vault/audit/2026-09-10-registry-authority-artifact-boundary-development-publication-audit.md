@@ -9,8 +9,6 @@ body_hash: 'sha256:6e7c92c81f6474c78cd12c1f154cf15361160424e7884b1d3c1159d65a604
 related: []
 ---
 
-
-
 # `registry-authority-artifact-boundary` audit: `development publication`
 
 ## Scope
