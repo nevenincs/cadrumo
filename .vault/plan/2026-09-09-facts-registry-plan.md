@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-11'
 body_schema: body-v2
-body_hash: 'sha256:a5253eba3b7f8b1b95328beba77b03cf3869a3f0fa50b8049a27c54d2cf80b0e'
+body_hash: 'sha256:0450eec7eb40f60d3e43f674c294880202e61b21392c5e833fe1bf05ea451bee'
 ---
 
 <!-- RETIRED: S65 -->
@@ -192,7 +192,11 @@ Move approved adapted data families and Python-held facts into one-fact-per-file
 - [x] `W04.P15.S77` - Normalize and retire the category-profile adapter only after every profile has an authored, evidence-bearing fact replacement; `src/cadrumo/_data/registry/aeat/categories and src/cadrumo/_data/registry/aeat/facts and dev/registry/compiler/categories.py and dev/registry/compiler/fact_providers.py and dev/registry/tests`.
 - [x] `W04.P15.S78` - Normalize and retire the legal-holiday calendar adapter while preserving publication and event provenance; `src/cadrumo/_data/registry/aeat/calendars and src/cadrumo/_data/registry/aeat/facts and dev/registry/compiler/holidays.py and dev/registry/compiler/fact_providers.py and dev/registry/tests`.
 - [x] `W04.P15.S79` - Normalize and retire the treaty-override adapter without duplicating the canonical convenio catalogue; `src/cadrumo/_data/registry/aeat/treaties and src/cadrumo/_data/registry/aeat/facts and dev/registry/compiler/convenio.py and dev/registry/compiler/fact_providers.py and dev/registry/compiler/authority.py and dev/registry/tests`.
-- [ ] `W04.P15.S80` - Classify the remaining IVA structured tables and authorize deletion only with a typed, evidence-bearing provider replacement; `src/cadrumo/_data/registry/aeat/iva and src/cadrumo/domain/iva and dev/registry/compiler and dev/registry/analysis`.
+- [x] `W04.P15.S80` - Classify the remaining IVA structured tables and authorize deletion only with a typed, evidence-bearing provider replacement; `src/cadrumo/_data/registry/aeat/iva and src/cadrumo/domain/iva and dev/registry/compiler and dev/registry/analysis`.
+- [ ] `W04.P15.S81` - Define a typed catalogue-applicability fact family, normalize IVA catalogue rows with their legal evidence, and only then retire the raw table.; `src/cadrumo/domain/iva and src/cadrumo/_data/registry/aeat/facts and src/cadrumo/_data/registry/aeat/iva and dev/registry`.
+- [ ] `W04.P15.S82` - Define a typed place-of-supply fact family that preserves establishing references plus exempt and silent semantics, normalize rows, then retire the raw table.; `src/cadrumo/domain/iva and src/cadrumo/_data/registry/aeat/facts and src/cadrumo/_data/registry/aeat/iva and dev/registry`.
+- [ ] `W04.P15.S83` - Define a typed territorial-applicability fact family that preserves postal-grouping semantics, normalize territory rows, then retire the raw table.; `src/cadrumo/domain/iva and src/cadrumo/_data/registry/aeat/facts and src/cadrumo/_data/registry/aeat/iva and dev/registry`.
+- [ ] `W04.P15.S84` - Define a typed territorial-carve-out fact family that preserves each three-way disposition, normalize rows, then retire the raw table.; `src/cadrumo/domain/iva and src/cadrumo/_data/registry/aeat/facts and src/cadrumo/_data/registry/aeat/iva and dev/registry`.
 
 ### Phase `W04.P16` - Delete Python legal constants and duplicate mappings
 

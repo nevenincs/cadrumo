@@ -1,4 +1,4 @@
-schema_version = 2
+schema_version = 3
 classification = "governed_fact_provider_retirement"
 provider_steps = ["W02.P05.S13", "W02.P05.S14"]
 consumer_step = "W03.P12.S26"
@@ -6,6 +6,52 @@ normalization_step = "W04.P15.S30"
 loader_deletion_step = "W04.P17.S56"
 grounding_repository_deletion_step = "W04.P17.S57"
 closure_step = "W04.P19.S58"
+classification_step = "W04.P15.S80"
+
+[[remaining_structured_tables]]
+data_path = "src/cadrumo/_data/registry/aeat/iva/catalogues.toml"
+row_count = 21
+classification = "needs_typed_schema_and_fact_migration"
+decision = "retain_until_lossless_replacement"
+reason = "Operative category rules carry per-citation quotation, grounding disposition, legal window, and exemption semantics. Existing scalar, mapping, and event facts cannot retain nested citation-level evidence or the unresolved domestic_zero refusal."
+direct_readers = ["src/cadrumo/domain/iva/catalogue.py:load_iva_catalogue", "src/cadrumo/core/resources/_repos/iva_catalogues.py"]
+safe_next_scope = "Introduce a typed regulation fact family with citation-level evidence and unresolved-grounding state; re-ground or explicitly split domestic_zero before any migration, then project the existing IvaCatalogue API from authority facts."
+
+[[remaining_structured_tables]]
+data_path = "src/cadrumo/_data/registry/aeat/iva/place_of_supply.toml"
+row_count = 22
+classification = "needs_typed_schema_and_fact_migration"
+decision = "retain_until_lossless_replacement"
+reason = "Each classification-rule key carries a closed temporal legal basis, an establishing provision, optional supply nature, and a legal-basis-exempt sentinel. Existing generic facts cannot encode the row-level legal-reference ordering and exempt-versus-silent distinction."
+direct_readers = ["src/cadrumo/domain/iva/place_of_supply.py:load_place_of_supply_table", "src/cadrumo/domain/iva/classification.py:place_of_supply_rule"]
+safe_next_scope = "Introduce a typed place-of-supply fact family and authority projection with rule-set parity against the classifier, closed-window selection, and exempt-row refusal before deleting the table or its direct reader."
+
+[[remaining_structured_tables]]
+data_path = "src/cadrumo/_data/registry/aeat/iva/territories.toml"
+row_count = 3
+classification = "needs_typed_schema_and_fact_migration"
+decision = "retain_until_lossless_replacement"
+reason = "Postal-prefix territorial treatment is an operative legal classification with legal references plus administrative-geography evidence. Removing it would make Canarias, Ceuta, and Melilla default incorrectly or unresolvable."
+direct_readers = ["src/cadrumo/domain/iva/establishment.py:_excluded_territories_by_prefix"]
+safe_next_scope = "Define a typed territorial-scope fact that preserves grouped postal prefixes, legal evidence, and the unknown-prefix refusal; project the existing scope resolver only after exact prefix parity."
+
+[[remaining_structured_tables]]
+data_path = "src/cadrumo/_data/registry/aeat/iva/territory_carve_outs.toml"
+row_count = 12
+classification = "needs_typed_schema_and_fact_migration"
+decision = "retain_until_lossless_replacement"
+reason = "The rows are legal territorial dispositions with a three-way sum type: assimilated parent, direct scope, or establishes-nothing. Flattening them into a generic mapping loses the deliberate non-answer and time-sensitive parent indirection."
+direct_readers = ["src/cadrumo/domain/iva/establishment.py:_territory_carve_outs"]
+safe_next_scope = "Define a typed territorial-carve-out fact family that enforces exactly one disposition, parent-chain cycle refusal, and legal evidence before replacing the direct reader."
+
+[[remaining_structured_tables]]
+data_path = "src/cadrumo/_data/registry/aeat/iva/country_names.toml"
+row_count = 78
+classification = "technical_non_legal_canonical_vocabulary"
+decision = "retain"
+reason = "Printed-name and ISO alpha-2/alpha-3 vocabulary is an external technical interoperability authority, grounded against the AEAT/Fakturae accepted-country register rather than a tax rule. It is not a governed tax fact or an adapter duplicate."
+direct_readers = ["src/cadrumo/domain/iva/country_vocabulary.py:country_codes_by_printed_name", "src/cadrumo/domain/iva/country_vocabulary.py:country_codes_by_alpha3"]
+safe_next_scope = "Keep one canonical vocabulary file and its strict direct reader; only relocate it with an equivalent technical-vocabulary authority, never enrol it as a legal fact."
 
 [[lanes]]
 lane_id = "iva-rate-table"

@@ -6,7 +6,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:96aefbdbd22e588ad18259f15c1c55d28df4aa2744214b070aa7bccc5bde98e6'
+body_hash: 'sha256:8c2c9609feb986c5b78715a78da6f0d317fd4592d7e162cc5a6a2da33ff33b6a'
 related:
   - '[[2026-09-09-facts-registry-W01-P01-S01]]'
   - '[[2026-09-09-facts-registry-W01-P01-S02]]'
@@ -72,6 +72,7 @@ related:
   - '[[2026-09-09-facts-registry-W04-P15-S77]]'
   - '[[2026-09-09-facts-registry-W04-P15-S78]]'
   - '[[2026-09-09-facts-registry-W04-P15-S79]]'
+  - '[[2026-09-09-facts-registry-W04-P15-S80]]'
   - '[[2026-09-09-facts-registry-W04-P16-S31]]'
   - '[[2026-09-09-facts-registry-W04-P16-S32]]'
   - '[[2026-09-09-facts-registry-W04-P16-S33]]'
@@ -110,6 +111,7 @@ related:
   - '[[2026-09-11-facts-registry-s77-category-retirement-audit]]'
   - '[[2026-09-11-facts-registry-s78-holiday-retirement-audit]]'
   - '[[2026-09-11-facts-registry-s79-convenio-retirement-review-audit]]'
+  - '[[2026-09-11-facts-registry-s80-iva-structured-table-classification-review-audit]]'
 ---
 
 # `facts-registry` feature index
@@ -147,6 +149,7 @@ Auto-generated index of all documents tagged with `#facts-registry`.
 - `2026-09-11-facts-registry-s77-category-retirement-audit` - `facts-registry` audit: `S77 category adapter retirement review`
 - `2026-09-11-facts-registry-s78-holiday-retirement-audit` - `facts-registry` audit: `S78 holiday calendar adapter retirement review`
 - `2026-09-11-facts-registry-s79-convenio-retirement-review-audit` - `facts-registry` audit: `S79 convenio adapter retirement review`
+- `2026-09-11-facts-registry-s80-iva-structured-table-classification-review-audit` - `facts-registry` audit: `S80 IVA structured-table classification review`
 
 ### exec
 
@@ -214,6 +217,7 @@ Auto-generated index of all documents tagged with `#facts-registry`.
 - `2026-09-09-facts-registry-W04-P15-S77` - `facts-registry` execution: `W04.P15.S77`
 - `2026-09-09-facts-registry-W04-P15-S78` - Normalize and retire the legal-holiday calendar adapter while preserving publication and event provenance
 - `2026-09-09-facts-registry-W04-P15-S79` - Normalize and retire the treaty-override adapter without duplicating the canonical convenio catalogue
+- `2026-09-09-facts-registry-W04-P15-S80` - Classify the remaining IVA structured tables and authorize deletion only with a typed, evidence-bearing provider replacement
 - `2026-09-09-facts-registry-W04-P16-S31` - Delete migrated statutory declarations but retain technical configuration
 - `2026-09-09-facts-registry-W04-P16-S32` - Delete numeric IVA interpretation but retain persisted enum tokens
 - `2026-09-09-facts-registry-W04-P16-S33` - Replace the remaining technical model-routing aliases with their specialized aggregation and calendar-policy owners, then delete the aliases
