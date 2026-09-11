@@ -7,11 +7,18 @@ from datetime import date
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
+from pydantic import ValidationError
+
 from ...core.citation_grounding import CitationGrounding
 from ...core.i18n import Translatable as tr
 from ..calculations.registry.errors import RegistryValidationError
-from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact, ScalarFactQuery
-from ..calculations.registry.facts.schema import FactSelector
+from ..calculations.registry.facts.resolution import (
+    MappingFactQuery,
+    ResolvedMappingFact,
+    ResolvedScalarFact,
+    ScalarFactQuery,
+)
+from ..calculations.registry.facts.schema import FactSelector, ScalarFactPayload
 from ..calculations.registry.schema_base import DateAxis
 from .errors import CategoryValidationError
 from .profile import CategoryProfile, IvaDeductibilityHint
@@ -20,6 +27,7 @@ from .proportionality import (
     CategoryCitationSource,
     ProportionalityKind,
     ProportionalityRule,
+    StatutoryCapAmount,
     StatutoryCapPeriod,
     StatutoryCapVariant,
     parse_http_url,
@@ -37,48 +45,71 @@ _CAP_VARIANT_FIELDS = {"label": "label", "eur_per_day": "statutory_cap_eur_per_d
 
 
 def load_category_profiles() -> Mapping[SpendingCategory, CategoryProfile]:
+    """Return the profiles in force at the latest grounded year.
+
+    A year-referenced cap keeps its complete declared schedule here, so a
+    consumer asking for another covered year reads that year's own amount.
+    """
     years = category_profile_years()
     if not years:
         raise CategoryValidationError("installed authority has no complete category profile coverage")
-    return resolve_category_profiles(max(years))
+    return _resolve_profiles(max(years), materialise_schedule=False)
 
 
 def category_profile_years() -> frozenset[int]:
+    """Return the years for which the authority grounds every category profile."""
     from ..calculations.registry.authority import bundled_authority
 
     fact = bundled_authority().catalogues.facts.facts.get(CATEGORY_PROFILE_FACT_ID)
-    if fact is None:
-        return frozenset()
     grouped: dict[str, set[int]] = {}
-    for variant in fact.variants:
-        category = next((s.value for s in variant.selectors if s.name == "category"), None)
+    for variant in () if fact is None else fact.variants:
+        category = next((str(s.value) for s in variant.selectors if s.name == "category"), None)
         if category is not None and variant.valid_to is not None:
-            grouped.setdefault(category, set()).update(range(variant.valid_from.year, variant.valid_to.year + 1))
-    return frozenset(set.intersection(*grouped.values())) if grouped else frozenset()
+            years = grouped.setdefault(category, set[int]())
+            years.update(range(variant.valid_from.year, variant.valid_to.year + 1))
+    groups = list(grouped.values())
+    covered = groups[0].intersection(*groups[1:]) if groups else set[int]()
+    return frozenset[int](covered)
 
 
 def resolve_category_profiles(year: int) -> Mapping[SpendingCategory, CategoryProfile]:
+    """Return the profiles in force for ``year`` with each cap fixed to that year."""
+    return _resolve_profiles(year, materialise_schedule=True)
+
+
+def _resolve_profiles(year: int, *, materialise_schedule: bool) -> Mapping[SpendingCategory, CategoryProfile]:
     from ..calculations.registry.authority import bundled_authority
 
     authority = bundled_authority()
     profiles: dict[SpendingCategory, CategoryProfile] = {}
     for category in SpendingCategory:
-        fact = authority.resolve_governed_fact(
-            MappingFactQuery(
-                fact_id=CATEGORY_PROFILE_FACT_ID,
-                date_axis=DateAxis.FILING_PERIOD,
-                effective_date=date(year, 12, 31),
-                selectors=(FactSelector(name="category", value=category.value),),
+        try:
+            fact = authority.resolve_governed_fact(
+                MappingFactQuery(
+                    fact_id=CATEGORY_PROFILE_FACT_ID,
+                    date_axis=DateAxis.FILING_PERIOD,
+                    effective_date=date(year, 12, 31),
+                    selectors=(FactSelector(name="category", value=category.value),),
+                )
             )
-        )
+        except RegistryValidationError as exc:
+            raise CategoryValidationError(
+                f"category authority has no profile for {category.value}/{year}; the year is unsupported"
+            ) from exc
         if not isinstance(fact, ResolvedMappingFact):
             raise CategoryValidationError("category profile authority returned a non-mapping fact")
-        profiles[category] = _profile_from_authority_fact(fact, authority=authority, year=year)
+        profiles[category] = _profile_from_authority_fact(
+            fact, authority=authority, year=year, materialise_schedule=materialise_schedule
+        )
     return MappingProxyType(profiles)
 
 
 def _profile_from_authority_fact(
-    resolved: ResolvedMappingFact, *, authority: ValidatedRegistryAuthority, year: int
+    resolved: ResolvedMappingFact,
+    *,
+    authority: ValidatedRegistryAuthority,
+    year: int,
+    materialise_schedule: bool = True,
 ) -> CategoryProfile:
     values = {str(entry.key): entry.value for entry in resolved.payload.entries}
     citations: list[CategoryCitation] = []
@@ -100,9 +131,10 @@ def _profile_from_authority_fact(
             )
         )
         index += 1
-    category = resolved.matched_selectors[0].value
+    category = str(resolved.matched_selectors[0].value)
     variants = _cap_variants_from_entries(values, category=category)
     cap = values.get("statutory_cap_eur")
+    schedule: tuple[StatutoryCapAmount, ...] = ()
     if (
         values.get("proportionality_kind") == ProportionalityKind.STATUTORY_CAP.value
         and not variants
@@ -110,20 +142,26 @@ def _profile_from_authority_fact(
         and "statutory_cap_eur_per_day" not in values
     ):
         # The profile carries no amount of its own, so the cap is year-referenced
-        # and its amount for this year lives only in the dated cap fact.
+        # and its amounts live only in the dated cap fact.
         try:
-            cap = authority.resolve_governed_fact(
+            resolved_cap = authority.resolve_governed_fact(
                 ScalarFactQuery(
                     fact_id=CATEGORY_STATUTORY_CAP_FACT_ID,
                     date_axis=DateAxis.FILING_PERIOD,
                     effective_date=date(year, 12, 31),
                     selectors=(FactSelector(name="category", value=category),),
                 )
-            ).payload.value
+            )
         except RegistryValidationError as exc:
             raise CategoryValidationError(
                 f"category authority has no dated statutory cap for {category}/{year}"
             ) from exc
+        if not isinstance(resolved_cap, ResolvedScalarFact):
+            raise CategoryValidationError(f"category cap authority returned a non-scalar fact for {category}")
+        cap = resolved_cap.payload.value
+        if not materialise_schedule:
+            schedule = _declared_cap_schedule(authority, category=category)
+            cap = None
     cap_period = values.get("statutory_cap_period")
     rule = {
         "kind": ProportionalityKind(str(values["proportionality_kind"])),
@@ -136,18 +174,44 @@ def _profile_from_authority_fact(
         "statutory_cap_eur": cap,
         "statutory_cap_period": None if cap_period is None else StatutoryCapPeriod(str(cap_period)),
         "statutory_cap_variants": variants,
+        "statutory_cap_schedule": schedule,
     }
+    try:
+        proportionality = ProportionalityRule.model_validate(rule)
+    except ValidationError as exc:
+        raise CategoryValidationError(f"category authority carries an invalid rule for {category}: {exc}") from exc
     return CategoryProfile(
-        category=SpendingCategory(resolved.matched_selectors[0].value),
+        category=SpendingCategory(category),
         display_label=tr(str(values["display_label"])),
-        proportionality=ProportionalityRule.model_validate(rule),
+        proportionality=proportionality,
         iva_hint=IvaDeductibilityHint(str(values["iva_hint"])) if "iva_hint" in values else None,
     )
 
 
-def _cap_variants_from_entries(
-    values: Mapping[str, object], *, category: str
-) -> tuple[StatutoryCapVariant, ...]:
+def _declared_cap_schedule(authority: ValidatedRegistryAuthority, *, category: str) -> tuple[StatutoryCapAmount, ...]:
+    """Return every dated amount the authority declares for one category's cap."""
+    fact = authority.catalogues.facts.facts.get(CATEGORY_STATUTORY_CAP_FACT_ID)
+    if fact is None:
+        raise CategoryValidationError(f"category authority has no dated statutory cap for {category}")
+    schedule: list[StatutoryCapAmount] = []
+    for variant in fact.variants:
+        if variant.date_axis is not DateAxis.FILING_PERIOD or not any(
+            selector.name == "category" and selector.value == category for selector in variant.selectors
+        ):
+            continue
+        if not isinstance(variant.payload, ScalarFactPayload) or variant.valid_to is None:
+            raise CategoryValidationError(
+                f"category authority cap variant {variant.variant_id!r} is not a closed dated amount"
+            )
+        schedule.append(
+            StatutoryCapAmount.model_validate(
+                {"value": variant.payload.value, "valid_from": variant.valid_from, "valid_to": variant.valid_to}
+            )
+        )
+    return tuple(sorted(schedule, key=lambda amount: amount.valid_from))
+
+
+def _cap_variants_from_entries(values: Mapping[str, object], *, category: str) -> tuple[StatutoryCapVariant, ...]:
     """Rebuild the condition-selected cap variants the profile fact projects.
 
     Each variant arrives as ``statutory_cap_variant.<id>.<field>`` entries. An
@@ -166,11 +230,14 @@ def _cap_variants_from_entries(
     for variant_id, declared in fields.items():
         if "label" not in declared:
             raise CategoryValidationError(f"category authority cap variant {category}/{variant_id} has no label")
-        variants.append(
-            StatutoryCapVariant.model_validate(
-                {**declared, "id": variant_id, "label": tr(str(declared["label"]))}
+        try:
+            variants.append(
+                StatutoryCapVariant.model_validate({**declared, "id": variant_id, "label": tr(str(declared["label"]))})
             )
-        )
+        except ValidationError as exc:
+            raise CategoryValidationError(
+                f"category authority carries an invalid cap variant {category}/{variant_id}: {exc}"
+            ) from exc
     return tuple(variants)
 
 
