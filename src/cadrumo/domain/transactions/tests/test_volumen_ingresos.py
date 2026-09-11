@@ -22,7 +22,7 @@ from ..volumen_ingresos import counts_toward_volumen_de_ingresos
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _EXCLUDED_FACT = "rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario"
-_ACTIVITY_PARAM = "modelo-131:selector-m036-volumen-ingresos-agrario"
+_ACTIVITY_FACT_ID = "modelo-131:selector-m036-volumen-ingresos-agrario"
 
 
 @pytest.fixture(scope="module")
@@ -106,7 +106,7 @@ def test_the_modelo_131_activity_selector_is_not_the_art_95_one(authority: Valid
     art. 95's agricultural/livestock set has no forestry code. Reusing it for a
     Modelo 131 casilla would therefore drop a forestry filer's quarterly volume.
     """
-    m131 = tipo_actividad_code_set(_ACTIVITY_PARAM, effective_date=date(2026, 4, 1), authority=authority)
+    m131 = tipo_actividad_code_set(_ACTIVITY_FACT_ID, effective_date=date(2026, 4, 1), authority=authority)
     art_95_agrarian = tipo_actividad_code_set(
         "rirpf-art-95:selector-m036-actividades-agricolas-ganaderas",
         effective_date=date(2026, 4, 1),
@@ -134,7 +134,7 @@ def test_pesquera_is_absent_because_the_form_is_narrower_than_article_110(
     modelling an activity this form cannot present -- and would then face the
     ``B04`` mejillón question that the current set deliberately never raises.
     """
-    declared = tipo_actividad_code_set(_ACTIVITY_PARAM, effective_date=date(2026, 4, 1), authority=authority)
+    declared = tipo_actividad_code_set(_ACTIVITY_FACT_ID, effective_date=date(2026, 4, 1), authority=authority)
 
     assert TipoActividad.B05_PESQUERA not in declared
     assert TipoActividad.B04_PRODUCCION_DE_MEJILLON not in declared

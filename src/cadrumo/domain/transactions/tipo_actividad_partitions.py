@@ -46,7 +46,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import date
-from typing import TYPE_CHECKING, Final, cast
+from typing import TYPE_CHECKING, Final
 
 from ...core.tipos_actividad import TipoActividad
 from ..calculations.registry.facts.resolution import EntitySetFactQuery, ResolvedEntitySetFact
@@ -93,7 +93,7 @@ _GOVERNED_ACTIVITY_SELECTOR_IDS: Final[frozenset[str]] = frozenset(
 
 
 def resolve_tipo_actividad_selector(
-    parameter_id: str,
+    fact_id: str,
     *,
     effective_date: date,
     authority: ValidatedRegistryAuthority | None = None,
@@ -104,9 +104,9 @@ def resolve_tipo_actividad_selector(
     coordinate, and authority digest for a caller that must explain why an
     activity was classified into this arm.
     """
-    if parameter_id not in _GOVERNED_ACTIVITY_SELECTOR_IDS:
+    if fact_id not in _GOVERNED_ACTIVITY_SELECTOR_IDS:
         raise TransactionValidationError(
-            f"registry fact {parameter_id!r} has no typed governed Modelo 036 activity-selector fact",
+            f"registry fact {fact_id!r} has no typed governed Modelo 036 activity-selector fact",
         )
     if authority is None:
         from ..calculations.registry.authority import bundled_authority
@@ -115,7 +115,7 @@ def resolve_tipo_actividad_selector(
     try:
         resolved = authority.resolve_governed_fact(
             EntitySetFactQuery(
-                fact_id=parameter_id,
+                fact_id=fact_id,
                 date_axis=DateAxis.FILING_PERIOD,
                 effective_date=effective_date,
             ),
@@ -125,10 +125,14 @@ def resolve_tipo_actividad_selector(
 
         if isinstance(exc, RegistryError):
             raise TransactionValidationError(
-                f"failed to resolve Modelo 036 activity selector {parameter_id!r}: {exc}",
+                f"failed to resolve Modelo 036 activity selector {fact_id!r}: {exc}",
             ) from exc
         raise
-    return cast("ResolvedEntitySetFact", resolved)
+    if not isinstance(resolved, ResolvedEntitySetFact):
+        raise TransactionValidationError(
+            f"Modelo 036 activity selector {fact_id!r} did not resolve to an entity-set fact",
+        )
+    return resolved
 
 
 def _typed_code_set(selector: ResolvedEntitySetFact) -> frozenset[TipoActividad]:
@@ -146,7 +150,7 @@ def _typed_code_set(selector: ResolvedEntitySetFact) -> frozenset[TipoActividad]
 
 
 def tipo_actividad_code_set(
-    parameter_id: str,
+    fact_id: str,
     *,
     effective_date: date,
     authority: ValidatedRegistryAuthority | None = None,
@@ -159,7 +163,7 @@ def tipo_actividad_code_set(
     second place the unit check, the unknown-token refusal and the typing can drift.
 
     Args:
-        parameter_id: The registry fact to read.
+        fact_id: The registry fact to read.
         effective_date: Filing-period coordinate for the exact fact variant.
         authority: Optional validated authority used for fact resolution.
 
@@ -172,7 +176,7 @@ def tipo_actividad_code_set(
     """
     return _typed_code_set(
         resolve_tipo_actividad_selector(
-            parameter_id,
+            fact_id,
             effective_date=effective_date,
             authority=authority,
         ),
@@ -188,27 +192,27 @@ def load_tipo_actividad_selectors(*, effective_date: date) -> Mapping[str, froze
     not be read as "no rate applies".
 
     Returns:
-        A mapping from selector parameter id to its declared codes.
+        A mapping from selector fact id to its declared codes.
 
     Raises:
         TransactionValidationError: If a selector is absent or malformed, if the
             same code appears in two selectors, or if the catalogue cannot load.
     """
     selectors = {
-        parameter_id: _typed_code_set(
-            resolve_tipo_actividad_selector(parameter_id, effective_date=effective_date),
+        fact_id: _typed_code_set(
+            resolve_tipo_actividad_selector(fact_id, effective_date=effective_date),
         )
-        for parameter_id in _ART_95_SELECTORS
+        for fact_id in _ART_95_SELECTORS
     }
 
     seen: dict[TipoActividad, str] = {}
-    for parameter_id, codes in selectors.items():
+    for fact_id, codes in selectors.items():
         for code in codes:
             previous = seen.get(code)
             if previous is not None:
                 raise TransactionValidationError(
                     f"Modelo 036 code {code.value!r} is declared by both {previous!r} and "
-                    f"{parameter_id!r}; a code must select at most one art. 95 arm",
+                    f"{fact_id!r}; a code must select at most one art. 95 arm",
                 )
-            seen[code] = parameter_id
+            seen[code] = fact_id
     return selectors

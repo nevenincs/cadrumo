@@ -13,12 +13,14 @@ not inferences, cited to the apartado that fixes them.
 from __future__ import annotations
 
 from datetime import date
+from typing import cast
 
 import pytest
 
 from ....core.tipos_actividad import TipoActividad
-from ...calculations.registry.facts.resolution import ResolvedEntitySetFact
-from ...calculations.registry.facts.schema import EntitySetFactPayload, FactOwnership
+from ...calculations.registry.authority import ValidatedRegistryAuthority
+from ...calculations.registry.facts.resolution import ResolvedEntitySetFact, ResolvedScalarFact
+from ...calculations.registry.facts.schema import EntitySetFactPayload, FactOwnership, ScalarFactPayload
 from ...calculations.registry.schema_base import DateAxis
 from ..errors import TransactionValidationError
 from ..tipo_actividad_partitions import (
@@ -46,7 +48,7 @@ def test_every_partition_is_declared_including_the_one_no_code_selects() -> None
 
     assert set(selectors) == set(_ART_95_SELECTORS)
     assert selectors[engorde] == frozenset()
-    assert all(codes for parameter_id, codes in selectors.items() if parameter_id != engorde)
+    assert all(codes for fact_id, codes in selectors.items() if fact_id != engorde)
 
 
 def test_no_code_selects_two_partitions() -> None:
@@ -78,7 +80,7 @@ def test_art_95_selector_resolution_retains_typed_fact_provenance() -> None:
 
 
 @pytest.mark.parametrize(
-    ("parameter_id", "expected_ref"),
+    ("fact_id", "expected_ref"),
     (
         (
             "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrarias-pesqueras",
@@ -99,14 +101,14 @@ def test_art_95_selector_resolution_retains_typed_fact_provenance() -> None:
     ),
 )
 def test_non_art_95_activity_selectors_resolve_through_the_same_fact_authority(
-    parameter_id: str,
+    fact_id: str,
     expected_ref: str,
 ) -> None:
-    selector = resolve_tipo_actividad_selector(parameter_id, effective_date=date(2026, 4, 1))
+    selector = resolve_tipo_actividad_selector(fact_id, effective_date=date(2026, 4, 1))
 
     assert expected_ref in selector.legal_refs
     assert selector.authority_digest
-    assert tipo_actividad_code_set(parameter_id, effective_date=date(2026, 4, 1)) == frozenset(
+    assert tipo_actividad_code_set(fact_id, effective_date=date(2026, 4, 1)) == frozenset(
         TipoActividad(token) for token in selector.payload.entities
     )
 
@@ -133,7 +135,7 @@ def test_typed_code_set_refuses_a_token_that_is_not_a_modelo_036_code() -> None:
     assert "B05" in str(raised.value)
 
 
-def test_selector_resolution_refuses_an_unenrolled_parameter() -> None:
+def test_selector_resolution_refuses_an_unenrolled_fact() -> None:
     """A missing selector is a loud refusal, never a silently empty partition.
 
     This is the positive control for the empty-set assertion above: an empty set
@@ -141,3 +143,29 @@ def test_selector_resolution_refuses_an_unenrolled_parameter() -> None:
     """
     with pytest.raises(TransactionValidationError, match="no typed governed"):
         tipo_actividad_code_set("rirpf-art-95:selector-missing", effective_date=date(2025, 12, 31))
+
+
+def test_selector_resolution_refuses_a_non_entity_set_fact() -> None:
+    """A selector facade cannot reinterpret a fact from another payload family."""
+
+    class ScalarAuthority:
+        def resolve_governed_fact(self, _query: object) -> ResolvedScalarFact:
+            return ResolvedScalarFact(
+                fact_id="lirpf-art-31:eo-exclusion-compras-eur",
+                variant_id="lirpf-art-31:eo-exclusion-compras-eur.current",
+                date_axis=DateAxis.FILING_PERIOD,
+                effective_date=date(2025, 12, 31),
+                valid_from=date(2025, 1, 1),
+                payload=ScalarFactPayload(value="250000", unit="EUR"),
+                legal_refs=("ley-35-2006:art-31",),
+                review_status="agent_reviewed",
+                ownership=FactOwnership.GENERATED,
+                authority_digest="a" * 64,
+            )
+
+    with pytest.raises(TransactionValidationError, match="did not resolve to an entity-set fact"):
+        resolve_tipo_actividad_selector(
+            "rirpf-art-95:selector-m036-actividades-profesionales",
+            effective_date=date(2025, 12, 31),
+            authority=cast("ValidatedRegistryAuthority", ScalarAuthority()),
+        )
