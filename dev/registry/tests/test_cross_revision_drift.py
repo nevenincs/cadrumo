@@ -28,12 +28,12 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Modelo
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaConstraints, CasillaDefinition
 
+from ..compiler.loader import load_modelo_directory
+from ..compiler.registry_scope import validate_registry_scope
 from ..compiler.validate_cross_revision import (
     cross_revision_casilla_consistency_failures,
     declared_cross_revision_continuity_semantic_linkage_failures,
 )
-from ..compiler.loader import load_modelo_directory
-from ..compiler.registry_scope import validate_registry_scope
 from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 from ._synthetic_locale_fixtures import (

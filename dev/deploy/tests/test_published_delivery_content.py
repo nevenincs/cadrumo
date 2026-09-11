@@ -29,8 +29,8 @@ from dev.docs.pagefind_index import build_search_index
 
 from ..docs_static_site import (
     _assert_served_index_matches_build,
-    _localized_languages,
     _verify_published_search_index,
+    localized_languages,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
@@ -133,7 +133,7 @@ def test_every_published_root_is_checked_not_only_the_default(tmp_path: Path) ->
     html_root = tmp_path / "html"
     html_root.mkdir()
     shutil.copytree(built, html_root / "site")
-    for language in _localized_languages():
+    for language in localized_languages():
         shutil.copytree(built, html_root / language)
     shutil.copytree(built / "pagefind", html_root / "pagefind")
 
@@ -145,7 +145,7 @@ def test_every_published_root_is_checked_not_only_the_default(tmp_path: Path) ->
 
     _verify_published_search_index(html_root, base_url="https://example.invalid/docs", fetch=_fetch)
 
-    for language in _localized_languages():
+    for language in localized_languages():
         assert any(f"/{language}/pagefind/pagefind-entry.json" in url for url in requested), (
             f"the {language!r} root's own published index was never read: {requested}"
         )

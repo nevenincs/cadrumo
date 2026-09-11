@@ -21,7 +21,7 @@ import typer
 
 from dev._paths import UTF_8
 
-from ._coverage import TerminologyCoverageReport, compute_coverage_report, coverage_report_path
+from .coverage_report import TerminologyCoverageReport, compute_coverage_report, coverage_report_path
 
 _UTF_8: Final[str] = UTF_8
 

@@ -50,12 +50,13 @@ from typing import TYPE_CHECKING, Annotated
 from pydantic import BaseModel as _BaseModel
 from pydantic import Field, RootModel, StringConstraints
 
-from cadrumo.core.external_constants import UTF_8_ENCODING
-from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from cadrumo.entrypoints.cli.command_api import (
+from cadrumo.application.operator_surface.command_ports import (
     MachineSecretPayloadMetadata,
     ProfileAuthenticationContractMetadata,
 )
+from cadrumo.core.external_constants import UTF_8_ENCODING
+from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from cadrumo.entrypoints.cli.command_spec import ArgumentSpec, DefaultKind
 
 from .cli_reference import _reference_subprocess_environment
 
@@ -239,11 +240,7 @@ def _build_cli_tree_loaded() -> CliTree:
     environment) so ``tr()`` help strings resolve to English.
     """
     from cadrumo.core.i18n.render import clear_output_language_cache, tr
-    from cadrumo.entrypoints.cli.command_api import (
-        ArgumentSpec,
-        DefaultKind,
-        command_registration_projection,
-    )
+    from cadrumo.entrypoints.cli.command_schema import command_registration_projection
     from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 
     clear_output_language_cache()

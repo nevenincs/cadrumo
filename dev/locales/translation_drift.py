@@ -56,7 +56,7 @@ import unicodedata
 from dataclasses import dataclass
 from typing import Final
 
-from .casilla_label_derivation import casilla_labels
+from .revision_label_restatement import casilla_labels
 
 __all__ = [
     "DIFFERENCE_KINDS",

@@ -30,13 +30,13 @@ import pytest
 
 from cadrumo.core.directory_scan import iter_directory
 
-from .._proof_ledger import (
+from ..lane_verification_core import write_smoke_manifest
+from ..proof_ledger import (
     ProofContractError,
     record_proof,
     recorded_proofs,
     reset_proof_ledger,
 )
-from ..lane_verification_core import write_smoke_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

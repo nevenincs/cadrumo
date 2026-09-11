@@ -20,10 +20,10 @@ from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
-from .validate_semantic_role_typos import grouped_semantic_role_typo_twin_failures
 from ._validate_semantic_role_required import (
     collect_casillas_by_semantic_role as collect_casillas_by_semantic_role,
 )
+from .validate_semantic_role_typos import grouped_semantic_role_typo_twin_failures
 
 __all__ = [
     "semantic_role_cardinality_failures",

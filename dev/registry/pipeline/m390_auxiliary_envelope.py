@@ -30,7 +30,6 @@ from cadrumo.domain.calculations.registry.schema_references import SourceReferen
 from cadrumo.domain.filing.errors import FilingExportValidationError
 
 from ..maintenance_support import resolve_record_design_binary
-from .variable_envelope import AUXILIARY_TO_PREFIX_ROLE
 from .export_fragment_provenance import ExportFragmentTarget
 from .record_design_intermediate import (
     RecordDesignIntermediate,
@@ -38,6 +37,7 @@ from .record_design_intermediate import (
     RecordDesignIntermediateField,
     RecordDesignIntermediateSource,
 )
+from .variable_envelope import AUXILIARY_TO_PREFIX_ROLE
 
 __all__ = [
     "M390_AUXILIARY_ENVELOPE_TARGETS",

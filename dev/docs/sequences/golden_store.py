@@ -461,9 +461,9 @@ def _running_version() -> str:
     installed distribution metadata, which reports whatever wheel happens to be
     in the environment and disagrees with the checkout after a version reset.
     """
-    from cadrumo import __version__
+    from cadrumo.core.package_version import PACKAGE_VERSION
 
-    return __version__
+    return PACKAGE_VERSION
 
 
 def normalise_text_output(

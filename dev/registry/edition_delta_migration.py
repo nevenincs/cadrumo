@@ -117,8 +117,8 @@ from dev._paths import REPO_ROOT
 from dev.test_runs.paths import allocate_run_directory
 
 from .analysis.delta_minimality import restatement_differences
-from .compiler.authority import compile_validated_authority
 from .compiler.edition_materialisation import materialise_edition
+from .compiler.loader import load_modelo_directory
 from .edition_export_scenarios import edition_export_scenarios
 from .edition_round_trip import (
     EditionExportScenario,
@@ -138,6 +138,7 @@ __all__ = [
     "MigrationPlan",
     "MigrationRefusedError",
     "PredecessorBasis",
+    "edition_source_default",
     "main",
     "migrate_modelo",
     "persist_migration_report",
@@ -591,11 +592,13 @@ def _source_refs(table: Mapping[str, object]) -> tuple[str, ...] | None:
     return tuple(str(item) for item in value) if isinstance(value, list) else None
 
 
-def _source_default(rows: Sequence[_Row]) -> tuple[tuple[str, ...] | None, str | None]:
+def edition_source_default(rows: Sequence[Mapping[str, object]]) -> tuple[tuple[str, ...] | None, str | None]:
     """The edition's shared leading ``source_refs`` run, or ``None`` and the reason none is declared.
 
     A run counts for a row only when the row's references open with it and
     repeat nothing, so the default followed by the rest reproduces them exactly.
+    This is the one definition of the rule: the status screen imports it, so a
+    row it counts as liftable is a row this tool will lift.
     """
     constraints = [table for row in rows if isinstance(table := row.get(_CONSTRAINTS), dict)]
     if any(_ROW_SOURCE not in table for table in [*rows, *constraints]):
@@ -750,7 +753,7 @@ def _plan(
         if any(row is None for row in full):
             raise MigrationRefusedError(f"edition {revision_id!r}: an inherited reference does not resolve on input")
         full_rows = [row for row in full if row is not None]
-        source_default, withheld = _source_default(full_rows)
+        source_default, withheld = edition_source_default(full_rows)
         orden = _manifest_defaults(source.manifest).orden
         lifts = {_row_id(row): _lift(row, source_default=source_default, orden=orden) for row in full_rows}
         new_defaults = _Defaults(source_refs=source_default, orden=orden)
@@ -1185,7 +1188,16 @@ def _is_fixed_point(works: Sequence[_EditionWork]) -> bool:
 
 
 def _load(registry_root: Path, modelo_id: str) -> ModeloDefinition:
-    return compile_validated_authority(registry_root, bundled_path()).modelo(modelo_id)
+    """Load the modelo being migrated without validating unrelated registry state.
+
+    ``load_modelo_directory`` performs the canonical typed load, including
+    predecessor materialisation and the modelo-local structural checks.  The
+    migration's round-trip gate subsequently validates the staged authority
+    when an export scenario needs filing behaviour.  Compiling the complete
+    registry here made an unrelated governed-fact error prevent the tool from
+    planning any modelo at all.
+    """
+    return load_modelo_directory(registry_root / _MODELOS / modelo_id)
 
 
 def _inside(path: Path, root: Path) -> bool:

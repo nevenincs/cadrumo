@@ -44,8 +44,10 @@ from functools import lru_cache
 
 import pytest
 
-from cadrumo.application.modelo._verification_predicates import evaluate_advisory_predicate_fires
-from cadrumo.application.modelo.verification_actions import evaluate_verification_predicates
+from cadrumo.application.modelo.verification_predicates import (
+    evaluate_advisory_predicate_fires,
+    evaluate_verification_predicates,
+)
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloRevision

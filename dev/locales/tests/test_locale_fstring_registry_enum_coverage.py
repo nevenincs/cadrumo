@@ -2,10 +2,10 @@
 
 import pytest
 
+from cadrumo.domain.contribuyente.entity_type import LegalEntityForm
 from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
-from cadrumo.domain.deadlines.models import LegalEntityForm
 
-from .._fstring_registry import get_registered_keys
+from ..fstring_registry import get_registered_keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

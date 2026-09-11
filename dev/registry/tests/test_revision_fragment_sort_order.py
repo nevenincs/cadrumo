@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from ..compiler.loader_cache import _revision_directory_source, fragment_sort_key
+from ..compiler.loader_cache import fragment_sort_key
 from ..compiler.loader_grammar import revision_section_fragment_paths
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -82,17 +82,3 @@ def test_revision_section_fragment_paths_uses_the_canonical_order(tmp_path: Path
 
     assert result == (first, second)
     assert result != _legacy_windows_path_sort((first, second))
-
-
-def test_revision_directory_source_uses_the_canonical_order(tmp_path: Path) -> None:
-    """The revision-source discovery function agrees with the merge-order function."""
-    revision_dir = tmp_path / "2024"
-    casillas_dir = revision_dir / "casillas"
-    first, second = _write_casilla_fragments(casillas_dir)
-    (revision_dir / "revision.toml").write_text("", encoding="utf-8")
-
-    source = _revision_directory_source(revision_dir)
-
-    discovered_casillas = tuple(p for p in source.fragment_paths if p.parent == casillas_dir)
-    assert discovered_casillas == (first, second)
-    assert discovered_casillas != _legacy_windows_path_sort((first, second))

@@ -16,8 +16,8 @@ import pytest
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
-from cadrumo.domain.calculations.registry.schema import CasillaDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_base import SCHEMA_FAMILY, CasillaDataType
 from cadrumo.domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
@@ -25,6 +25,7 @@ from cadrumo.domain.calculations.registry.schema_exports import (
 )
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from ..analysis.provenance_consistency import provenance_findings
 from ..compiler.authority import compiled_bundled_authority
@@ -214,7 +215,7 @@ def test_the_walked_families_and_the_declared_child_kinds_agree() -> None:
     added by the screen rather than by the walk.
     """
 
-    from cadrumo.domain.calculations.registry.schema import SCHEMA_FAMILY, ModeloRevision
+    from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
     from ..analysis.provenance_consistency import citing_children
 

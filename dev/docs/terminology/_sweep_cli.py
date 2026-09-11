@@ -23,13 +23,13 @@ import typer
 from dev._paths import UTF_8
 
 from ._query_aliases import load_query_alias_authority
-from ._sweep import (
+from ._wrangle import STRONG_SIGNAL_SCORE_FLOOR
+from .sweep_runner import (
     DEFAULT_MAX_RESULTS,
     ServiceRagSearchClient,
-    SweepResult,
     run_sweep,
 )
-from ._wrangle import STRONG_SIGNAL_SCORE_FLOOR
+from .term_relevance_mapping import SweepResult
 
 _UTF_8: Final[str] = UTF_8
 

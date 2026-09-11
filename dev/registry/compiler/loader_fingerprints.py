@@ -224,6 +224,11 @@ def _live_cached_fingerprints(
 
 def _registry_source_fingerprints(resolved: Path) -> RegistryPathFingerprints:
     """Fingerprint every catalogue TOML the loader will subsequently re-open."""
+    # Import here because fact providers use this module's fingerprint type.
+    # Their registered inputs are nevertheless compiler inputs and must affect
+    # the authority identity that publication records.
+    from .fact_providers import collect_registered_fact_provider_fingerprints
+
     fingerprints: list[RegistryPathFingerprint] = []
     for path in scan_directory(resolved / "legal", pattern="*.toml"):
         fingerprints.append(toml_file_fingerprint(path))
@@ -235,7 +240,7 @@ def _registry_source_fingerprints(resolved: Path) -> RegistryPathFingerprints:
     schema_path = resolved / "user_profile" / "schema.toml"
     if schema_path.is_file():
         fingerprints.append(toml_file_fingerprint(schema_path))
-    return tuple(fingerprints)
+    return (*fingerprints, *collect_registered_fact_provider_fingerprints(resolved))
 
 
 def _store_registry_fingerprints(

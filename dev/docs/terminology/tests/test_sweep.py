@@ -37,25 +37,24 @@ from .._query_aliases import (
     QueryAliasAuthority,
     QueryAliasEntry,
 )
-from .._resolution import (
+from .._wrangle import wrangle
+from ..resolution import (
     ChunkHit,
     GroundingSurface,
     ResolutionResult,
     TargetResolver,
     resolve_chunk_hits,
 )
-from .._sweep import (
+from ..search_record import SearchRecordKind
+from ..sweep_runner import (
     RagSearchClient,
     SweepQuery,
-    SweepResult,
-    TermRelevanceMapping,
     _mapping_from,
     _match_structured_casilla_query,
     enumerate_query_vocabulary,
     run_sweep,
 )
-from .._wrangle import wrangle
-from ..search_record import SearchRecordKind
+from ..term_relevance_mapping import SweepResult, TermRelevanceMapping
 from ..unified_record import SearchRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]

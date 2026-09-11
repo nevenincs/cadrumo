@@ -19,8 +19,8 @@ from __future__ import annotations
 
 import ast
 import tomllib
-from importlib.util import find_spec
 from importlib.metadata import packages_distributions
+from importlib.util import find_spec
 from pathlib import Path
 
 import pytest
@@ -135,9 +135,7 @@ def test_the_surface_inventory_names_real_entry_points() -> None:
             continue
         tree = ast.parse(Path(spec.origin).read_text(encoding="utf-8"))
         declared = {
-            node.name
-            for node in tree.body
-            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+            node.name for node in tree.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
         }
         if name not in declared:
             missing.append(f"{module_name} does not define {name}")

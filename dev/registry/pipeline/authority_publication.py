@@ -48,7 +48,8 @@ from cadrumo.domain.calculations.registry.export import derive_export_layouts_fr
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 
-from ..compiler.authority import canonical_authoring_root_pair, compile_validated_authority
+from ..compiler.authority import compile_validated_authority
+from ..compiler.authority_state import canonical_authoring_root_pair
 from ..compiler.corpus_provenance import classify_normative_corpus_provenance
 from ..compiler.identity import resolve_registry_identity
 from ..compiler.legal_grounding import published_legal_evidence_text

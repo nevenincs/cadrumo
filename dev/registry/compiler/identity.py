@@ -51,9 +51,9 @@ from typing import override
 
 from pydantic import BaseModel
 
-from cadrumo import __version__
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
+from cadrumo.core.package_version import PACKAGE_VERSION as __version__
 
 from .loader_cache import is_bundled_registry_root
 

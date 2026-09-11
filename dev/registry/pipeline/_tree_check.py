@@ -22,7 +22,6 @@ from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefi
 
 from ..compiler.loader import load_modelo_directory
 from ._export_tree import ExportTreeTransportProfile, RenderedExportTree, render_complete_export_tree
-from .tree_paths import contains, require_existing_non_link
 from ._tree_validation import (
     GeneratedExportTreeValidationContext,
     ValidatedGeneratedExportTree,
@@ -39,6 +38,7 @@ from .joined_record_design import JoinedRecordDesign
 from .render_profile import RenderProfile, RenderProfileSourceEvidence
 from .semantic_map import SemanticMap
 from .source_defects import SourceDefectDeclaration
+from .tree_paths import contains, require_existing_non_link
 
 __all__ = [
     "CheckedGeneratedExportTree",

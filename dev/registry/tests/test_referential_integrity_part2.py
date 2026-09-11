@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.toml import freeze_toml
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.record_design_coverage import calculation_closure_casilla_ids
+from cadrumo.domain.calculations.registry.reference_checks import check_all_id_references
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_surfaces import (
@@ -20,12 +23,9 @@ from ..conformance.registry_schema_support import committed_registry_tree as _co
 from ._referential_integrity_support import (
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,
-    ValidationError,
     build_snapshot_with_missing_legal,
     build_snapshot_with_missing_source,
-    check_all_id_references,
     completeness_manifest,
-    freeze_toml,
     minimal_casilla,
     minimal_catalogues,
     minimal_legal_ref,

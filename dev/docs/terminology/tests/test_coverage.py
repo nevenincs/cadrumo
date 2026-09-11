@@ -23,18 +23,18 @@ from pydantic import ValidationError
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 
-from .._coverage import (
+from .._miss_rate import load_committed_relevance
+from ..casilla_projection import project_casilla_search_records
+from ..concept_card_projection import ConceptCardRecord, project_concept_cards
+from ..coverage_report import (
     CoverageKind,
     KindCoverage,
     TerminologyCoverageReport,
     compute_coverage_report,
     coverage_report_path,
     legal_provision_ids,
-    legal_target_record_id,
 )
-from .._miss_rate import load_committed_relevance
-from ..casilla_projection import project_casilla_search_records
-from ..concept_card_projection import ConceptCardRecord, project_concept_cards
+from ..legal_projection import legal_target_record_id
 from ..search_record import CasillaSearchRecord, SearchRecordKind
 from ..term_relevance_mapping import SweepResult, TermRelevanceMapping, TermTargetRef
 from ..unified_record import to_search_record
@@ -44,7 +44,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 _EMPTY_CLI: dict[str, tuple[()]] = {"cli_command_records": (), "cli_option_records": ()}
 
 
-from ...tests._authority_fixtures import authority
+from cadrumo.tests.registry_authority_fixture import bundled_registry_authority_fixture
+
+authority = bundled_registry_authority_fixture(name="authority")
 
 __all__ = ["authority"]
 

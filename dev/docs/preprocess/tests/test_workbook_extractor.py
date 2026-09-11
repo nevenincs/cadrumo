@@ -23,13 +23,7 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
-from .._parts import split_units_by_budget
-from .._workbook import (
-    WORKBOOK_EXTRACTOR_ID,
-    _render_sheet,
-    build_outputs,
-    extract_workbook,
-)
+from ..parts import split_units_by_budget
 from ..schema import (
     ExtractionStatus,
     PreprocessOutput,
@@ -41,6 +35,12 @@ from ..sidecar import (
     PreprocessSidecarError,
     load_sidecar,
     sidecar_paths_for,
+)
+from ..workbook import (
+    WORKBOOK_EXTRACTOR_ID,
+    _render_sheet,
+    build_outputs,
+    extract_workbook,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.docs, pytest.mark.hex_core]
@@ -206,7 +206,7 @@ def test_tampered_sidecar_is_rejected(tmp_path: Path) -> None:
 def test_budget_splitter_groups_oversized_units() -> None:
     """The workbook extractor's grouping runs through the canonical splitter.
 
-    Exercises the shared `_parts.split_units_by_budget` splitter directly
+    Exercises the shared `parts.split_units_by_budget` splitter directly
     with synthetic oversized units (no real corpus workbook is large enough
     to trigger it), proving that a hypothetical over-cap workbook would
     split rather than ship an oversized, walker-skipped sidecar, and that
@@ -221,15 +221,14 @@ def test_budget_splitter_groups_oversized_units() -> None:
 
 
 def test_workbook_uses_the_canonical_parts_helpers_not_shadow_copies() -> None:
-    """Anti-duplication proof: the workbook module imports `_parts` by identity.
+    """Anti-duplication proof: the workbook module imports `parts` by identity.
 
     If the workbook extractor still carried a private budget-splitter or
     sidecar-naming re-implementation, its module attribute would be a
-    distinct function object rather than the exact `_parts` helper the PDF
+    distinct function object rather than the exact `parts` helper the PDF
     extractor also shares.
     """
-    from .. import _parts as parts
-    from .. import _workbook as workbook
+    from .. import parts, workbook
 
     assert workbook.split_units_by_budget is parts.split_units_by_budget
     assert workbook.stamp_part_anchors is parts.stamp_part_anchors
@@ -240,13 +239,13 @@ def test_workbook_and_pdf_extractors_share_one_budget_and_naming_scheme() -> Non
     """Workbook and PDF extraction split and name parts through one shared contract.
 
     Both format extractors delegate multi-part grouping and part naming to
-    the same `_parts` helpers, so an oversized workbook and an oversized PDF
+    the same `parts` helpers, so an oversized workbook and an oversized PDF
     split identically rather than each carrying its own drifted budget or
     naming convention.
     """
     from .. import _pdf as pdf
-    from .. import _workbook as workbook
-    from .._parts import TEXT_BUDGET_BYTES, part_stand_in_path
+    from .. import workbook
+    from ..parts import TEXT_BUDGET_BYTES, part_stand_in_path
 
     assert pdf.split_units_by_budget is workbook.split_units_by_budget
     assert pdf.stamp_part_anchors is workbook.stamp_part_anchors

@@ -37,7 +37,6 @@ from ..filing_export_proof import (
     CanonicalTwoChannelFilingExportProofAuthority,
     FilingExportConformanceEnrollmentReport,
     FilingExportConformanceVector,
-    FilingExportSecureReplayEvidence,
     FilingExportSecureReplayRequest,
     _derive_static_filing_export_conformance_enrollment,
     canonical_filing_export_conformance_vectors,
@@ -45,7 +44,7 @@ from ..filing_export_proof import (
     derive_diagnostic_filing_export_conformance_enrollment,
     derive_filing_export_conformance_enrollment,
 )
-from ..filing_export_proof_contracts import FilingExportProofCoordinate
+from ..filing_export_proof_contracts import FilingExportProofCoordinate, FilingExportSecureReplayEvidence
 from ..maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]

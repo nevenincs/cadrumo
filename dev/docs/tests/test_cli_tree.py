@@ -141,7 +141,7 @@ def test_machine_secret_and_profile_authentication_metadata_matches_live_project
     cli_tree: CliTree,
 ) -> None:
     """The generated discovery tree carries the same value-free graph contracts."""
-    from cadrumo.entrypoints.cli.command_api import command_registration_projection
+    from cadrumo.entrypoints.cli.command_schema import command_registration_projection
 
     registration = command_registration_projection()
     rows = {("aeat", *(row.cli_path or ())): row for row in registration.commands}

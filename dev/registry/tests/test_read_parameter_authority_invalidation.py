@@ -29,7 +29,6 @@ from cadrumo.domain.calculations.registry.formula_runtime_ops import read_parame
 from cadrumo.tests.attribute_scope import scoped_attribute
 
 from ..compiler.identity import compute_walked_tree_digest
-from ..compiler.loader_cache import _bundled_registry_root
 from ..compiler.loader_fingerprints import clear_fingerprint_cache, collect_registry_tree_fingerprints
 from ..compiler.m303_orden_manifest import collect_m303_annual_orden_fingerprints
 from ..compiler.source_evidence_fingerprint import collect_source_evidence_fingerprints
@@ -142,13 +141,11 @@ def redirected_bundled_registry_root() -> Iterator[Callable[[Path], Path]]:
 
     def _point_at(root: Path) -> Path:
         target["root"] = root
-        _bundled_registry_root.cache_clear()
         clear_fingerprint_cache()
         return real_bundled_path()
 
     with scoped_attribute(core_resources, "bundled_path", _redirected):
         yield _point_at
-    _bundled_registry_root.cache_clear()
     clear_fingerprint_cache()
 
 

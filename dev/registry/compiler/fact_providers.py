@@ -152,16 +152,28 @@ def reset_registered_fact_providers() -> None:
 
 
 def validate_fact_provider_directory_ownership(registry_root: Path) -> None:
-    """Refuse governed top-level or nested directories without an exact owner."""
+    """Refuse governed directories outside every registered provider root."""
     owned = registered_fact_provider_directories()
     root = registry_root.resolve()
+
+    def owner_for(relative: str) -> FactProviderRegistration | None:
+        path = PurePosixPath(relative)
+        return next(
+            (
+                registration
+                for owned_directory, registration in owned.items()
+                if path == PurePosixPath(owned_directory) or path.is_relative_to(PurePosixPath(owned_directory))
+            ),
+            None,
+        )
+
     for entry in scan_directory(root, select=DirectoryEntryKind.DIRECTORIES):
         if any(
             is_governed_fact_filename(path.name)
             for path in scan_directory(entry, pattern="*.toml", select=DirectoryEntryKind.FILES)
         ):
             relative = PurePosixPath(*entry.relative_to(root).parts).as_posix()
-            if relative not in owned:
+            if owner_for(relative) is None:
                 raise RegistryValidationError(f"governed fact directory {relative!r} has no registered provider")
     for relative_directory in owned:
         provider_root = root / Path(*PurePosixPath(relative_directory).parts)
@@ -169,7 +181,7 @@ def validate_fact_provider_directory_ownership(registry_root: Path) -> None:
             continue
         for entry in scan_directory(provider_root, select=DirectoryEntryKind.DIRECTORIES, recursive=True):
             relative = PurePosixPath(*entry.relative_to(root).parts).as_posix()
-            if relative not in owned:
+            if owner_for(relative) is None:
                 raise RegistryValidationError(
                     f"governed fact directory {relative!r} has no registered provider",
                 )
@@ -198,7 +210,7 @@ def _collect_authored_fact_fingerprints(registry_root: Path) -> RegistryPathFing
     facts_dir = registry_root.resolve() / "facts"
     return tuple(
         toml_file_fingerprint(path.resolve())
-        for path in scan_directory(facts_dir, pattern="*.toml", select=DirectoryEntryKind.FILES)
+        for path in scan_directory(facts_dir, pattern="*.toml", recursive=True, select=DirectoryEntryKind.FILES)
     )
 
 

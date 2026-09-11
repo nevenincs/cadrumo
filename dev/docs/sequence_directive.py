@@ -199,11 +199,11 @@ def _with_live_version(body: str) -> str:
     declaration, which is what makes the displayed version derived rather than
     hardcoded. A body carrying no token is returned unchanged.
     """
-    from cadrumo import __version__
+    from cadrumo.core.package_version import PACKAGE_VERSION
 
     from .sequences.golden_store import PACKAGE_VERSION_TOKEN
 
-    return body.replace(PACKAGE_VERSION_TOKEN, __version__)
+    return body.replace(PACKAGE_VERSION_TOKEN, PACKAGE_VERSION)
 
 
 def _stderr_view(golden_frame: GoldenFrame) -> dict[str, str] | None:

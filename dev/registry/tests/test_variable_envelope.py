@@ -9,15 +9,10 @@ import pytest
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema_exports import FilingEnvelopeCloserDerivation
+from cadrumo.domain.calculations.registry.schema_exports import FilingEnvelopeCloserDerivation, FilingEnvelopePrefixRole
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader import load_registry_tree
-from ..pipeline.variable_envelope import (
-    FilingEnvelopeProvenance,
-    compile_filing_envelope_definition,
-    validate_variable_envelope,
-)
 from ..pipeline.record_design_intermediate import (
     RecordDesignIntermediateField,
     RecordDesignIntermediateRelativeSuffixMarker,
@@ -28,9 +23,13 @@ from ..pipeline.record_design_intermediate import (
 from ..pipeline.semantic_map import (
     EnvelopePrefixField,
     EnvelopeTotalAnchor,
-    FilingEnvelopePrefixRole,
     SemanticMapAnchor,
     VariableEnvelopeSemantic,
+)
+from ..pipeline.variable_envelope import (
+    FilingEnvelopeProvenance,
+    compile_filing_envelope_definition,
+    validate_variable_envelope,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

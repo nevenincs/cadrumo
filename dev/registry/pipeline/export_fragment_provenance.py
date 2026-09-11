@@ -36,9 +36,8 @@ from cadrumo.domain.calculations.registry.ids import (
 )
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportLayoutDefinition
 
-from .pydantic_error_detail import validation_error_detail
-from .variable_envelope import FilingEnvelopeProvenance
 from .joined_record_design import JoinedRecordDesign
+from .pydantic_error_detail import validation_error_detail
 from .record_design_intermediate import (
     RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,
     RecordDesignIntermediateField,
@@ -51,6 +50,7 @@ from .render_profile import (
     validate_render_profile,
 )
 from .semantic_map import SemanticMap, SemanticMapEntry
+from .variable_envelope import FilingEnvelopeProvenance
 
 
 def _publish_once_bytes(path: Path, payload: bytes, *, mode: int = 0o600) -> None:

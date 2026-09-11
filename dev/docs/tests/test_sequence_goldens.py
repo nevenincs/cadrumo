@@ -43,7 +43,6 @@ from sphinx.errors import SphinxError
 from cadrumo.tests.env_scope import scoped_env_var
 from cadrumo.tests.golden_comparison import GOLDEN_MASK_FIELDS, differing_paths
 
-from ..sequences.__main__ import main as sequences_cli_main
 from ..sequences.checks import (
     check_page_coherence_in_subprocess,
     check_sequences,
@@ -51,6 +50,7 @@ from ..sequences.checks import (
     discover_sequences,
     refresh_sequences,
 )
+from ..sequences.cli import main as sequences_cli_main
 from ..sequences.compare import compare_transcript_to_golden
 from ..sequences.golden_store import SequenceGolden, build_golden
 from ..sequences.parser import parse_sequence

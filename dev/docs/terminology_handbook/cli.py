@@ -31,15 +31,6 @@ import typer
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
 
-from ._curation import (
-    CurationError,
-    audit_handbook,
-    relate_concepts,
-    remove_term,
-    retire_concept,
-    set_language_field,
-    set_term,
-)
 from ._scaffold import ScaffoldAction, ScaffoldPlan, scaffold_handbook
 from ._seed_import import (
     SeedEntry,
@@ -47,6 +38,15 @@ from ._seed_import import (
     apply_seed_entries,
     parse_iate_tbx,
     parse_ubterm_csv,
+)
+from .curation import (
+    CurationError,
+    audit_handbook,
+    relate_concepts,
+    remove_term,
+    retire_concept,
+    set_language_field,
+    set_term,
 )
 from .enums import TermStatus
 from .errors import TerminologyError

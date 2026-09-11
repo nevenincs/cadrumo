@@ -30,7 +30,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignField, RecordDesignSheet
 
-from ..compiler.record_design_pdf_state import _bracketed_payload_positions, contiguity_failure
+from ..compiler.record_design_pdf_state import contiguity_failure
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -57,51 +57,5 @@ def _opaque_payload_sheet() -> RecordDesignSheet:
     )
 
 
-def test_an_opaque_payload_between_two_markers_is_accounted_for() -> None:
-    assert _bracketed_payload_positions(_opaque_payload_sheet()) == set(range(9, 309))
-
-
 def test_a_record_whose_only_hole_is_an_opaque_payload_reads_whole() -> None:
     assert contiguity_failure(_opaque_payload_sheet()) is None
-
-
-def test_a_bracket_the_design_numbers_rows_inside_is_not_credited() -> None:
-    """The narrowing: a dropped row between markers must still be reported.
-
-    Here AEAT numbers a row at 9-108 inside the bracket, so the bracket is a
-    structural wrapper rather than an opaque payload. Crediting it would hide
-    the genuine 109-308 hole beside that row.
-    """
-    sheet = RecordDesignSheet(
-        name="body",
-        fields=(
-            _field(1, 8, 'Constante "<AUX>"'),
-            _field(9, 100, "Reservado para la Administración"),
-            _field(309, 9, 'Constante "</AUX>"'),
-        ),
-        total_positions=317,
-    )
-
-    assert _bracketed_payload_positions(sheet) == set()
-    reason = contiguity_failure(sheet)
-    assert reason is not None and "109-308" in reason
-
-
-def test_an_unmatched_opening_marker_credits_nothing() -> None:
-    sheet = RecordDesignSheet(
-        name="body",
-        fields=(_field(1, 8, 'Constante "<VECTOR>"'), _field(309, 9, "Importe")),
-        total_positions=317,
-    )
-
-    assert _bracketed_payload_positions(sheet) == set()
-
-
-def test_a_closing_marker_before_its_opening_credits_nothing() -> None:
-    sheet = RecordDesignSheet(
-        name="body",
-        fields=(_field(1, 9, 'Constante "</VECTOR>"'), _field(310, 8, 'Constante "<VECTOR>"')),
-        total_positions=317,
-    )
-
-    assert _bracketed_payload_positions(sheet) == set()

@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
 
 from .._status import CatalogueLeafState, catalogue_status, classify_catalogue_leaf

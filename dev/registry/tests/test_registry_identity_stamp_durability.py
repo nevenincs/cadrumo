@@ -25,11 +25,11 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo import __version__
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
+from cadrumo.core.package_version import PACKAGE_VERSION as __version__
 from cadrumo.tests.attribute_scope import scoped_attribute
 
-from ..compiler import loader_cache as loader_cache
+from ..compiler import identity as identity_module
 from ..compiler.identity import (
     REGISTRY_IDENTITY_SCHEMA_VERSION,
     RegistryIdentityOrigin,
@@ -38,7 +38,6 @@ from ..compiler.identity import (
     registry_identity_stamp_location,
     resolve_registry_identity,
 )
-from ..compiler.loader_cache import _bundled_registry_root, _bundled_root_match
 from ..compiler.loader_fingerprints import clear_fingerprint_cache
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -64,34 +63,19 @@ def _registry_root(tmp_path: Path) -> Path:
 
 @pytest.fixture
 def durability_bundled_root_pointing_at() -> Iterator[Callable[[Path], None]]:
-    """Redirect the bundled registry root at a caller-chosen real tree.
-
-    Rebinds inside ``loader_cache``, which holds its own reference to
-    ``bundled_path``; patching ``core.resources`` would leave the predicate
-    calling the original. Both memoised roots are cleared on repoint.
-    """
-    if not callable(loader_cache.bundled_path):
-        raise AssertionError("the registry bundled-path resolver must remain callable")
-    real_bundled_path = loader_cache.bundled_path
+    """Treat a caller-chosen real tree as bundled for the identity resolver."""
     target: dict[str, Path] = {}
 
-    def _redirected(*parts: str) -> Path:
-        if tuple(parts) == ("registry", "aeat") and "root" in target:
-            return target["root"]
-        return real_bundled_path(*parts)
-
-    def _clear() -> None:
-        _bundled_registry_root.cache_clear()
-        _bundled_root_match.cache_clear()
-        clear_fingerprint_cache()
+    def _is_bundled(root: Path) -> bool:
+        return target.get("root") == root.resolve()
 
     def _point_at(root: Path) -> None:
         target["root"] = root.resolve()
-        _clear()
+        clear_fingerprint_cache()
 
-    with scoped_attribute(loader_cache, "bundled_path", _redirected):
+    with scoped_attribute(identity_module, "is_bundled_registry_root", _is_bundled):
         yield _point_at
-    _clear()
+    clear_fingerprint_cache()
 
 
 def test_a_truncated_stamp_is_refused_rather_than_parsed(tmp_path: Path) -> None:

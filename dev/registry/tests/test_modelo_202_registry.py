@@ -10,7 +10,7 @@ import pytest
 
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.formula_runtime import _evaluate_expression
+from cadrumo.domain.calculations.registry.formula_runtime import evaluate_expression
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 from cadrumo.tests.registry_snapshot import build_snapshot
@@ -395,7 +395,7 @@ def test_committed_modelo_202_modalidad_40_3_resultado_reflects_b2_only_filer() 
         operand_refs: list[str] = []
         operand_casilla_refs: list[CasillaId] = []
         operand_values: list[Decimal] = []
-        result = _evaluate_expression(
+        result = evaluate_expression(
             modalidad_40_3_resultado_formula.expression,
             values={
                 "18": Decimal("0"),

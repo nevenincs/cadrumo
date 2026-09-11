@@ -164,13 +164,12 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
     from cadrumo.core.storage_taxonomy import StorageArea
     from cadrumo.domain.contribuyente.ccaa import CCAA
+    from cadrumo.domain.contribuyente.entity_type import EntityType, LegalEntityForm
     from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
     from cadrumo.domain.deadlines.models import (
-        EntityType,
         IrpfEstimationRegime,
         IrpfIncomeCategory,
         IrpfSpecialRegime,
-        LegalEntityForm,
     )
     from cadrumo.domain.user_profile.values import ProfileSetupState
 
@@ -387,7 +386,7 @@ def _modelo_work_help_registrations() -> tuple[FStringKeyRegistration, ...]:
     Deriving from it rather than hand-listing keeps the registration correct
     when an option is added or renamed, which a literal list could not.
     """
-    from cadrumo.entrypoints.cli._modelo_work_command_specs import MODELO_WORK_COMMAND_SPECS
+    from cadrumo.entrypoints.cli.modelo_work_command_specs import MODELO_WORK_COMMAND_SPECS
 
     prefix = "cli.app.modelo.work."
     names = sorted(

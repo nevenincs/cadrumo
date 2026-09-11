@@ -29,7 +29,7 @@ from ..compiler.fact_validation import retired_fact_provider_closure_failures
 from ..compiler.loader import load_shared_catalogues
 from ..compiler.validator import RegistryValidator
 from ..pipeline.candidate_staging import stage_generated_export_candidate
-from ..pipeline.cli import _supporting_modelos
+from ..pipeline.cli import supporting_modelos
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -193,7 +193,7 @@ def _staged_bundled_copy(work: Path) -> Path:
         candidate_root,
         modelo=_STAGED_MODELO,
         revision=_STAGED_REVISION,
-        supporting_modelos=_supporting_modelos(_STAGED_MODELO),
+        supporting_modelos=supporting_modelos(_STAGED_MODELO),
     )
     shutil.copytree(
         source_root / "modelos" / _STAGED_MODELO / "revisions" / _STAGED_REVISION / "export",

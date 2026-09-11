@@ -21,7 +21,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from cadrumo.domain.calculations.registry.m303_regimen_simplificado_projection import (
-    _m303_iae_epigraph_wire_value,
+    m303_iae_epigraph_wire_value,
     project_m303_regimen_simplificado_rows,
     validate_m303_regimen_simplificado_endpoint_epoch,
 )
@@ -292,7 +292,7 @@ def test_m303_iae_epigraph_wire_value_refuses_noncanonical_or_unrepresentable_id
 ) -> None:
     """A DP30302 four-byte IAE field never obtains its value by truncation."""
     with pytest.raises(RegistryValidationError, match="cannot encode"):
-        _m303_iae_epigraph_wire_value(iae_epigrafe)
+        m303_iae_epigraph_wire_value(iae_epigrafe)
 
 
 def test_agricultural_projection_refuses_without_official_code_crosswalk() -> None:

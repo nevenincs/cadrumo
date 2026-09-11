@@ -32,8 +32,8 @@ from ._m303_orden_keys import (
     non_agricultural_ingreso_legal_key,
     seasonal_index_legal_key,
 )
-from ._m303_orden_raw_models import M303AnnualOrdenRawActivity, M303AnnualOrdenSourceCensus
 from ._m303_orden_source import annual_orden_raw_activity_identity
+from .m303_orden_raw_models import M303AnnualOrdenRawActivity, M303AnnualOrdenSourceCensus
 
 _AUXILIARY_INDICATOR_BY_IAE_AND_ACTIVITY: Mapping[tuple[str, str], Literal["1", "2"]] = {
     ("691.9", "reparacion-de-calzado"): "1",

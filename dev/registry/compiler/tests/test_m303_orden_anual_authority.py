@@ -22,10 +22,10 @@ from cadrumo.domain.iva.regimen_simplificado_rows import (
     M303RegimenSimplificadoScopeDecision,
 )
 
+from ...maintenance_support import check_m303_annual_orden_manifest
 from .._m303_orden_source import extract_m303_annual_orden_source
 from ..authority import compiled_bundled_authority
 from ..m303_orden_manifest import load_m303_annual_orden_authority
-from ...maintenance_support import check_m303_annual_orden_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

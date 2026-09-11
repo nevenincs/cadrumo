@@ -181,21 +181,21 @@ def load_registry_tree(
     if identity is None:
         identity = resolve_registry_identity(resolved, collect_fingerprints=collect_registry_tree_fingerprints)
     if identity.is_stamped:
-        return _load_registry_tree_cached(str(resolved), stamped_cache_key_tuples(identity))
+        return load_registry_tree_cached(str(resolved), stamped_cache_key_tuples(identity))
     _validate_legal_directory(resolved / "legal")
     discover_modelo_sources(resolved / "modelos")
     fingerprints = collect_registry_tree_fingerprints(resolved)
     try:
-        return _load_registry_tree_cached(str(resolved), fingerprints)
+        return load_registry_tree_cached(str(resolved), fingerprints)
     except RegistryLoadError as exc:
         refreshed = _refresh_registry_tree_fingerprints_after_load_error(resolved, exc)
         if refreshed == fingerprints:
             raise
-        return _load_registry_tree_cached(str(resolved), refreshed)
+        return load_registry_tree_cached(str(resolved), refreshed)
 
 
 @lru_cache(maxsize=32)
-def _load_registry_tree_cached(
+def load_registry_tree_cached(
     root: str, fingerprints: _RegistryPathFingerprints
 ) -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
     resolved = Path(root)
@@ -213,4 +213,4 @@ def _load_registry_tree_cached(
 
 def clear_registry_tree_cache() -> None:
     """Clear the in-process compiled-tree memo without touching disk caches."""
-    _load_registry_tree_cached.cache_clear()
+    load_registry_tree_cached.cache_clear()

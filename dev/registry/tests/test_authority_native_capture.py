@@ -11,6 +11,8 @@ carries no capture incarnation at all.
 from __future__ import annotations
 
 import os
+from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
 from threading import Barrier, Event, Lock, Thread
 from typing import Final, cast

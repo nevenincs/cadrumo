@@ -17,11 +17,10 @@ from __future__ import annotations
 import re
 from typing import Final
 
-from ._key import TWIN_LINK_IS_PROSE, IngestCorpusDocument
+from ._key import IngestCorpusDocument
 
 __all__ = [
     "SPANISH_OPTIMISM_BIAS_CAVEAT",
-    "TWIN_LINK_IS_PROSE",
     "caveats_for_document",
     "normalise_whitespace",
 ]

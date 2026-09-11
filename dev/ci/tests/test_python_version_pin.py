@@ -141,9 +141,9 @@ def test_compatibility_matrix_override_classifier(
 
 def test_release_cohort_enforces_the_repository_python_pin() -> None:
     """The reproducible cohort builder consumes the same pin as CI."""
-    from dev.packaging.release_cohort import _REQUIRED_PYTHON_VERSION
+    from dev.packaging.release_cohort import REQUIRED_PYTHON_VERSION
 
-    assert _python_pin() == _REQUIRED_PYTHON_VERSION
+    assert _python_pin() == REQUIRED_PYTHON_VERSION
 
 
 def test_matrix_override_is_rejected_outside_the_compatibility_workflow() -> None:

@@ -74,6 +74,7 @@ from .corpus import bundled_modelo_ids
 
 __all__ = [
     "CENTS_SCALE",
+    "SELF_SCALING_WIRE_TYPES",
     "MonetaryScaleFinding",
     "scale_findings",
     "screen_authority",
@@ -90,7 +91,7 @@ _MONETARY = "money"
 #: Wire types that settle scale on their own: ``money`` scales by the cents
 #: factor inside the codec, and ``decimal`` refuses without a declared count.
 #: A monetary casilla rendered by either is not under-declared.
-_SELF_SCALING_WIRE_TYPES = frozenset({"money", "decimal"})
+SELF_SCALING_WIRE_TYPES = frozenset({"money", "decimal"})
 
 #: Field kinds that carry no produced value, so no scale question arises: a
 #: literal emits its declared text and a filler emits spaces.
@@ -139,7 +140,7 @@ def scale_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[Monetar
         decimals = getattr(field, "decimals", None)
         wire = str(field.data_type)
         carried_by = per_record[(endpoint.record_id, endpoint.casilla_id)]
-        if wire in _SELF_SCALING_WIRE_TYPES:
+        if wire in SELF_SCALING_WIRE_TYPES:
             if wire == "decimal" and decimals != CENTS_SCALE:
                 kind = "money_unexpected_scale"
                 detail = f"rendered as decimal with {decimals} decimals, not the usual {CENTS_SCALE}"

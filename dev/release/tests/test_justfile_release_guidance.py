@@ -99,7 +99,7 @@ def _build_moved_into_the_worker_pool(source: str) -> str:
     """Return the driver with its cohort build relocated inside `_run_form`."""
     block = (
         "    _run_step(\n"
-        '        [sys.executable, "-m", "dev.packaging.python_cohort", "build", "--output", _COHORT_DIR],\n'
+        '        [sys.executable, "-m", "dev.packaging.python_cohort", "build", "--output", COHORT_DIR],\n'
         "        repo_root,\n"
         '        "build-cohort",\n'
         "    )\n"
@@ -171,10 +171,10 @@ def test_packaging_smoke_builds_one_cohort_before_every_consumer() -> None:
     rendered = _render_recipe("packaging-smoke")
     assert "dev.packaging.campaign --profile portable" in rendered
 
-    from dev.packaging.campaign import _COHORT_DIR, _PROFILES, resolve_form
+    from dev.packaging.campaign import COHORT_DIR, PROFILES, resolve_form
 
-    assert _COHORT_DIR == "var/packaging-smoke-cohort/python"
-    assert all(resolve_form(selector)[1].takes_cohort for selector in _PROFILES["portable"])
+    assert COHORT_DIR == "var/packaging-smoke-cohort/python"
+    assert all(resolve_form(selector)[1].takes_cohort for selector in PROFILES["portable"])
 
     build_index, fanout_index, total = _cohort_build_and_fanout_positions(_CAMPAIGN_SOURCE.read_text(encoding="utf-8"))
 

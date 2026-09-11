@@ -22,7 +22,7 @@ from .._query_aliases import (
     query_alias_authority_path,
     validate_query_alias_authority,
 )
-from .._sweep import enumerate_query_vocabulary
+from ..sweep_runner import enumerate_query_vocabulary
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 

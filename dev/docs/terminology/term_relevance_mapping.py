@@ -8,7 +8,7 @@ source path -- the laundering boundary is these three models, so a reader of
 the committed data file and the runner that writes it cannot disagree about
 what a shipped relevance unit may contain.
 
-The runner (``_sweep``) produces one of these; the search-index injector
+The runner (``sweep_runner``) produces one of these; the search-index injector
 (``dev.docs.pagefind_inject``) validates the committed file back into one and
 ranks palette results from it. The two sit in different packages and address
 this same shape, so it has a defining module of its own rather than living

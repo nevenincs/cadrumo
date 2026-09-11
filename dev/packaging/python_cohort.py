@@ -26,7 +26,6 @@ from dev.source_tree import content_digest, repository_files, snapshot
 
 from ._distribution_limits import PYPI_FILE_CAP_BYTES
 from ._distribution_names import normalise_distribution_name
-from ._proof_ledger import record_proof
 from .build_scratch_reclaim import (
     COHORT_BUILD_TREE_FAMILY,
     COHORT_SOURCE_ARCHIVE_FAMILY,
@@ -34,6 +33,7 @@ from .build_scratch_reclaim import (
     var_scratch_name,
 )
 from .hashing import sha256_path, sha256_text
+from .proof_ledger import record_proof
 from .runtime_wheelhouse import build_runtime_wheelhouse, load_runtime_wheelhouse
 
 _UTF_8: Final[str] = UTF_8
@@ -926,12 +926,12 @@ def _stamp_bundled_registry_records_into_build_tree(build_root: Path) -> frozens
     Returns:
         The wheel-relative paths of the stamped members, as the archive carries them.
     """
-    from cadrumo import __version__
+    from cadrumo.core.package_version import PACKAGE_VERSION
     from dev.registry.maintenance_support import stamp_bundled_registry_release
 
     source_root = build_root / _BUILD_TREE_SOURCE_DIR
     registry_root = source_root / "cadrumo" / "_data" / "registry" / "aeat"
-    stamped = stamp_bundled_registry_release(registry_root, package_version=__version__)
+    stamped = stamp_bundled_registry_release(registry_root, package_version=PACKAGE_VERSION)
     resolved_source_root = source_root.resolve()
     return frozenset(
         path.relative_to(resolved_source_root).as_posix() for path in (stamped.identity_path, stamped.verdict_path)

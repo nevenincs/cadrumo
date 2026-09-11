@@ -18,16 +18,16 @@ from cadrumo.domain.calculations.registry.static_inspection import RegistryRevis
 
 from ..compiler.authority import compiled_bundled_authority
 from ..pipeline import semantic_map_validation
-from ..pipeline.semantic_map_validation import (
-    SemanticMapAnomalyException,
-    resolve_semantic_map_casilla_tokens,
-    validate_semantic_map,
-)
 from ..pipeline.record_design_intermediate import (
     RecordDesignIntermediate,
     RecordDesignWorkbookFormat,
 )
 from ..pipeline.semantic_map import SemanticMap
+from ..pipeline.semantic_map_validation import (
+    SemanticMapAnomalyException,
+    resolve_semantic_map_casilla_tokens,
+    validate_semantic_map,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

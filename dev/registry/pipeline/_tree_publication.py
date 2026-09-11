@@ -33,7 +33,6 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from ..compiler.loader import load_modelo_directory
 from ..conformance.manager import reset_conformance_cache
 from ._export_tree import RenderedExportTree
-from .tree_paths import contains
 from ._tree_validation import (
     GeneratedExportTreeValidationContext,
     ValidatedGeneratedExportTree,
@@ -53,6 +52,7 @@ from .export_fragment_provenance import (
 from .joined_record_design import JoinedRecordDesign
 from .render_profile import RenderProfile, RenderProfileSourceEvidence
 from .semantic_map import SemanticMap
+from .tree_paths import contains
 
 __all__ = [
     "GeneratedExportTreePublicationContext",

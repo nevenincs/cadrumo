@@ -27,7 +27,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from ..compiler.loader import load_modelo_directory
 from ._tree_validation import GeneratedExportTreeValidationContext, _validated_target_snapshot
 from .candidate_staging import stage_continuity_metadata, stage_generated_export_candidate
-from .cli import _supporting_modelos
+from .cli import supporting_modelos
 from .export_fragment_provenance import ExportFragmentTarget
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -48,7 +48,7 @@ def _staged_candidate(work: Path) -> tuple[Path, Path]:
         candidate_root,
         modelo=_MODELO,
         revision=_REVISION,
-        supporting_modelos=_supporting_modelos(_MODELO),
+        supporting_modelos=supporting_modelos(_MODELO),
     )
     shutil.copytree(
         source_root / "modelos" / _MODELO / "revisions" / _REVISION / "export",
@@ -66,7 +66,7 @@ def _validate(candidate_root: Path, witness: Path) -> str:
         target=ExportFragmentTarget(modelo=_MODELO, revision_id=_REVISION, design_epoch="unused-by-selection"),
         filing_year=_FILING_YEAR,
         period=_PERIOD,
-        supporting_modelos=_supporting_modelos(_MODELO),
+        supporting_modelos=supporting_modelos(_MODELO),
         continuity_metadata_modelo_root=witness,
         required_grade=RegistryAuthorityGrade.CALCULATION,
     )

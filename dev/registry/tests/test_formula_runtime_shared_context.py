@@ -27,10 +27,10 @@ import pytest
 
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.domain.calculations.registry.formula_runtime import (
-    _SPECIALIZED_EXPRESSION_EVALUATORS,
-    _EvalContext,
-    _evaluate_expression,
-    _evaluate_with_ctx,
+    SPECIALIZED_EXPRESSION_EVALUATORS,
+    EvalContext,
+    evaluate_expression,
+    evaluate_with_context,
 )
 from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
@@ -83,7 +83,7 @@ def _is_plain_arithmetic(expression: FormulaExpression) -> bool:
     its leaves in evaluation order.
     """
     if expression.op is not None:
-        if expression.op in _SPECIALIZED_EXPRESSION_EVALUATORS:
+        if expression.op in SPECIALIZED_EXPRESSION_EVALUATORS:
             return False
         return all(_is_plain_arithmetic(arg) for arg in expression.args)
     return expression.parameter is None and expression.date_binding is None
@@ -167,7 +167,7 @@ def _evaluate_collecting(case: _TreeCase) -> tuple[Decimal, list[str], list[Casi
     operand_refs: list[str] = []
     operand_casilla_refs: list[CasillaId] = []
     operand_values: list[Decimal] = []
-    value = _evaluate_expression(
+    value = evaluate_expression(
         case.expression,
         values=case.values,
         binding_values=case.binding_values,
@@ -218,7 +218,7 @@ def test_nested_operands_land_in_the_callers_own_provenance_sinks(
 def test_recursive_reentry_matches_the_loose_argument_entry_point(
     nested_formula_corpus: tuple[_TreeCase, ...],
 ) -> None:
-    """``_evaluate_with_ctx`` on a caller-built context equals ``_evaluate_expression``.
+    """``evaluate_with_context`` on a caller-built context equals ``evaluate_expression``.
 
     The two are the same dispatcher reached two ways: one builds the context
     from loose arguments, the other carries an existing one forward. They must
@@ -232,7 +232,7 @@ def test_recursive_reentry_matches_the_loose_argument_entry_point(
         operand_refs: list[str] = []
         operand_casilla_refs: list[CasillaId] = []
         operand_values: list[Decimal] = []
-        ctx = _EvalContext(
+        ctx = EvalContext(
             values=case.values,
             binding_values=case.binding_values,
             parameters={},
@@ -247,7 +247,7 @@ def test_recursive_reentry_matches_the_loose_argument_entry_point(
             date_binding_values={},
             filing_year=2025,
         )
-        value = _evaluate_with_ctx(case.expression, ctx)
+        value = evaluate_with_context(case.expression, ctx)
 
         where = f"{case.modelo_id}/{case.revision_id}/{case.formula_id}"
         assert value == expected_value, where
@@ -267,7 +267,7 @@ def test_eval_context_is_frozen_and_slotted() -> None:
     stops a per-op evaluator from swapping a sink out from under the
     recursion. Both are load-bearing claims in the class docstring.
     """
-    ctx = _EvalContext(
+    ctx = EvalContext(
         values={},
         binding_values={},
         parameters={},

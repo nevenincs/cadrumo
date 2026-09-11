@@ -42,7 +42,7 @@ from functools import cache
 import pytest
 
 from cadrumo.application.modelo.tests._verification_substance_support import _workflow_profile
-from cadrumo.application.modelo.verification_actions import evaluate_verification_predicates
+from cadrumo.application.modelo.verification_predicates import evaluate_verification_predicates
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloRevision

@@ -61,7 +61,7 @@ _ZIP_TIMESTAMP: Final[tuple[int, int, int, int, int, int]] = (1980, 1, 1, 0, 0, 
 # `_ZIP_TIMESTAMP` already gives every other archive this module writes
 # (1980-01-01T00:00:00Z).
 _SOURCE_DATE_EPOCH: Final[str] = "315532800"
-_REQUIRED_PYTHON_VERSION: Final[str] = (_REPO_ROOT / ".python-version").read_text(encoding=UTF_8).strip()
+REQUIRED_PYTHON_VERSION: Final[str] = (_REPO_ROOT / ".python-version").read_text(encoding=UTF_8).strip()
 _BUILD_CONSTRAINTS: Final[Path] = Path("packaging/build-system-constraints.txt")
 
 
@@ -220,10 +220,10 @@ def _build_identity(clean_root: Path) -> BuildIdentity:
             "the cohort records the build's uv, so an unreadable one cannot be stamped",
         )
     python_version = platform.python_version()
-    if platform.python_implementation() != "CPython" or python_version != _REQUIRED_PYTHON_VERSION:
+    if platform.python_implementation() != "CPython" or python_version != REQUIRED_PYTHON_VERSION:
         raise SystemExit(
             "release cohort requires "
-            f"CPython {_REQUIRED_PYTHON_VERSION}, got "
+            f"CPython {REQUIRED_PYTHON_VERSION}, got "
             f"{platform.python_implementation()} {python_version}",
         )
     constraints = (clean_root / _BUILD_CONSTRAINTS).resolve(strict=True)

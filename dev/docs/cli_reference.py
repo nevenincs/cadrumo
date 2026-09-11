@@ -205,7 +205,7 @@ def _rst_heading(text: str, char: str) -> str:
 def _render_graph_command(language: OutputLanguage, path: tuple[str, ...], spec: object) -> str:
     """Render one authored command specification without runtime tree inspection."""
     from cadrumo.core.i18n.render import tr
-    from cadrumo.entrypoints.cli.command_api import ArgumentSpec, CommandSpec
+    from cadrumo.entrypoints.cli.command_spec import ArgumentSpec, CommandSpec
 
     if not isinstance(spec, CommandSpec):
         raise TypeError("CLI reference received a non-CommandSpec node")
@@ -476,7 +476,7 @@ def generate_cli_reference(docs_root: Path) -> dict[str, str]:
 def _generate_cli_reference_loaded(docs_root: Path) -> dict[str, str]:
     """Render the CLI reference directly from the immutable command graph."""
     from cadrumo.core.i18n.render import clear_output_language_cache
-    from cadrumo.entrypoints.cli.command_api import command_schema_types
+    from cadrumo.entrypoints.cli.command_schema import command_schema_types
 
     from .build import docs_build_language
 

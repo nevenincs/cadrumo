@@ -34,7 +34,7 @@ from typing import Final, cast
 
 from dev._paths import UTF_8
 
-from ._parts import (
+from .parts import (
     split_units_by_budget,
     stamp_part_anchors,
     write_part_sidecars,

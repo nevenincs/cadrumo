@@ -79,8 +79,9 @@ from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueReposi
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from cadrumo.adapters.persistence.profile.transactions import TX_BUCKET_NAMESPACE, TransactionCatalogueRepository
-from cadrumo.adapters.persistence.storage.sql import SecureObjectRepository
+from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from cadrumo.adapters.persistence.storage.secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
+from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.aggregation.iva_ledger import (
     aggregate_iva_ledger_observations_from_repositories,
 )
@@ -508,7 +509,7 @@ def test_single_transaction_save_reports_write_path_latency(scale_bucket: Secure
     namespace_hash_samples: list[float] = []
     for _ in range(_DIAGNOSTIC_SAMPLE_COUNT):
         started = time.perf_counter()
-        namespace_hashes = scale_bucket.namespace_payload_hashes(TX_BUCKET_NAMESPACE)
+        namespace_hashes = scale_bucket.namespace_payload_hashes(TRANSACTION_CATALOGUE_NAMESPACE.namespace)
         namespace_hash_samples.append(time.perf_counter() - started)
         assert len(namespace_hashes) >= _TOTAL_TRANSACTIONS
 
@@ -550,7 +551,7 @@ def test_single_transaction_save_reports_write_path_latency(scale_bucket: Secure
         f"\n[bench] transaction_save_namespace_hash_scan: n={_DIAGNOSTIC_SAMPLE_COUNT} "
         f"p95={namespace_p95:.3f}s mean={statistics.mean(namespace_hash_samples):.3f}s "
         f"min={min(namespace_hash_samples):.3f}s max={max(namespace_hash_samples):.3f}s "
-        f"namespace={TX_BUCKET_NAMESPACE}",
+        f"namespace={TRANSACTION_CATALOGUE_NAMESPACE.namespace}",
     )
     print(
         f"[bench] transaction_save_serialize_hash_all_rows: n={_DIAGNOSTIC_SAMPLE_COUNT} "

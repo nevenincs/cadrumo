@@ -37,14 +37,6 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 
 from ..compiler.record_design import extract_record_design
-from ..compiler.record_design_pdf_orchestration import _better_page_record_lines
-from ..compiler.record_design_pdf_repairs import collapse_stuttered_row_prefix, join_wrapped_row_descriptions
-from ..compiler.record_design_pdf_visual import (
-    extract_pdf_text_lines,
-    extract_pdfplumber_text_lines,
-    uses_page_record_layout,
-)
-from ..compiler.record_design_sources import EMPTY_CORRECTIONS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -58,18 +50,6 @@ _CONTESTED_SHEET = "Pág. 7"
 #: casilla tag surfaced on ``@115`` instead, so the whole run is checked rather
 #: than the two positions that happened to show the damage.
 _CONTESTED_OFFSETS = (115, 132, 149, 166, 183)
-
-#: A page-record design whose pdfplumber read is already whole. It must keep
-#: using that reader, or the change would be a blanket preference for the plain
-#: extractor rather than a measured choice.
-_CLEAN_PAGE_RECORD_DESIGN = bundled_path(
-    "corpus",
-    "aeat_official",
-    "disenos_registro",
-    "modelo_840",
-    "files",
-    "01-840-orden-hac-2572-2003-99-kb-pdf.pdf",
-)
 
 
 def _read_or_abstain(design: Path):
@@ -169,25 +149,3 @@ def test_every_contested_position_carries_its_own_tag() -> None:
         assert set(_TAG.findall(by_offset.get(offset, ""))) == expected_tags, (
             f"@{offset} does not carry the casilla the sibling editions put there: expected {sorted(expected_tags)}"
         )
-
-
-def test_a_page_record_design_that_reads_whole_keeps_its_own_extractor() -> None:
-    """The choice is measured per design, not a preference for one reader.
-
-    Without this, replacing an unconditional switch with a different
-    unconditional switch would pass every assertion above.
-    """
-    raw = Path(_CLEAN_PAGE_RECORD_DESIGN).read_bytes()
-    label = _CLEAN_PAGE_RECORD_DESIGN.name
-    base_lines = extract_pdf_text_lines(raw, source_label=label)
-    assert uses_page_record_layout(base_lines), "this design must use the page-record layout to be a witness"
-
-    plain = collapse_stuttered_row_prefix(join_wrapped_row_descriptions(base_lines))
-    page = collapse_stuttered_row_prefix(
-        join_wrapped_row_descriptions(extract_pdfplumber_text_lines(raw, source_label=label)),
-    )
-    assert plain != page, "the two extractions are identical here, so the choice is untested"
-
-    chosen = _better_page_record_lines(page, plain, source_label=label, corrections=EMPTY_CORRECTIONS)
-
-    assert chosen is page

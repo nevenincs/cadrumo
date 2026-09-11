@@ -41,8 +41,8 @@ import pytest
 
 from cadrumo.core.aggregation import RelationAggregationOp
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.domain.calculations.registry.relation_aggregation import relation_aggregation_op
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.relation_aggregation import relation_aggregation_op
 from cadrumo.domain.calculations.registry.relations import resolve_relation_values
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 

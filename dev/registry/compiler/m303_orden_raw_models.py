@@ -11,6 +11,8 @@ from pydantic import Field, model_validator
 from cadrumo.core.filing_year import FilingYear
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.percentage import Percentage
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.ids import SourceRefId
 from cadrumo.domain.calculations.registry.m303_orden_constants import (
     EXPECTED_ACTIVITY_COUNT,
     EXPECTED_AGRICULTURAL_AXIS_COUNTS,
@@ -20,8 +22,6 @@ from cadrumo.domain.calculations.registry.m303_orden_constants import (
     validate_percentage_shape,
     validate_seasonal_index_shape,
 )
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.ids import SourceRefId
 from cadrumo.domain.calculations.registry.schema_base import RegistryModel
 from cadrumo.domain.iva.regimen_simplificado_rows import IaeEpigrafe
 

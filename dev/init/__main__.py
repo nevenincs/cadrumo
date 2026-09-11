@@ -45,6 +45,7 @@ import os
 import sys
 from pathlib import Path
 
+from dev._paths import REPO_ROOT as _DEV_REPO_ROOT
 from dev.exit_codes import INIT_HOST_TOOL_MISSING, INIT_STALE, OK
 
 from . import plan
@@ -94,7 +95,7 @@ def _repo_root() -> Path:
         The directory two levels above this file, which is the repository root
         for ``dev/init/__main__.py`` in every repository in the fleet.
     """
-    return Path(__file__).resolve().parents[2]
+    return _DEV_REPO_ROOT
 
 
 def _truthy(name: str) -> bool:

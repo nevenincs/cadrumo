@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.reference_checks import check_all_id_references
 from cadrumo.domain.calculations.registry.schema import (
     FormulaDefinition,
     ModeloDefinition,
@@ -36,8 +39,6 @@ from ._referential_integrity_support import (
     REFERENCE_SOURCE_ID,
     build_minimal_snapshot,
     build_snapshot_with_missing_legal,
-    check_all_id_references,
-    date,
     minimal_application_link,
     minimal_casilla,
     minimal_catalogues,

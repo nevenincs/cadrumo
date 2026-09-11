@@ -187,38 +187,25 @@ def test_committed_binding_passes_the_reachability_probe() -> None:
     validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition(binding)
 
 
-def test_reachability_probe_is_not_tautological_against_a_mistyped_casilla_id() -> None:
+def test_resolver_does_not_coerce_a_mistyped_casilla_id() -> None:
     """The probe compares typed values, not coerced ones: a str/int casilla-id mismatch reddens.
 
-    The matcher this family builds is a pure equality on ``target_casilla_id``,
-    so the probe's own honesty rests entirely on comparing REAL typed values
-    rather than silently coercing them equal. This proves that discipline
-    directly: a probe observation whose ``target_casilla_id`` is the same
-    digits but the WRONG type (``int`` where the registry's ``CasillaId`` is
-    always a ``str``) must fail to match, exactly as real ledger data typed
-    incorrectly upstream would fail to match in production. If this test
-    passed, the probe would be validating "same digits" rather than "the
-    real matcher accepts this shape", which is not the contract it claims.
+    The resolver's matching rule is a pure equality on ``target_casilla_id``,
+    so it must compare REAL typed values rather than silently coercing them
+    equal. A supplied observation whose target is the same digits but the
+    WRONG type (``int`` where the registry's ``CasillaId`` is always a
+    ``str``) must not feed the binding, exactly as real ledger data typed
+    incorrectly upstream would behave.
     """
-    from cadrumo.domain.calculations.registry.ledger_renta_gastos_pago_fraccionado_bindings import (
-        _renta_gastos_pago_fraccionado_build_matcher,
-    )
-
     revision = _modelo_130_snapshot().revision
     binding = next(binding for binding in revision.bindings if binding.id == _GASTOS_BINDING)
-    selector_dict = selector_as_dict(binding)
-    from cadrumo.domain.calculations.registry.ledger_renta_gastos_pago_fraccionado_bindings import (
-        _RentaLedgerGastosPagoFraccionadoSelector,
-    )
-
-    selector = _RentaLedgerGastosPagoFraccionadoSelector.model_validate(selector_dict)
-    matcher = _renta_gastos_pago_fraccionado_build_matcher(selector)
 
     mistyped = _GastoObservation(
-        target_casilla_id=int(selector.target_casilla_id),  # ty: ignore[invalid-argument-type]  # reason: the wrong type IS the subject under test
+        target_casilla_id=int(_M130_GASTOS_CASILLA),  # ty: ignore[invalid-argument-type]  # wrong type is under test
         deductible_amount=Decimal("1.00"),
     )
-    assert not matcher(mistyped), (
-        "the matcher silently coerced an int casilla id equal to the str selector value -- "
-        "a real reachability probe must compare typed values, not their string forms"
+    resolved = resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values(revision, (mistyped,))
+    assert resolved[binding.id] == Decimal("0"), (
+        "the resolver silently coerced an int casilla id equal to the str selector value -- "
+        "matching must compare typed values, not their string forms"
     )

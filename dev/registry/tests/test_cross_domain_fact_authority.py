@@ -11,8 +11,8 @@ import pytest
 from cadrumo.core.concepto_ingreso import ConceptoIngreso
 from cadrumo.core.irnr import TipoRentaIrnr
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.m347_threshold import resolve_m347_counterparty_annual_threshold
 from cadrumo.domain.calculations.registry.facts.resolution import ResolvedMappingFact
+from cadrumo.domain.calculations.registry.m347_threshold import resolve_m347_counterparty_annual_threshold
 from cadrumo.domain.contribuyente.family_fact_context import FamilyFactResolutionContext
 from cadrumo.domain.deadlines.festivos import holiday_calendar_from_authority
 from cadrumo.domain.iva.rates import iva_rate_record_from_fact

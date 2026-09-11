@@ -26,7 +26,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.config_support import SecretStoreBackend
-from cadrumo.entrypoints.cli.language_argv import _language_from_argv
+from cadrumo.entrypoints.cli.language_argv import language_from_argv
 from cadrumo.tests.secure_sql import dev_test_database_password
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -235,7 +235,7 @@ def test_language_from_argv_extracts_supported_value() -> None:
     """
     failures: list[str] = []
     for argv, expected in _LANGUAGE_ARGV_CASES:
-        actual = _language_from_argv(argv)
+        actual = language_from_argv(argv)
         if actual != expected:
             failures.append(f"{argv!r}: expected {expected!r}, got {actual!r}")
 

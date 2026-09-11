@@ -45,7 +45,7 @@ from typing import Final
 
 from dev._paths import UTF_8
 
-from ._parts import split_units_by_budget, write_part_sidecars
+from .parts import split_units_by_budget, write_part_sidecars
 from .schema import (
     ExtractionStatus,
     PreprocessOutput,

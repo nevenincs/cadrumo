@@ -56,7 +56,6 @@ from typing import cast
 
 import click
 import pytest
-from cadrumo.entrypoints.cli.tests.cli_runner import cadrumo_click_command
 
 from cadrumo.application.operator_surface.help import build_help_document, build_root_landing_report
 from cadrumo.application.operator_surface.help_models import HelpSurface
@@ -64,6 +63,7 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.json_contract import EnvelopeStatus
 from cadrumo.core.operator_action_enums import ActionEvidenceProvenance
+from cadrumo.entrypoints.cli.tests.cli_runner import cadrumo_click_command
 from dev._paths import REPO_ROOT
 from dev.agent_eval._action_coverage import LeafConditionScenario, production_leaf_condition_scenario_matrix
 from dev.agent_eval._models import ExitCodeScenario, ObservedProductionActionAssertion, observe_production_action

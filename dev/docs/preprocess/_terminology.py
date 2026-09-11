@@ -15,7 +15,7 @@ from typing import Final
 
 from dev._paths import UTF_8
 
-from ._parts import split_units_by_budget
+from .parts import split_units_by_budget
 from .schema import ExtractionStatus, PreprocessOutput, PreprocessUnit, SourceDocumentKind
 from .sidecar import sha256_of
 

@@ -38,9 +38,9 @@ from dev.docs.pagefind_index import (
 
 from ..docs_static_site import (
     _language_site_url,
-    _localized_languages,
     _require_search_index,
     _validate_language_roots,
+    localized_languages,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
@@ -181,7 +181,7 @@ def test_a_localized_root_is_refused_and_named(tmp_path: Path, pages_only_site: 
     routes to the shared check -- routing is a decision, and a decision is not
     the surface a reader's search runs against.
     """
-    languages = _localized_languages()
+    languages = localized_languages()
     assert languages, "no localized roots configured; this test would prove nothing"
 
     html_root = tmp_path / "html"

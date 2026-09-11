@@ -68,8 +68,8 @@ from dev._paths import REPO_ROOT, UTF_8
 from dev.corpus.extract_corpus_sidecars import check_all as check_corpus_sidecars
 from dev.corpus.extract_corpus_sidecars import extract_all as extract_corpus_sidecars
 
-from .._parts import part_stand_in_path
 from ..normatives_html import build_outputs
+from ..parts import part_stand_in_path
 from ..schema import PreprocessOutput
 from ..sidecar import (
     EXTRACTED_JSON_SUFFIX,
@@ -95,7 +95,7 @@ _MINIMUM_EXPECTED_SIDECARS = 400
 
 #: Per-origin-kind floors over the same population. This corpus is NOT one
 #: kind: its sidecars derive from five source families with three different
-#: extractors behind them (``normatives_html``, ``_pdf``, ``_workbook``).
+#: extractors behind them (``normatives_html``, ``_pdf``, ``workbook``).
 #: Live: ``.html`` 470, ``.pdf`` 104, ``.xlsx`` 90, ``.xls`` 41, ``.xlsm`` 2.
 #:
 #: A floor over the UNION cannot see one family leave. The total is dominated

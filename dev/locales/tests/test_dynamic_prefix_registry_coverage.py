@@ -10,7 +10,7 @@ catalogue leaf exists under that prefix. That is not enough: if the concrete
 leaves are only ever authored by hand, a catalogue strip (or a new enum member)
 silently drops them, and nothing re-materialises them on scaffold. The
 bounded-enumeration fix is an :class:`FStringKeyRegistration` in
-:mod:`locales._fstring_registry`, whose expanded keys scaffold re-inserts on
+:mod:`locales.fstring_registry`, whose expanded keys scaffold re-inserts on
 every run.
 
 This gate makes that fix non-optional. Every namespace marker the scanner emits
@@ -25,7 +25,7 @@ across ``src/cadrumo`` MUST be either:
   predicate id, a runtime metric name, and the like).
 
 A marker in neither set reds this gate with an instructive message naming the
-site's prefix and pointing at :mod:`locales._fstring_registry`. The allowlist
+site's prefix and pointing at :mod:`locales.fstring_registry`. The allowlist
 ratchets like the lazy-import policy gate: adding an entry is a reviewed edit
 that must justify why the namespace cannot be registered.
 
@@ -42,8 +42,8 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.domain.user_profile.values import ProfileSetupState
 
 from .._ast_scanner import scan_namespace_markers, scan_source_tree
-from .._fstring_registry import get_registered_keys
 from .._paths import SRC_DIR
+from ..fstring_registry import get_registered_keys
 from ..manager import LocaleManager, locale_catalogue_source
 from ..wizard_translation_audit import wizard_descriptor_keys
 
@@ -80,7 +80,7 @@ def _catalogue_payload(locale: str) -> dict[str, object]:
 # with the trailing ``.*`` stripped) to the reason its value space is NOT a
 # bounded import-time enumeration and therefore cannot be materialised by an
 # FStringKeyRegistration. A bounded namespace does NOT belong here — register it
-# in ``locales/_fstring_registry.py`` instead so scaffold re-inserts its keys.
+# in ``locales/fstring_registry.py`` instead so scaffold re-inserts its keys.
 #
 # This allowlist ratchets: adding a line is a reviewed edit that must state why
 # the namespace is genuinely open-ended.
@@ -198,7 +198,7 @@ def test_every_dynamic_prefix_is_registry_covered_or_allowlisted() -> None:
             "allowlisted:\n"
             f"{detail}\n\n"
             "If the tail is a BOUNDED enumeration, add an FStringKeyRegistration "
-            "to dev/locales/_fstring_registry.py so scaffold "
+            "to dev/locales/fstring_registry.py so scaffold "
             "re-materialises every concrete key. If the value space is genuinely "
             "OPEN-ENDED, add a reason-carrying entry to OPEN_ENDED_NAMESPACES in "
             "this gate stating why it cannot be registered."
@@ -252,7 +252,7 @@ def test_status_page_registration_expands_exactly_profile_setup_state() -> None:
     assert expanded == expected, (
         "flows.status.profiles.status.* registration is out of sync with "
         f"ProfileSetupState.\n  registered: {sorted(expanded)}\n  expected:   {sorted(expected)}\n"
-        "Update the registration in dev/locales/_fstring_registry.py."
+        "Update the registration in dev/locales/fstring_registry.py."
     )
 
 
@@ -392,7 +392,7 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
         # Ctx-scoped (entered and unwound inside the command callback's
         # settings scope - safe by construction):
         ("entrypoints/cli/_root_cli.py", "root_command"),
-        ("entrypoints/cli/_common.py", "activate_subcommand_output_language"),
+        ("entrypoints/cli/common.py", "activate_subcommand_output_language"),
         ("entrypoints/cli/config/custody.py", "_pin_render_language_to_target_bucket"),
     },
 )
@@ -407,7 +407,7 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
 _CTX_SCOPED_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
     {
         ("entrypoints/cli/_root_cli.py", "root_command"),
-        ("entrypoints/cli/_common.py", "activate_subcommand_output_language"),
+        ("entrypoints/cli/common.py", "activate_subcommand_output_language"),
         ("entrypoints/cli/config/custody.py", "_pin_render_language_to_target_bucket"),
     },
 )

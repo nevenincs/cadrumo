@@ -30,6 +30,7 @@ from datetime import date
 import pytest
 from pydantic import BaseModel, Field, ValidationError
 
+from cadrumo.core.prose_elision import PROSE_ELISION_MARKER
 from cadrumo.core.tax_domain import TaxDomain
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import CalculationClass
@@ -41,7 +42,6 @@ from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_reg
 
 from ..registry_classification_coherence import (
     _MAX_DETAIL_LENGTH,
-    _TRUNCATION_SUFFIX,
     ClassificationCoherenceFinding,
     DeclaredAxis,
     RegistryClassificationAudit,
@@ -514,8 +514,8 @@ def test_a_detail_over_the_bound_is_truncated_to_exactly_the_bound() -> None:
     over_bound = "y" * (_MAX_DETAIL_LENGTH + 50)
     clamped = _bounded_detail(over_bound)
     assert len(clamped) == _MAX_DETAIL_LENGTH
-    assert clamped.endswith(_TRUNCATION_SUFFIX)
-    assert clamped.startswith(over_bound[: _MAX_DETAIL_LENGTH - len(_TRUNCATION_SUFFIX)])
+    assert clamped.endswith(PROSE_ELISION_MARKER)
+    assert clamped.startswith(over_bound[: _MAX_DETAIL_LENGTH - len(PROSE_ELISION_MARKER)])
 
 
 def test_lowering_the_bound_moves_the_clamp() -> None:
@@ -560,7 +560,7 @@ def test_the_clamp_is_what_keeps_an_oversized_detail_constructible() -> None:
         registry_validated=False,
     )
     assert len(survived.detail) == _MAX_DETAIL_LENGTH
-    assert survived.detail.endswith(_TRUNCATION_SUFFIX)
+    assert survived.detail.endswith(PROSE_ELISION_MARKER)
 
 
 def test_the_worst_case_the_registry_schema_permits_needs_no_truncation() -> None:
@@ -600,7 +600,7 @@ def test_the_worst_case_the_registry_schema_permits_needs_no_truncation() -> Non
 
     detail = audit.findings_of_kind("informative_axis_divergence")[0].detail
     assert _MAX_DETAIL_LENGTH is not None
-    assert not detail.endswith(_TRUNCATION_SUFFIX), (
+    assert not detail.endswith(PROSE_ELISION_MARKER), (
         f"the widest legal divergence sentence is being truncated at {len(detail)} characters; "
         "the sampler no longer keeps real findings inside the field bound"
     )

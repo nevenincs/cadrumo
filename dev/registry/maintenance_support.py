@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from datetime import date
@@ -11,48 +12,50 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Annotated, Final, Literal, Protocol
 
-from pydantic import Field, TypeAdapter, ValidationError
+from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
-from cadrumo import __version__
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
+from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.external_constants import UTF_8_ENCODING
+from cadrumo.core.filing_year import FilingYear
 from cadrumo.core.hashing import blake2b_hex
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
+from cadrumo.core.package_version import PACKAGE_VERSION as __version__
 from cadrumo.core.period import RegistrySelectorPeriodCode
 from cadrumo.core.prose_elision import ElidedProse
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.condition_mode import ConditionModeField
-from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.export import (
-    CasillaId,
-    ExportFieldDefinition,
-    ModeloRevision,
     ResolvedExportEndpointPath,
     derive_export_layouts_from_bindings,
 )
-from cadrumo.domain.calculations.registry.ids import CrossReferenceId, OracleId
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
-from cadrumo.domain.calculations.registry.static_inspection import (
+from cadrumo.domain.calculations.registry.ids import (
     BindingId,
+    CrossReferenceId,
     LegalRefId,
     ModeloId,
-    ProjectionEndpointDeclaration,
+    OracleId,
     RevisionId,
+    SourceRefId,
 )
+from cadrumo.domain.calculations.registry.m303_orden_constants import EXTRACTOR_VERSION
+from cadrumo.domain.calculations.registry.m303_orden_projection_models import M303AnnualOrdenGeneratedManifest
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind
+from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ProjectionEndpointDeclaration
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource
 
 from .compiler.authority_lifecycle import (
     SILENT_REGISTRY_AUTHORITY_LIFECYCLE_OBSERVER,
     RegistryAuthorityLifecycleObserver,
 )
 from .compiler.authority_state import compiler_reset
-from .compiler.corpus_catalogue import (
-    GeneratedArtifactSource,
-    RegistrySourceKind,
-    RegistryValidationError,
-    verify_source_file,
-)
+from .compiler.corpus_catalogue import verify_source_file
 from .compiler.fact_providers import reset_registered_fact_providers
 from .compiler.identity import (
-    _LOGGER,
     REGISTRY_IDENTITY_SCHEMA_VERSION,
     FingerprintTuples,
     RegistryIdentityStamp,
@@ -65,21 +68,16 @@ from .compiler.loader import (
 from .compiler.loader_fingerprints import (
     collect_registry_tree_fingerprints as collect_registry_identity_fingerprints,
 )
-from cadrumo.domain.calculations.registry.m303_orden_constants import EXTRACTOR_VERSION
 from .compiler.m303_orden_census_artefact import (
     M303_ORDEN_CENSUS_SCHEMA_VERSION,
     M303AnnualOrdenCensusArtefact,
-    M303AnnualOrdenSourceCensus,
 )
 from .compiler.m303_orden_manifest import (
-    UTF_8_ENCODING,
-    M303AnnualOrdenGeneratedManifest,
-    SourceReference,
-    SourceRefId,
-    _check_manifest_with_censuses,
-    _generate_manifest_with_censuses,
-    _render_generated_manifest,
+    check_manifest_with_censuses,
+    generate_manifest_with_censuses,
+    render_generated_manifest,
 )
+from .compiler.m303_orden_raw_models import M303AnnualOrdenSourceCensus
 from .compiler.verdict_cache import (
     VERDICT_OUTCOME_GREEN,
     RegistryValidationVerdict,
@@ -89,14 +87,15 @@ from .compiler.verdict_cache import (
 )
 from .parity.external_grounding import (
     ExternalGroundingModel,
-    ExternalOracleCorpus,
-    FilingYear,
     ManualWorkedExamplePayload,
     OraclePayload,
     RentaWebOpenReplayPayload,
 )
-from .parity.live_parity import LiveParityOracle, _ParityModel
+from .parity.external_oracle_corpus import ExternalOracleCorpus
+from .parity.live_parity import LiveParityOracle
 from .parity.renta_web_open_replay_corpus import replay_corpus_directory
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class OracleEnvironment(StrEnum):
@@ -368,7 +367,7 @@ def load_modelo_path(path: Path) -> ModeloDefinition:
 
 def render_m303_annual_orden_manifest(*, source_root: Path, sources: Mapping[SourceRefId, SourceReference]) -> str:
     """Render the generated registry artefact in canonical TOML order."""
-    return _render_generated_manifest(generate_m303_annual_orden_manifest(source_root=source_root, sources=sources))
+    return render_generated_manifest(generate_m303_annual_orden_manifest(source_root=source_root, sources=sources))
 
 
 def check_m303_annual_orden_census_artefact(
@@ -402,7 +401,7 @@ def check_m303_annual_orden_manifest(
     *, manifest_path: Path, source_root: Path, sources: Mapping[SourceRefId, SourceReference]
 ) -> M303AnnualOrdenGeneratedManifest:
     """Refuse a missing, manually edited, or stale generated annual Orden artefact."""
-    return _check_manifest_with_censuses(manifest_path=manifest_path, source_root=source_root, sources=sources)[0]
+    return check_manifest_with_censuses(manifest_path=manifest_path, source_root=source_root, sources=sources)[0]
 
 
 class GeneratedArtifactInspection(Protocol):
@@ -735,7 +734,7 @@ def audit_oracle_bindings(
     return tuple(failures)
 
 
-class CrossReferenceApplicabilityDeclaracion(_ParityModel):
+class CrossReferenceApplicabilityDeclaracion(BaseModel):
     """A registry-declared applicability shape for one cross-reference.
 
     The model is a structural read of the registry data � the audit
@@ -744,6 +743,8 @@ class CrossReferenceApplicabilityDeclaracion(_ParityModel):
     :class:`CrossReferenceApplicability` (the run-time evaluation
     result).
     """
+
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo_id: str = Field(min_length=1, max_length=128)
     revision_id: RevisionId
@@ -761,7 +762,7 @@ def generate_m303_annual_orden_manifest(
     needs: an artefact regenerated from a shipped copy of itself would agree with
     that copy by construction and could never detect drift.
     """
-    return _generate_manifest_with_censuses(source_root=source_root, sources=sources)[0]
+    return generate_manifest_with_censuses(source_root=source_root, sources=sources)[0]
 
 
 def render_m303_annual_orden_census_artefact(
@@ -778,7 +779,7 @@ def render_m303_annual_orden_census_artefact(
     Returns:
         The artefact text, exactly as the generator commits it.
     """
-    _manifest, censuses = _generate_manifest_with_censuses(source_root=source_root, sources=sources)
+    _manifest, censuses = generate_manifest_with_censuses(source_root=source_root, sources=sources)
     return render_m303_annual_orden_censuses(tuple(censuses[key] for key in sorted(censuses)))
 
 

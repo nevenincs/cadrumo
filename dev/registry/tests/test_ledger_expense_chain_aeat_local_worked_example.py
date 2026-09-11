@@ -53,7 +53,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.aggregation import aggregate_renta_ledger_expenses
+from cadrumo.application.aggregation.renta_ledger import aggregate_renta_ledger_expenses
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path

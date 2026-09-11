@@ -26,7 +26,7 @@ MCP server over an in-memory client session instead of asserting a hand-rolled
 boolean (``aeat-quality-gates``, ``aeat-quality-gates``).
 
 See Also:
-    :mod:`~cadrumo_harness.mcp._hitl`
+    :mod:`~cadrumo_harness.mcp.hitl`
         Human-in-the-loop confirmation policy projected onto MCP tool calls.
     :class:`~agent.eval.ConfirmationGateCheck`
         Caller-injected golden-eval verdict that records expected and actual
@@ -49,10 +49,10 @@ from pathlib import Path
 import mcp.types as mcp_types
 import pytest
 
-from cadrumo_harness.mcp._hitl import ConfirmationPolicy, confirmation_for_tool
-from cadrumo_harness.mcp._server import build_server
-from cadrumo_harness.mcp._tools import McpToolDescriptor, build_tool_descriptors
-from cadrumo_harness.mcp.tests._session import connected_server_and_client_session as connect
+from cadrumo_harness.mcp.hitl import ConfirmationPolicy, confirmation_for_tool
+from cadrumo_harness.mcp.server import build_server
+from cadrumo_harness.mcp.tests.session import connected_server_and_client_session as connect
+from cadrumo_harness.mcp.tools import McpToolDescriptor, build_tool_descriptors
 
 from .._models import ConfirmationGateCheck, ConfirmationTier
 from .._runner import load_scenario, run_golden_scenario

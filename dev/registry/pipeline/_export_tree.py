@@ -45,10 +45,6 @@ from cadrumo.domain.calculations.registry.schema_exports import (
     ProjectionEndpointDeclaration,
 )
 
-from .variable_envelope import (
-    compile_auxiliary_envelope_header_definition,
-    compile_filing_envelope_definition,
-)
 from .export_fragment_provenance import (
     EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION,
     ExportFieldDerivation,
@@ -85,6 +81,10 @@ from .source_defects import (
     validate_note_governed_amount_declarations,
     validate_note_stated_applicability_declarations,
     validate_source_defect_declarations,
+)
+from .variable_envelope import (
+    compile_auxiliary_envelope_header_definition,
+    compile_filing_envelope_definition,
 )
 
 __all__ = [

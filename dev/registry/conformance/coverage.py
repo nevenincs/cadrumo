@@ -55,10 +55,6 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.filing_year import FilingYear
 from cadrumo.core.period import RegistrySelectorPeriodCode
 from cadrumo.core.revision_review import RevisionReviewStatus
-from cadrumo.domain.calculations.registry.schema_family_coverage import (
-    CoverageModel,
-)
-from cadrumo.domain.calculations.registry.snapshot import check_snapshot_filing_review_tier
 from cadrumo.domain.calculations.registry.authority import RegistryCoverageFacts, ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError, RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import (
@@ -76,10 +72,14 @@ from cadrumo.domain.calculations.registry.schema import (
     RegistrySnapshot,
 )
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier, EvidenceTierField, coerce_enum_member
+from cadrumo.domain.calculations.registry.schema_family_coverage import (
+    CoverageModel,
+)
 from cadrumo.domain.calculations.registry.schema_formula import ParameterDefinition
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
 from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision, WorkbookParityReference
+from cadrumo.domain.calculations.registry.snapshot import check_snapshot_filing_review_tier
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
 from ..maintenance_support import coverage_assessment_horizon, revision_selection_coordinates

@@ -41,7 +41,7 @@ from ..evidence_scrub import (
     find_residual_leaks,
     scrub_distribution_evidence,
 )
-from ._release_cohort_support import release_cohort
+from ..release_cohort_support import release_cohort
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

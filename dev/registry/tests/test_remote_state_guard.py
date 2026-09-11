@@ -8,7 +8,7 @@ from pydantic import AnyUrl, ValidationError
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from cadrumo.domain.calculations.registry.remote_state_guard import (
-    _FORBIDDEN_TOKENS,
+    AEAT_WRITE_FORBIDDEN_VERB_TOKENS,
     RemoteOperation,
     RemoteStateGuardPolicy,
     assert_remote_operation_allowed,
@@ -71,8 +71,8 @@ def test_url_method_guard_covers_every_witnessed_write_verb_token() -> None:
     """The URL/method denylist MUST cover every token proven against a real AEAT surface.
 
     The prior form of this test asserted
-    ``AEAT_WRITE_FORBIDDEN_VERB_TOKENS - set(_FORBIDDEN_TOKENS) == set()``,
-    which is VACUOUS: ``_FORBIDDEN_TOKENS`` is *built by unpacking*
+    ``AEAT_WRITE_FORBIDDEN_VERB_TOKENS``,
+    which is VACUOUS if it is compared only with a private derived tuple
     ``AEAT_WRITE_FORBIDDEN_VERB_TOKENS``, so the containment holds by
     construction at every value of the constant -- dropping ``tgvi`` from the
     source removes it from both sides and nothing reds (mutation-proven: see
@@ -82,12 +82,14 @@ def test_url_method_guard_covers_every_witnessed_write_verb_token() -> None:
     Pinning against ``_WITNESSED_AGAINST_A_REAL_AEAT_SURFACE`` -- a literal set
     independent of the constant under test -- breaks the circularity: a token
     dropped from ``AEAT_WRITE_FORBIDDEN_VERB_TOKENS`` is dropped from
-    ``_FORBIDDEN_TOKENS`` too, and this assertion reds.
+    the public guard vocabulary too, and this assertion reds.
     """
 
-    forbidden = set(_FORBIDDEN_TOKENS)
+    forbidden = set(AEAT_WRITE_FORBIDDEN_VERB_TOKENS)
     missing = _WITNESSED_AGAINST_A_REAL_AEAT_SURFACE - forbidden
-    assert not missing, f"_FORBIDDEN_TOKENS dropped a token witnessed against a real AEAT surface: {sorted(missing)}"
+    assert not missing, (
+        f"AEAT_WRITE_FORBIDDEN_VERB_TOKENS dropped a token witnessed against a real AEAT surface: {sorted(missing)}"
+    )
 
 
 def _open_policy() -> RemoteStateGuardPolicy:

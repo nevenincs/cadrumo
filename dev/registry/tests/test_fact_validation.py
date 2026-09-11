@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+from importlib import import_module
 
 import pytest
 
@@ -86,7 +87,8 @@ def test_validation_accepts_an_acyclic_ordered_overlap() -> None:
 
 
 def test_facts_package_initializer_is_an_inert_namespace_marker() -> None:
-    from cadrumo.domain.calculations.registry.facts import __dict__ as namespace
+    facts_namespace = import_module("cadrumo.domain.calculations.registry.facts")
+    namespace = vars(facts_namespace)
 
     assert "GovernedFact" not in namespace
     assert "ScalarFactPayload" not in namespace

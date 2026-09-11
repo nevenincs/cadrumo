@@ -53,9 +53,9 @@ def test_bundledexport_field_kinds_are_hydrated_enum_members() -> None:
 
 def test_binding_derived_export_fields_preserve_enum_kind() -> None:
     """The binding-derived export path emits CasillaFieldKind members."""
-    from cadrumo.domain.calculations.registry.withholding_bindings import _WithholdingSelector
+    from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingSelector
 
-    selector = _WithholdingSelector.model_validate(
+    selector = WithholdingSelector.model_validate(
         {
             "fact": "row_field",
             "record": "perceptor",
@@ -134,12 +134,12 @@ def test_m720_binding_fields_remain_visible_when_a_resolved_revision_is_derived_
 
 def test_binding_derived_export_skips_source_mirror_when_row_field_is_hand_authored() -> None:
     """One official fixed-width field can represent multiple source-specific row bindings."""
-    from cadrumo.domain.calculations.registry.withholding_bindings import _WithholdingSelector
+    from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingSelector
 
     public_binding = DataBindingDefinition(
         id="binding.rows.public",
         source=BindingSourceKind.WITHHOLDING,
-        selector=_WithholdingSelector.model_validate(
+        selector=WithholdingSelector.model_validate(
             {
                 "fact": "row_field",
                 "record": "perceptor",
@@ -154,7 +154,7 @@ def test_binding_derived_export_skips_source_mirror_when_row_field_is_hand_autho
     mirror_binding = DataBindingDefinition(
         id="binding.rows.mirror",
         source=BindingSourceKind.WITHHOLDING,
-        selector=_WithholdingSelector.model_validate(
+        selector=WithholdingSelector.model_validate(
             {
                 "fact": "row_field",
                 "record": "perceptor",
@@ -212,12 +212,12 @@ def test_binding_derived_export_skips_source_mirror_when_row_field_is_hand_autho
 
 def test_binding_derived_export_emits_one_field_for_source_mirror_template() -> None:
     """A casilla template row field becomes one binding export field, not one per source."""
-    from cadrumo.domain.calculations.registry.withholding_bindings import _WithholdingSelector
+    from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingSelector
 
     public_binding = DataBindingDefinition(
         id="binding.rows.public",
         source=BindingSourceKind.WITHHOLDING,
-        selector=_WithholdingSelector.model_validate(
+        selector=WithholdingSelector.model_validate(
             {
                 "fact": "row_field",
                 "record": "perceptor",
@@ -232,7 +232,7 @@ def test_binding_derived_export_emits_one_field_for_source_mirror_template() -> 
     mirror_binding = DataBindingDefinition(
         id="binding.rows.mirror",
         source=BindingSourceKind.WITHHOLDING,
-        selector=_WithholdingSelector.model_validate(
+        selector=WithholdingSelector.model_validate(
             {
                 "fact": "row_field",
                 "record": "perceptor",

@@ -21,12 +21,12 @@ handling and passes the decoded JSON ``observations`` rows in; this module only
 asserts over the already-fetched rows and never dispatches the call itself. The
 narration-faithfulness dimension (eval-catalogue category 9) follows the
 identical pattern one layer further: the caller runs the real
-``cadrumo_harness.mcp._faithfulness.faithfulness_check`` against a narration and
+``cadrumo_harness.mcp.faithfulness.faithfulness_check`` against a narration and
 the captured calculate JSON, and passes the per-step verdict in - this module
 never imports the MCP server layer and never runs the check itself. The
 confirmation-gate dimension (eval-catalogue category 8) follows the same pattern
 once more: the caller invokes the real
-``cadrumo_harness.mcp._hitl.confirmation_for_tool`` for a step and hands the
+``cadrumo_harness.mcp.hitl.confirmation_for_tool`` for a step and hands the
 resulting tier in as a :class:`~dev.agent_eval._models.ConfirmationGateCheck`;
 this module never imports the MCP server layer and never resolves a confirmation
 tier itself. The contradiction dimension (eval-catalogue category 4) follows the
@@ -529,7 +529,7 @@ def _decoded_envelope(output: str) -> Mapping[str, object] | None:
 
 def _safe_to_execute(cli_path: tuple[str, ...]) -> bool:
     """Read recovery safety from the command graph's execution-policy authority."""
-    from cadrumo.entrypoints.cli import command_execution_policy_for_cli_path
+    from cadrumo.entrypoints.cli.main import command_execution_policy_for_cli_path
 
     policy = command_execution_policy_for_cli_path(cli_path)
     return not (policy.destructive or policy.handoff or policy.live_write)
@@ -557,7 +557,7 @@ def _execute_safe_recovery_and_retry(
     has no action and therefore cannot reach this function.
     """
     from cadrumo.core.operator_action_enums import ActionArgumentStatus, ActionConditionality
-    from cadrumo.entrypoints.cli import resolve_cli_precondition_action
+    from cadrumo.entrypoints.cli.common import resolve_cli_precondition_action
 
     resolved = resolve_cli_precondition_action(precondition_verdict)
     action = resolved.action

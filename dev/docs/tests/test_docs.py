@@ -209,12 +209,12 @@ def test_documentation_install_snippets_cite_the_current_version() -> None:
     :func:`test_the_version_citation_scan_catches_a_stale_citation`, which runs
     the same scan over explicit input rather than over the corpus.
     """
-    from cadrumo import __version__
+    from cadrumo.core.package_version import PACKAGE_VERSION
 
     violations: list[str] = []
     for path in _markdown_docs():
         relative = path.relative_to(_REPO_ROOT).as_posix()
-        violations.extend(_stale_version_citations(path.read_text(encoding="utf-8"), relative, __version__))
+        violations.extend(_stale_version_citations(path.read_text(encoding="utf-8"), relative, PACKAGE_VERSION))
 
     assert not violations, "stale install versions in docs:\n" + "\n".join(violations)
 
@@ -227,10 +227,10 @@ def test_the_version_citation_scan_catches_a_stale_citation() -> None:
     one must not, so a regex that stopped matching -- the way the corpus itself
     can no longer tell us -- fails here immediately.
     """
-    from cadrumo import __version__
+    from cadrumo.core.package_version import PACKAGE_VERSION
 
     stale_version = "0.0.1"
-    assert stale_version != __version__, "pick a stale version the package does not carry"
+    assert stale_version != PACKAGE_VERSION, "pick a stale version the package does not carry"
 
     shapes = (
         "download `cadrumo-{v}-py3-none-any.whl`",
@@ -238,9 +238,9 @@ def test_the_version_citation_scan_catches_a_stale_citation() -> None:
         "the current release is `{v}`",
     )
     for shape in shapes:
-        stale = _stale_version_citations(shape.format(v=stale_version), "probe.md", __version__)
+        stale = _stale_version_citations(shape.format(v=stale_version), "probe.md", PACKAGE_VERSION)
         assert len(stale) == 1, f"the scan missed a stale citation in {shape.format(v=stale_version)!r}"
         assert stale_version in stale[0]
 
-        current = _stale_version_citations(shape.format(v=__version__), "probe.md", __version__)
-        assert not current, f"the scan flagged a current citation in {shape.format(v=__version__)!r}: {current}"
+        current = _stale_version_citations(shape.format(v=PACKAGE_VERSION), "probe.md", PACKAGE_VERSION)
+        assert not current, f"the scan flagged a current citation in {shape.format(v=PACKAGE_VERSION)!r}: {current}"

@@ -21,9 +21,8 @@ from collections.abc import Iterable, Sequence
 from decimal import Decimal
 from typing import Any
 
-from ._caveats import TWIN_LINK_IS_PROSE
 from ._field_mapping import slots_unavailable_at
-from ._key import CorpusKey
+from ._key import TWIN_LINK_IS_PROSE, CorpusKey
 from ._result import FLOAT_SANITY_PROBE, EmittedOnly, HarnessModelTier, HarnessRefusalError, ResultRow, Scored
 
 __all__ = ["HarnessReport", "format_report", "verify_decimal_comparison_path"]

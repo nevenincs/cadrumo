@@ -6,8 +6,8 @@ import json
 
 import pytest
 
-from .._proof_ledger import record_proof, reset_proof_ledger
 from ..lane_verification_core import relative_manifest_path, write_smoke_manifest
+from ..proof_ledger import record_proof, reset_proof_ledger
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

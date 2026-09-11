@@ -4,11 +4,11 @@ from pathlib import Path
 
 import pytest
 import yaml
-from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
 
 from cadrumo.application.operator_surface.contract import MOUNTED_COMMAND_FAMILIES
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLanguage
+from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
 
 from .._ast_scanner import scan_namespace_markers, scan_source_tree
 from .._paths import DOCS_SRC_DIR, HARNESS_SRC_DIR, LOCALES_DIR, SRC_DIR
@@ -1086,7 +1086,7 @@ def test_fstring_registry_expands_sal_and_sll_keys() -> None:
     These two enum values caused the #553 structural-repair-exception incident because
     scaffold could not generate their locale keys from the namespace marker alone.
     """
-    from .._fstring_registry import get_registered_keys
+    from ..fstring_registry import get_registered_keys
 
     keys = get_registered_keys()
     assert "wizard.setup.taxpayer-type.legal-entity-form.choices.sal.label" in keys, (
@@ -1107,7 +1107,7 @@ def test_fstring_registry_all_keys_present_in_all_locales(manager: LocaleManager
     scaffolded. A failure here means a new enum value was added without running
     scaffold (or scaffold does not cover it yet).
     """
-    from .._fstring_registry import get_registered_keys
+    from ..fstring_registry import get_registered_keys
 
     registered_keys = get_registered_keys()
     errors = []
@@ -1139,7 +1139,7 @@ def test_scaffold_surfaces_fstring_registry_keys_as_missing(tmp_path: Path) -> N
     guarantee this test pins is visibility through the missing-key report,
     not placeholder presence in the YAML.
     """
-    from .._fstring_registry import get_registered_keys
+    from ..fstring_registry import get_registered_keys
 
     locales_dir = tmp_path / "locales"
     locales_dir.mkdir()

@@ -21,7 +21,6 @@ from cadrumo.core.foreign_asset_obligation import M720AssetClassCode
 from cadrumo.domain.calculations.registry.detail_record_bindings import (
     AtributionMemberObservation,
     Modelo720RowObservation,
-    _build_foreign_asset_rows,
     resolve_atribucion_binding_row_values,
     resolve_foreign_asset_binding_row_values,
 )
@@ -37,6 +36,7 @@ def _modelos():
 
 
 def test_build_foreign_asset_rows_sorts_by_country_class_identifier_date() -> None:
+    revision = next(m for m in _modelos() if m.id == "720").revisions["2013-y-siguientes"]
     obs = (
         Modelo720RowObservation(
             source_id="a1",
@@ -64,11 +64,11 @@ def test_build_foreign_asset_rows_sorts_by_country_class_identifier_date() -> No
         ),
     )
 
-    rows = _build_foreign_asset_rows(obs)
+    resolved = resolve_foreign_asset_binding_row_values(revision, obs)
 
     # Sort key: (country_code, asset_class_code, asset_identifier, acquisition_date)
-    assert [row["country_code"] for row in rows] == ["CH", "CH", "DE"]
-    assert [row["asset_class_code"] for row in rows] == ["C", "V", "C"]
+    assert [resolved[("modelo-720-asset-row-country", index)] for index in (1, 2, 3)] == ["CH", "CH", "DE"]
+    assert [resolved[("modelo-720-asset-row-class", index)] for index in (1, 2, 3)] == ["C", "V", "C"]
 
 
 def test_resolve_foreign_asset_binding_row_values_emits_per_column_indexed_values() -> None:

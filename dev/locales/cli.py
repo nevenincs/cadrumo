@@ -12,6 +12,7 @@ from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 
 from ._paths import DOCS_SRC_DIR, HARNESS_SRC_DIR, LOCALES_DIR, SRC_DIR
 from ._registry_scanner import scan_modelo_schema_keys
+from ._signal import locale_signal
 from ._status import CatalogueStatusRecord, catalogue_status
 from ._subtree_move import (
     LocaleMoveConflict,
@@ -101,13 +102,29 @@ def _echo_placeholder_mismatch(mismatch: LocalePlaceholderMismatch) -> None:
 @app.command("status")
 def status(
     ctx: typer.Context,
+    json_output: Annotated[
+        bool,
+        typer.Option("--json", help="Emit the complete cross-surface status as one JSON object."),
+    ] = False,
+    check: Annotated[
+        bool,
+        typer.Option("--check", help="Exit 1 when the complete locale backlog is not empty."),
+    ] = False,
 ) -> None:
-    """Print the honest per-leaf state partition for every locale surface.
+    """Print the cross-surface locale status.
 
     Catalogue rows partition required keys into authored, key-echo,
-    unbindable, blank, and absent states.
+    unbindable, blank, and absent states. JSON mode additionally inventories
+    documentation, registry, terminology, dynamic-key, message, scanner-health,
+    and repetition surfaces for the canonical development signal.
     """
     manager = ctx.obj if isinstance(ctx.obj, LocaleManager) else _default_manager()
+    if json_output:
+        payload = locale_signal(manager)
+        typer.echo(json.dumps(payload, sort_keys=True, separators=(",", ":")))
+        if check and payload["outcome"] != "complete":
+            raise typer.Exit(code=1)
+        return
     for record in catalogue_status(manager):
         _echo_catalogue_status(record)
 

@@ -25,7 +25,7 @@ from typing import TypedDict, Unpack
 
 import pytest
 
-from cadrumo_harness.mcp._tools import build_tool_descriptors
+from cadrumo_harness.mcp.tools import build_tool_descriptors
 
 from .._live_scoring import (
     DiscoveryScore,
@@ -50,7 +50,7 @@ _TARGET = "modelo.work.calculate"
 # The always-on advertised tools that are NOT per-verb descriptors: the
 # `harness.load` floor (1), the two grounding tools (2), and the search/execute/
 # toolsets meta trio (3). The CORE and FULL advertised totals both add this
-# constant to their per-verb slice (mirrors `cadrumo_harness.mcp._server`'s list_tools
+# constant to their per-verb slice (mirrors `cadrumo_harness.mcp.server`'s list_tools
 # assembly: `[floor_tool, *grounding_tools, *advertised, *meta_tools]`).
 _ALWAYS_ON_NON_VERB_TOOLS = 1 + 2 + 3
 

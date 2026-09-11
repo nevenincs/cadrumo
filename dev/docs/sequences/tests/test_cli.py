@@ -14,7 +14,6 @@ from pathlib import Path
 
 import pytest
 
-from ..__main__ import main
 from ..checks import (
     COHERENCE_TIER_PREFIX,
     _timeout_progress_diagnostic,
@@ -23,6 +22,7 @@ from ..checks import (
     discover_sequences,
     refresh_sequences,
 )
+from ..cli import main
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 

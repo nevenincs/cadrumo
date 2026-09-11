@@ -272,6 +272,7 @@ class LocaleManager:
         #: Memo for :meth:`get_codebase_keys`, scoped to this manager so it can
         #: never outlive the ``src_dir`` it describes.
         self._codebase_keys: frozenset[str] | None = None
+        self._codebase_namespaces: frozenset[str] | None = None
         # ``docs_chrome`` is the documentation generators' accessor. It exists
         # because ``tr()`` resolves the ambient locale while a docs build must
         # render one explicit language per page, so the generators cannot use
@@ -316,7 +317,7 @@ class LocaleManager:
            ``message_key=`` kwargs, and ``build_entry`` portal keys.
         3. F-string registry — bounded f-string patterns whose value sets
            are fully known at import time (e.g. wizard choice labels
-           keyed by enum values). See :mod:`locales._fstring_registry`.
+           keyed by enum values). See :mod:`locales.fstring_registry`.
         4. Command-spec scanner — the keys the live CLI registry declares in
            its ``TranslationKey`` fields. A spec table builds an option's help
            key from the option name, so no literal for it exists anywhere and
@@ -339,7 +340,7 @@ class LocaleManager:
 
         from ._ast_scanner import scan_source_tree
         from ._command_spec_scanner import scan_command_spec_keys
-        from ._fstring_registry import get_registered_keys
+        from .fstring_registry import get_registered_keys
 
         if self._codebase_keys is not None:
             return set(self._codebase_keys)
@@ -385,11 +386,14 @@ class LocaleManager:
         Each marker passes the parity check when at least one
         concrete locale key starts with its prefix.
         """
+        if self._codebase_namespaces is not None:
+            return set(self._codebase_namespaces)
         from ._ast_scanner import scan_namespace_markers
 
         markers: set[str] = set()
         for root in (self.src_dir, *self.extra_src_dirs):
             markers.update(scan_namespace_markers(root))
+        self._codebase_namespaces = frozenset(markers)
         return markers
 
     def audit(self) -> LocaleAuditResult:

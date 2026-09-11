@@ -21,10 +21,10 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from dev._paths import REPO_ROOT
 
 from ..casilla_reference import CasillaReferenceResult, render_casilla_reference
-from ..terminology._coverage import CasillaCoverageKind, compute_casilla_coverage_census
-from ..terminology._resolution import ChunkHit, GroundingSurface, ResolvedTarget, TargetResolver
 from ..terminology.casilla_anchor import casilla_page_anchor, casilla_reference_target
 from ..terminology.casilla_projection import CasillaProjectionStats, project_casilla_search_records
+from ..terminology.coverage_report import CasillaCoverageKind, compute_casilla_coverage_census
+from ..terminology.resolution import ChunkHit, GroundingSurface, ResolvedTarget, TargetResolver
 from ..terminology.search_record import CasillaSearchRecord
 from ..terminology.unified_record import to_search_record
 

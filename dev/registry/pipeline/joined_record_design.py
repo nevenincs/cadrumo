@@ -24,10 +24,6 @@ from cadrumo.domain.calculations.registry.ids import (
 from cadrumo.domain.calculations.registry.schema_exports import ProjectionEndpointDeclaration
 
 from ..maintenance_support import GeneratedArtifactInspection
-from .semantic_map_validation import (
-    SemanticMapAnomalyException,
-    _validate_semantic_map_with_admissions,
-)
 from .record_design_intermediate import (
     AnchorKey,
     RecordDesignIntermediate,
@@ -46,6 +42,10 @@ from .semantic_map import (
     VariableEnvelopeSemantic,
     semantic_anchor_key,
     semantic_record_key,
+)
+from .semantic_map_validation import (
+    SemanticMapAnomalyException,
+    _validate_semantic_map_with_admissions,
 )
 
 __all__ = [

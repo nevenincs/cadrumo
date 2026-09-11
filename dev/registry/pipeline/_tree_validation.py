@@ -27,7 +27,6 @@ from ..compiler.loader import load_modelo_directory
 from ..compiler.loader_fingerprints import collect_registry_tree_fingerprints
 from ..compiler.registry_scope import validate_registry_scope
 from ._export_tree import RenderedExportTree
-from .tree_paths import require_existing_non_link
 from .export_fragment_provenance import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     ExportFragmentProvenanceManifest,
@@ -37,6 +36,7 @@ from .export_fragment_provenance import (
 from .joined_record_design import JoinedRecordDesign
 from .render_profile import RenderProfile, RenderProfileSourceEvidence
 from .semantic_map import SemanticMap
+from .tree_paths import require_existing_non_link
 
 __all__ = [
     "GeneratedExportTreeValidationContext",

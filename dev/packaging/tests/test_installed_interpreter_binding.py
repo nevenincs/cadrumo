@@ -30,7 +30,7 @@ from .._installed_wheel_binding import (
     installed_python_for_cli,
     sealed_wheel_payload_sha256,
 )
-from ._release_cohort_support import _real_product_wheel, _uv_executable, client_venv_template
+from ..release_cohort_support import _real_product_wheel, _uv_executable, client_venv_template
 
 # Serial and integration for the same reason as the sibling evidence suite:
 # these cases install the real product wheel into a real environment, which is

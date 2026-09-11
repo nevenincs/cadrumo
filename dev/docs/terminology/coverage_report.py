@@ -51,12 +51,12 @@ from dev._paths import UTF_8
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ._miss_rate import load_committed_relevance
-from ._sweep import SweepResult
 from .casilla_projection import project_casilla_search_records
 from .cli_projection import CliOptionRecord, CliSurfaceRecord, project_cli_search_records
 from .concept_card_projection import ConceptCardRecord, project_concept_cards
-from .legal_projection import legal_target_record_id
+from .legal_projection import legal_target_record_id as _legal_target_record_id
 from .search_record import CasillaSearchRecord
+from .term_relevance_mapping import SweepResult
 from .unified_record import SearchRecord, to_search_record
 
 __all__ = [
@@ -70,7 +70,6 @@ __all__ = [
     "compute_coverage_report",
     "coverage_report_path",
     "legal_provision_ids",
-    "legal_target_record_id",
 ]
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -423,7 +422,7 @@ def compute_coverage_report(
         CoverageKind.CONCEPT: {to_search_record(card).id for card in resolved_cards if card.is_approved},
         CoverageKind.CASILLA: {to_search_record(record).id for record in resolved_casillas},
         CoverageKind.CLI: {to_search_record(record).id for record in (*resolved_commands, *resolved_options)},
-        CoverageKind.LEGAL: {legal_target_record_id(legal_id) for legal_id in resolved_legal},
+        CoverageKind.LEGAL: {_legal_target_record_id(legal_id) for legal_id in resolved_legal},
     }
 
     kinds = tuple(_kind_coverage(kind, surfaces[kind], referenced) for kind in CoverageKind)

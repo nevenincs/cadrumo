@@ -34,7 +34,8 @@ from dataclasses import dataclass
 from typing import Literal, Protocol
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.schema import SCHEMA_FAMILY, ModeloRevision
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_base import SCHEMA_FAMILY
 
 from ..compiler.authority import compiled_bundled_authority
 from ..maintenance_support import resolved_export_endpoints

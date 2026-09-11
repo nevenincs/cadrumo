@@ -9,7 +9,7 @@ real repro is a real M130 calculate that returned correct casilla values but no
 
 This module dispatches a REAL ``modelo.work.calculate`` through the actual CLI
 command handling (the identical transport
-:func:`cadrumo_harness.mcp._dispatch.tool_request_argv` projects the
+:func:`cadrumo_harness.mcp.dispatch.tool_request_argv` projects the
 ``cadrumo_modelo_work_calculate`` MCP tool call onto: ``app modelo work calculate``),
 decodes the JSON RESPONSE payload's ``observations`` rows, and feeds them into
 :func:`dev.agent_eval._runner.run_golden_scenario` via its ``response_observations``
@@ -30,7 +30,6 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
@@ -39,6 +38,7 @@ from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.loader import load_user_profile_schema
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo.tests.profile_capsule import open_test_profile_session, seed_test_profile_record
 from cadrumo.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
@@ -177,7 +177,7 @@ def _dispatch_real_m130_calculate(
     Drives real command handling end to end (create work unit -> seed real
     ledger rows -> calculate) — the same transport the ``cadrumo_modelo_work_calculate``
     MCP tool dispatches to, since
-    :func:`cadrumo_harness.mcp._dispatch.tool_request_argv` projects that tool
+    :func:`cadrumo_harness.mcp.dispatch.tool_request_argv` projects that tool
     call onto the identical ``app modelo work calculate`` CLI argv this test
     invokes directly. Every returned value is what the real registry engine and
     the real CLI envelope serializer produced — not a hand-rolled dict.
