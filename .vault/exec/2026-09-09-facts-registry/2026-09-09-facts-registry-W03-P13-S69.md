@@ -3,29 +3,24 @@ tags:
   - '#exec'
   - '#facts-registry'
 date: '2026-09-10'
-modified: '2026-09-10'
+modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:cd87fb5bd73a8c0c937351f101fd88e92a541be328fcfcfd23887cc59677029b'
+body_hash: 'sha256:81904dc20917e23b3153e7eed77ceda46aa242a78cee6834b1b2d48b9be77b61'
 step_id: 'S69'
 related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
-
-
 # Enforce and prove canonical tax-fact temporal coverage, date-axis selection, provenance, and refusal outside source-grounded windows
 
 ## Scope
 
-- `dev/registry/compiler/fact_validation.py and dev/registry/compiler/validator.py and dev/registry/tests/test_migrated_legal_parameter_fact_gate.py`
+- `dev/registry/compiler/fact_validation.py`, `dev/registry/compiler/validator.py`, and `dev/registry/tests/test_retired_fact_provider_gate.py`
 
 ## Changes
 
 - `M` `dev/registry/compiler/fact_validation.py`
 - `M` `dev/registry/compiler/validator.py`
-- `A` `dev/registry/tests/test_migrated_legal_parameter_fact_gate.py`
-- `verify:` `uv run pytest --confcutdir=dev/registry/tests dev/registry/tests/test_migrated_legal_parameter_fact_gate.py -q` -> `6 passed`
-- `verify:` `uv run ruff check dev/registry/compiler/fact_validation.py dev/registry/tests/test_migrated_legal_parameter_fact_gate.py` -> `pass`
-
-## Notes
-
-The public `RegistryValidator.validate_registry(())` entry point rejects a compiled catalogue with a required migrated identity removed. The previously blocked `registry_scope` import was repaired by the concurrent compiler-import relocation checkpoint. Independent re-review cleared the original HIGH wiring finding. S69 remains open until its broader planned validation completes.
+- `A` then `R` `dev/registry/tests/test_migrated_legal_parameter_fact_gate.py` to `dev/registry/tests/test_retired_fact_provider_gate.py`
+- The mandatory compiler and `RegistryValidator` catalogue gates reject missing, temporally uncovered, ungrounded, or retired-provider facts with no bypass.
+- `verify:` `uv run pytest -q dev/registry/tests/test_catalogue_verification_catalogues.py dev/registry/tests/test_administrator_retention_authored_facts.py dev/registry/tests/test_retired_fact_provider_gate.py` -> `19 passed`
+- `verify:` `uv run ruff check dev/registry/compiler/fact_validation.py dev/registry/tests/test_retired_fact_provider_gate.py` -> `pass`

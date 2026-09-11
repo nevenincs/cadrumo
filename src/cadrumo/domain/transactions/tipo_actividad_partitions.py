@@ -183,7 +183,11 @@ def tipo_actividad_code_set(
     )
 
 
-def load_tipo_actividad_selectors(*, effective_date: date) -> Mapping[str, frozenset[TipoActividad]]:
+def load_tipo_actividad_selectors(
+    *,
+    effective_date: date,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> Mapping[str, frozenset[TipoActividad]]:
     """Return the codes each art. 95 selector fact declares.
 
     Every selector is present, including the engorde one whose set is empty. An
@@ -194,13 +198,21 @@ def load_tipo_actividad_selectors(*, effective_date: date) -> Mapping[str, froze
     Returns:
         A mapping from selector fact id to its declared codes.
 
+    Args:
+        effective_date: Filing-period coordinate for the exact selector variants.
+        authority: Optional validated authority used for fact resolution.
+
     Raises:
         TransactionValidationError: If a selector is absent or malformed, if the
             same code appears in two selectors, or if the catalogue cannot load.
     """
     selectors = {
         fact_id: _typed_code_set(
-            resolve_tipo_actividad_selector(fact_id, effective_date=effective_date),
+            resolve_tipo_actividad_selector(
+                fact_id,
+                effective_date=effective_date,
+                authority=authority,
+            ),
         )
         for fact_id in _ART_95_SELECTORS
     }
