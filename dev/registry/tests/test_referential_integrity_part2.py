@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from dev.registry.compiler.validator import RegistryValidator
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.record_design_coverage import calculation_closure_casilla_ids
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
@@ -34,6 +33,7 @@ from cadrumo.domain.calculations.registry.tests._referential_integrity_support i
     single_segment_casilla,
     snapshot_for_revision,
 )
+from dev.registry.compiler.validator import RegistryValidator
 
 from ._record_design_support import _committed_registry_tree
 

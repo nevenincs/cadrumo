@@ -29,8 +29,6 @@ from cadrumo.domain.calculations.registry.facts.schema import (
     MappingFactPayload,
     ScalarFactPayload,
 )
-from .loader_cache import toml_file_fingerprint
-from .loader_fingerprints import RegistryPathFingerprints
 from cadrumo.domain.calculations.registry.schema_base import DateAxis, SourceCitation
 from cadrumo.domain.categories.errors import CategoryValidationError
 from cadrumo.domain.categories.profile import CategoryProfile, IvaDeductibilityHint
@@ -50,6 +48,9 @@ from cadrumo.domain.categories.registry import (
     CATEGORY_STATUTORY_CAP_FACT_ID,
 )
 from cadrumo.domain.categories.spending_category import SpendingCategory
+
+from .loader_cache import toml_file_fingerprint
+from .loader_fingerprints import RegistryPathFingerprints
 
 _CATEGORY_CITATION_SOURCE_REFS = {
     CategoryCitationSource.LEY_IRPF: "lirpf-cuota-chain-authority",

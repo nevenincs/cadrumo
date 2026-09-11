@@ -5,11 +5,11 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.tests import REPO_ROOT
 from dev.registry.compiler.validator import RegistryValidator
+
 from ..compiler.corpus_catalogue import verify_source_catalogue
 from ..compiler.legal_grounding import verify_legal_catalogue_grounding
-from cadrumo.tests import REPO_ROOT
-
 from ._catalogue_verification_support import _registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

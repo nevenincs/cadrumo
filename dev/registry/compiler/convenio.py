@@ -18,8 +18,9 @@ from cadrumo.domain.calculations.registry.facts.schema import (
     GovernedFactVariant,
     OverrideFactPayload,
 )
-from .loader_cache import toml_file_fingerprint
 from cadrumo.domain.calculations.registry.schema_base import DateAxis, SourceCitation
+
+from .loader_cache import toml_file_fingerprint
 
 __all__ = [
     "collect_convenio_fingerprints",

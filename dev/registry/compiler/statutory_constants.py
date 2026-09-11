@@ -17,8 +17,9 @@ from cadrumo.domain.calculations.registry.facts.schema import (
     MappingFactPayload,
     ScalarFactPayload,
 )
-from .loader_cache import toml_file_fingerprint
 from cadrumo.domain.calculations.registry.schema_base import DateAxis, SourceCitation
+
+from .loader_cache import toml_file_fingerprint
 
 STATUTORY_CONSTANTS_PROVIDER_ID = "statutory-constants"
 STATUTORY_CONSTANTS_PROVIDER_DIRECTORY = "statutory"

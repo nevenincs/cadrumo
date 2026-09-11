@@ -12,6 +12,16 @@ from functools import lru_cache
 from pathlib import Path
 
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.schema import (
+    ModeloDefinition,
+    RegistryCatalogues,
+    SociedadesAnnualManualCoverageCatalogue,
+    SociedadesAnnualManualCoverageStatus,
+    SupportedFilingYearsCatalogue,
+)
+from cadrumo.domain.calculations.registry.schema_references import LegalParameter, LegalReference, SourceReference
+
 from ._compiled_cache import (
     load_compiled_registry_cache,
     store_compiled_registry_cache,
@@ -29,7 +39,6 @@ from ._loader_internals import (
     _validate_legal_parameter_refs,
     load_modelo_file,
 )
-from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from .identity import (
     RegistryIdentity,
     resolve_registry_identity,
@@ -45,14 +54,6 @@ from .loader_cache import (
 from .loader_fingerprints import (
     refresh_toml_fingerprint_after_load_error as _refresh_toml_fingerprint_after_load_error,
 )
-from cadrumo.domain.calculations.registry.schema import (
-    ModeloDefinition,
-    RegistryCatalogues,
-    SociedadesAnnualManualCoverageCatalogue,
-    SociedadesAnnualManualCoverageStatus,
-    SupportedFilingYearsCatalogue,
-)
-from cadrumo.domain.calculations.registry.schema_references import LegalParameter, LegalReference, SourceReference
 
 
 def load_modelo_directory(directory: Path) -> ModeloDefinition:

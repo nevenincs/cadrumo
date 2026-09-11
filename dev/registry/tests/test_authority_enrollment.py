@@ -8,7 +8,6 @@ from pathlib import Path
 
 import pytest
 
-from dev.registry.compiler.validator import RegistryValidator
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
@@ -19,6 +18,7 @@ from dev.registry.compiler.fact_providers import (
     compile_registered_fact_providers,
     validate_fact_provider_directory_ownership,
 )
+from dev.registry.compiler.validator import RegistryValidator
 from dev.registry.maintenance_support import reset_registry_caches
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

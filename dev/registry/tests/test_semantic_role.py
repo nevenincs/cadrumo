@@ -24,6 +24,13 @@ from pydantic import ValidationError
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaAlias, CasillaConstraints, CasillaDefinition
+from cadrumo.domain.calculations.registry.tests._synthetic_locale_fixtures import (
+    _synthetic_locale_scope,
+    _write_test_label,
+)
 from dev.registry.compiler._validate_semantic_role_axes import semantic_roles_are_axis_siblings
 from dev.registry.compiler._validate_semantic_role_typos import (
     _build_semantic_role_typo_index,
@@ -35,13 +42,6 @@ from dev.registry.compiler._validate_semantic_roles import (
     _validate_semantic_role_cardinality,
     _validate_semantic_role_consistency,
     _validate_semantic_role_typo_twins,
-)
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaAlias, CasillaConstraints, CasillaDefinition
-from cadrumo.domain.calculations.registry.tests._synthetic_locale_fixtures import (
-    _synthetic_locale_scope,
-    _write_test_label,
 )
 from dev.registry.compiler.registry_scope import validate_registry_scope
 from dev.registry.maintenance_support import load_modelo_path

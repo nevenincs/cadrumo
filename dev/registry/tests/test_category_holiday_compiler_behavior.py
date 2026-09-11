@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from datetime import date
-from shutil import copy2
 from pathlib import Path
+from shutil import copy2
 
 import pytest
 
@@ -20,16 +20,16 @@ from cadrumo.domain.calculations.registry.facts.schema import (
     GovernedFactCatalogue,
 )
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
-from cadrumo.domain.categories.registry import CATEGORY_PROFILE_FACT_ID
 from cadrumo.domain.categories.errors import CategoryValidationError
+from cadrumo.domain.categories.registry import CATEGORY_PROFILE_FACT_ID
 from cadrumo.domain.categories.spending_category import SpendingCategory
+from cadrumo.domain.deadlines.errors import DeadlineValidationError
 from cadrumo.domain.deadlines.festivos import (
     HOLIDAY_CALENDAR_PUBLICATION_EVENT_FACT_ID,
     HOLIDAY_EVENT_FACT_ID,
     CalendarCCAA,
     HolidayJurisdiction,
 )
-from cadrumo.domain.deadlines.errors import DeadlineValidationError
 from dev.registry.compiler.categories import compile_category_profile_facts
 from dev.registry.compiler.holidays import compile_holiday_calendar_facts
 
@@ -104,7 +104,10 @@ def test_authored_holiday_calendars_publish_only_evidenced_years_and_exact_ccaa_
         authority_digest="b" * 64,
     )
 
-    assert dict((item.name, item.value) for item in publication.payload.outputs)["boe_ref"] == "boe-resolucion-festivos-2025"
+    assert (
+        dict((item.name, item.value) for item in publication.payload.outputs)["boe_ref"]
+        == "boe-resolucion-festivos-2025"
+    )
     assert dict((item.name, item.value) for item in event.payload.outputs)["name"]
     with pytest.raises(RegistryValidationError, match="no variant for the exact query context"):
         resolve_governed_fact(
@@ -121,7 +124,9 @@ def test_authored_holiday_calendars_publish_only_evidenced_years_and_exact_ccaa_
 def test_category_compiler_refuses_a_duplicate_category_in_an_isolated_authored_candidate(tmp_path: Path) -> None:
     target = _candidate_file(tmp_path, "categories", "profiles.toml")
     target.write_text(
-        target.read_text(encoding="utf-8").replace('category = "vehiculo_combustible"', 'category = "hardware_amortizable"'),
+        target.read_text(encoding="utf-8").replace(
+            'category = "vehiculo_combustible"', 'category = "hardware_amortizable"'
+        ),
         encoding="utf-8",
     )
 
